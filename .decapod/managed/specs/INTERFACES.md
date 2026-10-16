@@ -172,6 +172,21 @@ workspace through Decapod, resolve ownership or store selection, and rerun the
 execution gate. Never manufacture a duplicate task or copy a database to hide
 this discrepancy.
 
+The explicit local transfer commands preserve an original standalone task:
+`todo transfer export --id <id> --to <receiver> --output <absolute-private-file>`
+requires an actual yield by the source actor and seals source mutation.
+`transfer recover --id <id> --transfer-id <id> --output <new-private-file>`
+recovers identical bytes after interrupted publication.
+`transfer import --input <absolute-private-file> --expected-digest <sha256:digest>
+--accept-source-transfer` requires a trusted source handoff, the same GitHub
+origin and intended receiver, fetched source commit and absent local authority.
+The `decapod.task-transfer.v1` artifact is bounded to 4 MiB and 4,096 subject
+events. Sessions and unrelated tasks are excluded. Export supports only yielded
+tasks without shared owners, parent/dependency edges or incoming relationships.
+Import returns `execution_ready: false`; it neither claims the task nor imports
+current-machine proof. `TODO_PROJECTION_MISSING` remains blocking until the real
+import, claim and applicable execution gates succeed.
+
 Cleanup requires ownership evidence. Task-like names, old timestamps, and an
 empty inventory from a different container engine do not establish permission
 to delete. Managed invocation receipts bind the exact path, directory generation,
@@ -471,8 +486,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `5fea9ee75e94adc0e1d71511fc93042789c6370d8f7082e63778e6fe600e9cfe`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

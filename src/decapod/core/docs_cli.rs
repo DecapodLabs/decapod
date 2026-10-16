@@ -690,6 +690,17 @@ missing or partial policy store fails before any workunit journal append.
 - `decapod todo journal restore --expected-current-digest <digest>` verifies
   the complete chain and the observed live-state precondition before restoring
   an absent or known predecessor projection; divergent authority is preserved
+- `decapod todo transfer export --id <id> --to <receiver> --output <private-file>`
+  seals a previously yielded standalone local task and exports at most 4 MiB
+  of task-scoped provenance; only the actor that yielded it can export
+- `decapod todo transfer recover --id <id> --transfer-id <id> --output <new-file>`
+  republishes the identical durable artifact after interrupted publication
+- `decapod todo transfer import --input <private-file> --expected-digest <sha256:digest> --accept-source-transfer`
+  requires operator-authenticated source handoff, matching GitHub origin and
+  receiver, fetched source commit, and absent destination identity/history.
+  Imported proof is historical; claim, orientation and local proof are required.
+  Connected/shared tasks, replay and conflicting authority fail closed. Source
+  sealing is local cooperative enforcement, not global exclusivity across clones.
 - `decapod govern workunit checkpoint --task-id <id> --operation-id <id>`
   records a checkpoint, with optional `--expected-generation <n>`
 - `decapod govern workunit journal-status --task-id <id>` inspects the journal

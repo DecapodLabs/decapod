@@ -38,6 +38,14 @@ The human should not need to operate the governance CLI for each coding task.
 Unclear intent, conflicting requirements, missing permission, and unavailable
 proof must become clear questions or blockers rather than hidden assumptions.
 
+When an agent changes machines, Git history alone does not establish local task
+ownership. Explicit task-scoped transfer preserves the original identity, intent,
+revision and relevant source history after the source yields and seals custody.
+The receiver accepts a private artifact through a trusted operator handoff and
+must regenerate machine-specific evidence. This bounded local mechanism covers
+standalone tasks; connected/shared work and global exclusivity across disconnected
+stores require further authority rather than an invented replacement claim.
+
 ## User and Actor Contract
 
 - The human supplies intent, constraints, authorization, and judgment
@@ -192,7 +200,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `5fea9ee75e94adc0e1d71511fc93042789c6370d8f7082e63778e6fe600e9cfe`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

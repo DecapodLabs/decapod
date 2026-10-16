@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d0f23e01601db5b4ce206355723a10b430f58d72",
+    "accepted_commit": "396f6991854a227c7b0ba4dfd09928f16d61dd93",
+    "release": "v0.117.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -321,45 +322,34 @@
     }
   },
   "change": {
-    "id": "change_01M51Q2M8F8C5DR5X05PDC3WDZ",
-    "base_commit": "d0f23e01601db5b4ce206355723a10b430f58d72",
+    "id": "change_01M52WNFQXJBT7M5JQKSVB74GV",
+    "base_commit": "396f6991854a227c7b0ba4dfd09928f16d61dd93",
     "target_base": "origin/master"
   },
   "claims": {
-    "ci-attested-finite-identities": {
-      "statement": "Explicit accepted Pipeline Trigger policy derives branch-bound concurrency identities and accepts exactly one successful keyless bootstrap while retaining exact required jobs and source/run bindings.",
-      "falsifier": "Any failed, missing, retried, extra or mismatched job set passes, or candidate policy authorizes itself.",
-      "status": "supported",
+    "task-custody-transfer": {
+      "statement": "Only a yielded standalone task owned by the source actor can be exported; export seals source mutation. Bound import rejects malformed or mismatched/replayed/conflicting custody and preserves historical evidence without authorizing current proof.",
+      "falsifier": "An active/shared/connected task exports, a sealed source task mutates, a wrong repository/receiver/digest/replay import succeeds, or historical pass becomes current destination proof.",
+      "status": "open",
       "proof_refs": [
-        "28 targeted CI-attested regressions; real public1840 and1870 projected fixtures"
+        "src/decapod/core/task_transfer.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "ci-attested-activation-01",
-      "summary": "Finite provider-attested identities and explicit activation with reviewed source mapping, real metadata regressions, and completion-proof coverage; approved bootstrap checks in progress, no current-controller readiness claim.",
-      "input_digest": "sha256:6d25326851592abc3fb0e8ddfffe7a870e810ab0968b6e6544760235946cd7fc",
+      "id": "task-transfer-initial",
+      "summary": "Implement explicit yielded-task custody transfer and adversarial regressions for #1452",
+      "input_digest": "sha256:8c1fbd8884e18bb218d7fde67e3920bb9956c0c15d40c0548e036bdd1942f1f6",
       "proof_refs": [
-        "28 targeted regressions passed; Cargo binaries and Bazel input/binary builds passed; independent read-only trust-boundary review"
+        "src/decapod/core/task_transfer.rs",
+        "tests/cli_contract_enforcement.rs",
+        "tests/unit/core/task_transfer_tests.rs"
       ]
-    },
-    {
-      "id": "ci-attested-activation-02",
-      "summary": "Repair exact clippy fixture warning; preserve failed preflight evidence and completed direct suites while final-head lint/CI rerun proceeds.",
-      "input_digest": "sha256:3e8704110adaeb8757ff2b8e934639c370611b90c1badef695d120e517064ce8",
-      "proof_refs": [
-        "GHA116853592483 and local clippy.log needless_range_loop; full library/integration/build checks passed"
-      ]
-    },
-    {
-      "id": "activation-clean-review-20261016",
-      "summary": "Bind reviewed specs to clean source fingerprint without generated Bazel convenience links",
-      "input_digest": "sha256:a3fb2d8fe569d5df6478e8c4e85c17909136e73ec1454c3d3049e4bbdb479337"
     }
   ],
   "intents": {
-    "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ": {
+    "intent:change_01M52WNFQXJBT7M5JQKSVB74GV": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -369,11 +359,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+      "id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Correct and activate CI-attested validation identities\n\nOne-time maintainer-authorized bootstrap: finite importer/concurrency identities, real metadata regressions, exact accepted policy activation, direct checks and CI then disclosed PR; no archive access or self-authorized readiness.",
-      "refined_intent": "Correct and activate CI-attested validation identities\n\nOne-time maintainer-authorized bootstrap: finite importer/concurrency identities, real metadata regressions, exact accepted policy activation, direct checks and CI then disclosed PR; no archive access or self-authorized readiness.",
+      "raw_intent": "Implement task-scoped custody transfer prerequisite for #1445\n\nSeparate recovery feature from current master. Extend existing task journal with yielded source acceptance, bounded non-secret artifact and guarded import preserving identity/provenance; fresh destination proof. Existing Vega task and branch remain untouched until independent release.",
+      "refined_intent": "Implement task-scoped custody transfer prerequisite for #1445\n\nSeparate recovery feature from current master. Extend existing task journal with yielded source acceptance, bounded non-secret artifact and guarded import preserving identity/provenance; fresh destination proof. Existing Vega task and branch remain untouched until independent release.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -386,162 +376,83 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Use the accepted CI executor terminal results for exact validation execution, with finite independently derived native job identities and explicitly trusted keyless Pipeline Trigger bootstrap. Activate only through maintainer merge after the approved one-time direct-check and exact-commit CI bootstrap; do not claim this candidate authorizes itself.",
+      "intent": "Deliver #1452 as a separate prerequisite for #1445. Add bounded Rust CLI export/recover/import for standalone yielded local tasks using canonical TODO events and existing journal; source freezes after export, receiver/repository/digest/operator-trust bound import retains original history and identity but regenerates local proof. Refuse connected/shared/conflicting tasks. Disconnected global exclusivity and automatic remote source authentication are outside this local trust boundary. No Vega edits or actual transfer before independent release.",
       "phases": [],
       "proof_hooks": [
-        "Direct fmt, library/integration regression tests, clippy, Bazel inputs/build, exact-commit GitHub and Buildkite checks; captured real success/failure metadata tests; no artifact downloads."
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current finite CI-attested identity contract, explicit configured-executor trust and accepted-target equality against implementation and regression fixtures. Generated Bazel convenience links removed before source fingerprinting; production contracts unchanged by the fixture lint repair.",
-          "reviewed_code_fingerprint": "aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833",
-          "spec_material_hash": "554518cafbd89726f62370608fe3ad8abae4e83943c41a777ab60be32b6624c1"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current finite CI-attested identity contract, explicit configured-executor trust and accepted-target equality against implementation and regression fixtures. Generated Bazel convenience links removed before source fingerprinting; production contracts unchanged by the fixture lint repair.",
-          "reviewed_code_fingerprint": "aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833",
-          "spec_material_hash": "a7958cfc0ca88294a6b9f6c7f0958249baf419f44d1d08421ff9865765e5a86f"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current finite CI-attested identity contract, explicit configured-executor trust and accepted-target equality against implementation and regression fixtures. Generated Bazel convenience links removed before source fingerprinting; production contracts unchanged by the fixture lint repair.",
-          "reviewed_code_fingerprint": "aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833",
-          "spec_material_hash": "a89fe8abf2f1fdcf3952cec88bee889900525ed4bc0dcc984d27b7c2d15c7094"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [
-        "Do not publish unless direct checks and exact-commit required CI succeed; no tool-denied archive reads, merge, or release."
+        "Do not use candidate transfer commands on the real #1445 task before maintainer merge and independent release",
+        "No credentials, manual database writes, replaced original task, or global exclusivity claim"
       ],
-      "title": "Correct and activate provider-attested validation",
+      "title": "Implement task-scoped custody transfer prerequisite for #1445",
       "todo_ids": [
-        "cicd_01m51q281cf5kqsf"
+        "feat_01m52wmkq11e98x6"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792134564Z"
+      "updated_at": "1792172384Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Only separately owned prerequisite #1452; original #1445 branch preserved"
       ],
-      "artifact_hash": "sha256:33bb0b38a73f34e41542e26f608b83d2053dd258e83e5965f468109c6d8e71f4",
-      "checks": [
-        {
-          "name": "bazel-binary-builds",
-          "status": "passed"
-        },
-        {
-          "name": "bazel-inputs",
-          "status": "passed"
-        },
-        {
-          "name": "ci-attested-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "clippy",
-          "status": "passed"
-        },
-        {
-          "name": "direct-candidate-build",
-          "status": "passed"
-        },
-        {
-          "name": "exact-commit-ci",
-          "status": "partial"
-        },
-        {
-          "name": "full-library-suite",
-          "status": "passed"
-        },
-        {
-          "name": "full-suite",
-          "status": "partial"
-        },
-        {
-          "name": "integration-regressions",
-          "status": "passed"
-        }
-      ],
+      "artifact_hash": "sha256:eef702fb5ba43cdf2c0b6848c9381b054e97f3ae75c483f706d262e41dd7443c",
+      "checks": [],
       "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
+            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
+            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M51Q2M91D2YCVNK9BQA51P53": {
+          "branch_01M52WNFTJFDYM89V30KSDGWX5": {
             "evidence_only": true,
-            "id": "branch_01M51Q2M91D2YCVNK9BQA51P53",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+            "id": "branch_01M52WNFTJFDYM89V30KSDGWX5",
+            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
             "steps": [
               {
-                "action": "implementation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/snapshot_provider/public_buildkite/ci_attested.rs",
-                  "src/decapod/core/validation_runtime/snapshot/ci_attested.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/workspace.rs",
                   ".decapod/config.toml",
-                  "tests/gatling.rs",
-                  "One-time maintainer bootstrap approved 2026-10-16 06:40, Sentinel_6ffcabbc81688191bf23c32a5352ea72, replying to explicit correction-and-activation/direct-check/exact-CI/publication exception. Candidate CLI used only for local preparation because released0.116 rejects new schema; no current-controller readiness claim.",
-                  "28 targeted CI-attested tests passed, including real public1840 success and1870 failure; Bazel cargo_inputs_policy passed. Full library tests and Bazel builds ongoing.",
-                  "Independent review found no blocking issues. Fresh78-entry discovery compared byte-for-byte against accepted d0f23e0: only additive Gatling selection and explicit Bazel fixture/config compile_data changed; no workflow, dependency, toolchain or executable-mode changes."
+                  "Human explicitly authorized separate supported-transfer prerequisite. Created issue1452, claimed fresh feat_01m52wmkq11e98x6, workspace ensure created from accepted396f after sandbox-only .git write denial was retried with escalation. No container GUI or product/root source edits. Orientation has no Decision Gate.",
+                  "Transfer trust requires an operator-reviewed digest from authenticated source handoff; local sealing is cooperative and cannot police disconnected clones or a privileged writer. No claim of cryptographic sender authentication or global single-owner enforcement."
                 ],
-                "proof_refs": [
-                  "ci-attested-regressions",
-                  "bazel-inputs",
-                  "direct-candidate-build",
-                  "full-suite",
-                  "exact-commit-ci"
-                ],
+                "proof_refs": [],
                 "scope": [
                   "root"
                 ],
@@ -549,76 +460,58 @@
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "implementation",
+                "command": "rustfmt --edition 2024 src/decapod/core/task_transfer.rs src/decapod/core/task_journal.rs src/decapod/core/todo.rs tests/unit/core/task_transfer_tests.rs tests/cli_contract_enforcement.rs src/decapod/core/docs_cli.rs",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Bazel9.3.0 cargo_inputs_policy and //:decapod //:release_projection_drift builds passed; ordinary Cargo binaries built. Source is checkpointed for same-branch preflight; full tests and lint remain pending."
+                  "src/decapod/core/fleet_coord.rs",
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/repo_identity.rs",
+                  "src/decapod/core/task_transfer.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/unit/core/task_transfer_tests.rs",
+                  "tests/cli_contract_enforcement.rs",
+                  "Implemented bounded standalone yielded-task export/recover/import in existing journal; source export and seal journal atomically before private no-clobber artifact publication. Import retains original source chain as nested provenance and creates explicit local baseline with new revision and unavailable current proof. Uses normal exclusive-claim trust after yield, not active-lease handoff; no global authority or signature guarantee. No candidate transfer on actual1445.",
+                  "Authored unit/adversarial and public CLI roundtrip tests; none executed yet. Updated source/generated command contract and material project specs through authored prose plus supported specs.refresh. First complete proof is plain117 validation after checkpoint."
                 ],
-                "proof_refs": [
-                  "bazel-binary-builds"
-                ],
+                "proof_refs": [],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Full library1381 passed3ignored; integration Gatling49passed1ignored, sharding23passed, release_workflow22passed, source_ci_profile60passed. Clippy rejected needless_range_loop in test fixture at line122 locally and GHA116853592483; repaired to mutable iteration, rerun pending.",
-                  "Remote73f5d03b verified. Buildkite1882 and GHA38864280221 running, four auxiliary Buildkite workflows passed. No archive/log evidence substituted for validation."
-                ],
-                "proof_refs": [
-                  "full-library-suite",
-                  "integration-regressions",
-                  "clippy",
-                  "exact-commit-ci"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Full all-target all-feature clippy now passed. Exact-head CI exposed stale spec reviews because local Bazel convenience symlinks entered repository fingerprint; removed generated links without deleting build targets, re-reviewed current source and refreshed projections. CI rerun remains required."
-                ],
-                "proof_refs": [
-                  "clippy"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "rustfmt --edition 2024 src/decapod/core/task_transfer.rs src/decapod/core/task_journal.rs src/decapod/core/todo.rs tests/unit/core/task_transfer_tests.rs tests/cli_contract_enforcement.rs src/decapod/core/docs_cli.rs"
+      ],
       "destination": "pull request",
       "evidence": [
-        "28 targeted CI-attested tests passed, including real public1840 success and1870 failure; Bazel cargo_inputs_policy passed. Full library tests and Bazel builds ongoing.",
-        "Bazel9.3.0 cargo_inputs_policy and //:decapod //:release_projection_drift builds passed; ordinary Cargo binaries built. Source is checkpointed for same-branch preflight; full tests and lint remain pending.",
-        "Full all-target all-feature clippy now passed. Exact-head CI exposed stale spec reviews because local Bazel convenience symlinks entered repository fingerprint; removed generated links without deleting build targets, re-reviewed current source and refreshed projections. CI rerun remains required.",
-        "Full library1381 passed3ignored; integration Gatling49passed1ignored, sharding23passed, release_workflow22passed, source_ci_profile60passed. Clippy rejected needless_range_loop in test fixture at line122 locally and GHA116853592483; repaired to mutable iteration, rerun pending.",
-        "Independent review found no blocking issues. Fresh78-entry discovery compared byte-for-byte against accepted d0f23e0: only additive Gatling selection and explicit Bazel fixture/config compile_data changed; no workflow, dependency, toolchain or executable-mode changes.",
-        "One-time maintainer bootstrap approved 2026-10-16 06:40, Sentinel_6ffcabbc81688191bf23c32a5352ea72, replying to explicit correction-and-activation/direct-check/exact-CI/publication exception. Candidate CLI used only for local preparation because released0.116 rejects new schema; no current-controller readiness claim.",
-        "Remote73f5d03b verified. Buildkite1882 and GHA38864280221 running, four auxiliary Buildkite workflows passed. No archive/log evidence substituted for validation."
+        "Authored unit/adversarial and public CLI roundtrip tests; none executed yet. Updated source/generated command contract and material project specs through authored prose plus supported specs.refresh. First complete proof is plain117 validation after checkpoint.",
+        "Human explicitly authorized separate supported-transfer prerequisite. Created issue1452, claimed fresh feat_01m52wmkq11e98x6, workspace ensure created from accepted396f after sandbox-only .git write denial was retried with escalation. No container GUI or product/root source edits. Orientation has no Decision Gate.",
+        "Implemented bounded standalone yielded-task export/recover/import in existing journal; source export and seal journal atomically before private no-clobber artifact publication. Import retains original source chain as nested provenance and creates explicit local baseline with new revision and unavailable current proof. Uses normal exclusive-claim trust after yield, not active-lease handoff; no global authority or signature guarantee. No candidate transfer on actual1445.",
+        "Transfer trust requires an operator-reviewed digest from authenticated source handoff; local sealing is cooperative and cannot police disconnected clones or a privileged writer. No claim of cryptographic sender authentication or global single-owner enforcement."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
-      "modified_files": [
+      "inspected_files": [
         ".decapod/config.toml",
-        "src/decapod/core/snapshot_provider/public_buildkite/ci_attested.rs",
-        "src/decapod/core/validation_runtime/snapshot/ci_attested.rs",
-        "tests/gatling.rs"
+        "src/decapod/core/events.rs",
+        "src/decapod/core/fleet_coord.rs",
+        "src/decapod/core/repo_identity.rs",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/workspace.rs"
+      ],
+      "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+      "modified_files": [
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/task_transfer.rs",
+        "src/decapod/core/todo.rs",
+        "tests/cli_contract_enforcement.rs",
+        "tests/unit/core/task_transfer_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -626,10 +519,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M51Q2M91D2YCVNK9BQA51P53",
+      "run_id": "branch_01M52WNFTJFDYM89V30KSDGWX5",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m51q281cf5kqsf",
+      "task_id": "feat_01m52wmkq11e98x6",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -115,6 +115,18 @@ Validation checks repository evidence for these product contracts:
 intended task, agent ownership, lease, and control plane before execution resumes.
 A storage error must not be relabeled as an absent projection.
 
+`tests/unit/core/task_transfer_tests.rs` exercises two separate local stores and
+real Git repositories: identity/intent/history preservation, source yield and
+actor checks, source seal rejection of later custody mutations, exact private
+artifact recovery, replay/conflicting-history refusal, repository/receiver/commit
+binding, malformed/truncated journal rejection, explicit operator acceptance,
+digest/byte bounds, and shared/connected-task rejection. Historical passed proof
+must remain only in provenance, with unavailable current proof and a new revision.
+These library regressions run through the existing required Supabase library-test
+recipe. Their presence is not passing evidence until normal validation executes
+them. Synthetic stores cannot prove source authenticity or global exclusivity;
+the trust contract requires the operator's authenticated source handoff.
+
 ## Obligation current-evidence regression proof
 
 `tests/plugins/obligation.rs` covers transitive and diamond completion without
@@ -499,8 +511,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `5fea9ee75e94adc0e1d71511fc93042789c6370d8f7082e63778e6fe600e9cfe`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

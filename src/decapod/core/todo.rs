@@ -80,6 +80,9 @@ where
             }
         };
         ids.sort(); ids.dedup();
+        for id in &ids {
+            task_journal::transfer::ensure_not_exported(conn, id)?;
+        }
         let before = task_journal::capture_selected(conn, &ids)?;
         let watermark = task_journal::watermark(conn)?;
         let result = f(conn)?;
@@ -299,6 +302,38 @@ pub enum TodoJournalCommand {
     Restore {
         #[clap(long)]
         expected_current_digest: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum TodoTransferCommand {
+    /// Seal a yielded standalone task and export its bounded history.
+    Export {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        to: String,
+        #[clap(long)]
+        output: PathBuf,
+    },
+    /// Republish an already sealed export after interrupted file publication.
+    Recover {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        transfer_id: String,
+        #[clap(long)]
+        output: PathBuf,
+    },
+    /// Import reviewed source custody; a digest alone does not authenticate it.
+    Import {
+        #[clap(long)]
+        input: PathBuf,
+        #[clap(long)]
+        expected_digest: String,
+        /// Operator confirms source yield/export and digest via a trusted channel.
+        #[clap(long, required = true)]
+        accept_source_transfer: bool,
     },
 }
 
@@ -546,6 +581,11 @@ pub enum TodoCommand {
     Journal {
         #[clap(subcommand)]
         command: TodoJournalCommand,
+    },
+    /// Explicit task-scoped transfer between local datastores.
+    Transfer {
+        #[clap(subcommand)]
+        command: TodoTransferCommand,
     },
     /// List available task categories.
     Categories,
@@ -6645,6 +6685,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "expertise", "parameters": ["agent", "category"] },
 
             { "name": "journal", "subcommands": [{"name":"checkpoint","parameters":[]},{"name":"verify","parameters":[]},{"name":"restore","parameters":["expected_current_digest"]}] },
+            { "name": "transfer", "subcommands": [{"name":"export","parameters":["id","to","output"]},{"name":"recover","parameters":["id","transfer_id","output"]},{"name":"import","parameters":["input","expected_digest","accept_source_transfer"]}] },
             { "name": "rebuild", "parameters": [] }
         ],
         "task_columns": [
@@ -7315,6 +7356,15 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
     factory: &F,
 ) -> Result<(), error::DecapodError> {
     let root = &store.root;
+    if let TodoCommand::Transfer { command } = &cli.command {
+        let out = task_journal::transfer::run(root, command, &mutation_actor(None))?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&out)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+        );
+        return Ok(());
+    }
     if matches!(
         cli.command,
         TodoCommand::Journal {
@@ -7650,6 +7700,9 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
                 expected_current_digest,
             } => task_journal_restore(root, expected_current_digest)?,
         },
+        TodoCommand::Transfer { .. } => {
+            unreachable!("transfer is dispatched before backend routing")
+        }
         TodoCommand::Categories => {
             let categories = list_categories(root)?;
             serde_json::json!({ "categories": categories })

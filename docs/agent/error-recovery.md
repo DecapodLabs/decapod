@@ -72,6 +72,55 @@ Database read failures remain storage errors, not missing-projection evidence.
    Ask for clarification only when request meaning, scope, or proof expectations
    are genuinely ambiguous; approval and ownership conflicts remain real gates.
 
+### Explicit transfer between local control planes
+
+A Git fetch retains source and authored governance but does not import task
+records. `todo journal restore` uses only checkpoints already in the selected
+datastore. `context.bundle.import` imports context, not custody.
+
+After installing an independently accepted controller with task-transfer support,
+the source agent runs in the original repository/control plane:
+
+```bash
+decapod todo yield --id <original-task-id> --reason "Explicit transfer to <receiver>"
+decapod todo transfer export --id <original-task-id> --to <receiver> --output <absolute-private-file>
+```
+
+Use the original yielding agent's session/identity. Export requires no remaining
+owners and a complete current journal; connected tasks need a separately reviewed
+closure and are refused. The source records an irreversible local seal before
+artifact publication. It cannot be reclaimed, edited or completed through the
+task mutation boundary after sealing. If file publication fails, use the reported
+transfer ID with `todo transfer recover` and a new output path; do not export again.
+No unrelated task or session state is included. Task text/history may itself be
+sensitive, so review and transmit the artifact privately outside Git.
+
+The receiver fetches the original source commit and imports in the same GitHub
+repository, using its own session/identity:
+
+```bash
+decapod todo transfer import --input <absolute-private-file> --expected-digest <sha256:digest-from-source> --accept-source-transfer
+decapod todo claim --id <original-task-id>
+decapod workspace ensure --branch <preserved-task-branch>
+```
+
+The digest must come from the authenticated source/operator handoff, not merely
+from hashing an untrusted received file. `--accept-source-transfer` declares that
+the operator verified source yield/export and receiver binding. These local
+identities are self-declared; a hash is not a signature or proof of source liveness.
+The protocol cannot prevent a privileged writer or disconnected clone from
+continuing. Enforcing global exclusive custody requires an independently trusted
+online authority, which this local mechanism does not supply.
+
+Import rejects any existing task ID/hash/history, replay, wrong receiver/origin,
+malformed or incomplete checkpoint chain, oversized artifact, or absent source
+commit. Source event sequences remain nested provenance in the canonical TODO
+event; they are not renumbered into local observations. Identity, intent, source
+revision and proof bytes remain visible historically. Current proof is cleared
+and the destination revision advances. Orientation, capsule/workunit setup and
+full validation must be regenerated before execution/publication gates can pass.
+This supported transition does not waive `TODO_PROJECTION_MISSING`.
+
 ### `Conflict("TODO already claimed")`
 - **Reason:** Another agent instance is working on this task.
 - **Protocol:** **STOP**. List other tasks with `decapod todo list` and select an unclaimed one.
