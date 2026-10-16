@@ -354,6 +354,14 @@
       "proof_refs": [
         "/private/tmp/task-transfer-validate-01.txt"
       ]
+    },
+    {
+      "id": "task-transfer-fixture-dir",
+      "summary": "Repair task-transfer fixture path type from exact-head CI compilation failure",
+      "input_digest": "sha256:3bdb9e272c494e83d3acfa04635f0487d229ce2922265082b309005111a4b7af",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/38943329366/job/117116358267"
+      ]
     }
   ],
   "intents": {
@@ -408,7 +416,7 @@
         "Current claimed task and isolated work branch",
         "Only separately owned prerequisite #1452; original #1445 branch preserved"
       ],
-      "artifact_hash": "sha256:142a4cc3e5159b8b1f0cd8a9a97c70b6888360de71628b1b4061e34a5a102724",
+      "artifact_hash": "sha256:0c007521aed3818a6f482f69e51522a2deaf92c93c41caa16636aab7d7ec60c7",
       "checks": [],
       "current_phase": "validation-recovery",
       "custody": {
@@ -445,10 +453,17 @@
             "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52WNFTJFDYM89V30KSDGWX5": {
@@ -511,6 +526,20 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "validation-recovery",
+                "command": "git push origin f3bff011:refs/heads/agent/task-transfer/feat_01m52wmkq11e98x6",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Attempts2 and3 plain117 failed SNAPSHOT_UPLOAD_INCOMPLETE GitTransport128, logs task-transfer-validate-02.txt and03.txt, evidence snapshots El8Al6 and B9NzvX preserved. Normal SSH pushed exact f3bff011 to same governed branch; unchanged-source fourth plain validation reached Buildkite provider_terminal_wait with CI1939. Direct HTTPS accepted-target read also succeeded; no credential extraction, URL rewrite, profile change or artifact workaround. GHA current exact-head Clippy job117116358267 reports E0277 in new fixture dir: Some(repo.into()) because TodoCommand Add dir is Option<String>. Corrected explicit path-to-string conversion. No test pass claimed from compile failure; running fourth proof will remain non-ready for old candidate."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -518,10 +547,13 @@
       },
       "declared_commands": [
         "decapod validate",
+        "env DECAPOD_AGENT_ID=codex-task-transfer decapod validate",
+        "git push origin f3bff011:refs/heads/agent/task-transfer/feat_01m52wmkq11e98x6",
         "rustfmt --edition 2024 src/decapod/core/task_transfer.rs src/decapod/core/task_journal.rs src/decapod/core/todo.rs tests/unit/core/task_transfer_tests.rs tests/cli_contract_enforcement.rs src/decapod/core/docs_cli.rs"
       ],
       "destination": "pull request",
       "evidence": [
+        "Attempts2 and3 plain117 failed SNAPSHOT_UPLOAD_INCOMPLETE GitTransport128, logs task-transfer-validate-02.txt and03.txt, evidence snapshots El8Al6 and B9NzvX preserved. Normal SSH pushed exact f3bff011 to same governed branch; unchanged-source fourth plain validation reached Buildkite provider_terminal_wait with CI1939. Direct HTTPS accepted-target read also succeeded; no credential extraction, URL rewrite, profile change or artifact workaround. GHA current exact-head Clippy job117116358267 reports E0277 in new fixture dir: Some(repo.into()) because TodoCommand Add dir is Option<String>. Corrected explicit path-to-string conversion. No test pass claimed from compile failure; running fourth proof will remain non-ready for old candidate.",
         "Authored unit/adversarial and public CLI roundtrip tests; none executed yet. Updated source/generated command contract and material project specs through authored prose plus supported specs.refresh. First complete proof is plain117 validation after checkpoint.",
         "Human explicitly authorized separate supported-transfer prerequisite. Created issue1452, claimed fresh feat_01m52wmkq11e98x6, workspace ensure created from accepted396f after sandbox-only .git write denial was retried with escalation. No container GUI or product/root source edits. Orientation has no Decision Gate.",
         "Implemented bounded standalone yielded-task export/recover/import in existing journal; source export and seal journal atomically before private no-clobber artifact publication. Import retains original source chain as nested provenance and creates explicit local baseline with new revision and unavailable current proof. Uses normal exclusive-claim trust after yield, not active-lease handoff; no global authority or signature guarantee. No candidate transfer on actual1445.",

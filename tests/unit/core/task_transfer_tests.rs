@@ -59,7 +59,7 @@ fn source() -> (tempfile::TempDir, PathBuf, String) {
             due: None,
             r#ref: "issue:1452".into(),
             scope: "root".into(),
-            dir: Some(repo.into()),
+            dir: Some(repo.to_string_lossy().into_owned()),
             depends_on: String::new(),
             blocks: String::new(),
             parent: None,

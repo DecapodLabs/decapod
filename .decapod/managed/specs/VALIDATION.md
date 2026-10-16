@@ -132,6 +132,9 @@ commands cannot authorize custody of the real feature task before this controlle
 is independently accepted and released. The unchanged accepted source executor
 and complete configured proof graph remain responsible for compiling and testing
 the candidate; refreshing a reviewed inventory declaration supplies no proof.
+Compiling the production binary alone does not execute the transfer regressions.
+The required library-test build must also compile their real repository fixtures
+and run them; fixture compilation failure leaves the transfer claim unsupported.
 
 ## Obligation current-evidence regression proof
 
@@ -517,7 +520,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5fea9ee75e94adc0e1d71511fc93042789c6370d8f7082e63778e6fe600e9cfe`
+- Repository signal fingerprint: `afbd31eb519397fd86a214ab250dba8130597f836cabe383de28fda876972d73`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
