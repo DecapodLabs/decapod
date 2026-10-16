@@ -108,8 +108,9 @@ The digest must come from the authenticated source/operator handoff, not merely
 from hashing an untrusted received file. `--accept-source-transfer` declares that
 the operator verified source yield/export and receiver binding. These local
 identities are self-declared; a hash is not a signature or proof of source liveness.
-The protocol cannot prevent a privileged writer or disconnected clone from
-continuing. Enforcing global exclusive custody requires an independently trusted
+All cooperating source writers must use a controller that understands the seal.
+The protocol cannot prevent an older executable, privileged writer or disconnected
+clone from continuing. Enforcing global exclusive custody requires an independently trusted
 online authority, which this local mechanism does not supply.
 
 Import rejects any existing task ID/hash/history, replay, wrong receiver/origin,

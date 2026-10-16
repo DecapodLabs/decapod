@@ -186,6 +186,9 @@ tasks without shared owners, parent/dependency edges or incoming relationships.
 Import returns `execution_ready: false`; it neither claims the task nor imports
 current-machine proof. `TODO_PROJECTION_MISSING` remains blocking until the real
 import, claim and applicable execution gates succeed.
+The source seal assumes all cooperating writers use a supporting controller.
+An older executable, privileged database writer or disconnected copy can ignore
+that fence; the artifact does not establish an online exclusive-ownership lease.
 
 Cleanup requires ownership evidence. Task-like names, old timestamps, and an
 empty inventory from a different container engine do not establish permission

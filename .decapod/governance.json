@@ -362,6 +362,16 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/38943329366/job/117116358267"
       ]
+    },
+    {
+      "id": "task-transfer-spec-reviews",
+      "summary": "Record required content-bound spec reviews and explicit supporting-controller trust limit",
+      "input_digest": "sha256:ab8ddb09b57c7dbc233a5be51aa79bbab167f6bd871ceacc7db968b40e44c382",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/38950038850/job/117139025612",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38950038850/job/117139025617",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38950038850/job/117141027506"
+      ]
     }
   ],
   "intents": {
@@ -398,6 +408,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed task_journal pure verifier reuse and canonical TODO event integration. Source seal and revision update occur in with_task_journal transaction; import uses existing task/children writers and local observed baseline. No second datastore or foreign sequence renumbering. Authored architecture matches source and distinguishes operator trust from global exclusivity.",
+          "reviewed_code_fingerprint": "afbd31eb519397fd86a214ab250dba8130597f836cabe383de28fda876972d73",
+          "spec_material_hash": "c5cb8e930e06ed442016a753d68570665b17dda062c64d39b05da561f86daa40"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed actual export/recover/import CLI, 4MiB and4096-event bounds, GitHub-origin and receiver/digest/operator-acceptance binding, no-clobber artifact and explicit false execution readiness against task_transfer.rs. Foreign history is nested provenance; original identity retained, current proof cleared. Updated interfaces include supporting-controller fence and reject replay/conflicts.",
+          "reviewed_code_fingerprint": "afbd31eb519397fd86a214ab250dba8130597f836cabe383de28fda876972d73",
+          "spec_material_hash": "e317f1e42692e4b6183f11bce2c5e8bf8ca8b3e70a272e96b1aad5626de77be2"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed yielded-source actor and no-owner checks, source-seal enforcement at task mutation/execution boundaries, independent digest and operator acceptance, destination absence checks, schema/bounds and proof invalidation. Updated security spec states Git origin/agent names are local bindings, artifacts can contain sensitive task text, and older binaries/privileged writers/disconnected clones remain outside local fence. No unmerged controller use on actual1445.",
+          "reviewed_code_fingerprint": "afbd31eb519397fd86a214ab250dba8130597f836cabe383de28fda876972d73",
+          "spec_material_hash": "238ffcd80094c9c73feb505cfaa346ffa800cae684a5fa060441a05ec9f16fd5"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "Do not use candidate transfer commands on the real #1445 task before maintainer merge and independent release",
@@ -409,14 +442,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792172384Z"
+      "updated_at": "1792176891Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Only separately owned prerequisite #1452; original #1445 branch preserved"
       ],
-      "artifact_hash": "sha256:0c007521aed3818a6f482f69e51522a2deaf92c93c41caa16636aab7d7ec60c7",
+      "artifact_hash": "sha256:696a23c47c17322fbe91f2f51a93436afaacc99516f3872b74f5215cf24f27d9",
       "checks": [],
       "current_phase": "validation-recovery",
       "custody": {
@@ -460,10 +493,17 @@
             "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52WNFTJFDYM89V30KSDGWX5": {
@@ -540,12 +580,28 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "validation-recovery",
+                "command": "decapod govern plan review-spec",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Fourth full117 validation at f3bff011 failed BuildkiteCI1939 uuid01a145da-4fbc-48f8-bc88-488f984f56bf; evidence snapshot wCY1dp preserved. Repaired fixture at7fbc6ecd. Fifth full117 validation uses BuildkiteCI1944 and current GHA38950038850. Actual GHA library job117139025612 executed all8 new transfer regressions successfully:1389 passed0failed3ignored library overall; required ContractConformance job117139025617 ran cli_contract_enforcement target successfully171.1s. GHA selective-cli was not_applicable, not execution evidence. Clippy and docs sync pass. These observations do not substitute for full Buildkite controller readiness.",
+                  "Current governance-artifacts job117141027506 reports SPEC_REVIEW_REQUIRED for INTERFACES. Reviewed actual CLI bounds/custody, journal architecture and operator-trust security with supported review-spec updated transitions for INTERFACES ARCHITECTURE SECURITY. Updated authored security/interface/recovery docs explicitly include older-controller bypass outside cooperative fence. No policy/check waiver and no real1445 transfer."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "decapod govern plan review-spec",
         "decapod validate",
         "env DECAPOD_AGENT_ID=codex-task-transfer decapod validate",
         "git push origin f3bff011:refs/heads/agent/task-transfer/feat_01m52wmkq11e98x6",
@@ -555,6 +611,8 @@
       "evidence": [
         "Attempts2 and3 plain117 failed SNAPSHOT_UPLOAD_INCOMPLETE GitTransport128, logs task-transfer-validate-02.txt and03.txt, evidence snapshots El8Al6 and B9NzvX preserved. Normal SSH pushed exact f3bff011 to same governed branch; unchanged-source fourth plain validation reached Buildkite provider_terminal_wait with CI1939. Direct HTTPS accepted-target read also succeeded; no credential extraction, URL rewrite, profile change or artifact workaround. GHA current exact-head Clippy job117116358267 reports E0277 in new fixture dir: Some(repo.into()) because TodoCommand Add dir is Option<String>. Corrected explicit path-to-string conversion. No test pass claimed from compile failure; running fourth proof will remain non-ready for old candidate.",
         "Authored unit/adversarial and public CLI roundtrip tests; none executed yet. Updated source/generated command contract and material project specs through authored prose plus supported specs.refresh. First complete proof is plain117 validation after checkpoint.",
+        "Current governance-artifacts job117141027506 reports SPEC_REVIEW_REQUIRED for INTERFACES. Reviewed actual CLI bounds/custody, journal architecture and operator-trust security with supported review-spec updated transitions for INTERFACES ARCHITECTURE SECURITY. Updated authored security/interface/recovery docs explicitly include older-controller bypass outside cooperative fence. No policy/check waiver and no real1445 transfer.",
+        "Fourth full117 validation at f3bff011 failed BuildkiteCI1939 uuid01a145da-4fbc-48f8-bc88-488f984f56bf; evidence snapshot wCY1dp preserved. Repaired fixture at7fbc6ecd. Fifth full117 validation uses BuildkiteCI1944 and current GHA38950038850. Actual GHA library job117139025612 executed all8 new transfer regressions successfully:1389 passed0failed3ignored library overall; required ContractConformance job117139025617 ran cli_contract_enforcement target successfully171.1s. GHA selective-cli was not_applicable, not execution evidence. Clippy and docs sync pass. These observations do not substitute for full Buildkite controller readiness.",
         "Human explicitly authorized separate supported-transfer prerequisite. Created issue1452, claimed fresh feat_01m52wmkq11e98x6, workspace ensure created from accepted396f after sandbox-only .git write denial was retried with escalation. No container GUI or product/root source edits. Orientation has no Decision Gate.",
         "Implemented bounded standalone yielded-task export/recover/import in existing journal; source export and seal journal atomically before private no-clobber artifact publication. Import retains original source chain as nested provenance and creates explicit local baseline with new revision and unavailable current proof. Uses normal exclusive-claim trust after yield, not active-lease handoff; no global authority or signature guarantee. No candidate transfer on actual1445.",
         "No tests executed; first attempt failed at inventory reconciliation.",
