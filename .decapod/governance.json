@@ -355,6 +355,16 @@
         "exact-authored-spec-reapplication",
         "exact-feature-source-reapplication"
       ]
+    },
+    {
+      "id": "vega-release117-01",
+      "summary": "Incorporate accepted v0.117 release and supported generated bindings/metadata, preserving vega journal; begin normal validation with native obligations explicitly unmet.",
+      "input_digest": "sha256:889fc3280a223e9f4de7541708252f2b1f03ba84e7c89df614d414309b5ec2a9",
+      "proof_refs": [
+        "dependency-metadata117",
+        "official-controller117-checksum",
+        "release-merge-review"
+      ]
     }
   ],
   "intents": {
@@ -398,22 +408,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Exact prior vega source and authored semantics reviewed on newly seeded accepted29414e61 base. Bounded post-proof assessment, accepted-required policy integrity, external pinned setup and active Jev removal are source-ready; native execution/parity/calibration/performance and feature tests remain unproven.",
-          "reviewed_code_fingerprint": "700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808",
+          "reason": "Reviewed accepted release396f6991 changes and regenerated117 entrypoint/Docker/dependency metadata. Vega semantics and exact-policy/freshness boundaries remain unchanged; separate native worker installation and all unmet native/parity/calibration/performance obligations remain explicit.",
+          "reviewed_code_fingerprint": "49efc76581808c16bb2ad5b6eda26926bf41ce7bb1e822c6cb3c6f4d7d03c75c",
           "spec_material_hash": "51ad8c57c177ec95cf160b6773e1c17a7beec46aaaa5da4025b72813e7fbbcab"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Exact prior vega source and authored semantics reviewed on newly seeded accepted29414e61 base. Bounded post-proof assessment, accepted-required policy integrity, external pinned setup and active Jev removal are source-ready; native execution/parity/calibration/performance and feature tests remain unproven.",
-          "reviewed_code_fingerprint": "700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808",
+          "reason": "Reviewed accepted release396f6991 changes and regenerated117 entrypoint/Docker/dependency metadata. Vega semantics and exact-policy/freshness boundaries remain unchanged; separate native worker installation and all unmet native/parity/calibration/performance obligations remain explicit.",
+          "reviewed_code_fingerprint": "49efc76581808c16bb2ad5b6eda26926bf41ce7bb1e822c6cb3c6f4d7d03c75c",
           "spec_material_hash": "f453f6322985f2372a1f269d1e1a847aa9d2b3115bcdaee975f640045863dad2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Exact prior vega source and authored semantics reviewed on newly seeded accepted29414e61 base. Bounded post-proof assessment, accepted-required policy integrity, external pinned setup and active Jev removal are source-ready; native execution/parity/calibration/performance and feature tests remain unproven.",
-          "reviewed_code_fingerprint": "700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808",
+          "reason": "Reviewed accepted release396f6991 changes and regenerated117 entrypoint/Docker/dependency metadata. Vega semantics and exact-policy/freshness boundaries remain unchanged; separate native worker installation and all unmet native/parity/calibration/performance obligations remain explicit.",
+          "reviewed_code_fingerprint": "49efc76581808c16bb2ad5b6eda26926bf41ce7bb1e822c6cb3c6f4d7d03c75c",
           "spec_material_hash": "fa33ffad2f3233838711a441d2a4a75113c624d1137f76048e04ddcdd2c81d47"
         }
       ],
@@ -428,7 +438,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792158852Z"
+      "updated_at": "1792168568Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -436,12 +446,16 @@
         "Current claimed task and isolated work branch",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:a621d436160b3d8f4b14c11d84b516efbeb402ad244fa4ceed13f51183805b69",
+      "artifact_hash": "sha256:7a8a773fbff32994df1a100991df4295557d6a00f8e781ce7dfd9d4dd8d2c4a1",
       "blockers": [
-        "Real Apple-arm64 compile/load/probe, independently authenticated upstream numerical references, readiness-domain calibration, native latency/peak-memory and repeated/error/token-boundary measurements remain required and unproven.",
-        "Release0.117.0/controller not yet published; released0.116 rejects pipeline_trigger. Ordinary feature validation must wait for accepted supported controller."
+        "Initialization discovery reported MODULE.bazel.lock at1052029 bytes beyond1048576 per-file bound; capture ordinary validation report before focused repair.",
+        "Native Apple-arm64 compile/load/probe, independent upstream parity, readiness-domain calibration and measured native latency/memory remain unmet genuine proof obligations."
       ],
       "checks": [
+        {
+          "name": "dependency-metadata117",
+          "status": "passed"
+        },
         {
           "name": "diff-whitespace",
           "status": "passed"
@@ -455,15 +469,27 @@
           "status": "passed"
         },
         {
+          "name": "feature-build-tests",
+          "status": "unavailable"
+        },
+        {
           "name": "native-metal-parity-calibration-performance",
           "status": "unavailable"
         },
         {
+          "name": "official-controller117-checksum",
+          "status": "passed"
+        },
+        {
           "name": "ordinary-feature-build-tests",
           "status": "unavailable"
+        },
+        {
+          "name": "release-merge-review",
+          "status": "passed"
         }
       ],
-      "current_phase": "source-recovery-preparation",
+      "current_phase": "ordinary-validation",
       "custody": {
         "events": [
           {
@@ -484,10 +510,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -516,6 +549,26 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "ordinary-validation",
+                "command": "Verify official v0.117.0 archive with published SHA-256; released executable hash ec7a04aa72c3d78961e78f27a6e2b7fcdfd247a37d0cf4a95043035f509b8f05",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Official published controller0.117.0 now governs; prior preparation-only candidate is no longer used. Accepted release changes only changelog and Cargo version/lock. Reviewed generated entrypoint117 fingerprints and Docker release pin; template bodies unchanged, machine projections updated only by supported CLI.",
+                  "Cargo metadata regeneration preserved immutable native Git pins and package pins except local decapod0.117; resolver updated several existing Windows/socket dependency edges, retained for ordinary validation. No model weights or native runtime installed; setup still reports runtime_installed=false."
+                ],
+                "proof_refs": [
+                  "official-controller117-checksum",
+                  "release-merge-review",
+                  "dependency-metadata117",
+                  "feature-build-tests"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -523,14 +576,20 @@
       },
       "declared_commands": [
         "Compare authored spec semantics after excluding generated blocks",
+        "Normal history-preserving merge of accepted396f6991854a227c7b0ba4dfd09928f16d61dd93",
         "Selectively reapply git diff f38b28ad..f92f19d5 outside .decapod and authored spec prose only; exclude old journal/generated blocks",
+        "Verify official v0.117.0 archive with published SHA-256; released executable hash ec7a04aa72c3d78961e78f27a6e2b7fcdfd247a37d0cf4a95043035f509b8f05",
+        "cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod (metadata only); bazel mod deps --lockfile_mode=update (metadata only)",
+        "decapod init --refresh --proof; compare legacy backup template bodies and preserve backups outside workspace",
         "git diff --cached --check",
         "git diff --cached --quiet f92f19d5 -- . :(exclude).decapod"
       ],
       "destination": "pull request",
       "evidence": [
+        "Cargo metadata regeneration preserved immutable native Git pins and package pins except local decapod0.117; resolver updated several existing Windows/socket dependency edges, retained for ordinary validation. No model weights or native runtime installed; setup still reports runtime_installed=false.",
         "Feature source and authored spec semantics exactly equal preserved f92f19d5baa14e79f3e4ab31c27eff5ff7a3dc9d, with no new feature scope. Earlier source contains63 vega/worker test cases and9 new/reworked existing-suite cases; none executed. Prior supported dependency metadata and exact pins retained unchanged.",
         "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
+        "Official published controller0.117.0 now governs; prior preparation-only candidate is no longer used. Accepted release changes only changelog and Cargo version/lock. Reviewed generated entrypoint117 fingerprints and Docker release pin; template bodies unchanged, machine projections updated only by supported CLI.",
         "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance."
       ],
       "inspected_files": [],
@@ -538,7 +597,8 @@
       "modified_files": [],
       "next_transitions": [
         "Checkpoint exact feature delta on accepted base; use ordinary validation only after supported released controller is available",
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Run plain released0.117 validation on the exact release-updated candidate and repair its actual report"
       ],
       "repo_scope": [
         "root"
