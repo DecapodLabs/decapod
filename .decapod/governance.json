@@ -342,6 +342,11 @@
       "id": "gatling-proof-inventory-02",
       "summary": "Review complete source inventory for additive Gatling selection; preserve failed validation and proof-not-run status",
       "input_digest": "sha256:c2629471fa0165aec41b2797015ec1d7abb548ca2ef31c8d27d5653a7d7ccca2"
+    },
+    {
+      "id": "gatling-format-03",
+      "summary": "Repair formatter failure after all four actual Gatling shards passed; retain full-readiness limitation",
+      "input_digest": "sha256:c4d378e5b1066bbb67009b3c8e28382adb20ef816ee6b186e930b4e226eb7363"
     }
   ],
   "intents": {
@@ -382,22 +387,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only negative CLI fixture and premerge selection change; includes lib.rs readiness entrypoint. Runtime transaction/revision architecture unchanged; VALIDATION documents proof boundaries.",
-          "reviewed_code_fingerprint": "c0da5ca063e76c295a7c47187429b883d1b44fdc544b0ff3a3b55719f89a9835",
+          "reason": "Only formatting repair after actual Gatling and selector execution passed; no architecture change.",
+          "reviewed_code_fingerprint": "dcf00a476ad64b36510298897bc62603423cf19b81ec7756476ea5aeadf20523",
           "spec_material_hash": "c9f47c7eab8acc53b34c7355b5eba05dce7efc60be4f6b685b494f09973f007f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI or runtime API changes; tests enforce existing failure semantics and source selectors include actual lib.rs readiness gate.",
-          "reviewed_code_fingerprint": "c0da5ca063e76c295a7c47187429b883d1b44fdc544b0ff3a3b55719f89a9835",
+          "reason": "Only negative CLI regression, additive selector and formatting; runtime interfaces unchanged.",
+          "reviewed_code_fingerprint": "dcf00a476ad64b36510298897bc62603423cf19b81ec7756476ea5aeadf20523",
           "spec_material_hash": "bf5735d95e83446d4311a941b7d511871056d9a9c3f94c8e80635255ef9b4b02"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No authorization or proof gate relaxed; premerge coverage expanded, successful unit completion coverage preserved with explicit limitation.",
-          "reviewed_code_fingerprint": "c0da5ca063e76c295a7c47187429b883d1b44fdc544b0ff3a3b55719f89a9835",
+          "reason": "Real Gatling rejected missing proof and preserved task state; no gate relaxed. Full publication readiness remains blocked.",
+          "reviewed_code_fingerprint": "dcf00a476ad64b36510298897bc62603423cf19b81ec7756476ea5aeadf20523",
           "spec_material_hash": "546e1354723c4d9853921f233ddbed7eb46c5da576aca356d9da8ed48dff1bb8"
         }
       ],
@@ -409,15 +414,27 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792108360Z"
+      "updated_at": "1792109012Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No standalone builds; prior bootstrap exception consumed; no denied artifact access"
       ],
-      "artifact_hash": "sha256:55408571ba64eb6f61ea77f1a6e36dc4ca0f713a576dbc66b47f4625928a64d4",
+      "artifact_hash": "sha256:0f3b0b878c9e8e2db208029c5d1182465ddaf0191d2027dd6fec73a8cd2bde88",
       "checks": [
+        {
+          "name": "ci-format",
+          "status": "failed"
+        },
+        {
+          "name": "ci-gatling",
+          "status": "passed"
+        },
+        {
+          "name": "ci-release-policies",
+          "status": "passed"
+        },
         {
           "name": "committed-validation",
           "status": "failed"
@@ -466,10 +483,17 @@
             "intent_id": "intent:change_01M50ZF1AHBF3KSSS7J32EAH6Q",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M50ZF1B4DGZK5XJQNYSYMH47",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M50ZF1AHBF3KSSS7J32EAH6Q",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M50ZF1B4DGZK5XJQNYSYMH47": {
@@ -528,16 +552,37 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "cargo fmt --all (source formatting repair)",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Exact423f4c34 GitHub run38826425262: all4 Gatling shards and release-policies actual execution passed; fmt failed; applied cargo fmt source repair, other jobs pending, full readiness unestablished."
+                ],
+                "proof_refs": [
+                  "ci-gatling",
+                  "ci-release-policies",
+                  "ci-format"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "cargo fmt --all (source formatting repair)"
+      ],
       "destination": "pull request",
       "evidence": [
         "/tmp/vega-repair-validation-committed.json: PROOF_PROFILE_RECONCILIATION_REQUIRED; complete78-entry inventory independently compared to accepted0140fb4f; only integration_shards.rs changed with additive coverage, no workflow/dependency/mode changes.",
         "/tmp/vega-repair-validation.json: COMMIT_AND_RERUN, no provider execution or artifact collection",
+        "Exact423f4c34 GitHub run38826425262: all4 Gatling shards and release-policies actual execution passed; fmt failed; applied cargo fmt source repair, other jobs pending, full readiness unestablished.",
         "Master job116710914849 exposed t051 fixture mismatch; source inspection shows fixture lacks readiness profile and successful unit completion remains covered."
       ],
       "inspected_files": [

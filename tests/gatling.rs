@@ -564,7 +564,10 @@ fn t051_todo_done_validated_requires_full_proof() {
     assert!(!ready, "bare fixture unexpectedly has full proof: {report}");
     assert!(report.contains("READINESS_PROFILE_REQUIRED"), "{report}");
     let (success, output) = run(&dir, &["todo", "done", "--id", &id, "--validated"]);
-    assert!(!success, "completion without full proof succeeded: {output}");
+    assert!(
+        !success,
+        "completion without full proof succeeded: {output}"
+    );
     assert!(
         output.contains("decapod validate did not pass"),
         "expected actual validation rejection, not an unrelated failure: {output}"
