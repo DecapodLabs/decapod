@@ -369,6 +369,13 @@ The worker alone owns the tokenizer dependency and concrete tokenizer adapter;
 the root library retains tokenizer-neutral prompt/span construction and bounds.
 This keeps native-only dependency metadata out of the root validation inventory
 without omitting the worker's locked tokenizer or changing inference semantics.
+Its portable `vega-native/decoder.rs` also owns SafeTensors payload decoding;
+the root exposes the shared checkpoint byte bound and checked weight schema,
+and retains configuration, setup header validation and typed scalar execution.
+The decoder preserves SafeTensors offset validation, preallocation name/shape
+checks, F32/F16/BF16 conversion and final typed finiteness/resource checks.
+Portable decoder fixtures must run through the separate worker's test target;
+root CI alone cannot establish their execution or native backend acceptance.
 The Rust scalar engine uses F32 and calibration uses F64 probabilities. Required
 calibration, unbound/OOD and prediction-set semantics are preserved. Runtime
 loads only explicitly pinned local artifacts, resets recurrent state per request,
@@ -441,8 +448,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4a66f719cb50c4ba87787e276b689d021445f5bd96259a946885526f8120307e`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (25 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
+- Repository signal fingerprint: `36ed1d2a1bcfb7041f71bc0fe6ac6440fcad716893187138eab0f5331786628a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

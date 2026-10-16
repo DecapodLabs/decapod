@@ -94,7 +94,6 @@ anyhow = "1"
 async-trait = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
 walkdir = "2.5.0"
-safetensors = "0.7"
 libm = "0.2"
 
 [package.metadata.cargo-machete]

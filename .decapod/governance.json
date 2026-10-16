@@ -373,6 +373,14 @@
       "proof_refs": [
         "/workspace/shared/vega-followup-evidence/validate117-first.log"
       ]
+    },
+    {
+      "id": "vega117-native-decoder-boundary",
+      "summary": "Keep payload decoding with native worker and repair generated root dependency inventory bound without weakening proof limits",
+      "input_digest": "sha256:5f93e8d4771103265010170da00152ca3126692c5aa8a0d42a2f1673c1182038",
+      "proof_refs": [
+        "/workspace/shared/vega-followup-evidence/validate117-second.log"
+      ]
     }
   ],
   "intents": {
@@ -409,29 +417,30 @@
       "phases": [],
       "proof_hooks": [
         "Plain decapod validate under an accepted released controller owns feature builds/tests and readiness; no bootstrap exception or candidate-controller acceptance",
-        "Real Apple-arm64 compile/load/probe, independent pinned-upstream numerical parity, readiness-domain calibration, latency/peak-memory and boundary/error evidence required"
+        "Real Apple-arm64 compile/load/probe, independent pinned-upstream numerical parity, readiness-domain calibration, latency/peak-memory and boundary/error evidence required",
+        "The separate native-worker portable unit-test target must execute the moved serialized decoder load/forward/NaN fixture and exact binary16 assertions. Root source CI does not establish their execution; all remain unrun until actual worker evidence exists."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed concrete tokenizer ownership move into native worker, unchanged generic prompt spans and bounds, and supported root/native Cargo plus Bazel metadata regeneration. Exact policy/freshness and private model boundaries unchanged. Required native proofs remain unrun and publication blocked.",
-          "reviewed_code_fingerprint": "4a66f719cb50c4ba87787e276b689d021445f5bd96259a946885526f8120307e",
-          "spec_material_hash": "8afdc558f73f53faf882920248ac01da4ac33ea9c65c0bfab9d21da84985270a"
+          "reason": "Reviewed root/native SafeTensors ownership boundary, unchanged strict decoder/half/fixture semantics, shared checked schema and byte bound, supported dependency graph and intact root typed/header tests. Separate worker test execution remains mandatory and unrun; native parity/calibration/performance publication obligations remain unmet.",
+          "reviewed_code_fingerprint": "36ed1d2a1bcfb7041f71bc0fe6ac6440fcad716893187138eab0f5331786628a",
+          "spec_material_hash": "2cd07d67da6151dac9f15b7e01712f8cfeeb30991cb2aae031a9e54e021220b6"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed concrete tokenizer ownership move into native worker, unchanged generic prompt spans and bounds, and supported root/native Cargo plus Bazel metadata regeneration. Exact policy/freshness and private model boundaries unchanged. Required native proofs remain unrun and publication blocked.",
-          "reviewed_code_fingerprint": "4a66f719cb50c4ba87787e276b689d021445f5bd96259a946885526f8120307e",
+          "reason": "Reviewed root/native SafeTensors ownership boundary, unchanged strict decoder/half/fixture semantics, shared checked schema and byte bound, supported dependency graph and intact root typed/header tests. Separate worker test execution remains mandatory and unrun; native parity/calibration/performance publication obligations remain unmet.",
+          "reviewed_code_fingerprint": "36ed1d2a1bcfb7041f71bc0fe6ac6440fcad716893187138eab0f5331786628a",
           "spec_material_hash": "f453f6322985f2372a1f269d1e1a847aa9d2b3115bcdaee975f640045863dad2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed concrete tokenizer ownership move into native worker, unchanged generic prompt spans and bounds, and supported root/native Cargo plus Bazel metadata regeneration. Exact policy/freshness and private model boundaries unchanged. Required native proofs remain unrun and publication blocked.",
-          "reviewed_code_fingerprint": "4a66f719cb50c4ba87787e276b689d021445f5bd96259a946885526f8120307e",
+          "reason": "Reviewed root/native SafeTensors ownership boundary, unchanged strict decoder/half/fixture semantics, shared checked schema and byte bound, supported dependency graph and intact root typed/header tests. Separate worker test execution remains mandatory and unrun; native parity/calibration/performance publication obligations remain unmet.",
+          "reviewed_code_fingerprint": "36ed1d2a1bcfb7041f71bc0fe6ac6440fcad716893187138eab0f5331786628a",
           "spec_material_hash": "fa33ffad2f3233838711a441d2a4a75113c624d1137f76048e04ddcdd2c81d47"
         }
       ],
@@ -446,7 +455,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792168959Z"
+      "updated_at": "1792169253Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -454,8 +463,12 @@
         "Current claimed task and isolated work branch",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:846081e1677f4578ce41235f7b4479d04950b35d9b1dbd5e6de8f267851d82e1",
+      "artifact_hash": "sha256:755a95c949cd1baeb535230c2490cd32aabcceb34bb90f3b80c34e7927743d96",
       "checks": [
+        {
+          "name": "decoder-source-review",
+          "status": "passed"
+        },
         {
           "name": "dependency-metadata117",
           "status": "passed"
@@ -497,12 +510,20 @@
           "status": "unavailable"
         },
         {
+          "name": "regenerated-lock-bound",
+          "status": "passed"
+        },
+        {
           "name": "release-merge-review",
           "status": "passed"
         },
         {
           "name": "tokenizer-boundary-metadata",
           "status": "passed"
+        },
+        {
+          "name": "worker-decoder-tests",
+          "status": "unavailable"
         }
       ],
       "current_phase": "ordinary-controller-validation",
@@ -540,10 +561,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -612,6 +640,25 @@
                 "validation_findings": [
                   "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision."
                 ]
+              },
+              {
+                "action": "ordinary-controller-validation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Plain117 second validation stopped PROOF_DISCOVERY_BLOCKED on MODULE.bazel.lock1052029 bytes. Moved unchanged SafeTensors decoder/half conversion and fixtures to sole native owner; root retains typed engine/header/GELU tests and checked schema. Supported metadata regeneration now gives1037341 bytes below1048576. Root graph removes only safetensors0.7/hashbrown0.16/foldhash/allocator-api2; native retains pinned SafeTensors0.7 and immutable model/source pins. Cargo reports0 package additions/updates, but reselects existing socket2/getrandom/Windows dependency edges; retain generator output for actual validation rather than hand-edit locks."
+                ],
+                "proof_refs": [
+                  "decoder-source-review",
+                  "regenerated-lock-bound",
+                  "worker-decoder-tests"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance."
+                ]
               }
             ]
           }
@@ -635,6 +682,7 @@
         "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
         "Official published controller0.117.0 now governs; prior preparation-only candidate is no longer used. Accepted release changes only changelog and Cargo version/lock. Reviewed generated entrypoint117 fingerprints and Docker release pin; template bodies unchanged, machine projections updated only by supported CLI.",
         "Official117 first plain validate stopped before provider submission on recorded trajectory blockers. Initialization discovery still observes MODULE.bazel.lock 1052029 bytes above1048576 bound; tokenizer-only adapter removal does not alter default Bazel graph. Preserve failed observation and let ordinary controller establish next actionable report.",
+        "Plain117 second validation stopped PROOF_DISCOVERY_BLOCKED on MODULE.bazel.lock1052029 bytes. Moved unchanged SafeTensors decoder/half conversion and fixtures to sole native owner; root retains typed engine/header/GELU tests and checked schema. Supported metadata regeneration now gives1037341 bytes below1048576. Root graph removes only safetensors0.7/hashbrown0.16/foldhash/allocator-api2; native retains pinned SafeTensors0.7 and immutable model/source pins. Cargo reports0 package additions/updates, but reselects existing socket2/getrandom/Windows dependency edges; retain generator output for actual validation rather than hand-edit locks.",
         "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance."
       ],
       "inspected_files": [],
@@ -654,7 +702,8 @@
       "task_id": "feat_01m52fnwybfvhfdj",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision."
+        "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
+        "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance."
       ]
     }
   },

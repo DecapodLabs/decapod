@@ -13,7 +13,8 @@ use thiserror::Error;
 
 // Resource limits belong to this reference runtime, not to the learned model.
 // They bound both untrusted checkpoint allocation and caller-supplied batches.
-const MAX_CHECKPOINT_BYTES: usize = 512 * 1024 * 1024;
+/// Shared checkpoint byte bound for setup and the native worker decoder.
+pub const MAX_CHECKPOINT_BYTES: usize = 512 * 1024 * 1024;
 const MAX_WEIGHT_ELEMENTS: usize = 64 * 1024 * 1024;
 const MAX_INPUT_ELEMENTS: usize = 16 * 1024 * 1024;
 const MAX_BATCH: usize = 256;
@@ -161,6 +162,12 @@ impl EngineConfig {
         Ok(())
     }
 
+    /// Checked state-dict schema for bounded external checkpoint decoders.
+    pub fn weight_shapes(&self) -> Result<BTreeMap<String, Vec<usize>>> {
+        self.validate()?;
+        Ok(self.expected_shapes())
+    }
+
     fn expected_shapes(&self) -> BTreeMap<String, Vec<usize>> {
         let (d, l, o, z, s, h, m) = (
             self.d_model,
@@ -216,7 +223,7 @@ impl EngineConfig {
 /// Inspect a bounded, parsed safetensors header before activation. This checks
 /// exact names, dimensions, supported floating-point dtypes and a contiguous,
 /// nonoverlapping data region. It does not attest finiteness of payload values;
-/// `from_safetensors` remains the full-value validation boundary.
+/// The native worker decoder and `VegaEngine::from_tensors` perform full-value validation.
 pub fn validate_weight_header(
     config: &EngineConfig,
     header: &serde_json::Value,
@@ -347,7 +354,7 @@ fn finite(name: &str, values: &[f32]) -> Result<()> {
 }
 
 /// An explicitly shaped, row-major tensor. Primarily useful for deterministic
-/// fixtures; production checkpoints should use `from_safetensors`.
+/// fixtures; production checkpoints are decoded by the native worker before `from_tensors`.
 #[derive(Debug, Clone)]
 pub struct TensorData {
     pub shape: Vec<usize>,
@@ -664,65 +671,6 @@ impl VegaEngine {
 
     pub fn config(&self) -> &EngineConfig {
         &self.config
-    }
-
-    /// Strict state-dict loading: every expected tensor exactly once, exact
-    /// dimensions, no unknown names (including adapter weights), finite floats.
-    /// Safetensors validates offsets and byte lengths before any tensor decoding.
-    pub fn from_safetensors(config: EngineConfig, bytes: &[u8]) -> Result<Self> {
-        use safetensors::{Dtype, SafeTensors};
-        config.validate()?;
-        if bytes.len() > MAX_CHECKPOINT_BYTES {
-            return Err(VegaError::Checkpoint(
-                "checkpoint byte limit exceeded".into(),
-            ));
-        }
-        let archive =
-            SafeTensors::deserialize(bytes).map_err(|e| VegaError::Checkpoint(e.to_string()))?;
-        let expected = config.expected_shapes();
-        if archive.len() != expected.len() {
-            return Err(VegaError::Checkpoint(format!(
-                "expected {} tensor names, received {}",
-                expected.len(),
-                archive.len()
-            )));
-        }
-        let mut tensors = BTreeMap::new();
-        for (name, shape) in expected {
-            let tensor = archive
-                .tensor(&name)
-                .map_err(|e| VegaError::Checkpoint(format!("{name}: {e}")))?;
-            if tensor.shape() != shape.as_slice() {
-                return Err(VegaError::Checkpoint(format!(
-                    "{name}: expected shape {shape:?}, received {:?}",
-                    tensor.shape()
-                )));
-            }
-            let values = match tensor.dtype() {
-                Dtype::F32 => tensor
-                    .data()
-                    .chunks_exact(4)
-                    .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
-                    .collect(),
-                Dtype::BF16 => tensor
-                    .data()
-                    .chunks_exact(2)
-                    .map(|b| f32::from_bits((u16::from_le_bytes([b[0], b[1]]) as u32) << 16))
-                    .collect(),
-                Dtype::F16 => tensor
-                    .data()
-                    .chunks_exact(2)
-                    .map(|b| half_to_f32(u16::from_le_bytes([b[0], b[1]])))
-                    .collect(),
-                other => {
-                    return Err(VegaError::Checkpoint(format!(
-                        "{name}: unsupported dtype {other:?}; expected F32/F16/BF16"
-                    )));
-                }
-            };
-            tensors.insert(name, TensorData { shape, values });
-        }
-        Self::from_tensors(config, tensors)
     }
 
     pub fn from_tensors(
@@ -1133,25 +1081,6 @@ impl VegaEngine {
     }
 }
 
-// IEEE binary16 -> f32, exact (including subnormals); nonfinite values are
-// rejected by state-dict validation rather than silently saturated.
-fn half_to_f32(bits: u16) -> f32 {
-    let sign = ((bits & 0x8000) as u32) << 16;
-    let exponent = (bits >> 10) & 0x1f;
-    let mantissa = (bits & 0x03ff) as u32;
-    let out = match exponent {
-        0 if mantissa == 0 => sign,
-        0 => {
-            let shift = mantissa.leading_zeros() - 21;
-            let normalized = (mantissa << shift) & 0x3ff;
-            sign | ((113 - shift) << 23) | (normalized << 13)
-        }
-        31 => sign | 0x7f800000 | (mantissa << 13),
-        _ => sign | (((exponent as u32) + 112) << 23) | (mantissa << 13),
-    };
-    f32::from_bits(out)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1422,14 +1351,7 @@ mod tests {
     }
 
     #[test]
-    fn ieee_half_conversion_and_exact_gelu_reference_values() {
-        assert_eq!(half_to_f32(0x3c00), 1.0);
-        assert_eq!(half_to_f32(0xc000), -2.0);
-        assert_eq!(half_to_f32(0x0001), 2.0f32.powi(-24));
-        assert_eq!(half_to_f32(0x03ff), 1023.0 * 2.0f32.powi(-24));
-        assert_eq!(half_to_f32(0x0400), 2.0f32.powi(-14));
-        assert!(half_to_f32(0x7c00).is_infinite());
-        assert!(half_to_f32(0x7e00).is_nan());
+    fn exact_gelu_reference_values() {
         near(gelu(1.0), 0.8413447, 1e-7);
         near(gelu(-1.0), -0.15865526, 1e-7);
         assert_eq!(gelu(0.0), 0.0);
@@ -1530,25 +1452,10 @@ mod tests {
     }
 
     #[test]
-    fn strict_header_and_safetensors_payload_load_without_real_weights() {
+    fn strict_header_accepts_complete_fixture_without_real_weights() {
         let cfg = config();
         let (header, payload) = archive_fixture(&cfg);
         validate_weight_header(&cfg, &header, payload.len() as u64).unwrap();
-        let mut json = serde_json::to_vec(&header).unwrap();
-        while !json.len().is_multiple_of(8) {
-            json.push(b' ');
-        }
-        let mut bytes = (json.len() as u64).to_le_bytes().to_vec();
-        bytes.extend(&json);
-        bytes.extend(&payload);
-        let engine = VegaEngine::from_safetensors(cfg.clone(), &bytes).unwrap();
-        assert_eq!(
-            engine.forward(&input(&cfg), true).unwrap().rows[0].potential,
-            -2.0
-        );
-        // First payload tensor is A_log. Nonfinite bytes cannot become a model.
-        bytes[8 + json.len()..12 + json.len()].copy_from_slice(&f32::NAN.to_le_bytes());
-        assert!(VegaEngine::from_safetensors(cfg, &bytes).is_err());
     }
 
     #[test]

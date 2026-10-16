@@ -7,6 +7,12 @@ use decapod::core::{
     vega_readiness::{self, Request, Response},
     vega_setup,
 };
+#[cfg(any(
+    test,
+    all(feature = "vega-native", target_os = "macos", target_arch = "aarch64")
+))]
+#[path = "vega-native/decoder.rs"]
+mod decoder;
 #[path = "../../src/decapod/core/vega_backbone.rs"]
 mod vega_backbone;
 use std::{
@@ -157,7 +163,7 @@ fn infer(
 ) -> Result<(vega_readiness::Outcome, usize), Box<dyn std::error::Error>> {
     use decapod::core::{
         vega_calibration::Calibration,
-        vega_engine::{ChunkBatch, EngineConfig, FeatureBatch, QuestionType, VegaEngine},
+        vega_engine::{ChunkBatch, EngineConfig, FeatureBatch, QuestionType},
     };
     use std::time::Instant;
     let total_start = Instant::now();
@@ -217,7 +223,7 @@ fn infer(
     let stage = Instant::now();
     let engine_config = EngineConfig::from_json(&config)?;
     let steps = engine_config.n_steps;
-    let engine = VegaEngine::from_safetensors(
+    let engine = decoder::from_safetensors(
         engine_config,
         &read_bounded(
             &request.installation.join("engine.safetensors"),
