@@ -397,6 +397,15 @@
       "proof_refs": [
         "/workspace/shared/vega-followup-evidence/validate117-fourth.log"
       ]
+    },
+    {
+      "id": "vega117-first-ci-repairs",
+      "summary": "Repair measured source compilation and dependency-lint failures and reconcile published release tag custody",
+      "input_digest": "sha256:bf34224469ffe76b755c8e79959b58644b33c4438e9f55d0e91a378b32d96751",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/38935477967/job/117089772479",
+        "https://github.com/DecapodLabs/decapod/actions/runs/38935478030/job/117090004983"
+      ]
     }
   ],
   "intents": {
@@ -441,22 +450,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed explicit existing32-bit half normalization and expanded signed/finite/nonfinite fixture assertions, plus matching updated inventory declaration. No transport policy or credentials changed; worker test and native acceptance obligations remain unrun.",
-          "reviewed_code_fingerprint": "23c0e87404af60801501d30f96a16eec312d44ffd8b6c1e058fd91e9580654a3",
+          "reason": "Reviewed actual CI repairs: typed setup serialization error, removal of unused worker sha2, precisely justified thiserror exception for included BackboneError, and generator-produced single-edge lock update. Current inventory reviewed; strict proof, native tests and native acceptance remain required.",
+          "reviewed_code_fingerprint": "48f1be686f71ac9272f8caaf0acd4e36d5fe8815c018b409ccd6811adb46210e",
           "spec_material_hash": "9ce01985648d9b229da0a317e8d2eb6decc468984d7eb397bf0eff8eed03ebdb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed explicit existing32-bit half normalization and expanded signed/finite/nonfinite fixture assertions, plus matching updated inventory declaration. No transport policy or credentials changed; worker test and native acceptance obligations remain unrun.",
-          "reviewed_code_fingerprint": "23c0e87404af60801501d30f96a16eec312d44ffd8b6c1e058fd91e9580654a3",
-          "spec_material_hash": "f453f6322985f2372a1f269d1e1a847aa9d2b3115bcdaee975f640045863dad2"
+          "reason": "Reviewed actual CI repairs: typed setup serialization error, removal of unused worker sha2, precisely justified thiserror exception for included BackboneError, and generator-produced single-edge lock update. Current inventory reviewed; strict proof, native tests and native acceptance remain required.",
+          "reviewed_code_fingerprint": "48f1be686f71ac9272f8caaf0acd4e36d5fe8815c018b409ccd6811adb46210e",
+          "spec_material_hash": "c05fe22b9f25693440c2de7995843a0ce4c8cd1e27e24ce2d127223db1394b2b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed explicit existing32-bit half normalization and expanded signed/finite/nonfinite fixture assertions, plus matching updated inventory declaration. No transport policy or credentials changed; worker test and native acceptance obligations remain unrun.",
-          "reviewed_code_fingerprint": "23c0e87404af60801501d30f96a16eec312d44ffd8b6c1e058fd91e9580654a3",
+          "reason": "Reviewed actual CI repairs: typed setup serialization error, removal of unused worker sha2, precisely justified thiserror exception for included BackboneError, and generator-produced single-edge lock update. Current inventory reviewed; strict proof, native tests and native acceptance remain required.",
+          "reviewed_code_fingerprint": "48f1be686f71ac9272f8caaf0acd4e36d5fe8815c018b409ccd6811adb46210e",
           "spec_material_hash": "fa33ffad2f3233838711a441d2a4a75113c624d1137f76048e04ddcdd2c81d47"
         }
       ],
@@ -471,7 +480,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792169551Z"
+      "updated_at": "1792169897Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -479,7 +488,7 @@
         "Current claimed task and isolated work branch",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:7e4ea71a80e3dd0650027e291fb5f51a58d6b5d5b6d7f8f707025f20dcfe4cfb",
+      "artifact_hash": "sha256:410c463143c18881158f466c8715a5604a92e2ec97e4f7a67aa320171752aaa0",
       "checks": [
         {
           "name": "decoder-source-review",
@@ -531,7 +540,7 @@
         },
         {
           "name": "provider-transport",
-          "status": "failed"
+          "status": "passed"
         },
         {
           "name": "regenerated-lock-bound",
@@ -542,8 +551,16 @@
           "status": "passed"
         },
         {
+          "name": "release-tag-custody",
+          "status": "passed"
+        },
+        {
           "name": "reviewed-source-inventory",
           "status": "passed"
+        },
+        {
+          "name": "source-ci-first-head",
+          "status": "failed"
         },
         {
           "name": "tokenizer-boundary-metadata",
@@ -610,10 +627,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -732,6 +756,24 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "git fetch origin refs/tags/v0.116.0:refs/tags/v0.116.0 refs/tags/v0.117.0:refs/tags/v0.117.0; cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod-vega-infer",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Ordinary same-branch push succeeded at08a46639. Plain117 fifth report stops SNAPSHOT_UPLOAD_INCOMPLETE because only local v0.116.0 and v0.117.0 tags were missing. Fetched those existing published tags normally, no force or remote tag mutation; complete tag maps now match and117 peels to accepted396f. Real exact-head CI reports E0277 setup report JSON conversion and cargo-machete unused sha2/thiserror. Repaired explicit DecapodError serialization mapping, removed genuinely unused worker sha2, retained used path-included BackboneError thiserror with precise scanner exception. Worker lock regeneration changes only removed direct sha2 edge. Repaired-head execution remains pending."
+                ],
+                "proof_refs": [
+                  "provider-transport",
+                  "release-tag-custody",
+                  "source-ci-first-head"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -746,7 +788,8 @@
         "cargo update --offline --package decapod; cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod; bazel mod deps --lockfile_mode=update",
         "decapod init --refresh --proof; compare legacy backup template bodies and preserve backups outside workspace",
         "git diff --cached --check",
-        "git diff --cached --quiet f92f19d5 -- . :(exclude).decapod"
+        "git diff --cached --quiet f92f19d5 -- . :(exclude).decapod",
+        "git fetch origin refs/tags/v0.116.0:refs/tags/v0.116.0 refs/tags/v0.117.0:refs/tags/v0.117.0; cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod-vega-infer"
       ],
       "destination": "pull request",
       "evidence": [
@@ -756,6 +799,7 @@
         "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
         "Official published controller0.117.0 now governs; prior preparation-only candidate is no longer used. Accepted release changes only changelog and Cargo version/lock. Reviewed generated entrypoint117 fingerprints and Docker release pin; template bodies unchanged, machine projections updated only by supported CLI.",
         "Official117 first plain validate stopped before provider submission on recorded trajectory blockers. Initialization discovery still observes MODULE.bazel.lock 1052029 bytes above1048576 bound; tokenizer-only adapter removal does not alter default Bazel graph. Preserve failed observation and let ordinary controller establish next actionable report.",
+        "Ordinary same-branch push succeeded at08a46639. Plain117 fifth report stops SNAPSHOT_UPLOAD_INCOMPLETE because only local v0.116.0 and v0.117.0 tags were missing. Fetched those existing published tags normally, no force or remote tag mutation; complete tag maps now match and117 peels to accepted396f. Real exact-head CI reports E0277 setup report JSON conversion and cargo-machete unused sha2/thiserror. Repaired explicit DecapodError serialization mapping, removed genuinely unused worker sha2, retained used path-included BackboneError thiserror with precise scanner exception. Worker lock regeneration changes only removed direct sha2 edge. Repaired-head execution remains pending.",
         "Plain117 fourth validation reached GitTransport and exited128 before provider execution. Normal configured-helper ls-remote succeeds and feature remote branch is absent; no credential extraction or settings change. Static review confirmed committed binary16 mantissa already explicitly cast to u32; use u32::from for clarity, preserve normalization and expand signed zero/subnormal/normal/Inf/NaN assertions. No test execution or numerical parity claimed.",
         "Plain117 second validation stopped PROOF_DISCOVERY_BLOCKED on MODULE.bazel.lock1052029 bytes. Moved unchanged SafeTensors decoder/half conversion and fixtures to sole native owner; root retains typed engine/header/GELU tests and checked schema. Supported metadata regeneration now gives1037341 bytes below1048576. Root graph removes only safetensors0.7/hashbrown0.16/foldhash/allocator-api2; native retains pinned SafeTensors0.7 and immutable model/source pins. Cargo reports0 package additions/updates, but reselects existing socket2/getrandom/Windows dependency edges; retain generator output for actual validation rather than hand-edit locks.",
         "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance."

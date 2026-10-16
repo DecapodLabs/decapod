@@ -2668,7 +2668,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                     offline,
                     rollback,
                 })?;
-                println!("{}", serde_json::to_string_pretty(&report)?);
+                let report_json = serde_json::to_string_pretty(&report).map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "vega setup report serialization failed: {e}"
+                    ))
+                })?;
+                println!("{report_json}");
             }
             SetupCommand::Hook {
                 commit_msg,
