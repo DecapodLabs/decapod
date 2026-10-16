@@ -65,7 +65,7 @@ agent documentation. The source architecture is described in
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5450f82e5e8d7b3f751e248e6148ff0f9ef57e7e46234422fca9ae4f99242490`
+- Repository signal fingerprint: `c1716ca40849b245be0dd678c96b52864191ac76f04ff2d907dd60177ff71fad`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `bazel-bin/` (7 files), `bazel-laya-readiness-todo-01m51q-agent-laya-readiness-cicd_01m51q281cf5kqsf/` (8102 files), `bazel-out/` (11 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

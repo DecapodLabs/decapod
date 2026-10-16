@@ -343,6 +343,14 @@
       "proof_refs": [
         "28 targeted regressions passed; Cargo binaries and Bazel input/binary builds passed; independent read-only trust-boundary review"
       ]
+    },
+    {
+      "id": "ci-attested-activation-02",
+      "summary": "Repair exact clippy fixture warning; preserve failed preflight evidence and completed direct suites while final-head lint/CI rerun proceeds.",
+      "input_digest": "sha256:3e8704110adaeb8757ff2b8e934639c370611b90c1badef695d120e517064ce8",
+      "proof_refs": [
+        "GHA116853592483 and local clippy.log needless_range_loop; full library/integration/build checks passed"
+      ]
     }
   ],
   "intents": {
@@ -418,7 +426,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5bc031e14fae38f7ea57a7567bbf145f171e0ce0e9b7b24e8567de354f55d2b6",
+      "artifact_hash": "sha256:982bf768f3708f0d5f41412510675144d2c7c9b50091f78aa945ee225bb7deb6",
       "checks": [
         {
           "name": "bazel-binary-builds",
@@ -433,16 +441,28 @@
           "status": "passed"
         },
         {
+          "name": "clippy",
+          "status": "failed"
+        },
+        {
           "name": "direct-candidate-build",
           "status": "passed"
         },
         {
           "name": "exact-commit-ci",
-          "status": "unavailable"
+          "status": "partial"
+        },
+        {
+          "name": "full-library-suite",
+          "status": "passed"
         },
         {
           "name": "full-suite",
           "status": "partial"
+        },
+        {
+          "name": "integration-regressions",
+          "status": "passed"
         }
       ],
       "current_phase": "implementation",
@@ -473,10 +493,17 @@
             "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M51Q2M91D2YCVNK9BQA51P53": {
@@ -523,6 +550,25 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Full library1381 passed3ignored; integration Gatling49passed1ignored, sharding23passed, release_workflow22passed, source_ci_profile60passed. Clippy rejected needless_range_loop in test fixture at line122 locally and GHA116853592483; repaired to mutable iteration, rerun pending.",
+                  "Remote73f5d03b verified. Buildkite1882 and GHA38864280221 running, four auxiliary Buildkite workflows passed. No archive/log evidence substituted for validation."
+                ],
+                "proof_refs": [
+                  "full-library-suite",
+                  "integration-regressions",
+                  "clippy",
+                  "exact-commit-ci"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -533,8 +579,10 @@
       "evidence": [
         "28 targeted CI-attested tests passed, including real public1840 success and1870 failure; Bazel cargo_inputs_policy passed. Full library tests and Bazel builds ongoing.",
         "Bazel9.3.0 cargo_inputs_policy and //:decapod //:release_projection_drift builds passed; ordinary Cargo binaries built. Source is checkpointed for same-branch preflight; full tests and lint remain pending.",
+        "Full library1381 passed3ignored; integration Gatling49passed1ignored, sharding23passed, release_workflow22passed, source_ci_profile60passed. Clippy rejected needless_range_loop in test fixture at line122 locally and GHA116853592483; repaired to mutable iteration, rerun pending.",
         "Independent review found no blocking issues. Fresh78-entry discovery compared byte-for-byte against accepted d0f23e0: only additive Gatling selection and explicit Bazel fixture/config compile_data changed; no workflow, dependency, toolchain or executable-mode changes.",
-        "One-time maintainer bootstrap approved 2026-10-16 06:40, Sentinel_6ffcabbc81688191bf23c32a5352ea72, replying to explicit correction-and-activation/direct-check/exact-CI/publication exception. Candidate CLI used only for local preparation because released0.116 rejects new schema; no current-controller readiness claim."
+        "One-time maintainer bootstrap approved 2026-10-16 06:40, Sentinel_6ffcabbc81688191bf23c32a5352ea72, replying to explicit correction-and-activation/direct-check/exact-CI/publication exception. Candidate CLI used only for local preparation because released0.116 rejects new schema; no current-controller readiness claim.",
+        "Remote73f5d03b verified. Buildkite1882 and GHA38864280221 running, four auxiliary Buildkite workflows passed. No archive/log evidence substituted for validation."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",

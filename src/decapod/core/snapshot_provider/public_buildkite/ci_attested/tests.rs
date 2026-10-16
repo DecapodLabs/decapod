@@ -119,8 +119,8 @@ fn trigger_fixture() -> [Value; 3] {
     values[2]["records"][2]["step_key"] = Value::Null;
     values[2]["records"][2]["command"] = Value::Null;
     values[2]["records"][2]["name"] = json!(":github:");
-    for index in 0..2 {
-        values[1][index]["uploaded_by_step_uuid"] = json!(STEPS[2]);
+    for step in values[1].as_array_mut().unwrap().iter_mut().take(2) {
+        step["uploaded_by_step_uuid"] = json!(STEPS[2]);
     }
     values
 }
