@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9f9ad1a091eb3f69341a9f6ff619cecc43d6d53d",
-    "release": "v0.115.0",
+    "accepted_commit": "d0f23e01601db5b4ce206355723a10b430f58d72",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -322,59 +321,45 @@
     }
   },
   "change": {
-    "id": "change_01M50NTQNTWPQHGMGH2SA0RPAS",
-    "base_commit": "9f9ad1a091eb3f69341a9f6ff619cecc43d6d53d",
+    "id": "change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+    "base_commit": "d0f23e01601db5b4ce206355723a10b430f58d72",
     "target_base": "origin/master"
   },
   "claims": {
-    "ci-metadata-binding": {
-      "statement": "CI-attested success requires the complete independently required job set bound to exact source and intent",
-      "falsifier": "Wrong source, missing/skipped/failed/retried or unknown native jobs can establish readiness",
+    "ci-attested-finite-identities": {
+      "statement": "Explicit accepted Pipeline Trigger policy derives branch-bound concurrency identities and accepts exactly one successful keyless bootstrap while retaining exact required jobs and source/run bindings.",
+      "falsifier": "Any failed, missing, retried, extra or mismatched job set passes, or candidate policy authorizes itself.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/readiness_evidence/buildkite_ci/tests.rs",
-        "src/decapod/core/snapshot_provider/public_buildkite/ci_attested/tests.rs"
-      ]
-    },
-    "ci-policy-default": {
-      "statement": "CI-attested collection remains optional and cannot be enabled or changed by a candidate lacking the exact accepted policy",
-      "falsifier": "A candidate-only policy or changed policy passes acceptance, or default collection selects CI-attested mode",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/validation_runtime/snapshot/ci_attested.rs"
+        "28 targeted CI-attested regressions; real public1840 and1870 projected fixtures"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "ci-attested-bootstrap-checked",
-      "summary": "Owner-approved isolated CI-attested bootstrap; direct library/integration/lint/Bazel checks passed, policy disabled, no full controller readiness claim",
-      "input_digest": "sha256:d4dbf60223dc9323840c3c3593aebd0bf171c2fa76433e8ec7a96d1526fde8bc",
+      "id": "ci-attested-activation-01",
+      "summary": "Finite provider-attested identities and explicit activation with reviewed source mapping, real metadata regressions, and completion-proof coverage; approved bootstrap checks in progress, no current-controller readiness claim.",
+      "input_digest": "sha256:6d25326851592abc3fb0e8ddfffe7a870e810ab0968b6e6544760235946cd7fc",
       "proof_refs": [
-        "src/decapod/core/readiness_evidence/buildkite_ci/tests.rs",
-        "src/decapod/core/snapshot_provider/public_buildkite/ci_attested/tests.rs"
+        "28 targeted regressions passed; Cargo binaries and Bazel input/binary builds passed; independent read-only trust-boundary review"
       ]
     },
     {
-      "id": "ci-attested-docs-mirror",
-      "summary": "Repair generated configuration documentation drift identified by hosted CI; canonical policy and Rust source unchanged",
-      "input_digest": "sha256:4c9f0fb1f0533cc64c9416b1568b2a38b8b912c86430757921c55cc88354a620",
+      "id": "ci-attested-activation-02",
+      "summary": "Repair exact clippy fixture warning; preserve failed preflight evidence and completed direct suites while final-head lint/CI rerun proceeds.",
+      "input_digest": "sha256:3e8704110adaeb8757ff2b8e934639c370611b90c1badef695d120e517064ce8",
       "proof_refs": [
-        "docs/agent/config-schema.md",
-        "docs/agent/repository-readiness.md"
+        "GHA116853592483 and local clippy.log needless_range_loop; full library/integration/build checks passed"
       ]
     },
     {
-      "id": "ci-attested-clean-source-review",
-      "summary": "Rebind reviewed specs to clean source without generated Bazel symlinks; preserve original CI failure; no implementation changes",
-      "input_digest": "sha256:f4afca764aafa469ae06ab2b84b7540b615d41847fa574f7e955911514140abe",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md"
-      ]
+      "id": "activation-clean-review-20261016",
+      "summary": "Bind reviewed specs to clean source fingerprint without generated Bazel convenience links",
+      "input_digest": "sha256:a3fb2d8fe569d5df6478e8c4e85c17909136e73ec1454c3d3049e4bbdb479337"
     }
   ],
   "intents": {
-    "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS": {
+    "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -384,11 +369,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+      "id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Bootstrap CI-attested validation policy\n\nOwner-approved one-time direct-check and draft-publication bootstrap; isolate API policy and regression tests, disabled by default, preserve existing work, no S3 requests, human merge and release.",
-      "refined_intent": "Bootstrap CI-attested validation policy\n\nOwner-approved one-time direct-check and draft-publication bootstrap; isolate API policy and regression tests, disabled by default, preserve existing work, no S3 requests, human merge and release.",
+      "raw_intent": "Correct and activate CI-attested validation identities\n\nOne-time maintainer-authorized bootstrap: finite importer/concurrency identities, real metadata regressions, exact accepted policy activation, direct checks and CI then disclosed PR; no archive access or self-authorized readiness.",
+      "refined_intent": "Correct and activate CI-attested validation identities\n\nOne-time maintainer-authorized bootstrap: finite importer/concurrency identities, real metadata regressions, exact accepted policy activation, direct checks and CI then disclosed PR; no archive access or self-authorized readiness.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -401,190 +386,161 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Owner-approved isolated API validation policy bootstrap: direct checks and explicitly disclosed draft PR, human merge/release, disabled default, no S3 reads",
+      "intent": "Use the accepted CI executor terminal results for exact validation execution, with finite independently derived native job identities and explicitly trusted keyless Pipeline Trigger bootstrap. Activate only through maintainer merge after the approved one-time direct-check and exact-commit CI bootstrap; do not claim this candidate authorizes itself.",
       "phases": [],
       "proof_hooks": [
-        "Direct Rust library and integration regressions, fmt, clippy and Bazel inputs/build"
+        "Direct fmt, library/integration regression tests, clippy, Bazel inputs/build, exact-commit GitHub and Buildkite checks; captured real success/failure metadata tests; no artifact downloads."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed clean source without generated Bazel symlinks; optional accepted CI policy trust boundary documented",
-          "reviewed_code_fingerprint": "1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df",
-          "spec_material_hash": "c9f47c7eab8acc53b34c7355b5eba05dce7efc60be4f6b685b494f09973f007f"
+          "reason": "Reviewed current finite CI-attested identity contract, explicit configured-executor trust and accepted-target equality against implementation and regression fixtures. Generated Bazel convenience links removed before source fingerprinting; production contracts unchanged by the fixture lint repair.",
+          "reviewed_code_fingerprint": "aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833",
+          "spec_material_hash": "554518cafbd89726f62370608fe3ad8abae4e83943c41a777ab60be32b6624c1"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed clean source; no new command or service; optional schema is documented in canonical and generated readiness docs",
-          "reviewed_code_fingerprint": "1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df",
-          "spec_material_hash": "bf5735d95e83446d4311a941b7d511871056d9a9c3f94c8e80635255ef9b4b02"
+          "reason": "Reviewed current finite CI-attested identity contract, explicit configured-executor trust and accepted-target equality against implementation and regression fixtures. Generated Bazel convenience links removed before source fingerprinting; production contracts unchanged by the fixture lint repair.",
+          "reviewed_code_fingerprint": "aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833",
+          "spec_material_hash": "a7958cfc0ca88294a6b9f6c7f0958249baf419f44d1d08421ff9865765e5a86f"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed clean source; credentials/access unchanged, explicit accepted-policy CI executor trust documented",
-          "reviewed_code_fingerprint": "1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df",
-          "spec_material_hash": "546e1354723c4d9853921f233ddbed7eb46c5da576aca356d9da8ed48dff1bb8"
+          "reason": "Reviewed current finite CI-attested identity contract, explicit configured-executor trust and accepted-target equality against implementation and regression fixtures. Generated Bazel convenience links removed before source fingerprinting; production contracts unchanged by the fixture lint repair.",
+          "reviewed_code_fingerprint": "aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833",
+          "spec_material_hash": "a89fe8abf2f1fdcf3952cec88bee889900525ed4bc0dcc984d27b7c2d15c7094"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Bootstrap optional CI-attested validation",
+      "stop_conditions": [
+        "Do not publish unless direct checks and exact-commit required CI succeed; no tool-denied archive reads, merge, or release."
+      ],
+      "title": "Correct and activate provider-attested validation",
       "todo_ids": [
-        "cicd_01m50ns7bafppa7k"
+        "cicd_01m51q281cf5kqsf"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792100442Z"
+      "updated_at": "1792134564Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Owner approved 20:58 UTC one-time direct-check and draft-publication exception to AGENTS rule 7; no full released-controller readiness claim; no S3 requests"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:33e01fb824379ffb6471b3bca75d09d14be7395c077c1fe91e639e398c11e606",
+      "artifact_hash": "sha256:33bb0b38a73f34e41542e26f608b83d2053dd258e83e5965f468109c6d8e71f4",
       "checks": [
         {
           "name": "bazel-binary-builds",
           "status": "passed"
         },
         {
-          "name": "bazel-cargo-input-policy",
+          "name": "bazel-inputs",
           "status": "passed"
         },
         {
-          "name": "clippy-all-targets-all-features",
+          "name": "ci-attested-regressions",
           "status": "passed"
         },
         {
-          "name": "docs-generation",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "format",
+          "name": "direct-candidate-build",
           "status": "passed"
         },
         {
-          "name": "format-final",
+          "name": "exact-commit-ci",
+          "status": "partial"
+        },
+        {
+          "name": "full-library-suite",
           "status": "passed"
         },
         {
-          "name": "full-lib-first-run",
-          "status": "failed"
+          "name": "full-suite",
+          "status": "partial"
         },
         {
-          "name": "full-lib-rustup-rerun",
+          "name": "integration-regressions",
           "status": "passed"
-        },
-        {
-          "name": "hosted-docs-sync-first-run",
-          "status": "failed"
-        },
-        {
-          "name": "hosted-governance-first-run",
-          "status": "failed"
-        },
-        {
-          "name": "integration-76-tests",
-          "status": "passed"
-        },
-        {
-          "name": "metadata-and-evidence-static-review",
-          "status": "passed"
-        },
-        {
-          "name": "new-policy-regressions-first-run",
-          "status": "passed"
-        },
-        {
-          "name": "owner-bootstrap-exception",
-          "status": "passed"
-        },
-        {
-          "name": "private-checkout-reproduction",
-          "status": "failed"
         }
       ],
-      "completion_claim": "Direct bootstrap checks passed; no full released-controller readiness verdict, no hosted CI or model proof claimed",
-      "current_phase": "intent",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
+            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
+            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
+            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
+            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M50NTQPDT9Z8WSWWAK4PBVPX": {
+          "branch_01M51Q2M91D2YCVNK9BQA51P53": {
             "evidence_only": true,
-            "id": "branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
-            "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+            "id": "branch_01M51Q2M91D2YCVNK9BQA51P53",
+            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "AGENTS.md",
-                  "assets/tools/source_ci_profile.rs"
+                  "src/decapod/core/snapshot_provider/public_buildkite/ci_attested.rs",
+                  "src/decapod/core/validation_runtime/snapshot/ci_attested.rs",
+                  ".decapod/config.toml",
+                  "tests/gatling.rs",
+                  "One-time maintainer bootstrap approved 2026-10-16 06:40, Sentinel_6ffcabbc81688191bf23c32a5352ea72, replying to explicit correction-and-activation/direct-check/exact-CI/publication exception. Candidate CLI used only for local preparation because released0.116 rejects new schema; no current-controller readiness claim.",
+                  "28 targeted CI-attested tests passed, including real public1840 success and1870 failure; Bazel cargo_inputs_policy passed. Full library tests and Bazel builds ongoing.",
+                  "Independent review found no blocking issues. Fresh78-entry discovery compared byte-for-byte against accepted d0f23e0: only additive Gatling selection and explicit Bazel fixture/config compile_data changed; no workflow, dependency, toolchain or executable-mode changes."
                 ],
                 "proof_refs": [
-                  "owner-bootstrap-exception"
+                  "ci-attested-regressions",
+                  "bazel-inputs",
+                  "direct-candidate-build",
+                  "full-suite",
+                  "exact-commit-ci"
                 ],
                 "scope": [
                   "root"
@@ -596,14 +552,9 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "/workspace/shared/ci-attested-bootstrap: original library failure retained; rustup installed from official checksum-verified vendor to repair missing test prerequisite; full suite rerun pending"
+                  "Bazel9.3.0 cargo_inputs_policy and //:decapod //:release_projection_drift builds passed; ordinary Cargo binaries built. Source is checkpointed for same-branch preflight; full tests and lint remain pending."
                 ],
                 "proof_refs": [
-                  "format",
-                  "new-policy-regressions-first-run",
-                  "full-lib-first-run",
-                  "integration-76-tests",
-                  "bazel-cargo-input-policy",
                   "bazel-binary-builds"
                 ],
                 "scope": [
@@ -616,11 +567,14 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "23 new tests passed; 76 integration tests passed; Bazel input policy and two binary targets passed; full library rerun uses installed official rustup toolchain"
+                  "Full library1381 passed3ignored; integration Gatling49passed1ignored, sharding23passed, release_workflow22passed, source_ci_profile60passed. Clippy rejected needless_range_loop in test fixture at line122 locally and GHA116853592483; repaired to mutable iteration, rerun pending.",
+                  "Remote73f5d03b verified. Buildkite1882 and GHA38864280221 running, four auxiliary Buildkite workflows passed. No archive/log evidence substituted for validation."
                 ],
                 "proof_refs": [
-                  "clippy-all-targets-all-features",
-                  "metadata-and-evidence-static-review"
+                  "full-library-suite",
+                  "integration-regressions",
+                  "clippy",
+                  "exact-commit-ci"
                 ],
                 "scope": [
                   "root"
@@ -632,49 +586,15 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "cargo test --locked --lib: 1366 passed, 3 ignored; 76 integration tests passed; 23 new regressions included; clippy all targets/features passed; pinned Bazel cargo-inputs and both binary builds passed"
+                  "Full all-target all-feature clippy now passed. Exact-head CI exposed stale spec reviews because local Bazel convenience symlinks entered repository fingerprint; removed generated links without deleting build targets, re-reviewed current source and refreshed projections. CI rerun remains required."
                 ],
                 "proof_refs": [
-                  "full-lib-rustup-rerun",
-                  "format-final"
+                  "clippy"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "docs/agent/config-schema.md",
-                  "Buildkite1822 docs-sync failed; source-built docs build reproduced missing generated config-schema mirror and generated exact canonical30-line update"
-                ],
-                "proof_refs": [
-                  "hosted-docs-sync-first-run",
-                  "docs-generation"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "Exact private CI checkout exposed stale reviews: local repo-signal fingerprint followed generated Bazel symlinks. Removed only four generated symlinks, retained output cache and logs, re-reviewed clean source and refreshed projections."
-                ],
-                "proof_refs": [
-                  "hosted-governance-first-run",
-                  "private-checkout-reproduction"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
                 "validation_findings": []
               }
             ]
@@ -684,19 +604,21 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/workspace/shared/ci-attested-bootstrap: original library failure retained; rustup installed from official checksum-verified vendor to repair missing test prerequisite; full suite rerun pending",
-        "23 new tests passed; 76 integration tests passed; Bazel input policy and two binary targets passed; full library rerun uses installed official rustup toolchain",
-        "Buildkite1822 docs-sync failed; source-built docs build reproduced missing generated config-schema mirror and generated exact canonical30-line update",
-        "Exact private CI checkout exposed stale reviews: local repo-signal fingerprint followed generated Bazel symlinks. Removed only four generated symlinks, retained output cache and logs, re-reviewed clean source and refreshed projections.",
-        "cargo test --locked --lib: 1366 passed, 3 ignored; 76 integration tests passed; 23 new regressions included; clippy all targets/features passed; pinned Bazel cargo-inputs and both binary builds passed"
+        "28 targeted CI-attested tests passed, including real public1840 success and1870 failure; Bazel cargo_inputs_policy passed. Full library tests and Bazel builds ongoing.",
+        "Bazel9.3.0 cargo_inputs_policy and //:decapod //:release_projection_drift builds passed; ordinary Cargo binaries built. Source is checkpointed for same-branch preflight; full tests and lint remain pending.",
+        "Full all-target all-feature clippy now passed. Exact-head CI exposed stale spec reviews because local Bazel convenience symlinks entered repository fingerprint; removed generated links without deleting build targets, re-reviewed current source and refreshed projections. CI rerun remains required.",
+        "Full library1381 passed3ignored; integration Gatling49passed1ignored, sharding23passed, release_workflow22passed, source_ci_profile60passed. Clippy rejected needless_range_loop in test fixture at line122 locally and GHA116853592483; repaired to mutable iteration, rerun pending.",
+        "Independent review found no blocking issues. Fresh78-entry discovery compared byte-for-byte against accepted d0f23e0: only additive Gatling selection and explicit Bazel fixture/config compile_data changed; no workflow, dependency, toolchain or executable-mode changes.",
+        "One-time maintainer bootstrap approved 2026-10-16 06:40, Sentinel_6ffcabbc81688191bf23c32a5352ea72, replying to explicit correction-and-activation/direct-check/exact-CI/publication exception. Candidate CLI used only for local preparation because released0.116 rejects new schema; no current-controller readiness claim.",
+        "Remote73f5d03b verified. Buildkite1882 and GHA38864280221 running, four auxiliary Buildkite workflows passed. No archive/log evidence substituted for validation."
       ],
-      "inspected_files": [
-        "AGENTS.md",
-        "assets/tools/source_ci_profile.rs"
-      ],
-      "intent_id": "intent:change_01M50NTQNTWPQHGMGH2SA0RPAS",
+      "inspected_files": [],
+      "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
       "modified_files": [
-        "docs/agent/config-schema.md"
+        ".decapod/config.toml",
+        "src/decapod/core/snapshot_provider/public_buildkite/ci_attested.rs",
+        "src/decapod/core/validation_runtime/snapshot/ci_attested.rs",
+        "tests/gatling.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -704,10 +626,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M50NTQPDT9Z8WSWWAK4PBVPX",
+      "run_id": "branch_01M51Q2M91D2YCVNK9BQA51P53",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m50ns7bafppa7k",
+      "task_id": "cicd_01m51q281cf5kqsf",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -63,7 +63,7 @@ commands = []
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:0fca22254bf27cbc7aab1c502d8b04efdc414fbeae06684bf2c270548764a2d6"
+reviewed_sources_digest = "sha256:0f2777204bd7b8dc360ed5d30700af073de9659f323f011bc184776703d7db8c"
 
 [custody]
 isolation = "container"
@@ -76,3 +76,94 @@ declared_sources = []
 
 [decision]
 provider = "none"
+
+# Provider-attested acceptance trusts this configured Buildkite executor.
+# It does not independently prove the keyless importer's plugin implementation
+# or that remote pipeline settings remained unchanged. Candidate changes cannot
+# authorize their own policy; activation requires maintainer acceptance.
+[proof.ci_attested]
+schema = "decapod.ci-attested-validation.v1"
+
+[[proof.ci_attested.workflows]]
+path = ".github/workflows/ci.yml"
+required_step_keys = ["gha-b803fcb7f17ed923-release-metadata", "gha-b803fcb7f17ed923-commit-lint", "gha-b803fcb7f17ed923-governance-artifacts", "gha-b803fcb7f17ed923-material-specs", "gha-b803fcb7f17ed923-detect-migration-script-changes", "gha-b803fcb7f17ed923-supabase-consumer", "gha-b803fcb7f17ed923-workspace-lifecycle-docker", "gha-b803fcb7f17ed923-fmt", "gha-b803fcb7f17ed923-clippy", "gha-b803fcb7f17ed923-deps-lint", "gha-b803fcb7f17ed923-health", "gha-b803fcb7f17ed923-setup", "gha-b803fcb7f17ed923-integration-prepare", "gha-b803fcb7f17ed923-integration-status", "gha-b803fcb7f17ed923-test-rpc-suite", "gha-b803fcb7f17ed923-contracts", "gha-b803fcb7f17ed923-migration-script-tests", "gha-b803fcb7f17ed923-musl-publication-fa54ecf7f403", "gha-b803fcb7f17ed923-musl-publication-0b011f11a8c5", "gha-b803fcb7f17ed923-state-commit-golden-vectors-dc1326f3e68b", "gha-b803fcb7f17ed923-state-commit-golden-vectors-2554a1edaa14", "gha-b803fcb7f17ed923-test-d21bf6657223", "gha-b803fcb7f17ed923-test-16bb5a2d0acd", "gha-b803fcb7f17ed923-test-f889c74497b0", "gha-b803fcb7f17ed923-test-integration-83e91786eb4a", "gha-b803fcb7f17ed923-test-integration-19ace69fb5e6", "gha-b803fcb7f17ed923-test-integration-d9fef7a64213", "gha-b803fcb7f17ed923-test-integration-c94748220762", "gha-b803fcb7f17ed923-test-integration-f5ffb834e199", "gha-b803fcb7f17ed923-test-integration-03574316c482", "gha-b803fcb7f17ed923-test-integration-33dc6a8917d1", "gha-b803fcb7f17ed923-test-integration-204cd75fa507", "gha-b803fcb7f17ed923-test-integration-1c14ff273aaa", "gha-b803fcb7f17ed923-propodus-live", "gha-b803fcb7f17ed923-test-master", "gha-b803fcb7f17ed923-release-build"]
+auxiliary_step_keys = []
+pipeline_trigger = { contract = "buildkite-gha-0.102.7", workflow_name = "CI", concurrency_group = "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}" }
+checks = [
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "release-metadata", matrix = {  }, profile = "decapod.pr-readiness.v1/release-metadata" }, step_key = "gha-b803fcb7f17ed923-release-metadata" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "commit-lint", matrix = {  }, profile = "decapod.pr-readiness.v1/commit-lint" }, step_key = "gha-b803fcb7f17ed923-commit-lint" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "governance-artifacts", matrix = {  }, profile = "decapod.pr-readiness.v1/governance-artifacts" }, step_key = "gha-b803fcb7f17ed923-governance-artifacts" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "material-specs", matrix = {  }, profile = "decapod.pr-readiness.v1/material-specs" }, step_key = "gha-b803fcb7f17ed923-material-specs" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "detect-migration-script-changes", matrix = {  }, profile = "decapod.pr-readiness.v1/migration-detection" }, step_key = "gha-b803fcb7f17ed923-detect-migration-script-changes" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "supabase-consumer", matrix = {  }, profile = "decapod.pr-readiness.v1/supabase-consumer" }, step_key = "gha-b803fcb7f17ed923-supabase-consumer" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "workspace-lifecycle-docker", matrix = {  }, profile = "decapod.pr-readiness.v1/workspace-lifecycle-docker" }, step_key = "gha-b803fcb7f17ed923-workspace-lifecycle-docker" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "fmt", matrix = {  }, profile = "decapod.pr-readiness.v1/fmt" }, step_key = "gha-b803fcb7f17ed923-fmt" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "clippy", matrix = {  }, profile = "decapod.pr-readiness.v1/clippy" }, step_key = "gha-b803fcb7f17ed923-clippy" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "deps-lint", matrix = {  }, profile = "decapod.pr-readiness.v1/dependencies-machete" }, step_key = "gha-b803fcb7f17ed923-deps-lint" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "deps-lint", matrix = {  }, profile = "decapod.pr-readiness.v1/dependencies-deny" }, step_key = "gha-b803fcb7f17ed923-deps-lint" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "health", matrix = {  }, profile = "decapod.pr-readiness.v1/health" }, step_key = "gha-b803fcb7f17ed923-health" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "setup", matrix = {  }, profile = "decapod.pr-readiness.v1/setup-bazel" }, step_key = "gha-b803fcb7f17ed923-setup" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "integration-prepare", matrix = {  }, profile = "decapod.pr-readiness.v1/integration-prepare" }, step_key = "gha-b803fcb7f17ed923-integration-prepare" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "integration-status", matrix = {  }, profile = "decapod.pr-readiness.v1/integration-status" }, step_key = "gha-b803fcb7f17ed923-integration-status" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-rpc-suite", matrix = {  }, profile = "decapod.pr-readiness.v1/rpc-suite" }, step_key = "gha-b803fcb7f17ed923-test-rpc-suite" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-rpc-suite", matrix = {  }, profile = "decapod.pr-readiness.v1/chaos-replay" }, step_key = "gha-b803fcb7f17ed923-test-rpc-suite" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-rpc-suite", matrix = {  }, profile = "decapod.pr-readiness.v1/daemonless-lifecycle" }, step_key = "gha-b803fcb7f17ed923-test-rpc-suite" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "contracts", matrix = {  }, profile = "decapod.pr-readiness.v1/contracts" }, step_key = "gha-b803fcb7f17ed923-contracts" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "contracts", matrix = {  }, profile = "decapod.pr-readiness.v1/cli-contracts" }, step_key = "gha-b803fcb7f17ed923-contracts" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "migration-script-tests", matrix = {  }, profile = "decapod.pr-readiness.v1/migration-tests" }, step_key = "gha-b803fcb7f17ed923-migration-script-tests" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "musl-publication", matrix = { target = "x86_64-unknown-linux-musl", execution = "native" }, profile = "decapod.pr-readiness.v1/musl-build-x86_64" }, step_key = "gha-b803fcb7f17ed923-musl-publication-fa54ecf7f403" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "musl-publication", matrix = { target = "x86_64-unknown-linux-musl", execution = "native" }, profile = "decapod.pr-readiness.v1/musl-test-x86_64" }, step_key = "gha-b803fcb7f17ed923-musl-publication-fa54ecf7f403" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "musl-publication", matrix = { target = "aarch64-unknown-linux-musl", execution = "QEMU user-mode" }, profile = "decapod.pr-readiness.v1/musl-build-aarch64" }, step_key = "gha-b803fcb7f17ed923-musl-publication-0b011f11a8c5" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "musl-publication", matrix = { target = "aarch64-unknown-linux-musl", execution = "QEMU user-mode" }, profile = "decapod.pr-readiness.v1/musl-test-aarch64" }, step_key = "gha-b803fcb7f17ed923-musl-publication-0b011f11a8c5" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "state-commit-golden-vectors", matrix = { os = "ubuntu-latest" }, profile = "decapod.pr-readiness.v1/golden-vectors-linux" }, step_key = "gha-b803fcb7f17ed923-state-commit-golden-vectors-dc1326f3e68b" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "state-commit-golden-vectors", matrix = { os = "macos-latest" }, profile = "decapod.pr-readiness.v1/golden-vectors-macos" }, step_key = "gha-b803fcb7f17ed923-state-commit-golden-vectors-2554a1edaa14" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test", matrix = { target = "core" }, profile = "decapod.pr-readiness.v1/selective-core" }, step_key = "gha-b803fcb7f17ed923-test-d21bf6657223" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test", matrix = { target = "plugins" }, profile = "decapod.pr-readiness.v1/selective-plugins" }, step_key = "gha-b803fcb7f17ed923-test-16bb5a2d0acd" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test", matrix = { target = "cli" }, profile = "decapod.pr-readiness.v1/selective-cli" }, step_key = "gha-b803fcb7f17ed923-test-f889c74497b0" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-integration", matrix = { shard = "gatling-0" }, profile = "decapod.pr-readiness.v1/integration-gatling-0" }, step_key = "gha-b803fcb7f17ed923-test-integration-83e91786eb4a" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-integration", matrix = { shard = "gatling-1" }, profile = "decapod.pr-readiness.v1/integration-gatling-1" }, step_key = "gha-b803fcb7f17ed923-test-integration-19ace69fb5e6" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-integration", matrix = { shard = "gatling-2" }, profile = "decapod.pr-readiness.v1/integration-gatling-2" }, step_key = "gha-b803fcb7f17ed923-test-integration-d9fef7a64213" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-integration", matrix = { shard = "gatling-3" }, profile = "decapod.pr-readiness.v1/integration-gatling-3" }, step_key = "gha-b803fcb7f17ed923-test-integration-c94748220762" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-integration", matrix = { shard = "release-policies" }, profile = "decapod.pr-readiness.v1/integration-release-policies" }, step_key = "gha-b803fcb7f17ed923-test-integration-f5ffb834e199" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-integration", matrix = { shard = "contract_conformance" }, profile = "decapod.pr-readiness.v1/integration-contract_conformance" }, step_key = "gha-b803fcb7f17ed923-test-integration-03574316c482" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-integration", matrix = { shard = "constitution_claims" }, profile = "decapod.pr-readiness.v1/integration-constitution_claims" }, step_key = "gha-b803fcb7f17ed923-test-integration-33dc6a8917d1" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-integration", matrix = { shard = "spec_conformance" }, profile = "decapod.pr-readiness.v1/integration-spec_conformance" }, step_key = "gha-b803fcb7f17ed923-test-integration-204cd75fa507" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "test-integration", matrix = { shard = "substrate_integrity" }, profile = "decapod.pr-readiness.v1/integration-substrate_integrity" }, step_key = "gha-b803fcb7f17ed923-test-integration-1c14ff273aaa" },
+  { check = { provider = "buildkite", workflow = ".github/workflows/ci.yml", job = "candidate-build", matrix = {  }, profile = "decapod.pr-readiness.v1/fresh-candidate-build" }, step_key = "gha-b803fcb7f17ed923-setup" },
+]
+
+[[proof.ci_attested.workflows]]
+path = ".github/workflows/constitution-sync.yml"
+required_step_keys = ["gha-87512bb5e4b73406-validate-constitution"]
+auxiliary_step_keys = []
+pipeline_trigger = { contract = "buildkite-gha-0.102.7", workflow_name = "Constitution Sync and Validation" }
+checks = [
+  { check = { provider = "buildkite", workflow = ".github/workflows/constitution-sync.yml", job = "validate-constitution", matrix = {  }, profile = "decapod.pr-readiness.v1/constitution-schema" }, step_key = "gha-87512bb5e4b73406-validate-constitution" },
+]
+
+[[proof.ci_attested.workflows]]
+path = ".github/workflows/decapod-validate.yml"
+required_step_keys = ["gha-379144e3c3cb2dfa-validate"]
+auxiliary_step_keys = []
+pipeline_trigger = { contract = "buildkite-gha-0.102.7", workflow_name = "Decapod Validate" }
+checks = [
+  { check = { provider = "buildkite", workflow = ".github/workflows/decapod-validate.yml", job = "validate", matrix = {  }, profile = "decapod.pr-readiness.v1/standalone-validation" }, step_key = "gha-379144e3c3cb2dfa-validate" },
+]
+
+[[proof.ci_attested.workflows]]
+path = ".github/workflows/docs.yml"
+required_step_keys = ["gha-9cf2000c53760d83-build", "gha-9cf2000c53760d83-deploy"]
+auxiliary_step_keys = []
+pipeline_trigger = { contract = "buildkite-gha-0.102.7", workflow_name = "Deploy Docs" }
+checks = [
+  { check = { provider = "buildkite", workflow = ".github/workflows/docs.yml", job = "build", matrix = {  }, profile = "decapod.pr-readiness.v1/docs-build" }, step_key = "gha-9cf2000c53760d83-build" },
+]
+
+[[proof.ci_attested.workflows]]
+path = ".github/workflows/docs_sync.yml"
+required_step_keys = ["gha-cc87b5ff8dab6c39-sync-docs"]
+auxiliary_step_keys = []
+pipeline_trigger = { contract = "buildkite-gha-0.102.7", workflow_name = "Documentation Sync" }
+checks = [
+  { check = { provider = "buildkite", workflow = ".github/workflows/docs_sync.yml", job = "sync-docs", matrix = {  }, profile = "decapod.pr-readiness.v1/docs-drift" }, step_key = "gha-cc87b5ff8dab6c39-sync-docs" },
+]

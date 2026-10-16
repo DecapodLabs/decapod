@@ -1,0 +1,403 @@
+[
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "release-metadata",
+    "matrix": {},
+    "checks": [
+      "release-metadata"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-release-metadata"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "commit-lint",
+    "matrix": {},
+    "checks": [
+      "commit-lint"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-commit-lint"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "governance-artifacts",
+    "matrix": {},
+    "checks": [
+      "governance-artifacts"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-governance-artifacts"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "material-specs",
+    "matrix": {},
+    "checks": [
+      "material-specs"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-material-specs"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "detect-migration-script-changes",
+    "matrix": {},
+    "checks": [
+      "migration-detection"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-detect-migration-script-changes"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "supabase-consumer",
+    "matrix": {},
+    "checks": [
+      "supabase-consumer"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-supabase-consumer"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "workspace-lifecycle-docker",
+    "matrix": {},
+    "checks": [
+      "workspace-lifecycle-docker"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-workspace-lifecycle-docker"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "fmt",
+    "matrix": {},
+    "checks": [
+      "fmt"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-fmt"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "clippy",
+    "matrix": {},
+    "checks": [
+      "clippy"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-clippy"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "deps-lint",
+    "matrix": {},
+    "checks": [
+      "dependencies-machete",
+      "dependencies-deny"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-deps-lint"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "health",
+    "matrix": {},
+    "checks": [
+      "health"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-health"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "setup",
+    "matrix": {},
+    "checks": [
+      "setup-bazel"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-setup"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "integration-prepare",
+    "matrix": {},
+    "checks": [
+      "integration-prepare"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-integration-prepare"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "integration-status",
+    "matrix": {},
+    "checks": [
+      "integration-status"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-integration-status"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-rpc-suite",
+    "matrix": {},
+    "checks": [
+      "rpc-suite",
+      "chaos-replay",
+      "daemonless-lifecycle"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-rpc-suite"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "contracts",
+    "matrix": {},
+    "checks": [
+      "contracts",
+      "cli-contracts"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-contracts"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "migration-script-tests",
+    "matrix": {},
+    "checks": [
+      "migration-tests"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-migration-script-tests"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "musl-publication",
+    "matrix": {
+      "target": "x86_64-unknown-linux-musl",
+      "execution": "native"
+    },
+    "checks": [
+      "musl-build-x86_64",
+      "musl-test-x86_64"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-musl-publication-fa54ecf7f403"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "musl-publication",
+    "matrix": {
+      "target": "aarch64-unknown-linux-musl",
+      "execution": "QEMU user-mode"
+    },
+    "checks": [
+      "musl-build-aarch64",
+      "musl-test-aarch64"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-musl-publication-0b011f11a8c5"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "state-commit-golden-vectors",
+    "matrix": {
+      "os": "ubuntu-latest"
+    },
+    "checks": [
+      "golden-vectors-linux"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-state-commit-golden-vectors-dc1326f3e68b"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "state-commit-golden-vectors",
+    "matrix": {
+      "os": "macos-latest"
+    },
+    "checks": [
+      "golden-vectors-macos"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-state-commit-golden-vectors-2554a1edaa14"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test",
+    "matrix": {
+      "target": "core"
+    },
+    "checks": [
+      "selective-core"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-d21bf6657223"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test",
+    "matrix": {
+      "target": "plugins"
+    },
+    "checks": [
+      "selective-plugins"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-16bb5a2d0acd"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test",
+    "matrix": {
+      "target": "cli"
+    },
+    "checks": [
+      "selective-cli"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-f889c74497b0"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-integration",
+    "matrix": {
+      "shard": "gatling-0"
+    },
+    "checks": [
+      "integration-gatling-0"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-integration-83e91786eb4a"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-integration",
+    "matrix": {
+      "shard": "gatling-1"
+    },
+    "checks": [
+      "integration-gatling-1"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-integration-19ace69fb5e6"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-integration",
+    "matrix": {
+      "shard": "gatling-2"
+    },
+    "checks": [
+      "integration-gatling-2"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-integration-d9fef7a64213"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-integration",
+    "matrix": {
+      "shard": "gatling-3"
+    },
+    "checks": [
+      "integration-gatling-3"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-integration-c94748220762"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-integration",
+    "matrix": {
+      "shard": "release-policies"
+    },
+    "checks": [
+      "integration-release-policies"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-integration-f5ffb834e199"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-integration",
+    "matrix": {
+      "shard": "contract_conformance"
+    },
+    "checks": [
+      "integration-contract_conformance"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-integration-03574316c482"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-integration",
+    "matrix": {
+      "shard": "constitution_claims"
+    },
+    "checks": [
+      "integration-constitution_claims"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-integration-33dc6a8917d1"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-integration",
+    "matrix": {
+      "shard": "spec_conformance"
+    },
+    "checks": [
+      "integration-spec_conformance"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-integration-204cd75fa507"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-integration",
+    "matrix": {
+      "shard": "substrate_integrity"
+    },
+    "checks": [
+      "integration-substrate_integrity"
+    ],
+    "step_key": "gha-b803fcb7f17ed923-test-integration-1c14ff273aaa"
+  },
+  {
+    "workflow": ".github/workflows/constitution-sync.yml",
+    "job": "validate-constitution",
+    "matrix": {},
+    "checks": [
+      "constitution-schema"
+    ],
+    "step_key": "gha-87512bb5e4b73406-validate-constitution"
+  },
+  {
+    "workflow": ".github/workflows/decapod-validate.yml",
+    "job": "validate",
+    "matrix": {},
+    "checks": [
+      "standalone-validation"
+    ],
+    "step_key": "gha-379144e3c3cb2dfa-validate"
+  },
+  {
+    "workflow": ".github/workflows/docs.yml",
+    "job": "build",
+    "matrix": {},
+    "checks": [
+      "docs-build"
+    ],
+    "step_key": "gha-9cf2000c53760d83-build"
+  },
+  {
+    "workflow": ".github/workflows/docs_sync.yml",
+    "job": "sync-docs",
+    "matrix": {},
+    "checks": [
+      "docs-drift"
+    ],
+    "step_key": "gha-cc87b5ff8dab6c39-sync-docs"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "propodus-live",
+    "matrix": {},
+    "checks": [],
+    "step_key": "gha-b803fcb7f17ed923-propodus-live"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "test-master",
+    "matrix": {},
+    "checks": [],
+    "step_key": "gha-b803fcb7f17ed923-test-master"
+  },
+  {
+    "workflow": ".github/workflows/ci.yml",
+    "job": "release-build",
+    "matrix": {},
+    "checks": [],
+    "step_key": "gha-b803fcb7f17ed923-release-build"
+  },
+  {
+    "workflow": ".github/workflows/docs.yml",
+    "job": "deploy",
+    "matrix": {},
+    "checks": [],
+    "step_key": "gha-9cf2000c53760d83-deploy"
+  }
+]

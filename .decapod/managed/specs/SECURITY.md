@@ -8,6 +8,20 @@ proof required for governed publication. The human supplies intent and decisions
 the agent interprets and performs the work. Decapod checks the configured
 invariants and records their outcomes.
 
+### Provider-attested validation trust
+
+The accepted CI-attested policy trusts the configured Buildkite executor and its
+HTTPS metadata for the required validation results. Pipeline Trigger mode permits
+exactly one keyless importer on the independently bound pipeline UUID. Its label
+and count are consistency checks; the provider API does not prove plugin identity,
+plugin version, or unchanged remote pipeline settings. Policy acceptance explicitly
+includes that executor trust. The actual provider job UUID is retained under a
+reserved bootstrap identity; no synthetic artifact or toolchain digest is claimed.
+Branch-dependent concurrency keys are independently derived from reviewed source
+and expected event context. Additional unkeyed jobs, unknown keyed jobs, retries,
+failed checks and source/run mismatches cannot be accepted as green. A candidate
+cannot change the policy used to authorize its own publication.
+
 These controls do not sandbox every command an agent or harness can run. They
 cannot establish correctness beyond the required proof or protect state from a
 malicious process with the same operating-system authority. A repository owner,
@@ -303,8 +317,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (193 files), `tests/` (193 files)
+- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
