@@ -8,7 +8,6 @@
 <p align="center">
   Work in Cursor, Claude Code, Codex, Antigravity, Grok, or your preferred coding agent.
   Decapod governs the work while you keep using the same tools.
-  Decapod can use <a href="https://docs.typesafe.ai/introduction">Jev</a> for System 1 input.
 </p>
 
 <p align="center">
@@ -44,7 +43,7 @@ cargo binstall decapod && decapod init
 3. **Run agents in parallel.** Task claims make ownership explicit. Overlap checks and isolated workspaces help keep concurrent changes separate.
 4. **Continue the same PR in another tool.** The next agent can use the recorded plan, decisions and work history to pick up where work stopped.
 5. **Apply your project’s rules.** Agents consult engineering guidance as they plan and build. Conflicts that need your decision stay visible.
-6. **Know what has been checked.** Built-in validation ties results to the current change and the project's required checks. Missing required proof keeps the work unverified; Jev can add advisory input.
+6. **Know what has been checked.** Built-in validation ties results to the current change and the project's required checks. Missing required proof keeps the work unverified.
 
 ## How it works
 

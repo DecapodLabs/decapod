@@ -346,7 +346,7 @@ These files are the project-local contract for humans and agents.
 - `.decapod/governance.json`: the sole tracked governance document, with a compact baseline, current plan and trajectory, validation evidence, active claims, explicit unresolved obligations, and cumulative current-PR checkpoints.
 - `decapod workspace ensure` seeds the fresh work-branch governance template from the claimed task; repeated calls preserve current work. `decapod govern artifacts begin-pr --id <change> --base-branch <base>` is the explicit recovery boundary. Accepted claims remain recoverable in Git; template generation never supplies successful validation.
 - `decapod govern artifacts checkpoint --id <checkpoint> --summary "..." --proof-ref <evidence>` records proof after staging authored work; stage the governance document next and commit both. Publication verifies the complete authored commit range.
-- Optional Jev observations remain a logical section of the same governance document.
+- Historical observation sections remain readable as archived evidence; they do not authorize current work.
 - `.decapod/managed/artifacts/inventory/`: deterministic release inventory.
 - `.decapod/managed/artifacts/diagnostics/`: opt-in diagnostics artifacts.
 - `.decapod/workspaces/`: isolated todo-scoped git worktrees.

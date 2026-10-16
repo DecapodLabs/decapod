@@ -1,5 +1,4 @@
 use decapod::core::assurance::{AssuranceEngine, AssuranceEvaluateInput, AssurancePhase};
-use decapod::core::decision_provider::{DecisionObservationResult, NoObservationReason};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -211,7 +210,7 @@ fn protected_branch_or_workspace_state_triggers_workspace_interlock() {
 }
 
 #[test]
-fn default_assurance_surfaces_no_observation_without_changing_policy() {
+fn assurance_preserves_policy_without_external_observation_surface() {
     let tmp = tempdir().expect("temp");
     init_repo(tmp.path(), "feature/x");
     seed_docs(tmp.path());
@@ -228,12 +227,11 @@ fn default_assurance_surfaces_no_observation_without_changing_policy() {
         })
         .expect("eval");
 
-    assert_eq!(
-        out.advisory.decision_observation,
-        DecisionObservationResult::NoObservation {
-            provider: "none".to_string(),
-            reason: NoObservationReason::Disabled,
-        }
+    assert!(
+        serde_json::to_value(&out.advisory)
+            .unwrap()
+            .get("decision_observation")
+            .is_none()
     );
     assert_eq!(
         out.interlock

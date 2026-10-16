@@ -1,14 +1,8 @@
-use crate::core::decision_provider::{
-    DecisionContext, DecisionObservationResult, DurableGovernanceContext, GovernanceArtifactState,
-    GovernanceContext, GovernanceObligation, TrajectoryContext, WorkspaceContext,
-};
 use crate::core::error::DecapodError;
 use crate::core::events;
-use crate::core::jev_history;
 use crate::core::mentor::{MentorEngine, Obligation, ObligationKind, ObligationsContext};
 use crate::core::rpc::{Advisory, Attestation, Interlock, LoopSignal, ReconciliationPointer};
 use crate::core::workspace;
-use crate::core::{research_claims, trajectory, validate};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -164,7 +158,6 @@ impl AssuranceEngine {
             verification_plan,
             loop_signal,
             notes: Some(env_notes),
-            decision_observation: self.observe_decision(input, &obligations, &workspace_status),
         };
 
         let attestation = self.write_attestation(input, interlock.as_ref())?;
@@ -173,172 +166,6 @@ impl AssuranceEngine {
             advisory,
             attestation,
         })
-    }
-
-    fn observe_decision(
-        &self,
-        input: &AssuranceEvaluateInput,
-        obligations: &crate::core::mentor::Obligations,
-        status: &workspace::WorkspaceStatus,
-    ) -> DecisionObservationResult {
-        let plan = crate::plan_governance::load_plan(&self.repo_root)
-            .ok()
-            .flatten();
-        let context = DecisionContext {
-            declared_intent: plan.as_ref().map(|plan| plan.intent.clone()),
-            trajectory: TrajectoryContext {
-                operation: input.op.clone(),
-                touched_paths: input.touched_paths.clone(),
-                diff_summary: input.diff_summary.clone(),
-            },
-            governance: GovernanceContext {
-                must_obligations: obligations
-                    .must
-                    .iter()
-                    .map(|obligation| Self::decision_obligation(obligation, true))
-                    .collect(),
-                recommended_obligations: obligations
-                    .recommended
-                    .iter()
-                    .map(|obligation| Self::decision_obligation(obligation, false))
-                    .collect(),
-                contradictions: obligations
-                    .contradictions
-                    .iter()
-                    .map(|contradiction| contradiction.description.clone())
-                    .collect(),
-                proof_hooks: plan
-                    .as_ref()
-                    .map(|plan| plan.proof_hooks.clone())
-                    .unwrap_or_default(),
-                forbidden_paths: plan
-                    .as_ref()
-                    .map(|plan| plan.constraints.forbidden_paths.clone())
-                    .unwrap_or_default(),
-                file_touch_budget: plan
-                    .as_ref()
-                    .and_then(|plan| plan.constraints.file_touch_budget),
-                workspace: WorkspaceContext {
-                    branch: status.git.current_branch.clone(),
-                    is_protected: status.git.is_protected,
-                    is_isolated: status.git.in_worktree && !status.git.is_main_repo,
-                    can_work: status.can_work,
-                },
-            },
-            durable_governance: Self::durable_governance_context(&self.repo_root),
-        };
-
-        let provider_kind = match crate::cli::DecapodProjectConfig::load(&self.repo_root) {
-            Ok(config) => config.decision.provider,
-            Err(DecapodError::NotFound(_)) => {
-                crate::core::decision_provider::DecisionProviderKind::None
-            }
-            Err(_) => {
-                return DecisionObservationResult::no_observation(
-                    "config",
-                    crate::core::decision_provider::NoObservationReason::Configuration,
-                );
-            }
-        };
-        if provider_kind != crate::core::decision_provider::DecisionProviderKind::Jev {
-            return crate::core::decision_provider::configured(provider_kind).observe(&context);
-        }
-
-        let trajectory_run_id = match trajectory::load_trajectory_cookie(&self.repo_root) {
-            Ok(Some(trajectory)) => trajectory.run_id,
-            Ok(None) => {
-                return DecisionObservationResult::no_observation(
-                    "jev",
-                    crate::core::decision_provider::NoObservationReason::MissingTrajectory,
-                );
-            }
-            Err(_) => {
-                return DecisionObservationResult::no_observation(
-                    "jev",
-                    crate::core::decision_provider::NoObservationReason::Configuration,
-                );
-            }
-        };
-        let result = crate::core::decision_provider::configured(provider_kind).observe(&context);
-        match jev_history::append(
-            &self.repo_root,
-            &trajectory_run_id,
-            &input.op,
-            &input.touched_paths,
-            input.diff_summary.as_deref(),
-            result.clone(),
-        ) {
-            Ok(()) => result,
-            Err(_) => DecisionObservationResult::no_observation(
-                "jev",
-                crate::core::decision_provider::NoObservationReason::Persistence,
-            ),
-        }
-    }
-
-    fn decision_obligation(obligation: &Obligation, required: bool) -> GovernanceObligation {
-        GovernanceObligation {
-            kind: format!("{:?}", obligation.kind),
-            reference: obligation.ref_path.clone(),
-            title: obligation.title.clone(),
-            required,
-        }
-    }
-
-    fn durable_governance_context(repo_root: &Path) -> DurableGovernanceContext {
-        DurableGovernanceContext {
-            plan: Self::validated_artifact_state(
-                crate::plan_governance::load_plan(repo_root),
-                repo_root,
-                "plan",
-            ),
-            claims: match research_claims::load_and_validate(repo_root) {
-                Ok(Some(_)) => Self::read_artifact_state(repo_root, "claims"),
-                Ok(None) => GovernanceArtifactState::Missing,
-                Err(_) => GovernanceArtifactState::Invalid,
-            },
-            trajectory: Self::validated_artifact_state(
-                trajectory::load_trajectory_cookie(repo_root),
-                repo_root,
-                "trajectory",
-            ),
-            validation: Self::validation_artifact_state(repo_root),
-        }
-    }
-
-    fn validated_artifact_state<T: Serialize>(
-        loaded: Result<Option<T>, DecapodError>,
-        repo_root: &Path,
-        section: &str,
-    ) -> GovernanceArtifactState {
-        match loaded {
-            Ok(Some(_)) => Self::read_artifact_state(repo_root, section),
-            Ok(None) => GovernanceArtifactState::Missing,
-            Err(_) => GovernanceArtifactState::Invalid,
-        }
-    }
-
-    fn validation_artifact_state(repo_root: &Path) -> GovernanceArtifactState {
-        let value = match crate::core::governance_document::read_section(repo_root, "validation") {
-            Ok(Some(value)) => value,
-            Ok(None) => return GovernanceArtifactState::Missing,
-            Err(_) => return GovernanceArtifactState::Invalid,
-        };
-        let receipt = match serde_json::from_value::<validate::ValidationReceipt>(value) {
-            Ok(receipt) if receipt.validate_integrity().is_ok() => receipt,
-            _ => return GovernanceArtifactState::Invalid,
-        };
-        serde_json::to_value(receipt)
-            .map(GovernanceArtifactState::Present)
-            .unwrap_or(GovernanceArtifactState::Invalid)
-    }
-
-    fn read_artifact_state(repo_root: &Path, section: &str) -> GovernanceArtifactState {
-        match crate::core::governance_document::read_section(repo_root, section) {
-            Ok(Some(value)) => GovernanceArtifactState::Present(value),
-            Ok(None) => GovernanceArtifactState::Missing,
-            Err(_) => GovernanceArtifactState::Invalid,
-        }
     }
 
     fn resolve_interlock(
@@ -596,42 +423,5 @@ impl AssuranceEngine {
         let mut seen = std::collections::HashSet::new();
         items.retain(|item| seen.insert(format!("{}::{}", item.kind, item.r#ref)));
         items.truncate(5);
-    }
-}
-
-#[cfg(test)]
-mod governance_section_tests {
-    use super::*;
-
-    #[test]
-    fn durable_context_contains_logical_plan_not_the_shared_document() {
-        let root = tempfile::tempdir().unwrap();
-        crate::plan_governance::init_plan(
-            root.path(),
-            crate::plan_governance::InitPlanInput {
-                title: "Logical section".into(),
-                intent: "Expose only the plan to the plan observation".into(),
-                todo_ids: vec![],
-                proof_hooks: vec![],
-                unknowns: vec![],
-                human_questions: vec![],
-                stop_conditions: vec![],
-                unresolved_contradictions: vec![],
-                deferred_questions: vec![],
-                constraints: Default::default(),
-                phases: vec![],
-            },
-        )
-        .unwrap();
-        let state = AssuranceEngine::durable_governance_context(root.path());
-        match state.plan {
-            GovernanceArtifactState::Present(value) => {
-                assert_eq!(value["title"], "Logical section");
-                assert!(value.get("sections").is_none());
-                assert!(value.get("checkpoints").is_none());
-            }
-            other => panic!("expected logical plan, got {other:?}"),
-        }
-        assert!(matches!(state.validation, GovernanceArtifactState::Missing));
     }
 }

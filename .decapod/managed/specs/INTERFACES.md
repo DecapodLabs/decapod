@@ -430,11 +430,26 @@ REST URL is not that endpoint. Endpoint-scoped sessions cannot reuse another
 endpoint's credentials, and Supabase authentication/data transports reject
 redirects. Fixture tests alone do not establish hosted authorization or atomicity.
 
-`DecisionProvider::observe` returns a typed `trajectory_satisfies_intent`
-probability or `no_observation`. The default `none` provider makes no external
-call. Jev is optional; missing credentials, timeout, transport errors, and invalid
-responses remain no-observation results. Observations cannot approve an action,
-clear an interlock, rewrite authority, satisfy proof, or declare completion.
+`[vega]` selects disabled or required assessment, with explicit alpha/risk keys.
+`[vega.installation]` binds canonical directory, manifest digest, canonical native
+worker path and executable SHA-256. The old provider flag and credential lookup
+are removed. Historical Jev evidence remains read-only compatibility, without
+current trajectory or readiness authority.
+
+`decapod setup vega` supports `--cache-directory`, `--check-updates`, `--refresh`,
+`--offline`, and `--rollback <manifest-digest>`. Its JSON report prints verified
+model pins and disabled TOML; it does not claim to install the native executable.
+The worker's bounded `decapod.vega-worker.v1` request/response binds input and
+installation identity. Outcomes preserve [no, yes] probabilities, prediction set,
+abstention, unbound/OOD, physical diagnostics and explicit devices/precision.
+Only positive singleton yes accepts; negative rejects and uncertainty abstains.
+The validation report separates `proof_ready`, final `ready`, and the exact-bound
+`decapod.vega-readiness.v1` receipt. No result supplies independent proof authority.
+
+Worker `--probe` performs a real finite Metal numerical check without models.
+Optional `--proof-output` writes private bounded numerical diagnostics, including
+tokens/spans, pooled vectors, readouts, outcomes and measured durations; parity
+remains unverified until independently authenticated reference comparison.
 
 Local handshake hashes make declarations tamper-evident. Self-declared model,
 provider, and agent identity remain unverified without a configured trust root.
@@ -471,8 +486,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (25 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

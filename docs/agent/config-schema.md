@@ -16,7 +16,6 @@ pub struct DecapodProjectConfig {
     #[serde(default)]
     pub context: DeclaredContextConfig,
     #[serde(default)]
-    pub decision: DecisionConfig,
 }
 ```
 
@@ -133,3 +132,16 @@ declared intent and satisfies the conditions for integration. Its assurance is
 bounded by the declared requirements and checks. A subsequent readiness decision
 can evaluate that result; the agent publishes through the applicable gate and
 the human retains merge authority. This principle adds no unimplemented guarantee.
+
+## Optional vega readiness
+
+`[vega]` defaults to `mode = "disabled"`; `mode = "required"` adds the
+post-proof uncertainty-preserving assessment. Supported `alpha` values are
+`"0.1"` and `"0.05"`; `risk` values are `"0.05"`, `"0.1"`, `"0.2"`.
+They select pinned upstream calibration entries, not code-readiness guarantees.
+`[vega.installation]` binds `directory`, `manifest_digest`, `runtime` and
+`runtime_sha256`. Directory/executable paths must be canonical and absolute;
+required mode fails closed on missing, changed or unsupported local artifacts.
+There is no runtime download or selectable provider configuration. See
+[repository readiness](repository-readiness.md#optional-vega-post-validation-assessment)
+for explicit setup and the outstanding native acceptance evidence.

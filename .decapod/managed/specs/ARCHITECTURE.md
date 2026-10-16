@@ -168,8 +168,8 @@ published release are separate facts.
 
 Starting another trajectory run is a guarded journal transition. Under the same
 governance-document lock, `trajectory::init_trajectory` proves that the complete
-predecessor document is recoverable from Git before replacing trajectory,
-intent custody, or Jev observations. An uncommitted failed or interrupted run
+predecessor document is recoverable from Git before replacing trajectory and
+intent custody. Historical Jev observations remain read-only and preserved. An uncommitted failed or interrupted run
 cannot be discarded by choosing another run ID; the agent continues that run
 or checkpoints and commits it before starting another. Git remains the history
 store rather than a second snapshot database.
@@ -346,17 +346,36 @@ contexts retain distinct immutable endpoints. The constitution workflow rechecks
 the same accepted commit and tree before and after running its schema command.
 This no-delta execution produces no measured candidate custody receipt.
 
-## Optional advisory intelligence
+## Optional vega readiness assessment
 
-The assurance engine reconstructs obligations and workspace state before
-calling the provider-neutral decision seam. With Jev enabled, the adapter
-receives declared intent, the proposed trajectory, obligations, and labeled
-snapshots of governed artifacts. The default provider is `none`.
+`core::validation_runtime::run` finishes the complete deterministic proof profile
+before calling `vega_readiness::assess`. Required mode additionally needs an
+uncertainty-free positive singleton and a second exact-state freshness check.
+The assessor cannot supply proof, waive failed checks or publish a PR. Disabled
+mode preserves ordinary deterministic validation; there is no selectable provider
+architecture or active Jev transport/credential path.
 
-The result is a typed observation or `no_observation`. An observation remains
-advisory: it cannot resolve an interlock, waive proof, change boundaries, or
-mark work complete. Provider transport, credentials, and parsing stay inside
-the adapter boundary.
+The bounded `validation-results.v2` projection interns repeated observations and
+stage definitions, retaining all check identities, outcomes, exclusions, simulated
+stages, blockers and adverse trajectory facts. It supplies minimal declared intent
+and changed paths, without full plans, diffs or logs. Opaque custody hashes bind
+the complete evidence in the request/receipt instead of consuming model context.
+Unknown log warnings and untested intent remain explicit. Overflow abstains.
+
+The separate `assets/tools/vega-native` worker uses pinned Candle Apple Metal for
+the Qwen3.5-0.8B text backbone, F32 pooled block 13/19 features and at most 4,096
+tokens. A finite numerical Metal probe must succeed; OS labels are insufficient.
+The Rust scalar engine uses F32 and calibration uses F64 probabilities. Required
+calibration, unbound/OOD and prediction-set semantics are preserved. Runtime
+loads only explicitly pinned local artifacts, resets recurrent state per request,
+and has no downloads, CPU backbone fallback or cross-request state reuse.
+
+`vega_setup` owns explicit bounded discovery/download, independently pinned
+engine/backbone/tokenizer/config/license identities, content-deduplicated cache
+and atomic activation/rollback. The active pointer is never runtime authority.
+Private numerical diagnostics support future measurements but do not establish
+parity. Actual Apple execution, independent reference agreement, readiness-domain
+calibration and latency/memory measurements remain required acceptance evidence.
 
 ## Architectural constraints
 
@@ -418,8 +437,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (25 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

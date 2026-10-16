@@ -389,10 +389,23 @@ server-side tenant isolation, deployment membership policy, or event atomicity.
 Missing host SQLite runtime is an explicit availability failure; it does not
 activate a bundled fallback driver.
 
-The optional Jev adapter requires tests for disabled operation, missing or invalid
-state, credentials, malformed/out-of-range observations, transport failure, and
-interlock preservation. A live provider corpus is opt-in and must report its own
-execution; it does not establish a production approval threshold.
+Vega requires Rust regressions for positive-singleton-only acceptance, negative,
+ambiguous, abstaining, unbound/OOD and malformed output; stale source, intent,
+evidence, policy, executable and compound model identities; failed-proof refusal;
+and exact retention of adverse outcomes, exclusions and unknowns during prompt
+compaction. Setup/cache tests must cover pin validation, unchanged-backbone reuse,
+atomic refresh/rollback and no runtime downloads. No new Python test path exists.
+
+Synthetic fixtures and source review are not native acceptance. Required measured
+evidence remains Apple-arm64 compilation, genuine Metal numerical dispatch, real
+pinned checkpoint loading, independent reference agreement through pooling,
+engine and calibrated decision output, readiness-domain calibration evaluation,
+latency/peak memory and repeated-request cleanup. Exercise 4,096/4,097-token
+boundaries. The private numerical export records observations with parity
+unverified and supplies no fabricated threshold or pass. No compatible native
+executor or independent reference outputs are currently established for this work.
+Ordinary governed full validation is still required; activation's one-time
+bootstrap permission does not authorize feature builds/tests or publication.
 
 Platform proof must state where it executed. Native, emulated, and cross-compiled
 results are distinct. Packaging checks must build and run the promised artifact
@@ -499,8 +512,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (25 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -2514,7 +2514,7 @@ pub fn verify_validation_artifacts_for_publish(repo_root: &Path) -> Result<(), D
 }
 
 /// Current governance obligations shared by full validation and publication.
-/// This preserves plan, task, claims, decisions and Jev custody without using a
+/// This preserves plan, task, claims, decisions and historical custody without using a
 /// legacy project-check receipt as authority for the full source-CI verdict.
 fn verify_current_governance_ownership(
     repo_root: &Path,
@@ -2544,7 +2544,7 @@ fn verify_current_governance_ownership(
 }
 
 pub fn verify_current_governance_for_publish(repo_root: &Path) -> Result<(), DecapodError> {
-    let trajectory = verify_current_governance_ownership(repo_root)?;
+    verify_current_governance_ownership(repo_root)?;
     for (path, present) in [
         (
             ".decapod/governance.json#/sections/plan",
@@ -2559,19 +2559,6 @@ pub fn verify_current_governance_for_publish(repo_root: &Path) -> Result<(), Dec
             return Err(DecapodError::ValidationError(format!(
                 "Cannot publish: required governance artifact is missing or invalid: {path}. Run `decapod govern artifacts inventory --repair`, then rerun the inventory command before publication."
             )));
-        }
-    }
-    if crate::core::governance_document::read_section(repo_root, "jev")?.is_some() {
-        let ledger = crate::core::jev_history::load_and_validate(repo_root)?.ok_or_else(|| {
-            DecapodError::ValidationError(
-                "Jev ledger disappeared during publish verification".to_string(),
-            )
-        })?;
-        if ledger.trajectory_run_id != trajectory.run_id {
-            return Err(DecapodError::ValidationError(
-                "Cannot publish: Jev observation ledger is not bound to the current trajectory."
-                    .to_string(),
-            ));
         }
     }
     Ok(())
@@ -2606,26 +2593,6 @@ fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodErr
         .map_err(DecapodError::IoError)?;
     if !unstaged.status.success() {
         return Err(DecapodError::ValidationError("UNSTAGED_GOVERNANCE_ARTIFACT: required artifact bytes differ from the index. Stage the current validated bundle before publication.".into()));
-    }
-    let jev_path = crate::core::jev_history::JEV_HISTORY_PATH;
-    if repo_root.join(jev_path).is_file() {
-        let output = Command::new("git")
-            .args([
-                "-C",
-                dir,
-                "ls-files",
-                "--cached",
-                "--error-unmatch",
-                "--",
-                jev_path,
-            ])
-            .bounded_output(CONTROL_TIMEOUT)
-            .map_err(DecapodError::IoError)?;
-        if !output.status.success() {
-            return Err(DecapodError::ValidationError(format!(
-                "Cannot publish: Jev observation ledger was not staged: {jev_path}"
-            )));
-        }
     }
     Ok(())
 }

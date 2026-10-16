@@ -93,6 +93,14 @@ principal with unrestricted filesystem/Git access from rewriting history.
 
 ## Authentication
 
+Vega's required publication configuration is inherited from the accepted target.
+`vega_readiness::verify_policy_acceptance` rejects candidate-side disablement,
+runtime/model repinning, installation-path changes or calibration-setting changes
+when accepted policy is required. Such a policy transition needs independent
+acceptance; setup cache refresh cannot authorize it. A disabled accepted policy
+keeps normal behavior and may add a required assessment. The same check runs in
+initial and post-inference project discovery.
+
 Most mutations require an active local session. Session credentials establish
 repository-local custody and correlation. They do not authenticate an agent's
 model provider, harness, organization or human identity. Local handshake hashes
@@ -101,11 +109,19 @@ self-declared and unverified without a configured trust root. The current binary
 exposes CLI and structured process RPC, not a native MCP server.
 
 Local session credentials prefer private machine-local storage, with a secure
-workspace-local fallback. Cloud authentication and optional Jev credentials use
-separate machine-local records. The TypeSafe key resolves from the environment
-before the machine secret file and never belongs in project state. Session-health
-proof records active or inactive status only. Credentials must not enter source,
+workspace-local fallback. Cloud authentication uses separate machine-local
+records. Active Jev credential persistence and lookup are removed; historical
+secret files are left untouched and are never read by vega. Session-health proof
+records active or inactive status only. Credentials must not enter source,
 trajectory records, validation artifacts or diagnostics.
+
+Vega setup accepts only bounded public official-source artifacts with explicit
+revision, size and SHA-256 pins. It does not accept credentials, agreements or
+gated-model access. Runtime performs no network operation and invokes only the
+canonical pinned native executable. Private create-new bounded request/proof
+files may contain repository context and numeric features; they are local
+diagnostics, never uploaded or treated as trusted policy. Repository text is
+untrusted evidence, and a model verdict cannot overrule deterministic proof.
 
 ## Data Classification
 
@@ -317,8 +333,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (25 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

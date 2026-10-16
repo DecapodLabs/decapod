@@ -1,123 +1,58 @@
 use super::*;
-use crate::core::decision_provider::{
-    DecisionObservation, DecisionObservationResult, NoObservationReason,
-};
-use std::fs;
-use tempfile::tempdir;
 
-fn observed(probability: f64) -> DecisionObservationResult {
-    DecisionObservationResult::Observed {
-        observation: DecisionObservation {
-            kind: TRAJECTORY_SATISFIES_INTENT.to_string(),
-            probability,
-            provider: "jev".to_string(),
-            model: Some("jev-latest".to_string()),
-            usage: None,
-        },
-    }
-}
-
-fn paths() -> Vec<String> {
-    vec!["src/lib.rs".to_string()]
-}
-
-#[test]
-fn appends_multiple_typed_results_to_one_trajectory_ledger() {
-    let temp = tempdir().expect("tempdir");
-    append(
-        temp.path(),
-        "trajectory_new",
-        "build",
-        &paths(),
-        Some("first pass"),
-        observed(0.91),
-    )
-    .expect("first append");
-    append(
-        temp.path(),
-        "trajectory_new",
-        "verify",
-        &paths(),
-        None,
-        DecisionObservationResult::NoObservation {
-            provider: "jev".to_string(),
-            reason: NoObservationReason::Unavailable,
-        },
-    )
-    .expect("second append");
-
-    let ledger = load_and_validate(temp.path())
-        .expect("load ledger")
-        .expect("ledger present");
-    assert_eq!(ledger.trajectory_run_id, "trajectory_new");
-    assert_eq!(ledger.runs.len(), 2);
-    // The map is keyed by ULID. IDs generated in the same millisecond can
-    // have either suffix order; sequence is the explicit append-order field.
-    let mut runs = ledger.runs.values().collect::<Vec<_>>();
-    runs.sort_unstable_by_key(|run| run.sequence);
-    assert_eq!(
-        runs.iter().map(|run| run.sequence).collect::<Vec<_>>(),
-        vec![1, 2]
-    );
-    assert_eq!(runs[0].operation, "build");
-    assert_eq!(runs[1].operation, "verify");
-    assert!(
-        ledger
-            .runs
-            .values()
-            .any(|run| matches!(run.result, DecisionObservationResult::Observed { .. }))
-    );
-    assert!(
-        ledger
-            .runs
-            .values()
-            .any(|run| matches!(run.result, DecisionObservationResult::NoObservation { .. }))
-    );
+fn legacy_ledger() -> serde_json::Value {
+    serde_json::json!({
+        "$schema": JEV_HISTORY_SCHEMA_URI,
+        "schema_version": JEV_HISTORY_SCHEMA_VERSION,
+        "kind": JEV_HISTORY_KIND,
+        "trajectory_run_id": "historical-run",
+        "runs": {
+            "old-observation": {
+                "id": "old-observation",
+                "sequence": 1,
+                "recorded_at": "2026-01-01T00:00:00Z",
+                "operation": "build",
+                "touched_paths": ["src/lib.rs"],
+                "result": {
+                    "status": "observed",
+                    "observation": {
+                        "kind": "trajectory_satisfies_intent",
+                        "probability": 0.91,
+                        "provider": "jev",
+                        "model": "jev-latest",
+                        "usage": {"input_tokens": 12, "output_tokens": 1}
+                    }
+                }
+            },
+            "old-unavailable": {
+                "id": "old-unavailable",
+                "sequence": 2,
+                "recorded_at": "2026-01-01T00:01:00Z",
+                "operation": "verify",
+                "touched_paths": [],
+                "result": {
+                    "status": "no_observation",
+                    "provider": "jev",
+                    "reason": "unavailable"
+                }
+            }
+        }
+    })
 }
 
 #[test]
-fn a_new_trajectory_removes_the_prior_working_tree_ledger() {
-    let temp = tempdir().expect("tempdir");
-    append(
-        temp.path(),
-        "trajectory_old",
-        "build",
-        &paths(),
-        None,
-        observed(0.4),
-    )
-    .expect("append");
-    assert!(temp.path().join(JEV_HISTORY_PATH).is_file());
-
-    reset_for_trajectory(temp.path(), "trajectory_new").expect("reset");
-    assert!(load_and_validate(temp.path()).unwrap().is_none());
-    assert!(
-        temp.path().join(JEV_HISTORY_PATH).exists(),
-        "retiring Jev must preserve the shared document"
-    );
+fn historical_observed_and_unavailable_results_remain_readable() {
+    let source = legacy_ledger();
+    let ledger: JevObservationLedger = serde_json::from_value(source.clone()).unwrap();
+    validate(&ledger).unwrap();
+    assert_eq!(serde_json::to_value(&ledger).unwrap(), source);
 }
 
 #[test]
-fn same_trajectory_preserves_history_and_corruption_fails_closed() {
-    let temp = tempdir().expect("tempdir");
-    append(
-        temp.path(),
-        "trajectory_same",
-        "build",
-        &paths(),
-        None,
-        observed(0.4),
-    )
-    .expect("append");
-    reset_for_trajectory(temp.path(), "trajectory_same").expect("same-run reset");
-    assert!(temp.path().join(JEV_HISTORY_PATH).is_file());
-
-    fs::write(temp.path().join(JEV_HISTORY_PATH), b"not-json").expect("corrupt ledger");
-    let error = reset_for_trajectory(temp.path(), "trajectory_new")
-        .expect_err("corrupt history must not be discarded");
-    assert!(error.to_string().contains("Invalid governance document"));
-    assert_eq!(
-        fs::read_to_string(temp.path().join(JEV_HISTORY_PATH)).expect("read ledger"),
-        "not-json"
-    );
+fn historical_evidence_retains_integrity_checks() {
+    let mut source = legacy_ledger();
+    source["runs"]["old-observation"]["result"]["observation"]["probability"] =
+        serde_json::json!(1.5);
+    let ledger: JevObservationLedger = serde_json::from_value(source).unwrap();
+    assert!(validate(&ledger).is_err());
 }

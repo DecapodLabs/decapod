@@ -165,7 +165,7 @@ fn new_run_preserves_uncommitted_failures_blockers_custody_and_jev() {
     assert!(
         crate::core::governance_document::read_section(temp.path(), "jev")
             .unwrap()
-            .is_none()
+            .is_some()
     );
 }
 

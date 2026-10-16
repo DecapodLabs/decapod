@@ -1,146 +1,88 @@
-//! Durable, provider-neutral custody for Jev observations.
+//! Read-only compatibility for historical Jev observation evidence.
 //!
-//! The ledger is a repository artifact, not a policy input. It groups every
-//! Jev result produced during the active trajectory run so Git can preserve
-//! the evidence with the PR. A new trajectory run replaces the active ledger;
-//! prior committed ledgers remain recoverable through Git history.
+//! No provider, transport, credential lookup, observation writer, or policy gate
+//! is retained. Existing governance documents remain readable without changing
+//! their archived results or requiring a current trajectory binding.
 
-use crate::core::decision_provider::{
-    DecisionObservationResult, NoObservationReason, TRAJECTORY_SATISFIES_INTENT,
-};
 use crate::core::error::DecapodError;
-use crate::core::path_policy;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
-use std::path::Path;
 
-pub const JEV_HISTORY_PATH: &str = crate::core::governance_document::GOVERNANCE_PATH;
-pub const JEV_HISTORY_SCHEMA_VERSION: &str = "1.0.0";
-pub const JEV_HISTORY_KIND: &str = "jev_observation_ledger";
-pub const JEV_HISTORY_SCHEMA_URI: &str =
+pub(crate) const JEV_HISTORY_SCHEMA_VERSION: &str = "1.0.0";
+pub(crate) const JEV_HISTORY_KIND: &str = "jev_observation_ledger";
+pub(crate) const JEV_HISTORY_SCHEMA_URI: &str =
     "https://decapod.dev/schemas/jev-observations-1.0.0.schema.json";
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(deny_unknown_fields)]
-pub struct JevObservationLedger {
-    #[serde(rename = "$schema")]
-    pub schema_uri: String,
-    pub schema_version: String,
-    pub kind: String,
-    pub trajectory_run_id: String,
-    /// Keys are stable per-run observation IDs. The values retain the typed
-    /// provider result without exposing Jev's HTTP request/response schema.
-    pub runs: BTreeMap<String, JevRun>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(deny_unknown_fields)]
-pub struct JevRun {
-    pub id: String,
-    pub sequence: u64,
-    pub recorded_at: String,
-    pub operation: String,
-    pub touched_paths: Vec<String>,
+/// Historical observation payload, retained only to read existing evidence.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+pub(crate) struct DecisionObservation {
+    pub(crate) kind: String,
+    pub(crate) probability: f64,
+    pub(crate) provider: String,
+    pub(crate) model: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub diff_summary: Option<String>,
-    pub result: DecisionObservationResult,
+    pub(crate) usage: Option<DecisionUsage>,
 }
 
-pub fn load_and_validate(repo_root: &Path) -> Result<Option<JevObservationLedger>, DecapodError> {
-    crate::core::governance_document::read_section(repo_root, "jev")?
-        .map(|value| {
-            serde_json::from_value(value).map_err(|e| DecapodError::ValidationError(e.to_string()))
-        })
-        .transpose()
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub(crate) struct DecisionUsage {
+    pub(crate) input_tokens: u64,
+    pub(crate) output_tokens: u64,
 }
 
-/// Remove a prior run's working-tree ledger when the trajectory cookie starts
-/// a new run. This is intentionally a narrow reset: Git history remains the
-/// recovery surface for the committed prior ledger.
-pub fn reset_for_trajectory(repo_root: &Path, trajectory_run_id: &str) -> Result<(), DecapodError> {
-    crate::core::governance_document::with_lock(repo_root, || {
-        if trajectory_run_id.trim().is_empty() {
-            return Err(DecapodError::ValidationError(
-                "Jev observation ledger requires a non-empty trajectory run id".to_string(),
-            ));
-        }
-        let path = repo_root.join(JEV_HISTORY_PATH);
-        if !path.exists() {
-            return Ok(());
-        }
-        let Some(existing) = load_and_validate(repo_root)? else {
-            return Ok(());
-        };
-        if existing.trajectory_run_id != trajectory_run_id {
-            crate::core::governance_document::remove_section(repo_root, "jev")?;
-        }
-        Ok(())
-    })
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum NoObservationReason {
+    Disabled,
+    Unconfigured,
+    MissingIntent,
+    MissingTrajectory,
+    Unavailable,
+    MalformedResponse,
+    InvalidObservation,
+    Configuration,
+    Persistence,
 }
 
-pub fn append(
-    repo_root: &Path,
-    trajectory_run_id: &str,
-    operation: &str,
-    touched_paths: &[String],
-    diff_summary: Option<&str>,
-    result: DecisionObservationResult,
-) -> Result<(), DecapodError> {
-    crate::core::governance_document::with_lock(repo_root, || {
-        if trajectory_run_id.trim().is_empty() {
-            return Err(DecapodError::ValidationError(
-                "Jev observation ledger requires a non-empty trajectory run id".to_string(),
-            ));
-        }
-        let mut ledger = match load_and_validate(repo_root)? {
-            Some(existing) if existing.trajectory_run_id == trajectory_run_id => existing,
-            Some(_) | None => new_ledger(trajectory_run_id),
-        };
-        let id = crate::core::ulid::new_ulid();
-        let sequence = ledger
-            .runs
-            .values()
-            .map(|run| run.sequence)
-            .max()
-            .unwrap_or(0)
-            .saturating_add(1);
-        ledger.runs.insert(
-            id.clone(),
-            JevRun {
-                id,
-                sequence,
-                recorded_at: crate::core::time::now_epoch_z(),
-                operation: operation.to_string(),
-                touched_paths: touched_paths
-                    .iter()
-                    .map(|path| path_policy::normalize_persisted_path(repo_root, path))
-                    .collect(),
-                diff_summary: diff_summary
-                    .map(|summary| path_policy::redact_text(repo_root, summary)),
-                result,
-            },
-        );
-        validate(&ledger)?;
-        let bytes = serde_json::to_vec_pretty(&ledger).map_err(|error| {
-            DecapodError::ValidationError(format!("serialize Jev observation ledger: {error}"))
-        })?;
-        crate::core::governance_document::write_section(
-            repo_root,
-            "jev",
-            &serde_json::from_slice(&bytes)
-                .map_err(|e| DecapodError::ValidationError(e.to_string()))?,
-        )
-    })
+/// Historical result payload; never consulted for current readiness.
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub(crate) enum DecisionObservationResult {
+    Observed {
+        observation: DecisionObservation,
+    },
+    NoObservation {
+        provider: String,
+        reason: NoObservationReason,
+    },
 }
 
-fn new_ledger(trajectory_run_id: &str) -> JevObservationLedger {
-    JevObservationLedger {
-        schema_uri: JEV_HISTORY_SCHEMA_URI.to_string(),
-        schema_version: JEV_HISTORY_SCHEMA_VERSION.to_string(),
-        kind: JEV_HISTORY_KIND.to_string(),
-        trajectory_run_id: trajectory_run_id.to_string(),
-        runs: BTreeMap::new(),
-    }
+const TRAJECTORY_SATISFIES_INTENT: &str = "trajectory_satisfies_intent";
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct JevObservationLedger {
+    #[serde(rename = "$schema")]
+    pub(crate) schema_uri: String,
+    pub(crate) schema_version: String,
+    pub(crate) kind: String,
+    pub(crate) trajectory_run_id: String,
+    /// Keys are stable per-run observation IDs. The values retain the typed
+    /// historical result without retaining a live provider interface.
+    pub(crate) runs: BTreeMap<String, JevRun>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct JevRun {
+    pub(crate) id: String,
+    pub(crate) sequence: u64,
+    pub(crate) recorded_at: String,
+    pub(crate) operation: String,
+    pub(crate) touched_paths: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) diff_summary: Option<String>,
+    pub(crate) result: DecisionObservationResult,
 }
 
 pub(crate) fn validate(ledger: &JevObservationLedger) -> Result<(), DecapodError> {

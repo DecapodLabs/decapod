@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d0f23e01601db5b4ce206355723a10b430f58d72",
+    "accepted_commit": "29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -321,45 +321,44 @@
     }
   },
   "change": {
-    "id": "change_01M51Q2M8F8C5DR5X05PDC3WDZ",
-    "base_commit": "d0f23e01601db5b4ce206355723a10b430f58d72",
+    "id": "change_01M52FPFDFCY7ZXGYNDYN51JBS",
+    "base_commit": "29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e",
     "target_base": "origin/master"
   },
   "claims": {
-    "ci-attested-finite-identities": {
-      "statement": "Explicit accepted Pipeline Trigger policy derives branch-bound concurrency identities and accepts exactly one successful keyless bootstrap while retaining exact required jobs and source/run bindings.",
-      "falsifier": "Any failed, missing, retried, extra or mismatched job set passes, or candidate policy authorizes itself.",
-      "status": "supported",
+    "vega-native-acceptance": {
+      "statement": "Native Apple-arm64 compilation, real Metal numerical execution, independent pinned-upstream parity, readiness-domain calibration and measured latency/memory are required before feature acceptance; source preparation establishes none of them.",
+      "falsifier": "Source-only review, metadata generation, platform labels, synthetic outputs or missing measurements are represented as native/parity/calibration/performance acceptance.",
+      "status": "blocked",
       "proof_refs": [
-        "28 targeted CI-attested regressions; real public1840 and1870 projected fixtures"
+        "assets/tools/vega_infer.rs",
+        "src/decapod/core/vega_backbone.rs"
+      ]
+    },
+    "vega-positive-singleton": {
+      "statement": "Required vega may permit readiness only after deterministic proof and exact freshness, accepted policy integrity and a positive singleton yes without abstention/OOD; failed, stale, uncertain or changed identities remain blocked.",
+      "falsifier": "A disabled or repinned accepted required policy, failed/stale check, adverse projection omission, changed binding, negative/ambiguous/OOD/abstaining result can establish readiness.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/vega_readiness.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "ci-attested-activation-01",
-      "summary": "Finite provider-attested identities and explicit activation with reviewed source mapping, real metadata regressions, and completion-proof coverage; approved bootstrap checks in progress, no current-controller readiness claim.",
-      "input_digest": "sha256:6d25326851592abc3fb0e8ddfffe7a870e810ab0968b6e6544760235946cd7fc",
+      "id": "vega-accepted-base-source-01",
+      "summary": "Reapply exact vega source and authored specs on fresh accepted29414e61 base with newly seeded task journal; preserve old stack as provenance. No feature tests/native acceptance claimed.",
+      "input_digest": "sha256:de7959666312c54688e72265cd7b8b40de1d07275155f26f5e7b444549985093",
       "proof_refs": [
-        "28 targeted regressions passed; Cargo binaries and Bazel input/binary builds passed; independent read-only trust-boundary review"
+        "diff-whitespace",
+        "exact-authored-spec-reapplication",
+        "exact-feature-source-reapplication"
       ]
-    },
-    {
-      "id": "ci-attested-activation-02",
-      "summary": "Repair exact clippy fixture warning; preserve failed preflight evidence and completed direct suites while final-head lint/CI rerun proceeds.",
-      "input_digest": "sha256:3e8704110adaeb8757ff2b8e934639c370611b90c1badef695d120e517064ce8",
-      "proof_refs": [
-        "GHA116853592483 and local clippy.log needless_range_loop; full library/integration/build checks passed"
-      ]
-    },
-    {
-      "id": "activation-clean-review-20261016",
-      "summary": "Bind reviewed specs to clean source fingerprint without generated Bazel convenience links",
-      "input_digest": "sha256:a3fb2d8fe569d5df6478e8c4e85c17909136e73ec1454c3d3049e4bbdb479337"
     }
   ],
   "intents": {
-    "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ": {
+    "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -369,11 +368,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+      "id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Correct and activate CI-attested validation identities\n\nOne-time maintainer-authorized bootstrap: finite importer/concurrency identities, real metadata regressions, exact accepted policy activation, direct checks and CI then disclosed PR; no archive access or self-authorized readiness.",
-      "refined_intent": "Correct and activate CI-attested validation identities\n\nOne-time maintainer-authorized bootstrap: finite importer/concurrency identities, real metadata regressions, exact accepted policy activation, direct checks and CI then disclosed PR; no archive access or self-authorized readiness.",
+      "raw_intent": "Implement accepted-base Rust vega readiness\n\nRecover issue1445 feature source from clean stacked checkpointf92f19d5/merge2aeb3e82 onto accepted master29414e61 using a newly seeded journal; no old activation commits or governance imported. Same bounded Rust vega scope and native proof obligations. Local source preparation only until released accepted controller.",
+      "refined_intent": "Implement accepted-base Rust vega readiness\n\nRecover issue1445 feature source from clean stacked checkpointf92f19d5/merge2aeb3e82 onto accepted master29414e61 using a newly seeded journal; no old activation commits or governance imported. Same bounded Rust vega scope and native proof obligations. Local source preparation only until released accepted controller.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -384,252 +383,170 @@
         "file_touch_budget": null,
         "forbidden_paths": []
       },
-      "deferred_questions": [],
+      "deferred_questions": [
+        "Native execution, independent upstream reference outputs, readiness-domain calibration and measured latency/memory remain unmet acceptance evidence, not undecided architecture or claimed passes."
+      ],
       "human_questions": [],
-      "intent": "Use the accepted CI executor terminal results for exact validation execution, with finite independently derived native job identities and explicitly trusted keyless Pipeline Trigger bootstrap. Activate only through maintainer merge after the approved one-time direct-check and exact-commit CI bootstrap; do not claim this candidate authorizes itself.",
+      "intent": "Recover issue1445 source on a fresh governed branch from accepted29414e61 after squash-ancestry identity conflict. Reapply exactly the prior vega feature delta: Rust-only post-validation bounded adverse-preserving projection and minimal intent, positive singleton yes with no abstention/OOD, exact source/intent/evidence/config/model/tokenizer/engine/calibration/runtime identities and freshness, accepted-required policy protection, full active Jev removal, explicit pinned external setup/cache/refresh/rollback with backbone reuse, minimal text0.8B F32/4096-token Candle Apple Metal plus Rust F32 engine/F64 calibration. Existing agent publication gate and human merge remain. Preserve prior stacked branch as provenance; no activation source or old governance imported.",
       "phases": [],
       "proof_hooks": [
-        "Direct fmt, library/integration regression tests, clippy, Bazel inputs/build, exact-commit GitHub and Buildkite checks; captured real success/failure metadata tests; no artifact downloads."
+        "Plain decapod validate under an accepted released controller owns feature builds/tests and readiness; no bootstrap exception or candidate-controller acceptance",
+        "Real Apple-arm64 compile/load/probe, independent pinned-upstream numerical parity, readiness-domain calibration, latency/peak-memory and boundary/error evidence required"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current finite CI-attested identity contract, explicit configured-executor trust and accepted-target equality against implementation and regression fixtures. Generated Bazel convenience links removed before source fingerprinting; production contracts unchanged by the fixture lint repair.",
-          "reviewed_code_fingerprint": "aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833",
-          "spec_material_hash": "554518cafbd89726f62370608fe3ad8abae4e83943c41a777ab60be32b6624c1"
+          "reason": "Exact prior vega source and authored semantics reviewed on newly seeded accepted29414e61 base. Bounded post-proof assessment, accepted-required policy integrity, external pinned setup and active Jev removal are source-ready; native execution/parity/calibration/performance and feature tests remain unproven.",
+          "reviewed_code_fingerprint": "700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808",
+          "spec_material_hash": "51ad8c57c177ec95cf160b6773e1c17a7beec46aaaa5da4025b72813e7fbbcab"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current finite CI-attested identity contract, explicit configured-executor trust and accepted-target equality against implementation and regression fixtures. Generated Bazel convenience links removed before source fingerprinting; production contracts unchanged by the fixture lint repair.",
-          "reviewed_code_fingerprint": "aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833",
-          "spec_material_hash": "a7958cfc0ca88294a6b9f6c7f0958249baf419f44d1d08421ff9865765e5a86f"
+          "reason": "Exact prior vega source and authored semantics reviewed on newly seeded accepted29414e61 base. Bounded post-proof assessment, accepted-required policy integrity, external pinned setup and active Jev removal are source-ready; native execution/parity/calibration/performance and feature tests remain unproven.",
+          "reviewed_code_fingerprint": "700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808",
+          "spec_material_hash": "f453f6322985f2372a1f269d1e1a847aa9d2b3115bcdaee975f640045863dad2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current finite CI-attested identity contract, explicit configured-executor trust and accepted-target equality against implementation and regression fixtures. Generated Bazel convenience links removed before source fingerprinting; production contracts unchanged by the fixture lint repair.",
-          "reviewed_code_fingerprint": "aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833",
-          "spec_material_hash": "a89fe8abf2f1fdcf3952cec88bee889900525ed4bc0dcc984d27b7c2d15c7094"
+          "reason": "Exact prior vega source and authored semantics reviewed on newly seeded accepted29414e61 base. Bounded post-proof assessment, accepted-required policy integrity, external pinned setup and active Jev removal are source-ready; native execution/parity/calibration/performance and feature tests remain unproven.",
+          "reviewed_code_fingerprint": "700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808",
+          "spec_material_hash": "fa33ffad2f3233838711a441d2a4a75113c624d1137f76048e04ddcdd2c81d47"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
-        "Do not publish unless direct checks and exact-commit required CI succeed; no tool-denied archive reads, merge, or release."
+        "No feature builds/tests/publication until accepted released controller is available; never substitute local candidate authority",
+        "Stop on unavailable native hardware/reference outputs or policy denial; never synthesize parity or latency"
       ],
-      "title": "Correct and activate provider-attested validation",
+      "title": "Prepare accepted-base Rust vega readiness source",
       "todo_ids": [
-        "cicd_01m51q281cf5kqsf"
+        "feat_01m52fnwybfvhfdj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792134564Z"
+      "updated_at": "1792158852Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Candidate CLI is local preparation-only, not feature build/test/readiness authority; no bootstrap exception",
+        "Current claimed task and isolated work branch",
+        "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:33bb0b38a73f34e41542e26f608b83d2053dd258e83e5965f468109c6d8e71f4",
+      "artifact_hash": "sha256:a621d436160b3d8f4b14c11d84b516efbeb402ad244fa4ceed13f51183805b69",
+      "blockers": [
+        "Real Apple-arm64 compile/load/probe, independently authenticated upstream numerical references, readiness-domain calibration, native latency/peak-memory and repeated/error/token-boundary measurements remain required and unproven.",
+        "Release0.117.0/controller not yet published; released0.116 rejects pipeline_trigger. Ordinary feature validation must wait for accepted supported controller."
+      ],
       "checks": [
         {
-          "name": "bazel-binary-builds",
+          "name": "diff-whitespace",
           "status": "passed"
         },
         {
-          "name": "bazel-inputs",
+          "name": "exact-authored-spec-reapplication",
           "status": "passed"
         },
         {
-          "name": "ci-attested-regressions",
+          "name": "exact-feature-source-reapplication",
           "status": "passed"
         },
         {
-          "name": "clippy",
-          "status": "passed"
+          "name": "native-metal-parity-calibration-performance",
+          "status": "unavailable"
         },
         {
-          "name": "direct-candidate-build",
-          "status": "passed"
-        },
-        {
-          "name": "exact-commit-ci",
-          "status": "partial"
-        },
-        {
-          "name": "full-library-suite",
-          "status": "passed"
-        },
-        {
-          "name": "full-suite",
-          "status": "partial"
-        },
-        {
-          "name": "integration-regressions",
-          "status": "passed"
+          "name": "ordinary-feature-build-tests",
+          "status": "unavailable"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "source-recovery-preparation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M51Q2M91D2YCVNK9BQA51P53",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M51Q2M91D2YCVNK9BQA51P53": {
+          "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
             "evidence_only": true,
-            "id": "branch_01M51Q2M91D2YCVNK9BQA51P53",
-            "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
+            "id": "branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "steps": [
               {
-                "action": "implementation",
+                "action": "source-recovery-preparation",
+                "command": "Selectively reapply git diff f38b28ad..f92f19d5 outside .decapod and authored spec prose only; exclude old journal/generated blocks",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/snapshot_provider/public_buildkite/ci_attested.rs",
-                  "src/decapod/core/validation_runtime/snapshot/ci_attested.rs",
-                  ".decapod/config.toml",
-                  "tests/gatling.rs",
-                  "One-time maintainer bootstrap approved 2026-10-16 06:40, Sentinel_6ffcabbc81688191bf23c32a5352ea72, replying to explicit correction-and-activation/direct-check/exact-CI/publication exception. Candidate CLI used only for local preparation because released0.116 rejects new schema; no current-controller readiness claim.",
-                  "28 targeted CI-attested tests passed, including real public1840 success and1870 failure; Bazel cargo_inputs_policy passed. Full library tests and Bazel builds ongoing.",
-                  "Independent review found no blocking issues. Fresh78-entry discovery compared byte-for-byte against accepted d0f23e0: only additive Gatling selection and explicit Bazel fixture/config compile_data changed; no workflow, dependency, toolchain or executable-mode changes."
+                  "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
+                  "Feature source and authored spec semantics exactly equal preserved f92f19d5baa14e79f3e4ab31c27eff5ff7a3dc9d, with no new feature scope. Earlier source contains63 vega/worker test cases and9 new/reworked existing-suite cases; none executed. Prior supported dependency metadata and exact pins retained unchanged.",
+                  "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance."
                 ],
                 "proof_refs": [
-                  "ci-attested-regressions",
-                  "bazel-inputs",
-                  "direct-candidate-build",
-                  "full-suite",
-                  "exact-commit-ci"
+                  "exact-feature-source-reapplication",
+                  "exact-authored-spec-reapplication",
+                  "diff-whitespace",
+                  "ordinary-feature-build-tests",
+                  "native-metal-parity-calibration-performance"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Bazel9.3.0 cargo_inputs_policy and //:decapod //:release_projection_drift builds passed; ordinary Cargo binaries built. Source is checkpointed for same-branch preflight; full tests and lint remain pending."
-                ],
-                "proof_refs": [
-                  "bazel-binary-builds"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Full library1381 passed3ignored; integration Gatling49passed1ignored, sharding23passed, release_workflow22passed, source_ci_profile60passed. Clippy rejected needless_range_loop in test fixture at line122 locally and GHA116853592483; repaired to mutable iteration, rerun pending.",
-                  "Remote73f5d03b verified. Buildkite1882 and GHA38864280221 running, four auxiliary Buildkite workflows passed. No archive/log evidence substituted for validation."
-                ],
-                "proof_refs": [
-                  "full-library-suite",
-                  "integration-regressions",
-                  "clippy",
-                  "exact-commit-ci"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Full all-target all-feature clippy now passed. Exact-head CI exposed stale spec reviews because local Bazel convenience symlinks entered repository fingerprint; removed generated links without deleting build targets, re-reviewed current source and refreshed projections. CI rerun remains required."
-                ],
-                "proof_refs": [
-                  "clippy"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "Compare authored spec semantics after excluding generated blocks",
+        "Selectively reapply git diff f38b28ad..f92f19d5 outside .decapod and authored spec prose only; exclude old journal/generated blocks",
+        "git diff --cached --check",
+        "git diff --cached --quiet f92f19d5 -- . :(exclude).decapod"
+      ],
       "destination": "pull request",
       "evidence": [
-        "28 targeted CI-attested tests passed, including real public1840 success and1870 failure; Bazel cargo_inputs_policy passed. Full library tests and Bazel builds ongoing.",
-        "Bazel9.3.0 cargo_inputs_policy and //:decapod //:release_projection_drift builds passed; ordinary Cargo binaries built. Source is checkpointed for same-branch preflight; full tests and lint remain pending.",
-        "Full all-target all-feature clippy now passed. Exact-head CI exposed stale spec reviews because local Bazel convenience symlinks entered repository fingerprint; removed generated links without deleting build targets, re-reviewed current source and refreshed projections. CI rerun remains required.",
-        "Full library1381 passed3ignored; integration Gatling49passed1ignored, sharding23passed, release_workflow22passed, source_ci_profile60passed. Clippy rejected needless_range_loop in test fixture at line122 locally and GHA116853592483; repaired to mutable iteration, rerun pending.",
-        "Independent review found no blocking issues. Fresh78-entry discovery compared byte-for-byte against accepted d0f23e0: only additive Gatling selection and explicit Bazel fixture/config compile_data changed; no workflow, dependency, toolchain or executable-mode changes.",
-        "One-time maintainer bootstrap approved 2026-10-16 06:40, Sentinel_6ffcabbc81688191bf23c32a5352ea72, replying to explicit correction-and-activation/direct-check/exact-CI/publication exception. Candidate CLI used only for local preparation because released0.116 rejects new schema; no current-controller readiness claim.",
-        "Remote73f5d03b verified. Buildkite1882 and GHA38864280221 running, four auxiliary Buildkite workflows passed. No archive/log evidence substituted for validation."
+        "Feature source and authored spec semantics exactly equal preserved f92f19d5baa14e79f3e4ab31c27eff5ff7a3dc9d, with no new feature scope. Earlier source contains63 vega/worker test cases and9 new/reworked existing-suite cases; none executed. Prior supported dependency metadata and exact pins retained unchanged.",
+        "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
+        "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance."
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M51Q2M8F8C5DR5X05PDC3WDZ",
-      "modified_files": [
-        ".decapod/config.toml",
-        "src/decapod/core/snapshot_provider/public_buildkite/ci_attested.rs",
-        "src/decapod/core/validation_runtime/snapshot/ci_attested.rs",
-        "tests/gatling.rs"
-      ],
+      "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+      "modified_files": [],
       "next_transitions": [
+        "Checkpoint exact feature delta on accepted base; use ordinary validation only after supported released controller is available",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M51Q2M91D2YCVNK9BQA51P53",
+      "run_id": "branch_01M52FPFE20Z7DZVE569ZZYJ77",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m51q281cf5kqsf",
+      "task_id": "feat_01m52fnwybfvhfdj",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

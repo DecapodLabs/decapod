@@ -9,9 +9,7 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const CLOUD_ACCESS_TOKEN_ENV: &str = "DECAPOD_ACCESS_TOKEN";
-pub const TYPESAFE_API_KEY_ENV: &str = "TYPESAFE_API_KEY";
 pub const CLOUD_SESSION_REFRESH_LEAD_SECS: i64 = 30 * 60;
-const MACHINE_SECRETS_FILE: &str = "secrets.json";
 
 fn machine_data_dir() -> Result<PathBuf, DecapodError> {
     if let Ok(data_home) = env::var("XDG_DATA_HOME") {
@@ -34,104 +32,6 @@ fn machine_data_dir() -> Result<PathBuf, DecapodError> {
 
 fn machine_session_token_path() -> Result<PathBuf, DecapodError> {
     Ok(machine_data_dir()?.join("session_token.json"))
-}
-
-fn machine_secrets_path() -> Result<PathBuf, DecapodError> {
-    Ok(machine_data_dir()?.join(MACHINE_SECRETS_FILE))
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-struct MachineSecretsRecord {
-    #[serde(default)]
-    typesafe_api_key: Option<String>,
-}
-
-fn normalize_secret(value: &str, name: &str) -> Result<Option<String>, DecapodError> {
-    let trimmed = value.trim();
-    if trimmed.is_empty() {
-        return Ok(None);
-    }
-    if trimmed.chars().any(char::is_control) || trimmed.chars().any(char::is_whitespace) {
-        return Err(DecapodError::SessionError(format!(
-            "{name} contains whitespace or control characters"
-        )));
-    }
-    Ok(Some(trimmed.to_string()))
-}
-
-/// Resolve the TypeSafe API key from the process environment first, then the
-/// machine-local secret store. Neither source is repository state.
-pub fn load_typesafe_api_key() -> Result<Option<String>, DecapodError> {
-    let environment = env::var(TYPESAFE_API_KEY_ENV).ok();
-    let machine_file = {
-        let path = machine_secrets_path()?;
-        if !path.exists() {
-            None
-        } else {
-            crate::core::fs_permissions::check_file(&path, false).map_err(DecapodError::IoError)?;
-            let raw = fs::read_to_string(path).map_err(DecapodError::IoError)?;
-            let record: MachineSecretsRecord = serde_json::from_str(&raw).map_err(|_| {
-                DecapodError::SessionError("machine secret file is not valid JSON".to_string())
-            })?;
-            record.typesafe_api_key
-        }
-    };
-    resolve_typesafe_api_key(environment.as_deref(), machine_file.as_deref())
-}
-
-/// Resolve provider credentials from already-loaded sources. This pure seam
-/// keeps precedence and validation deterministic without mutating process
-/// environment in tests.
-pub fn resolve_typesafe_api_key(
-    environment: Option<&str>,
-    machine_file: Option<&str>,
-) -> Result<Option<String>, DecapodError> {
-    for value in [environment, machine_file].into_iter().flatten() {
-        if let Some(value) = normalize_secret(value, TYPESAFE_API_KEY_ENV)? {
-            return Ok(Some(value));
-        }
-    }
-    Ok(None)
-}
-
-/// Persist a TypeSafe API key in the machine-local secret store.
-///
-/// This file is deliberately separate from `session_token.json`, whose schema
-/// is reserved for the Propodus cloud session. The repository never receives
-/// this value.
-pub fn store_typesafe_api_key(value: &str) -> Result<(), DecapodError> {
-    let value = normalize_secret(value, TYPESAFE_API_KEY_ENV)?.ok_or_else(|| {
-        DecapodError::SessionError("typesafe API key must not be empty".to_string())
-    })?;
-    let path = machine_secrets_path()?;
-    let parent = path.parent().ok_or_else(|| {
-        DecapodError::SessionError("machine secret path has no parent directory".to_string())
-    })?;
-    crate::core::fs_permissions::ensure_private_dir(parent).map_err(DecapodError::IoError)?;
-
-    let record = MachineSecretsRecord {
-        typesafe_api_key: Some(value),
-    };
-    let bytes = serde_json::to_vec_pretty(&record).map_err(|error| {
-        DecapodError::SessionError(format!("failed to serialize machine secrets: {error}"))
-    })?;
-    crate::core::atomic::write_atomic(&path, &bytes).map_err(DecapodError::IoError)
-}
-
-/// During Jev-enabled initialization, migrate an explicitly supplied
-/// environment key into the machine-local secret store. Missing credentials
-/// remain allowed because Jev is optional and will fail closed at observation
-/// time.
-pub fn persist_typesafe_api_key_from_environment() -> Result<bool, DecapodError> {
-    let Some(value) = env::var(TYPESAFE_API_KEY_ENV)
-        .ok()
-        .and_then(|value| normalize_secret(&value, TYPESAFE_API_KEY_ENV).transpose())
-        .transpose()?
-    else {
-        return Ok(false);
-    };
-    store_typesafe_api_key(&value)?;
-    Ok(true)
 }
 
 /// The non-repository credential sources are intentionally ordered from most

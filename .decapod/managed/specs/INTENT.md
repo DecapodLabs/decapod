@@ -112,8 +112,8 @@ unattempted backlog to be complete (`core::obligation`, `core::validate`).
 ### Local operation with explicit integrations
 
 Decapod runs on demand without a daemon and uses local repository state by
-default. Cloud storage, container execution, remote validation, and advisory
-decision providers have separate access and proof requirements. They extend
+default. Cloud storage, container execution, remote validation, and optional
+vega readiness inference have separate access and proof requirements. They extend
 particular boundaries of the product without owning its intent or governance.
 
 Release automation may create an ordinary branch at the accepted target before
@@ -192,7 +192,21 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (25 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Rust vega readiness scope
+
+Issue #1445 adds a small, optional post-validation intent-fit assessment to the
+existing agent publication gate. The user chose vega alone and removal of active
+Jev integration, with Rust production/setup/new tests and native Apple Metal for
+the text-only 0.8B backbone. The bounded 4,096-token input contains structured
+validation outcomes and minimal intent/change context; all adverse facts and
+unknowns survive compaction. No full plan, diff or log is copied into the prompt.
+The agent publishes through existing gates and the human merges. Failed/stale
+proof cannot be blessed, and only an uncertainty-free positive singleton yes can
+satisfy required assessment. External pinned model setup and explicit refresh
+remain separate from offline inference. Source preparation is not native parity,
+readiness calibration, latency evidence or publication readiness.

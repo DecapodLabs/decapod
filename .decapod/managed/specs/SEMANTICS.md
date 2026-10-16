@@ -160,10 +160,14 @@ prose. Refresh must reject a transformation that would lose authored content
 before writing specs or the manifest. A fingerprint-only change cannot satisfy
 the material authored-spec requirement.
 
-Jev observations belong to the active trajectory and retain their typed
-`trajectory_satisfies_intent` meaning. Missing, invalid, and present governance
-inputs remain distinct. Provider or persistence failure yields
-`no_observation`; a probability is neither approval nor proof.
+Historical Jev observations retain their serialized meaning without current
+trajectory or publication authority. Vega consumes actual bounded validation
+outcomes and minimal intent context only after deterministic proof passes.
+Positive singleton yes, with no abstention/OOD and unchanged exact identities,
+can satisfy required-mode assessment. Negative singleton rejects; larger/missing
+sets, failed runtime or stale evidence abstain. `proof_ready` remains separate
+from `ready`; a model result cannot create proof. Indexed prompt compaction never
+removes adverse outcomes, exclusions, simulations, blockers or unknowns.
 
 ## Failure reporting
 
@@ -239,7 +243,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `700f8ced5ea6ecfb27fdb463bc957e3dfdaee10145af2159347c26530ba60808`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (25 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

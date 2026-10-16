@@ -149,7 +149,7 @@ fn trajectory_cli_records_scope_actions_checks_and_verdicts() {
 }
 
 #[test]
-fn trajectory_cli_replaces_current_section_and_resets_only_prior_jev_history() {
+fn trajectory_cli_replaces_current_section_and_preserves_retired_observation_history() {
     let (_temp, root, password) = setup_repo();
     let env_password = Some(password.as_str());
     let init = run_decapod(
@@ -247,8 +247,8 @@ fn trajectory_cli_replaces_current_section_and_resets_only_prior_jev_history() {
     assert!(
         decapod::core::governance_document::read_section(&root, "jev")
             .unwrap()
-            .is_none(),
-        "new trajectory must reset prior Jev history"
+            .is_some(),
+        "new trajectory must preserve historical observation evidence"
     );
     assert_eq!(
         decapod::core::governance_document::read_section(&root, "plan").unwrap(),

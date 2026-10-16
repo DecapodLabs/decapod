@@ -33,43 +33,6 @@ Cloud service details are intentionally not project configuration. Decapod
 owns the Propodus deployment defaults in the binary, derives `repo_id` from
 the GitHub `origin`, and keeps credentials machine-local.
 
-## The `[decision]` Section
-
-The optional decision provider supplies structured observations to Decapod's
-assurance result. It does not make policy decisions or replace governance.
-
-| Key | Type | Default | Description |
-|---|---|---|---|
-| `provider` | enum | `"none"` | `"none"` keeps operation local; `"jev"` enables the bounded Jev trajectory-satisfaction observation. |
-
-When Jev is enabled, Decapod reads the API credential from the machine
-environment variable `TYPESAFE_API_KEY`, falling back to the machine-local
-`~/.local/share/decapod/secrets.json` file (or the `XDG_DATA_HOME` equivalent).
-Running `decapod init --decision-provider jev` persists an explicitly supplied
-environment key to that file with restrictive permissions. The file is separate
-from the Propodus `session_token.json`; credentials are never written to this
-project file. Jev uses TypeSafe's documented
-[System One API](https://docs.typesafe.ai/api). A missing credential, unavailable
-service, timeout, or malformed response yields `no_observation`; it never
-clears an interlock or satisfies a proof gate.
-
-For an initialized project, `decapod init --refresh` reopens the interactive
-initialization questionnaire with the current configuration as each default.
-Pressing Enter preserves a setting; selecting another option can enable or
-disable it, including the decision provider. The refresh path preserves the
-existing repository setup and does not require `--force`.
-
-With an active trajectory run, every Jev attempt is retained in the
-schema-versioned `jev` section of `.decapod/governance.json`. A new trajectory run
-resets that working-tree ledger, while committed prior ledgers remain
-recoverable through Git history. The ledger is advisory evidence and is not
-included as a governance authority or completion proof.
-
-The live semantic corpus is separate from normal validation and must be enabled
-explicitly with `DECAPOD_RUN_JEV_EVAL=1`; it emits machine-readable observations
-for comparison and does not interpret them as policy. See the repository README
-for the exact command and corpus scope.
-
 ## Schema Versioning
 
 Decapod uses a `schema_version` key at the root to ensure forward and backward compatibility as the governance kernel evolves.
@@ -86,3 +49,16 @@ product_name = "decapod"
 container_workspaces = true
 done_criteria = "Validate passes and all unit tests are green."
 ```
+
+## Vega post-validation readiness
+
+`[vega] mode` is `disabled` by default or explicitly `required`. Required mode
+accepts only a positive singleton without abstention/OOD after current proof.
+Optional `alpha`/`risk` select supported pinned calibration keys. Installation
+requires `[vega.installation] directory`, `manifest_digest`, `runtime` and
+`runtime_sha256`; paths are canonical and absolute, digests are SHA-256 pins.
+Use explicit `decapod setup vega` for data installation/update checks. No model
+is bundled with the crate or downloaded during builds/inference. Native
+execution, parity, domain calibration and latency remain separate proof duties.
+Retired `[decision]` input is ignored on load and omitted on init refresh;
+retired credentials are not read or overwritten.

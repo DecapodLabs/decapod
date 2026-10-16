@@ -970,7 +970,7 @@ fn receipt_is_reusable_after_governance_only_commit() {
 }
 
 #[test]
-fn canonical_first_commit_can_validate_before_receipt_issuance_without_optional_jev() {
+fn canonical_first_commit_can_validate_before_receipt_issuance_with_retired_observations() {
     let tmp = tempdir().unwrap();
     let dir = tmp.path();
     git(dir, &["init", "-b", "master"]);
@@ -984,11 +984,18 @@ fn canonical_first_commit_can_validate_before_receipt_issuance_without_optional_
     crate::core::governance_document::begin_pr(dir, "first-receipt", "master").unwrap();
     seed_publication_bundle(dir);
     crate::core::governance_document::remove_section(dir, "validation").unwrap();
-    assert!(
-        crate::core::governance_document::read_section(dir, "jev")
-            .unwrap()
-            .is_none()
-    );
+    crate::core::governance_document::write_section(
+        dir,
+        "jev",
+        &serde_json::json!({
+            "$schema": "https://decapod.dev/schemas/jev-observations-1.0.0.schema.json",
+            "schema_version": "1.0.0",
+            "kind": "jev_observation_ledger",
+            "trajectory_run_id": "historical-unrelated-run",
+            "runs": {}
+        }),
+    )
+    .unwrap();
     git(dir, &["add", "."]);
     crate::core::governance_document::checkpoint(
         dir,

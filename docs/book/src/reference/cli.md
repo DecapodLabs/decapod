@@ -31,9 +31,6 @@ Bootstrap or manage the Decapod lifecycle.
   existing project, preserving current values as defaults and keeping the
   refresh non-destructive. In non-interactive environments it preserves the
   current configuration without prompting.
-- `--decision-provider <none|jev>`: Configure the optional advisory provider;
-  when `jev` is selected, an explicitly supplied `TYPESAFE_API_KEY` is stored
-  in the machine-local Decapod secret file, never in project configuration.
 
 ### `capabilities`
 Discover the features supported by the current Decapod binary.
@@ -156,3 +153,13 @@ Research claims are separate from Health Engine claims in `.decapod/data/decapod
 Perform a deterministic query over the embedded constitution.
 - `--topic <name>`: The subject of inquiry.
 - `--scope <scope>`: The context boundary (e.g., "interfaces").
+
+### `setup vega`
+
+Explicitly manage the external pinned vega model cache. Options:
+`--cache-directory <path>`, `--check-updates`, `--refresh`, `--offline`, and
+`--rollback <manifest-digest>`. Conflicting modes are rejected. Output is a JSON
+installation/update report with disabled configuration; installing model data
+neither installs a worker executable nor proves native readiness. Runtime is
+one-shot and offline. The native worker separately supports `--probe` and
+`--request <private-json> [--proof-output <new-private-json>]`.

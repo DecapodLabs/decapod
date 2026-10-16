@@ -851,11 +851,6 @@ const DIAGRAM_NOTATION_DESCRIPTIONS: &[&str] = &[
     "ASCII/text blocks readable in terminals and plain Markdown",
     "Mermaid diagrams rendered by GitHub Markdown from readable text source",
 ];
-const DECISION_PROVIDER_OPTIONS: &[&str] = &["none", "jev"];
-const DECISION_PROVIDER_DESCRIPTIONS: &[&str] = &[
-    "Local-only operation; do not request external observations",
-    "Optional advisory trajectory observation through Jev",
-];
 const SELECTOR_VISIBLE_OPTIONS: usize = 10;
 
 fn normalize_language(input: &str) -> String {
@@ -1562,45 +1557,6 @@ fn prompt_diagram_style(
     parse_diagram_style_choice(&choice, default_style)
 }
 
-fn decision_provider_choice(
-    provider: crate::core::decision_provider::DecisionProviderKind,
-) -> Result<crate::core::decision_provider::DecisionProviderKind, error::DecapodError> {
-    print_init_block(
-        "Decision Provider",
-        "Choose whether Decapod may request optional advisory observations.",
-    );
-    println!(
-        "    current selection/default: {}",
-        match provider {
-            crate::core::decision_provider::DecisionProviderKind::None => "none",
-            crate::core::decision_provider::DecisionProviderKind::Jev => "jev",
-        }
-        .bright_white()
-    );
-    println!("    options: up/down, type name or number");
-    let default = vec![
-        match provider {
-            crate::core::decision_provider::DecisionProviderKind::None => "none",
-            crate::core::decision_provider::DecisionProviderKind::Jev => "jev",
-        }
-        .to_string(),
-    ];
-    let choice = prompt_terminal_selector(
-        DECISION_PROVIDER_OPTIONS,
-        Some(DECISION_PROVIDER_DESCRIPTIONS),
-        &default,
-        "    choice: ",
-    )?
-    .unwrap_or_else(|| default[0].clone());
-    match choice.to_ascii_lowercase().as_str() {
-        "none" => Ok(crate::core::decision_provider::DecisionProviderKind::None),
-        "jev" => Ok(crate::core::decision_provider::DecisionProviderKind::Jev),
-        _ => Err(error::DecapodError::ValidationError(
-            "Invalid decision provider; expected none or jev".to_string(),
-        )),
-    }
-}
-
 fn init_with_from_config(
     config: &DecapodProjectConfig,
     target_dir: PathBuf,
@@ -1658,7 +1614,6 @@ fn init_with_from_config(
         } else {
             crate::cli::BackendType::Local
         },
-        decision_provider: Some(config.decision.provider),
         git: false,
         no_git: false,
     }
@@ -1744,9 +1699,6 @@ fn preserve_unspecified_init_options(
     }
     if !explicit("backend") {
         init.backend = existing.backend;
-    }
-    if !explicit("decision_provider") {
-        init.decision_provider = existing.decision_provider;
     }
     // Entrypoint flags add requested projections without silently removing the
     // project's existing selection; --all explicitly adds every projection.
@@ -1871,11 +1823,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-        decision: DecisionConfig {
-            provider: init
-                .decision_provider
-                .unwrap_or(crate::core::decision_provider::DecisionProviderKind::None),
-        },
+        vega: core::vega_readiness::Configuration::default(),
     }
 }
 
@@ -2079,11 +2027,6 @@ fn enrich_repo_context_interactive(
 
     let enable_ci = prompt_yes_no("Scaffold GitHub Action for decapod validate?", init.ci)?;
     init.ci = enable_ci;
-
-    init.decision_provider = Some(decision_provider_choice(
-        init.decision_provider
-            .unwrap_or(crate::core::decision_provider::DecisionProviderKind::None),
-    )?);
 
     Ok(())
 }
@@ -2517,7 +2460,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
                             backend: init_group.backend,
-                            decision_provider: init_group.decision_provider,
                             git: init_group.git,
                             no_git: init_group.no_git,
                         }
@@ -2614,14 +2556,11 @@ pub fn run() -> Result<(), error::DecapodError> {
                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
             }
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
-            let config = config_from_init_with(&init_with, repo_ctx);
-            write_project_config(&target_dir, &config, init_with.dry_run)?;
-            if !init_with.dry_run
-                && config.decision.provider
-                    == crate::core::decision_provider::DecisionProviderKind::Jev
-            {
-                auth::persist_typesafe_api_key_from_environment()?;
+            let mut config = config_from_init_with(&init_with, repo_ctx);
+            if let Some(existing) = existing_config.as_ref() {
+                config.vega = existing.vega.clone();
             }
+            write_project_config(&target_dir, &config, init_with.dry_run)?;
             // The scaffold writes project specs before the final config is
             // persisted. Refresh the manifest after that write so its
             // config/spec input hashes describe the actual initialized
@@ -2715,6 +2654,22 @@ pub fn run() -> Result<(), error::DecapodError> {
             run_release_command(release_cli, &project_root)?;
         }
         Command::Setup(setup_cli) => match setup_cli.command {
+            SetupCommand::Vega {
+                cache_directory,
+                check_updates,
+                refresh,
+                offline,
+                rollback,
+            } => {
+                let report = core::vega_setup::run(&core::vega_setup::SetupOptions {
+                    cache_directory,
+                    check_updates,
+                    refresh,
+                    offline,
+                    rollback,
+                })?;
+                println!("{}", serde_json::to_string_pretty(&report)?);
+            }
             SetupCommand::Hook {
                 commit_msg,
                 pre_commit,
@@ -6635,6 +6590,8 @@ fn run_current_workbranch_readiness_with(
                 signal_guard.restore()?;
                 return Ok(runtime::ValidationReport {
                     ready: false,
+                    proof_ready: false,
+                    vega_readiness: None,
                     scope: runtime::READINESS_SCOPE,
                     agent_guidance: runtime::ValidationGuidance::for_outcome(false),
                     stage_dispositions: Vec::new(),
@@ -6733,6 +6690,8 @@ fn run_current_workbranch_readiness_with(
     })();
     result.unwrap_or_else(|error| runtime::ValidationReport {
         ready: false,
+        proof_ready: false,
+        vega_readiness: None,
         scope: report_scope,
         agent_guidance: runtime::ValidationGuidance::for_outcome(false),
         stage_dispositions: Vec::new(),
