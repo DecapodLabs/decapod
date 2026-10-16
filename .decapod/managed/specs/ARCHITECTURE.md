@@ -376,6 +376,8 @@ The decoder preserves SafeTensors offset validation, preallocation name/shape
 checks, F32/F16/BF16 conversion and final typed finiteness/resource checks.
 Portable decoder fixtures must run through the separate worker's test target;
 root CI alone cannot establish their execution or native backend acceptance.
+Binary16 fixture obligations include both signs of zero and subnormals, normal
+and maximum finite values, infinities and NaNs, with explicit 32-bit normalization.
 The Rust scalar engine uses F32 and calibration uses F64 probabilities. Required
 calibration, unbound/OOD and prediction-set semantics are preserved. Runtime
 loads only explicitly pinned local artifacts, resets recurrent state per request,
@@ -448,7 +450,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `36ed1d2a1bcfb7041f71bc0fe6ac6440fcad716893187138eab0f5331786628a`
+- Repository signal fingerprint: `23c0e87404af60801501d30f96a16eec312d44ffd8b6c1e058fd91e9580654a3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

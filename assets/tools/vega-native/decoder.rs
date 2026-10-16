@@ -69,7 +69,8 @@ pub fn from_safetensors(config: EngineConfig, bytes: &[u8]) -> Result<VegaEngine
 fn half_to_f32(bits: u16) -> f32 {
     let sign = ((bits & 0x8000) as u32) << 16;
     let exponent = (bits >> 10) & 0x1f;
-    let mantissa = (bits & 0x03ff) as u32;
+    // The subnormal normalization below uses the 32-bit leading-zero count.
+    let mantissa = u32::from(bits & 0x03ff);
     let out = match exponent {
         0 if mantissa == 0 => sign,
         0 => {
@@ -186,12 +187,19 @@ mod tests {
 
     #[test]
     fn ieee_half_conversion_is_exact() {
+        assert_eq!(half_to_f32(0x0000).to_bits(), 0x0000_0000);
+        assert_eq!(half_to_f32(0x8000).to_bits(), 0x8000_0000);
         assert_eq!(half_to_f32(0x3c00), 1.0);
         assert_eq!(half_to_f32(0xc000), -2.0);
         assert_eq!(half_to_f32(0x0001), 2.0f32.powi(-24));
+        assert_eq!(half_to_f32(0x8001), -2.0f32.powi(-24));
         assert_eq!(half_to_f32(0x03ff), 1023.0 * 2.0f32.powi(-24));
+        assert_eq!(half_to_f32(0x83ff), -1023.0 * 2.0f32.powi(-24));
         assert_eq!(half_to_f32(0x0400), 2.0f32.powi(-14));
-        assert!(half_to_f32(0x7c00).is_infinite());
+        assert_eq!(half_to_f32(0x7bff), 65_504.0);
+        assert_eq!(half_to_f32(0x7c00), f32::INFINITY);
+        assert_eq!(half_to_f32(0xfc00), f32::NEG_INFINITY);
         assert!(half_to_f32(0x7e00).is_nan());
+        assert!(half_to_f32(0xfe00).is_nan());
     }
 }

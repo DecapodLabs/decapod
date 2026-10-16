@@ -389,6 +389,14 @@
       "proof_refs": [
         "/workspace/shared/vega-followup-evidence/validate117-third.log"
       ]
+    },
+    {
+      "id": "vega117-half-boundary-fixtures",
+      "summary": "Clarify existing half conversion width and extend portable worker boundary fixtures",
+      "input_digest": "sha256:0a0f94fc331ef498588bcf35f8365b9ddf1cb6cd98f8a612d68fd1b20703f7dc",
+      "proof_refs": [
+        "/workspace/shared/vega-followup-evidence/validate117-fourth.log"
+      ]
     }
   ],
   "intents": {
@@ -433,22 +441,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed complete discovered proof inventory and exact accepted-base delta. Only root dependency metadata and four new native-worker files differ; strict profile, workflows/actions/accepted executor remain unchanged. Inventory review declaration updated explicitly, with separate worker/native execution obligations still unmet.",
-          "reviewed_code_fingerprint": "36ed1d2a1bcfb7041f71bc0fe6ac6440fcad716893187138eab0f5331786628a",
-          "spec_material_hash": "2cd07d67da6151dac9f15b7e01712f8cfeeb30991cb2aae031a9e54e021220b6"
+          "reason": "Reviewed explicit existing32-bit half normalization and expanded signed/finite/nonfinite fixture assertions, plus matching updated inventory declaration. No transport policy or credentials changed; worker test and native acceptance obligations remain unrun.",
+          "reviewed_code_fingerprint": "23c0e87404af60801501d30f96a16eec312d44ffd8b6c1e058fd91e9580654a3",
+          "spec_material_hash": "9ce01985648d9b229da0a317e8d2eb6decc468984d7eb397bf0eff8eed03ebdb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed complete discovered proof inventory and exact accepted-base delta. Only root dependency metadata and four new native-worker files differ; strict profile, workflows/actions/accepted executor remain unchanged. Inventory review declaration updated explicitly, with separate worker/native execution obligations still unmet.",
-          "reviewed_code_fingerprint": "36ed1d2a1bcfb7041f71bc0fe6ac6440fcad716893187138eab0f5331786628a",
+          "reason": "Reviewed explicit existing32-bit half normalization and expanded signed/finite/nonfinite fixture assertions, plus matching updated inventory declaration. No transport policy or credentials changed; worker test and native acceptance obligations remain unrun.",
+          "reviewed_code_fingerprint": "23c0e87404af60801501d30f96a16eec312d44ffd8b6c1e058fd91e9580654a3",
           "spec_material_hash": "f453f6322985f2372a1f269d1e1a847aa9d2b3115bcdaee975f640045863dad2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed complete discovered proof inventory and exact accepted-base delta. Only root dependency metadata and four new native-worker files differ; strict profile, workflows/actions/accepted executor remain unchanged. Inventory review declaration updated explicitly, with separate worker/native execution obligations still unmet.",
-          "reviewed_code_fingerprint": "36ed1d2a1bcfb7041f71bc0fe6ac6440fcad716893187138eab0f5331786628a",
+          "reason": "Reviewed explicit existing32-bit half normalization and expanded signed/finite/nonfinite fixture assertions, plus matching updated inventory declaration. No transport policy or credentials changed; worker test and native acceptance obligations remain unrun.",
+          "reviewed_code_fingerprint": "23c0e87404af60801501d30f96a16eec312d44ffd8b6c1e058fd91e9580654a3",
           "spec_material_hash": "fa33ffad2f3233838711a441d2a4a75113c624d1137f76048e04ddcdd2c81d47"
         }
       ],
@@ -463,7 +471,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792169392Z"
+      "updated_at": "1792169551Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -471,7 +479,7 @@
         "Current claimed task and isolated work branch",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:0cf3118b0b0740139349af5323b192ffcb915c2ec84b017d9d54be868df04c1a",
+      "artifact_hash": "sha256:7e4ea71a80e3dd0650027e291fb5f51a58d6b5d5b6d7f8f707025f20dcfe4cfb",
       "checks": [
         {
           "name": "decoder-source-review",
@@ -498,6 +506,10 @@
           "status": "unavailable"
         },
         {
+          "name": "half-width-source-review",
+          "status": "passed"
+        },
+        {
           "name": "init-source-discovery",
           "status": "failed"
         },
@@ -516,6 +528,10 @@
         {
           "name": "ordinary-feature-build-tests",
           "status": "unavailable"
+        },
+        {
+          "name": "provider-transport",
+          "status": "failed"
         },
         {
           "name": "regenerated-lock-bound",
@@ -587,10 +603,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -693,6 +716,22 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Plain117 fourth validation reached GitTransport and exited128 before provider execution. Normal configured-helper ls-remote succeeds and feature remote branch is absent; no credential extraction or settings change. Static review confirmed committed binary16 mantissa already explicitly cast to u32; use u32::from for clarity, preserve normalization and expand signed zero/subnormal/normal/Inf/NaN assertions. No test execution or numerical parity claimed."
+                ],
+                "proof_refs": [
+                  "provider-transport",
+                  "half-width-source-review"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -717,6 +756,7 @@
         "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
         "Official published controller0.117.0 now governs; prior preparation-only candidate is no longer used. Accepted release changes only changelog and Cargo version/lock. Reviewed generated entrypoint117 fingerprints and Docker release pin; template bodies unchanged, machine projections updated only by supported CLI.",
         "Official117 first plain validate stopped before provider submission on recorded trajectory blockers. Initialization discovery still observes MODULE.bazel.lock 1052029 bytes above1048576 bound; tokenizer-only adapter removal does not alter default Bazel graph. Preserve failed observation and let ordinary controller establish next actionable report.",
+        "Plain117 fourth validation reached GitTransport and exited128 before provider execution. Normal configured-helper ls-remote succeeds and feature remote branch is absent; no credential extraction or settings change. Static review confirmed committed binary16 mantissa already explicitly cast to u32; use u32::from for clarity, preserve normalization and expand signed zero/subnormal/normal/Inf/NaN assertions. No test execution or numerical parity claimed.",
         "Plain117 second validation stopped PROOF_DISCOVERY_BLOCKED on MODULE.bazel.lock1052029 bytes. Moved unchanged SafeTensors decoder/half conversion and fixtures to sole native owner; root retains typed engine/header/GELU tests and checked schema. Supported metadata regeneration now gives1037341 bytes below1048576. Root graph removes only safetensors0.7/hashbrown0.16/foldhash/allocator-api2; native retains pinned SafeTensors0.7 and immutable model/source pins. Cargo reports0 package additions/updates, but reselects existing socket2/getrandom/Windows dependency edges; retain generator output for actual validation rather than hand-edit locks.",
         "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance."
       ],
