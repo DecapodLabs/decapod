@@ -132,6 +132,9 @@ def decapod_targets():
             "tests/fixtures/derived-release/dist.toml",
         ]
         + native.glob(["src/decapod/core/snapshot_provider/source_execution/*.json"])
+        # Public metadata regression fixtures and the authored policy they check.
+        + native.glob(["src/decapod/core/snapshot_provider/public_buildkite/ci_attested/fixtures/*.json"])
+        + [".decapod/config.toml"]
         # The controller embeds the complete reviewed carrier, and runtime
         # admission fixtures materialize the same workflow bytes. Keep these
         # explicit sandbox inputs aligned with readiness_profile::carrier_files.

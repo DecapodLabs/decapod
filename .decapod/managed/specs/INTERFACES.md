@@ -12,6 +12,25 @@ RPC invocation is ephemeral; repository state preserves continuity between calls
 
 ## Human and agent entrypoints
 
+### CI-attested execution declaration
+
+`proof.ci_attested.workflows` maps each supported workflow's native step keys to
+the compiled required checks. Its optional `pipeline_trigger` declaration names
+the finite `buildkite-gha-0.102.7` contract, exact workflow name and, when present,
+the supported authored concurrency expression. The configured executor is trusted
+to supply one keyless importer; metadata verifies its terminal success and actual
+job UUID, not the plugin implementation. Derived concurrency gates and the reserved
+bootstrap evidence identity are distinct from required logical validation checks.
+Collection reads only build, complete steps and complete jobs metadata. It rejects
+failed, retried, missing, duplicate or unexpected jobs and mismatched source/run
+identity. Optional configured workflows are collected only when the compiled
+catalog requires them. Exact accepted-target policy equality remains mandatory.
+
+The activation PR uses an explicitly approved one-time direct-check and exact-CI
+bootstrap review. It cannot report released-controller publication readiness for
+its own new policy. Subsequent changes use the accepted policy and released
+controller through ordinary validation.
+
 Human setup is `cargo binstall decapod && decapod init` in the project, followed
 by a task given to the person's coding agent. The README keeps this path short.
 Operational commands belong in the agent contract and agent documentation.
@@ -452,8 +471,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (193 files), `tests/` (193 files)
+- Repository signal fingerprint: `5450f82e5e8d7b3f751e248e6148ff0f9ef57e7e46234422fca9ae4f99242490`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `bazel-bin/` (7 files), `bazel-laya-readiness-todo-01m51q-agent-laya-readiness-cicd_01m51q281cf5kqsf/` (8102 files), `bazel-out/` (11 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

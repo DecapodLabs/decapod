@@ -499,8 +499,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (193 files), `tests/` (193 files)
+- Repository signal fingerprint: `5450f82e5e8d7b3f751e248e6148ff0f9ef57e7e46234422fca9ae4f99242490`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `bazel-bin/` (7 files), `bazel-laya-readiness-todo-01m51q-agent-laya-readiness-cicd_01m51q281cf5kqsf/` (8102 files), `bazel-out/` (11 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -584,3 +584,31 @@ verify its accepted source-CI executor, exact candidate identity and downloaded
 artifact digest, then rerun complete readiness. This is not automatic controller
 adoption or acceptance of candidate-produced JSON as a proof verdict. No separate
 local prerequisite build or reduced check graph is introduced.
+
+## CI-attested activation regression coverage
+
+The finite provider adapter is checked against projected public metadata from
+Buildkite builds 1840 (successful commit `c444ff9b03ae569a268f348c898f0dccfa08b5e4`)
+and 1870 (failed commit `bcb5842ff5d1dba6a8697b1cffe5deb1d135f701`). Fixture
+provenance distinguishes retained identity/status fields from redacted command
+content. Required keys originate in the reviewed workflow/catalog mapping, never
+from whichever observed jobs passed. Tests must exercise the ordinary three-read
+collector, branch-dependent concurrency identities, exactly one keyless bootstrap,
+negative source/run/job mutations, and checked-in policy mapping completeness.
+Only metadata routes are permitted by the fixture reader; no archives or logs are
+used as evidence for this policy.
+
+This activation change is checked under a specifically approved one-time bootstrap
+exception: direct repository build/lint/tests and exact-commit CI, followed by a
+PR that discloses those results and the absence of current-controller readiness.
+Maintainer merge and a controller release establish the accepted policy for future
+ordinary validation. Passing fixture tests alone does not prove native execution,
+vega readiness calibration, or the absence of mutable provider configuration.
+
+The Gatling completion regression exercises the public CLI's rejection of
+`todo done --validated` when its minimal fixture lacks the mandatory full proof
+profile, retaining the open task and unchanged revision. Existing completion-unit
+fixtures separately cover successful prepared proof capture and atomic status
+commit. The ignored positive public-CLI full-readiness fixture remains an explicit
+coverage gap, not a passing acceptance test. Completion/runtime edits additionally
+select Gatling so future changes cannot silently omit this regression.

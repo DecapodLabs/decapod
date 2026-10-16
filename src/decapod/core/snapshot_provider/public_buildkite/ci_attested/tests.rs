@@ -99,6 +99,149 @@ fn reader(values: [Value; 3]) -> MetadataReader {
         calls: Vec::new(),
     }
 }
+
+fn trigger_policy() -> PipelineTriggerPolicy {
+    PipelineTriggerPolicy {
+        contract: PipelineTriggerContract::BuildkiteGha01027,
+        workflow_name: "CI".into(),
+        concurrency_group: None,
+    }
+}
+
+fn trigger_fixture() -> [Value; 3] {
+    let mut values = fixture();
+    for step in values[1].as_array_mut().unwrap() {
+        step["state"] = json!("finished");
+    }
+    values[1][2]["key"] = Value::Null;
+    values[1][2]["command_script"] = Value::Null;
+    values[1][2]["label"] = json!(":github:");
+    values[2]["records"][2]["step_key"] = Value::Null;
+    values[2]["records"][2]["command"] = Value::Null;
+    values[2]["records"][2]["name"] = json!(":github:");
+    for index in 0..2 {
+        values[1][index]["uploaded_by_step_uuid"] = json!(STEPS[2]);
+    }
+    values
+}
+
+fn collect_trigger(
+    values: [Value; 3],
+    policy: &PipelineTriggerPolicy,
+) -> Result<CiAttestedValidation> {
+    let cancel = Cancellation::default();
+    let budget = Budget::new(Duration::from_secs(2), 1024 * 1024, &cancel).unwrap();
+    collect_ci_attested_validation_with_pipeline_trigger(
+        &mut reader(values),
+        build(),
+        &expectation(),
+        RUN,
+        &required(),
+        &[],
+        Some(policy),
+        &budget,
+    )
+}
+
+#[test]
+fn accepted_pipeline_trigger_binds_keyless_root_to_actual_uuid_without_inventing_native_key() {
+    let values = trigger_fixture();
+    assert!(
+        collect(
+            &mut reader(values.clone()),
+            &expectation(),
+            RUN,
+            &required(),
+            &auxiliary()
+        )
+        .is_err()
+    );
+    let result = collect_trigger(values, &trigger_policy()).unwrap();
+    assert_eq!(result.jobs().len(), 3);
+    assert_eq!(result.auxiliary_jobs()[PIPELINE_TRIGGER_IDENTITY], JOBS[2]);
+    assert!(!result.jobs().contains_key(KEYS[2]));
+}
+
+#[test]
+fn pipeline_trigger_rejects_ambiguous_roots_labels_linkage_commands_and_incomplete_steps() {
+    for case in 0..11 {
+        let mut values = trigger_fixture();
+        match case {
+            0 => {
+                values[1][1]["key"] = Value::Null;
+                values[2]["records"][1]["step_key"] = Value::Null;
+            }
+            1 => {
+                values[1][2]["key"] = json!(KEYS[2]);
+                values[2]["records"][2]["step_key"] = json!(KEYS[2]);
+            }
+            2 => values[1][2]["uploaded_by_step_uuid"] = json!(STEPS[0]),
+            3 => values[1][0]["uploaded_by_step_uuid"] = Value::Null,
+            4 => values[1][2]["label"] = json!("unrelated"),
+            5 => values[2]["records"][2]["name"] = json!("unrelated"),
+            6 => {
+                values[1][2]["command_script"] = json!("run");
+                values[2]["records"][2]["command"] = json!("run");
+            }
+            7 => values[1][2]["statistics"]["jobs_finished_count"] = json!(0),
+            8 => values[1][0]["outcome"] = json!("skipped"),
+            9 => values[2]["records"][2]["retry_pending"] = json!(true),
+            10 => {
+                values[1][2]["key"] = json!(7);
+                values[2]["records"][2]["step_key"] = json!(7);
+            }
+            _ => unreachable!(),
+        }
+        assert!(
+            collect_trigger(values, &trigger_policy()).is_err(),
+            "case {case}"
+        );
+    }
+}
+
+#[test]
+fn trigger_bookkeeping_and_derived_keys_cannot_collide_with_explicit_keys() {
+    let mut policy = trigger_policy();
+    policy.concurrency_group = Some(WORKFLOW_REF_CONCURRENCY.into());
+    let keys = policy.auxiliary_step_keys(&expectation()).unwrap();
+    for key in keys {
+        let mut reader = reader(trigger_fixture());
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(2), 1024 * 1024, &cancel).unwrap();
+        assert!(
+            collect_ci_attested_validation_with_pipeline_trigger(
+                &mut reader,
+                build(),
+                &expectation(),
+                RUN,
+                &required(),
+                &[key],
+                Some(&policy),
+                &budget,
+            )
+            .is_err()
+        );
+        assert!(reader.calls.is_empty());
+    }
+}
+
+#[test]
+fn pipeline_trigger_derivation_rejects_unreviewed_expression_and_non_push_events() {
+    let mut policy = trigger_policy();
+    policy.concurrency_group = Some("${{ github.sha }}".into());
+    assert!(policy.auxiliary_step_keys(&expectation()).is_err());
+    policy.concurrency_group = Some(WORKFLOW_REF_CONCURRENCY.into());
+    let mut expected = expectation();
+    expected.event = "pull_request".into();
+    assert!(policy.auxiliary_step_keys(&expected).is_err());
+    expected.event = "push".into();
+    let original = policy.auxiliary_step_keys(&expected).unwrap();
+    expected.branch = "other".into();
+    assert_ne!(original, policy.auxiliary_step_keys(&expected).unwrap());
+    expected.branch = "work".into();
+    expected.repository = Repository::new("owner", "different").unwrap();
+    assert_ne!(original, policy.auxiliary_step_keys(&expected).unwrap());
+}
 fn collect(
     reader: &mut MetadataReader,
     expected: &InventoryExpectation,

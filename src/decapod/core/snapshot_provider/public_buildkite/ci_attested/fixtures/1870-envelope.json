@@ -1,0 +1,28 @@
+{
+   "account" : {
+      "slug" : "decapodlabs"
+   },
+   "blocked_state" : null,
+   "branch_name" : "agent/laya-readiness/code_01m50zemd9zw1swe",
+   "commit_id" : "bcb5842ff5d1dba6a8697b1cffe5deb1d135f701",
+   "github_webhook_event" : "push",
+   "github_workflow_path" : ".github/workflows/ci.yml",
+   "id" : "01a14205-d31a-4ae0-9fb2-c92b61248f00",
+   "number" : 1870,
+   "path" : "/decapodlabs/decapod/builds/1870",
+   "project" : {
+      "id" : "01a0bcf1-5e16-44ae-8457-04495fae8ff5",
+      "provider" : {
+         "id" : "github",
+         "url" : "https://github.com/DecapodLabs/decapod"
+      },
+      "public" : true,
+      "slug" : "decapod"
+   },
+   "source" : "webhook",
+   "state" : "failed",
+   "statistics" : {
+      "jobs_count" : 39,
+      "steps_count" : 39
+   }
+}

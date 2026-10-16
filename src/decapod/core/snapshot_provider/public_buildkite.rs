@@ -13,7 +13,10 @@ mod collection;
 mod custody;
 mod program;
 pub use ci_attested::{
-    CiAttestedValidation, collect_ci_attested_validation, verify_ci_attested_validation,
+    CiAttestedValidation, PIPELINE_TRIGGER_IDENTITY, PipelineTriggerContract,
+    PipelineTriggerPolicy, WORKFLOW_REF_CONCURRENCY, collect_ci_attested_validation,
+    collect_ci_attested_validation_with_pipeline_trigger, verify_ci_attested_validation,
+    verify_ci_attested_validation_with_pipeline_trigger,
 };
 pub use collection::CollectionReader;
 pub use custody::{

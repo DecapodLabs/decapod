@@ -192,7 +192,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (193 files), `tests/` (193 files)
+- Repository signal fingerprint: `5450f82e5e8d7b3f751e248e6148ff0f9ef57e7e46234422fca9ae4f99242490`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `bazel-bin/` (7 files), `bazel-laya-readiness-todo-01m51q-agent-laya-readiness-cicd_01m51q281cf5kqsf/` (8102 files), `bazel-out/` (11 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

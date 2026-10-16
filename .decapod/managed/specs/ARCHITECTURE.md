@@ -418,8 +418,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d9cb65474dccf2738529f9e4b7ab82a2a25f574f52f4b8721d80927132679df`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (193 files), `tests/` (193 files)
+- Repository signal fingerprint: `5450f82e5e8d7b3f751e248e6148ff0f9ef57e7e46234422fca9ae4f99242490`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `bazel-bin/` (7 files), `bazel-laya-readiness-todo-01m51q-agent-laya-readiness-cicd_01m51q281cf5kqsf/` (8102 files), `bazel-out/` (11 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -492,6 +492,19 @@ CI-attested observations bound to material, intent and check definitions.
 
 The trust boundary is the configured CI executor and provider-owned HTTPS
 metadata, rather than independently downloaded measurements of remote outputs.
-No artifact, log, toolchain or binary measurement is invented. The default
-archive-based policy remains unchanged. This bootstrap delivers capability and
-negative regressions, not policy activation or model readiness integration.
+No artifact, log, toolchain or binary measurement is invented. Projects without
+an accepted CI-attested policy retain archive custody. This repository selects
+the CI-attested policy in `.decapod/config.toml`; its activation still requires
+maintainer acceptance and a controller containing the corrected adapter.
+
+The finite `buildkite-gha-0.102.7` Pipeline Trigger declaration trusts the
+configured Buildkite pipeline to supply exactly one keyless importer. Its label
+and count are consistency checks, not independent proof of plugin identity or
+unchanged remote pipeline settings. Evidence retains the actual provider job
+UUID under a reserved bootstrap identity. Concurrency identities are derived
+from the reviewed workflow name, authored expression, repository and exact push
+branch using the pinned importer's algorithm. Unknown, duplicate, failed or
+retried jobs remain rejection conditions. The complete required catalog chooses
+which configured workflows must run; an inapplicable documentation-sync workflow
+does not become an extra execution obligation. This change establishes neither
+vega inference nor native Apple GPU readiness.

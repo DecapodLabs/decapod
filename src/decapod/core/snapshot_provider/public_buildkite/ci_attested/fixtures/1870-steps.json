@@ -1,0 +1,782 @@
+[
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : null,
+      "group_uuid" : null,
+      "key" : null,
+      "label" : ":github:",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14205-d31f-4454-aecf-061671033c10",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : null,
+      "uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "true",
+      "group_uuid" : null,
+      "key" : "gha-concurrency-start-6bb3eb42f9e9",
+      "label" : ":github: Start workflow concurrency",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-ef98-44ed-a026-4f7e5b6aa422",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-eed7-4811-9fa6-4d2084b107b3"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "true",
+      "group_uuid" : null,
+      "key" : "gha-concurrency-finish-6bb3eb42f9e9",
+      "label" : ":github: Finish workflow concurrency",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efb5-49b1-839d-40fe30b0ff52",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-eee9-4d1c-ae35-4969160401e5"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:959f7e3c6a65a33a7172e14c75f9cc949dd713677c9e75ae239a1b7f580c05bb",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-release-metadata",
+      "label" : ":github: job · Release Metadata Classification",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efbb-4631-9cef-8e850c194708",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-eeee-4a57-9b2f-1543bfd889c2"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:49aad1987d8c194c7c7df56f9f06ee576671bd6ab58871b89a675b16f5ee92c1",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-clippy",
+      "label" : ":github: job · Lint (clippy)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efc2-4ffa-9ce5-142d0f7a4a83",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-eefa-4f8c-8c18-531916baee9a"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:daffec2a5bd26d196159c121ba50a58c7fa1e22ced85e90fd9ef1f9462a0816b",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-commit-lint",
+      "label" : ":github: job · Commit Lint",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efc7-4fac-bd42-597c5a5cb8b6",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-eefe-47ca-9ca4-a34d59b2748d"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:968bee20d17afc29ee59981ca13684c23e1a76657655e2d770cb1c8f9409a665",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-contracts",
+      "label" : ":github: job · Contract Conformance",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efcc-4400-a6e8-7da5ee52a08c",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef01-4a3c-83ac-1baa19d0b69e"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:b5dd4614b44269d6bc704b3db132f3b5ec2622b5dfae6eeced446d4627f8df0f",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-deps-lint",
+      "label" : ":github: job · Lint (dependencies)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efd1-4f76-8333-9fdf3ac2a866",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef05-44dd-ab66-deaec3acce16"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:d40e2c1ea3fdb36736193aa6b50659d7924b0568327d5630895f2e13096fa937",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-detect-migration-script-changes",
+      "label" : ":github: job · Detect Migration Script Changes",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efd6-4f28-8815-e2125c722a7d",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef08-431d-8c88-6720cf426363"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:ddd47c68c2a56f04edf40cfbec277b49f99354ec2f41d2273af5156180715c51",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-fmt",
+      "label" : ":github: job · Lint (fmt)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efdb-4a56-8939-67719afcb74a",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef0b-454b-a360-87de591587bd"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:0154dd3bc16d60719f7515dbe5f2e45cfb5155b6a6281a1a0a7886d8b8754861",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-integration-prepare",
+      "label" : ":github: job · Prepare Integration Tests",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efe0-4602-8a9d-10896e1416e3",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef10-4d10-bdb1-bcba7d38d7e7"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:8ce8ed3c39f2592aa9079585903bcf12eff7165432a465cbb07456fba97e9f7f",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-material-specs",
+      "label" : ":github: job · Material Living Specs (beyond fingerprints)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efe5-4ba1-82b7-ad334725693d",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef14-4777-804a-615f09df7731"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:51f610c67535ded12a3330dffd4a2e1c9ff878dbf424a4fbe3a0428b1ae0e6a9",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-migration-script-tests",
+      "label" : ":github: job · Migration Script Tests (skipped)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efe9-4849-84b8-b5710f2097cf",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef17-475e-8d64-11c59ba22020"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:5ef28bd83d41af5d746682a1f4a2e2cce2a63890c659ac03e19e260cc07b10a4",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-musl-publication-0b011f11a8c5",
+      "label" : ":github: job · Musl build and atomic publication (aarch64-unknown-linux-musl, QEMU user-mode)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-efee-4a2c-a579-ec45419c4fbd",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef1b-4ff8-9d3e-713c409a5a4c"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:d9fa6f69f265cd5ffd94e598a3d77de40c55a2cac85e86a4533b7d1065cfde55",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-musl-publication-fa54ecf7f403",
+      "label" : ":github: job · Musl build and atomic publication (x86_64-unknown-linux-musl, native)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-eff3-477e-923f-4354e47ea331",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef20-4ca4-9f07-1c13e332e44f"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:357361a092cbe2646b6663e780a306b201906851298ed6e8251e15d44901d74d",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-propodus-live",
+      "label" : ":github: job · Propodus Live Contract Proof (skipped)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-eff8-4b37-9588-022461c3cfbb",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef22-487f-b850-2a399649b4b1"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:1ad8e4e634b1f2353df6de21b56e3a46e886f31b3019b7572a8318e504bf4300",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-setup",
+      "label" : ":github: job · Setup & Build Shared Binary",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-effc-4a50-ab01-71ea8963e2bd",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef25-44b3-883b-0a0b5e8fdc2a"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:308f98a7997b74a19bc51dff9ca8c8f8a0092cbfbf59f89cc864b906a244f331",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-governance-artifacts",
+      "label" : ":github: job · Governance Checkpoints (every authored commit)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f008-4990-858a-cf2c13b00b90",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef28-45ce-892c-3e0cb4d04b5d"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:14271358e0de2b069cb497398885e2081115e7970de043f603b53f5b229437bb",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-health",
+      "label" : ":github: job · Decapod Validate",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f011-4bb5-83de-a4bffe510936",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef2a-4566-bb02-bea1acd90de2"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:b6b274eff4a32a1ddee575fbe8d3522dd865e4e07eb9b526066b1426397f6f24",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-state-commit-golden-vectors-2554a1edaa14",
+      "label" : ":github: job · Golden Vectors (macos-latest)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f015-40ec-9862-aa9878d169d2",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef2d-4a00-a7ec-f900c1cdf8b5"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:5b00dada36a2ce231d72c34ad3d6ba8c715cf50774bcde5759eaeee66c4a55c1",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-state-commit-golden-vectors-dc1326f3e68b",
+      "label" : ":github: job · Golden Vectors (ubuntu-latest)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f021-4a26-96cb-dd68c3581eb1",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef30-4621-bb27-4dc09a2b218b"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:d788e77026cc2923c5917d2e8c4bfae99e60ff1a60ad29b83e6d45da030c95f7",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-supabase-consumer",
+      "label" : ":github: job · Supabase consumer (offline fixtures)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f026-42ff-bb9a-0be7e006b68f",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef33-4832-9d14-e5e40626c8ea"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:12df88a5e2fce202d8cd3ea7fcc8349b20789d80a85f6b5093759e8fc46d668e",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-16bb5a2d0acd",
+      "label" : ":github: job · Tests (plugins)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f02a-45db-8bbf-8608c3495785",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef35-4e36-afbf-dd09dc86dd8f"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:283fa27c90f190425c8cc8c7f7d0abfce49323174bd980018238a41834328485",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-d21bf6657223",
+      "label" : ":github: job · Tests (core)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f030-4199-9783-a4b16a83b85b",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef38-4e50-a7ed-45b65130b540"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:c8701de622b748f9df30d6bd746135cee096dafc6c8362f8b84d7e2dab7176bc",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-f889c74497b0",
+      "label" : ":github: job · Tests (cli)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f036-443d-82b5-639017449f16",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef3b-43a6-aca6-b61a0c9605b1"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:dfeea6062ae13d54b29645ffe32c2cefaf80475e7944aa1fd217e1486f6ecb80",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-integration-03574316c482",
+      "label" : ":github: job · Tests (integration contract_conformance)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f03c-47c3-8522-0c6413709b16",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef3d-450f-a3dc-c18eb3bad049"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:4887bf3d5d8ad197f5f77ed5290bc90304d6b488503a51133dd653f965a33c85",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-integration-19ace69fb5e6",
+      "label" : ":github: job · Tests (integration gatling-1)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f041-4177-9836-f11419fee190",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef40-4e8b-bd23-1905910a7f4c"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:91105a6ca4d0000e35cb280ebc98fe13a02115845a16e050c6e6503f953e0831",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-integration-1c14ff273aaa",
+      "label" : ":github: job · Tests (integration substrate_integrity)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f046-4925-9fee-5e7c099f08ba",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef43-4fce-ad46-5272d13bb7ec"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:fb6833eac5511064bad8003eabf020d53cbfaade02fa4b4e41a669debd67c646",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-integration-204cd75fa507",
+      "label" : ":github: job · Tests (integration spec_conformance)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f04b-4c0b-865f-6e0431f1a969",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef45-485a-9c0f-e2e9b119cc63"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:4cbe9db85f753059de2de1654cb3c6f08d6b3e60107acc8ae8a5429c0b21e8ba",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-integration-33dc6a8917d1",
+      "label" : ":github: job · Tests (integration constitution_claims)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f050-4a33-a215-f0131400e22a",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef48-4b30-a04c-addda5f6c922"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:2b9711d6da904c2a1a43a9eacc846856e167cef1281518279c61e32d5a021687",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-integration-83e91786eb4a",
+      "label" : ":github: job · Tests (integration gatling-0)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f054-45c0-ba67-490ef5d3c8bd",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef4b-43d5-ad01-89b82dcd0a60"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:0af09a3fd6a798dde069b1bfad2ec0c6f1be4d502d61c620d31d72fbaedb4eec",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-integration-c94748220762",
+      "label" : ":github: job · Tests (integration gatling-3)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f059-4e0e-b57f-b19382efd641",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef4d-4a1a-b886-81283ef78349"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:73ee21e2c2c96bf9ce075d070698036c9e0b0d845628344c994e42e1aad31ec5",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-integration-d9fef7a64213",
+      "label" : ":github: job · Tests (integration gatling-2)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f05e-4ca5-9a62-2b9e12bb4e8c",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef50-453b-89ce-19d4d272ecfc"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:e50a6d612b69d5d1a75ad1d87ed064762d2e25a2eb6270a7f7d5c708c0b31178",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-integration-f5ffb834e199",
+      "label" : ":github: job · Tests (integration release-policies)",
+      "outcome" : "hard_failed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f063-4107-bf07-23a72590bd43",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef53-467c-8547-0bf3664f4bdd"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:95eb767925f03a19a6a9b13798f16eb88e749086d8adde9873b701ba5406f0c4",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-integration-status",
+      "label" : ":github: job · Tests (integration)",
+      "outcome" : "hard_failed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f068-4544-939f-0a0bd1b1a5ee",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef57-42bc-a19e-5aa9f8f3b201"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:02fd9a39e73c57f63dc3dae9cd5910abaecc4d9cdadbac9a7bed6716decfe0f2",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-master",
+      "label" : ":github: job · Tests (Full) (skipped)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f06d-47af-9cac-2d8d21bb0ff2",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef5a-4ce4-9322-04dc55f40bce"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:c8bf3aaca954ae40114f32cba2206cc738fbb6f329015efa429b969d362a843e",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-test-rpc-suite",
+      "label" : ":github: job · Tests (RPC Suite)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f072-483d-bba0-75c05905dfd7",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef5d-442e-9846-aaf8f4996add"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:4b528a5bcbdef0d5f18342e1037a67b5ef492645ece375f322bcd5b74fbff5e7",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-workspace-lifecycle-docker",
+      "label" : ":github: job · Workspace lifecycle (actual Docker)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f076-45f1-b8b4-d0262e532c5a",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef60-4535-b14a-c8a4ab46e48f"
+   },
+   {
+      "command_matrix_dimensions" : null,
+      "command_parallelism" : null,
+      "command_script" : "fixture-redacted-sha256:0bf001e7cd7fbedc4386d3b789a03b45e5c8d4284f8ce1169604f09c7c6617c8",
+      "group_uuid" : null,
+      "key" : "gha-b803fcb7f17ed923-release-build",
+      "label" : ":github: job · Release Build Check (skipped)",
+      "outcome" : "passed",
+      "state" : "finished",
+      "statistics" : {
+         "jobs_count" : 1,
+         "jobs_finished_count" : 1,
+         "latest_job_id" : "01a14206-f07b-4cc6-b360-4a8765bae167",
+         "retries_count" : 0,
+         "step_children_count" : 0
+      },
+      "type" : "command",
+      "uploaded_by_step_uuid" : "01a14205-d30c-4079-93b8-813a50eec9bf",
+      "uuid" : "01a14206-ef62-4956-936e-ad4da14096e2"
+   }
+]
