@@ -176,7 +176,14 @@ The explicit local transfer commands preserve an original standalone task:
 `todo transfer export --id <id> --to <receiver> --output <absolute-private-file>`
 requires an actual yield by the source actor and seals source mutation.
 `transfer recover --id <id> --transfer-id <id> --output <new-private-file>`
-recovers identical bytes after interrupted publication.
+recovers identical bytes after interrupted publication. Recovery selects the
+immutable export event by task and transfer identity instead of recapturing the
+entire subject journal. The canonical event read enforces its existing 8 MiB
+record bound before payload materialization, and recovery revalidates the
+repository, exporter, task, transfer, envelope and artifact digest bindings.
+Successful exports at the 4,095/4,096-event boundary remain recoverable after
+the export/checkpoint append and after later comments. This does not relax the
+4 MiB artifact or 4,096-event historical-bundle limits.
 `transfer import --input <absolute-private-file> --expected-digest <sha256:digest>
 --accept-source-transfer` requires a trusted source handoff, the same GitHub
 origin and intended receiver, fetched source commit and absent local authority.
@@ -489,7 +496,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `afbd31eb519397fd86a214ab250dba8130597f836cabe383de28fda876972d73`
+- Repository signal fingerprint: `9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

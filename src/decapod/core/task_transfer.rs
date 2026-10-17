@@ -350,18 +350,32 @@ fn recover_bundle(
             .to_str()
             .ok_or_else(|| fail("invalid datastore path"))?,
     )?;
-    let history = events::query_subject_on_conn(&conn, events::TODO, "task", id, MAX_HISTORY)?;
-    let event = history
-        .iter()
-        .find(|e| {
-            e.event_type == EXPORTED && e.payload["payload"]["bundle"]["transfer_id"] == transfer_id
-        })
-        .ok_or_else(|| fail("no matching durable export"))?;
+    // The immutable export is addressed directly: exporting appends its own
+    // event and checkpoint, and comments may grow the subject after sealing.
+    // Neither may consume the recovery reader's history budget.
+    let event = events::query_subject_event_on_conn(
+        &conn,
+        events::TODO,
+        "task",
+        id,
+        &format!("task-transfer-export:{transfer_id}"),
+    )?
+    .ok_or_else(|| fail("no matching durable export"))?;
     let bundle: Bundle = serde_json::from_value(event.payload["payload"]["bundle"].clone())
         .map_err(|_| fail("malformed durable export"))?;
     validate(&bundle)?;
     if bundle.repository != name
+        || bundle.projection.task.id != id
+        || bundle.transfer_id != transfer_id
         || bundle.exporter != actor
+        || event.event_type != EXPORTED
+        || event.actor != actor
+        || event.payload["event_id"] != event.event_id
+        || event.payload["event_type"] != EXPORTED
+        || event.payload["task_id"] != id
+        || event.payload["actor"] != actor
+        || event.payload["ts"] != event.ts
+        || event.payload["payload"]["source_sealed"] != true
         || event.payload["payload"]["artifact_sha256"] != sha(&encode(&bundle)?)
     {
         return Err(fail("durable export binding mismatch"));

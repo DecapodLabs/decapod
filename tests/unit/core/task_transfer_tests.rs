@@ -414,3 +414,89 @@ fn input_digest_unknown_schema_oversize_and_missing_acceptance_fail_closed() {
     let conn = Connection::open(todo_db_path(&dest_root)).unwrap();
     assert!(capture_selected(&conn, &[id]).unwrap().is_empty());
 }
+
+#[test]
+fn recovery_survives_full_export_history_and_post_seal_comments() {
+    for history_len in [MAX_HISTORY - 1, MAX_HISTORY] {
+        let (_source, root, id) = source();
+        let conn = Connection::open(todo_db_path(&root)).unwrap();
+        let initial = events::query_subject_on_conn(&conn, events::TODO, "task", &id, MAX_HISTORY)
+            .unwrap()
+            .len();
+        // Disposable fixture only; canonical comment appends do not alter the
+        // task projection or require a new checkpoint.
+        conn.execute_batch("BEGIN IMMEDIATE").unwrap();
+        for index in initial..history_len {
+            events::append_on_conn(
+                &conn,
+                events::TODO,
+                &json!({
+                    "event_id": format!("recovery-boundary-comment:{index}"),
+                    "ts": now_iso(), "event_type": "task.comment", "task_id": id,
+                    "actor": SOURCE, "payload": {"comment": "history boundary"}
+                }),
+            )
+            .unwrap();
+        }
+        conn.execute_batch("COMMIT").unwrap();
+        let bundle = export_bundle(&root, &id, RECEIVER, SOURCE).unwrap();
+        assert_eq!(bundle.history.len(), history_len);
+        let bytes = encode(&bundle).unwrap();
+        // Simulate publication losing the no-overwrite race after sealing.
+        let dir = tempfile::tempdir().unwrap();
+        let occupied = dir.path().join("occupied.json");
+        fs::write(&occupied, b"keep existing").unwrap();
+        assert!(publish(&occupied, &bundle).is_err());
+        assert_eq!(fs::read(&occupied).unwrap(), b"keep existing");
+        assert!(ensure_not_exported(&conn, &id).is_err());
+        // The complete-history API must retain its original bound.
+        assert!(
+            events::query_subject_on_conn(&conn, events::TODO, "task", &id, MAX_HISTORY,).is_err()
+        );
+        let recovered = recover_bundle(&root, &id, &bundle.transfer_id, SOURCE).unwrap();
+        assert_eq!(encode(&recovered).unwrap(), bytes);
+        // Exercise the actual supported append path after sealing, not a
+        // reserved-slot assumption about how much history export adds.
+        for _ in 0..3 {
+            todo::comment_task(&root, &id, "publication retry pending").unwrap();
+        }
+        let recovered = recover_bundle(&root, &id, &bundle.transfer_id, SOURCE).unwrap();
+        assert_eq!(encode(&recovered).unwrap(), bytes);
+        let output = dir.path().join("recovered.json");
+        publish(&output, &recovered).unwrap();
+        assert_eq!(fs::read(output).unwrap(), bytes);
+        assert!(recover_bundle(&root, &id, &bundle.transfer_id, RECEIVER).is_err());
+        assert!(recover_bundle(&root, "another-task", &bundle.transfer_id, SOURCE).is_err());
+        assert!(recover_bundle(&root, &id, &crate::core::ulid::new_ulid(), SOURCE).is_err());
+    }
+}
+
+#[test]
+fn recovery_rejects_mismatched_durable_event_actor_and_oversized_record() {
+    let (_source, root, id) = source();
+    let bundle = export_bundle(&root, &id, RECEIVER, SOURCE).unwrap();
+    let conn = Connection::open(todo_db_path(&root)).unwrap();
+    let event_id = format!("task-transfer-export:{}", bundle.transfer_id);
+    // Corrupt only this disposable fixture; recovery must fail closed even
+    // when the bundle and its digest remain otherwise intact.
+    conn.execute(
+        "UPDATE events SET actor=?1 WHERE stream=?2 AND event_id=?3",
+        params![RECEIVER, events::TODO, event_id],
+    )
+    .unwrap();
+    assert!(recover_bundle(&root, &id, &bundle.transfer_id, SOURCE).is_err());
+    conn.execute(
+        "UPDATE events SET actor=?1, payload=?2 WHERE stream=?3 AND event_id=?4",
+        params![
+            SOURCE,
+            " ".repeat(8 * 1024 * 1024 + 1),
+            events::TODO,
+            event_id
+        ],
+    )
+    .unwrap();
+    let error = recover_bundle(&root, &id, &bundle.transfer_id, SOURCE)
+        .err()
+        .expect("oversized record must fail");
+    assert!(error.to_string().contains("record byte bound"));
+}

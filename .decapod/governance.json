@@ -327,6 +327,14 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "recovery-boundary": {
+      "statement": "Durable export recovery remains available for successful4095/4096-history exports and subsequent comments without weakening bounds.",
+      "falsifier": "Focused boundary/recovery tests fail or full-history/package bounds change.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/unit/core/task_transfer_tests.rs"
+      ]
+    },
     "task-custody-transfer": {
       "statement": "Only a yielded standalone task owned by the source actor can be exported; export seals source mutation. Bound import rejects malformed or mismatched/replayed/conflicting custody and preserves historical evidence without authorizing current proof.",
       "falsifier": "An active/shared/connected task exports, a sealed source task mutates, a wrong repository/receiver/digest/replay import succeeds, or historical pass becomes current destination proof.",
@@ -372,6 +380,16 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/38950038850/job/117139025617",
         "https://github.com/DecapodLabs/decapod/actions/runs/38950038850/job/117141027506"
       ]
+    },
+    {
+      "id": "pr1453-recovery-boundary-fix",
+      "summary": "Recover bounded durable export by task/transfer identity; preserve caps and integrity, add boundary regressions, 67 focused Rust tests and full formatting pass; full controller validation pending original owner.",
+      "input_digest": "sha256:e88bbf8341a9dab0d5adedd3316e1cf442dac173c4cfbda4bedd2ae397343a57",
+      "proof_refs": [
+        "tests/unit/core/events_tests.rs",
+        "tests/unit/core/task_journal_tests.rs",
+        "tests/unit/core/task_transfer_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -410,24 +428,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed task_journal pure verifier reuse and canonical TODO event integration. Source seal and revision update occur in with_task_journal transaction; import uses existing task/children writers and local observed baseline. No second datastore or foreign sequence renumbering. Authored architecture matches source and distinguishes operator trust from global exclusivity.",
-          "reviewed_code_fingerprint": "afbd31eb519397fd86a214ab250dba8130597f836cabe383de28fda876972d73",
+          "reason": "Reviewed existing transfer architecture and canonical event-store boundary. Direct identity lookup changes the recovery access path without changing durable export transaction, provenance model, task lifecycle, pure checkpoint verification or datastore architecture. Detailed bounded-read behavior is updated in INTERFACES.",
+          "reviewed_code_fingerprint": "9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035",
           "spec_material_hash": "c5cb8e930e06ed442016a753d68570665b17dda062c64d39b05da561f86daa40"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed actual export/recover/import CLI, 4MiB and4096-event bounds, GitHub-origin and receiver/digest/operator-acceptance binding, no-clobber artifact and explicit false execution readiness against task_transfer.rs. Foreign history is nested provenance; original identity retained, current proof cleared. Updated interfaces include supporting-controller fence and reject replay/conflicts.",
-          "reviewed_code_fingerprint": "afbd31eb519397fd86a214ab250dba8130597f836cabe383de28fda876972d73",
-          "spec_material_hash": "e317f1e42692e4b6183f11bce2c5e8bf8ca8b3e70a272e96b1aad5626de77be2"
+          "reason": "Reviewed direct immutable export lookup with unchanged4096-history/4MiB artifact limits against events.rs and task_transfer.rs. Authored recovery boundary, post-seal comments, existing8MiB pre-materialization event limit and integrity bindings. All10 transfer regressions passed including4095/4096 export recovery and oversized/actor rejection.",
+          "reviewed_code_fingerprint": "9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035",
+          "spec_material_hash": "c8d0ff0414f31a3b203259a9d2aab91dca471cf9927e39ffda3ee9559a0b20d1"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed yielded-source actor and no-owner checks, source-seal enforcement at task mutation/execution boundaries, independent digest and operator acceptance, destination absence checks, schema/bounds and proof invalidation. Updated security spec states Git origin/agent names are local bindings, artifacts can contain sensitive task text, and older binaries/privileged writers/disconnected clones remain outside local fence. No unmerged controller use on actual1445.",
-          "reviewed_code_fingerprint": "afbd31eb519397fd86a214ab250dba8130597f836cabe383de28fda876972d73",
+          "reason": "Reviewed recovery trust and transfer operator-trust limits against new exact lookup. Source custody remains local, original actor and repository/digest checks retained, event/task/transfer envelope bindings strengthened, existing byte/history caps unchanged. No new credentials, authority, data sharing, lease service or security assumption.",
+          "reviewed_code_fingerprint": "9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035",
           "spec_material_hash": "238ffcd80094c9c73feb505cfaa346ffa800cae684a5fa060441a05ec9f16fd5"
         }
       ],
@@ -438,19 +456,41 @@
       ],
       "title": "Implement task-scoped custody transfer prerequisite for #1445",
       "todo_ids": [
-        "feat_01m52wmkq11e98x6"
+        "feat_01m52wmkq11e98x6",
+        "code_01m5433ebpeksx5a"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792176891Z"
+      "updated_at": "1792213021Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Only separately owned prerequisite #1452; original #1445 branch preserved"
       ],
-      "artifact_hash": "sha256:696a23c47c17322fbe91f2f51a93436afaacc99516f3872b74f5215cf24f27d9",
-      "checks": [],
+      "artifact_hash": "sha256:e2ce9327ce4c8980ceaa36824e93b31c290e463098ef6464efb60fe3655c0c30",
+      "checks": [
+        {
+          "name": "event_regressions",
+          "status": "passed"
+        },
+        {
+          "name": "full_controller_validation",
+          "status": "unavailable"
+        },
+        {
+          "name": "journal_regressions",
+          "status": "passed"
+        },
+        {
+          "name": "repository_format",
+          "status": "passed"
+        },
+        {
+          "name": "transfer_regressions",
+          "status": "passed"
+        }
+      ],
       "current_phase": "validation-recovery",
       "custody": {
         "events": [
@@ -500,10 +540,24 @@
             "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52WNFTJFDYM89V30KSDGWX5": {
@@ -595,12 +649,55 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/task_transfer.rs",
+                  "tests/unit/core/task_transfer_tests.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "User explicitly authorized this scoped repair and normal push to PR1453 branch for original agent follow-up. Repair actor dot-transfer-recovery owns separate task code_01m5433ebpeksx5a; original feat_01m52wmkq11e98x6 ownership is unchanged. workspace ensure reported can_work true, and plan check-execute reported EXECUTION_READY. Preserve original PR trajectory and evidence."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "cargo test --locked --offline --lib core::todo::task_journal::transfer::tests",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Rust 1.96.1 actual test execution: transfer suite 10 passed, 0 failed (including 4095/4096 history + failed publication + actual post-seal comments; bad actor/oversized record rejection); events suite 16 passed, 0 failed; task-journal suite 41 passed, 0 failed. Full cargo fmt check and git diff --check passed. No full library suite, Clippy, full decapod validate or current-candidate CI readiness claimed; original local owner will complete full validation on the authorized PR branch after pull. Normal branch push is permitted before preflight and user explicitly requested it.",
+                  "Proof sources: tests/unit/core/task_transfer_tests.rs, tests/unit/core/events_tests.rs, tests/unit/core/task_journal_tests.rs; executed focused Cargo test filters listed in declared_commands. Independent static review found no blocking issues; artifact and history caps remain unchanged."
+                ],
+                "proof_refs": [
+                  "transfer_regressions",
+                  "event_regressions",
+                  "journal_regressions",
+                  "repository_format",
+                  "full_controller_validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "cargo fmt --all -- --check",
+        "cargo test --locked --offline --lib core::events::tests",
+        "cargo test --locked --offline --lib core::todo::task_journal::tests",
+        "cargo test --locked --offline --lib core::todo::task_journal::transfer::tests",
         "decapod govern plan review-spec",
         "decapod validate",
         "env DECAPOD_AGENT_ID=codex-task-transfer decapod validate",
@@ -617,7 +714,10 @@
         "Implemented bounded standalone yielded-task export/recover/import in existing journal; source export and seal journal atomically before private no-clobber artifact publication. Import retains original source chain as nested provenance and creates explicit local baseline with new revision and unavailable current proof. Uses normal exclusive-claim trust after yield, not active-lease handoff; no global authority or signature guarantee. No candidate transfer on actual1445.",
         "No tests executed; first attempt failed at inventory reconciliation.",
         "Plain installed117 validate attempt1 at032cbd54 failed PROOF_PROFILE_RECONCILIATION_REQUIRED before provider submission. Report /private/tmp/task-transfer-validate-01.txt preserved. Reviewed all discovered workflow/helper/build inventory entries by exact Git comparison against accepted origin/master396f: no changed inventory sources. Current supported agent.init inventory is c434f71e; baseline declaration0f2777 is stale under117. Backed up config and explicitly updated only reviewed_sources_digest; check mapping/provider/profile unchanged, no weakened proof or candidate self-transfer.",
-        "Transfer trust requires an operator-reviewed digest from authenticated source handoff; local sealing is cooperative and cannot police disconnected clones or a privileged writer. No claim of cryptographic sender authentication or global single-owner enforcement."
+        "Proof sources: tests/unit/core/task_transfer_tests.rs, tests/unit/core/events_tests.rs, tests/unit/core/task_journal_tests.rs; executed focused Cargo test filters listed in declared_commands. Independent static review found no blocking issues; artifact and history caps remain unchanged.",
+        "Rust 1.96.1 actual test execution: transfer suite 10 passed, 0 failed (including 4095/4096 history + failed publication + actual post-seal comments; bad actor/oversized record rejection); events suite 16 passed, 0 failed; task-journal suite 41 passed, 0 failed. Full cargo fmt check and git diff --check passed. No full library suite, Clippy, full decapod validate or current-candidate CI readiness claimed; original local owner will complete full validation on the authorized PR branch after pull. Normal branch push is permitted before preflight and user explicitly requested it.",
+        "Transfer trust requires an operator-reviewed digest from authenticated source handoff; local sealing is cooperative and cannot police disconnected clones or a privileged writer. No claim of cryptographic sender authentication or global single-owner enforcement.",
+        "User explicitly authorized this scoped repair and normal push to PR1453 branch for original agent follow-up. Repair actor dot-transfer-recovery owns separate task code_01m5433ebpeksx5a; original feat_01m52wmkq11e98x6 ownership is unchanged. workspace ensure reported can_work true, and plan check-execute reported EXECUTION_READY. Preserve original PR trajectory and evidence."
       ],
       "inspected_files": [
         ".decapod/config.toml",
@@ -630,6 +730,8 @@
       ],
       "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
       "modified_files": [
+        ".decapod/managed/specs/INTERFACES.md",
+        "src/decapod/core/events.rs",
         "src/decapod/core/task_journal.rs",
         "src/decapod/core/task_transfer.rs",
         "src/decapod/core/todo.rs",
