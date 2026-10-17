@@ -402,7 +402,23 @@ and maximum finite values, infinities and NaNs, with explicit 32-bit normalizati
 The Rust scalar engine uses F32 and calibration uses F64 probabilities. Required
 calibration, unbound/OOD and prediction-set semantics are preserved. Runtime
 loads only explicitly pinned local artifacts, resets recurrent state per request,
-and has no downloads, CPU backbone fallback or cross-request state reuse.
+and has no downloads or cross-request state reuse. Its current implementation is
+Metal-only and has no CPU backbone fallback. The required portability extension
+must preserve this pinned hidden-state path while adding a genuine Rust CPU path
+and supported non-Apple GPU selection. A failed accelerator attempt must not leak
+partial features or recurrent state into a CPU retry; both attempts remain bounded
+by the original deadline and use the same immutable model/calibration inputs.
+Receipts must disclose the selected device and fallback history. The pinned
+attention dependency implements Metal/CUDA kernels, not CPU operations, so merely
+constructing `Device::Cpu` is insufficient.
+
+Project policy and machine installation have different owners. Team enablement
+belongs in tracked configuration; each maintainer's verified cache/runtime binding
+belongs in existing private local storage outside Git. Resolving that binding must
+select an immutable configured model identity, never a floating active pointer,
+and recapture local runtime identity before accepting a decision. This separation
+is required by the clarified intent and is not implemented by the current absolute
+`[vega.installation]` contract.
 
 `vega_setup` owns explicit bounded discovery/download, independently pinned
 engine/backbone/tokenizer/config/license identities, content-addressed download
@@ -476,7 +492,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e`
+- Repository signal fingerprint: `4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

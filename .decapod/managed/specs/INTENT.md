@@ -200,7 +200,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e`
+- Repository signal fingerprint: `4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -209,8 +209,14 @@ These declarations select authoring and proof obligations; they do not attest im
 
 Issue #1445 adds a small, optional post-validation intent-fit assessment to the
 existing agent publication gate. The user chose vega alone and removal of active
-Jev integration, with Rust production/setup/new tests and native Apple Metal for
-the text-only 0.8B backbone. The bounded 4,096-token input contains structured
+Jev integration, with Rust production/setup/new tests for the text-only 0.8B
+backbone. Teams must be able to select Vega in project configuration and during
+init without requiring every maintainer to own an Apple GPU. Automatic execution
+must prefer Apple Metal on macOS and supported GPU acceleration elsewhere, with
+safe CPU fallback and the actual backend recorded. Shared policy must not depend
+on one maintainer's absolute installation paths. The current worker is still
+Metal-only; portable inference, fallback and local binding remain implementation
+obligations, not measured capabilities. The bounded 4,096-token input contains structured
 validation outcomes and minimal intent/change context; all adverse facts and
 unknowns survive compaction. No full plan, diff or log is copied into the prompt.
 The agent publishes through existing gates and the human merges. Failed/stale

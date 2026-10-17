@@ -456,10 +456,23 @@ endpoint's credentials, and Supabase authentication/data transports reject
 redirects. Fixture tests alone do not establish hosted authorization or atomicity.
 
 `[vega]` selects disabled or required assessment, with explicit alpha/risk keys.
+Both `init --vega-decisions[=true|false]` and `init with --vega-decisions[=true|false]`
+select that policy. Interactive init offers the same choice; refresh preserves it
+unless explicitly changed. Init does not install models or execute inference.
+New selection contains no machine-specific installation path; previously authored
+pins and unrelated settings remain intact when the mode changes. These new init
+regressions are authored but require execution before a passing claim.
 `[vega.installation]` binds canonical directory, manifest digest, canonical native
 worker path and executable SHA-256. The old provider flag and credential lookup
 are removed. Historical Jev evidence remains read-only compatibility, without
 current trajectory or readiness authority.
+
+The shared-policy/local-binding split and portable Metal/GPU/CPU-fallback runtime
+remain required extensions to that current installation/response contract. An
+enabled team policy must resolve each maintainer's own verified installation and
+report the actual backend, rather than accepting a forged Metal label for CPU
+execution or requiring another maintainer's paths. Unsupported hardware and failed
+fallback still fail closed; CPU support is not yet established by the current code.
 
 Init refresh removes only the obsolete provider selector when its value is
 `none` or `jev`, deleting the section only when empty. Authored extension keys
@@ -521,7 +534,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e`
+- Repository signal fingerprint: `4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

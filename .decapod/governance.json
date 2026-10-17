@@ -450,6 +450,11 @@
       "id": "vega-cli-recovery-suite-balance",
       "summary": "Repair observed 300s selective CLI aggregate timeout by moving both unchanged recovery cases into already-required shorter cli_contracts target. Preserve every assertion, all targets, budgets and provider policy. Reviewed explicit build inventory, current specs and native proof blockers. Executed old candidate library1439/0/3 and init target passed; corrected allocation requires new CI. No native or readiness pass claimed.",
       "input_digest": "sha256:7294ebc304a44ac4e60827e59fd772acbb45a62d653fdec61ec1824d885d3b83"
+    },
+    {
+      "id": "vega-team-init-selection",
+      "summary": "Implement explicit Vega required/disabled selection on both init surfaces and interactive questionnaire; preserve omitted choice, existing pins and authored settings, no downloads or inference. Add meaningful refresh/dry-run/selection regression. Update approved human intent and specs for team-local bindings, Metal/non-Apple GPU preference and safe CPU fallback; portable runtime remains required and unimplemented. Prior bad94 source CI passed, new selector tests require current CI; full native/reference/holdout blockers remain.",
+      "input_digest": "sha256:13950474337caacc8466c441b69c36181b58eb15da077cccdad86b6d650094cb"
     }
   ],
   "intents": {
@@ -482,34 +487,36 @@
         "Mandatory acceptance evidence remains outstanding: actual Apple-arm64 compile/load/Metal probe, independent authenticated pinned-upstream token/span/pooled/engine/calibration parity, readiness-domain calibration, native latency and peak memory, repeated-error cleanup and 4096/4097-token boundaries."
       ],
       "human_questions": [],
-      "intent": "Recover issue1445 source on a fresh governed branch from accepted29414e61 after squash-ancestry identity conflict. Reapply exactly the prior vega feature delta: Rust-only post-validation bounded adverse-preserving projection and minimal intent, positive singleton yes with no abstention/OOD, exact source/intent/evidence/config/model/tokenizer/engine/calibration/runtime identities and freshness, accepted-required policy protection, full active Jev removal, explicit pinned external setup/cache/refresh/rollback with backbone reuse, minimal text0.8B F32/4096-token Candle Apple Metal plus Rust F32 engine/F64 calibration. Existing agent publication gate and human merge remain. Preserve prior stacked branch as provenance; no activation source or old governance imported.",
+      "intent": "Complete the existing issue1445 Rust-only Vega post-validation integration on its preserved branch and original task. Vega is an optional team configuration selectable during init; shared policy/model/calibration identities must work across maintainers without committed machine paths. Automatic execution prefers Apple Metal on macOS and supported GPU on other systems (initial pinned CUDA/NVIDIA path, other GPU availability explicitly bounded), with safe CPU fallback using the same pinned model and a fresh bounded attempt; record actual backend, precision, runtime identity and fallback failures. Preserve the chosen Candle/candle-vllm hidden-state path and separate SafeTensors worker, external immutable assets/cache/integrity/atomic activation, active Jev removal, minimal bounded validation input, deterministic authority and fail-closed stale/missing/malformed/abstaining decisions. Preserve all source history, original task provenance, existing failed validation and native/parity/readiness-calibration proof obligations. Agent publishes only after exact-source accepted-controller validation and required genuine native/reference/holdout evidence; human retains merge/release authority.",
       "phases": [],
       "proof_hooks": [
         "Plain decapod validate under an accepted released controller owns feature builds/tests and readiness; no bootstrap exception or candidate-controller acceptance",
         "Real Apple-arm64 compile/load/probe, independent pinned-upstream numerical parity, readiness-domain calibration, latency/peak-memory and boundary/error evidence required",
-        "The separate native-worker portable unit-test target must execute the moved serialized decoder load/forward/NaN fixture and exact binary16 assertions. Root source CI does not establish their execution; all remain unrun until actual worker evidence exists."
+        "The separate native-worker portable unit-test target must execute the moved serialized decoder load/forward/NaN fixture and exact binary16 assertions; root source CI does not establish worker execution",
+        "Init selection/refresh and shared policy must preserve unrelated settings and per-maintainer local bindings; test GPU preference, missing/failed GPU, clean CPU fallback, exact identities, no partial result reuse and explicit real-platform coverage limits",
+        "CPU/CUDA/Metal model behavior needs justified independent numerical evidence before portability or backend equivalence is claimed; unavailable platform evidence remains explicit"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed unchanged production architecture and private verified installation. CLI workunit recovery assertions move unchanged into an existing required target to preserve bounded complete source proof; no authority boundary changes.",
-          "reviewed_code_fingerprint": "45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e",
-          "spec_material_hash": "2d1134d6736663ef701558e473903b7be980ccecc79f757235cdead07e74aa45"
+          "reason": "Current source review: init selects shared Vega required/disabled policy; current worker remains Metal-only. Specs explicitly distinguish planned portable CPU/GPU and per-maintainer local bindings from implemented behavior, preserving isolated worker and deterministic authority.",
+          "reviewed_code_fingerprint": "4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee",
+          "spec_material_hash": "6bc21354b1ba7a100ffc1fc0a8470d56cadae30d6570c25e2d8f9790b303274e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed unchanged Vega and retired-init public interfaces. Recovery CLI assertions and required target coverage preserved by test relocation; no native proof or model behavior changes.",
-          "reviewed_code_fingerprint": "45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e",
-          "spec_material_hash": "db81942d9f5903a895de991800d3a904234cde444423cc37cd87db8fae5d40e3"
+          "reason": "Reviewed both init selectors, interactive default, explicit false and omission preservation. Init changes mode after preserving existing pins and authored settings, performs no inference/setup, and does not claim portable worker support. New tests remain unexecuted.",
+          "reviewed_code_fingerprint": "4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee",
+          "spec_material_hash": "90c096ec18b8aee02f183058f5d0477e658925b39080a4ee516ad43e54159cd7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Only test allocation and explicit reviewed build inventory changed since current security review; all recovery assertions preserved, finite budgets unchanged, private storage and deterministic publication authority intact.",
-          "reviewed_code_fingerprint": "45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e",
+          "reason": "New init flag only writes an explicitly chosen policy mode, preserving existing model/runtime pins. Accepted-target required-policy protection, private storage and fail-closed inference remain unchanged. No CPU fallback or new runtime trust boundary activated yet.",
+          "reviewed_code_fingerprint": "4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee",
           "spec_material_hash": "5c388f23475ae97165d933b09fe5155fd7e5aab16ff0ef1b75e44a02984dc9b1"
         }
       ],
@@ -524,7 +531,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792254785Z"
+      "updated_at": "1792255791Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -532,7 +539,7 @@
         "Current claimed task and isolated work branch",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:482f5c7e9eddc552a95244a21a3032c14a78188a6098ee5edc10d5cf9bf92028",
+      "artifact_hash": "sha256:781165f1744aad5754b16f954c2fa80e162dc6b2196af043e8ade5de79ca6fc3",
       "blockers": [
         "Independent pinned backbone/pooling reference and readiness holdout not supplied; existing 2050 upstream choice results lack required raw features/readiness labels.",
         "Released v0.118 strict source contract lacks a supplemental host worker build/test/probe/inference recipe; generic proof CLI resolves canonical root, not task workspace. Independent accepted/released adapter required; no profile downgrade or candidate self-authorization."
@@ -540,6 +547,10 @@
       "checks": [
         {
           "name": "clippy-source-repair",
+          "status": "passed"
+        },
+        {
+          "name": "corrected-source-ci",
           "status": "passed"
         },
         {
@@ -580,6 +591,10 @@
         },
         {
           "name": "independent-parity",
+          "status": "unavailable"
+        },
+        {
+          "name": "init-selector-tests",
           "status": "unavailable"
         },
         {
@@ -671,7 +686,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "source-cli-timeout-repair",
+      "current_phase": "portable-vega-init",
       "custody": {
         "events": [
           {
@@ -776,10 +791,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 16,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1028,6 +1050,27 @@
                 "validation_findings": [
                   "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain."
                 ]
+              },
+              {
+                "action": "portable-vega-init",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "tests/init_config_behavior.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/39049929213"
+                ],
+                "proof_refs": [
+                  "corrected-source-ci",
+                  "init-selector-tests"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 17,
+                "validation_findings": [
+                  "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked."
+                ]
               }
             ]
           }
@@ -1064,7 +1107,8 @@
         "Repaired actual source failures: moved LocalVerification before test module without suppression; init retires only known none/jev selector and preserves unrelated keys, unknown/malformed selectors fail without config overwrite; installation independently verifies private no-clobber copies instead of cache hardlinks while retaining nlink checks. Added cache reuse/corruption/hardlink/cancellation/install-failure regressions and both init-surface dry-run/idempotence/extension/unknown-selector coverage. Tests authored, not executed. Official Cargo metadata reconciliation updates only local decapod version0.117->0.118 and resolver-selected edges among already locked socket/getrandom/Windows packages; native Git identities unchanged. Reviewed supported agent.init inventory f24497519b688749366c03ec1a580bf34fcae4e819593aad1e921351f977cc6b against accepted source; only existing Cargo/native inputs differ, no CI policy/helper/check graph change. Backed up user config then retained all unrelated settings and removed exact retired provider none. Source and governance ready for plain validate; native and numerical/domain acceptance still unverified. Canonical task claim renewed after session expiry; all further controller mutations use consistent machine session.",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
-        "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233"
+        "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39049929213"
       ],
       "inspected_files": [
         "docs/agent/repository-readiness.md",
@@ -1075,9 +1119,12 @@
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
         ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/cli.rs",
         "src/decapod/core/vega_readiness.rs",
+        "src/decapod/lib.rs",
         "tests/cli_contract_enforcement.rs",
         "tests/cli_contracts.rs",
+        "tests/init_config_behavior.rs",
         "tests/support/cli_workunit_recovery.rs"
       ],
       "next_transitions": [
@@ -1098,7 +1145,8 @@
         "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
         "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
         "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain.",
-        "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed."
+        "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
+        "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked."
       ]
     }
   },

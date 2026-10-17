@@ -431,6 +431,14 @@ cancelled-copy cleanup and retry, no-clobber publication, and failed installatio
 preserving the previous active identity and reusable cache. Init coverage checks
 both entry points, read-only dry-run, idempotent migration of known retired
 selectors, extension preservation and rejection of ambiguous provider settings.
+The init policy selector additionally needs both command surfaces, explicit true
+and false, preservation on omitted flags, read-only dry-run, unchanged authored
+pins/extensions and proof that selection performs no inference or model download.
+Portable execution needs real CPU inference and bounded accelerator-failure
+recovery, platform-specific device selection, exact model/runtime binding after
+fallback, and independent numerical checks for every claimed backend. Declared
+support, a CPU enum variant or mocked accelerator errors do not prove that the
+pinned backbone executes on CPU or CUDA.
 
 Cross-machine custody is established separately from execution evidence. The
 released v0.118.0 task-transfer importer preserves the original task identity and
@@ -614,7 +622,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e`
+- Repository signal fingerprint: `4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

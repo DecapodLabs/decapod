@@ -301,6 +301,52 @@ fn init_refuses_ambiguous_retired_selectors_without_rewriting_user_configuration
 }
 
 #[test]
+fn init_can_select_vega_and_refresh_preserves_policy_and_local_pins() {
+    for mut surface in [vec!["init"], vec!["init", "with"]] {
+        let project = tempdir().unwrap();
+        surface.push("--force");
+        let mut enable = surface.clone();
+        enable.push("--vega-decisions");
+        assert!(run_decapod(project.path(), &enable).status.success());
+        let path = project.path().join(".decapod/config.toml");
+        let mut configured = fs::read_to_string(&path).unwrap();
+        let selected: toml::Value = toml::from_str(&configured).unwrap();
+        assert_eq!(selected["vega"]["mode"].as_str(), Some("required"));
+        assert!(selected["vega"].get("installation").is_none());
+        configured.push_str(&format!(
+            "\n[custom]\nnote = 'keep team settings'\n\
+             [vega.installation]\ndirectory = '/unavailable-model'\n\
+             manifest_digest = 'sha256:{}'\nruntime = '/unavailable-worker'\n\
+             runtime_sha256 = 'sha256:{}'\n",
+            "a".repeat(64),
+            "b".repeat(64)
+        ));
+        fs::write(&path, configured).unwrap();
+        assert!(run_decapod(project.path(), &surface).status.success());
+        let preserved = fs::read_to_string(&path).unwrap();
+        let before: toml::Value = toml::from_str(&preserved).unwrap();
+        assert_eq!(before["vega"]["mode"].as_str(), Some("required"));
+        let mut disable = surface.clone();
+        disable.push("--vega-decisions=false");
+        let mut dry = disable.clone();
+        dry.push("--dry-run");
+        assert!(run_decapod(project.path(), &dry).status.success());
+        assert_eq!(fs::read_to_string(&path).unwrap(), preserved);
+        assert!(run_decapod(project.path(), &disable).status.success());
+        let after: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(after["vega"]["mode"].as_str(), Some("disabled"));
+        assert_eq!(
+            after["vega"]["installation"],
+            before["vega"]["installation"]
+        );
+        assert_eq!(after["custom"], before["custom"]);
+        assert!(run_decapod(project.path(), &enable).status.success());
+        let restored: toml::Value = toml::from_str(&fs::read_to_string(path).unwrap()).unwrap();
+        assert_eq!(restored["vega"], before["vega"]);
+    }
+}
+
+#[test]
 fn init_refresh_preserves_explicit_vega_installation_without_executing_it() {
     let project = tempdir().expect("project tempdir");
     let first = run_decapod(project.path(), &["init", "with", "--force"]);

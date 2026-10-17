@@ -1636,6 +1636,7 @@ fn init_with_from_config(
         existing_required_profile: config.proof.required_profile.clone(),
         existing_repository_contract: config.proof.repository_contract.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
+        vega_decisions: Some(config.vega.mode == core::vega_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
         backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
@@ -1724,6 +1725,9 @@ fn preserve_unspecified_init_options(
     }
     if !explicit("validation_buildkite_preflights") {
         init.validation_buildkite_preflights = existing.validation_buildkite_preflights;
+    }
+    if !explicit("vega_decisions") {
+        init.vega_decisions = existing.vega_decisions;
     }
     if !explicit("backend") {
         init.backend = existing.backend;
@@ -1990,6 +1994,10 @@ fn enrich_repo_context_interactive(
         &proof_default,
     )?;
     apply_init_proof_command_input(init, &proof_input);
+    init.vega_decisions = Some(prompt_yes_no(
+        "Require Vega readiness decisions after validation? (Each maintainer installs the runtime and pinned model data separately.)",
+        init.vega_decisions.unwrap_or(false),
+    )?);
     init.validation_buildkite_preflights = Some(prompt_yes_no(
         "Use Buildkite on the current workspace branch for the full required proof suite? (No runs the full suite natively in Decapod.)",
         init.validation_buildkite_preflights.unwrap_or(false),
@@ -2485,6 +2493,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_required_profile: None,
                             existing_repository_contract: None,
                             existing_ci_attested: None,
+                            vega_decisions: init_group.vega_decisions,
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
                             backend: init_group.backend,
@@ -2587,6 +2596,13 @@ pub fn run() -> Result<(), error::DecapodError> {
             let mut config = config_from_init_with(&init_with, repo_ctx);
             if let Some(existing) = existing_config.as_ref() {
                 config.vega = existing.vega.clone();
+            }
+            if let Some(enabled) = init_with.vega_decisions {
+                config.vega.mode = if enabled {
+                    core::vega_readiness::Mode::Required
+                } else {
+                    core::vega_readiness::Mode::Disabled
+                };
             }
             write_project_config(&target_dir, &config, init_with.dry_run)?;
             // The scaffold writes project specs before the final config is

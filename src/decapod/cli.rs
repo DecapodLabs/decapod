@@ -260,6 +260,10 @@ pub(crate) struct InitGroupCli {
     /// Proof command in `name=command` form (repeatable/comma-separated).
     #[clap(long = "proof-command", value_delimiter = ',')]
     pub proof_commands: Vec<String>,
+    /// Require Vega readiness decisions after deterministic validation passes.
+    /// Omission preserves the existing setting; runtime/model setup is separate.
+    #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
+    pub vega_decisions: Option<bool>,
     /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
@@ -407,6 +411,10 @@ pub(crate) struct InitWithCli {
     pub existing_repository_contract: Option<crate::core::repository_profile::RepositoryContract>,
     #[clap(skip)]
     pub existing_ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
+    /// Require Vega readiness decisions after deterministic validation passes.
+    /// Omission preserves the existing setting; runtime/model setup is separate.
+    #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
+    pub vega_decisions: Option<bool>,
     /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]

@@ -100,6 +100,11 @@ through the existing gate; the human merges. Active Jev integration is removed,
 including selectable providers, transport and credential lookup. Historical
 observations remain readable without governing current work.
 
+`init --vega-decisions[=true|false]` and `init with --vega-decisions[=true|false]`
+select required or disabled Vega assessment. Interactive init offers the same
+choice. Refresh preserves the existing choice and installation pins unless
+explicitly changed. Selection installs no model and executes no inference.
+
 Init refresh retires only a recognized `[decision].provider = "none" | "jev"`
 selector, removes an empty retired section, and preserves unrelated authored
 settings, including extension keys in that section. Unknown or malformed provider
