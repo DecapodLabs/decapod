@@ -13,6 +13,9 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 
+#[path = "task_transfer.rs"]
+pub(super) mod transfer;
+
 pub(super) const EVENT_TYPE: &str = "task.journal.checkpoint";
 const SCHEMA_VERSION: u32 = 1;
 const MAX_TASKS: usize = 10_000;
@@ -615,10 +618,14 @@ fn checkpoint_events(
 }
 
 fn read_journal(conn: &Connection, ids: Option<&[String]>) -> Result<Journal, DecapodError> {
+    journal_from_records(checkpoint_events(conn, ids)?)
+}
+
+fn journal_from_records(records: Vec<CheckpointEvent>) -> Result<Journal, DecapodError> {
     let mut journal = Journal::default();
     // The events owner validates the canonical row/envelope contract. Historical
     // non-checkpoint events are not interpreted as task state.
-    for record in checkpoint_events(conn, ids)? {
+    for record in records {
         let event = record.event;
         if event.event_type != EVENT_TYPE {
             continue;
@@ -891,6 +898,7 @@ pub(super) fn check_execution_authority(
     conn: &Connection,
     task_id: &str,
 ) -> Result<(), DecapodError> {
+    transfer::ensure_not_exported(conn, task_id)?;
     use crate::core::db::OptionalExtension;
     let raw: Option<String> = conn
         .query_row(

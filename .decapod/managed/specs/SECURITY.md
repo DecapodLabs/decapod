@@ -1,5 +1,22 @@
 # Security
 
+## Explicit local task-transfer trust
+
+`src/decapod/core/task_transfer.rs` accepts source custody only with an independently
+supplied artifact digest and explicit operator acceptance. Git origin and agent
+names are local bindings, not authenticated remote principals. The operator must
+verify source yield/export through a trusted channel and ensure cooperating source
+writers use the supporting controller. No signature, source liveness check or
+global exclusivity across disconnected clones is implied.
+
+The source task is sealed under the normal journal transaction before private
+artifact publication. Only its previous yielding actor can export. Import refuses
+existing identity/hash/history and replay, validates source chain and receiver,
+and retains source proof solely as history. Current proof and pass timestamps are
+cleared. The artifact excludes session tables and unrelated tasks, but task text
+can itself be sensitive and must remain outside Git. Older binaries and privileged
+writers are outside this cooperative local fence.
+
 ## Threat Model
 
 Decapod governs accepted agent work inside a repository. Its security boundary
@@ -333,8 +350,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `84bf62ddb8e3f8182363c33afbaca73763a9037c6ae21f731c76ea85249006a0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
+- Repository signal fingerprint: `24e535e837912d326bf804f05ee377916e33b05b70fccaf543a639938c5b1719`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (192 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -415,6 +415,14 @@
         "https://buildkite.com/decapodlabs/decapod/builds/1933",
         "https://github.com/DecapodLabs/decapod/actions/runs/38936084937/job/117091823692"
       ]
+    },
+    {
+      "id": "vega-local-transfer-master118",
+      "summary": "Preserve original Vega branch and imported task custody; integrate accepted v0.118.0 master, retaining feature journal and authored specs while refreshing generated projections",
+      "input_digest": "sha256:644cddb1620831a702931bb663da07a327374035b2188a44c716e7ea5e571264",
+      "proof_refs": [
+        "task-transfer:01M5470V8JDG8WJA1WX2EJ098Y"
+      ]
     }
   ],
   "intents": {
@@ -497,7 +505,7 @@
         "Current claimed task and isolated work branch",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:0636e92437ae0289cc5117a920a6d0ac62c2f20d9be248962473faa185658a54",
+      "artifact_hash": "sha256:7b5f5a0403b57536914ab430ab32321eccb16becd95ff6fe642946c98dabfcb1",
       "checks": [
         {
           "name": "clippy-source-repair",
@@ -584,6 +592,10 @@
           "status": "failed"
         },
         {
+          "name": "task-transfer",
+          "status": "passed"
+        },
+        {
           "name": "tokenizer-boundary-metadata",
           "status": "passed"
         },
@@ -592,7 +604,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "ordinary-controller-validation",
+      "current_phase": "local-handoff",
       "custody": {
         "events": [
           {
@@ -662,10 +674,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -819,6 +838,22 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "local-handoff",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "docs/agent/repository-readiness.md",
+                  "Released0.118.0 imported accepted transfer01M5470V8JDG8WJA1WX2EJ098Y under receivercodex-vega-metal. Exact source-supplied artifact sha256:5cf05c74167d81052460666ee1ae87112ce5e101335875df65aa5181bb2efec4 verified before import. Taskfeat_01m52fnwybfvhfdj identity and nested provenance retained, destination revision8; journal verify valid without missing/divergent projections. Fresh exclusive claim succeeded. Root ensure refused recreating existing branch; registered worktree was preserved and moved to managed path, then workspace ensure accepted can_work=true. Originalfeature5f2801e581ec9d436c28c5df2a9a64e261efa895 retained, no history rewrite. Normal no-commit merge accepted24490934 underway. Retained original feature governance from committed Git during merge; accepted prerequisite governance remains in merge-parent history. Supported specs.refresh reconciled generated conflict blocks while preserving all authored transfer and Vega prose. All previous validation failures remain; native/independent parity/calibration still unverified."
+                ],
+                "proof_refs": [
+                  "task-transfer"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -848,9 +883,12 @@
         "Plain117 fourth validation reached GitTransport and exited128 before provider execution. Normal configured-helper ls-remote succeeds and feature remote branch is absent; no credential extraction or settings change. Static review confirmed committed binary16 mantissa already explicitly cast to u32; use u32::from for clarity, preserve normalization and expand signed zero/subnormal/normal/Inf/NaN assertions. No test execution or numerical parity claimed.",
         "Plain117 second validation stopped PROOF_DISCOVERY_BLOCKED on MODULE.bazel.lock1052029 bytes. Moved unchanged SafeTensors decoder/half conversion and fixtures to sole native owner; root retains typed engine/header/GELU tests and checked schema. Supported metadata regeneration now gives1037341 bytes below1048576. Root graph removes only safetensors0.7/hashbrown0.16/foldhash/allocator-api2; native retains pinned SafeTensors0.7 and immutable model/source pins. Cargo reports0 package additions/updates, but reselects existing socket2/getrandom/Windows dependency edges; retain generator output for actual validation rather than hand-edit locks.",
         "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance.",
+        "Released0.118.0 imported accepted transfer01M5470V8JDG8WJA1WX2EJ098Y under receivercodex-vega-metal. Exact source-supplied artifact sha256:5cf05c74167d81052460666ee1ae87112ce5e101335875df65aa5181bb2efec4 verified before import. Taskfeat_01m52fnwybfvhfdj identity and nested provenance retained, destination revision8; journal verify valid without missing/divergent projections. Fresh exclusive claim succeeded. Root ensure refused recreating existing branch; registered worktree was preserved and moved to managed path, then workspace ensure accepted can_work=true. Originalfeature5f2801e581ec9d436c28c5df2a9a64e261efa895 retained, no history rewrite. Normal no-commit merge accepted24490934 underway. Retained original feature governance from committed Git during merge; accepted prerequisite governance remains in merge-parent history. Supported specs.refresh reconciled generated conflict blocks while preserving all authored transfer and Vega prose. All previous validation failures remain; native/independent parity/calibration still unverified.",
         "Released117 authoritative run at87a13363 reached provider_terminal_wait then failed Docs Sync Buildkite1933 uuid01a145a6-9e36-4379-8009-3523c0d6e03d; evidence /tmp/decapod-snapshot-HOyW3w. Actual clippy flags mixed return type_complexity: replaced tuple spelling with meaningful MixedSlotsAndOptions alias, no lint suppression. GHA Docs Sync job117091823692 log contains no complete diff; no archive read. Corrected ordinary config-schema source from exact canonical Rust config declaration, readiness_config_contract literal and repository-readiness include, preserving documented alpha/risk/pins. This is source-derived correction, not locally executed candidate generation; CI equality remains pending. command-contracts already matches its only renderer-source change."
       ],
-      "inspected_files": [],
+      "inspected_files": [
+        "docs/agent/repository-readiness.md"
+      ],
       "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
       "modified_files": [],
       "next_transitions": [

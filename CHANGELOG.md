@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.118.0](https://github.com/DecapodLabs/decapod/compare/v0.117.0...v0.118.0) - 2026-10-17
+
+### Added
+
+- support explicit task-scoped custody transfer ([#1453](https://github.com/DecapodLabs/decapod/pull/1453))
+
 ## [0.117.0](https://github.com/DecapodLabs/decapod/compare/v0.116.0...v0.117.0) - 2026-10-16
 
 ### Fixed

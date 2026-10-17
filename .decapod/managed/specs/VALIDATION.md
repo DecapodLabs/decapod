@@ -115,6 +115,27 @@ Validation checks repository evidence for these product contracts:
 intended task, agent ownership, lease, and control plane before execution resumes.
 A storage error must not be relabeled as an absent projection.
 
+`tests/unit/core/task_transfer_tests.rs` exercises two separate local stores and
+real Git repositories: identity/intent/history preservation, source yield and
+actor checks, source seal rejection of later custody mutations, exact private
+artifact recovery, replay/conflicting-history refusal, repository/receiver/commit
+binding, malformed/truncated journal rejection, explicit operator acceptance,
+digest/byte bounds, and shared/connected-task rejection. Historical passed proof
+must remain only in provenance, with unavailable current proof and a new revision.
+These library regressions run through the existing required Supabase library-test
+recipe. Their presence is not passing evidence until normal validation executes
+them. Synthetic stores cannot prove source authenticity or global exclusivity;
+the trust contract requires the operator's authenticated source handoff.
+
+Transfer regressions use synthetic task identities only. Candidate transfer
+commands cannot authorize custody of the real feature task before this controller
+is independently accepted and released. The unchanged accepted source executor
+and complete configured proof graph remain responsible for compiling and testing
+the candidate; refreshing a reviewed inventory declaration supplies no proof.
+Compiling the production binary alone does not execute the transfer regressions.
+The required library-test build must also compile their real repository fixtures
+and run them; fixture compilation failure leaves the transfer claim unsupported.
+
 ## Obligation current-evidence regression proof
 
 `tests/plugins/obligation.rs` covers transitive and diamond completion without
@@ -396,6 +417,13 @@ and exact retention of adverse outcomes, exclusions and unknowns during prompt
 compaction. Setup/cache tests must cover pin validation, unchanged-backbone reuse,
 atomic refresh/rollback and no runtime downloads. No new Python test path exists.
 
+Cross-machine custody is established separately from execution evidence. The
+released v0.118.0 task-transfer importer preserves the original task identity and
+source journal as provenance, but its successful import and fresh local claim
+do not carry forward validation or native results. The Mac continuation must
+regenerate complete candidate proof and record its actual Metal, independent
+parity and readiness-calibration results before publication.
+
 Synthetic fixtures and source review are not native acceptance. Required measured
 evidence remains Apple-arm64 compilation, genuine Metal numerical dispatch, real
 pinned checkpoint loading, independent reference agreement through pooling,
@@ -512,8 +540,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `84bf62ddb8e3f8182363c33afbaca73763a9037c6ae21f731c76ea85249006a0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (207 files), `tests/` (191 files)
+- Repository signal fingerprint: `24e535e837912d326bf804f05ee377916e33b05b70fccaf543a639938c5b1719`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (192 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

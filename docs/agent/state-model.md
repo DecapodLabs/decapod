@@ -110,6 +110,17 @@ Incomplete legacy histories are not replayed as if they were complete. An
 explicit migration baseline identifies where reconstructable modern history
 begins; it never upgrades old evidence.
 
+Standalone yielded tasks can be explicitly transferred between local datastores
+through `todo transfer export/recover/import`. Export records a local source seal
+before publishing a private bounded artifact. Import preserves original identity,
+intent and source history in the canonical TODO stream while clearing current
+proof and advancing the destination revision. It creates a new local observed
+baseline rather than replaying foreign sequence numbers. Receiver/origin binding,
+an independently supplied digest and explicit operator acceptance are required;
+duplicate or conflicting authority is rejected. Session secrets are not exported.
+This is cooperative local custody, not global single-owner enforcement over
+disconnected stores. Source authenticity remains an operator trust boundary.
+
 Workunit snapshots live in the canonical `workunit` event stream. The ignored
 JSON manifest is a projection of its journal head. Generation and predecessor
 checks reject stale or contradictory updates, and operation IDs distinguish
