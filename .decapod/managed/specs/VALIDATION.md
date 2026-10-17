@@ -443,6 +443,16 @@ recovery, platform-specific device selection, exact model/runtime binding after
 fallback, and independent numerical checks for every claimed backend. Declared
 support, a CPU enum variant or mocked accelerator errors do not prove that the
 pinned backbone executes on CPU or CUDA.
+The CPU/GPU worker source and v2 hardware-only retry protocol are now authored.
+The scalar CPU recurrence fixture uses hand-calculated decayed state and query
+scaling, and RoPE fixtures independently constrain zero-position/tail behavior.
+These are not checkpoint parity or independently reviewed reference evidence.
+The parent classification tests must reject retries for any answer (including
+negative/abstaining answers), inference errors, malformed messages and CPU retries.
+Init-refresh coverage also requires omitted portable defaults and an empty model
+pin to remain omitted from legacy TOML; explicitly authored backend/fallback
+settings must survive refresh. All current source changes need executed CI, while
+native build/probe/inference remains a separate missing validation recipe.
 Local-binding regressions must exercise independent per-maintainer paths for one
 shared model pin, private permissions, malformed/oversized/wrong-identity records,
 failed registration preserving prior bytes, unsafe executable links/formats and
@@ -634,8 +644,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dd74a827573209f3aa1f8fa78c1f5c19785f3bb3c54154a26bc5667292068027`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
+- Repository signal fingerprint: `a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

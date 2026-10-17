@@ -157,9 +157,9 @@ Incomplete or cancelled copies never activate an installation. Unsupported archi
 quantization, tokenizer or adapter changes fail compatibility checks. A changed
 upstream source revision is surfaced for review, never substituted as runtime code.
 
-Setup prints disabled TOML with the verified installation path and manifest digest.
+Setup prints disabled portable TOML with the verified compound model digest.
 It does not pretend to install a native executable. The Rust worker is built from
-`assets/tools/vega-native/Cargo.toml` on Apple-arm64. A source-install command from
+`assets/tools/vega-native/Cargo.toml`. A source-install command from
 a reviewed release is `cargo install --path assets/tools/vega-native --locked`.
 Repository development builds/tests remain owned by ordinary governed validation.
 Run the worker's `--probe` to require a genuine finite Metal numerical result.
@@ -172,8 +172,25 @@ cannot authorize readiness. Runtime bytes and model files are reverified locally
 Runtime digests use `sha256:<64 lowercase hex>`.
 
 Runtime never follows a floating active pointer, downloads artifacts or selects a
-CPU backbone fallback. The pinned Candle path captures raw blocks 13/19 and pools
-F32 state/question/option/chunk features on Metal. The verified BF16 backbone is
+different model during fallback. `[vega] backend = "auto"` (the default) prefers
+Metal on macOS and CUDA elsewhere; `metal`, `cuda` and `cpu` explicitly select a
+backend. `cpu_fallback` defaults true. A CUDA-enabled non-Apple worker requires
+its `cuda` Cargo feature and NVIDIA toolchain; ordinary CPU builds need no CUDA
+toolkit. AMD/Intel GPU acceleration is not implemented. These source paths still
+require execution evidence before portability can be claimed.
+
+Only an explicit hardware-unavailable result may trigger a fresh CPU process,
+with identical frozen pins and the original overall deadline. Failed checks,
+invalid output, timeout, crash, numerical errors, abstention and negative decisions
+never trigger a retry to seek acceptance. Set `cpu_fallback = false` for an
+accelerator-required operation. Receipts disclose backend and failed attempts;
+a CPU result never proves Metal ran. Each maintainer performs explicit local
+setup once; shared policy never contains their local executable paths.
+
+The pinned Candle GPU path captures raw blocks 13/19 and pools
+F32 state/question/option/chunk features. The separate Rust CPU path uses the same
+checkpoint and pooling with CPU attention/recurrence, without a generation API.
+It is not an independently reviewed parity reference. The verified BF16 backbone is
 upcast to F32, increasing weight memory accordingly. Base dynamics run in Rust F32
 on CPU; calibration uses F64 probabilities. This profile has adapters off, no image
 path and fresh recurrent state for every request.

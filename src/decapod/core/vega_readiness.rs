@@ -4,7 +4,76 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 pub const SCHEMA: &str = "decapod.vega-readiness.v1";
-pub const WORKER_SCHEMA: &str = "decapod.vega-worker.v1";
+pub const WORKER_SCHEMA: &str = "decapod.vega-worker.v2";
+
+/// Portable repository preference. The worker must disclose the actual device;
+/// it cannot silently replace this request or choose a different checkpoint.
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum BackendPreference {
+    #[default]
+    Auto,
+    Metal,
+    Cuda,
+    Cpu,
+}
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Backend {
+    Metal,
+    Cuda,
+    Cpu,
+}
+impl Backend {
+    pub fn device(self) -> &'static str {
+        match self {
+            Self::Metal => "metal",
+            Self::Cuda => "cuda",
+            Self::Cpu => "cpu",
+        }
+    }
+    pub fn runtime(self) -> &'static str {
+        match self {
+            Self::Metal => "candle-metal",
+            Self::Cuda => "candle-cuda",
+            Self::Cpu => "candle-cpu",
+        }
+    }
+}
+fn default_cpu_fallback() -> bool {
+    true
+}
+fn is_true(value: &bool) -> bool {
+    *value
+}
+fn is_auto(value: &BackendPreference) -> bool {
+    *value == BackendPreference::Auto
+}
+impl BackendPreference {
+    pub fn resolve(self) -> Backend {
+        match self {
+            Self::Auto if cfg!(target_os = "macos") => Backend::Metal,
+            Self::Auto | Self::Cuda => Backend::Cuda,
+            Self::Metal => Backend::Metal,
+            Self::Cpu => Backend::Cpu,
+        }
+    }
+}
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum WorkerErrorKind {
+    HardwareUnavailable,
+    InferenceFailed,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BackendAttempt {
+    pub backend: Backend,
+    pub request_id: String,
+    pub error_kind: Option<WorkerErrorKind>,
+    pub error: Option<String>,
+}
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -14,17 +83,35 @@ pub enum Mode {
     Required,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default, deny_unknown_fields)]
 pub struct Configuration {
     pub mode: Mode,
+    #[serde(skip_serializing_if = "is_auto")]
+    pub backend: BackendPreference,
+    #[serde(default = "default_cpu_fallback", skip_serializing_if = "is_true")]
+    pub cpu_fallback: bool,
     /// Shared immutable model identity; local executable paths stay out of Git.
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub model_manifest_digest: String,
     pub installation: Option<Installation>,
     /// A key actually present in the pinned conformal table, not a guarantee
     /// of code-readiness coverage under distribution shift.
     pub alpha: String,
     pub risk: String,
+}
+impl Default for Configuration {
+    fn default() -> Self {
+        Self {
+            mode: Mode::Disabled,
+            backend: BackendPreference::Auto,
+            cpu_fallback: true,
+            model_manifest_digest: String::new(),
+            installation: None,
+            alpha: String::new(),
+            risk: String::new(),
+        }
+    }
 }
 impl Configuration {
     pub fn is_default(&self) -> bool {
@@ -116,6 +203,7 @@ pub struct Request {
     pub state: String,
     pub alpha: String,
     pub risk: String,
+    pub backend: Backend,
 }
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -131,6 +219,24 @@ pub struct Response {
     pub input_tokens: usize,
     pub outcome: Option<Outcome>,
     pub error: Option<String>,
+    pub error_kind: Option<WorkerErrorKind>,
+}
+impl Response {
+    /// A typed hardware failure is the only replayable result. It must contain
+    /// no partial model answer or tokenization evidence. A normal abstention,
+    /// malformed IPC, crash, timeout, negative verdict or arithmetic failure
+    /// never authorizes another attempt to seek a positive answer.
+    fn permits_cpu_retry(&self, requested: Backend, enabled: bool) -> bool {
+        enabled
+            && requested != Backend::Cpu
+            && self.error_kind == Some(WorkerErrorKind::HardwareUnavailable)
+            && self
+                .error
+                .as_ref()
+                .is_some_and(|error| !error.is_empty() && error.len() <= 512)
+            && self.outcome.is_none()
+            && self.input_tokens == 0
+    }
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
@@ -171,6 +277,8 @@ pub struct Receipt {
     pub engine_device: Option<String>,
     pub precision: Option<Precision>,
     pub input_tokens: Option<usize>,
+    #[serde(default)]
+    pub backend_attempts: Vec<BackendAttempt>,
     pub calibration_scope: String,
 }
 impl Receipt {
@@ -534,6 +642,7 @@ pub(crate) fn assess(
         engine_device: None,
         precision: None,
         input_tokens: None,
+        backend_attempts: Vec::new(),
         calibration_scope:
             "upstream-general-decisions; code-readiness coverage/risk not established".into(),
     };
@@ -544,9 +653,6 @@ pub(crate) fn assess(
     }
     let deadline = Instant::now() + timeout.min(Duration::from_secs(120));
     let evaluated = (|| -> io::Result<()> {
-        if !cfg!(all(target_os = "macos", target_arch = "aarch64")) {
-            return Err(invalid("native_apple_metal_required"));
-        }
         let install = captured_installation
             .as_ref()
             .map_err(|error| invalid(error.to_string()))?
@@ -578,7 +684,7 @@ pub(crate) fn assess(
             &install.manifest_digest,
             install,
         ))?;
-        let request = Request {
+        let mut request = Request {
             schema: WORKER_SCHEMA.into(),
             request_id: receipt.request_id.clone(),
             input_digest: receipt.input_digest.clone(),
@@ -587,46 +693,83 @@ pub(crate) fn assess(
             state,
             alpha: config.alpha.clone(),
             risk: config.risk.clone(),
+            backend: config.backend.resolve(),
         };
-        let path = directory.join("vega-input.json");
-        private_write(
-            &path,
-            &serde_json::to_vec(&request).map_err(io::Error::other)?,
-        )?;
-        let capture = Command::new(&install.runtime)
-            .env_clear()
-            .arg("--request")
-            .arg(&path)
-            .bounded_capture(
-                ProcessLimits {
-                    timeout: deadline
-                        .checked_duration_since(Instant::now())
-                        .ok_or_else(|| invalid("vega_timeout"))?,
-                    max_output_bytes: 16 * 1024,
-                },
-                cancel,
+        let mut response = None;
+        for attempt in 0..2 {
+            // Every retry is a fresh process with a separately bound immutable input.
+            // All attempts share the original overall deadline and frozen pins.
+            request.request_id = digest(&(&receipt.request_id, attempt, request.backend))?;
+            let path = directory.join(format!("vega-input-{attempt}.json"));
+            private_write(
+                &path,
+                &serde_json::to_vec(&request).map_err(io::Error::other)?,
             )?;
-        if capture.termination != Termination::Exited || !capture.output.status.success() {
-            return Err(invalid("vega_worker_failed_or_timeout"));
+            let capture = Command::new(&install.runtime)
+                .env_clear()
+                .arg("--request")
+                .arg(&path)
+                .bounded_capture(
+                    ProcessLimits {
+                        timeout: deadline
+                            .checked_duration_since(Instant::now())
+                            .ok_or_else(|| invalid("vega_timeout"))?,
+                        max_output_bytes: 16 * 1024,
+                    },
+                    cancel,
+                )?;
+            if capture.termination != Termination::Exited || !capture.output.status.success() {
+                return Err(invalid("vega_worker_failed_or_timeout"));
+            }
+            let current: Response =
+                serde_json::from_slice(&capture.output.stdout).map_err(io::Error::other)?;
+            if current.schema != WORKER_SCHEMA
+                || current.request_id != request.request_id
+                || current.input_digest != receipt.input_digest
+                || current.manifest_digest != install.manifest_digest
+                || current.backend != request.backend.runtime()
+                || current.device != request.backend.device()
+                || current.engine_device != "cpu"
+                || current.precision != Precision::supported()
+            {
+                return Err(invalid("vega_response_binding_or_backend_invalid"));
+            }
+            receipt.backend_attempts.push(BackendAttempt {
+                backend: request.backend,
+                request_id: request.request_id.clone(),
+                error_kind: current.error_kind,
+                error: current
+                    .error
+                    .as_ref()
+                    .map(|error| error.chars().take(512).collect()),
+            });
+            if attempt == 0 && current.permits_cpu_retry(request.backend, config.cpu_fallback) {
+                // Re-verify before launching the independently owned CPU worker.
+                super::vega_setup::verify_installation_bounded(
+                    &install.directory,
+                    &install.manifest_digest,
+                    deadline,
+                    cancel,
+                )?;
+                pinned_runtime(&install.runtime, &install.runtime_sha256, deadline, cancel)?;
+                if capture_installation(config)?.as_ref() != Some(install) {
+                    return Err(invalid("vega_local_binding_changed_before_fallback"));
+                }
+                request.backend = Backend::Cpu;
+                continue;
+            }
+            response = Some(current);
+            break;
         }
-        let response: Response =
-            serde_json::from_slice(&capture.output.stdout).map_err(io::Error::other)?;
-        if response.schema != WORKER_SCHEMA
-            || response.request_id != receipt.request_id
-            || response.input_digest != receipt.input_digest
-            || response.manifest_digest != install.manifest_digest
-            || response.backend != "candle-metal"
-            || response.device != "metal"
-            || response.engine_device != "cpu"
-            || response.precision != Precision::supported()
-        {
-            return Err(invalid("vega_response_binding_or_backend_invalid"));
-        }
+        let response = response.ok_or_else(|| invalid("vega_worker_response_missing"))?;
         if let Some(error) = response.error {
             return Err(invalid(format!(
                 "vega_native_abstained:{}",
                 error.chars().take(512).collect::<String>()
             )));
+        }
+        if response.error_kind.is_some() {
+            return Err(invalid("vega_worker_error_without_message"));
         }
         if response.input_tokens == 0 || response.input_tokens > super::vega_prompt::MAX_TOKENS {
             return Err(invalid("vega_response_token_count_invalid"));
@@ -972,6 +1115,87 @@ mod projection_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn portable_defaults_preserve_legacy_serialization_and_explicit_preferences() {
+        let defaults: Configuration = toml::from_str("mode='required'").unwrap();
+        assert_eq!(defaults.backend, BackendPreference::Auto);
+        assert!(defaults.cpu_fallback);
+        assert_eq!(
+            toml::to_string(&defaults).unwrap().trim(),
+            "mode = \"required\"\nalpha = \"\"\nrisk = \"\""
+        );
+        let explicit: Configuration =
+            toml::from_str("mode='required'\nbackend='cpu'\ncpu_fallback=false").unwrap();
+        assert_eq!(explicit.backend.resolve(), Backend::Cpu);
+        let roundtrip: Configuration =
+            toml::from_str(&toml::to_string(&explicit).unwrap()).unwrap();
+        assert_eq!(explicit, roundtrip);
+        for invalid in ["backend='gpu'", "cpu_fallback='true'", "backend=3"] {
+            assert!(toml::from_str::<Configuration>(invalid).is_err());
+        }
+        assert_eq!(
+            BackendPreference::Auto.resolve(),
+            if cfg!(target_os = "macos") {
+                Backend::Metal
+            } else {
+                Backend::Cuda
+            }
+        );
+    }
+    #[test]
+    fn cpu_retry_requires_only_a_typed_hardware_failure_without_an_answer() {
+        let response = || Response {
+            schema: WORKER_SCHEMA.into(),
+            request_id: "request".into(),
+            input_digest: hash(b"input"),
+            manifest_digest: hash(b"model"),
+            backend: Backend::Metal.runtime().into(),
+            device: "metal".into(),
+            engine_device: "cpu".into(),
+            precision: Precision::supported(),
+            input_tokens: 0,
+            outcome: None,
+            error: Some("device unavailable".into()),
+            error_kind: Some(WorkerErrorKind::HardwareUnavailable),
+        };
+        assert!(response().permits_cpu_retry(Backend::Metal, true));
+        assert!(response().permits_cpu_retry(Backend::Cuda, true));
+        assert!(!response().permits_cpu_retry(Backend::Cpu, true));
+        assert!(!response().permits_cpu_retry(Backend::Metal, false));
+        let mut current = response();
+        current.error_kind = Some(WorkerErrorKind::InferenceFailed);
+        assert!(!current.permits_cpu_retry(Backend::Metal, true));
+        current = response();
+        current.error_kind = None;
+        assert!(!current.permits_cpu_retry(Backend::Metal, true));
+        for answer in [
+            outcome(),
+            {
+                let mut answer = outcome();
+                answer.abstain = true;
+                answer
+            },
+            {
+                let mut answer = outcome();
+                answer.probabilities = [0.9, 0.1];
+                answer.confidence = 0.9;
+                answer.prediction_set = Some(vec![false]);
+                answer
+            },
+        ] {
+            current = response();
+            current.outcome = Some(answer);
+            assert!(!current.permits_cpu_retry(Backend::Metal, true));
+        }
+        current = response();
+        current.input_tokens = 1;
+        assert!(!current.permits_cpu_retry(Backend::Metal, true));
+        for error in [None, Some(String::new()), Some("x".repeat(513))] {
+            current = response();
+            current.error = error;
+            assert!(!current.permits_cpu_retry(Backend::Metal, true));
+        }
+    }
     fn outcome() -> Outcome {
         Outcome {
             probabilities: [0.1, 0.9],
@@ -1043,6 +1267,8 @@ mod tests {
             "alpha",
             "risk",
             "model_manifest",
+            "backend",
+            "cpu_fallback",
         ] {
             let mut changed = required.clone();
             let installation = changed.installation.as_mut().unwrap();
@@ -1054,6 +1280,8 @@ mod tests {
                 "alpha" => changed.alpha = "0.05".into(),
                 "risk" => changed.risk = "0.2".into(),
                 "model_manifest" => changed.model_manifest_digest = hash(b"new model"),
+                "backend" => changed.backend = BackendPreference::Cpu,
+                "cpu_fallback" => changed.cpu_fallback = false,
                 _ => unreachable!(),
             }
             assert!(

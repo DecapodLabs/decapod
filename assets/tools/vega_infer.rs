@@ -7,10 +7,8 @@ use decapod::core::{
     vega_readiness::{self, Request, Response},
     vega_setup,
 };
-#[cfg(any(
-    test,
-    all(feature = "vega-native", target_os = "macos", target_arch = "aarch64")
-))]
+#[cfg(all(not(target_os = "macos"), feature = "cuda"))]
+extern crate candle_vllm_cuda as candle_vllm;
 #[path = "vega-native/decoder.rs"]
 mod decoder;
 #[path = "../../src/decapod/core/vega_backbone.rs"]
@@ -62,6 +60,13 @@ fn write_private_proof(path: &Path, proof: &impl serde::Serialize) -> io::Result
     file.write_all(&bytes)?;
     file.sync_all()
 }
+#[cfg(not(unix))]
+fn write_private_proof(_: &Path, _: &impl serde::Serialize) -> io::Result<()> {
+    Err(io::Error::new(
+        io::ErrorKind::Unsupported,
+        "private diagnostic export needs a reviewed platform file-permission implementation",
+    ))
+}
 fn read_bounded(path: &Path, limit: u64) -> io::Result<Vec<u8>> {
     let meta = fs::symlink_metadata(path)?;
     if !meta.is_file() || meta.len() > limit {
@@ -107,13 +112,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         request_id: request.request_id.clone(),
         input_digest: request.input_digest.clone(),
         manifest_digest: request.manifest_digest.clone(),
-        backend: "candle-metal".into(),
-        device: "metal".into(),
+        backend: request.backend.runtime().into(),
+        device: request.backend.device().into(),
         engine_device: "cpu".into(),
         precision: vega_readiness::Precision::supported(),
         input_tokens: 0,
         outcome: None,
         error: None,
+        error_kind: None,
     };
     let proof_path = if args.len() == 4 {
         Some(Path::new(&args[3]))
@@ -125,19 +131,23 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             response.outcome = Some(outcome);
             response.input_tokens = tokens;
         }
-        Err(error) => response.error = Some(error.to_string()),
+        Err(error) => {
+            response.error_kind = Some(
+                if matches!(
+                    error.downcast_ref::<vega_backbone::BackboneError>(),
+                    Some(vega_backbone::BackboneError::HardwareUnavailable(_))
+                ) {
+                    vega_readiness::WorkerErrorKind::HardwareUnavailable
+                } else {
+                    vega_readiness::WorkerErrorKind::InferenceFailed
+                },
+            );
+            response.error = Some(error.to_string().chars().take(512).collect());
+        }
     }
     println!("{}", serde_json::to_string(&response)?);
     Ok(())
 }
-#[cfg(not(all(feature = "vega-native", target_os = "macos", target_arch = "aarch64")))]
-fn infer(
-    _: &Request,
-    _: Option<&Path>,
-) -> Result<(vega_readiness::Outcome, usize), Box<dyn std::error::Error>> {
-    Err("native Apple-arm64 Metal execution is required; no fallback".into())
-}
-#[cfg(all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"))]
 fn tokenize(
     state: &str,
     tokenizer: &tokenizers::Tokenizer,
@@ -156,7 +166,6 @@ fn tokenize(
             .map_err(|e| e.to_string())
     })
 }
-#[cfg(all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"))]
 fn infer(
     request: &Request,
     proof_path: Option<&Path>,
@@ -212,9 +221,10 @@ fn infer(
         return Err("unsupported backbone shard layout".into());
     }
     let stage = Instant::now();
-    let mut backbone = vega_backbone::MetalBackbone::load(
+    let mut backbone = vega_backbone::NativeBackbone::load(
         &request.installation.join("backbone/config.json"),
         &weights,
+        request.backend,
     )?;
     let backbone_load_including_probe_ms = stage.elapsed().as_secs_f64() * 1000.0;
     let stage = Instant::now();
@@ -347,9 +357,10 @@ fn infer(
                 "manifest":manifest,
                 "backbone_source_revision":vega_backbone::NATIVE_SOURCE_REVISION,
                 "candle_source_revision":vega_backbone::CANDLE_SOURCE_REVISION,
-                "backend":"candle-metal","device":"metal","engine_device":"cpu",
+                "backend":request.backend.runtime(),"device":request.backend.device(),"engine_device":"cpu",
                 "precision":vega_readiness::Precision::supported(),
-                "metal_probe":backbone.metal_probe()
+                "device_probe":backbone.device_probe(),
+                "cpu_source":"assets/tools/vega-native/cpu_backbone.rs; separately implemented, not independently reviewed"
             }),
             serde_json::json!({
                 "prompt_token_ids":prompt.tokens,"prompt_spans":prompt.spans,

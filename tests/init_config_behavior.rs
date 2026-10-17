@@ -319,6 +319,11 @@ fn init_can_select_vega_and_refresh_preserves_policy_and_local_pins() {
                 .starts_with("sha256:")
         );
         assert!(selected["vega"].get("installation").is_none());
+        configured = configured.replacen(
+            "[vega]\n",
+            "[vega]\nbackend = 'cpu'\ncpu_fallback = false\n",
+            1,
+        );
         configured.push_str(&format!(
             "\n[custom]\nnote = 'keep team settings'\n\
              [vega.installation]\ndirectory = '/unavailable-model'\n\
@@ -332,6 +337,8 @@ fn init_can_select_vega_and_refresh_preserves_policy_and_local_pins() {
         let preserved = fs::read_to_string(&path).unwrap();
         let before: toml::Value = toml::from_str(&preserved).unwrap();
         assert_eq!(before["vega"]["mode"].as_str(), Some("required"));
+        assert_eq!(before["vega"]["backend"].as_str(), Some("cpu"));
+        assert_eq!(before["vega"]["cpu_fallback"].as_bool(), Some(false));
         let mut disable = surface.clone();
         disable.push("--vega-decisions=false");
         let mut dry = disable.clone();
@@ -341,6 +348,11 @@ fn init_can_select_vega_and_refresh_preserves_policy_and_local_pins() {
         assert!(run_decapod(project.path(), &disable).status.success());
         let after: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
         assert_eq!(after["vega"]["mode"].as_str(), Some("disabled"));
+        assert_eq!(after["vega"]["backend"], before["vega"]["backend"]);
+        assert_eq!(
+            after["vega"]["cpu_fallback"],
+            before["vega"]["cpu_fallback"]
+        );
         assert_eq!(
             after["vega"]["installation"],
             before["vega"]["installation"]

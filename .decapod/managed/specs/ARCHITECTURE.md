@@ -402,15 +402,26 @@ and maximum finite values, infinities and NaNs, with explicit 32-bit normalizati
 The Rust scalar engine uses F32 and calibration uses F64 probabilities. Required
 calibration, unbound/OOD and prediction-set semantics are preserved. Runtime
 loads only explicitly pinned local artifacts, resets recurrent state per request,
-and has no downloads or cross-request state reuse. Its current implementation is
-Metal-only and has no CPU backbone fallback. The required portability extension
-must preserve this pinned hidden-state path while adding a genuine Rust CPU path
-and supported non-Apple GPU selection. A failed accelerator attempt must not leak
-partial features or recurrent state into a CPU retry; both attempts remain bounded
-by the original deadline and use the same immutable model/calibration inputs.
-Receipts must disclose the selected device and fallback history. The pinned
-attention dependency implements Metal/CUDA kernels, not CPU operations, so merely
-constructing `Device::Cpu` is insufficient.
+and has no downloads or cross-request state reuse. Shared `backend = "auto"`
+prefers Metal on macOS and CUDA elsewhere; explicit metal/cuda/cpu preferences
+and `cpu_fallback = false` are supported. Metal builds retain the pinned
+`forward_collecting_layers` path; optional non-Apple `cuda` builds use that same
+API and pinned kernel closure. Unsupported GPU builds/devices return a typed
+hardware-unavailable result. The controller may then launch one fresh CPU process,
+under the original deadline and frozen model/runtime pins. A negative, abstaining,
+malformed or failed numerical result is never a fallback trigger.
+
+The pinned attention dependency has no CPU GDN kernels. The separate worker's
+`cpu_backbone.rs` implements the dense, text-only profile in Rust with Candle CPU
+GEMMs, causal grouped attention, partial RoPE and scalar gated delta recurrence.
+It upcasts the same BF16 weights to F32 and captures raw blocks 13/19, stopping
+after block 19 because later blocks/final norm/logits do not affect those features.
+State is request-local. CPU recurrence and RoPE fixtures establish mathematical
+test obligations only: this new CPU path is not an independently reviewed oracle,
+and CPU/CUDA/Metal execution and cross-backend parity remain unverified.
+Receipts retain actual device and per-attempt bindings/errors; a CPU result cannot
+count as evidence that Metal ran. Existing scalar engine and calibration remain
+CPU F32 and F64 respectively. No model identities change during fallback.
 
 Project policy and machine installation have different owners. Team enablement
 belongs in tracked configuration; each maintainer's verified cache/runtime binding
@@ -498,8 +509,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dd74a827573209f3aa1f8fa78c1f5c19785f3bb3c54154a26bc5667292068027`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
+- Repository signal fingerprint: `a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

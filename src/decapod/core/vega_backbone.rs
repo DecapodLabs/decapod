@@ -7,7 +7,7 @@
 //! Span/chunk semantics follow vegaml/_common.py at
 //! `21a17c90624aa85cec60b1092fa72cb8b720f71a` (Apache-2.0).
 //!
-//! There is no download, tokenizer, Python process, CPU fallback, quantization,
+//! There is no download, tokenizer, Python process, quantization,
 //! cache reuse, batching, or truncation here. The caller must verify the pinned
 //! installation before loading it. Source compatibility is not evidence of
 //! numerical parity or actual Apple GPU execution; those are separate gates.
@@ -16,8 +16,13 @@
 //! memory versus BF16 inference; kernel-level numerical parity remains unproven.
 
 use super::vega_prompt::{MAX_TOKENS, Prompt, PromptSpans};
+use decapod::core::vega_readiness::Backend;
 use std::ops::Range;
 use thiserror::Error;
+
+#[path = "../../../assets/tools/vega-native/cpu_backbone.rs"]
+mod cpu;
+pub use cpu::CpuBackbone;
 
 pub const D_MODEL: usize = 1024;
 pub const FEATURE_LAYERS: [usize; 2] = [13, 19];
@@ -32,13 +37,15 @@ const BOOLEAN_OPTIONS: usize = 2;
 
 #[derive(Debug, Error)]
 pub enum BackboneError {
+    #[error("vega hardware backend is unavailable: {0}")]
+    HardwareUnavailable(String),
     #[error("vega native backbone is unavailable: {0}")]
     Unsupported(String),
     #[error("invalid vega backbone checkpoint: {0}")]
     Checkpoint(String),
     #[error("invalid vega backbone input: {0}")]
     Input(String),
-    #[error("vega Metal computation failed: {0}")]
+    #[error("vega native computation failed: {0}")]
     Compute(String),
     #[error("vega recurrent-state cleanup failed; reload the backbone: {0}")]
     Cleanup(String),
@@ -174,7 +181,103 @@ fn chunk_ranges(state_tokens: usize) -> Vec<Range<usize>> {
         .collect()
 }
 
-#[cfg(all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"))]
+fn read_profile_config(path: &std::path::Path) -> Result<(serde_json::Value, String)> {
+    use serde_json::{Value, json};
+    use std::io::Read;
+    const MAX_CONFIG_BYTES: u64 = 64 * 1024;
+    let metadata = std::fs::symlink_metadata(path)
+        .map_err(|e| BackboneError::Checkpoint(format!("configuration metadata: {e}")))?;
+    if !metadata.file_type().is_file() || metadata.len() > MAX_CONFIG_BYTES {
+        return Err(BackboneError::Checkpoint(
+            "expected a bounded regular configuration file".into(),
+        ));
+    }
+    let mut raw = String::new();
+    std::fs::File::open(path)
+        .and_then(|file| file.take(MAX_CONFIG_BYTES + 1).read_to_string(&mut raw))
+        .map_err(|e| BackboneError::Checkpoint(format!("configuration read: {e}")))?;
+    if raw.len() as u64 > MAX_CONFIG_BYTES {
+        return Err(BackboneError::Checkpoint(
+            "configuration exceeds its byte limit".into(),
+        ));
+    }
+    let root: Value = serde_json::from_str(&raw)
+        .map_err(|e| BackboneError::Checkpoint(format!("configuration JSON: {e}")))?;
+    let text = root
+        .get("text_config")
+        .ok_or_else(|| BackboneError::Checkpoint("missing text_config".into()))?;
+    for (field, expected) in [
+        ("hidden_size", 1024),
+        ("num_hidden_layers", 24),
+        ("vocab_size", 248_320),
+        ("head_dim", 256),
+        ("num_attention_heads", 8),
+        ("num_key_value_heads", 2),
+        ("intermediate_size", 3584),
+        ("linear_conv_kernel_dim", 4),
+        ("linear_key_head_dim", 128),
+        ("linear_value_head_dim", 128),
+        ("linear_num_key_heads", 16),
+        ("linear_num_value_heads", 16),
+        ("full_attention_interval", 4),
+        ("max_position_embeddings", 262_144),
+    ] {
+        if text.get(field).and_then(Value::as_u64) != Some(expected) {
+            return Err(BackboneError::Checkpoint(format!(
+                "unsupported 0.8B profile field: {field}"
+            )));
+        }
+    }
+    let expected_layers: Vec<_> = (0..24)
+        .map(|index| {
+            if (index + 1) % 4 == 0 {
+                "full_attention"
+            } else {
+                "linear_attention"
+            }
+        })
+        .collect();
+    let rope = text
+        .get("rope_parameters")
+        .ok_or_else(|| BackboneError::Checkpoint("missing rope_parameters".into()))?;
+    if root.get("model_type").and_then(Value::as_str) != Some("qwen3_5")
+        || root.get("architectures") != Some(&json!(["Qwen3_5ForConditionalGeneration"]))
+        || text.get("model_type").and_then(Value::as_str) != Some("qwen3_5_text")
+        || text.get("layer_types") != Some(&json!(expected_layers))
+        || text.get("hidden_act").and_then(Value::as_str) != Some("silu")
+        || text.get("dtype").and_then(Value::as_str) != Some("bfloat16")
+        || text.get("mamba_ssm_dtype").and_then(Value::as_str) != Some("float32")
+        || text.get("tie_word_embeddings").and_then(Value::as_bool) != Some(true)
+        || text.get("attention_bias").and_then(Value::as_bool) != Some(false)
+        || text.get("attn_output_gate").and_then(Value::as_bool) != Some(true)
+        || text.get("rms_norm_eps").and_then(Value::as_f64) != Some(1e-6)
+        || rope.get("rope_type").and_then(Value::as_str) != Some("default")
+        || rope.get("rope_theta").and_then(Value::as_f64) != Some(10_000_000.0)
+        || rope.get("partial_rotary_factor").and_then(Value::as_f64) != Some(0.25)
+        || rope.get("mrope_interleaved").and_then(Value::as_bool) != Some(true)
+        || rope.get("mrope_section") != Some(&json!([11, 11, 10]))
+    {
+        return Err(BackboneError::Checkpoint(
+            "configuration does not match the supported dense 0.8B BF16 profile".into(),
+        ));
+    }
+    if [&root, text].iter().any(|config| {
+        config
+            .get("quantization_config")
+            .is_some_and(|v| !v.is_null())
+            || config.get("isq_quant").is_some_and(|v| !v.is_null())
+    }) {
+        return Err(BackboneError::Unsupported(
+            "quantized backbones require separate parity evidence".into(),
+        ));
+    }
+    Ok((root, raw))
+}
+
+#[cfg(any(
+    all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
+    all(not(target_os = "macos"), feature = "cuda")
+))]
 mod native {
     use super::*;
     use candle_core::{DType, Device, Tensor};
@@ -184,14 +287,10 @@ mod native {
     use candle_vllm::openai::distributed::Comm;
     use candle_vllm::openai::models::{Config, qwen3_5::Qwen3_5};
     use parking_lot::RwLock;
-    use serde_json::{Value, json};
-    use std::fs::File;
-    use std::io::Read;
     use std::path::{Path, PathBuf};
     use std::rc::Rc;
     use std::sync::Arc;
 
-    const MAX_CONFIG_BYTES: u64 = 64 * 1024;
     const MAX_WEIGHT_BYTES: u64 = 2 * 1024 * 1024 * 1024;
     const SEQUENCE_ID: usize = 0;
     const INFERENCE_DTYPE: DType = DType::F32;
@@ -200,13 +299,27 @@ mod native {
         BackboneError::Compute(error.to_string())
     }
 
-    fn checked_metal_device() -> Result<Device> {
+    fn checked_device(backend: Backend) -> Result<Device> {
         // Never use a helper that may select CPU as a fallback.
-        let device = Device::new_metal(0)
-            .map_err(|e| BackboneError::Unsupported(format!("Apple Metal device 0: {e}")))?;
-        if !device.is_metal() {
-            return Err(BackboneError::Unsupported(
-                "a native Metal device is required".into(),
+        let device = std::panic::catch_unwind(|| match backend {
+            Backend::Metal => Device::new_metal(0),
+            Backend::Cuda => Device::new_cuda(0),
+            Backend::Cpu => Err(candle_core::Error::Msg(
+                "GPU constructor requires Metal or CUDA".into(),
+            )),
+        })
+        .map_err(|_| {
+            BackboneError::HardwareUnavailable("GPU driver/device initialization panicked".into())
+        })?
+        .map_err(|e| {
+            BackboneError::HardwareUnavailable(format!("{} device 0: {e}", backend.device()))
+        })?;
+        if !matches!(
+            (backend, &device),
+            (Backend::Metal, Device::Metal(_)) | (Backend::Cuda, Device::Cuda(_))
+        ) {
+            return Err(BackboneError::HardwareUnavailable(
+                "requested GPU was not selected".into(),
             ));
         }
         Ok(device)
@@ -214,8 +327,16 @@ mod native {
 
     fn probe_on_device(device: &Device) -> Result<MetalProbe> {
         let start = std::time::Instant::now();
-        let metal = device.as_metal_device().map_err(compute)?;
-        let device_name = metal.device().name().to_owned();
+        let (backend, device_name) = match device {
+            #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+            Device::Metal(metal) => (Backend::Metal, metal.device().name().to_owned()),
+            Device::Cuda(_) => (Backend::Cuda, "CUDA device 0".to_owned()),
+            _ => {
+                return Err(BackboneError::Compute(
+                    "GPU probe received a non-GPU device".into(),
+                ));
+            }
+        };
         if device_name.len() > 256 {
             return Err(BackboneError::Unsupported(
                 "Metal device identity exceeds limit".into(),
@@ -230,8 +351,7 @@ mod native {
             .and_then(|product| product.add(&left))
             .map_err(compute)?;
         if [&left, &right, &output].iter().any(|tensor| {
-            !tensor.device().is_metal()
-                || !tensor.device().same_device(device)
+            !tensor.device().same_device(device)
                 || tensor.dtype() != DType::F32
                 || tensor.dims() != [8]
         }) {
@@ -242,10 +362,10 @@ mod native {
         device.synchronize().map_err(compute)?;
         let actual = verify_probe_output(&output.to_vec1::<f32>().map_err(compute)?)?;
         Ok(MetalProbe {
-            schema: "decapod.vega-metal-probe.v1",
+            schema: "decapod.vega-device-probe.v1",
             status: "passed",
-            backend: "candle-metal",
-            device: "metal",
+            backend: backend.runtime(),
+            device: backend.device(),
             device_name,
             device_ordinal: 0,
             dtype: "f32",
@@ -265,23 +385,27 @@ mod native {
 
     /// Needs no checkpoint files. Failure is an error, never a CPU retry.
     pub fn probe_metal() -> Result<MetalProbe> {
-        probe_on_device(&checked_metal_device()?)
+        probe_on_device(&checked_device(Backend::Metal)?)
     }
 
     /// Owned single-request runtime. `pooled` requires &mut self, so requests
     /// cannot share or race recurrent state through this interface.
-    pub struct MetalBackbone {
+    pub struct GpuBackbone {
         model: Qwen3_5,
         device: Device,
         probe: MetalProbe,
         poisoned: bool,
     }
 
-    impl MetalBackbone {
+    impl GpuBackbone {
         /// Load only previously verified, immutable local checkpoint files.
         /// The installation must stay unchanged while this mmap-backed model
         /// exists. No remote repository or floating revision is accepted here.
-        pub fn load(config_path: &Path, weight_paths: &[PathBuf]) -> Result<Self> {
+        pub fn load(
+            config_path: &Path,
+            weight_paths: &[PathBuf],
+            backend: Backend,
+        ) -> Result<Self> {
             let cfg = load_profile_config(config_path)?;
             if weight_paths.len() != 1 {
                 return Err(BackboneError::Checkpoint(
@@ -303,7 +427,7 @@ mod native {
             }
             // This constructor is intentionally used instead of candle-vllm's
             // new_device helper, which can silently choose the CPU.
-            let device = checked_metal_device()?;
+            let device = checked_device(backend)?;
             // Fail closed before loading or running the model, on the exact
             // device subsequently used by this owned inference runtime.
             let probe = probe_on_device(&device)?;
@@ -322,7 +446,7 @@ mod native {
                 Arc::new(RwLock::new(ProgressReporter::new(0))),
             )
             .map_err(|e| BackboneError::Checkpoint(format!("Qwen3.5 text load: {e}")))?;
-            if !model.embed_weight().device().is_metal()
+            if !model.embed_weight().device().same_device(&device)
                 || model.embed_weight().dtype() != INFERENCE_DTYPE
                 || model.dtype() != INFERENCE_DTYPE
             {
@@ -340,7 +464,7 @@ mod native {
             })
         }
 
-        pub fn metal_probe(&self) -> &MetalProbe {
+        pub fn device_probe(&self) -> &MetalProbe {
             &self.probe
         }
 
@@ -426,7 +550,8 @@ mod native {
                 ));
             }
             for hidden in &layers {
-                if !hidden.device().is_metal() || hidden.dims() != [length, D_MODEL] {
+                if !hidden.device().same_device(&self.device) || hidden.dims() != [length, D_MODEL]
+                {
                     return Err(BackboneError::Compute(
                         "unexpected hidden-state device or shape".into(),
                     ));
@@ -492,7 +617,7 @@ mod native {
         let pooled = Tensor::stack(rows, 0)
             .and_then(|tensor| tensor.flatten_all())
             .map_err(compute)?;
-        if !pooled.device().is_metal()
+        if pooled.device().is_cpu()
             || pooled.dtype() != DType::F32
             || pooled.elem_count() != expected
         {
@@ -533,92 +658,8 @@ mod native {
     }
 
     fn load_profile_config(path: &Path) -> Result<Config> {
-        let metadata = std::fs::symlink_metadata(path)
-            .map_err(|e| BackboneError::Checkpoint(format!("configuration metadata: {e}")))?;
-        if !metadata.file_type().is_file() || metadata.len() > MAX_CONFIG_BYTES {
-            return Err(BackboneError::Checkpoint(
-                "expected a bounded regular configuration file".into(),
-            ));
-        }
-        let mut raw = String::new();
-        File::open(path)
-            .and_then(|file| file.take(MAX_CONFIG_BYTES + 1).read_to_string(&mut raw))
-            .map_err(|e| BackboneError::Checkpoint(format!("configuration read: {e}")))?;
-        if raw.len() as u64 > MAX_CONFIG_BYTES {
-            return Err(BackboneError::Checkpoint(
-                "configuration exceeds its byte limit".into(),
-            ));
-        }
-        let root: Value = serde_json::from_str(&raw)
-            .map_err(|e| BackboneError::Checkpoint(format!("configuration JSON: {e}")))?;
-        let text = root
-            .get("text_config")
-            .ok_or_else(|| BackboneError::Checkpoint("missing text_config".into()))?;
-        for (field, expected) in [
-            ("hidden_size", 1024),
-            ("num_hidden_layers", 24),
-            ("vocab_size", 248_320),
-            ("head_dim", 256),
-            ("num_attention_heads", 8),
-            ("num_key_value_heads", 2),
-            ("intermediate_size", 3584),
-            ("linear_conv_kernel_dim", 4),
-            ("linear_key_head_dim", 128),
-            ("linear_value_head_dim", 128),
-            ("linear_num_key_heads", 16),
-            ("linear_num_value_heads", 16),
-            ("full_attention_interval", 4),
-            ("max_position_embeddings", 262_144),
-        ] {
-            if text.get(field).and_then(Value::as_u64) != Some(expected) {
-                return Err(BackboneError::Checkpoint(format!(
-                    "unsupported 0.8B profile field: {field}"
-                )));
-            }
-        }
-        let expected_layers: Vec<_> = (0..24)
-            .map(|index| {
-                if (index + 1) % 4 == 0 {
-                    "full_attention"
-                } else {
-                    "linear_attention"
-                }
-            })
-            .collect();
-        let rope = text
-            .get("rope_parameters")
-            .ok_or_else(|| BackboneError::Checkpoint("missing rope_parameters".into()))?;
-        if root.get("model_type").and_then(Value::as_str) != Some("qwen3_5")
-            || root.get("architectures") != Some(&json!(["Qwen3_5ForConditionalGeneration"]))
-            || text.get("model_type").and_then(Value::as_str) != Some("qwen3_5_text")
-            || text.get("layer_types") != Some(&json!(expected_layers))
-            || text.get("hidden_act").and_then(Value::as_str) != Some("silu")
-            || text.get("dtype").and_then(Value::as_str) != Some("bfloat16")
-            || text.get("mamba_ssm_dtype").and_then(Value::as_str) != Some("float32")
-            || text.get("tie_word_embeddings").and_then(Value::as_bool) != Some(true)
-            || text.get("attention_bias").and_then(Value::as_bool) != Some(false)
-            || text.get("attn_output_gate").and_then(Value::as_bool) != Some(true)
-            || text.get("rms_norm_eps").and_then(Value::as_f64) != Some(1e-6)
-            || rope.get("rope_type").and_then(Value::as_str) != Some("default")
-            || rope.get("rope_theta").and_then(Value::as_f64) != Some(10_000_000.0)
-            || rope.get("partial_rotary_factor").and_then(Value::as_f64) != Some(0.25)
-            || rope.get("mrope_interleaved").and_then(Value::as_bool) != Some(true)
-            || rope.get("mrope_section") != Some(&json!([11, 11, 10]))
-        {
-            return Err(BackboneError::Checkpoint(
-                "configuration does not match the supported dense 0.8B BF16 profile".into(),
-            ));
-        }
-        if [&root, text].iter().any(|config| {
-            config
-                .get("quantization_config")
-                .is_some_and(|v| !v.is_null())
-                || config.get("isq_quant").is_some_and(|v| !v.is_null())
-        }) {
-            return Err(BackboneError::Unsupported(
-                "quantized backbones require separate parity evidence".into(),
-            ));
-        }
+        let (root, raw) = read_profile_config(path)?;
+        let text = &root["text_config"];
         // Parse the already bounded bytes rather than the upstream file loader,
         // whose missing-file branch panics. Preserve its outer-config handling
         // and public RoPE resolution without adding runtime scaling overrides.
@@ -643,34 +684,76 @@ mod native {
     }
 }
 
-#[cfg(all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"))]
-pub use native::{MetalBackbone, probe_metal};
+#[cfg(any(
+    all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
+    all(not(target_os = "macos"), feature = "cuda")
+))]
+pub use native::probe_metal;
 
-#[cfg(not(all(feature = "vega-native", target_os = "macos", target_arch = "aarch64")))]
+#[cfg(not(any(
+    all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
+    all(not(target_os = "macos"), feature = "cuda")
+)))]
 pub fn probe_metal() -> Result<MetalProbe> {
-    Err(BackboneError::Unsupported(
-        "requires an Apple Silicon macOS build with vega-native enabled; no fallback".into(),
+    Err(BackboneError::HardwareUnavailable(
+        "this runtime has no compiled Metal backend; an explicit Metal probe never falls back"
+            .into(),
     ))
 }
 
-#[cfg(not(all(feature = "vega-native", target_os = "macos", target_arch = "aarch64")))]
-pub struct MetalBackbone;
-
-#[cfg(not(all(feature = "vega-native", target_os = "macos", target_arch = "aarch64")))]
-impl MetalBackbone {
+pub enum NativeBackbone {
+    Cpu(CpuBackbone),
+    #[cfg(any(
+        all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
+        all(not(target_os = "macos"), feature = "cuda")
+    ))]
+    Gpu(native::GpuBackbone),
+}
+impl NativeBackbone {
     pub fn load(
-        _config_path: &std::path::Path,
-        _weight_paths: &[std::path::PathBuf],
+        config_path: &std::path::Path,
+        weight_paths: &[std::path::PathBuf],
+        backend: Backend,
     ) -> Result<Self> {
-        Err(BackboneError::Unsupported(
-            "requires an Apple Silicon macOS build with vega-native enabled".into(),
-        ))
+        if backend == Backend::Cpu {
+            return CpuBackbone::load(config_path, weight_paths).map(Self::Cpu);
+        }
+        #[cfg(any(
+            all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
+            all(not(target_os = "macos"), feature = "cuda")
+        ))]
+        {
+            native::GpuBackbone::load(config_path, weight_paths, backend).map(Self::Gpu)
+        }
+        #[cfg(not(any(
+            all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
+            all(not(target_os = "macos"), feature = "cuda")
+        )))]
+        {
+            Err(BackboneError::HardwareUnavailable(
+                "this runtime has no compiled GPU backend".into(),
+            ))
+        }
     }
-
-    pub fn pooled(&mut self, _prompt: &Prompt) -> Result<PooledFeatures> {
-        Err(BackboneError::Unsupported(
-            "requires an Apple Silicon macOS build with vega-native enabled".into(),
-        ))
+    pub fn pooled(&mut self, prompt: &Prompt) -> Result<PooledFeatures> {
+        match self {
+            Self::Cpu(backbone) => backbone.pooled(prompt),
+            #[cfg(any(
+                all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
+                all(not(target_os = "macos"), feature = "cuda")
+            ))]
+            Self::Gpu(backbone) => backbone.pooled(prompt),
+        }
+    }
+    pub fn device_probe(&self) -> Option<&MetalProbe> {
+        match self {
+            Self::Cpu(_) => None,
+            #[cfg(any(
+                all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
+                all(not(target_os = "macos"), feature = "cuda")
+            ))]
+            Self::Gpu(backbone) => Some(backbone.device_probe()),
+        }
     }
 }
 

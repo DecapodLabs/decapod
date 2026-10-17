@@ -142,6 +142,7 @@ dependencies = [
  "candle-core",
  "candle-nn",
  "half",
+ "kernels",
  "metal 0.27.0",
  "metal-kernels",
  "parking_lot",
@@ -418,7 +419,9 @@ version = "0.8.3"
 source = "git+https://github.com/guoqingbao/candle.git?rev=b60efcf#b60efcf926dcfbdcad9e7c82e8a83679c526df20"
 dependencies = [
  "byteorder",
+ "candle-kernels",
  "candle-metal-kernels",
+ "cudarc",
  "gemm 0.17.1",
  "half",
  "memmap2",
@@ -434,6 +437,14 @@ dependencies = [
  "ug-metal",
  "yoke 0.7.5",
  "zip",
+]
+
+[[package]]
+name = "candle-kernels"
+version = "0.8.3"
+source = "git+https://github.com/guoqingbao/candle.git?rev=b60efcf#b60efcf926dcfbdcad9e7c82e8a83679c526df20"
+dependencies = [
+ "cudaforge",
 ]
 
 [[package]]
@@ -526,7 +537,7 @@ dependencies = [
  "tracing-subscriber",
  "utoipa",
  "uuid",
- "which",
+ "which 8.0.6",
 ]
 
 [[package]]
@@ -856,6 +867,34 @@ checksum = "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
 dependencies = [
  "generic-array",
  "typenum",
+]
+
+[[package]]
+name = "cudaforge"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d475ff95b9e4096878f47fe0ca5dbad0e23849a79fc225305ea06c2f25771cd"
+dependencies = [
+ "anyhow",
+ "fs2",
+ "glob",
+ "num_cpus",
+ "rayon",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.21",
+ "walkdir",
+ "which 7.0.3",
+]
+
+[[package]]
+name = "cudarc"
+version = "0.14.1"
+source = "git+https://github.com/guoqingbao/cudarc.git?rev=2e81793#2e81793a40ce596fd07a4355ceb8459696dd1f36"
+dependencies = [
+ "half",
+ "libloading",
 ]
 
 [[package]]
@@ -1330,6 +1369,12 @@ dependencies = [
  "quote",
  "syn 2.0.119",
 ]
+
+[[package]]
+name = "env_home"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7f84e12ccf0a7ddc17a6c41c93326024c42920d7ee630d04950e6926645c0fe"
 
 [[package]]
 name = "env_logger"
@@ -1924,6 +1969,12 @@ dependencies = [
  "color_quant",
  "weezl",
 ]
+
+[[package]]
+name = "glob"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e4eba85ea1d0a966a983acd07deee566e67395d2d96b6fb39e62b5a833f1eb0b"
 
 [[package]]
 name = "h2"
@@ -2613,6 +2664,17 @@ dependencies = [
  "cfg-if",
  "futures-util",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "kernels"
+version = "0.6.8"
+source = "git+https://github.com/guoqingbao/attention.rs.git?rev=5b4d645#5b4d645ea3e9b19fcc09ba1e4e0b8767b15df961"
+dependencies = [
+ "anyhow",
+ "cudaforge",
+ "sha2",
+ "ureq",
 ]
 
 [[package]]
@@ -5544,6 +5606,18 @@ checksum = "a28ac98ddc8b9274cb41bb4d9d4d5c425b6020c50c46f25559911905610b4a88"
 
 [[package]]
 name = "which"
+version = "7.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24d643ce3fd3e5b54854602a080f34fb10ab75e0b813ee32d00ca2b44fa74762"
+dependencies = [
+ "either",
+ "env_home",
+ "rustix",
+ "winsafe",
+]
+
+[[package]]
+name = "which"
 version = "8.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bae2f2b2b816647a1cab1acc91f5bd20812d53cb344382635ec2181940c8034f"
@@ -5897,6 +5971,12 @@ checksum = "23b97319f7b8343df12cc98938e5c3eb436064524c8d2b4e30a1d3a36eecdf81"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "winsafe"
+version = "0.0.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d135d17ab770252ad95e9a872d365cf3090e3be864a34ab46f48555993efc904"
 
 [[package]]
 name = "wit-bindgen"

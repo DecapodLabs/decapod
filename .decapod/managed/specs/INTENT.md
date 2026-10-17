@@ -200,8 +200,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dd74a827573209f3aa1f8fa78c1f5c19785f3bb3c54154a26bc5667292068027`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
+- Repository signal fingerprint: `a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -214,9 +214,10 @@ backbone. Teams must be able to select Vega in project configuration and during
 init without requiring every maintainer to own an Apple GPU. Automatic execution
 must prefer Apple Metal on macOS and supported GPU acceleration elsewhere, with
 safe CPU fallback and the actual backend recorded. Shared policy must not depend
-on one maintainer's absolute installation paths. The current worker is still
-Metal-only; portable inference, fallback and local binding remain implementation
-obligations, not measured capabilities. The bounded 4,096-token input contains structured
+on one maintainer's absolute installation paths. Shared pins/private bindings and
+portable selection/fallback now have source implementations. Metal, optional CUDA
+and the separate Rust CPU backbone still require executed verification before
+claiming portability. The bounded 4,096-token input contains structured
 validation outcomes and minimal intent/change context; all adverse facts and
 unknowns survive compaction. No full plan, diff or log is copied into the prompt.
 The agent publishes through existing gates and the human merges. Failed/stale

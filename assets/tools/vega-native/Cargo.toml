@@ -15,6 +15,7 @@ path = "../vega_infer.rs"
 [features]
 default = ["vega-native"]
 vega-native = []
+cuda = ["dep:candle-vllm-cuda"]
 
 [dependencies]
 decapod = { path = "../../..", default-features = false }
@@ -22,6 +23,10 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "2"
 safetensors = "0.7"
+candle-core = { git = "https://github.com/guoqingbao/candle.git", rev = "b60efcf", default-features = false }
+candle-nn = { git = "https://github.com/guoqingbao/candle.git", rev = "b60efcf", default-features = false }
+parking_lot = "0.12"
+tokenizers = { version = "0.23.2", default-features = false, features = ["fancy-regex"] }
 
 [package.metadata.cargo-machete]
 # Required by BackboneError in the path-included ../../../src/decapod/core/vega_backbone.rs.
@@ -32,5 +37,6 @@ candle-vllm = { git = "https://github.com/EricLBuehler/candle-vllm", rev = "2c2c
 # Match the upstream source selector exactly; Cargo.lock pins its full commit.
 candle-core = { git = "https://github.com/guoqingbao/candle.git", rev = "b60efcf", default-features = false, features = ["metal"] }
 candle-nn = { git = "https://github.com/guoqingbao/candle.git", rev = "b60efcf", default-features = false, features = ["metal"] }
-parking_lot = "0.12"
-tokenizers = { version = "0.23.2", default-features = false, features = ["fancy-regex"] }
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+candle-vllm-cuda = { package = "candle-vllm", git = "https://github.com/EricLBuehler/candle-vllm", rev = "2c2c5293d21961d29dd73c2ff7b246b77d3eaf3f", optional = true, default-features = false, features = ["cuda"] }

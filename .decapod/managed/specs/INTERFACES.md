@@ -473,11 +473,14 @@ The old provider flag and credential lookup
 are removed. Historical Jev evidence remains read-only compatibility, without
 current trajectory or readiness authority.
 
-The portable Metal/GPU/CPU-fallback runtime remains a required extension to the
-current response contract. Shared policy now resolves each maintainer's local
-installation; the worker must additionally report the actual backend rather than
-accepting a forged Metal label for CPU execution. Unsupported hardware and failed
-fallback still fail closed; CPU support is not yet established by the current code.
+Shared `[vega]` policy resolves each maintainer's private local installation.
+`backend` accepts auto (default), metal, cuda and cpu; `cpu_fallback` defaults true.
+Auto prefers Metal on macOS and CUDA elsewhere; CPU-only builds on other systems
+can return a typed unavailable-GPU response and then execute CPU inference.
+CUDA currently targets NVIDIA via the worker's explicit `cuda` build feature;
+AMD/Intel acceleration is not implemented. These defaults do not prove runtime
+availability. Backend choice/fallback are part of the frozen policy and cannot
+weaken an accepted required policy through candidate changes.
 
 Init refresh removes only the obsolete provider selector when its value is
 `none` or `jev`, deleting the section only when empty. Authored extension keys
@@ -494,8 +497,16 @@ instead of panicking or claiming a successful setup response.
 The generated configuration reference includes the exact vega configuration
 declaration and the complete authored readiness/setup guidance; source-derived
 documentation corrections still require the CI renderer's equality check.
-The worker's bounded `decapod.vega-worker.v1` request/response binds input and
-installation identity. Outcomes preserve [no, yes] probabilities, prediction set,
+The worker's bounded `decapod.vega-worker.v2` request/response additionally binds
+the explicitly requested physical backend. The parent validates actual backend
+and precision labels before consuming an answer or considering fallback. A typed
+`hardware_unavailable` error with no outcome/tokens permits one fresh CPU process
+when policy allows; inference errors, invalid IPC, timeout, crash and all model
+decisions terminate the attempt without retry. Pins are rechecked between attempts,
+each request has its own digest and the original deadline bounds both. Receipt
+`backend_attempts` preserves each requested backend, request ID and error.
+This protocol needs execution tests; declarations alone are not portability proof.
+Outcomes preserve [no, yes] probabilities, prediction set,
 abstention, unbound/OOD, physical diagnostics and explicit devices/precision.
 Only positive singleton yes accepts; negative rejects and uncertainty abstains.
 The validation report separates `proof_ready`, final `ready`, and the exact-bound
@@ -541,8 +552,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dd74a827573209f3aa1f8fa78c1f5c19785f3bb3c54154a26bc5667292068027`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
+- Repository signal fingerprint: `a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -8,7 +8,13 @@ private registration records reject malformed or mismatched identities. Operator
 selection of a trusted reviewed runtime remains a trust boundary. Validation
 freezes the binding before proof and rechecks binding/model/runtime identity before
 consuming an acceptance. Local registration cannot bless source proof, fabricate
-Metal/CPU execution or establish numerical parity. CPU fallback remains unimplemented.
+Metal/CPU execution or establish numerical parity. CPU fallback is restricted to a
+typed hardware-unavailable response without a model answer, then a fresh process
+under the original deadline with reverified identical pins. Malformed output,
+arithmetic failure, timeout, crash, negative verdict and abstention do not trigger
+fallback. Runtime labels must match the explicit physical-backend request. New
+CPU and CUDA paths still require actual execution and numerical verification;
+neither a CPU answer nor a capability declaration proves Metal execution.
 
 ## Explicit local task-transfer trust
 
@@ -360,8 +366,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dd74a827573209f3aa1f8fa78c1f5c19785f3bb3c54154a26bc5667292068027`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
+- Repository signal fingerprint: `a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
