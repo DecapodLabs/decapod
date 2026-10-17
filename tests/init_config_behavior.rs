@@ -230,6 +230,77 @@ fn init_refresh_ignores_retired_provider_configuration_and_leaves_secrets_untouc
 }
 
 #[test]
+fn init_migrates_only_known_retired_selectors_and_preserves_authored_extensions() {
+    for surface in [vec!["init", "--refresh"], vec!["init", "with", "--force"]] {
+        for provider in ["none", "jev"] {
+            for extension in [false, true] {
+                let project = tempdir().unwrap();
+                assert!(
+                    run_decapod(project.path(), &["init", "with", "--force"])
+                        .status
+                        .success()
+                );
+                let path = project.path().join(".decapod/config.toml");
+                let mut original = fs::read_to_string(&path).unwrap();
+                original.push_str(&format!(
+                    "\n[custom]\nnote = 'preserve me'\n[decision]\nprovider = '{provider}'\n"
+                ));
+                if extension {
+                    original.push_str("reviewer_note = 'authored extension'\n");
+                }
+                fs::write(&path, &original).unwrap();
+                let mut dry = surface.clone();
+                dry.push("--dry-run");
+                assert!(run_decapod(project.path(), &dry).status.success());
+                assert_eq!(fs::read_to_string(&path).unwrap(), original);
+                let output = run_decapod(project.path(), &surface);
+                assert!(
+                    output.status.success(),
+                    "{}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+                let migrated = fs::read_to_string(&path).unwrap();
+                let value: toml::Value = toml::from_str(&migrated).unwrap();
+                assert_eq!(value["custom"]["note"].as_str(), Some("preserve me"));
+                if extension {
+                    assert_eq!(
+                        value["decision"]["reviewer_note"].as_str(),
+                        Some("authored extension")
+                    );
+                    assert!(value["decision"].get("provider").is_none());
+                } else {
+                    assert!(value.get("decision").is_none());
+                }
+                assert!(run_decapod(project.path(), &surface).status.success());
+                assert_eq!(fs::read_to_string(path).unwrap(), migrated);
+            }
+        }
+    }
+}
+
+#[test]
+fn init_refuses_ambiguous_retired_selectors_without_rewriting_user_configuration() {
+    for surface in [vec!["init", "--refresh"], vec!["init", "with", "--force"]] {
+        for provider in ["'custom-provider'", "42", "['jev']"] {
+            let project = tempdir().unwrap();
+            assert!(
+                run_decapod(project.path(), &["init", "with", "--force"])
+                    .status
+                    .success()
+            );
+            let path = project.path().join(".decapod/config.toml");
+            let mut original = fs::read_to_string(&path).unwrap();
+            original.push_str(&format!("\n[decision]\nprovider = {provider}\n"));
+            fs::write(&path, &original).unwrap();
+            let output = run_decapod(project.path(), &surface);
+            assert!(!output.status.success());
+            assert!(String::from_utf8_lossy(&output.stderr).contains("RETIRED_DECISION_CONFIG"));
+            assert_eq!(fs::read_to_string(path).unwrap(), original);
+        }
+    }
+}
+
+#[test]
 fn init_refresh_preserves_explicit_vega_installation_without_executing_it() {
     let project = tempdir().expect("project tempdir");
     let first = run_decapod(project.path(), &["init", "with", "--force"]);

@@ -405,8 +405,13 @@ loads only explicitly pinned local artifacts, resets recurrent state per request
 and has no downloads, CPU backbone fallback or cross-request state reuse.
 
 `vega_setup` owns explicit bounded discovery/download, independently pinned
-engine/backbone/tokenizer/config/license identities, content-deduplicated cache
-and atomic activation/rollback. The active pointer is never runtime authority.
+engine/backbone/tokenizer/config/license identities, content-addressed download
+reuse and atomic activation/rollback. Installation copies each component into a
+private temporary artifact, synchronizes and independently verifies the copy,
+then installs without clobbering another file. Cache and installation files each
+retain one link; offline reuse saves downloads while requiring separate disk
+space. Full checkpoint verification still precedes atomic directory activation.
+The active pointer is never runtime authority.
 Private numerical diagnostics support future measurements but do not establish
 parity. Actual Apple execution, independent reference agreement, readiness-domain
 calibration and latency/memory measurements remain required acceptance evidence.
@@ -471,7 +476,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `24e535e837912d326bf804f05ee377916e33b05b70fccaf543a639938c5b1719`
+- Repository signal fingerprint: `722906938f1419eadb21b579ee0b840b3f550b43e5cc4414c1d4f36657756168`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (192 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

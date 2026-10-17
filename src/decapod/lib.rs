@@ -126,6 +126,33 @@ fn merge_init_config_values(
     }
 }
 
+// Retire only the known provider selector. Other authored decision settings
+// remain user data; an unknown selector needs review rather than silent loss.
+fn retire_decision_provider(config: &mut toml::Value) -> Result<(), error::DecapodError> {
+    let Some(decision) = config.get_mut("decision") else {
+        return Ok(());
+    };
+    let unsupported = || {
+        error::DecapodError::ValidationError(
+        "RETIRED_DECISION_CONFIG: review the unsupported [decision] configuration; init preserves the file instead of guessing its meaning".into(),
+    )
+    };
+    let decision = decision.as_table_mut().ok_or_else(unsupported)?;
+    if let Some(provider) = decision.get("provider") {
+        if !matches!(provider.as_str(), Some("none" | "jev")) {
+            return Err(unsupported());
+        }
+        decision.remove("provider");
+        if decision.is_empty() {
+            config
+                .as_table_mut()
+                .expect("project config table")
+                .remove("decision");
+        }
+    }
+    Ok(())
+}
+
 fn write_project_config(
     target_dir: &Path,
     config: &DecapodProjectConfig,
@@ -147,6 +174,7 @@ fn write_project_config(
             error::DecapodError::ValidationError(format!("CONFIG_SERIALIZE_FAILED: {error}"))
         })?;
         merged = authored.clone();
+        retire_decision_provider(&mut merged)?;
         // Normalize supported legacy aliases without leaving duplicate fields.
         if let Some(repo) = merged.get_mut("repo").and_then(toml::Value::as_table_mut) {
             repo.remove("architecture_intent");

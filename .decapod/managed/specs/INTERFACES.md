@@ -461,6 +461,11 @@ worker path and executable SHA-256. The old provider flag and credential lookup
 are removed. Historical Jev evidence remains read-only compatibility, without
 current trajectory or readiness authority.
 
+Init refresh removes only the obsolete provider selector when its value is
+`none` or `jev`, deleting the section only when empty. Authored extension keys
+remain intact. Unknown or malformed selectors require review and leave the
+configuration unchanged; dry-run performs the same checks without writing it.
+
 `decapod setup vega` supports `--cache-directory`, `--check-updates`, `--refresh`,
 `--offline`, and `--rollback <manifest-digest>`. Its JSON report prints verified
 model pins and disabled TOML; it does not claim to install the native executable.
@@ -516,7 +521,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `24e535e837912d326bf804f05ee377916e33b05b70fccaf543a639938c5b1719`
+- Repository signal fingerprint: `722906938f1419eadb21b579ee0b840b3f550b43e5cc4414c1d4f36657756168`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (192 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

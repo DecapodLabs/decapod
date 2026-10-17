@@ -417,6 +417,13 @@ and exact retention of adverse outcomes, exclusions and unknowns during prompt
 compaction. Setup/cache tests must cover pin validation, unchanged-backbone reuse,
 atomic refresh/rollback and no runtime downloads. No new Python test path exists.
 
+Cache regression coverage additionally requires one download across separately
+verified single-link installations, corruption and unsafe-hardlink rejection,
+cancelled-copy cleanup and retry, no-clobber publication, and failed installation
+preserving the previous active identity and reusable cache. Init coverage checks
+both entry points, read-only dry-run, idempotent migration of known retired
+selectors, extension preservation and rejection of ambiguous provider settings.
+
 Cross-machine custody is established separately from execution evidence. The
 released v0.118.0 task-transfer importer preserves the original task identity and
 source journal as provenance, but its successful import and fresh local claim
@@ -540,7 +547,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `24e535e837912d326bf804f05ee377916e33b05b70fccaf543a639938c5b1719`
+- Repository signal fingerprint: `722906938f1419eadb21b579ee0b840b3f550b43e5cc4414c1d4f36657756168`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (192 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

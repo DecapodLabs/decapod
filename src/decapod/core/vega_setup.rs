@@ -1234,11 +1234,8 @@ fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
     file.sync_all()
 }
 
-/// Content-addressed components allow an engine refresh to retain the 1.75GB
-/// backbone without another download or another copy. Hard links never replace
-/// existing objects; every use rechecks the full hash. Mutating one shared inode
-/// invalidates all referring manifests and fails verification. Same-account/root
-/// races are outside the private-cache threat boundary.
+/// Content-addressed components avoid repeated backbone downloads. Installation
+/// makes separately verified copies to preserve the single-link storage contract.
 fn component(
     transport: &impl Transport,
     root: &Path,
@@ -1282,6 +1279,54 @@ fn component(
     })?;
     Ok(object)
 }
+fn copy_component(
+    source: &Path,
+    destination: &Path,
+    pin: &FilePin,
+    transport: &impl Transport,
+) -> io::Result<()> {
+    transport.checkpoint()?;
+    let mut source = checked_file(source)?;
+    if source.metadata()?.len() != pin.bytes {
+        return Err(invalid("Vega component length mismatch before copy"));
+    }
+    let parent = destination
+        .parent()
+        .ok_or_else(|| invalid("artifact parent missing"))?;
+    private_directory(parent, true)?;
+    let mut temporary = tempfile::Builder::new()
+        .prefix(".artifact-")
+        .tempfile_in(parent)?;
+    let mut buffer = [0; 65536];
+    let mut total = 0_u64;
+    loop {
+        transport.checkpoint()?;
+        let count = source.read(&mut buffer)?;
+        if count == 0 {
+            break;
+        }
+        total += count as u64;
+        if total > pin.bytes {
+            return Err(invalid(
+                "Vega component grew beyond pinned length during copy",
+            ));
+        }
+        temporary.write_all(&buffer[..count])?;
+    }
+    if total != pin.bytes {
+        return Err(invalid("Vega component shortened during copy"));
+    }
+    temporary.as_file().sync_all()?;
+    // Read back the copied bytes independently before publishing even inside
+    // the private installation scratch. Errors/cancellation remove the temp file.
+    verify_file(temporary.path(), pin, transport)?;
+    transport.checkpoint()?;
+    temporary
+        .persist_noclobber(destination)
+        .map_err(|error| error.error)?;
+    Ok(())
+}
+
 fn install(
     transport: &impl Transport,
     root: &Path,
@@ -1321,9 +1366,7 @@ fn install(
                 .ok_or_else(|| invalid("artifact parent missing"))?,
             true,
         )?;
-        // Both directories live below one cache root. No symlink is followed;
-        // inability to hard-link fails explicitly rather than duplicating GBs.
-        fs::hard_link(&object, &destination)?;
+        copy_component(&object, &destination, pin, transport)?;
     }
     verify_checkpoint(scratch.path(), manifest, transport)?;
     write_new(
@@ -1655,6 +1698,31 @@ fn verify_weight_headers(directory: &Path) -> io::Result<()> {
     Ok(())
 }
 
+struct LocalVerification<'a> {
+    deadline: Instant,
+    cancellation: &'a Cancellation,
+}
+impl Transport for LocalVerification<'_> {
+    fn checkpoint(&self) -> io::Result<()> {
+        if self.cancellation.is_cancelled() {
+            return Err(io::Error::new(
+                io::ErrorKind::Interrupted,
+                "Vega verification cancelled",
+            ));
+        }
+        if Instant::now() >= self.deadline {
+            return Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                "Vega verification deadline exceeded",
+            ));
+        }
+        Ok(())
+    }
+    fn download(&self, _: &str, _: &Path, _: u64) -> io::Result<()> {
+        Err(invalid("local Vega verification cannot use the network"))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1954,7 +2022,7 @@ mod tests {
     }
 
     #[test]
-    fn component_reuse_has_one_download_and_shared_verified_bytes() {
+    fn component_reuse_has_one_download_and_separate_verified_single_link_copies() {
         let root = temporary();
         let pin = small_pin(b"component fixture");
         let url = artifact_url(&pin);
@@ -1967,14 +2035,29 @@ mod tests {
         assert_eq!(first, second);
         assert_eq!(transport.requests.borrow().len(), 1);
         let installation = root.path().join("engine.safetensors");
-        fs::hard_link(&first, &installation).unwrap();
+        copy_component(&first, &installation, &pin, &Offline).unwrap();
         verify_file(&installation, &pin, &Offline).unwrap();
+        let another = root.path().join("another-engine.safetensors");
+        copy_component(&second, &another, &pin, &Offline).unwrap();
+        verify_file(&another, &pin, &Offline).unwrap();
+        assert_eq!(
+            component(&transport, root.path(), &pin, None).unwrap(),
+            first
+        );
+        assert_eq!(transport.requests.borrow().len(), 1);
         #[cfg(unix)]
         {
             use std::os::unix::fs::MetadataExt;
-            assert_eq!(
-                fs::metadata(first).unwrap().ino(),
-                fs::metadata(installation).unwrap().ino()
+            let source = fs::metadata(first).unwrap();
+            for path in [&installation, &another] {
+                let installed = fs::metadata(path).unwrap();
+                assert_ne!(source.ino(), installed.ino());
+                assert_eq!(installed.nlink(), 1);
+            }
+            assert_eq!(source.nlink(), 1);
+            assert_ne!(
+                fs::metadata(installation).unwrap().ino(),
+                fs::metadata(another).unwrap().ino()
             );
         }
     }
@@ -1998,6 +2081,103 @@ mod tests {
                 .exists()
         );
         assert!(active(root.path()).unwrap().is_none());
+    }
+
+    #[test]
+    fn copied_artifact_rejects_corruption_and_preserves_existing_destination() {
+        let root = temporary();
+        let source = root.path().join("source");
+        let output = root.path().join("output");
+        let pin = small_pin(b"good");
+        write_new(&source, b"evil").unwrap();
+        assert!(copy_component(&source, &output, &pin, &Offline).is_err());
+        assert!(!output.exists());
+        assert_eq!(fs::read(&source).unwrap(), b"evil");
+        fs::write(&source, b"good").unwrap();
+        write_new(&output, b"keep existing").unwrap();
+        assert!(copy_component(&source, &output, &pin, &Offline).is_err());
+        assert_eq!(fs::read(&output).unwrap(), b"keep existing");
+        assert_eq!(fs::read_dir(root.path()).unwrap().count(), 2);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn unsafe_hardlinked_components_remain_rejected() {
+        let root = temporary();
+        let source = root.path().join("source");
+        let alias = root.path().join("alias");
+        let output = root.path().join("output");
+        write_new(&source, b"good").unwrap();
+        fs::hard_link(&source, &alias).unwrap();
+        let pin = small_pin(b"good");
+        assert!(verify_file(&source, &pin, &Offline).is_err());
+        assert!(copy_component(&source, &output, &pin, &Offline).is_err());
+        assert!(!output.exists());
+        assert_eq!(fs::read(alias).unwrap(), b"good");
+    }
+
+    #[test]
+    fn cancelled_copy_never_publishes_partial_artifact_and_cache_can_retry() {
+        struct CancelDuringCopy(Cell<usize>);
+        impl Transport for CancelDuringCopy {
+            fn checkpoint(&self) -> io::Result<()> {
+                let calls = self.0.get() + 1;
+                self.0.set(calls);
+                if calls >= 3 {
+                    Err(io::Error::new(
+                        io::ErrorKind::Interrupted,
+                        "injected copy cancellation",
+                    ))
+                } else {
+                    Ok(())
+                }
+            }
+            fn download(&self, _: &str, _: &Path, _: u64) -> io::Result<()> {
+                panic!("copy must remain offline")
+            }
+        }
+        let root = temporary();
+        let source = root.path().join("source");
+        let output = root.path().join("output");
+        let bytes = vec![42; 2 * 65536 + 1];
+        let pin = small_pin(&bytes);
+        write_new(&source, &bytes).unwrap();
+        let error =
+            copy_component(&source, &output, &pin, &CancelDuringCopy(Cell::new(0))).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::Interrupted);
+        assert!(!output.exists());
+        assert_eq!(fs::read_dir(root.path()).unwrap().count(), 1);
+        verify_file(&source, &pin, &Offline).unwrap();
+        copy_component(&source, &output, &pin, &Offline).unwrap();
+        verify_file(&output, &pin, &Offline).unwrap();
+    }
+
+    #[test]
+    fn failed_install_preserves_prior_activation_and_reusable_cache() {
+        let root = temporary();
+        let pin = small_pin(b"cached fixture");
+        let transport = MemoryTransport {
+            responses: [(artifact_url(&pin), b"cached fixture".to_vec())]
+                .into_iter()
+                .collect(),
+            ..Default::default()
+        };
+        let cached = component(&transport, root.path(), &pin, None).unwrap();
+        let prior = hash(b"prior manifest");
+        activate(root.path(), &prior, &Offline).unwrap();
+        assert!(install(&transport, root.path(), &baseline(), None).is_err());
+        assert_eq!(active(root.path()).unwrap().unwrap().manifest_digest, prior);
+        verify_file(&cached, &pin, &Offline).unwrap();
+        assert_eq!(
+            component(&transport, root.path(), &pin, None).unwrap(),
+            cached
+        );
+        assert_eq!(
+            fs::read_dir(root.path().join("installations"))
+                .unwrap()
+                .count(),
+            0
+        );
     }
 
     #[test]
@@ -2142,30 +2322,5 @@ mod tests {
         fs::set_permissions(&real, fs::Permissions::from_mode(0o644)).unwrap();
         assert!(checked_file(&real).is_err());
         assert!(safe_path(Path::new("/tmp/../escape")).is_err());
-    }
-}
-
-struct LocalVerification<'a> {
-    deadline: Instant,
-    cancellation: &'a Cancellation,
-}
-impl Transport for LocalVerification<'_> {
-    fn checkpoint(&self) -> io::Result<()> {
-        if self.cancellation.is_cancelled() {
-            return Err(io::Error::new(
-                io::ErrorKind::Interrupted,
-                "Vega verification cancelled",
-            ));
-        }
-        if Instant::now() >= self.deadline {
-            return Err(io::Error::new(
-                io::ErrorKind::TimedOut,
-                "Vega verification deadline exceeded",
-            ));
-        }
-        Ok(())
-    }
-    fn download(&self, _: &str, _: &Path, _: u64) -> io::Result<()> {
-        Err(invalid("local Vega verification cannot use the network"))
     }
 }

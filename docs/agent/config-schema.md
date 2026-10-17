@@ -145,6 +145,11 @@ through the existing gate; the human merges. Active Jev integration is removed,
 including selectable providers, transport and credential lookup. Historical
 observations remain readable without governing current work.
 
+Init refresh retires only a recognized `[decision].provider = "none" | "jev"`
+selector, removes an empty retired section, and preserves unrelated authored
+settings, including extension keys in that section. Unknown or malformed provider
+selectors stop refresh without rewriting the configuration. Dry-run remains read-only.
+
 By default `[vega]` is disabled. Required mode additionally needs a positive
 singleton yes, no abstention or unbound/OOD signal, and unchanged exact validated
 material, intent, proof, configuration and model/runtime pins. Negative singleton
@@ -180,7 +185,10 @@ a compatible new revision, `--offline` verifies cached files without networking,
 and `--rollback <manifest-digest>` atomically activates a verified prior install.
 Use `--cache-directory` to select another private cache. Engine/config/calibration,
 backbone, tokenizer and source/license identities have independent immutable pins.
-Unchanged backbone components are reused by content hash. Unsupported architecture,
+Unchanged backbone components are reused by content hash without another download.
+Each immutable installation receives a separately verified private copy, requiring
+additional disk space while retaining the single-link storage safety contract.
+Incomplete or cancelled copies never activate an installation. Unsupported architecture,
 quantization, tokenizer or adapter changes fail compatibility checks. A changed
 upstream source revision is surfaced for review, never substituted as runtime code.
 

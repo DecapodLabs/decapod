@@ -63,7 +63,7 @@ commands = []
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:7822464f7b3e4827af29e0030d18a412b93213affc0790f322034454e95c42cc"
+reviewed_sources_digest = "sha256:f24497519b688749366c03ec1a580bf34fcae4e819593aad1e921351f977cc6b"
 
 [custody]
 isolation = "container"
@@ -73,9 +73,6 @@ provider = "decapod"
 
 [context]
 declared_sources = []
-
-[decision]
-provider = "none"
 
 # Provider-attested acceptance trusts this configured Buildkite executor.
 # It does not independently prove the keyless importer's plugin implementation

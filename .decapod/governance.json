@@ -423,6 +423,15 @@
       "proof_refs": [
         "task-transfer:01M5470V8JDG8WJA1WX2EJ098Y"
       ]
+    },
+    {
+      "id": "vega-install-config-repairs",
+      "summary": "Repair native artifact copy safety, legacy init migration and item ordering; retain independent native proof requirements",
+      "input_digest": "sha256:4bb5482fa599eb66d8e62cda773241301d281c19ab2332eb10dbf89678624bcd",
+      "proof_refs": [
+        "src/decapod/core/vega_setup.rs",
+        "tests/init_config_behavior.rs"
+      ]
     }
   ],
   "intents": {
@@ -467,23 +476,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed meaningful mixed-slot/option type alias and canonical source-derived configuration documentation correction. Existing command renderer delta already matches; candidate CI regeneration must prove exact documentation equality. No arithmetic, proof requirement, dependency or worker execution scope changed.",
-          "reviewed_code_fingerprint": "84bf62ddb8e3f8182363c33afbaca73763a9037c6ae21f731c76ea85249006a0",
-          "spec_material_hash": "9ce01985648d9b229da0a317e8d2eb6decc468984d7eb397bf0eff8eed03ebdb"
+          "reason": "Reviewed existing Vega worker isolation and unchanged pinned native APIs. Documented verified per-install copies with single-link cache safety and atomic activation; content reuse saves downloads rather than sharing inodes. Native results remain unverified.",
+          "reviewed_code_fingerprint": "722906938f1419eadb21b579ee0b840b3f550b43e5cc4414c1d4f36657756168",
+          "spec_material_hash": "2d1134d6736663ef701558e473903b7be980ccecc79f757235cdead07e74aa45"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed meaningful mixed-slot/option type alias and canonical source-derived configuration documentation correction. Existing command renderer delta already matches; candidate CI regeneration must prove exact documentation equality. No arithmetic, proof requirement, dependency or worker execution scope changed.",
-          "reviewed_code_fingerprint": "84bf62ddb8e3f8182363c33afbaca73763a9037c6ae21f731c76ea85249006a0",
-          "spec_material_hash": "802d2748f6f19b25a6bc63c1a8df9036deeb31a52ca9795d985b8b14a4b0a657"
+          "reason": "Reviewed init merge semantics for known retired none/jev selector, preservation of unrelated extension keys and rejection of ambiguous provider settings. Existing transfer and bounded post-validation Vega interfaces are preserved.",
+          "reviewed_code_fingerprint": "722906938f1419eadb21b579ee0b840b3f550b43e5cc4414c1d4f36657756168",
+          "spec_material_hash": "db81942d9f5903a895de991800d3a904234cde444423cc37cd87db8fae5d40e3"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed meaningful mixed-slot/option type alias and canonical source-derived configuration documentation correction. Existing command renderer delta already matches; candidate CI regeneration must prove exact documentation equality. No arithmetic, proof requirement, dependency or worker execution scope changed.",
-          "reviewed_code_fingerprint": "84bf62ddb8e3f8182363c33afbaca73763a9037c6ae21f731c76ea85249006a0",
-          "spec_material_hash": "fa33ffad2f3233838711a441d2a4a75113c624d1137f76048e04ddcdd2c81d47"
+          "reason": "Reviewed init and cache copy changes against current security prose. Unsafe hardlinks/symlinks remain rejected; private bounded no-clobber copies are synchronized and independently hashed before immutable installation. Deterministic authority, source custody and native acceptance requirements remain unchanged.",
+          "reviewed_code_fingerprint": "722906938f1419eadb21b579ee0b840b3f550b43e5cc4414c1d4f36657756168",
+          "spec_material_hash": "5c388f23475ae97165d933b09fe5155fd7e5aab16ff0ef1b75e44a02984dc9b1"
         }
       ],
       "state": "APPROVED",
@@ -497,7 +506,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792170482Z"
+      "updated_at": "1792251397Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -505,7 +514,7 @@
         "Current claimed task and isolated work branch",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:7b5f5a0403b57536914ab430ab32321eccb16becd95ff6fe642946c98dabfcb1",
+      "artifact_hash": "sha256:6efc3cc7238d2eae2722577c870af131d06aa1c07fe362821225aa7ae22dcb0c",
       "checks": [
         {
           "name": "clippy-source-repair",
@@ -546,6 +555,10 @@
         {
           "name": "init-source-discovery",
           "status": "failed"
+        },
+        {
+          "name": "local-source-repairs",
+          "status": "partial"
         },
         {
           "name": "native-acceptance",
@@ -604,7 +617,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "local-handoff",
+      "current_phase": "repair-source",
       "custody": {
         "events": [
           {
@@ -681,10 +694,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -854,6 +874,21 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "repair-source",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Repaired actual source failures: moved LocalVerification before test module without suppression; init retires only known none/jev selector and preserves unrelated keys, unknown/malformed selectors fail without config overwrite; installation independently verifies private no-clobber copies instead of cache hardlinks while retaining nlink checks. Added cache reuse/corruption/hardlink/cancellation/install-failure regressions and both init-surface dry-run/idempotence/extension/unknown-selector coverage. Tests authored, not executed. Official Cargo metadata reconciliation updates only local decapod version0.117->0.118 and resolver-selected edges among already locked socket/getrandom/Windows packages; native Git identities unchanged. Reviewed supported agent.init inventory f24497519b688749366c03ec1a580bf34fcae4e819593aad1e921351f977cc6b against accepted source; only existing Cargo/native inputs differ, no CI policy/helper/check graph change. Backed up user config then retained all unrelated settings and removed exact retired provider none. Source and governance ready for plain validate; native and numerical/domain acceptance still unverified. Canonical task claim renewed after session expiry; all further controller mutations use consistent machine session."
+                ],
+                "proof_refs": [
+                  "local-source-repairs"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -884,7 +919,8 @@
         "Plain117 second validation stopped PROOF_DISCOVERY_BLOCKED on MODULE.bazel.lock1052029 bytes. Moved unchanged SafeTensors decoder/half conversion and fixtures to sole native owner; root retains typed engine/header/GELU tests and checked schema. Supported metadata regeneration now gives1037341 bytes below1048576. Root graph removes only safetensors0.7/hashbrown0.16/foldhash/allocator-api2; native retains pinned SafeTensors0.7 and immutable model/source pins. Cargo reports0 package additions/updates, but reselects existing socket2/getrandom/Windows dependency edges; retain generator output for actual validation rather than hand-edit locks.",
         "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance.",
         "Released0.118.0 imported accepted transfer01M5470V8JDG8WJA1WX2EJ098Y under receivercodex-vega-metal. Exact source-supplied artifact sha256:5cf05c74167d81052460666ee1ae87112ce5e101335875df65aa5181bb2efec4 verified before import. Taskfeat_01m52fnwybfvhfdj identity and nested provenance retained, destination revision8; journal verify valid without missing/divergent projections. Fresh exclusive claim succeeded. Root ensure refused recreating existing branch; registered worktree was preserved and moved to managed path, then workspace ensure accepted can_work=true. Originalfeature5f2801e581ec9d436c28c5df2a9a64e261efa895 retained, no history rewrite. Normal no-commit merge accepted24490934 underway. Retained original feature governance from committed Git during merge; accepted prerequisite governance remains in merge-parent history. Supported specs.refresh reconciled generated conflict blocks while preserving all authored transfer and Vega prose. All previous validation failures remain; native/independent parity/calibration still unverified.",
-        "Released117 authoritative run at87a13363 reached provider_terminal_wait then failed Docs Sync Buildkite1933 uuid01a145a6-9e36-4379-8009-3523c0d6e03d; evidence /tmp/decapod-snapshot-HOyW3w. Actual clippy flags mixed return type_complexity: replaced tuple spelling with meaningful MixedSlotsAndOptions alias, no lint suppression. GHA Docs Sync job117091823692 log contains no complete diff; no archive read. Corrected ordinary config-schema source from exact canonical Rust config declaration, readiness_config_contract literal and repository-readiness include, preserving documented alpha/risk/pins. This is source-derived correction, not locally executed candidate generation; CI equality remains pending. command-contracts already matches its only renderer-source change."
+        "Released117 authoritative run at87a13363 reached provider_terminal_wait then failed Docs Sync Buildkite1933 uuid01a145a6-9e36-4379-8009-3523c0d6e03d; evidence /tmp/decapod-snapshot-HOyW3w. Actual clippy flags mixed return type_complexity: replaced tuple spelling with meaningful MixedSlotsAndOptions alias, no lint suppression. GHA Docs Sync job117091823692 log contains no complete diff; no archive read. Corrected ordinary config-schema source from exact canonical Rust config declaration, readiness_config_contract literal and repository-readiness include, preserving documented alpha/risk/pins. This is source-derived correction, not locally executed candidate generation; CI equality remains pending. command-contracts already matches its only renderer-source change.",
+        "Repaired actual source failures: moved LocalVerification before test module without suppression; init retires only known none/jev selector and preserves unrelated keys, unknown/malformed selectors fail without config overwrite; installation independently verifies private no-clobber copies instead of cache hardlinks while retaining nlink checks. Added cache reuse/corruption/hardlink/cancellation/install-failure regressions and both init-surface dry-run/idempotence/extension/unknown-selector coverage. Tests authored, not executed. Official Cargo metadata reconciliation updates only local decapod version0.117->0.118 and resolver-selected edges among already locked socket/getrandom/Windows packages; native Git identities unchanged. Reviewed supported agent.init inventory f24497519b688749366c03ec1a580bf34fcae4e819593aad1e921351f977cc6b against accepted source; only existing Cargo/native inputs differ, no CI policy/helper/check graph change. Backed up user config then retained all unrelated settings and removed exact retired provider none. Source and governance ready for plain validate; native and numerical/domain acceptance still unverified. Canonical task claim renewed after session expiry; all further controller mutations use consistent machine session."
       ],
       "inspected_files": [
         "docs/agent/repository-readiness.md"
