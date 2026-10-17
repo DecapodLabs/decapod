@@ -431,6 +431,11 @@ do not carry forward validation or native results. The Mac continuation must
 regenerate complete candidate proof and record its actual Metal, independent
 parity and readiness-calibration results before publication.
 
+The standalone CI recipe regenerates release-bound entrypoints, the managed
+Dockerfile and the spec manifest with its evaluating binary, then requires a
+clean tracked projection. Commit supported regeneration after a controller
+upgrade; passing project checks alongside projection drift is still failure.
+
 Synthetic fixtures and source review are not native acceptance. Required measured
 evidence remains Apple-arm64 compilation, genuine Metal numerical dispatch, real
 pinned checkpoint loading, independent reference agreement through pooling,
