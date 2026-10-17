@@ -849,6 +849,9 @@ pub(crate) enum SetupCommand {
     Vega {
         #[clap(long)]
         cache_directory: Option<PathBuf>,
+        /// Register this maintainer's installed worker without committing its path.
+        #[clap(long, conflicts_with = "check_updates")]
+        runtime: Option<PathBuf>,
         #[clap(long, conflicts_with_all = ["refresh", "offline", "rollback"])]
         check_updates: bool,
         #[clap(long, conflicts_with_all = ["check_updates", "offline", "rollback"])]

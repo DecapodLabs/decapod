@@ -18,6 +18,8 @@ pub enum Mode {
 #[serde(default, deny_unknown_fields)]
 pub struct Configuration {
     pub mode: Mode,
+    /// Shared immutable model identity; local executable paths stay out of Git.
+    pub model_manifest_digest: String,
     pub installation: Option<Installation>,
     /// A key actually present in the pinned conformal table, not a guarantee
     /// of code-readiness coverage under distribution shift.
@@ -238,6 +240,11 @@ pub(crate) fn configuration_from_bytes(bytes: &[u8]) -> io::Result<Configuration
     {
         return Err(invalid("unsupported_vega_alpha_or_risk"));
     }
+    if !cfg.model_manifest_digest.is_empty()
+        && !super::vega_setup::valid_digest(&cfg.model_manifest_digest)
+    {
+        return Err(invalid("invalid_vega_model_manifest_digest"));
+    }
     Ok(cfg)
 }
 
@@ -432,59 +439,79 @@ fn pinned_runtime(
     deadline: Instant,
     cancel: &Cancellation,
 ) -> io::Result<()> {
-    if !path.is_absolute()
-        || path.canonicalize()? != path
-        || !expected.starts_with("sha256:")
-        || expected.len() != 71
+    if !super::vega_setup::valid_digest(expected)
+        || super::vega_runtime::runtime_digest(path, deadline, cancel)? != expected
     {
-        return Err(invalid("invalid_runtime_pin"));
-    }
-    let meta = fs::symlink_metadata(path)?;
-    if !meta.is_file() || meta.len() > 512 * 1024 * 1024 {
-        return Err(invalid("runtime_not_bounded_regular_file"));
-    }
-    let mut file = fs::File::open(path)?;
-    let mut hasher = Sha256::new();
-    let mut buf = [0; 65536];
-    let mut count = 0u64;
-    let mut header = [0u8; 8];
-    file.read_exact(&mut header)?;
-    if header != [0xcf, 0xfa, 0xed, 0xfe, 0x0c, 0x00, 0x00, 0x01] {
-        return Err(invalid("runtime_not_native_arm64_macho"));
-    }
-    use std::io::Seek;
-    file.rewind()?;
-    loop {
-        if Instant::now() >= deadline || cancel.is_cancelled() {
-            return Err(invalid("runtime_verification_cancelled_or_timeout"));
-        }
-        let n = file.read(&mut buf)?;
-        if n == 0 {
-            break;
-        }
-        count += n as u64;
-        if count > 512 * 1024 * 1024 {
-            return Err(invalid("runtime_size_changed"));
-        }
-        hasher.update(&buf[..n]);
-    }
-    if format!("sha256:{:x}", hasher.finalize()) != expected {
         return Err(invalid("runtime_digest_mismatch"));
     }
     Ok(())
 }
 
+pub(crate) fn capture_installation(config: &Configuration) -> io::Result<Option<Installation>> {
+    if config.mode == Mode::Disabled {
+        return Ok(None);
+    }
+    let installation = match &config.installation {
+        Some(installation) => installation.clone(),
+        None => super::vega_runtime::resolve(&config.model_manifest_digest)?,
+    };
+    if !config.model_manifest_digest.is_empty()
+        && config.model_manifest_digest != installation.manifest_digest
+    {
+        return Err(invalid("vega_shared_local_manifest_mismatch"));
+    }
+    Ok(Some(installation))
+}
+
+pub(crate) fn verify_installation_snapshot(
+    config: &Configuration,
+    captured: &io::Result<Option<Installation>>,
+    deadline: Instant,
+    cancel: &Cancellation,
+) -> io::Result<()> {
+    let installation = captured
+        .as_ref()
+        .map_err(|error| invalid(error.to_string()))?
+        .as_ref()
+        .ok_or_else(|| invalid("vega_installation_not_captured"))?;
+    if capture_installation(config)?.as_ref() != Some(installation) {
+        return Err(invalid("vega_local_binding_changed_during_validation"));
+    }
+    super::vega_setup::verify_installation_bounded(
+        &installation.directory,
+        &installation.manifest_digest,
+        deadline,
+        cancel,
+    )?;
+    pinned_runtime(
+        &installation.runtime,
+        &installation.runtime_sha256,
+        deadline,
+        cancel,
+    )
+}
+
+/// Shared policy and per-maintainer custody captured at validation entry.
+pub(crate) struct AssessmentConfig<'a> {
+    pub policy: &'a Configuration,
+    pub captured_installation: &'a io::Result<Option<Installation>>,
+}
+
 /// Sole caller: validation_runtime after `readiness_profile::finish` succeeds.
-/// Caller must independently re-run exact-state proof freshness after this returns.
+/// Caller must independently re-run proof and local custody freshness afterwards.
 pub(crate) fn assess(
     root: &Path,
     directory: &Path,
-    config: &Configuration,
+    selected: AssessmentConfig<'_>,
     validation: &ValidationSummary<'_>,
     mut binding: Binding,
     timeout: Duration,
     cancel: &Cancellation,
 ) -> io::Result<Receipt> {
+    let AssessmentConfig {
+        policy: config,
+        captured_installation,
+    } = selected;
     binding.configuration_digest = digest(&config)?;
     let mut receipt = Receipt {
         schema: SCHEMA.into(),
@@ -520,10 +547,14 @@ pub(crate) fn assess(
         if !cfg!(all(target_os = "macos", target_arch = "aarch64")) {
             return Err(invalid("native_apple_metal_required"));
         }
-        let install = config
-            .installation
+        let install = captured_installation
             .as_ref()
-            .ok_or_else(|| invalid("vega_installation_not_configured"))?;
+            .map_err(|error| invalid(error.to_string()))?
+            .as_ref()
+            .ok_or_else(|| invalid("vega_installation_not_captured"))?;
+        if capture_installation(config)?.as_ref() != Some(install) {
+            return Err(invalid("vega_local_binding_changed_during_validation"));
+        }
         let manifest = super::vega_setup::verify_installation_bounded(
             &install.directory,
             &install.manifest_digest,
@@ -545,6 +576,7 @@ pub(crate) fn assess(
             &receipt.input_digest,
             &receipt.decapod_version,
             &install.manifest_digest,
+            install,
         ))?;
         let request = Request {
             schema: WORKER_SCHEMA.into(),
@@ -611,6 +643,9 @@ pub(crate) fn assess(
             cancel,
         )?;
         pinned_runtime(&install.runtime, &install.runtime_sha256, deadline, cancel)?;
+        if capture_installation(config)?.as_ref() != Some(install) {
+            return Err(invalid("vega_local_binding_changed_during_inference"));
+        }
         receipt.decision = decision;
         receipt.reason = match decision {
             Decision::Accept => "positive_singleton",
@@ -908,7 +943,10 @@ mod projection_tests {
         let mut receipt = assess(
             Path::new("/unused"),
             Path::new("/unused"),
-            &Configuration::default(),
+            AssessmentConfig {
+                policy: &Configuration::default(),
+                captured_installation: &Ok(None),
+            },
             &summary,
             binding,
             Duration::from_secs(1),
@@ -1004,6 +1042,7 @@ mod tests {
             "runtime_path",
             "alpha",
             "risk",
+            "model_manifest",
         ] {
             let mut changed = required.clone();
             let installation = changed.installation.as_mut().unwrap();
@@ -1014,6 +1053,7 @@ mod tests {
                 "runtime_path" => installation.runtime = PathBuf::from("/replacement/worker"),
                 "alpha" => changed.alpha = "0.05".into(),
                 "risk" => changed.risk = "0.2".into(),
+                "model_manifest" => changed.model_manifest_digest = hash(b"new model"),
                 _ => unreachable!(),
             }
             assert!(
@@ -1031,5 +1071,34 @@ mod tests {
         assert!(verify_policy_acceptance(&implicit, &explicit).is_ok());
         let required = configuration_from_bytes(b"[vega]\nmode = 'required'\n").unwrap();
         assert!(verify_policy_acceptance(&required, &implicit).is_ok());
+    }
+
+    #[test]
+    fn local_binding_snapshot_rejects_changes_before_model_access() {
+        let mut config = Configuration {
+            mode: Mode::Required,
+            installation: Some(Installation {
+                directory: PathBuf::from("/unavailable-model"),
+                manifest_digest: hash(b"model"),
+                runtime: PathBuf::from("/unavailable-worker"),
+                runtime_sha256: hash(b"worker"),
+            }),
+            ..Default::default()
+        };
+        let captured = capture_installation(&config);
+        config.installation.as_mut().unwrap().runtime = PathBuf::from("/different-worker");
+        let error = verify_installation_snapshot(
+            &config,
+            &captured,
+            Instant::now() + Duration::from_secs(1),
+            &Cancellation::default(),
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("binding_changed"));
+        config.mode = Mode::Disabled;
+        assert!(capture_installation(&config).unwrap().is_none());
+        config.mode = Mode::Required;
+        config.model_manifest_digest = hash(b"different model");
+        assert!(capture_installation(&config).is_err());
     }
 }

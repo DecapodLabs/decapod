@@ -387,6 +387,10 @@ target. The selective CLI matrix still executes that target alongside
 target is excluded. This balances the aggregate real-process suites without
 extending their 300-second budgets. A successful contracts job alone does not
 prove the complete selective CLI matrix passed.
+The enforcement target also runs exclusively with respect to sibling Bazel test
+targets: its real CLI/validation processes repeatedly passed alone but exhausted
+the same 300-second budget under sibling load. Serialization preserves all cases,
+commands and finite per-target limits; current execution must verify the repair.
 
 Source-owned shell, checkout, setup, release, and dependency-policy regressions
 must exercise the actual authored helper or workflow body. Tool setup verifies
@@ -439,6 +443,14 @@ recovery, platform-specific device selection, exact model/runtime binding after
 fallback, and independent numerical checks for every claimed backend. Declared
 support, a CPU enum variant or mocked accelerator errors do not prove that the
 pinned backbone executes on CPU or CUDA.
+Local-binding regressions must exercise independent per-maintainer paths for one
+shared model pin, private permissions, malformed/oversized/wrong-identity records,
+failed registration preserving prior bytes, unsafe executable links/formats and
+cancellation, and frozen-custody rejection before model access. Native-format
+fixtures are never executed and provide no Metal/CPU inference evidence. Recheck
+local custody after the independent deterministic freshness check; changed runtime
+or assets must invalidate the model acceptance without relabelling passed source
+proof as failed model inference.
 
 Cross-machine custody is established separately from execution evidence. The
 released v0.118.0 task-transfer importer preserves the original task identity and
@@ -622,8 +634,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (193 files)
+- Repository signal fingerprint: `dd74a827573209f3aa1f8fa78c1f5c19785f3bb3c54154a26bc5667292068027`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -312,6 +312,12 @@ fn init_can_select_vega_and_refresh_preserves_policy_and_local_pins() {
         let mut configured = fs::read_to_string(&path).unwrap();
         let selected: toml::Value = toml::from_str(&configured).unwrap();
         assert_eq!(selected["vega"]["mode"].as_str(), Some("required"));
+        assert!(
+            selected["vega"]["model_manifest_digest"]
+                .as_str()
+                .unwrap()
+                .starts_with("sha256:")
+        );
         assert!(selected["vega"].get("installation").is_none());
         configured.push_str(&format!(
             "\n[custom]\nnote = 'keep team settings'\n\

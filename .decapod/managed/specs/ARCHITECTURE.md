@@ -417,8 +417,14 @@ belongs in tracked configuration; each maintainer's verified cache/runtime bindi
 belongs in existing private local storage outside Git. Resolving that binding must
 select an immutable configured model identity, never a floating active pointer,
 and recapture local runtime identity before accepting a decision. This separation
-is required by the clarified intent and is not implemented by the current absolute
-`[vega.installation]` contract.
+is implemented by the shared `model_manifest_digest` and private `vega_runtime`
+binding, registered only by explicit setup. Legacy absolute `[vega.installation]`
+bindings remain supported without being generated for a new team policy. The
+validation runtime captures local custody before deterministic proof, refuses a
+changed binding before inference and rechecks runtime/model bytes before consuming
+an acceptance. Missing setup produces a post-proof abstention. Local registration
+pins operator-selected executable bytes; it does not prove build provenance or
+native execution. These new storage/freshness regressions require execution.
 
 `vega_setup` owns explicit bounded discovery/download, independently pinned
 engine/backbone/tokenizer/config/license identities, content-addressed download
@@ -492,8 +498,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (193 files)
+- Repository signal fingerprint: `dd74a827573209f3aa1f8fa78c1f5c19785f3bb3c54154a26bc5667292068027`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

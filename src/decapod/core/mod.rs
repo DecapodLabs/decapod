@@ -95,4 +95,5 @@ pub mod vega_calibration;
 pub mod vega_engine;
 pub mod vega_prompt;
 pub mod vega_readiness;
+pub mod vega_runtime;
 pub mod vega_setup;

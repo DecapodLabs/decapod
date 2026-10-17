@@ -868,6 +868,9 @@ fn run(
     }
     let project = load_project(options, &mut budget)?;
     let vega_config = super::vega_readiness::configuration(&options.root)?;
+    // Freeze local custody before deterministic proof without running inference.
+    // Missing local setup remains a post-proof abstention, not proof authority.
+    let vega_installation = super::vega_readiness::capture_installation(&vega_config);
     if prerequisites == ProjectPrerequisites::ProviderRequired
         && !project.configuration.validation_buildkite_preflights
     {
@@ -1031,7 +1034,10 @@ fn run(
     let mut decision = super::vega_readiness::assess(
         &options.root,
         &directory,
-        config,
+        super::vega_readiness::AssessmentConfig {
+            policy: config,
+            captured_installation: &vega_installation,
+        },
         &super::vega_readiness::ValidationSummary {
             scope: report.scope,
             evidence: &result.evidence,
@@ -1091,6 +1097,19 @@ fn run(
     if final_proof.is_err() {
         decision.stale();
         report.proof_ready = false;
+    }
+    if decision.decision == super::vega_readiness::Decision::Accept
+        && super::vega_readiness::verify_installation_snapshot(
+            config,
+            &vega_installation,
+            budget.deadline,
+            budget.cancel,
+        )
+        .is_err()
+    {
+        // Runtime/model drift invalidates the assessment while keeping the
+        // independently completed deterministic proof disposition distinct.
+        decision.stale();
     }
     write_new(
         &directory.join("vega-readiness.json"),

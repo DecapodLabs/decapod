@@ -37,6 +37,8 @@ const SOURCE_LICENSE: &str = "LICENSE";
 #[derive(Debug, Clone, Default)]
 pub struct SetupOptions {
     pub cache_directory: Option<PathBuf>,
+    /// Explicitly register this maintainer's already installed native worker.
+    pub runtime: Option<PathBuf>,
     pub check_updates: bool,
     pub refresh: bool,
     pub offline: bool,
@@ -107,6 +109,7 @@ pub struct SetupReport {
     pub updates: Option<UpdateReport>,
     pub configuration_toml: Option<String>,
     pub runtime_installed: bool,
+    pub runtime_registered: bool,
     pub detail: &'static str,
 }
 
@@ -202,7 +205,7 @@ pub fn valid_revision(value: &str) -> bool {
             .bytes()
             .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
-fn valid_digest(value: &str) -> bool {
+pub(crate) fn valid_digest(value: &str) -> bool {
     value.strip_prefix("sha256:").is_some_and(|value| {
         value.len() == 64
             && value
@@ -217,6 +220,10 @@ pub fn manifest_digest(manifest: &InstallManifest) -> io::Result<String> {
     Ok(hash(
         &serde_json::to_vec(manifest).map_err(io::Error::other)?,
     ))
+}
+
+pub(crate) fn baseline_digest() -> io::Result<String> {
+    manifest_digest(&baseline())
 }
 fn json_digest(value: &Value) -> io::Result<String> {
     Ok(hash(&serde_json::to_vec(value).map_err(io::Error::other)?))
@@ -782,17 +789,27 @@ fn activate(root: &Path, digest: &str, transport: &impl Transport) -> io::Result
         serde_json::to_vec_pretty(&pointer).map_err(io::Error::other)?,
     )
 }
-fn default_cache() -> io::Result<PathBuf> {
-    let home = PathBuf::from(
-        std::env::var_os("HOME")
-            .ok_or_else(|| invalid("HOME unavailable; supply --cache-directory"))?,
-    );
-    safe_path(&home)?;
-    Ok(home.join(if cfg!(target_os = "macos") {
-        "Library/Caches/decapod/vega"
+pub(crate) fn default_cache() -> io::Result<PathBuf> {
+    let home = || std::env::var_os("HOME").map(PathBuf::from);
+    let base = if cfg!(target_os = "macos") {
+        home().map(|path| path.join("Library/Caches"))
+    } else if cfg!(target_os = "windows") {
+        std::env::var_os("LOCALAPPDATA")
+            .map(PathBuf::from)
+            .or_else(|| {
+                std::env::var_os("USERPROFILE")
+                    .map(|path| PathBuf::from(path).join("AppData/Local"))
+            })
     } else {
-        ".cache/decapod/vega"
-    }))
+        std::env::var_os("XDG_CACHE_HOME")
+            .map(PathBuf::from)
+            .or_else(|| home().map(|path| path.join(".cache")))
+    };
+    let root = base
+        .ok_or_else(|| invalid("local cache home unavailable; supply --cache-directory"))?
+        .join("decapod/vega");
+    safe_path(&root)?;
+    Ok(root)
 }
 
 /// Read-only, full content verification for native inference. No network,
@@ -1394,31 +1411,11 @@ fn install(
     })?;
     Ok(destination)
 }
-fn configuration(directory: &Path, digest: &str) -> io::Result<String> {
-    let settings: toml::map::Map<_, _> = [
-        (
-            "directory".into(),
-            toml::Value::String(directory.to_string_lossy().into_owned()),
-        ),
-        ("manifest_digest".into(), toml::Value::String(digest.into())),
-    ]
-    .into_iter()
-    .collect();
-    let value = toml::Value::Table(
-        [(
-            "vega".into(),
-            toml::Value::Table(
-                [
-                    ("mode".into(), toml::Value::String("disabled".into())),
-                    ("installation".into(), toml::Value::Table(settings)),
-                ]
-                .into_iter()
-                .collect(),
-            ),
-        )]
-        .into_iter()
-        .collect(),
-    );
+fn configuration(_directory: &Path, digest: &str) -> io::Result<String> {
+    let value = toml::Value::try_from(serde_json::json!({
+        "vega": {"mode": "disabled", "model_manifest_digest": digest}
+    }))
+    .map_err(io::Error::other)?;
     toml::to_string_pretty(&value).map_err(io::Error::other)
 }
 fn report(
@@ -1441,10 +1438,16 @@ fn report(
         updates,
         configuration_toml,
         runtime_installed: false,
-        detail: "Model data only, base engine with adapters explicitly off. Pin the reviewed native Rust executable separately. Apply configuration explicitly; setup does not edit it. An active cache pointer is setup convenience only; inference uses the configured immutable directory and manifest digest. Metadata compatibility does not establish numerical parity or readiness-domain calibration.",
+        runtime_registered: false,
+        detail: "Model data only, base engine with adapters explicitly off. Optional --runtime registers this maintainer's installed executable bytes privately; it does not build or execute the worker. Apply shared model configuration explicitly; setup does not edit project policy. Inference uses the immutable policy pin and local binding, never the active pointer. Registration and metadata compatibility do not establish numerical parity or readiness-domain calibration.",
     })
 }
 fn validate_options(options: &SetupOptions) -> io::Result<()> {
+    if options.check_updates && options.runtime.is_some() {
+        return Err(invalid(
+            "runtime registration cannot be a read-only update check",
+        ));
+    }
     if [
         options.check_updates,
         options.refresh,
@@ -1479,7 +1482,34 @@ pub fn run(options: &SetupOptions) -> io::Result<SetupReport> {
         deadline: Instant::now() + DEADLINE,
         cancellation: guard.cancellation(),
     };
-    run_with_transport(options, &root, &transport)
+    let mut report = run_with_transport(options, &root, &transport)?;
+    if let Some(runtime) = &options.runtime {
+        transport.checkpoint()?;
+        let directory = report
+            .model_directory
+            .as_ref()
+            .ok_or_else(|| invalid("runtime registration needs a verified installation"))?
+            .canonicalize()?;
+        let manifest_digest = report
+            .manifest_digest
+            .clone()
+            .ok_or_else(|| invalid("runtime registration needs a pinned manifest"))?;
+        let runtime = runtime.canonicalize()?;
+        let runtime_sha256 = super::vega_runtime::runtime_digest(
+            &runtime,
+            transport.deadline,
+            transport.cancellation,
+        )?;
+        transport.checkpoint()?;
+        super::vega_runtime::register(super::vega_readiness::Installation {
+            directory,
+            manifest_digest,
+            runtime,
+            runtime_sha256,
+        })?;
+        report.runtime_registered = true;
+    }
+    Ok(report)
 }
 fn run_with_transport(
     options: &SetupOptions,
@@ -2014,6 +2044,11 @@ mod tests {
                 rollback: Some("main".into()),
                 ..Default::default()
             },
+            SetupOptions {
+                check_updates: true,
+                runtime: Some(PathBuf::from("/unavailable-worker")),
+                ..Default::default()
+            },
         ] {
             assert!(run_with_transport(&options, &root, &transport).is_err());
         }
@@ -2298,15 +2333,16 @@ mod tests {
         let config: toml::Value = toml::from_str(&text).unwrap();
         assert_eq!(config["vega"]["mode"].as_str(), Some("disabled"));
         assert_eq!(
-            config["vega"]["installation"]["directory"].as_str(),
-            Some("/private/models/vega")
+            config["vega"]["model_manifest_digest"].as_str(),
+            Some(hash(b"manifest").as_str())
         );
-        assert!(config["vega"]["installation"].get("runtime").is_none());
+        assert!(config["vega"].get("installation").is_none());
+        assert!(!text.contains("/private/models"));
         assert!(config.get("decision").is_none());
         let typed: super::super::vega_readiness::Configuration =
             config["vega"].clone().try_into().unwrap();
         assert_eq!(typed.mode, super::super::vega_readiness::Mode::Disabled);
-        assert!(typed.installation.unwrap().runtime.as_os_str().is_empty());
+        assert!(typed.installation.is_none());
     }
 
     #[cfg(unix)]

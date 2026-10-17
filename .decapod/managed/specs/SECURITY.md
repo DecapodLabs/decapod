@@ -1,5 +1,15 @@
 # Security
 
+Vega's tracked team policy pins model identity separately from each maintainer's
+private runtime binding. Explicit setup registers native executable bytes without
+running them or proving their source. Unix runtime checks reject foreign ownership,
+writable-by-others files, scripts, incompatible architecture and multiple links;
+private registration records reject malformed or mismatched identities. Operator
+selection of a trusted reviewed runtime remains a trust boundary. Validation
+freezes the binding before proof and rechecks binding/model/runtime identity before
+consuming an acceptance. Local registration cannot bless source proof, fabricate
+Metal/CPU execution or establish numerical parity. CPU fallback remains unimplemented.
+
 ## Explicit local task-transfer trust
 
 `src/decapod/core/task_transfer.rs` accepts source custody only with an independently
@@ -350,8 +360,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (193 files)
+- Repository signal fingerprint: `dd74a827573209f3aa1f8fa78c1f5c19785f3bb3c54154a26bc5667292068027`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

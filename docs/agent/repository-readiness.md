@@ -118,8 +118,13 @@ abstain. Upstream confidence and conformal settings are not established
 code-readiness risk guarantees.
 Supported `alpha` values are `"0.1"` and `"0.05"`; `risk` values are `"0.05"`,
 `"0.1"` and `"0.2"`. These select pinned upstream calibration entries, not
-readiness-domain guarantees. `[vega.installation]` binds canonical absolute
-`directory` and `runtime` paths plus `manifest_digest` and `runtime_sha256`.
+readiness-domain guarantees. `[vega].model_manifest_digest` is the shared immutable
+compound model pin. `setup vega --runtime <installed-worker>` explicitly registers
+each maintainer's canonical runtime path and executable hash in private local cache
+metadata. Registration does not build or execute the worker or certify its source.
+The team configuration contains no maintainer-specific path. Legacy explicit
+`[vega.installation]` directory/runtime/manifest/hash bindings remain supported;
+if both forms are present their model identities must agree.
 
 An already-required accepted-target vega policy cannot be disabled, repinned or
 have its calibration settings changed by the candidate it governs. Validation
@@ -158,8 +163,12 @@ It does not pretend to install a native executable. The Rust worker is built fro
 a reviewed release is `cargo install --path assets/tools/vega-native --locked`.
 Repository development builds/tests remain owned by ordinary governed validation.
 Run the worker's `--probe` to require a genuine finite Metal numerical result.
-Then supply its canonical absolute `runtime` path and `runtime_sha256` under
-`[vega.installation]` and explicitly choose `[vega] mode = "required"`.
+Register the installed worker with `decapod setup vega --offline --runtime <canonical-worker-path>`.
+Apply the shared `model_manifest_digest` from setup and explicitly choose
+`[vega] mode = "required"`, or select `--vega-decisions` during init. Each maintainer
+performs local setup; validation freezes that binding before proof and rechecks it
+before inference and publication. Missing, replaced or malformed local metadata
+cannot authorize readiness. Runtime bytes and model files are reverified locally.
 Runtime digests use `sha256:<64 lowercase hex>`.
 
 Runtime never follows a floating active pointer, downloads artifacts or selects a

@@ -462,16 +462,21 @@ unless explicitly changed. Init does not install models or execute inference.
 New selection contains no machine-specific installation path; previously authored
 pins and unrelated settings remain intact when the mode changes. These new init
 regressions are authored but require execution before a passing claim.
-`[vega.installation]` binds canonical directory, manifest digest, canonical native
-worker path and executable SHA-256. The old provider flag and credential lookup
+`[vega].model_manifest_digest` pins the shared compound model identity. Explicit
+`setup vega --runtime <path>` verifies the installed worker's native file format
+and byte identity, then atomically records this maintainer's local binding in
+private cache metadata. It executes no worker and does not certify build source.
+Legacy `[vega.installation]` still binds canonical directory, manifest digest,
+native worker path and SHA-256; both model pins must agree if present. These
+installation identities are frozen before proof and rechecked before acceptance.
+The old provider flag and credential lookup
 are removed. Historical Jev evidence remains read-only compatibility, without
 current trajectory or readiness authority.
 
-The shared-policy/local-binding split and portable Metal/GPU/CPU-fallback runtime
-remain required extensions to that current installation/response contract. An
-enabled team policy must resolve each maintainer's own verified installation and
-report the actual backend, rather than accepting a forged Metal label for CPU
-execution or requiring another maintainer's paths. Unsupported hardware and failed
+The portable Metal/GPU/CPU-fallback runtime remains a required extension to the
+current response contract. Shared policy now resolves each maintainer's local
+installation; the worker must additionally report the actual backend rather than
+accepting a forged Metal label for CPU execution. Unsupported hardware and failed
 fallback still fail closed; CPU support is not yet established by the current code.
 
 Init refresh removes only the obsolete provider selector when its value is
@@ -480,8 +485,10 @@ remain intact. Unknown or malformed selectors require review and leave the
 configuration unchanged; dry-run performs the same checks without writing it.
 
 `decapod setup vega` supports `--cache-directory`, `--check-updates`, `--refresh`,
-`--offline`, and `--rollback <manifest-digest>`. Its JSON report prints verified
-model pins and disabled TOML; it does not claim to install the native executable.
+`--offline`, `--rollback <manifest-digest>` and explicit `--runtime <path>` local
+registration. A read-only update check cannot register a runtime. Its JSON report
+prints verified model pins and disabled portable TOML; `runtime_registered` is
+distinct from `runtime_installed`, and it does not build or install an executable.
 Report serialization failures propagate through the CLI's typed validation error path
 instead of panicking or claiming a successful setup response.
 The generated configuration reference includes the exact vega configuration
@@ -534,8 +541,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4d5d6e1665b2166cdae1aea8194ea7aaea56b9fb739e8dc2646e4091dc74e6ee`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (193 files)
+- Repository signal fingerprint: `dd74a827573209f3aa1f8fa78c1f5c19785f3bb3c54154a26bc5667292068027`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

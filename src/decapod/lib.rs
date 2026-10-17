@@ -2603,6 +2603,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                 } else {
                     core::vega_readiness::Mode::Disabled
                 };
+                if enabled
+                    && config.vega.model_manifest_digest.is_empty()
+                    && config.vega.installation.is_none()
+                {
+                    config.vega.model_manifest_digest = core::vega_setup::baseline_digest()?;
+                }
             }
             write_project_config(&target_dir, &config, init_with.dry_run)?;
             // The scaffold writes project specs before the final config is
@@ -2700,6 +2706,7 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Setup(setup_cli) => match setup_cli.command {
             SetupCommand::Vega {
                 cache_directory,
+                runtime,
                 check_updates,
                 refresh,
                 offline,
@@ -2707,6 +2714,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             } => {
                 let report = core::vega_setup::run(&core::vega_setup::SetupOptions {
                     cache_directory,
+                    runtime,
                     check_updates,
                     refresh,
                     offline,
