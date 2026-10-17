@@ -453,6 +453,9 @@ Init-refresh coverage also requires omitted portable defaults and an empty model
 pin to remain omitted from legacy TOML; explicitly authored backend/fallback
 settings must survive refresh. All current source changes need executed CI, while
 native build/probe/inference remains a separate missing validation recipe.
+The worker manifest scopes `parking_lot` to Metal and optional CUDA builds;
+CPU-only targets do not need GPU loader synchronization. Dependency lint must
+recognize this target/feature boundary without adding an unused-dependency waiver.
 Local-binding regressions must exercise independent per-maintainer paths for one
 shared model pin, private permissions, malformed/oversized/wrong-identity records,
 failed registration preserving prior bytes, unsafe executable links/formats and
