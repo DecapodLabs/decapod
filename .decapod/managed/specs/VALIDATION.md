@@ -447,6 +447,60 @@ executor or independent reference outputs are currently established for this wor
 Ordinary governed full validation is still required; activation's one-time
 bootstrap permission does not authorize feature builds/tests or publication.
 
+### Native execution boundary
+
+The released v0.118.0 controller's `validation_runtime::source_invocation`
+supports a finite source-check catalog and the main candidate binary build;
+it has no recipe for the separate `assets/tools/vega-native/Cargo.toml` worker,
+its Metal probe, model installation or `--proof-output` inference. The strict
+Buildkite profile does not execute arbitrary `proof.commands`. Selecting the
+consumer repository-local profile would downgrade the accepted source contract
+and is rejected. `proof::execute_proof_cli` resolves configuration and execution
+from the canonical datastore's project root, rather than the claimed worktree;
+it is not a supported workaround for this host-native task.
+
+The smallest legitimate controller prerequisite is an independently accepted
+and released supplemental host-proof recipe that retains the complete source-CI
+profile. It must bind the exact candidate and accepted target, worker manifest
+and lock, measured Rust/Xcode/Metal toolchain, immutable verified model inputs,
+bounded child execution and private proof output. It must execute the separate
+decoder tests, actual synchronized Metal probe and pinned-model requests, preserve
+failed attempts and refuse completion when either source proof or native proof
+is missing. An unmerged candidate must not authorize this new recipe. Hardware
+availability alone does not close this execution-contract gap.
+
+### Readiness evaluation protocol
+
+Freeze the calibration and model/runtime pins before evaluating. The initial
+acceptance criterion is zero false-ready outcomes, with a one-sided 95% exact
+binomial upper bound at most 5% for false-ready among accepted decisions. With
+zero errors this requires at least 59 independent accepted evaluation cases;
+zero observations never establishes safety. Require at least 50% nonabstaining
+coverage overall and at least 50% acceptance of independently labelled ready
+cases, so rejecting or abstaining on everything cannot pass. These engineering
+criteria do not reinterpret upstream conformal levels as readiness guarantees.
+
+Evaluation must use real, independently adjudicated task/PR snapshots with
+explicit requirements and validation evidence as available at the decision time.
+Labels must be fixed without looking at this implementation's outputs. Include
+ready cases and passing tests with unmet explicit requirements, incomplete work,
+contradictions, stale/missing evidence and ambiguous cases requiring abstention.
+Group related task revisions into one split; keep the evaluation holdout apart
+from any fitting or threshold selection and record corpus provenance, split
+digest, label adjudication and deduplication. No readiness fitting or real holdout
+evaluation has yet occurred. If fitting becomes necessary, pin it separately and
+evaluate on a new untouched holdout; do not silently replace upstream calibration.
+
+Report total and per-category sample counts, false-ready counts and denominators,
+coverage, abstention, malformed/error outcomes and confidence intervals. Separate
+deterministic gate refusals from model assessments. Representative sampling and
+independent-case assumptions must be disclosed; a convenience corpus cannot
+prove population risk or out-of-distribution coverage. Synthetic fixtures only
+test arithmetic and fail-closed gates. Independent parity additionally needs
+authenticated pinned inputs and token/span, raw block 13/19, pooled feature,
+normalization, engine and calibrated-output reference values, or a separately
+reviewed Rust reference with stage-specific tolerances fixed before comparison.
+
 Platform proof must state where it executed. Native, emulated, and cross-compiled
 results are distinct. Packaging checks must build and run the promised artifact
 on the applicable native or explicitly emulated target; evaluating metadata or
@@ -552,7 +606,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `722906938f1419eadb21b579ee0b840b3f550b43e5cc4414c1d4f36657756168`
+- Repository signal fingerprint: `e184f68c64435018063b337373d7b2685278931586b7109178d8c7b8c25dde39`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (192 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

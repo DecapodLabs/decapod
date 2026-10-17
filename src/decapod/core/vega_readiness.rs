@@ -186,109 +186,6 @@ pub(crate) fn permits_publication(proof_ready: bool, receipt: &Receipt) -> bool 
     proof_ready && receipt.permits_readiness()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    fn outcome() -> Outcome {
-        Outcome {
-            probabilities: [0.1, 0.9],
-            prediction_set: Some(vec![true]),
-            abstain: false,
-            unbound: false,
-            settle_steps: 12,
-            energy: 0.0,
-            kinetic: 0.1,
-            nearest: 0.1,
-            confidence: 0.9,
-        }
-    }
-    #[test]
-    fn only_positive_unambiguous_nonabstaining_result_accepts() {
-        let mut o = outcome();
-        assert_eq!(o.decision().unwrap(), Decision::Accept);
-        o.prediction_set = Some(vec![false, true]);
-        assert_eq!(o.decision().unwrap(), Decision::Abstain);
-        o.prediction_set = None;
-        assert_eq!(o.decision().unwrap(), Decision::Abstain);
-        o = outcome();
-        o.abstain = true;
-        assert_eq!(o.decision().unwrap(), Decision::Abstain);
-        o = outcome();
-        o.unbound = true;
-        assert_eq!(o.decision().unwrap(), Decision::Abstain);
-    }
-    #[test]
-    fn negative_singleton_rejects_not_approves() {
-        let mut o = outcome();
-        o.probabilities = [0.9, 0.1];
-        o.prediction_set = Some(vec![false]);
-        assert_eq!(o.decision().unwrap(), Decision::Reject);
-    }
-    #[test]
-    fn malformed_output_never_accepts() {
-        let mut o = outcome();
-        o.probabilities[0] = f64::NAN;
-        assert!(o.decision().is_err());
-        o = outcome();
-        o.prediction_set = Some(vec![true, true]);
-        assert!(o.decision().is_err());
-        o = outcome();
-        o.prediction_set = Some(vec![false]);
-        assert!(o.decision().is_err());
-        o = outcome();
-        o.confidence = 1.0;
-        assert!(o.decision().is_err());
-    }
-
-    #[test]
-    fn accepted_required_policy_cannot_be_disabled_or_repinned_by_candidate() {
-        let mut required = configuration_from_bytes(b"[vega]\nmode = 'required'\n").unwrap();
-        required.installation = Some(Installation {
-            directory: PathBuf::from("/verified/model"),
-            manifest_digest: hash(b"manifest"),
-            runtime: PathBuf::from("/verified/worker"),
-            runtime_sha256: hash(b"runtime"),
-        });
-        assert!(verify_policy_acceptance(&required, &required).is_ok());
-        let disabled = configuration_from_bytes(b"").unwrap();
-        assert!(verify_policy_acceptance(&disabled, &required).is_err());
-        for field in [
-            "manifest",
-            "runtime",
-            "directory",
-            "runtime_path",
-            "alpha",
-            "risk",
-        ] {
-            let mut changed = required.clone();
-            let installation = changed.installation.as_mut().unwrap();
-            match field {
-                "manifest" => installation.manifest_digest = hash(b"replacement"),
-                "runtime" => installation.runtime_sha256 = hash(b"replacement"),
-                "directory" => installation.directory = PathBuf::from("/replacement/model"),
-                "runtime_path" => installation.runtime = PathBuf::from("/replacement/worker"),
-                "alpha" => changed.alpha = "0.05".into(),
-                "risk" => changed.risk = "0.2".into(),
-                _ => unreachable!(),
-            }
-            assert!(
-                verify_policy_acceptance(&changed, &required).is_err(),
-                "{field}"
-            );
-        }
-    }
-
-    #[test]
-    fn disabled_accepted_policy_preserves_optional_compatibility() {
-        let implicit = configuration_from_bytes(b"").unwrap();
-        let explicit = configuration_from_bytes(b"[vega]\nmode = 'disabled'\n").unwrap();
-        assert_eq!(implicit, explicit);
-        assert!(verify_policy_acceptance(&implicit, &explicit).is_ok());
-        let required = configuration_from_bytes(b"[vega]\nmode = 'required'\n").unwrap();
-        assert!(verify_policy_acceptance(&required, &implicit).is_ok());
-    }
-}
-
 use super::bounded_process::{BoundedCommand, Cancellation, ProcessLimits, Termination};
 use super::readiness_evidence as evidence;
 use sha2::{Digest, Sha256};
@@ -1031,5 +928,108 @@ mod projection_tests {
         receipt.decision = Decision::Accept;
         receipt.stale();
         assert!(!permits_publication(true, &receipt));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn outcome() -> Outcome {
+        Outcome {
+            probabilities: [0.1, 0.9],
+            prediction_set: Some(vec![true]),
+            abstain: false,
+            unbound: false,
+            settle_steps: 12,
+            energy: 0.0,
+            kinetic: 0.1,
+            nearest: 0.1,
+            confidence: 0.9,
+        }
+    }
+    #[test]
+    fn only_positive_unambiguous_nonabstaining_result_accepts() {
+        let mut o = outcome();
+        assert_eq!(o.decision().unwrap(), Decision::Accept);
+        o.prediction_set = Some(vec![false, true]);
+        assert_eq!(o.decision().unwrap(), Decision::Abstain);
+        o.prediction_set = None;
+        assert_eq!(o.decision().unwrap(), Decision::Abstain);
+        o = outcome();
+        o.abstain = true;
+        assert_eq!(o.decision().unwrap(), Decision::Abstain);
+        o = outcome();
+        o.unbound = true;
+        assert_eq!(o.decision().unwrap(), Decision::Abstain);
+    }
+    #[test]
+    fn negative_singleton_rejects_not_approves() {
+        let mut o = outcome();
+        o.probabilities = [0.9, 0.1];
+        o.prediction_set = Some(vec![false]);
+        assert_eq!(o.decision().unwrap(), Decision::Reject);
+    }
+    #[test]
+    fn malformed_output_never_accepts() {
+        let mut o = outcome();
+        o.probabilities[0] = f64::NAN;
+        assert!(o.decision().is_err());
+        o = outcome();
+        o.prediction_set = Some(vec![true, true]);
+        assert!(o.decision().is_err());
+        o = outcome();
+        o.prediction_set = Some(vec![false]);
+        assert!(o.decision().is_err());
+        o = outcome();
+        o.confidence = 1.0;
+        assert!(o.decision().is_err());
+    }
+
+    #[test]
+    fn accepted_required_policy_cannot_be_disabled_or_repinned_by_candidate() {
+        let mut required = configuration_from_bytes(b"[vega]\nmode = 'required'\n").unwrap();
+        required.installation = Some(Installation {
+            directory: PathBuf::from("/verified/model"),
+            manifest_digest: hash(b"manifest"),
+            runtime: PathBuf::from("/verified/worker"),
+            runtime_sha256: hash(b"runtime"),
+        });
+        assert!(verify_policy_acceptance(&required, &required).is_ok());
+        let disabled = configuration_from_bytes(b"").unwrap();
+        assert!(verify_policy_acceptance(&disabled, &required).is_err());
+        for field in [
+            "manifest",
+            "runtime",
+            "directory",
+            "runtime_path",
+            "alpha",
+            "risk",
+        ] {
+            let mut changed = required.clone();
+            let installation = changed.installation.as_mut().unwrap();
+            match field {
+                "manifest" => installation.manifest_digest = hash(b"replacement"),
+                "runtime" => installation.runtime_sha256 = hash(b"replacement"),
+                "directory" => installation.directory = PathBuf::from("/replacement/model"),
+                "runtime_path" => installation.runtime = PathBuf::from("/replacement/worker"),
+                "alpha" => changed.alpha = "0.05".into(),
+                "risk" => changed.risk = "0.2".into(),
+                _ => unreachable!(),
+            }
+            assert!(
+                verify_policy_acceptance(&changed, &required).is_err(),
+                "{field}"
+            );
+        }
+    }
+
+    #[test]
+    fn disabled_accepted_policy_preserves_optional_compatibility() {
+        let implicit = configuration_from_bytes(b"").unwrap();
+        let explicit = configuration_from_bytes(b"[vega]\nmode = 'disabled'\n").unwrap();
+        assert_eq!(implicit, explicit);
+        assert!(verify_policy_acceptance(&implicit, &explicit).is_ok());
+        let required = configuration_from_bytes(b"[vega]\nmode = 'required'\n").unwrap();
+        assert!(verify_policy_acceptance(&required, &implicit).is_ok());
     }
 }
