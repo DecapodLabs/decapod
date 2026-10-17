@@ -172,6 +172,31 @@ workspace through Decapod, resolve ownership or store selection, and rerun the
 execution gate. Never manufacture a duplicate task or copy a database to hide
 this discrepancy.
 
+The explicit local transfer commands preserve an original standalone task:
+`todo transfer export --id <id> --to <receiver> --output <absolute-private-file>`
+requires an actual yield by the source actor and seals source mutation.
+`transfer recover --id <id> --transfer-id <id> --output <new-private-file>`
+recovers identical bytes after interrupted publication. Recovery selects the
+immutable export event by task and transfer identity instead of recapturing the
+entire subject journal. The canonical event read enforces its existing 8 MiB
+record bound before payload materialization, and recovery revalidates the
+repository, exporter, task, transfer, envelope and artifact digest bindings.
+Successful exports at the 4,095/4,096-event boundary remain recoverable after
+the export/checkpoint append and after later comments. This does not relax the
+4 MiB artifact or 4,096-event historical-bundle limits.
+`transfer import --input <absolute-private-file> --expected-digest <sha256:digest>
+--accept-source-transfer` requires a trusted source handoff, the same GitHub
+origin and intended receiver, fetched source commit and absent local authority.
+The `decapod.task-transfer.v1` artifact is bounded to 4 MiB and 4,096 subject
+events. Sessions and unrelated tasks are excluded. Export supports only yielded
+tasks without shared owners, parent/dependency edges or incoming relationships.
+Import returns `execution_ready: false`; it neither claims the task nor imports
+current-machine proof. `TODO_PROJECTION_MISSING` remains blocking until the real
+import, claim and applicable execution gates succeed.
+The source seal assumes all cooperating writers use a supporting controller.
+An older executable, privileged database writer or disconnected copy can ignore
+that fence; the artifact does not establish an online exclusive-ownership lease.
+
 Cleanup requires ownership evidence. Task-like names, old timestamps, and an
 empty inventory from a different container engine do not establish permission
 to delete. Managed invocation receipts bind the exact path, directory generation,
@@ -471,8 +496,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

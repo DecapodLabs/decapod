@@ -115,6 +115,27 @@ Validation checks repository evidence for these product contracts:
 intended task, agent ownership, lease, and control plane before execution resumes.
 A storage error must not be relabeled as an absent projection.
 
+`tests/unit/core/task_transfer_tests.rs` exercises two separate local stores and
+real Git repositories: identity/intent/history preservation, source yield and
+actor checks, source seal rejection of later custody mutations, exact private
+artifact recovery, replay/conflicting-history refusal, repository/receiver/commit
+binding, malformed/truncated journal rejection, explicit operator acceptance,
+digest/byte bounds, and shared/connected-task rejection. Historical passed proof
+must remain only in provenance, with unavailable current proof and a new revision.
+These library regressions run through the existing required Supabase library-test
+recipe. Their presence is not passing evidence until normal validation executes
+them. Synthetic stores cannot prove source authenticity or global exclusivity;
+the trust contract requires the operator's authenticated source handoff.
+
+Transfer regressions use synthetic task identities only. Candidate transfer
+commands cannot authorize custody of the real feature task before this controller
+is independently accepted and released. The unchanged accepted source executor
+and complete configured proof graph remain responsible for compiling and testing
+the candidate; refreshing a reviewed inventory declaration supplies no proof.
+Compiling the production binary alone does not execute the transfer regressions.
+The required library-test build must also compile their real repository fixtures
+and run them; fixture compilation failure leaves the transfer claim unsupported.
+
 ## Obligation current-evidence regression proof
 
 `tests/plugins/obligation.rs` covers transitive and diamond completion without
@@ -499,8 +520,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

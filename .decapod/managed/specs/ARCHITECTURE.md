@@ -268,6 +268,27 @@ not an externally sealed tamper-proof log. Post-baseline legacy imports and
 sequence renumbering require an explicit migration instead of silent repair.
 The optional cloud task schema has no reconstruction adapter in this contract.
 
+`core::todo::task_journal::transfer` (implemented in
+`src/decapod/core/task_transfer.rs`) adds explicit bounded custody transfer for
+standalone yielded local tasks. A source transaction records the exact transfer
+artifact and increments its revision; the shared task mutation boundary refuses
+later mutations on that sealed subject. Artifact publication follows the durable
+record and supports explicit byte-identical recovery. Import validates the source
+checkpoint chain through the same pure journal verifier, binds GitHub repository,
+receiver and source commit, then atomically creates the original task identity and
+a local observed baseline. Foreign events remain nested source provenance inside
+the canonical TODO stream, preserving their sequence numbers without pretending
+they executed locally. No new datastore or lease service is added.
+
+Only task records/history cross this boundary. Current verification artifacts and
+pass timestamps are cleared; exact old bytes remain in the provenance record.
+Destination revision advances, requiring fresh claim, orientation and proof.
+Connected/shared tasks and any preexisting destination task/hash/history fail
+closed. Operator acceptance of an independently obtained digest supplies source
+trust. A content digest does not authenticate a sender; local source sealing cannot
+prevent divergent clones or privileged writers from continuing. Global exclusive
+custody would require an additional trusted authority.
+
 `core::workunit` journals complete manifest snapshots in the canonical `workunit`
 event stream. The JSON file remains the ignored, recoverable projection. Journal
 commit precedes file publication; interruption can leave the projection behind
@@ -418,8 +439,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aa272e3c3051a2fa2cc491fb2265900d8da19de0788aea6e9856a55cd1155833`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (202 files), `tests/` (193 files)
+- Repository signal fingerprint: `9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

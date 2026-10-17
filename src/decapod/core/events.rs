@@ -388,6 +388,74 @@ pub fn query_subject_on_conn(
     Ok(output)
 }
 
+/// Read one durable subject event by its canonical identity, independently of
+/// later subject history. Bound the payload in SQL before materializing it.
+/// This is not a complete-history reader and must not be used for replay.
+pub fn query_subject_event_on_conn(
+    conn: &Connection,
+    stream: &str,
+    subject_kind: &str,
+    subject_id: &str,
+    event_id: &str,
+) -> Result<Option<StoredEvent>, error::DecapodError> {
+    let invalid = |message: &str| {
+        error::DecapodError::ValidationError(format!("EVENT_SUBJECT_JOURNAL: {message}"))
+    };
+    if !is_known_stream(stream)
+        || subject_kind.is_empty()
+        || subject_id.is_empty()
+        || event_id.is_empty()
+    {
+        return Err(invalid("invalid subject or event identity"));
+    }
+    if !conn.has_table(EVENTS_TABLE)? {
+        return Ok(None);
+    }
+    let record = conn
+        .query_row(
+            "SELECT ts, seq, event_type,
+                    CASE WHEN length(CAST(payload AS BLOB)) <= ?5 THEN payload ELSE NULL END,
+                    actor
+             FROM events WHERE stream = ?1 AND subject_kind = ?2
+                 AND subject_id = ?3 AND event_id = ?4",
+            params![
+                stream,
+                subject_kind,
+                subject_id,
+                event_id,
+                MAX_SUBJECT_RECORD_BYTES
+            ],
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, u64>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, Option<String>>(3)?,
+                    row.get::<_, String>(4)?,
+                ))
+            },
+        )
+        .optional()?;
+    let Some((ts, seq, event_type, raw, actor)) = record else {
+        return Ok(None);
+    };
+    let raw = raw.ok_or_else(|| invalid("event exceeds record byte bound"))?;
+    if raw.len() as u64 > MAX_SUBJECT_RECORD_BYTES {
+        return Err(invalid("event exceeds record byte bound"));
+    }
+    let payload =
+        serde_json::from_str(&raw).map_err(|_| invalid("malformed canonical subject payload"))?;
+    Ok(Some(StoredEvent {
+        stream: stream.into(),
+        event_id: event_id.into(),
+        ts,
+        seq,
+        event_type,
+        payload,
+        actor,
+    }))
+}
+
 /// Check prospective subject-journal size inside the same transaction as append.
 /// A successful append must not render the subject unreadable by its bounded
 /// recovery reader. Identical existing records consume no additional capacity.

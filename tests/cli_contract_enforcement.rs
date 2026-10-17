@@ -40,6 +40,203 @@ fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
         .expect("run decapod")
 }
 
+#[test]
+fn public_task_transfer_preserves_identity_without_importing_a_live_lease() {
+    fn git(dir: &Path, args: &[&str]) {
+        let out = Command::new("git")
+            .current_dir(dir)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "git {args:?}: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    fn cli(dir: &Path, actor: &str, args: &[&str]) -> serde_json::Value {
+        let out = Command::new(resolve_decapod_bin())
+            .current_dir(dir)
+            .env("DECAPOD_AGENT_ID", actor)
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{args:?}: {} {}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        serde_json::from_slice(&out.stdout).unwrap()
+    }
+    fn init(dir: &Path) {
+        let out = Command::new(resolve_decapod_bin())
+            .current_dir(dir)
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
+            .args([
+                "init",
+                "--force",
+                "--no-ci",
+                "--no-specs",
+                "--no-container-workspaces",
+            ])
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    let source = TempDir::new().unwrap();
+    git(source.path(), &["init", "-q", "-b", "transfer-fixture"]);
+    git(
+        source.path(),
+        &[
+            "-c",
+            "user.name=Transfer Test",
+            "-c",
+            "user.email=test@example.invalid",
+            "-c",
+            "core.hooksPath=/dev/null",
+            "commit",
+            "-q",
+            "--allow-empty",
+            "-m",
+            "fixture",
+        ],
+    );
+    git(
+        source.path(),
+        &[
+            "remote",
+            "add",
+            "origin",
+            "git@github.com:fixture/transfer.git",
+        ],
+    );
+    init(source.path());
+    let task = cli(
+        source.path(),
+        "source-agent",
+        &[
+            "todo",
+            "add",
+            "Preserve transfer identity",
+            "--format",
+            "json",
+        ],
+    );
+    let id = task["id"].as_str().unwrap();
+    cli(
+        source.path(),
+        "source-agent",
+        &["todo", "claim", "--id", id, "--format", "json"],
+    );
+    cli(
+        source.path(),
+        "source-agent",
+        &[
+            "todo",
+            "yield",
+            "--id",
+            id,
+            "--reason",
+            "explicit transfer",
+            "--format",
+            "json",
+        ],
+    );
+    let artifacts = TempDir::new().unwrap();
+    let package = artifacts.path().join("task.json");
+    let exported = cli(
+        source.path(),
+        "source-agent",
+        &[
+            "todo",
+            "transfer",
+            "export",
+            "--id",
+            id,
+            "--to",
+            "receiver-agent",
+            "--output",
+            package.to_str().unwrap(),
+        ],
+    );
+    let dest = TempDir::new().unwrap();
+    let clone = Command::new("git")
+        .args(["clone", "-q", "--local"])
+        .arg(source.path())
+        .arg(dest.path())
+        .output()
+        .unwrap();
+    assert!(
+        clone.status.success(),
+        "{}",
+        String::from_utf8_lossy(&clone.stderr)
+    );
+    git(
+        dest.path(),
+        &[
+            "remote",
+            "set-url",
+            "origin",
+            "https://github.com/fixture/transfer.git",
+        ],
+    );
+    init(dest.path());
+    let input = [
+        "todo",
+        "transfer",
+        "import",
+        "--input",
+        package.to_str().unwrap(),
+        "--expected-digest",
+        exported["artifact_sha256"].as_str().unwrap(),
+    ];
+    let rejected = Command::new(resolve_decapod_bin())
+        .current_dir(dest.path())
+        .env("DECAPOD_AGENT_ID", "receiver-agent")
+        .args(input)
+        .output()
+        .unwrap();
+    assert!(!rejected.status.success());
+    let mut accepted = input.to_vec();
+    accepted.push("--accept-source-transfer");
+    let imported = cli(dest.path(), "receiver-agent", &accepted);
+    assert_eq!(imported["task_id"], id);
+    assert_eq!(imported["execution_ready"], false);
+    let replay = Command::new(resolve_decapod_bin())
+        .current_dir(dest.path())
+        .env("DECAPOD_AGENT_ID", "receiver-agent")
+        .args(&accepted)
+        .output()
+        .unwrap();
+    assert!(!replay.status.success());
+    let sealed = Command::new(resolve_decapod_bin())
+        .current_dir(source.path())
+        .env("DECAPOD_AGENT_ID", "source-agent")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .args(["todo", "claim", "--id", id])
+        .output()
+        .unwrap();
+    assert!(!sealed.status.success());
+    assert!(String::from_utf8_lossy(&sealed.stderr).contains("source task is sealed"));
+    cli(
+        dest.path(),
+        "receiver-agent",
+        &["todo", "claim", "--id", id, "--format", "json"],
+    );
+    let status = cli(
+        dest.path(),
+        "receiver-agent",
+        &["todo", "claim-status", "--id", id, "--format", "json"],
+    );
+    assert!(status.to_string().contains("receiver-agent"));
+}
+
 fn setup_repo() -> &'static (TempDir, PathBuf) {
     SHARED_REPO.get_or_init(|| {
         let tmp = TempDir::new().expect("tmpdir");
