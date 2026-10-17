@@ -380,6 +380,14 @@ and propagate every child failure. The repository's selective integration steps
 retain their 300-second execution budget. Raising a timeout, omitting a test, or
 passing one isolated case does not prove the complete suite fits that budget.
 
+The real-CLI workunit recovery cases live in
+`tests/support/cli_workunit_recovery.rs`, included by the required `cli_contracts`
+target. The selective CLI matrix still executes that target alongside
+`cli_contract_enforcement` and `entrypoint_correctness`; no recovery assertion or
+target is excluded. This balances the aggregate real-process suites without
+extending their 300-second budgets. A successful contracts job alone does not
+prove the complete selective CLI matrix passed.
+
 Source-owned shell, checkout, setup, release, and dependency-policy regressions
 must exercise the actual authored helper or workflow body. Tool setup verifies
 pinned official bytes and exact version output before adding tools to PATH.
@@ -606,8 +614,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e184f68c64435018063b337373d7b2685278931586b7109178d8c7b8c25dde39`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (192 files)
+- Repository signal fingerprint: `45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (26 files), `docs/` (1 files), `src/` (208 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

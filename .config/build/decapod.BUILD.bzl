@@ -243,6 +243,7 @@ def decapod_targets():
                 "tests/consumer_readiness.rs",
                 "tests/init_ci_scaffolding.rs",
                 "tests/init_config_behavior.rs",
+                "tests/support/cli_workunit_recovery.rs",
             ] if path == "tests/cli_contracts.rs" else [path] + [
                 "assets/tools/release_metadata.rs",
                 "src/decapod/core/release_metadata.rs",

@@ -445,6 +445,11 @@
       "id": "vega-native-boundary-eval-protocol",
       "summary": "Move remaining readiness test module after production items without behavior changes. Document released controller host-proof gap, exact legitimate supplemental recipe boundary, independent reference requirements and preregistered holdout risk/coverage criteria; no native result or calibration pass claimed. Earlier fb1 CI passed; full validation transport/rate-limit failures retained; current candidate must rerun validation.",
       "input_digest": "sha256:91f9dfd187f80b69a652b0ab642e3c1350e9c10204797ded8c280d51783fc6e1"
+    },
+    {
+      "id": "vega-cli-recovery-suite-balance",
+      "summary": "Repair observed 300s selective CLI aggregate timeout by moving both unchanged recovery cases into already-required shorter cli_contracts target. Preserve every assertion, all targets, budgets and provider policy. Reviewed explicit build inventory, current specs and native proof blockers. Executed old candidate library1439/0/3 and init target passed; corrected allocation requires new CI. No native or readiness pass claimed.",
+      "input_digest": "sha256:7294ebc304a44ac4e60827e59fd772acbb45a62d653fdec61ec1824d885d3b83"
     }
   ],
   "intents": {
@@ -489,22 +494,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current-content review after behavior-preserving readiness test module ordering. Verified private separately hashed single-link installation architecture remains documented; native execution and parity are still not established.",
-          "reviewed_code_fingerprint": "e184f68c64435018063b337373d7b2685278931586b7109178d8c7b8c25dde39",
+          "reason": "Reviewed unchanged production architecture and private verified installation. CLI workunit recovery assertions move unchanged into an existing required target to preserve bounded complete source proof; no authority boundary changes.",
+          "reviewed_code_fingerprint": "45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e",
           "spec_material_hash": "2d1134d6736663ef701558e473903b7be980ccecc79f757235cdead07e74aa45"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current-content review: init preserves unrelated extensions and refuses ambiguous retired providers; original task custody, bounded Vega receipt and deterministic authority interfaces remain unchanged by test ordering.",
-          "reviewed_code_fingerprint": "e184f68c64435018063b337373d7b2685278931586b7109178d8c7b8c25dde39",
+          "reason": "Reviewed unchanged Vega and retired-init public interfaces. Recovery CLI assertions and required target coverage preserved by test relocation; no native proof or model behavior changes.",
+          "reviewed_code_fingerprint": "45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e",
           "spec_material_hash": "db81942d9f5903a895de991800d3a904234cde444423cc37cd87db8fae5d40e3"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current code: only behavior-preserving test ordering since last review. Existing security requirements retain unsafe-link rejection, integrity and atomic activation, stale-output refusal and deterministic publication authority; no new trust boundary is activated.",
-          "reviewed_code_fingerprint": "e184f68c64435018063b337373d7b2685278931586b7109178d8c7b8c25dde39",
+          "reason": "Only test allocation and explicit reviewed build inventory changed since current security review; all recovery assertions preserved, finite budgets unchanged, private storage and deterministic publication authority intact.",
+          "reviewed_code_fingerprint": "45e250e882dd9e03b9f0b78231b34c14a50ac1a9822474998454d9e59fa23c1e",
           "spec_material_hash": "5c388f23475ae97165d933b09fe5155fd7e5aab16ff0ef1b75e44a02984dc9b1"
         }
       ],
@@ -519,7 +524,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792253914Z"
+      "updated_at": "1792254785Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -527,7 +532,7 @@
         "Current claimed task and isolated work branch",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
       ],
-      "artifact_hash": "sha256:1a300d0b017e1aae6736c1265cb924d1ee6edb809df566f05ff01c035e0237f6",
+      "artifact_hash": "sha256:482f5c7e9eddc552a95244a21a3032c14a78188a6098ee5edc10d5cf9bf92028",
       "blockers": [
         "Independent pinned backbone/pooling reference and readiness holdout not supplied; existing 2050 upstream choice results lack required raw features/readiness labels.",
         "Released v0.118 strict source contract lacks a supplemental host worker build/test/probe/inference recipe; generic proof CLI resolves canonical root, not task workspace. Independent accepted/released adapter required; no profile downgrade or candidate self-authorization."
@@ -582,6 +587,10 @@
           "status": "failed"
         },
         {
+          "name": "library-regressions",
+          "status": "passed"
+        },
+        {
           "name": "local-source-repairs",
           "status": "partial"
         },
@@ -634,6 +643,10 @@
           "status": "passed"
         },
         {
+          "name": "selective-cli",
+          "status": "failed"
+        },
+        {
           "name": "source-ci",
           "status": "passed"
         },
@@ -658,7 +671,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "native-proof-boundary",
+      "current_phase": "source-cli-timeout-repair",
       "custody": {
         "events": [
           {
@@ -756,10 +769,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 16,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -985,6 +1005,29 @@
                 "validation_findings": [
                   "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed."
                 ]
+              },
+              {
+                "action": "source-cli-timeout-repair",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "tests/cli_contract_enforcement.rs",
+                  "tests/cli_contracts.rs",
+                  "tests/support/cli_workunit_recovery.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171"
+                ],
+                "proof_refs": [
+                  "selective-cli",
+                  "library-regressions"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 16,
+                "validation_findings": [
+                  "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain."
+                ]
               }
             ]
           }
@@ -1019,7 +1062,9 @@
         "Released0.118.0 imported accepted transfer01M5470V8JDG8WJA1WX2EJ098Y under receivercodex-vega-metal. Exact source-supplied artifact sha256:5cf05c74167d81052460666ee1ae87112ce5e101335875df65aa5181bb2efec4 verified before import. Taskfeat_01m52fnwybfvhfdj identity and nested provenance retained, destination revision8; journal verify valid without missing/divergent projections. Fresh exclusive claim succeeded. Root ensure refused recreating existing branch; registered worktree was preserved and moved to managed path, then workspace ensure accepted can_work=true. Originalfeature5f2801e581ec9d436c28c5df2a9a64e261efa895 retained, no history rewrite. Normal no-commit merge accepted24490934 underway. Retained original feature governance from committed Git during merge; accepted prerequisite governance remains in merge-parent history. Supported specs.refresh reconciled generated conflict blocks while preserving all authored transfer and Vega prose. All previous validation failures remain; native/independent parity/calibration still unverified.",
         "Released117 authoritative run at87a13363 reached provider_terminal_wait then failed Docs Sync Buildkite1933 uuid01a145a6-9e36-4379-8009-3523c0d6e03d; evidence /tmp/decapod-snapshot-HOyW3w. Actual clippy flags mixed return type_complexity: replaced tuple spelling with meaningful MixedSlotsAndOptions alias, no lint suppression. GHA Docs Sync job117091823692 log contains no complete diff; no archive read. Corrected ordinary config-schema source from exact canonical Rust config declaration, readiness_config_contract literal and repository-readiness include, preserving documented alpha/risk/pins. This is source-derived correction, not locally executed candidate generation; CI equality remains pending. command-contracts already matches its only renderer-source change.",
         "Repaired actual source failures: moved LocalVerification before test module without suppression; init retires only known none/jev selector and preserves unrelated keys, unknown/malformed selectors fail without config overwrite; installation independently verifies private no-clobber copies instead of cache hardlinks while retaining nlink checks. Added cache reuse/corruption/hardlink/cancellation/install-failure regressions and both init-surface dry-run/idempotence/extension/unknown-selector coverage. Tests authored, not executed. Official Cargo metadata reconciliation updates only local decapod version0.117->0.118 and resolver-selected edges among already locked socket/getrandom/Windows packages; native Git identities unchanged. Reviewed supported agent.init inventory f24497519b688749366c03ec1a580bf34fcae4e819593aad1e921351f977cc6b against accepted source; only existing Cargo/native inputs differ, no CI policy/helper/check graph change. Backed up user config then retained all unrelated settings and removed exact retired provider none. Source and governance ready for plain validate; native and numerical/domain acceptance still unverified. Canonical task claim renewed after session expiry; all further controller mutations use consistent machine session.",
-        "https://github.com/DecapodLabs/decapod/actions/runs/39046342568"
+        "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233"
       ],
       "inspected_files": [
         "docs/agent/repository-readiness.md",
@@ -1028,8 +1073,12 @@
       ],
       "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
       "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/managed/specs/VALIDATION.md",
-        "src/decapod/core/vega_readiness.rs"
+        "src/decapod/core/vega_readiness.rs",
+        "tests/cli_contract_enforcement.rs",
+        "tests/cli_contracts.rs",
+        "tests/support/cli_workunit_recovery.rs"
       ],
       "next_transitions": [
         "Checkpoint exact feature delta on accepted base; use ordinary validation only after supported released controller is available",
@@ -1048,6 +1097,7 @@
       "unresolved_assumptions": [
         "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
         "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
+        "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain.",
         "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed."
       ]
     }
