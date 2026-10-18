@@ -647,7 +647,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fcc58a4d0ae4c739b1f0f1a2682be685cdd4e673c6be911f3aae4bd05a346ec1`
+- Repository signal fingerprint: `003bc1b3edaa3356e12fa3eba22652fddf687bdb462b38a363015bf53ab42526`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -775,6 +775,21 @@ probe/model inference, independent backbone parity and readiness holdout proof
 remain outstanding and must run through the accepted released controller.
 
 ## Supplemental Rust worker verification
+
+The v0.119.0 release commit is integrated by normal merge on the original Vega
+branch, preserving its original task and all earlier checkpoints. Supported init
+refreshes the release-bound entrypoints and Docker pin; the authored configuration
+is restored from its pre-refresh backup so the old controller's obsolete
+`[decision] provider = "none"` insertion does not reintroduce retired policy.
+The separately locked worker now references the local v0.119.0 main package.
+Its existing registry package versions/checksums and model/runtime Git revisions
+remain pinned; Cargo reconciled dependency edges to already locked versions.
+
+The first released-controller attempt stopped at `READINESS_BLOCKED` before
+building because independent parity reference and readiness holdout inputs are
+still missing. The obsolete unsupported-controller blocker is resolved; those
+domain-evidence blockers and the no-publication condition remain. Source test
+success cannot satisfy them, and no Metal/model measurement is asserted here.
 
 Official v0.119.0 was published and installed from its locked crates.io package;
 its VCS identity is release commit `201b504485d64f9a09a7fc0e0560fdff035e8daf`.

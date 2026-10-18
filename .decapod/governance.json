@@ -497,6 +497,11 @@
       "id": "native119-integration",
       "summary": "Integrate accepted1455 before Vega, configure reviewed native worker recipe and propagate the absolute discovery deadline; real slow-probe regression authored, native/model/parity/calibration evidence outstanding.",
       "input_digest": "sha256:5c2f7aebfe325be14a10609b639ba718877a2eca449f97a5067e10d674357ec2"
+    },
+    {
+      "id": "release119-reconciliation",
+      "summary": "Integrate accepted v0.119.0 release, refresh release-bound projections through official init, preserve authored Vega-only policy and reconcile the separate worker lock; external domain-evidence blockers remain and full validation must rerun.",
+      "input_digest": "sha256:a2ce6edb94cf83ecb8bf9e79cd1691c1539ad1ed77203516d3267b2f10330205"
     }
   ],
   "intents": {
@@ -543,22 +548,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted native-worker checks precede Vega assessment; original deadline carries through discovery. Actual Metal/model, independent parity and labelled holdout evidence remain required and outstanding.",
-          "reviewed_code_fingerprint": "fcc58a4d0ae4c739b1f0f1a2682be685cdd4e673c6be911f3aae4bd05a346ec1",
+          "reason": "Reviewed119 release merge and separate locked native recipe; source/native gates precede Vega and original deadline is preserved. Actual native/model execution, independent parity and readiness holdout remain unverified and publication-blocking.",
+          "reviewed_code_fingerprint": "003bc1b3edaa3356e12fa3eba22652fddf687bdb462b38a363015bf53ab42526",
           "spec_material_hash": "eb53334fcd43a6fff3bd3021c48038ac492ef65a078540fa10ec969aa8060e75"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed native recipe and strict source-before-native-before-Vega ordering; actual model execution and independent parity/calibration remain outstanding.",
-          "reviewed_code_fingerprint": "fcc58a4d0ae4c739b1f0f1a2682be685cdd4e673c6be911f3aae4bd05a346ec1",
+          "reason": "Reviewed119 release merge and separate locked native recipe; source/native gates precede Vega and original deadline is preserved. Actual native/model execution, independent parity and readiness holdout remain unverified and publication-blocking.",
+          "reviewed_code_fingerprint": "003bc1b3edaa3356e12fa3eba22652fddf687bdb462b38a363015bf53ab42526",
           "spec_material_hash": "942fbaa0ce5aef13ddf4f420a4d051bdf2102082dba0c410caa5676d8a58a6ee"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed absolute deadline propagation, private diagnostics, typed hardware-only fallback and preserved deterministic proof authority; no native or calibration claim is asserted.",
-          "reviewed_code_fingerprint": "fcc58a4d0ae4c739b1f0f1a2682be685cdd4e673c6be911f3aae4bd05a346ec1",
+          "reason": "Reviewed119 release merge and separate locked native recipe; source/native gates precede Vega and original deadline is preserved. Actual native/model execution, independent parity and readiness holdout remain unverified and publication-blocking.",
+          "reviewed_code_fingerprint": "003bc1b3edaa3356e12fa3eba22652fddf687bdb462b38a363015bf53ab42526",
           "spec_material_hash": "e662013621a917085bf3f02b57a7420ea4e07b824f0bbe82c8ddbdeabf2918da"
         }
       ],
@@ -573,7 +578,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792290419Z"
+      "updated_at": "1792290609Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -582,10 +587,9 @@
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb",
         "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation."
       ],
-      "artifact_hash": "sha256:8eb15bfb182066dafbeefdd693b5ec128fa83f74781292a84a7d000cb3c11849",
+      "artifact_hash": "sha256:5b733e3a0221304fcae57c1cc7057cea2835c945c0e911e26093f0703ea0d54d",
       "blockers": [
-        "Independent pinned backbone/pooling reference and readiness holdout not supplied; existing 2050 upstream choice results lack required raw features/readiness labels.",
-        "Released v0.118 strict source contract lacks a supplemental host worker build/test/probe/inference recipe; generic proof CLI resolves canonical root, not task workspace. Independent accepted/released adapter required; no profile downgrade or candidate self-authorization."
+        "Independent pinned tokenization/backbone/pooling/engine reference and independently labelled readiness holdout remain unsupplied; upstream choice results are not these proofs. Feature publication remains prohibited."
       ],
       "checks": [
         {
@@ -649,11 +653,19 @@
           "status": "failed"
         },
         {
+          "name": "full119_validation",
+          "status": "failed"
+        },
+        {
           "name": "half-width-source-review",
           "status": "passed"
         },
         {
           "name": "independent-parity",
+          "status": "unavailable"
+        },
+        {
+          "name": "independent_parity_reference",
           "status": "unavailable"
         },
         {
@@ -733,6 +745,10 @@
           "status": "unavailable"
         },
         {
+          "name": "readiness_holdout",
+          "status": "unavailable"
+        },
+        {
           "name": "regenerated-lock-bound",
           "status": "passed"
         },
@@ -789,7 +805,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "native_recipe_preparation",
+      "current_phase": "released119_candidate_preparation",
       "custody": {
         "events": [
           {
@@ -950,10 +966,24 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 24
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:25",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 25
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:26",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 26
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 24,
+        "next_sequence": 26,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1383,6 +1413,42 @@
                 ],
                 "sequence": 24,
                 "validation_findings": []
+              },
+              {
+                "action": "native_validation_pending_external_reference",
+                "custody_event_id": "event:25",
+                "observations": [
+                  "v0.119.0 published and installed; obsolete118 unsupported-adapter blocker resolved only. First released119 validate failed READINESS_BLOCKED on recorded trajectory gaps; report/private/tmp/vega-119-first-validation.json preserved and no builds ran. Domain proof requirements remain enforced; no failed check waived."
+                ],
+                "proof_refs": [
+                  "official_controller_with_native_worker",
+                  "independent_parity_reference",
+                  "readiness_holdout",
+                  "full119_validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 25,
+                "validation_findings": []
+              },
+              {
+                "action": "released119_candidate_preparation",
+                "custody_event_id": "event:26",
+                "observations": [
+                  "assets/tools/vega-native/Cargo.lock",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Normal merge of accepted release201b5044 applied cleanly after71ea7f73. Official119 init regenerated entrypoints andDocker; authored config restored from backup to preserve semantics and exclude obsolete decision none. Cargo update changed local package118to119 and reconciled edges to already locked registry versions; model/backbone/tokenizer/engine/calibration/runtime pins unchanged. Explicitly reviewed inventoryeb0e08b6. Failed119 validation report preserved, no builds ran, domain evidence blockers retained."
+                ],
+                "proof_refs": [
+                  "formatting",
+                  "full119_validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 26,
+                "validation_findings": []
               }
             ]
           }
@@ -1408,6 +1474,7 @@
         "Cargo metadata regeneration preserved immutable native Git pins and package pins except local decapod0.117; resolver updated several existing Windows/socket dependency edges, retained for ordinary validation. No model weights or native runtime installed; setup still reports runtime_installed=false.",
         "Feature source and authored spec semantics exactly equal preserved f92f19d5baa14e79f3e4ab31c27eff5ff7a3dc9d, with no new feature scope. Earlier source contains63 vega/worker test cases and9 new/reworked existing-suite cases; none executed. Prior supported dependency metadata and exact pins retained unchanged.",
         "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
+        "Normal merge of accepted release201b5044 applied cleanly after71ea7f73. Official119 init regenerated entrypoints andDocker; authored config restored from backup to preserve semantics and exclude obsolete decision none. Cargo update changed local package118to119 and reconciled edges to already locked registry versions; model/backbone/tokenizer/engine/calibration/runtime pins unchanged. Explicitly reviewed inventoryeb0e08b6. Failed119 validation report preserved, no builds ran, domain evidence blockers retained.",
         "Official published controller0.117.0 now governs; prior preparation-only candidate is no longer used. Accepted release changes only changelog and Cargo version/lock. Reviewed generated entrypoint117 fingerprints and Docker release pin; template bodies unchanged, machine projections updated only by supported CLI.",
         "Official117 first plain validate stopped before provider submission on recorded trajectory blockers. Initialization discovery still observes MODULE.bazel.lock 1052029 bytes above1048576 bound; tokenizer-only adapter removal does not alter default Bazel graph. Preserve failed observation and let ordinary controller establish next actionable report.",
         "Official119 installed from locked published crates source,VCS201b5044. Reviewed native recipe d50b0bb7 and source inventory633f90d3; original deadline regression and portable actual tensor probe authored, not executed. Original task custody and all history preserved. Independent pinned reference and separately labelled holdout remain unsupplied; no blockers waived.",
@@ -1431,7 +1498,8 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39054791735",
         "https://github.com/DecapodLabs/decapod/actions/runs/39054791735/job/117460563561",
         "https://github.com/DecapodLabs/decapod/actions/runs/39054791735/job/117460563614",
-        "https://github.com/DecapodLabs/decapod/actions/runs/39054791735/job/117460563616"
+        "https://github.com/DecapodLabs/decapod/actions/runs/39054791735/job/117460563616",
+        "v0.119.0 published and installed; obsolete118 unsupported-adapter blocker resolved only. First released119 validate failed READINESS_BLOCKED on recorded trajectory gaps; report/private/tmp/vega-119-first-validation.json preserved and no builds ran. Domain proof requirements remain enforced; no failed check waived."
       ],
       "inspected_files": [
         "assets/tools/vega-native/Cargo.toml",

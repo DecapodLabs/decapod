@@ -74,7 +74,7 @@ runs = [{ arguments = ["--probe-auto"], proof_output = true }]
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:633f90d3ee38a33d541b6798aa700b4d97e8556a797f35fc1cb5fd80cc1a2c42"
+reviewed_sources_digest = "sha256:eb0e08b60c29d04a454ae35e72eab3e25de1c4e7a5e6c439ce047556a0b7d3e5"
 
 [custody]
 isolation = "container"
