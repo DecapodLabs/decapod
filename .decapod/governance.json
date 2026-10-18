@@ -357,6 +357,11 @@
       "id": "reviewed-golden-fixture-alias",
       "summary": "Preserve exact reviewed golden-vector symlink and regular target in bounded native snapshots; reject malformed planes and unrelated links; keep fixtures/golden vectors unchanged.",
       "input_digest": "sha256:5ccb600c1b9e680d0630bb291436939e2c161e67c9e696498c0a94febb139691"
+    },
+    {
+      "id": "final-config-projection",
+      "summary": "Repair manifest config-input drift reported by Buildkite2101 using specs.refresh after final reviewed config; retain failed report and full source obligations.",
+      "input_digest": "sha256:0e0bc0d588403baef0d4d59f7a0991dde35cb73202b81d7f7cc751e3b3e1f7b7"
     }
   ],
   "intents": {
@@ -434,8 +439,12 @@
         "Current claimed task and isolated work branch",
         "Separate controller prerequisite only. Original Vega branch/task preserved and yielded to serialize exclusive claims; no candidate-controller or native Vega acceptance."
       ],
-      "artifact_hash": "sha256:57886cdcb7520388b3db50b1409b05a490476d6fb446867d203472fd0309ddf4",
+      "artifact_hash": "sha256:52b1b40fd996f57e92cf59e36e73549e92d93b2669d4ef12a4cd335e1b211cb7",
       "checks": [
+        {
+          "name": "first_validation",
+          "status": "failed"
+        },
         {
           "name": "formatting",
           "status": "passed"
@@ -445,7 +454,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "candidate_preparation",
+      "current_phase": "repair_config_projection",
       "custody": {
         "events": [
           {
@@ -466,10 +475,17 @@
             "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M56GQQ03BZZP9D6VS7NNRBHV",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M56GQQ03BZZP9D6VS7NNRBHV": {
@@ -495,6 +511,21 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "repair_config_projection",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "/private/tmp/vega-snapshot-validation-1.json; https://buildkite.com/decapodlabs/decapod/builds/2101; manifest config_input_hash drift corrected by supported specs.refresh after final inventory pin"
+                ],
+                "proof_refs": [
+                  "first_validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -503,6 +534,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/vega-snapshot-validation-1.json; https://buildkite.com/decapodlabs/decapod/builds/2101; manifest config_input_hash drift corrected by supported specs.refresh after final inventory pin",
         "Issue1457 documents released119 validation failure from original Vega task; source fixture and immutable vectors untouched."
       ],
       "inspected_files": [
