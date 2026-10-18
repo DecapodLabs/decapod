@@ -532,6 +532,14 @@
       "proof_refs": [
         "docs/vega-reference-contract.md"
       ]
+    },
+    {
+      "id": "vega-current-code-spec-reviews",
+      "summary": "Repair actual STALE_SPEC_REVIEW from sourceCI39099541876: renew all publication spec reviews against current process-owner implementation, author validation semantics and preserve failed/native-blocked history. No model, labels, calibration, source safety or required checks changed.",
+      "input_digest": "sha256:d725cb85bfc5e6b72c6d3212d22f38c05edf7717e21188e57894c9dc38cdbb7e",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/39099541876/job/117593631622"
+      ]
     }
   ],
   "intents": {
@@ -573,24 +581,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Keep model assessments in the kernel-owned worker process: nested new process groups could escape outer macOS SIGKILL. Preserve original hard execution deadline, disclose soft dispatch cutoff and cumulative RSS.",
+          "reason": "Review current660974b4 implementation and authored validation recovery semantics: evaluation retains original kernel process/deadline, separates label authority and numeric acceptance, and records cumulative RSS; existing specification prose remains accurate. Renew current-code binding after actual STALE_SPEC_REVIEW failure; no native execution or calibration success claimed.",
           "reviewed_code_fingerprint": "92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3",
           "spec_material_hash": "dbaf21d4315585b899281c8348f453676a14830b4d5d3b745cb51aea4fd854cd"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Correct evaluation resource/deadline semantics before execution: direct fresh-state assessments, proof/outcome binding, original hard kernel budget and soft new-dispatch cutoff.",
+          "reason": "Review current660974b4 implementation and authored validation recovery semantics: evaluation retains original kernel process/deadline, separates label authority and numeric acceptance, and records cumulative RSS; existing specification prose remains accurate. Renew current-code binding after actual STALE_SPEC_REVIEW failure; no native execution or calibration success claimed.",
           "reviewed_code_fingerprint": "92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3",
           "spec_material_hash": "e221d162dccb31311441f2843aac820630b00231da448d06c3877a52299f5923"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Existing private bounded child execution, verified immutable assets, no credential inheritance and deterministic-authority boundaries apply unchanged. This challenge-set runner never creates proof receipts or publication authority and does not claim production calibration or fallback routing.",
-          "reviewed_code_fingerprint": "e558ac556d1b2a551df05d28130cf325186482e39960fcbb4e831ae2ab1b86b1",
+          "reason": "Review current660974b4 implementation and authored validation recovery semantics: evaluation retains original kernel process/deadline, separates label authority and numeric acceptance, and records cumulative RSS; existing specification prose remains accurate. Renew current-code binding after actual STALE_SPEC_REVIEW failure; no native execution or calibration success claimed.",
+          "reviewed_code_fingerprint": "92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3",
           "spec_material_hash": "e662013621a917085bf3f02b57a7420ea4e07b824f0bbe82c8ddbdeabf2918da"
         }
       ],
@@ -604,7 +612,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792300103Z"
+      "updated_at": "1792300823Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -615,7 +623,7 @@
         "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation.",
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting."
       ],
-      "artifact_hash": "sha256:8de2657087490d07776e03d90f8a54928aeae8a33b8c0973638e60ebfa872a7d",
+      "artifact_hash": "sha256:91964465a553be1f22221fdd7bfdf0425aff965da2793890d82e9c69239d14f2",
       "blockers": [
         "Released119 native snapshot rejects the existing immutable golden fixture symlink; no supported additional alias review command exists. Native build/probe/model/reference/evaluation remain unexecuted pending an accepted released repair; do not alter the fixture or use a candidate controller."
       ],
@@ -690,6 +698,10 @@
         },
         {
           "name": "full_validation_4de86774",
+          "status": "failed"
+        },
+        {
+          "name": "governance_ci",
           "status": "failed"
         },
         {
@@ -881,7 +893,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "evaluation-process-review",
+      "current_phase": "repair-current-spec-review",
       "custody": {
         "events": [
           {
@@ -1098,10 +1110,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 32
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:33",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 33
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 32,
+        "next_sequence": 33,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1682,6 +1701,23 @@
                 ],
                 "sequence": 32,
                 "validation_findings": []
+              },
+              {
+                "action": "repair-current-spec-review",
+                "custody_event_id": "event:33",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/39099541876/job/117593631622",
+                  "Actual CI error STALE_SPEC_REVIEW SECURITY.md or code changed after review; Architecture/Interfaces were current, Security needed supported current-code review after660974b4. Re-reviewed Security unchanged-with-reason and refreshed projections, retaining all failures and native-release blocker."
+                ],
+                "proof_refs": [
+                  "governance_ci",
+                  "native_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 33,
+                "validation_findings": []
               }
             ]
           }
@@ -1707,6 +1743,7 @@
         "/private/tmp/vega-119-current-validation.json retains the earlier pre-execution failure",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
+        "Actual CI error STALE_SPEC_REVIEW SECURITY.md or code changed after review; Architecture/Interfaces were current, Security needed supported current-code review after660974b4. Re-reviewed Security unchanged-with-reason and refreshed projections, retaining all failures and native-release blocker.",
         "Actual plain117 third report requires inventory reconciliation. Compared all discovered sources against accepted396f: only Cargo.toml/Cargo.lock/MODULE.bazel.lock changed plus four new native worker files; existing workflows/actions/executor helpers unchanged. Reviewed actual dependency and worker boundary, then explicitly updated only human-editable required-profile reviewed_sources_digest from supported agent.init inventory. No profile/provider/check graph change and no test execution claimed.",
         "Authored frozen-case Rust evaluation, explicit absolute-deadline inference children, omission of label/split/variant/rationale metadata, grouped exact binomial risk and all-case coverage. Synthetic tests protect small-sample risk, related-unit counts, errors versus abstention and expired dispatch; these tests are not executed until the required native recipe runs. Corpus split/calibration/tolerances unchanged; final added evaluation run remains non-accepting with current label authority and23units.",
         "Cargo metadata regeneration preserved immutable native Git pins and package pins except local decapod0.117; resolver updated several existing Windows/socket dependency edges, retained for ordinary validation. No model weights or native runtime installed; setup still reports runtime_installed=false.",
@@ -1742,6 +1779,7 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39054791735/job/117460563614",
         "https://github.com/DecapodLabs/decapod/actions/runs/39054791735/job/117460563616",
         "https://github.com/DecapodLabs/decapod/actions/runs/39091789504",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39099541876/job/117593631622",
         "v0.119.0 published and installed; obsolete118 unsupported-adapter blocker resolved only. First released119 validate failed READINESS_BLOCKED on recorded trajectory gaps; report/private/tmp/vega-119-first-validation.json preserved and no builds ran. Domain proof requirements remain enforced; no failed check waived."
       ],
       "inspected_files": [

@@ -14,6 +14,8 @@ failures, and revalidate. Human decisions and unavailable proof remain explicit
 blockers. Human onboarding requires only installation and initialization; the
 agent performs validation and coordination.
 
+Publication spec reviews bind current code as well as authored prose (`workspace_publication.rs`, `STALE_SPEC_REVIEW`). After changing implementation, re-review Architecture, Interfaces and Security against that final source even when a specification remains semantically unchanged; record the reason through the supported command. Refreshing fingerprints does not renew that review. Vega candidate `660974b4` failed source CI `39099541876` because Security retained the review from before the process-owner correction. Its failed run remains evidence; a current-content review and a new checkpoint repair the head without rewriting history or claiming unexecuted native tests passed.
+
 ## Runtime recovery proof obligations
 
 The durability slice requires adversarial proof at real domain boundaries:
