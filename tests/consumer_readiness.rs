@@ -209,6 +209,7 @@ impl Fixture {
                 reviewed_sources_digest: sources.digest().unwrap(),
             }),
             repository_contract: Some(contract),
+            rust_workers: None,
             ci_attested: None,
             commands,
         };

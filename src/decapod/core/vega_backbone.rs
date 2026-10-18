@@ -101,6 +101,43 @@ fn verify_probe_output(actual: &[f32]) -> Result<[f32; 8]> {
     Ok(verified)
 }
 
+/// Real CPU tensor dispatch for portable capability diagnostics. This neither
+/// reports Metal execution nor establishes checkpoint/fallback equivalence.
+pub fn probe_cpu() -> Result<MetalProbe> {
+    use candle_core::{Device, Tensor};
+    let start = std::time::Instant::now();
+    let device = Device::Cpu;
+    let compute = |error: candle_core::Error| BackboneError::Compute(error.to_string());
+    let left = Tensor::from_vec(PROBE_LEFT.to_vec(), (8,), &device).map_err(compute)?;
+    let right = Tensor::from_vec(PROBE_RIGHT.to_vec(), (8,), &device).map_err(compute)?;
+    let output = left
+        .mul(&right)
+        .and_then(|product| product.add(&left))
+        .map_err(compute)?;
+    device.synchronize().map_err(compute)?;
+    let actual = verify_probe_output(&output.to_vec1::<f32>().map_err(compute)?)?;
+    Ok(MetalProbe {
+        schema: "decapod.vega-device-probe.v1",
+        status: "passed",
+        backend: Backend::Cpu.runtime(),
+        device: Backend::Cpu.device(),
+        device_name: format!("{} CPU", std::env::consts::ARCH),
+        device_ordinal: 0,
+        dtype: "f32",
+        operation: "left * right + left",
+        left: PROBE_LEFT,
+        right: PROBE_RIGHT,
+        expected: PROBE_EXPECTED,
+        actual,
+        synchronized: true,
+        bit_exact: true,
+        wall_clock_ms: start.elapsed().as_secs_f64() * 1000.0,
+        timing_scope: "CPU allocation, tensor arithmetic and numerical readback",
+        candle_source_revision: CANDLE_SOURCE_REVISION,
+        parity: "unverified",
+    })
+}
+
 /// A single boolean prompt, in the exact flat order consumed by FeatureBatch.
 /// Only these small pooled vectors cross from Metal to host memory.
 #[derive(Debug, Clone)]

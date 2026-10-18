@@ -509,8 +509,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
+- Repository signal fingerprint: `fcc58a4d0ae4c739b1f0f1a2682be685cdd4e673c6be911f3aae4bd05a346ec1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -613,3 +613,36 @@ empty loader exit 127 requires the separate CPU pin. Invalid reports and all
 other process/numerical failures remain non-ready. Every attempt stays within
 the same deadline and immutable model/calibration binding. These source changes
 are not yet executed native evidence.
+
+## Supplemental Rust worker verification
+
+For issue #1445, the combined order is complete source validation, required
+native worker tests/runs, fresh deterministic source/target verification, then
+Vega assessment and another freshness check. A worker failure returns before
+Vega runs. The assessment cannot turn native or source failure into a pass.
+Supplemental discovery receives the outer absolute deadline; its 120-second
+discovery cap can shorten that deadline but cannot restart the original budget.
+
+`validation_runtime::rust_worker` adds a required supplemental phase to the strict
+source profile. `run` first verifies the full primary source verdict, then executes
+every configured worker test/run through the existing `native_proof` immutable
+snapshot and bounded process runner. It independently recaptures source, policy,
+primary tooling and a fresh accepted-target observation afterwards before final
+readiness. A native failure leaves private failure evidence and keeps readiness
+false. No alternate source profile or partial-source publication route is added.
+
+`proof.rust_workers` contains reviewed relative Cargo manifests, features and run
+arguments. Installed Rust/Cargo/linker discovery remains controller-owned; shared
+recipes contain no installed tool paths. Cargo tests and runs use `--release` and
+`--locked`, fresh private HOME/CARGO_HOME, and an owned target directory outside
+source. Snapshot source and original Git refs/index remain protected. Optional
+Metal-toolchain inventory on macOS measures xcrun, selected metal/metallib tools
+and macOS/iOS SDK metadata. These measurements identify the declared compiler
+closure, not every OS/runtime dependency or physical GPU execution.
+
+The supplemental subplan reuses the existing local-command evidence kind/verifier
+inside an independently preserved outer strict source plan. It is never a
+replacement `repo.pr-readiness.v1` project selection. Only trusted compiled hosts
+can provide the existing native external-action authorizer. Recipe declarations
+and worker outputs cannot mint that authority. Numerical/model claims still need
+their independent reference and evaluation evidence.

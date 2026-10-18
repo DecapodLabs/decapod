@@ -647,8 +647,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
+- Repository signal fingerprint: `fcc58a4d0ae4c739b1f0f1a2682be685cdd4e673c6be911f3aae4bd05a346ec1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -773,3 +773,54 @@ coverage remains required. Rustfmt and whitespace checks pass; these are not
 executed Rust tests. Actual loader fallback, native worker compilation, Metal
 probe/model inference, independent backbone parity and readiness holdout proof
 remain outstanding and must run through the accepted released controller.
+
+## Supplemental Rust worker verification
+
+Official v0.119.0 was published and installed from its locked crates.io package;
+its VCS identity is release commit `201b504485d64f9a09a7fc0e0560fdff035e8daf`.
+The separate worker recipe now requires native tests and a private automatic
+capability diagnostic. Source CI, successful compilation and CPU arithmetic
+remain distinct from Metal/model/parity/calibration verification.
+
+The candidate corrects #1455's supplemental discovery deadline overrun by
+passing the original absolute deadline into discovery. A regression compiles
+and launches a real Rust slow probe with half a second left of an original
+120-second budget; it requires dispatch, interrupted execution, and refusal to
+start any probe after expiry. That test is authored and remains unexecuted until
+the prescribed current-candidate validation runs. The installed v0.119.0
+controller still has its released discovery implementation; candidate source
+does not replace its authority.
+
+The supplemental Rust-worker prerequisite must pass plain official-controller
+`decapod validate` with its new recipe inactive. It must not use an unmerged
+candidate controller to validate or activate itself. Preserve all strict source
+checks, current accepted-target identity, failures and normal branch history.
+
+New regression obligations cover malformed/oversized/duplicate recipes, stale
+review pins, accepted-recipe removal/reinterpretation, relative path aliases and
+escape attempts, argv separation, proof-output destination control, and finite
+read-only Metal tool probes. A real dependency-free Rust fixture must compile,
+test and execute through the immutable runner, retain a private JSON diagnostic,
+preserve an intentional failure, stop dependent runs and leave original source
+and Git state unchanged. That fixture is CPU arithmetic, not fake Metal, a model
+oracle or calibration data. The real Rust fixture passed in the first candidate source CI, including preserved
+intentional failure and source/ref integrity. The first candidate ran the remaining
+regressions in source CI; its private-output
+permission fixture failed because the general storage check permits read access.
+A stricter proof-only privacy check and its new variant regression require rerun.
+The same attempt also found a malformed fixture insertion and a Clippy failure.
+Its full validation remained non-ready (Buildkite 2032); prior evidence is retained.
+Existing native-runner regressions remain required for source/tool/target drift,
+timeout, cancellation, output limits and cleanup. Actual Vega Metal/model/parity
+and independent readiness holdout measurements remain separate issue #1445 gates.
+
+### Permanent recovery provenance
+
+The prepared source was carried from `d8cc8305d1e06c7d7f761ba8e7699a2e1b0d9d8c`
+after its branch was rejected for the missing historical checkpoint in
+`a31ac5d1377e5c11f268f7952753543d46261b15`. The rejected branch, full
+Buildkite 2032/2042 failures and source-CI history remain preserved. The human
+authorized this permanent replacement PR branch under the same prerequisite task.
+No old governance identity/checkpoints were imported or retrospectively asserted.
+Fresh governance and released-controller validation must bind this exact candidate;
+prior passing code jobs do not establish its publication readiness.

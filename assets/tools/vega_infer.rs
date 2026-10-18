@@ -124,15 +124,41 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         );
         return Ok(());
     }
-    if args.len() == 1 && args[0] == "--probe" {
-        println!("{}", serde_json::to_string(&vega_backbone::probe_metal()?)?);
+    if matches!(args.len(), 1 | 3)
+        && (args[0] == "--probe" || args[0] == "--probe-auto")
+        && (args.len() == 1 || args[1] == "--proof-output")
+    {
+        let proof = if args[0] == "--probe" {
+            serde_json::to_value(vega_backbone::probe_metal()?)?
+        } else {
+            let preferred = vega_readiness::BackendPreference::Auto.resolve();
+            let (probe, fallback) = match vega_backbone::probe_backend(preferred) {
+                Ok(probe) => (probe, None),
+                Err(vega_backbone::BackboneError::HardwareUnavailable(reason)) => {
+                    (vega_backbone::probe_cpu()?, Some(reason))
+                }
+                Err(error) => return Err(error.into()),
+            };
+            serde_json::json!({
+                "schema":"decapod.vega-auto-probe.v1",
+                "preferred_backend":preferred,
+                "cpu_fallback_reason":fallback,
+                "probe":probe,
+                "model_inference":"not_executed",
+                "parity":"unverified"
+            })
+        };
+        if args.len() == 3 {
+            write_private_proof(Path::new(&args[2]), &proof)?;
+        }
+        println!("{}", serde_json::to_string(&proof)?);
         return Ok(());
     }
     if !matches!(args.len(), 2 | 4)
         || args[0] != "--request"
         || (args.len() == 4 && args[2] != "--proof-output")
     {
-        return Err("usage: decapod-vega-infer --probe | --backend-check <metal|cuda> | --request <private-json> [--proof-output <new-private-json> (PRIVATE, maximum 1 MiB)]".into());
+        return Err("usage: decapod-vega-infer --probe | --probe-auto | --backend-check <metal|cuda> | --request <private-json> [--proof-output <new-private-json> (PRIVATE, maximum 1 MiB)]".into());
     }
     let request: Request = serde_json::from_slice(&read_bounded(Path::new(&args[1]), 64 * 1024)?)?;
     if request.schema != vega_readiness::WORKER_SCHEMA

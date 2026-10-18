@@ -552,8 +552,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
+- Repository signal fingerprint: `fcc58a4d0ae4c739b1f0f1a2682be685cdd4e673c6be911f3aae4bd05a346ec1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -611,3 +611,42 @@ Unknown fields, contradictory status, wrong schema/backend and compute errors
 are rejected. A successful capability check is not a readiness verdict.
 `BackendAttempt` records capability/inference phase and executable SHA-256; the
 receipt's runtime pin identifies the final selected inference executable.
+
+## Supplemental Rust worker verification
+
+The Vega work branch selects a reviewed `vega-native` recipe using the separate
+`assets/tools/vega-native/Cargo.toml` and its lock. Tests precede
+`--probe-auto --proof-output <private-controller-path>`. Automatic capability
+diagnostics select Metal on Apple or CUDA elsewhere, with real CPU tensor
+arithmetic only after typed hardware unavailability. The JSON names the selected
+backend and fallback reason and explicitly says model inference was not executed.
+The explicit `--probe` remains a Metal-only check with no CPU retry.
+
+Optional `[proof.rust_workers]` has `reviewed_recipes_digest` and `workers`.
+Each worker has a unique `name` and a repository-relative `manifest` ending in
+`Cargo.toml`, explicit `timeout_seconds` (1–1800 per test/run), `features` (default
+empty), `metal_toolchain` (default false) and nonempty `runs`. Each run has literal
+`arguments` and optional `proof_output` (default false). The controller always runs
+the worker's tests first. Run arguments follow Cargo's `--` separator. The worker
+must be a separately locked Cargo workspace with explicit `package.rust-version`.
+A manifest may have distinct feature-set variants; exact or reordered duplicate
+variants are rejected. Each variant has independent build scratch. At most four workers, sixteen unique simple feature names and eight runs per
+worker are accepted, with bounded argument counts/bytes and the original overall
+validation deadline. Paths, duplicate declarations, unsupported fields and stale
+review pins fail closed. An accepted recipe cannot be removed or changed by a
+candidate; additional recipes only add required proof.
+
+`rpc agent.init` reports `rust_worker_recipes_digest` as a read-only review aid.
+It neither writes nor approves the recipe pin. Init refresh retains authored
+recipes. A configured recipe requires the strict Decapod source profile and the
+complete existing source proof before native execution. Absent host authorization
+is an explicit unsupported-adapter error. This prerequisite's installed controller
+continues to be v0.118.0; candidate support cannot authorize its own adoption.
+
+`proof_output=true` appends `--proof-output <fresh-private-path>` to that run. The
+controller retains a bounded private JSON object (at most 1 MiB), hashes it, and
+retains command stdout/stderr, timing, termination and failures under the existing
+validation evidence directory. A run cannot supply its own output destination.
+This is diagnostic custody, not independent validation of model semantics. The
+outer validation report is the only publication-readiness result; supplemental
+command records explicitly carry `publication_ready=false`.

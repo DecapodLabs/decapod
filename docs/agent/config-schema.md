@@ -107,6 +107,56 @@ An authored `.decapod/EXTERNAL_ACTIONS.json` remains authoritative: an explicit
 fails closed, and a present policy must explicitly allow proof execution. The
 kernel never rewrites that policy to make a check pass.
 
+## Supplemental Rust workers
+
+A release containing `proof.rust_workers` supports required native Rust worker
+verification after the full strict Decapod source profile passes. It does not
+replace source CI, select the repository-local profile, install a controller or
+authorize publication from a worker response. This source extension must first
+be independently accepted and released before another feature uses it.
+
+```toml
+[proof.rust_workers]
+reviewed_recipes_digest = "sha256:<reviewed recipe digest>"
+
+[[proof.rust_workers.workers]]
+name = "native-worker"
+manifest = "assets/tools/native-worker/Cargo.toml"
+features = []
+metal_toolchain = true
+timeout_seconds = 900
+runs = [{ arguments = ["--probe"], proof_output = false }]
+```
+
+The manifest must be committed, declare a separate `[workspace]` and an explicit
+`package.rust-version`, and have a committed sibling Cargo.lock. The controller
+selects the installed Rust toolchain, runs locked release tests and each configured
+run with literal arguments after Cargo's `--`, in an immutable source snapshot.
+Shared recipes contain no installed tool paths. `agent.init` reports
+`rust_worker_recipes_digest` as a read-only review aid; inspect the recipe before
+explicitly updating its pin. Init preserves authored recipes. Accepted recipes
+cannot be removed or changed by candidate policy; new recipes add required checks.
+
+Workers have unique names. One manifest can have distinct feature-set variants
+(for example CPU and CUDA); duplicate variants, including reordered features, fail.
+Each variant uses its own target directory. Limits are four workers, eight runs per worker, sixteen unique feature names,
+64 arguments/16 KiB per run, 4 KiB per argument and 1–1800 seconds per test/run.
+The original validation deadline bounds the entire operation. Tool discovery does
+not install Rust or copy an authenticated Cargo home. Optional Metal inventory on
+macOS measures selected tools and macOS/iOS SDK metadata; it does not prove GPU
+dispatch. This remains the existing reviewed-source execution model, without an
+OS sandbox against malicious build scripts or attestation of every OS dependency.
+
+`proof_output = true` appends a fresh private `--proof-output` destination. The
+worker must write a nonempty JSON object of at most 1 MiB using private regular
+file permissions and a single link. Missing, unsafe or malformed diagnostics
+fail the phase. Private command output, timing, termination, failure observations
+and diagnostic hashes remain under the validation evidence directory. Their
+`publication_ready=false` scope cannot replace the outer complete validation
+result. Source, policy, tools and a fresh accepted target are rechecked after the
+phase. Numeric/model claims still need independent reference and calibration
+evaluation evidence; command success alone establishes neither.
+
 ## Optional CI-attested validation policy
 
 `proof.ci_attested` selects provider-attested validation instead of execution
@@ -127,9 +177,9 @@ claim measured remote binary, toolchain, log or output hashes. A successful
 CI-local validation job alone does not satisfy the complete required profile.
 
 This optional controller capability requires a separately reviewed, accepted job
-mapping before activation. This bootstrap change does not enable it. The PR's
-direct test results are disclosed as a one-time maintainer-approved bootstrap,
-not a successful full validation verdict from the previously released controller.
+mapping before activation. Its historical rollout exception does not authorize
+later changes. New prerequisites and features must pass normal full validation
+using an independently supported released controller before publication.
 
 Validation establishes whether the agent's work has converged on the user's
 declared intent and satisfies the conditions for integration. Its assurance is

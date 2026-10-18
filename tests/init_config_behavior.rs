@@ -1334,11 +1334,35 @@ fn init_refresh_preserves_buildkite_provider_and_structured_proofs() {
             }))
             .expect("required proof definition"),
         ]);
+        let workers = vec![decapod::core::validation_runtime::rust_worker::Worker {
+            name: "uninstalled".into(),
+            manifest: "assets/tools/uninstalled/Cargo.toml".into(),
+            features: vec![],
+            metal_toolchain: false,
+            runs: vec![decapod::core::validation_runtime::rust_worker::Run {
+                arguments: vec!["--probe".into()],
+                proof_output: false,
+            }],
+            timeout_seconds: 60,
+        }];
+        config["proof"].as_table_mut().unwrap().insert(
+            "rust_workers".into(),
+            toml::Value::try_from(
+                decapod::core::validation_runtime::rust_worker::Configuration {
+                    reviewed_recipes_digest:
+                        decapod::core::validation_runtime::rust_worker::recipe_digest(&workers)
+                            .unwrap(),
+                    workers,
+                },
+            )
+            .unwrap(),
+        );
         let expected = config["proof"].clone();
         fs::write(&path, toml::to_string_pretty(&config).unwrap())
             .expect("write structured config");
         assert_init_success(project.path(), &args);
         assert_eq!(read_init_proof_config(project.path()), expected);
+        assert!(!project.path().join("assets/tools/uninstalled").exists());
     }
 }
 

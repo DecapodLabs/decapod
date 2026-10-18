@@ -326,6 +326,11 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "native-discovery-deadline": {
+      "statement": "Supplemental Rust discovery shares the original absolute validation deadline.",
+      "falsifier": "A near-expired real Rust slow probe obtains a fresh discovery budget or launches after expiry.",
+      "status": "open"
+    },
     "vega-native-acceptance": {
       "statement": "Native Apple-arm64 compilation, real Metal numerical execution, independent pinned-upstream parity, readiness-domain calibration and measured latency/memory are required before feature acceptance; source preparation establishes none of them.",
       "falsifier": "Source-only review, metadata generation, platform labels, synthetic outputs or missing measurements are represented as native/parity/calibration/performance acceptance.",
@@ -487,6 +492,11 @@
         "src/decapod/core/vega_runtime.rs",
         "src/decapod/core/vega_setup.rs"
       ]
+    },
+    {
+      "id": "native119-integration",
+      "summary": "Integrate accepted1455 before Vega, configure reviewed native worker recipe and propagate the absolute discovery deadline; real slow-probe regression authored, native/model/parity/calibration evidence outstanding.",
+      "input_digest": "sha256:5c2f7aebfe325be14a10609b639ba718877a2eca449f97a5067e10d674357ec2"
     }
   ],
   "intents": {
@@ -533,23 +543,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed frozen private CPU companion pins, model-free GPU startup, strict loader-only/typed hardware fallback, deadline and receipt identity. Malformed/numerical/negative/abstaining inference remains final non-ready; no source authority changes, new-controller adoption or native/parity/calibration claims. New tests require execution.",
-          "reviewed_code_fingerprint": "7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3",
-          "spec_material_hash": "8eca11774f2058d52189afc701faa41a6ef2cc53397fd245e698d6c0ec69a78b"
+          "reason": "Accepted native-worker checks precede Vega assessment; original deadline carries through discovery. Actual Metal/model, independent parity and labelled holdout evidence remain required and outstanding.",
+          "reviewed_code_fingerprint": "fcc58a4d0ae4c739b1f0f1a2682be685cdd4e673c6be911f3aae4bd05a346ec1",
+          "spec_material_hash": "eb53334fcd43a6fff3bd3021c48038ac492ef65a078540fa10ec969aa8060e75"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed frozen private CPU companion pins, model-free GPU startup, strict loader-only/typed hardware fallback, deadline and receipt identity. Malformed/numerical/negative/abstaining inference remains final non-ready; no source authority changes, new-controller adoption or native/parity/calibration claims. New tests require execution.",
-          "reviewed_code_fingerprint": "7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3",
-          "spec_material_hash": "034935179e57fe29ae7c2db7182d752a9428a26558486a69b526596a16138e81"
+          "reason": "Reviewed native recipe and strict source-before-native-before-Vega ordering; actual model execution and independent parity/calibration remain outstanding.",
+          "reviewed_code_fingerprint": "fcc58a4d0ae4c739b1f0f1a2682be685cdd4e673c6be911f3aae4bd05a346ec1",
+          "spec_material_hash": "942fbaa0ce5aef13ddf4f420a4d051bdf2102082dba0c410caa5676d8a58a6ee"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed frozen private CPU companion pins, model-free GPU startup, strict loader-only/typed hardware fallback, deadline and receipt identity. Malformed/numerical/negative/abstaining inference remains final non-ready; no source authority changes, new-controller adoption or native/parity/calibration claims. New tests require execution.",
-          "reviewed_code_fingerprint": "7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3",
-          "spec_material_hash": "75b41128904305448d1fbda9d60708781ec16a62a5dae01512483fdb5399dd39"
+          "reason": "Reviewed absolute deadline propagation, private diagnostics, typed hardware-only fallback and preserved deterministic proof authority; no native or calibration claim is asserted.",
+          "reviewed_code_fingerprint": "fcc58a4d0ae4c739b1f0f1a2682be685cdd4e673c6be911f3aae4bd05a346ec1",
+          "spec_material_hash": "e662013621a917085bf3f02b57a7420ea4e07b824f0bbe82c8ddbdeabf2918da"
         }
       ],
       "state": "APPROVED",
@@ -563,7 +573,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792284189Z"
+      "updated_at": "1792290419Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -572,7 +582,7 @@
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb",
         "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation."
       ],
-      "artifact_hash": "sha256:09e9e07f529c176403bca76a41f67de5ea26c32d944f81f11ce8ae906635e620",
+      "artifact_hash": "sha256:8eb15bfb182066dafbeefdd693b5ec128fa83f74781292a84a7d000cb3c11849",
       "blockers": [
         "Independent pinned backbone/pooling reference and readiness holdout not supplied; existing 2050 upstream choice results lack required raw features/readiness labels.",
         "Released v0.118 strict source contract lacks a supplemental host worker build/test/probe/inference recipe; generic proof CLI resolves canonical root, not task workspace. Independent accepted/released adapter required; no profile downgrade or candidate self-authorization."
@@ -691,12 +701,24 @@
           "status": "unavailable"
         },
         {
+          "name": "native_worker_execution",
+          "status": "unavailable"
+        },
+        {
           "name": "official-controller117-checksum",
+          "status": "passed"
+        },
+        {
+          "name": "official_controller_with_native_worker",
           "status": "passed"
         },
         {
           "name": "ordinary-feature-build-tests",
           "status": "unavailable"
+        },
+        {
+          "name": "original_custody",
+          "status": "passed"
         },
         {
           "name": "portable_library_tests_24c706f5",
@@ -767,7 +789,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "cpu-startup-source-prepared",
+      "current_phase": "native_recipe_preparation",
       "custody": {
         "events": [
           {
@@ -914,10 +936,24 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 22
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:23",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 23
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:24",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 24
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 22,
+        "next_sequence": 24,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1309,6 +1345,44 @@
                 "validation_findings": [
                   "New companion binding/probe/classifier/receipt changes and regressions authored, no Rust tests executed for this candidate. Actual worker build/Metal/model/parity/calibration unavailable under current released native-proof contract; no manual build, shadow preflight, Python or artifact workaround used. Preserved native/reference/holdout blockers. Prerequisite5cee green but publication awaits public API rate reset; its candidate controller is not adopted."
                 ]
+              },
+              {
+                "action": "accepted_native_support_integration",
+                "command": "git merge --no-commit origin/master",
+                "custody_event_id": "event:23",
+                "observations": [
+                  "src/decapod/core/validation_runtime/rust_worker.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_runtime/rust_worker.rs",
+                  "src/decapod/core/validation_runtime/tests.rs",
+                  "Original task transfer already completed; original task claimed via supported CLI and same workspace ensured. Accepted master ae9094de contains1455. GitHub latest published118 and crates sparse index118; release PR1456 open. Existing feature0c sourceCI39083822922 passed,1448library tests. Source merge and near-expired actual Rust slow-probe regression authored, not yet executed."
+                ],
+                "proof_refs": [
+                  "official_controller_with_native_worker",
+                  "original_custody"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 23,
+                "validation_findings": []
+              },
+              {
+                "action": "native_recipe_preparation",
+                "custody_event_id": "event:24",
+                "observations": [
+                  "Official119 installed from locked published crates source,VCS201b5044. Reviewed native recipe d50b0bb7 and source inventory633f90d3; original deadline regression and portable actual tensor probe authored, not executed. Original task custody and all history preserved. Independent pinned reference and separately labelled holdout remain unsupplied; no blockers waived."
+                ],
+                "proof_refs": [
+                  "official_controller_with_native_worker",
+                  "native_worker_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 24,
+                "validation_findings": []
               }
             ]
           }
@@ -1324,7 +1398,8 @@
         "decapod init --refresh --proof; compare legacy backup template bodies and preserve backups outside workspace",
         "git diff --cached --check",
         "git diff --cached --quiet f92f19d5 -- . :(exclude).decapod",
-        "git fetch origin refs/tags/v0.116.0:refs/tags/v0.116.0 refs/tags/v0.117.0:refs/tags/v0.117.0; cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod-vega-infer"
+        "git fetch origin refs/tags/v0.116.0:refs/tags/v0.116.0 refs/tags/v0.117.0:refs/tags/v0.117.0; cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod-vega-infer",
+        "git merge --no-commit origin/master"
       ],
       "destination": "pull request",
       "evidence": [
@@ -1335,7 +1410,9 @@
         "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
         "Official published controller0.117.0 now governs; prior preparation-only candidate is no longer used. Accepted release changes only changelog and Cargo version/lock. Reviewed generated entrypoint117 fingerprints and Docker release pin; template bodies unchanged, machine projections updated only by supported CLI.",
         "Official117 first plain validate stopped before provider submission on recorded trajectory blockers. Initialization discovery still observes MODULE.bazel.lock 1052029 bytes above1048576 bound; tokenizer-only adapter removal does not alter default Bazel graph. Preserve failed observation and let ordinary controller establish next actionable report.",
+        "Official119 installed from locked published crates source,VCS201b5044. Reviewed native recipe d50b0bb7 and source inventory633f90d3; original deadline regression and portable actual tensor probe authored, not executed. Original task custody and all history preserved. Independent pinned reference and separately labelled holdout remain unsupplied; no blockers waived.",
         "Ordinary same-branch push succeeded at08a46639. Plain117 fifth report stops SNAPSHOT_UPLOAD_INCOMPLETE because only local v0.116.0 and v0.117.0 tags were missing. Fetched those existing published tags normally, no force or remote tag mutation; complete tag maps now match and117 peels to accepted396f. Real exact-head CI reports E0277 setup report JSON conversion and cargo-machete unused sha2/thiserror. Repaired explicit DecapodError serialization mapping, removed genuinely unused worker sha2, retained used path-included BackboneError thiserror with precise scanner exception. Worker lock regeneration changes only removed direct sha2 edge. Repaired-head execution remains pending.",
+        "Original task transfer already completed; original task claimed via supported CLI and same workspace ensured. Accepted master ae9094de contains1455. GitHub latest published118 and crates sparse index118; release PR1456 open. Existing feature0c sourceCI39083822922 passed,1448library tests. Source merge and near-expired actual Rust slow-probe regression authored, not yet executed.",
         "Plain0.118 c78b5eb6 first attempt failed GitTransport128 before CI, evidence decapod-snapshot-OZ7aJg. Exact normal SSH push succeeded; second full validation reached Buildkite and failed standalone validation build1994 uuid01a14a84-192c-4ab4-b2b4-e1b945e70136, evidence decapod-snapshot-NxBsV0. GHA39045963267 job117434624175 proves project prerequisite pass189/fail0 but regenerated118 entrypoints, Dockerfile and manifest left tracked drift. Required job exit1 retained. Supported govern project-check --refresh-specs regenerated local projections; local prerequisite observation pass202/fail2 includes host container_workspace_required and is not source/readiness proof. Clippy job117434726646 passed for repaired Rust source. No other unexecuted test or native result is claimed. Commit actual generated projection repair and repeat full validation.",
         "Plain117 fourth validation reached GitTransport and exited128 before provider execution. Normal configured-helper ls-remote succeeds and feature remote branch is absent; no credential extraction or settings change. Static review confirmed committed binary16 mantissa already explicitly cast to u32; use u32::from for clarity, preserve normalization and expand signed zero/subnormal/normal/Inf/NaN assertions. No test execution or numerical parity claimed.",
         "Plain117 second validation stopped PROOF_DISCOVERY_BLOCKED on MODULE.bazel.lock1052029 bytes. Moved unchanged SafeTensors decoder/half conversion and fixtures to sole native owner; root retains typed engine/header/GELU tests and checked schema. Supported metadata regeneration now gives1037341 bytes below1048576. Root graph removes only safetensors0.7/hashbrown0.16/foldhash/allocator-api2; native retains pinned SafeTensors0.7 and immutable model/source pins. Cargo reports0 package additions/updates, but reselects existing socket2/getrandom/Windows dependency edges; retain generator output for actual validation rather than hand-edit locks.",
@@ -1361,6 +1438,7 @@
         "docs/agent/repository-readiness.md",
         "src/decapod/core/proof.rs",
         "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/rust_worker.rs",
         "src/decapod/core/vega_readiness.rs",
         "src/decapod/core/vega_runtime.rs",
         "src/decapod/core/vega_setup.rs"
@@ -1375,6 +1453,8 @@
         "assets/tools/vega_infer.rs",
         "src/decapod/cli.rs",
         "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/rust_worker.rs",
+        "src/decapod/core/validation_runtime/tests.rs",
         "src/decapod/core/vega_backbone.rs",
         "src/decapod/core/vega_readiness.rs",
         "src/decapod/core/vega_runtime.rs",

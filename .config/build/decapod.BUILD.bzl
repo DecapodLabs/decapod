@@ -236,10 +236,12 @@ def decapod_targets():
             # crash recovery and launch probes. Individual client waits remain
             # bounded; retain a finite aggregate budget for their stage evidence.
             timeout = "long" if path == "tests/group_broker.rs" else "moderate",
-            # These suites exercise real bounded validation/process behavior.
-            # Rust's test-threads flag does not isolate concurrent Bazel targets;
-            # keep their unchanged finite budgets free of sibling test load.
-            tags = ["exclusive"] if path in ["tests/validate_termination.rs", "tests/cli_contract_enforcement.rs"] else [],
+            # This suite asserts uncontended process wall-clock budgets. Rust's
+            # test-threads flag alone does not isolate concurrent Bazel targets.
+            tags = ["exclusive"] if path in [
+                "tests/validate_termination.rs",
+                "tests/cli_contract_enforcement.rs",
+            ] else [],
             srcs = [path] + [
                 "tests/consumer_readiness.rs",
                 "tests/init_ci_scaffolding.rs",

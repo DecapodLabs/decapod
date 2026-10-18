@@ -114,6 +114,7 @@ pub struct SnapshotHost<'a, R: Runner> {
     public_buildkite: Option<PublicBuildkiteReader<'a>>,
     buildkite_contract: Option<ReviewedBuildkiteImporter>,
     evidence_directory: Option<PathBuf>,
+    rust_worker_authorizer: Option<NativeAuthorizer<'a>>,
 }
 impl<'a, R: Runner> SnapshotHost<'a, R> {
     #[allow(clippy::too_many_arguments)]
@@ -156,7 +157,16 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             buildkite_contract: None,
             project_check: Box::new(project_check),
             evidence_directory: None,
+            rust_worker_authorizer: None,
         })
+    }
+
+    pub fn with_rust_worker_authorizer<A>(mut self, authorize: A) -> Self
+    where
+        A: FnMut(NativeAction<'_>) -> io::Result<()> + 'a,
+    {
+        self.rust_worker_authorizer = Some(Box::new(authorize));
+        self
     }
     /// GitHub raw ZIP handoff is outside Buildkite-only preflight. Buildkite
     /// artifacts are collected automatically from their authenticated producer.
@@ -405,6 +415,11 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
     }
 }
 impl<R: Runner> Host for SnapshotHost<'_, R> {
+    fn authorize_rust_worker(&mut self, action: NativeAction<'_>) -> io::Result<()> {
+        self.rust_worker_authorizer
+            .as_mut()
+            .ok_or_else(|| invalid("RUST_WORKER_ADAPTER_UNAVAILABLE"))?(action)
+    }
     fn project_check(&mut self, budget: &RuntimeBudget<'_>) -> io::Result<ProjectPrerequisites> {
         (self.project_check)(budget)
     }

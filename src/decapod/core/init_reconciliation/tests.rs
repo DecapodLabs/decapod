@@ -21,6 +21,40 @@ fn declare(root: &Path) -> ProjectProofConfig {
 }
 
 #[test]
+fn rust_worker_review_aid_exposes_digest_without_approving_stale_recipe_or_proof() {
+    use crate::core::validation_runtime::rust_worker::{Configuration, Run, Worker, recipe_digest};
+    let root = tempdir().unwrap();
+    let workers = vec![Worker {
+        name: "probe".into(),
+        manifest: "tools/probe/Cargo.toml".into(),
+        features: vec![],
+        metal_toolchain: false,
+        runs: vec![Run {
+            arguments: vec!["--probe".into()],
+            proof_output: false,
+        }],
+        timeout_seconds: 60,
+    }];
+    let expected = recipe_digest(&workers).unwrap();
+    let proof = ProjectProofConfig {
+        rust_workers: Some(Configuration {
+            reviewed_recipes_digest: "unreviewed".into(),
+            workers,
+        }),
+        ..Default::default()
+    };
+    let report = inspect(root.path(), &proof, None);
+    assert_eq!(report.rust_worker_recipes_digest, Some(expected));
+    assert!(has(&report, "RUST_WORKER_CONTRACT_INVALID"));
+    assert!(!report.merge_ready);
+    assert_eq!(report.proof_status, "not_run");
+    assert_eq!(
+        proof.rust_workers.unwrap().reviewed_recipes_digest,
+        "unreviewed"
+    );
+}
+
+#[test]
 fn fresh_repository_never_reports_empty_proof_success() {
     let root = tempdir().unwrap();
     for buildkite in [false, true] {
