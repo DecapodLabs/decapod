@@ -653,7 +653,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fc0627d0b46ae8983b391047121e7c110ca967e6e2b21a199de4479d33314421`
+- Repository signal fingerprint: `6995cb0a12d496c5a35f887d523029d952c71a711613a501ec591fa40681fa26`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -873,3 +873,5 @@ The real snapshot regression includes both reviewed aliases simultaneously, matc
 ### Resume after official snapshot repair
 
 The original task and feature branch retain custody and all failure history. Official controller v0.119.1 (accepted release `7371ad25`) supplies #1458 without candidate-controller adoption. Earlier snapshot rejection remains evidence; the next prescribed validation must establish whether native compilation and execution now work. Authored scalar reference and frozen 23-original holdout remain unexecuted, with unchanged tolerances, agent-proxy label limits and the unsatisfied 5% risk criterion. No prerequisite branch contributes additional feature work: task-transfer and native-worker recovery trees match their accepted squash commits; the old failed native branch differs only in governance/spec recovery records.
+
+The first full v0.119.1 validation of `5d6fda2d` passed all configured Buildkite steps (2186 and supplemental source workflows) and GitHub source CI39172229105, including 1456 library tests with zero failures and three ignored. Native snapshot preparation then correctly rejected credential-shaped literals in gatekeeper tests before compilation. Inspection found the same synthetic AWS/GitHub shapes in trace redaction tests. Those fixtures now construct complete synthetic identifiers at runtime, preserving scanner/redaction assertions and source fixture coverage without credential-shaped committed bytes. Snapshot scanning, denied paths and proof requirements are unchanged; this is a feature-source fixture repair, not another controller prerequisite. Failed report `/private/tmp/vega-1191-validation-20261018T222725Z.json` remains preserved. Native execution remains unverified until rerun.
