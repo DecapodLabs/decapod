@@ -513,7 +513,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6995cb0a12d496c5a35f887d523029d952c71a711613a501ec591fa40681fa26`
+- Repository signal fingerprint: `b41f7215117f4ac5b63af90d7d8afdeea95b7425c261bdc965e6097adbb91ec2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -661,3 +661,6 @@ The separate native worker now also owns verification-only `reference_engine.rs`
 
 `src/decapod/core/native_proof/snapshot.rs::reviewed_alias` recognizes only the existing Rust toolchain alias and `tests/fixtures/state_commit_repo/symlink_test -> target.txt`. The fixture destination is the regular in-repository `tests/fixtures/state_commit_repo/target.txt`. Index and HEAD link blobs must match exact expected bytes and both planes must contain the regular target. Working capture verifies the link and target types and hashes; fixture parents must be directories, not symlinks. Copying recreates the link without following it, checks its frozen digest, charges link bytes to existing budgets, and verifies the resulting snapshot with the existing material identities. Arbitrary aliases, submodules, special files and source changes remain rejected. No fixture content or immutable golden vector is changed.
 
+### Vega native runtime compatibility revision
+
+The separate Rust worker explicitly pins candle-vllm b1055eca63de76b548d0d4b0daa96ff8cd1d0596, Candle23a6f388a82a71c88067ad2b0d64ac9d00f24aac and attentionf22e42cf27dd31efd2d1b838bd9e4cbf85bd2305 after the first actual native compile exposed upstream Metal DFlash symbol gating. The candle-vllm successor changes only dependency pins, preserving the reviewed Qwen3.5 block-capture implementation. No model or calibration artifact changes. Rust runtime revisions are diagnostic provenance; they do not prove native execution or numerical equivalence.

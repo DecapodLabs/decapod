@@ -558,7 +558,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6995cb0a12d496c5a35f887d523029d952c71a711613a501ec591fa40681fa26`
+- Repository signal fingerprint: `b41f7215117f4ac5b63af90d7d8afdeea95b7425c261bdc965e6097adbb91ec2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -667,3 +667,4 @@ Verification-only `--prepare-evaluation --proof-output <fresh-private-path>` wri
 
 The existing supplemental Rust-worker recipe and private evidence contracts are unchanged. Native snapshot preparation now accepts the exact already reviewed golden-vector fixture symlink in addition to the reviewed toolchain alias. There is no generic symlink permission or caller-controlled target map. `SnapshotReview.denied_paths` remains an additional deny list and takes precedence even for a recognized alias. Missing or retargeted HEAD/index/working links or nonregular targets fail closed; no out-of-repository referent is copied. The accepted released controller remains the authority for validation. Official published controller v0.119.1 contains this repair; native execution remains to be measured through the required recipe.
 
+Native device-probe receipts now include the exact attention source revision alongside Candle provenance. Source compatibility is explicitly advanced to candle-vllm b1055eca/Candle23a6f38/attentionf22e42c; external model/tokenizer/engine/calibration identities and selected raw blocks13/19 remain fixed. Unsupported model modes and malformed/abstaining/stale proof still cannot authorize readiness.

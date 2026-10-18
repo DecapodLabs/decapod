@@ -573,6 +573,15 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261018T222725Z.json"
       ]
+    },
+    {
+      "id": "vega1191-compatible-metal-runtime",
+      "summary": "Repair executed native Metal dependency compile failure with reviewed upstream manifest-only successor and explicit transitive runtime pins; preserve frozen model/reference/evaluation criteria and failure evidence",
+      "input_digest": "sha256:baf364a708c694a1e4409f6c2da2a9676bd5a2b2fa09199bf68a5796c7d8e3c3",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261018T224908Z.json",
+        "https://github.com/EricLBuehler/candle-vllm/commit/b1055eca63de76b548d0d4b0daa96ff8cd1d0596"
+      ]
     }
   ],
   "intents": {
@@ -614,24 +623,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current code repairs only two synthetic credential test fixture constructions after official1191 snapshot rejected raw AWS/GitHub shapes. Complete runtime shapes and scanner/redaction assertions remain, production scanner/snapshot behavior unchanged. Preserve earlier successful source CI and failed native preparation; no native/model/parity/calibration success claim.",
-          "reviewed_code_fingerprint": "6995cb0a12d496c5a35f887d523029d952c71a711613a501ec591fa40681fa26",
-          "spec_material_hash": "db83de9992e599c79b74a017c14ab61298c40e31c04f0e131b41ea2317ae5d52"
+          "reason": "Explicitly reviewed compatible native runtime successor b1055eca changes only upstream Cargo pins; Qwen hidden-state implementation unchanged. Candle23a6f38 alters CUDA workspace only, attentionf22e42c provides missing genuine Metal DFlash functions/build fixes plus unused Qwen4/MoE/GGUF changes. External model/tokenizer/engine/calibration pins, independent scalar equations, tolerances and holdout unchanged. Probe reports transitive attention revision; authored lock/receipt provenance regression requires native execution. No controller change or source proof waiver.",
+          "reviewed_code_fingerprint": "b41f7215117f4ac5b63af90d7d8afdeea95b7425c261bdc965e6097adbb91ec2",
+          "spec_material_hash": "32615778c3b45f68b8a4c359cd7208a5d22f8e3d0cea01f53e7d57c269425f71"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current code repairs only two synthetic credential test fixture constructions after official1191 snapshot rejected raw AWS/GitHub shapes. Complete runtime shapes and scanner/redaction assertions remain, production scanner/snapshot behavior unchanged. Preserve earlier successful source CI and failed native preparation; no native/model/parity/calibration success claim.",
-          "reviewed_code_fingerprint": "6995cb0a12d496c5a35f887d523029d952c71a711613a501ec591fa40681fa26",
-          "spec_material_hash": "d06449ca0bd666d9d850f8e7d1c2a4c6d843ca7a387bc863139c895043338246"
+          "reason": "Explicitly reviewed compatible native runtime successor b1055eca changes only upstream Cargo pins; Qwen hidden-state implementation unchanged. Candle23a6f38 alters CUDA workspace only, attentionf22e42c provides missing genuine Metal DFlash functions/build fixes plus unused Qwen4/MoE/GGUF changes. External model/tokenizer/engine/calibration pins, independent scalar equations, tolerances and holdout unchanged. Probe reports transitive attention revision; authored lock/receipt provenance regression requires native execution. No controller change or source proof waiver.",
+          "reviewed_code_fingerprint": "b41f7215117f4ac5b63af90d7d8afdeea95b7425c261bdc965e6097adbb91ec2",
+          "spec_material_hash": "58f16e3ceb9c2d7888c8910300dcae6456d01ee1e7058291f00bca669f10e4a4"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current code repairs only two synthetic credential test fixture constructions after official1191 snapshot rejected raw AWS/GitHub shapes. Complete runtime shapes and scanner/redaction assertions remain, production scanner/snapshot behavior unchanged. Preserve earlier successful source CI and failed native preparation; no native/model/parity/calibration success claim.",
-          "reviewed_code_fingerprint": "6995cb0a12d496c5a35f887d523029d952c71a711613a501ec591fa40681fa26",
+          "reason": "Explicitly reviewed compatible native runtime successor b1055eca changes only upstream Cargo pins; Qwen hidden-state implementation unchanged. Candle23a6f38 alters CUDA workspace only, attentionf22e42c provides missing genuine Metal DFlash functions/build fixes plus unused Qwen4/MoE/GGUF changes. External model/tokenizer/engine/calibration pins, independent scalar equations, tolerances and holdout unchanged. Probe reports transitive attention revision; authored lock/receipt provenance regression requires native execution. No controller change or source proof waiver.",
+          "reviewed_code_fingerprint": "b41f7215117f4ac5b63af90d7d8afdeea95b7425c261bdc965e6097adbb91ec2",
           "spec_material_hash": "5865ac210d81f7ec1b12a40aa6bec84585007c3a8dd1684ed97da5a3efc3ed13"
         }
       ],
@@ -645,7 +654,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792363704Z"
+      "updated_at": "1792365983Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -657,7 +666,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:83380f80d463de2ad78a532416abba13fda1c383afe301610125dab4e94db2db",
+      "artifact_hash": "sha256:02b5c6c54abb27571402f0814862a6cbc810e845a76aa48892adfb9ad86bf5e3",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -796,6 +805,10 @@
           "status": "unavailable"
         },
         {
+          "name": "native_compile_aa36",
+          "status": "failed"
+        },
+        {
           "name": "native_evaluation",
           "status": "unavailable"
         },
@@ -929,6 +942,10 @@
         },
         {
           "name": "source5d",
+          "status": "passed"
+        },
+        {
+          "name": "source_aa36",
           "status": "passed"
         },
         {
@@ -1218,10 +1235,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 39
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:40",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 40
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 39,
+        "next_sequence": 40,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1939,6 +1963,29 @@
                 "validation_findings": [
                   "Source fixtures are synthetic and generated at runtime; no real credential hidden or scanner exemption added. Existing scanner/redaction regressions must execute again. Native model/reference/holdout proof remains unexecuted."
                 ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:40",
+                "observations": [
+                  "assets/tools/vega-native/Cargo.lock",
+                  "assets/tools/vega-native/Cargo.toml",
+                  "src/decapod/core/vega_backbone.rs",
+                  "/private/tmp/vega-1191-validation-20261018T224908Z.json",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/39173829817",
+                  "https://github.com/EricLBuehler/candle-vllm/commit/b1055eca63de76b548d0d4b0daa96ff8cd1d0596"
+                ],
+                "proof_refs": [
+                  "source_aa36",
+                  "native_compile_aa36"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 40,
+                "validation_findings": [
+                  "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending."
+                ]
               }
             ]
           }
@@ -1963,6 +2010,7 @@
       "evidence": [
         "/private/tmp/vega-119-current-validation.json retains the earlier pre-execution failure",
         "/private/tmp/vega-1191-validation-20261018T222725Z.json",
+        "/private/tmp/vega-1191-validation-20261018T224908Z.json",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
         "Actual CI error STALE_SPEC_REVIEW SECURITY.md or code changed after review; Architecture/Interfaces were current, Security needed supported current-code review after660974b4. Re-reviewed Security unchanged-with-reason and refreshed projections, retaining all failures and native-release blocker.",
@@ -2007,11 +2055,14 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39091789504",
         "https://github.com/DecapodLabs/decapod/actions/runs/39099541876/job/117593631622",
         "https://github.com/DecapodLabs/decapod/actions/runs/39172229105",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39173829817",
         "https://github.com/DecapodLabs/decapod/pull/1458",
         "https://github.com/DecapodLabs/decapod/releases/tag/v0.119.1",
+        "https://github.com/EricLBuehler/candle-vllm/commit/b1055eca63de76b548d0d4b0daa96ff8cd1d0596",
         "v0.119.0 published and installed; obsolete118 unsupported-adapter blocker resolved only. First released119 validate failed READINESS_BLOCKED on recorded trajectory gaps; report/private/tmp/vega-119-first-validation.json preserved and no builds ran. Domain proof requirements remain enforced; no failed check waived."
       ],
       "inspected_files": [
+        "assets/tools/vega-native/Cargo.lock",
         "assets/tools/vega-native/Cargo.toml",
         "assets/tools/vega-native/evaluation_corpus.rs",
         "assets/tools/vega-native/readiness_evaluation.rs",
@@ -2085,6 +2136,7 @@
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
         "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
+        "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
         "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
         "New companion binding/probe/classifier/receipt changes and regressions authored, no Rust tests executed for this candidate. Actual worker build/Metal/model/parity/calibration unavailable under current released native-proof contract; no manual build, shadow preflight, Python or artifact workaround used. Preserved native/reference/holdout blockers. Prerequisite5cee green but publication awaits public API rate reset; its candidate controller is not adopted.",
         "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change.",

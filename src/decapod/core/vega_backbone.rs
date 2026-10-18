@@ -1,7 +1,7 @@
 //! Bounded, text-only Qwen3.5 perception for the vega-0.8B readiness profile.
 //!
 //! The native implementation uses candle-vllm at
-//! `2c2c5293d21961d29dd73c2ff7b246b77d3eaf3f` (MIT), with its pinned Candle
+//! `b1055eca63de76b548d0d4b0daa96ff8cd1d0596` (MIT), with its pinned Candle
 //! fork and attention.rs Metal kernels. It calls the public
 //! `Qwen3_5::forward_collecting_layers` API, not an embedding or generation API.
 //! Span/chunk semantics follow vegaml/_common.py at
@@ -29,8 +29,9 @@ pub const FEATURE_LAYERS: [usize; 2] = [13, 19];
 pub const OPTION_LAYERS: [usize; 1] = [19];
 pub const MEMORY_CHUNKS: usize = 16;
 pub const VOCAB_SIZE: usize = 248_320;
-pub const NATIVE_SOURCE_REVISION: &str = "2c2c5293d21961d29dd73c2ff7b246b77d3eaf3f";
-pub const CANDLE_SOURCE_REVISION: &str = "b60efcf926dcfbdcad9e7c82e8a83679c526df20";
+pub const NATIVE_SOURCE_REVISION: &str = "b1055eca63de76b548d0d4b0daa96ff8cd1d0596";
+pub const ATTENTION_SOURCE_REVISION: &str = "f22e42cf27dd31efd2d1b838bd9e4cbf85bd2305";
+pub const CANDLE_SOURCE_REVISION: &str = "23a6f388a82a71c88067ad2b0d64ac9d00f24aac";
 const CHUNK_MIN_TOKENS: usize = 128;
 const CHUNK_TOKENS: usize = 128;
 const BOOLEAN_OPTIONS: usize = 2;
@@ -82,6 +83,7 @@ pub struct MetalProbe {
     pub wall_clock_ms: f64,
     pub timing_scope: &'static str,
     pub candle_source_revision: &'static str,
+    pub attention_source_revision: &'static str,
     pub parity: &'static str,
 }
 
@@ -134,6 +136,7 @@ pub fn probe_cpu() -> Result<MetalProbe> {
         wall_clock_ms: start.elapsed().as_secs_f64() * 1000.0,
         timing_scope: "CPU allocation, tensor arithmetic and numerical readback",
         candle_source_revision: CANDLE_SOURCE_REVISION,
+        attention_source_revision: ATTENTION_SOURCE_REVISION,
         parity: "unverified",
     })
 }
@@ -430,6 +433,7 @@ mod native {
             wall_clock_ms: start.elapsed().as_secs_f64() * 1000.0,
             timing_scope: "allocation, dispatch, synchronization, host readback and exact comparison; excludes device creation",
             candle_source_revision: CANDLE_SOURCE_REVISION,
+            attention_source_revision: ATTENTION_SOURCE_REVISION,
             parity: "unverified",
         })
     }
@@ -847,6 +851,35 @@ impl NativeBackbone {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reported_native_revisions_match_the_separate_worker_lock() {
+        // A probe's provenance must describe the dependencies actually resolved
+        // for this separate workspace, including transitive attention kernels.
+        let lock = include_str!("../../../assets/tools/vega-native/Cargo.lock");
+        for (url, revision) in [
+            (
+                "https://github.com/EricLBuehler/candle-vllm",
+                NATIVE_SOURCE_REVISION,
+            ),
+            (
+                "https://github.com/guoqingbao/candle.git",
+                CANDLE_SOURCE_REVISION,
+            ),
+            (
+                "https://github.com/guoqingbao/attention.rs.git",
+                ATTENTION_SOURCE_REVISION,
+            ),
+        ] {
+            assert!(
+                lock.lines().any(|line| {
+                    line.starts_with(&format!("source = \"git+{url}?rev="))
+                        && line.ends_with(&format!("#{revision}\""))
+                }),
+                "runtime receipt revision differs from worker lock: {url}"
+            );
+        }
+    }
 
     #[test]
     fn capability_probe_requires_exact_finite_arithmetic() {

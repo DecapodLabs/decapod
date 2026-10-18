@@ -29,8 +29,8 @@ fancy-regex = "0.17"
 unicode-normalization = "0.1"
 parquet = { version = "=57.0.0", default-features = false, features = ["snap", "json"] }
 safetensors = "0.7"
-candle-core = { git = "https://github.com/guoqingbao/candle.git", rev = "b60efcf", default-features = false }
-candle-nn = { git = "https://github.com/guoqingbao/candle.git", rev = "b60efcf", default-features = false }
+candle-core = { git = "https://github.com/guoqingbao/candle.git", rev = "23a6f38", default-features = false }
+candle-nn = { git = "https://github.com/guoqingbao/candle.git", rev = "23a6f38", default-features = false }
 tokenizers = { version = "0.23.2", default-features = false, features = ["fancy-regex"] }
 
 [package.metadata.cargo-machete]
@@ -38,12 +38,12 @@ tokenizers = { version = "0.23.2", default-features = false, features = ["fancy-
 ignored = ["thiserror"]
 
 [target.'cfg(all(target_os = "macos", target_arch = "aarch64"))'.dependencies]
-candle-vllm = { git = "https://github.com/EricLBuehler/candle-vllm", rev = "2c2c5293d21961d29dd73c2ff7b246b77d3eaf3f", default-features = false, features = ["metal"] }
+candle-vllm = { git = "https://github.com/EricLBuehler/candle-vllm", rev = "b1055eca63de76b548d0d4b0daa96ff8cd1d0596", default-features = false, features = ["metal"] }
 # Match the upstream source selector exactly; Cargo.lock pins its full commit.
-candle-core = { git = "https://github.com/guoqingbao/candle.git", rev = "b60efcf", default-features = false, features = ["metal"] }
-candle-nn = { git = "https://github.com/guoqingbao/candle.git", rev = "b60efcf", default-features = false, features = ["metal"] }
+candle-core = { git = "https://github.com/guoqingbao/candle.git", rev = "23a6f38", default-features = false, features = ["metal"] }
+candle-nn = { git = "https://github.com/guoqingbao/candle.git", rev = "23a6f38", default-features = false, features = ["metal"] }
 parking_lot = "0.12"
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
-candle-vllm-cuda = { package = "candle-vllm", git = "https://github.com/EricLBuehler/candle-vllm", rev = "2c2c5293d21961d29dd73c2ff7b246b77d3eaf3f", optional = true, default-features = false, features = ["cuda"] }
+candle-vllm-cuda = { package = "candle-vllm", git = "https://github.com/EricLBuehler/candle-vllm", rev = "b1055eca63de76b548d0d4b0daa96ff8cd1d0596", optional = true, default-features = false, features = ["cuda"] }
 parking_lot = { version = "0.12", optional = true }
