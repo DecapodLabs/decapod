@@ -15,6 +15,8 @@ mod decoder;
 mod evaluation_corpus;
 #[path = "vega-native/readiness_evaluation.rs"]
 mod readiness_evaluation;
+#[path = "vega-native/reference_backbone.rs"]
+mod reference_backbone;
 #[path = "vega-native/reference_engine.rs"]
 mod reference_engine;
 #[path = "vega-native/reference_tokenizer.rs"]
@@ -236,6 +238,16 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn evaluation_probe(
+    backend: vega_readiness::Backend,
+) -> Result<vega_backbone::MetalProbe, vega_backbone::BackboneError> {
+    if backend == vega_readiness::Backend::Cpu {
+        vega_backbone::probe_cpu()
+    } else {
+        vega_backbone::probe_backend(backend)
+    }
+}
+
 fn evaluate_readiness(
     split: &str,
     backend: &str,
@@ -274,7 +286,8 @@ fn evaluate_readiness(
     } else {
         BackendPreference::Auto.resolve()
     };
-    let (selected, fallback) = match vega_backbone::probe_backend(preferred) {
+    let selection_probe = evaluation_probe(preferred);
+    let (selected, fallback) = match selection_probe {
         Ok(_) => (preferred, None),
         Err(vega_backbone::BackboneError::HardwareUnavailable(reason)) if backend == "auto" => {
             vega_backbone::probe_cpu()?;
@@ -453,46 +466,94 @@ fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> 
     }
     // A fixed diagnostic, not a labelled evaluation case or passing proof.
     let state = r#"{"intent":"Document a CLI option","validation":"passed","obligations":[{"requirement":"Describe CPU fallback explicitly","evidence":"missing"}],"unknowns":[]}"#.to_owned();
-    let (attempts, inference_failed) = collect_diagnostics([preferred, Backend::Cpu], |backend| {
-        let request = Request {
-            schema: vega_readiness::WORKER_SCHEMA.into(),
-            request_id: format!("native-diagnostic-{}", backend.device()),
-            input_digest: vega_readiness::hash(state.as_bytes()),
-            installation: installation.clone(),
-            manifest_digest: manifest_digest.clone(),
-            state: state.clone(),
-            alpha: "0.1".into(),
-            risk: "0.1".into(),
-            backend,
-        };
-        let temporary = tempfile::tempdir()?;
-        let path = temporary.path().join("inference.json");
-        infer(&request, Some(&path))?;
-        let mut value = serde_json::from_slice::<serde_json::Value>(&read_bounded(
-            &path,
-            MAX_PROOF_BYTES as u64,
-        )?)?;
-        let configuration: serde_json::Value = serde_json::from_slice(&read_bounded(
-            &installation.join("vega_config.json"),
-            1024 * 1024,
-        )?)?;
-        // Reference outputs come from independent equations, not the candidate
-        // engine's outputs. Pooled tensors are explicitly reference inputs.
-        value["separate_engine_reference"] = match reference_engine::compare(
-            &configuration,
-            &read_bounded(&installation.join("engine.safetensors"), 128 * 1024 * 1024)?,
-            &value,
-        ) {
-            Ok(comparison) => comparison,
-            Err(error) => {
-                serde_json::json!({"status":"failed","error":error.to_string(),"backbone_parity":"unverified"})
-            }
-        };
-        Ok(value)
-    });
-    let reference_failed = attempts
-        .iter()
-        .any(|attempt| attempt["separate_engine_reference"]["status"] == "failed");
+    let (mut attempts, inference_failed) = collect_diagnostics(
+        [preferred, Backend::Cpu],
+        |backend| {
+            let request = Request {
+                schema: vega_readiness::WORKER_SCHEMA.into(),
+                request_id: format!("native-diagnostic-{}", backend.device()),
+                input_digest: vega_readiness::hash(state.as_bytes()),
+                installation: installation.clone(),
+                manifest_digest: manifest_digest.clone(),
+                state: state.clone(),
+                alpha: "0.1".into(),
+                risk: "0.1".into(),
+                backend,
+            };
+            let temporary = tempfile::tempdir()?;
+            let path = temporary.path().join("inference.json");
+            infer(&request, Some(&path))?;
+            let mut value = serde_json::from_slice::<serde_json::Value>(&read_bounded(
+                &path,
+                MAX_PROOF_BYTES as u64,
+            )?)?;
+            let configuration: serde_json::Value = serde_json::from_slice(&read_bounded(
+                &installation.join("vega_config.json"),
+                1024 * 1024,
+            )?)?;
+            // Reference outputs come from independent equations, not the candidate
+            // engine's outputs. Pooled tensors are explicitly reference inputs.
+            value["separate_engine_reference"] = match reference_engine::compare(
+                &configuration,
+                &read_bounded(&installation.join("engine.safetensors"), 128 * 1024 * 1024)?,
+                &value,
+            ) {
+                Ok(comparison) => comparison,
+                Err(error) => {
+                    serde_json::json!({"status":"failed","error":error.to_string(),"backbone_parity":"unverified"})
+                }
+            };
+            Ok(value)
+        },
+    );
+    // Both backend execution attempts happen before the independent oracle.
+    // Missing/unsupported reference inputs cannot suppress device diagnostics.
+    report["separate_backbone_reference"] = match verify_backbone_reference(
+        &installation,
+        &state,
+        &mut attempts,
+        proof_path,
+    ) {
+        Ok(value) => value,
+        Err(error) => {
+            serde_json::json!({"status":"failed","error":error.to_string(),"backbone_parity":"unverified"})
+        }
+    };
+    let reference_failed = report["separate_backbone_reference"]["status"] == "failed"
+        || attempts.iter().any(|attempt| {
+            attempt["separate_engine_reference"]["status"] == "failed"
+                || attempt["separate_backbone_reference"]["status"] == "failed"
+                || attempt["combined_reference_engine"]["status"] == "failed"
+        });
+    // Each full numeric export retains the original1MiB cap. The combined
+    // receipt binds their private paths/hashes instead of duplicating vectors
+    // and accidentally increasing its own export limit.
+    for attempt in &mut attempts {
+        if attempt["outcome"].is_null() {
+            continue;
+        }
+        let device = attempt["device"].as_str().ok_or("missing proof device")?;
+        if !matches!(device, "metal" | "cuda" | "cpu") {
+            return Err("invalid proof device".into());
+        }
+        let numeric_path = proof_path.with_extension(format!("{device}.json"));
+        write_private_proof(&numeric_path, attempt)?;
+        let digest = vega_readiness::hash(&read_bounded(&numeric_path, MAX_PROOF_BYTES as u64)?);
+        let object = attempt.as_object_mut().ok_or("invalid numeric attempt")?;
+        for key in [
+            "pooled_feats",
+            "pooled_opts",
+            "pooled_chunks",
+            "sampled_hidden",
+            "prompt_token_ids",
+        ] {
+            object.remove(key);
+        }
+        object.insert(
+            "private_numeric_proof".into(),
+            serde_json::json!({"file":numeric_path,"sha256":digest,"max_bytes":MAX_PROOF_BYTES}),
+        );
+    }
     report["attempts"] = attempts.into();
     report["separate_tokenizer_reference"] = match verify_tokenizer_reference(&installation) {
         Ok(comparison) => comparison,
@@ -509,6 +570,79 @@ fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> 
         return Err("one or more native diagnostics failed; inspect private proof".into());
     }
     Ok(())
+}
+
+fn verify_backbone_reference(
+    installation: &Path,
+    state: &str,
+    attempts: &mut [serde_json::Value],
+    proof_path: &Path,
+) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    let started = std::time::Instant::now();
+    let tokenizer_bytes = read_bounded(
+        &installation.join("backbone/tokenizer.json"),
+        16 * 1024 * 1024,
+    )?;
+    if vega_readiness::hash(&tokenizer_bytes)
+        != "sha256:5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42"
+    {
+        return Err("independent tokenizer artifact pin differs".into());
+    }
+    let tokenizer =
+        reference_tokenizer::ReferenceTokenizer::new(&serde_json::from_slice(&tokenizer_bytes)?)?;
+    let prompt = tokenizer.prompt(state, vega_prompt::QUESTION, None)?;
+    let config = read_bounded(&installation.join("backbone/config.json"), 1024 * 1024)?;
+    let weights = read_bounded(
+        &installation.join("backbone/model.safetensors-00001-of-00001.safetensors"),
+        2 * 1024 * 1024 * 1024,
+    )?;
+    let expected = reference_backbone::compute(&config, &weights, &prompt)?;
+    drop(weights);
+    let reference_path = proof_path.with_extension("reference.json");
+    write_private_proof(&reference_path, &expected)?;
+    let reference_digest =
+        vega_readiness::hash(&read_bounded(&reference_path, MAX_PROOF_BYTES as u64)?);
+    let configuration: serde_json::Value = serde_json::from_slice(&read_bounded(
+        &installation.join("vega_config.json"),
+        1024 * 1024,
+    )?)?;
+    let engine_weights = read_bounded(&installation.join("engine.safetensors"), 128 * 1024 * 1024)?;
+    let mut compared = 0;
+    for attempt in attempts {
+        if attempt["outcome"].is_null() {
+            continue;
+        }
+        if attempt["prompt_token_ids"] != prompt["tokens"]
+            || attempt["prompt_spans"] != prompt["spans"]
+        {
+            attempt["separate_backbone_reference"] = serde_json::json!({"status":"failed","error":"independent token/span input differs"});
+            continue;
+        }
+        attempt["separate_backbone_reference"] =
+            match reference_backbone::compare(&expected, attempt) {
+                Ok(value) => value,
+                Err(error) => serde_json::json!({"status":"failed","error":error.to_string()}),
+            };
+        attempt["combined_reference_engine"] = match reference_engine::compare_with_inputs(
+            &configuration,
+            &engine_weights,
+            attempt,
+            &expected,
+        ) {
+            Ok(value) => value,
+            Err(error) => serde_json::json!({"status":"failed","error":error.to_string()}),
+        };
+        compared += 1;
+    }
+    Ok(
+        serde_json::json!({"status":"reference_calculated","prompt_cases":1,"backend_comparisons":compared,
+        "expected_file":reference_path,"expected_sha256":reference_digest,"maximum_export_bytes":MAX_PROOF_BYTES,
+        "reference_spec_revision":expected["reference_spec_revision"],"reference_spec_sha256":expected["reference_spec_sha256"],
+        "input_tokens":expected["input_tokens"],"max_reference_tokens":reference_backbone::MAX_REFERENCE_TOKENS,
+        "wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
+        "independent_human_review":false,"scope":expected["scope"],
+        "limitations":"Same-agent independent mathematical implementation, shared JSON/SafeTensors/hash infrastructure and pinned weights; not empirical HF execution or all-context/backbone equivalence. Long/chunked state and production fallback routing remain unverified."}),
+    )
 }
 
 fn verify_tokenizer_reference(
@@ -676,7 +810,7 @@ fn infer(
     )?;
     let backbone_load_including_probe_ms = stage.elapsed().as_secs_f64() * 1000.0;
     let stage = Instant::now();
-    let pooled = backbone.pooled(&prompt)?;
+    let pooled = backbone.pooled(&prompt, proof_path.is_some())?;
     let backbone_inference_pooling_readback_cleanup_ms = stage.elapsed().as_secs_f64() * 1000.0;
     let stage = Instant::now();
     let engine_config = EngineConfig::from_json(&config)?;
@@ -783,6 +917,7 @@ fn infer(
             .iter()
             .chain(&batch.opts)
             .chain(&chunks.values)
+            .chain(&pooled.sampled_hidden)
             .any(|value| !value.is_finite())
         {
             return Err("non-finite pooled diagnostic".into());
@@ -819,8 +954,11 @@ fn infer(
                 "feature_layers":vega_backbone::FEATURE_LAYERS,"option_layers":vega_backbone::OPTION_LAYERS,
                 "feats_shape":[1,2,3,1024],"opts_shape":[1,2,1,1024],"chunks_shape":[1,16,1024],
                 "pooled_feats":batch.feats,"pooled_opts":batch.opts,"pooled_chunks":chunks.values,
+                "sample_positions":pooled.sample_positions,"sampled_hidden":pooled.sampled_hidden,
+                "sampled_hidden_scope":"Private proof only; selected raw blocks in layer-major then sorted token-position then hidden-feature order",
                 "pooled_feats_sha256":vector_hash(&batch.feats),"pooled_opts_sha256":vector_hash(&batch.opts),
                 "pooled_chunks_sha256":vector_hash(&chunks.values),"chunk_mask":chunks.mask
+                ,"sampled_hidden_sha256":vector_hash(&pooled.sampled_hidden)
             }),
             serde_json::json!({
                 "pooled_hash_encoding":"concatenated little-endian F32 bytes in flat tensor order",
@@ -861,6 +999,16 @@ fn infer(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn explicit_cpu_evaluation_probe_dispatches_cpu_arithmetic() {
+        let probe = evaluation_probe(vega_readiness::Backend::Cpu).unwrap();
+        assert_eq!(probe.device, "cpu");
+        assert_eq!(probe.actual, probe.expected);
+        assert!(probe.bit_exact && probe.synchronized);
+        // A real model-free CPU tensor operation, not checkpoint inference or
+        // evidence of the production fallback protocol.
+        assert_eq!(probe.parity, "unverified");
+    }
 
     #[test]
     fn failed_accelerator_diagnostic_does_not_skip_independent_cpu_collection() {

@@ -8,6 +8,8 @@ the human requested, what the agent understood, what ran, and what the evidence
 supports. It cannot establish correctness outside the configured requirements or
 control commands an agent runs outside Decapod.
 
+The authored short-text backbone parity surface now includes scalar-F64 `reference_backbone.rs`, from Transformers `aad13b87ed59f2afcfaebc985f403301887a35fc` (Apache-2.0), source SHA256 `0e7410f5251e5c324a5628c5340ee3551f7a6a505ce398569fcc3b5f3ac07f7a`. It computes raw selected blocks, bounded sample rows and independent pooling before separate combined engine/calibration comparison. Component tolerance `0.005 + 0.001*abs(reference)` and normalized RMS <=0.002 were declared before observing outputs; combined probabilities require abs <=0.005 and discrete abstention/set/unbound/settle behavior stays exact. Existing conditional engine and identical-readout calibration tolerances are unchanged. It supports only <=512-token pure text and is authored/unexecuted, not independent human review or full-context equivalence. Native attempts run first and retain separate <=1 MiB numeric files plus path/hash receipts; no output cap increases. Hand-anchored scalar fixtures and a real model-free CPU-probe regression remain unexecuted until the released controller can run this native recipe. Long/chunked-state parity, production fallback routing, measured native execution and readiness calibration remain required and unverified.
+
 The agent owns the operational loop: establish intent and scope, work in a
 claimed workspace, record falsifiable claims, gather evidence, repair supported
 failures, and revalidate. Human decisions and unavailable proof remain explicit
@@ -651,8 +653,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (31 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `8ae6b62255c62ef6eac154c0690956c505fdad8a243cb2eeaf42cb7f75ccc2b3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

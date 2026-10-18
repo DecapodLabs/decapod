@@ -360,7 +360,7 @@ impl CpuBackbone {
             .map_err(compute)?;
         Ok(Self { embedding, layers })
     }
-    pub fn pooled(&mut self, prompt: &Prompt) -> Result<PooledFeatures> {
+    pub fn pooled(&mut self, prompt: &Prompt, collect_samples: bool) -> Result<PooledFeatures> {
         validate_input(&prompt.tokens, &prompt.spans)?;
         let ids = Tensor::from_vec(prompt.tokens.clone(), prompt.tokens.len(), &Device::Cpu)
             .map_err(compute)?;
@@ -403,10 +403,23 @@ impl CpuBackbone {
             chunks[index * D_MODEL..(index + 1) * D_MODEL].copy_from_slice(&pooled);
             chunk_mask[index] = true;
         }
+        let sample_positions = if collect_samples {
+            super::proof_positions(prompt)
+        } else {
+            Vec::new()
+        };
+        let mut sampled_hidden = Vec::new();
+        for hidden in &captures {
+            for &position in &sample_positions {
+                sampled_hidden
+                    .extend(vector(&hidden.get(position).map_err(compute)?).map_err(compute)?);
+            }
+        }
         if feats
             .iter()
             .chain(&opts)
             .chain(&chunks)
+            .chain(&sampled_hidden)
             .any(|x| !x.is_finite())
         {
             return Err(BackboneError::NonFinite("cpu pooled features"));
@@ -418,6 +431,8 @@ impl CpuBackbone {
             opts,
             chunks,
             chunk_mask,
+            sample_positions,
+            sampled_hidden,
         })
     }
 }

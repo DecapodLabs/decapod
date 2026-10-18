@@ -396,7 +396,16 @@ fn within_tolerance(expected: f64, actual: f64, absolute: f64, relative: f64) ->
 
 /// Fixed tolerances are documented before execution in the reference contract.
 pub fn compare(config: &Value, checkpoint: &[u8], proof: &Value) -> Result<Value> {
-    let reference = boolean_engine(config, checkpoint, proof)?;
+    compare_with_inputs(config, checkpoint, proof, proof)
+}
+
+pub fn compare_with_inputs(
+    config: &Value,
+    checkpoint: &[u8],
+    proof: &Value,
+    reference_inputs: &Value,
+) -> Result<Value> {
+    let reference = boolean_engine(config, checkpoint, reference_inputs)?;
     let observed = &proof["engine_readout"];
     let mut maximum = 0_f64;
     for name in ["logits", "z0", "z_t"] {
@@ -436,10 +445,24 @@ pub fn compare(config: &Value, checkpoint: &[u8], proof: &Value) -> Result<Value
     }
     let answer = calibrate(config, observed, 12)?;
     let actual = &proof["calibrated_answer"];
+    // Also constrain the decision obtained from independently calculated engine
+    // outputs, rather than testing calibration only on the candidate's row.
+    let chain_answer = calibrate(config, &reference, 12)?;
     for name in ["abstain", "unbound", "prediction_set"] {
-        if answer[name] != actual[name] {
+        if answer[name] != actual[name] || chain_answer[name] != actual[name] {
             return Err(format!("reference calibration {name} mismatch").into());
         }
+    }
+    let chain_probabilities = array(&chain_answer["probabilities"])?;
+    let actual_probabilities = array(&actual["probabilities"])?;
+    if chain_probabilities.len() != 2
+        || actual_probabilities.len() != 2
+        || chain_probabilities
+            .iter()
+            .zip(&actual_probabilities)
+            .any(|(a, b)| !within_tolerance(*a, *b, 0.005, 0.0))
+    {
+        return Err("combined reference calibrated probability differs beyond0.005".into());
     }
     let expected = array(&answer["probabilities"])?;
     let observed = array(&actual["probabilities"])?;
@@ -465,6 +488,7 @@ pub fn compare(config: &Value, checkpoint: &[u8], proof: &Value) -> Result<Value
     Ok(
         json!({"status":"passed_engine_only","engine_max_absolute_error":maximum,"engine_absolute_tolerance":0.001,
         "engine_relative_tolerance":0.0001,"calibration_absolute_tolerance":1e-10,
+        "combined_probability_absolute_tolerance":0.005,"combined_abstention_set_unbound":"exact",
         "scope":"Separate scalar F64 engine and calibration; pooled features are inputs, not verified backbone outputs",
         "backbone_parity":"unverified","independent_human_review":false}),
     )

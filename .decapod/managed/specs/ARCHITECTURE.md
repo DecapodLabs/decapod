@@ -11,6 +11,8 @@ Vega's separate native worker keeps evidence collection and final acceptance dis
 
 ## Direction
 
+Verification-only `assets/tools/vega-native/reference_backbone.rs` adds an independently authored scalar-F64 short-text calculation from pinned Transformers equations inside the separate worker. It verifies the full config/checkpoint identities, computes raw blocks 13/19 and pooling without candidate model/tensor calls, then supplies independent inputs to the separate engine/calibration calculation. This does not replace the production Candle/candle-vllm or CPU path. Private proof mode alone samples bounded raw rows; normal requests transfer only pooled features. Native attempts precede reference calculation. Same-agent authorship, shared parsing/hash infrastructure, 512-token pure-text scope and absent execution/review remain explicit limits, not a full-backbone acceptance claim.
+
 The product is a local-first command-line runtime with a structured process RPC
 surface. Agents invoke it at decision and state-transition boundaries. Durable
 repository records provide continuity instead of a resident orchestration service.
@@ -511,8 +513,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (31 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `8ae6b62255c62ef6eac154c0690956c505fdad8a243cb2eeaf42cb7f75ccc2b3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

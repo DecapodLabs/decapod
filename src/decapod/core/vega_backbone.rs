@@ -139,7 +139,8 @@ pub fn probe_cpu() -> Result<MetalProbe> {
 }
 
 /// A single boolean prompt, in the exact flat order consumed by FeatureBatch.
-/// Only these small pooled vectors cross from Metal to host memory.
+/// Normal requests copy only pooled vectors. Explicit private proof exports
+/// additionally sample at most four token rows from each selected raw block.
 #[derive(Debug, Clone)]
 pub struct PooledFeatures {
     pub d_model: usize,
@@ -152,6 +153,19 @@ pub struct PooledFeatures {
     pub chunks: Vec<f32>,
     /// [1, 16], with the first k entries true.
     pub chunk_mask: Vec<bool>,
+    pub sample_positions: Vec<usize>,
+    pub sampled_hidden: Vec<f32>,
+}
+
+fn proof_positions(prompt: &Prompt) -> Vec<usize> {
+    std::collections::BTreeSet::from([
+        0,
+        prompt.spans.state.start,
+        prompt.spans.state.end - 1,
+        prompt.spans.last,
+    ])
+    .into_iter()
+    .collect()
 }
 
 fn checked_span(span: &Range<usize>, length: usize, name: &str) -> Result<()> {
@@ -509,7 +523,7 @@ mod native {
             &self.probe
         }
 
-        pub fn pooled(&mut self, prompt: &Prompt) -> Result<PooledFeatures> {
+        pub fn pooled(&mut self, prompt: &Prompt, collect_samples: bool) -> Result<PooledFeatures> {
             validate_input(&prompt.tokens, &prompt.spans)?;
             if self.poisoned {
                 return Err(BackboneError::Cleanup(
@@ -524,7 +538,7 @@ mod native {
                 model: &self.model,
                 finished: false,
             };
-            let result = self.pooled_inner(prompt);
+            let result = self.pooled_inner(prompt, collect_samples);
             if let Err(error) = cleanup.finish() {
                 self.poisoned = true;
                 let detail = match result {
@@ -541,7 +555,7 @@ mod native {
             result
         }
 
-        fn pooled_inner(&self, prompt: &Prompt) -> Result<PooledFeatures> {
+        fn pooled_inner(&self, prompt: &Prompt, collect_samples: bool) -> Result<PooledFeatures> {
             let length = prompt.tokens.len();
             let length_u32 = u32::try_from(length)
                 .map_err(|_| BackboneError::Input("token length exceeds u32".into()))?;
@@ -632,6 +646,26 @@ mod native {
             while chunks.len() < MEMORY_CHUNKS {
                 chunks.push(Tensor::zeros((D_MODEL,), DType::F32, &self.device).map_err(compute)?);
             }
+            let sample_positions = if collect_samples {
+                proof_positions(prompt)
+            } else {
+                Vec::new()
+            };
+            let mut sample_rows = Vec::new();
+            for hidden in &layers {
+                for &position in &sample_positions {
+                    sample_rows.push(hidden.get(position).map_err(compute)?);
+                }
+            }
+            let sampled_hidden = if sample_rows.is_empty() {
+                Vec::new()
+            } else {
+                small_host_vector(
+                    &sample_rows,
+                    FEATURE_LAYERS.len() * sample_positions.len() * D_MODEL,
+                    "raw block samples",
+                )?
+            };
             Ok(PooledFeatures {
                 d_model: D_MODEL,
                 option_count: BOOLEAN_OPTIONS,
@@ -639,6 +673,8 @@ mod native {
                 opts: small_host_vector(&options, BOOLEAN_OPTIONS * D_MODEL, "options")?,
                 chunks: small_host_vector(&chunks, MEMORY_CHUNKS * D_MODEL, "chunks")?,
                 chunk_mask,
+                sample_positions,
+                sampled_hidden,
             })
         }
     }
@@ -786,14 +822,14 @@ impl NativeBackbone {
             ))
         }
     }
-    pub fn pooled(&mut self, prompt: &Prompt) -> Result<PooledFeatures> {
+    pub fn pooled(&mut self, prompt: &Prompt, collect_samples: bool) -> Result<PooledFeatures> {
         match self {
-            Self::Cpu(backbone) => backbone.pooled(prompt),
+            Self::Cpu(backbone) => backbone.pooled(prompt, collect_samples),
             #[cfg(any(
                 all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
                 all(not(target_os = "macos"), feature = "cuda")
             ))]
-            Self::Gpu(backbone) => backbone.pooled(prompt),
+            Self::Gpu(backbone) => backbone.pooled(prompt, collect_samples),
         }
     }
     pub fn device_probe(&self) -> Option<&MetalProbe> {

@@ -16,6 +16,8 @@ fallback. Runtime labels must match the explicit physical-backend request. New
 CPU and CUDA paths still require actual execution and numerical verification;
 neither a CPU answer nor a capability declaration proves Metal execution.
 
+The verification-only scalar-F64 reference verifies complete immutable model/config hashes before computing expected values. It uses no candidate model or tensor math, while sharing generic parsing/hash infrastructure and the same author; these limits and its short-text scope prevent a claim of independently reviewed full-context equivalence. Raw block samples and expected tensors remain bounded private diagnostic exports outside Git. The primary receipt binds their paths/digests but does not elevate them into kernel publication authority. A missing, malformed, unsupported or disagreeing reference fails after independent native attempts have been collected. No Python specification code executes and no model weights enter the published crate. Required readiness evaluation and deterministic freshness gates remain authoritative even if numerical subset comparisons later pass.
+
 ## Explicit local task-transfer trust
 
 `src/decapod/core/task_transfer.rs` accepts source custody only with an independently
@@ -366,8 +368,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (31 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `8ae6b62255c62ef6eac154c0690956c505fdad8a243cb2eeaf42cb7f75ccc2b3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -548,6 +548,14 @@
       "proof_refs": [
         "docs/vega-reference-contract.md"
       ]
+    },
+    {
+      "id": "vega-scalar-backbone-reference",
+      "summary": "Author independent pinned scalar-F64 short-text backbone and combined engine/calibration comparison, private bounded raw samples and separate hash-bound numeric files. Preserve production runtime, weights outside crate, hard kernel gates and all unexecuted/reference-review/context/fallback/calibration gaps. No Python, candidate oracle, model outputs or threshold tuning; original native release blocker and failure history retained.",
+      "input_digest": "sha256:add12a7fbeb7b39c1c5b52d8ce2b939b5d06abecd015845817198e8385fa4231",
+      "proof_refs": [
+        "docs/vega-reference-contract.md"
+      ]
     }
   ],
   "intents": {
@@ -589,25 +597,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review current final v2 corpus/evaluation source before checkpoint: add explicit contradictory semantic-evidence cases before any observations/fitting, preserve v1/project splits/pins/numeric thresholds, report benchmark units without claiming independence, and score required abstentions separately. Private bounded in-process evaluation and unsatisfied final acceptance preserve existing architecture and security authority.",
-          "reviewed_code_fingerprint": "52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f",
-          "spec_material_hash": "dbaf21d4315585b899281c8348f453676a14830b4d5d3b745cb51aea4fd854cd"
+          "reason": "Current source adds independent scalar-F64 pinned short-text model equations without candidate math calls; both backend attempts precede reference calculation. Private raw samples only in proof mode; separate1MiB numeric exports with hash receipts. Preserve production Candle/CPU boundaries, full model/config integrity, same-author/shared-infrastructure limits, unexecuted status, long-context/fallback/calibration gaps and deterministic publication authority.",
+          "reviewed_code_fingerprint": "8ae6b62255c62ef6eac154c0690956c505fdad8a243cb2eeaf42cb7f75ccc2b3",
+          "spec_material_hash": "4a3ad7be59c579f6476a163ad19764840f685ed967ca48b1ab856a31c62e5f3d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review current final v2 corpus/evaluation source before checkpoint: add explicit contradictory semantic-evidence cases before any observations/fitting, preserve v1/project splits/pins/numeric thresholds, report benchmark units without claiming independence, and score required abstentions separately. Private bounded in-process evaluation and unsatisfied final acceptance preserve existing architecture and security authority.",
-          "reviewed_code_fingerprint": "52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f",
-          "spec_material_hash": "f8f494f89608a776855bd70f91b02947e69845c37e4e0f8495084f3fc3fb7c6d"
+          "reason": "Current source adds independent scalar-F64 pinned short-text model equations without candidate math calls; both backend attempts precede reference calculation. Private raw samples only in proof mode; separate1MiB numeric exports with hash receipts. Preserve production Candle/CPU boundaries, full model/config integrity, same-author/shared-infrastructure limits, unexecuted status, long-context/fallback/calibration gaps and deterministic publication authority.",
+          "reviewed_code_fingerprint": "8ae6b62255c62ef6eac154c0690956c505fdad8a243cb2eeaf42cb7f75ccc2b3",
+          "spec_material_hash": "d1fe15bfa79a27fbccc85fb9bbfc399534c3c9ca01930b3dc8fc8a872191c3ae"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review current final v2 corpus/evaluation source before checkpoint: add explicit contradictory semantic-evidence cases before any observations/fitting, preserve v1/project splits/pins/numeric thresholds, report benchmark units without claiming independence, and score required abstentions separately. Private bounded in-process evaluation and unsatisfied final acceptance preserve existing architecture and security authority.",
-          "reviewed_code_fingerprint": "52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f",
-          "spec_material_hash": "e662013621a917085bf3f02b57a7420ea4e07b824f0bbe82c8ddbdeabf2918da"
+          "reason": "Current source adds independent scalar-F64 pinned short-text model equations without candidate math calls; both backend attempts precede reference calculation. Private raw samples only in proof mode; separate1MiB numeric exports with hash receipts. Preserve production Candle/CPU boundaries, full model/config integrity, same-author/shared-infrastructure limits, unexecuted status, long-context/fallback/calibration gaps and deterministic publication authority.",
+          "reviewed_code_fingerprint": "8ae6b62255c62ef6eac154c0690956c505fdad8a243cb2eeaf42cb7f75ccc2b3",
+          "spec_material_hash": "1f8427f50bf86c723fbac220ab734fb1a287750ec94d355171e97e2995606f6b"
         }
       ],
       "state": "APPROVED",
@@ -620,7 +628,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792301380Z"
+      "updated_at": "1792304209Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -629,9 +637,10 @@
         "Final publication remains prohibited pending independent parity and readiness calibration acceptance; removing the general execution blocker only permits collection. Prior failed validation reports are retained.",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb",
         "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation.",
-        "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting."
+        "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
+        "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:da5e04c05f3e1635f9e88f71ba66dfe1797622ef22b83f9275ef411bc8275b83",
+      "artifact_hash": "sha256:1f6aaa838abf9c75f345006fceb7c5b4d64cb650e2a50365b1feba9e45bcce18",
       "blockers": [
         "Released119 native snapshot rejects the existing immutable golden fixture symlink; no supported additional alias review command exists. Native build/probe/model/reference/evaluation remain unexecuted pending an accepted released repair; do not alter the fixture or use a candidate controller."
       ],
@@ -789,6 +798,10 @@
           "status": "unavailable"
         },
         {
+          "name": "numerical_execution",
+          "status": "unavailable"
+        },
+        {
           "name": "official-controller117-checksum",
           "status": "passed"
         },
@@ -857,6 +870,10 @@
           "status": "passed"
         },
         {
+          "name": "scalar_reference_execution",
+          "status": "unavailable"
+        },
+        {
           "name": "selective-cli",
           "status": "failed"
         },
@@ -901,7 +918,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "freeze-v2-before-model-observations",
+      "current_phase": "scalar-reference-authored",
       "custody": {
         "events": [
           {
@@ -1139,10 +1156,24 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 35
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:36",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 36
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:37",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 37
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 35,
+        "next_sequence": 37,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1777,6 +1808,45 @@
                 ],
                 "sequence": 35,
                 "validation_findings": []
+              },
+              {
+                "action": "independent-backbone-reference-source",
+                "custody_event_id": "event:36",
+                "observations": [
+                  "Ferritebdaddf5c76b9392ba64e77fb565288fe1fdec53c inspected and rejected as oracle: primary README documents remaining SSM formula-level divergence, no licence file or published reference tensors in pinned tree. Mistral28ed6d requires reviewed private-tap adapter; speculative attachment is not substitute text-generation parity."
+                ],
+                "proof_refs": [
+                  "numerical_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 36,
+                "validation_findings": [
+                  "Pinned transformersv5.3.0 aad13b87ed59f2afcfaebc985f403301887a35fc modeling_qwen3_5.py SHA0e7410f5251e5c324a5628c5340ee3551f7a6a505ce398569fcc3b5f3ac07f7a read as mathematical specification only, never executed. Source config b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204, weight SHA04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696 independently pinned. Metadata range only read, not installed or used as inference proof.",
+                  "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation."
+                ]
+              },
+              {
+                "action": "scalar-reference-authored",
+                "custody_event_id": "event:37",
+                "observations": [
+                  "assets/tools/vega-native/reference_backbone.rs",
+                  "assets/tools/vega-native/reference_engine.rs",
+                  "assets/tools/vega_infer.rs",
+                  "assets/tools/vega-native/cpu_backbone.rs",
+                  "src/decapod/core/vega_backbone.rs",
+                  "Authored scalarF64 dense pure-text model equations from pinned Apache2 Transformers source aad13b87, strict config/model hashes, up to512tokens, rawblocks13/19/sample rows/pooling with no candidate math kernels. Hand-anchored projection/conv/delta/normalization/gate/RoPE and finite-comparison fixtures remain unexecuted. Both native backend attempts run before reference calculation, separate private1MiB output files retain numeric vectors and hashes. New combined independently computed engine/calibration probability tolerance0.005 declared before any model observations; existing engine and identical-readout calibration tolerances unchanged, discrete outcomes exact. Same-agent/shared parsing/hash limits and all full-context/fallback/readiness gaps retained. Explicit CPU evaluation now uses actual CPU arithmetic probe, not GPU-only API; not yet executed."
+                ],
+                "proof_refs": [
+                  "formatting",
+                  "scalar_reference_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 37,
+                "validation_findings": []
               }
             ]
           }
@@ -1805,8 +1875,10 @@
         "Actual CI error STALE_SPEC_REVIEW SECURITY.md or code changed after review; Architecture/Interfaces were current, Security needed supported current-code review after660974b4. Re-reviewed Security unchanged-with-reason and refreshed projections, retaining all failures and native-release blocker.",
         "Actual plain117 third report requires inventory reconciliation. Compared all discovered sources against accepted396f: only Cargo.toml/Cargo.lock/MODULE.bazel.lock changed plus four new native worker files; existing workflows/actions/executor helpers unchanged. Reviewed actual dependency and worker boundary, then explicitly updated only human-editable required-profile reviewed_sources_digest from supported agent.init inventory. No profile/provider/check graph change and no test execution claimed.",
         "Authored frozen-case Rust evaluation, explicit absolute-deadline inference children, omission of label/split/variant/rationale metadata, grouped exact binomial risk and all-case coverage. Synthetic tests protect small-sample risk, related-unit counts, errors versus abstention and expired dispatch; these tests are not executed until the required native recipe runs. Corpus split/calibration/tolerances unchanged; final added evaluation run remains non-accepting with current label authority and23units.",
+        "Authored scalarF64 dense pure-text model equations from pinned Apache2 Transformers source aad13b87, strict config/model hashes, up to512tokens, rawblocks13/19/sample rows/pooling with no candidate math kernels. Hand-anchored projection/conv/delta/normalization/gate/RoPE and finite-comparison fixtures remain unexecuted. Both native backend attempts run before reference calculation, separate private1MiB output files retain numeric vectors and hashes. New combined independently computed engine/calibration probability tolerance0.005 declared before any model observations; existing engine and identical-readout calibration tolerances unchanged, discrete outcomes exact. Same-agent/shared parsing/hash limits and all full-context/fallback/readiness gaps retained. Explicit CPU evaluation now uses actual CPU arithmetic probe, not GPU-only API; not yet executed.",
         "Cargo metadata regeneration preserved immutable native Git pins and package pins except local decapod0.117; resolver updated several existing Windows/socket dependency edges, retained for ordinary validation. No model weights or native runtime installed; setup still reports runtime_installed=false.",
         "Feature source and authored spec semantics exactly equal preserved f92f19d5baa14e79f3e4ab31c27eff5ff7a3dc9d, with no new feature scope. Earlier source contains63 vega/worker test cases and9 new/reworked existing-suite cases; none executed. Prior supported dependency metadata and exact pins retained unchanged.",
+        "Ferritebdaddf5c76b9392ba64e77fb565288fe1fdec53c inspected and rejected as oracle: primary README documents remaining SSM formula-level divergence, no licence file or published reference tensors in pinned tree. Mistral28ed6d requires reviewed private-tap adapter; speculative attachment is not substitute text-generation parity.",
         "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
         "Normal merge of accepted release201b5044 applied cleanly after71ea7f73. Official119 init regenerated entrypoints andDocker; authored config restored from backup to preserve semantics and exclude obsolete decision none. Cargo update changed local package118to119 and reconciled edges to already locked registry versions; model/backbone/tokenizer/engine/calibration/runtime pins unchanged. Explicitly reviewed inventoryeb0e08b6. Failed119 validation report preserved, no builds ran, domain evidence blockers retained.",
         "Official published controller0.117.0 now governs; prior preparation-only candidate is no longer used. Accepted release changes only changelog and Cargo version/lock. Reviewed generated entrypoint117 fingerprints and Docker release pin; template bodies unchanged, machine projections updated only by supported CLI.",
@@ -1867,6 +1939,7 @@
         "assets/tools/vega-native/cpu_backbone.rs",
         "assets/tools/vega-native/evaluation_corpus.rs",
         "assets/tools/vega-native/readiness_evaluation.rs",
+        "assets/tools/vega-native/reference_backbone.rs",
         "assets/tools/vega-native/reference_engine.rs",
         "assets/tools/vega-native/reference_tokenizer.rs",
         "assets/tools/vega_infer.rs",
@@ -1907,6 +1980,7 @@
         "24c706f5 executed1445 library tests with0 failures and3 ignored; CLI enforcement160.3s/contracts107.1s/entrypoints111.8s passed, including init refresh and portable parent retry policy. All CI jobs except dependency lint passed. Scope parking_lot to GPU targets/features, no lint waiver. Reviewed inventory d39eff26f37bdb8e49140867f78e116c4a9b93698ba5e20da8a486c2cca65f78. Native worker still uncompiled/unexecuted.",
         "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
         "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
+        "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
         "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
@@ -1914,6 +1988,7 @@
         "New companion binding/probe/classifier/receipt changes and regressions authored, no Rust tests executed for this candidate. Actual worker build/Metal/model/parity/calibration unavailable under current released native-proof contract; no manual build, shadow preflight, Python or artifact workaround used. Preserved native/reference/holdout blockers. Prerequisite5cee green but publication awaits public API rate reset; its candidate controller is not adopted.",
         "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change.",
         "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain.",
+        "Pinned transformersv5.3.0 aad13b87ed59f2afcfaebc985f403301887a35fc modeling_qwen3_5.py SHA0e7410f5251e5c324a5628c5340ee3551f7a6a505ce398569fcc3b5f3ac07f7a read as mathematical specification only, never executed. Source config b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204, weight SHA04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696 independently pinned. Metadata range only read, not installed or used as inference proof.",
         "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
         "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained.",
         "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked."
