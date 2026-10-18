@@ -388,6 +388,10 @@ mod native {
         probe_on_device(&checked_device(Backend::Metal)?)
     }
 
+    pub fn probe_backend(backend: Backend) -> Result<MetalProbe> {
+        probe_on_device(&checked_device(backend)?)
+    }
+
     /// Owned single-request runtime. `pooled` requires &mut self, so requests
     /// cannot share or race recurrent state through this interface.
     pub struct GpuBackbone {
@@ -688,7 +692,7 @@ mod native {
     all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
     all(not(target_os = "macos"), feature = "cuda")
 ))]
-pub use native::probe_metal;
+pub use native::{probe_backend, probe_metal};
 
 #[cfg(not(any(
     all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
@@ -698,6 +702,16 @@ pub fn probe_metal() -> Result<MetalProbe> {
     Err(BackboneError::HardwareUnavailable(
         "this runtime has no compiled Metal backend; an explicit Metal probe never falls back"
             .into(),
+    ))
+}
+
+#[cfg(not(any(
+    all(feature = "vega-native", target_os = "macos", target_arch = "aarch64"),
+    all(not(target_os = "macos"), feature = "cuda")
+)))]
+pub fn probe_backend(_: Backend) -> Result<MetalProbe> {
+    Err(BackboneError::HardwareUnavailable(
+        "this runtime has no compiled GPU backend".into(),
     ))
 }
 

@@ -66,10 +66,33 @@ pub enum WorkerErrorKind {
     InferenceFailed,
 }
 
+pub const BACKEND_CHECK_SCHEMA: &str = "decapod.vega-backend-check.v1";
+/// Model-free startup only. This carries no model input or readiness answer.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BackendCheck {
+    pub schema: String,
+    pub backend: Backend,
+    pub available: bool,
+    pub error_kind: Option<WorkerErrorKind>,
+    pub error: Option<String>,
+}
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AttemptPhase {
+    Capability,
+    #[default]
+    Inference,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BackendAttempt {
     pub backend: Backend,
+    #[serde(default)]
+    pub phase: AttemptPhase,
+    #[serde(default)]
+    pub runtime_sha256: String,
     pub request_id: String,
     pub error_kind: Option<WorkerErrorKind>,
     pub error: Option<String>,
@@ -120,6 +143,12 @@ impl Configuration {
 }
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
+pub struct RuntimePin {
+    pub runtime: PathBuf,
+    pub runtime_sha256: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Installation {
     pub directory: PathBuf,
     pub manifest_digest: String,
@@ -127,6 +156,9 @@ pub struct Installation {
     pub runtime: PathBuf,
     #[serde(default)]
     pub runtime_sha256: String,
+    /// Separate CPU-only executable when GPU libraries prevent worker startup.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpu_runtime: Option<RuntimePin>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -555,6 +587,116 @@ fn pinned_runtime(
     Ok(())
 }
 
+fn verify_runtime_pins(
+    installation: &Installation,
+    deadline: Instant,
+    cancel: &Cancellation,
+) -> io::Result<()> {
+    pinned_runtime(
+        &installation.runtime,
+        &installation.runtime_sha256,
+        deadline,
+        cancel,
+    )?;
+    if let Some(cpu) = &installation.cpu_runtime {
+        pinned_runtime(&cpu.runtime, &cpu.runtime_sha256, deadline, cancel)?;
+    }
+    Ok(())
+}
+fn runtime_for(installation: &Installation, backend: Backend) -> (&Path, &str) {
+    if backend == Backend::Cpu
+        && let Some(cpu) = &installation.cpu_runtime
+    {
+        return (&cpu.runtime, &cpu.runtime_sha256);
+    }
+    (&installation.runtime, &installation.runtime_sha256)
+}
+
+#[derive(Debug)]
+enum GpuStartup {
+    Available,
+    Unavailable {
+        reason: String,
+        separate_cpu_required: bool,
+    },
+}
+fn backend_check_response(bytes: &[u8], backend: Backend) -> io::Result<GpuStartup> {
+    let check: BackendCheck = serde_json::from_slice(bytes).map_err(io::Error::other)?;
+    if check.schema != BACKEND_CHECK_SCHEMA || check.backend != backend || backend == Backend::Cpu {
+        return Err(invalid("vega_backend_check_binding_invalid"));
+    }
+    match (check.available, check.error_kind, check.error) {
+        (true, None, None) => Ok(GpuStartup::Available),
+        (false, Some(WorkerErrorKind::HardwareUnavailable), Some(reason))
+            if !reason.is_empty() && reason.len() <= 512 =>
+        {
+            Ok(GpuStartup::Unavailable {
+                reason,
+                separate_cpu_required: false,
+            })
+        }
+        _ => Err(invalid("vega_backend_check_failed_or_malformed")),
+    }
+}
+
+/// No model paths, input state or readiness request is supplied to this process.
+/// Only typed hardware unavailability or the loader's empty exit127 can select
+/// another executable. Crashes, timeouts, malformed reports and compute errors
+/// remain failures. Inference outcomes never enter this startup classifier.
+fn check_gpu_startup(
+    installation: &Installation,
+    backend: Backend,
+    directory: &Path,
+    deadline: Instant,
+    cancel: &Cancellation,
+) -> io::Result<GpuStartup> {
+    let capture = Command::new(&installation.runtime)
+        .env_clear()
+        .args(["--backend-check", backend.device()])
+        .bounded_capture(
+            ProcessLimits {
+                timeout: deadline
+                    .checked_duration_since(Instant::now())
+                    .ok_or_else(|| invalid("vega_timeout"))?
+                    .min(Duration::from_secs(10)),
+                max_output_bytes: 16 * 1024,
+            },
+            cancel,
+        );
+    let capture = match capture {
+        // A verified ELF executable with an absent interpreter reports ENOENT.
+        // Every pin is checked again before the separately registered CPU starts.
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            return Ok(GpuStartup::Unavailable {
+                reason: "gpu_worker_loader_unavailable".into(),
+                separate_cpu_required: true,
+            });
+        }
+        other => other?,
+    };
+    private_write(
+        &directory.join("vega-capability.stdout"),
+        &capture.output.stdout,
+    )?;
+    private_write(
+        &directory.join("vega-capability.stderr"),
+        &capture.output.stderr,
+    )?;
+    if capture.termination != Termination::Exited {
+        return Err(invalid("vega_backend_check_cancelled_or_timeout"));
+    }
+    if !capture.output.status.success() {
+        if capture.output.status.code() == Some(127) && capture.output.stdout.is_empty() {
+            return Ok(GpuStartup::Unavailable {
+                reason: "gpu_worker_loader_exit127".into(),
+                separate_cpu_required: true,
+            });
+        }
+        return Err(invalid("vega_backend_check_process_failed"));
+    }
+    backend_check_response(&capture.output.stdout, backend)
+}
+
 pub(crate) fn capture_installation(config: &Configuration) -> io::Result<Option<Installation>> {
     if config.mode == Mode::Disabled {
         return Ok(None);
@@ -591,12 +733,7 @@ pub(crate) fn verify_installation_snapshot(
         deadline,
         cancel,
     )?;
-    pinned_runtime(
-        &installation.runtime,
-        &installation.runtime_sha256,
-        deadline,
-        cancel,
-    )
+    verify_runtime_pins(installation, deadline, cancel)
 }
 
 /// Shared policy and per-maintainer custody captured at validation entry.
@@ -668,8 +805,48 @@ pub(crate) fn assess(
             cancel,
         )?;
         receipt.manifest = Some(serde_json::to_value(&manifest).map_err(io::Error::other)?);
-        pinned_runtime(&install.runtime, &install.runtime_sha256, deadline, cancel)?;
+        verify_runtime_pins(install, deadline, cancel)?;
         receipt.runtime_sha256 = Some(install.runtime_sha256.clone());
+        let mut backend = config.backend.resolve();
+        if backend != Backend::Cpu {
+            let startup = check_gpu_startup(install, backend, directory, deadline, cancel)?;
+            let (error_kind, error) = match &startup {
+                GpuStartup::Available => (None, None),
+                GpuStartup::Unavailable { reason, .. } => (
+                    Some(WorkerErrorKind::HardwareUnavailable),
+                    Some(reason.clone()),
+                ),
+            };
+            receipt.backend_attempts.push(BackendAttempt {
+                backend,
+                phase: AttemptPhase::Capability,
+                runtime_sha256: install.runtime_sha256.clone(),
+                request_id: digest(&(
+                    &receipt.binding,
+                    "model-free-startup",
+                    backend,
+                    &install.runtime_sha256,
+                ))?,
+                error_kind,
+                error,
+            });
+            if let GpuStartup::Unavailable {
+                separate_cpu_required,
+                ..
+            } = startup
+            {
+                if !config.cpu_fallback {
+                    return Err(invalid("vega_gpu_unavailable_cpu_fallback_disabled"));
+                }
+                if separate_cpu_required && install.cpu_runtime.is_none() {
+                    return Err(invalid(
+                        "vega_cpu_runtime_registration_required: setup vega --runtime <gpu-worker> --cpu-runtime <cpu-only-worker>",
+                    ));
+                }
+                verify_installation_snapshot(config, captured_installation, deadline, cancel)?;
+                backend = Backend::Cpu;
+            }
+        }
         deadline
             .checked_duration_since(Instant::now())
             .ok_or_else(|| invalid("vega_timeout"))?;
@@ -693,19 +870,26 @@ pub(crate) fn assess(
             state,
             alpha: config.alpha.clone(),
             risk: config.risk.clone(),
-            backend: config.backend.resolve(),
+            backend,
         };
         let mut response = None;
         for attempt in 0..2 {
             // Every retry is a fresh process with a separately bound immutable input.
             // All attempts share the original overall deadline and frozen pins.
-            request.request_id = digest(&(&receipt.request_id, attempt, request.backend))?;
+            let (runtime, runtime_sha256) = runtime_for(install, request.backend);
+            receipt.runtime_sha256 = Some(runtime_sha256.to_owned());
+            request.request_id = digest(&(
+                &receipt.request_id,
+                attempt,
+                request.backend,
+                runtime_sha256,
+            ))?;
             let path = directory.join(format!("vega-input-{attempt}.json"));
             private_write(
                 &path,
                 &serde_json::to_vec(&request).map_err(io::Error::other)?,
             )?;
-            let capture = Command::new(&install.runtime)
+            let capture = Command::new(runtime)
                 .env_clear()
                 .arg("--request")
                 .arg(&path)
@@ -736,6 +920,8 @@ pub(crate) fn assess(
             }
             receipt.backend_attempts.push(BackendAttempt {
                 backend: request.backend,
+                phase: AttemptPhase::Inference,
+                runtime_sha256: runtime_sha256.to_owned(),
                 request_id: request.request_id.clone(),
                 error_kind: current.error_kind,
                 error: current
@@ -751,7 +937,7 @@ pub(crate) fn assess(
                     deadline,
                     cancel,
                 )?;
-                pinned_runtime(&install.runtime, &install.runtime_sha256, deadline, cancel)?;
+                verify_runtime_pins(install, deadline, cancel)?;
                 if capture_installation(config)?.as_ref() != Some(install) {
                     return Err(invalid("vega_local_binding_changed_before_fallback"));
                 }
@@ -785,7 +971,7 @@ pub(crate) fn assess(
             deadline,
             cancel,
         )?;
-        pinned_runtime(&install.runtime, &install.runtime_sha256, deadline, cancel)?;
+        verify_runtime_pins(install, deadline, cancel)?;
         if capture_installation(config)?.as_ref() != Some(install) {
             return Err(invalid("vega_local_binding_changed_during_inference"));
         }
@@ -1116,6 +1302,113 @@ mod projection_tests {
 mod tests {
     use super::*;
     #[test]
+    fn model_free_backend_checks_reject_answers_and_ambiguous_failures() {
+        let check = || BackendCheck {
+            schema: BACKEND_CHECK_SCHEMA.into(),
+            backend: Backend::Cuda,
+            available: false,
+            error_kind: Some(WorkerErrorKind::HardwareUnavailable),
+            error: Some("GPU unavailable".into()),
+        };
+        let bytes = |value: &BackendCheck| serde_json::to_vec(value).unwrap();
+        assert!(matches!(
+            backend_check_response(&bytes(&check()), Backend::Cuda).unwrap(),
+            GpuStartup::Unavailable {
+                separate_cpu_required: false,
+                ..
+            }
+        ));
+        let mut ready = check();
+        ready.available = true;
+        ready.error_kind = None;
+        ready.error = None;
+        assert!(matches!(
+            backend_check_response(&bytes(&ready), Backend::Cuda).unwrap(),
+            GpuStartup::Available
+        ));
+        for invalid in [
+            BackendCheck {
+                error_kind: Some(WorkerErrorKind::InferenceFailed),
+                ..check()
+            },
+            BackendCheck {
+                available: true,
+                ..check()
+            },
+            BackendCheck {
+                error_kind: None,
+                ..check()
+            },
+            BackendCheck {
+                error: None,
+                ..check()
+            },
+            BackendCheck {
+                error: Some(String::new()),
+                ..check()
+            },
+            BackendCheck {
+                error: Some("x".repeat(513)),
+                ..check()
+            },
+            BackendCheck {
+                backend: Backend::Cpu,
+                ..check()
+            },
+            BackendCheck {
+                schema: WORKER_SCHEMA.into(),
+                ..check()
+            },
+        ] {
+            assert!(backend_check_response(&bytes(&invalid), Backend::Cuda).is_err());
+        }
+        assert!(backend_check_response(&bytes(&check()), Backend::Metal).is_err());
+        let mut answer = serde_json::to_value(check()).unwrap();
+        answer["outcome"] = serde_json::to_value(outcome()).unwrap();
+        assert!(
+            backend_check_response(&serde_json::to_vec(&answer).unwrap(), Backend::Cuda).is_err()
+        );
+        for malformed in [b"".as_slice(), b"null", b"{", b"{}"] {
+            assert!(backend_check_response(malformed, Backend::Cuda).is_err());
+        }
+    }
+
+    #[test]
+    fn frozen_cpu_runtime_changes_fail_before_model_access() {
+        let mut config = Configuration {
+            mode: Mode::Required,
+            installation: Some(Installation {
+                directory: "/unavailable-model".into(),
+                manifest_digest: hash(b"model"),
+                runtime: "/gpu-worker".into(),
+                runtime_sha256: hash(b"gpu"),
+                cpu_runtime: Some(RuntimePin {
+                    runtime: "/cpu-worker".into(),
+                    runtime_sha256: hash(b"cpu"),
+                }),
+            }),
+            ..Default::default()
+        };
+        let captured = capture_installation(&config);
+        config
+            .installation
+            .as_mut()
+            .unwrap()
+            .cpu_runtime
+            .as_mut()
+            .unwrap()
+            .runtime_sha256 = hash(b"changed");
+        let error = verify_installation_snapshot(
+            &config,
+            &captured,
+            Instant::now() + Duration::from_secs(1),
+            &Cancellation::default(),
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains("local_binding_changed"));
+    }
+
+    #[test]
     fn portable_defaults_preserve_legacy_serialization_and_explicit_preferences() {
         let defaults: Configuration = toml::from_str("mode='required'").unwrap();
         assert_eq!(defaults.backend, BackendPreference::Auto);
@@ -1255,6 +1548,7 @@ mod tests {
             manifest_digest: hash(b"manifest"),
             runtime: PathBuf::from("/verified/worker"),
             runtime_sha256: hash(b"runtime"),
+            cpu_runtime: None,
         });
         assert!(verify_policy_acceptance(&required, &required).is_ok());
         let disabled = configuration_from_bytes(b"").unwrap();
@@ -1310,6 +1604,7 @@ mod tests {
                 manifest_digest: hash(b"model"),
                 runtime: PathBuf::from("/unavailable-worker"),
                 runtime_sha256: hash(b"worker"),
+                cpu_runtime: None,
             }),
             ..Default::default()
         };

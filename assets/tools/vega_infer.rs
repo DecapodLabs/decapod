@@ -89,6 +89,41 @@ fn main() {
 }
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args_os().skip(1).collect::<Vec<_>>();
+    if args.len() == 2 && args[0] == "--backend-check" {
+        use vega_readiness::{BACKEND_CHECK_SCHEMA, Backend, BackendCheck, WorkerErrorKind};
+        let backend = match args[1].to_str() {
+            Some("metal") => Backend::Metal,
+            Some("cuda") => Backend::Cuda,
+            _ => return Err("backend check requires metal or cuda".into()),
+        };
+        let (available, error_kind, error) = match vega_backbone::probe_backend(backend) {
+            Ok(_) => (true, None, None),
+            Err(error) => {
+                let kind = if matches!(error, vega_backbone::BackboneError::HardwareUnavailable(_))
+                {
+                    WorkerErrorKind::HardwareUnavailable
+                } else {
+                    WorkerErrorKind::InferenceFailed
+                };
+                (
+                    false,
+                    Some(kind),
+                    Some(error.to_string().chars().take(512).collect()),
+                )
+            }
+        };
+        println!(
+            "{}",
+            serde_json::to_string(&BackendCheck {
+                schema: BACKEND_CHECK_SCHEMA.into(),
+                backend,
+                available,
+                error_kind,
+                error,
+            })?
+        );
+        return Ok(());
+    }
     if args.len() == 1 && args[0] == "--probe" {
         println!("{}", serde_json::to_string(&vega_backbone::probe_metal()?)?);
         return Ok(());
@@ -97,7 +132,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         || args[0] != "--request"
         || (args.len() == 4 && args[2] != "--proof-output")
     {
-        return Err("usage: decapod-vega-infer --probe | --request <private-json> [--proof-output <new-private-json> (PRIVATE, maximum 1 MiB)]".into());
+        return Err("usage: decapod-vega-infer --probe | --backend-check <metal|cuda> | --request <private-json> [--proof-output <new-private-json> (PRIVATE, maximum 1 MiB)]".into());
     }
     let request: Request = serde_json::from_slice(&read_bounded(Path::new(&args[1]), 64 * 1024)?)?;
     if request.schema != vega_readiness::WORKER_SCHEMA

@@ -476,6 +476,17 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/39054791735"
       ]
+    },
+    {
+      "id": "cpu-companion-startup",
+      "summary": "Correct CUDA-linked worker startup boundary: verify/register optional separate CPU executable privately, freeze both pins, check GPU capability before supplying model/state, allow only typed hardware or strict loader unavailability to select CPU, preserve all malformed/numerical/negative/abstaining failure gates and same deadline. Record capability/inference phases and selected executable hashes. Material specs/docs and adversarial binding/protocol regressions authored; formatting passes but new Rust/native tests unexecuted. Native/controller/reference/holdout blockers remain; no candidate controller used, feature PR not ready.",
+      "input_digest": "sha256:7db54e1bd6f27cc52654f4ac9db41ba86de293803dc48c393af32759c0b439e4",
+      "proof_refs": [
+        "assets/tools/vega_infer.rs",
+        "src/decapod/core/vega_readiness.rs",
+        "src/decapod/core/vega_runtime.rs",
+        "src/decapod/core/vega_setup.rs"
+      ]
     }
   ],
   "intents": {
@@ -520,25 +531,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current scope: dependency repair confines parking_lot to Metal and optional CUDA; portable runtime and fail-closed contracts unchanged. Source CI24c706f5 passed1445 library tests and CLI tests, but native worker execution/parity/holdout remain unavailable.",
-          "reviewed_code_fingerprint": "a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273",
-          "spec_material_hash": "15b67660236b17041df5039630000e4055ec62e1471b9e6c778ec3a201121a3f"
+          "reason": "Reviewed frozen private CPU companion pins, model-free GPU startup, strict loader-only/typed hardware fallback, deadline and receipt identity. Malformed/numerical/negative/abstaining inference remains final non-ready; no source authority changes, new-controller adoption or native/parity/calibration claims. New tests require execution.",
+          "reviewed_code_fingerprint": "7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3",
+          "spec_material_hash": "8eca11774f2058d52189afc701faa41a6ef2cc53397fd245e698d6c0ec69a78b"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current scope: dependency repair confines parking_lot to Metal and optional CUDA; portable runtime and fail-closed contracts unchanged. Source CI24c706f5 passed1445 library tests and CLI tests, but native worker execution/parity/holdout remain unavailable.",
-          "reviewed_code_fingerprint": "a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273",
-          "spec_material_hash": "77496a6a3c6d1720e7564295dafea197de9e05a74f170d4702a5cf6761823efd"
+          "reason": "Reviewed frozen private CPU companion pins, model-free GPU startup, strict loader-only/typed hardware fallback, deadline and receipt identity. Malformed/numerical/negative/abstaining inference remains final non-ready; no source authority changes, new-controller adoption or native/parity/calibration claims. New tests require execution.",
+          "reviewed_code_fingerprint": "7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3",
+          "spec_material_hash": "034935179e57fe29ae7c2db7182d752a9428a26558486a69b526596a16138e81"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current scope: dependency repair confines parking_lot to Metal and optional CUDA; portable runtime and fail-closed contracts unchanged. Source CI24c706f5 passed1445 library tests and CLI tests, but native worker execution/parity/holdout remain unavailable.",
-          "reviewed_code_fingerprint": "a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273",
-          "spec_material_hash": "2f42c10838e08026a6fa3847c0c718ddf333f1eb1026351f439d13629f9ccfc5"
+          "reason": "Reviewed frozen private CPU companion pins, model-free GPU startup, strict loader-only/typed hardware fallback, deadline and receipt identity. Malformed/numerical/negative/abstaining inference remains final non-ready; no source authority changes, new-controller adoption or native/parity/calibration claims. New tests require execution.",
+          "reviewed_code_fingerprint": "7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3",
+          "spec_material_hash": "75b41128904305448d1fbda9d60708781ec16a62a5dae01512483fdb5399dd39"
         }
       ],
       "state": "APPROVED",
@@ -552,15 +563,16 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792263771Z"
+      "updated_at": "1792284189Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Candidate CLI is local preparation-only, not feature build/test/readiness authority; no bootstrap exception",
         "Current claimed task and isolated work branch",
-        "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb"
+        "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb",
+        "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation."
       ],
-      "artifact_hash": "sha256:1e46e1a6ded5f52dc42f5a7374206af814a4d76276cc68524ea06890648e829a",
+      "artifact_hash": "sha256:09e9e07f529c176403bca76a41f67de5ea26c32d944f81f11ce8ae906635e620",
       "blockers": [
         "Independent pinned backbone/pooling reference and readiness holdout not supplied; existing 2050 upstream choice results lack required raw features/readiness labels.",
         "Released v0.118 strict source contract lacks a supplemental host worker build/test/probe/inference recipe; generic proof CLI resolves canonical root, not task workspace. Independent accepted/released adapter required; no profile downgrade or candidate self-authorization."
@@ -572,6 +584,18 @@
         },
         {
           "name": "corrected-source-ci",
+          "status": "passed"
+        },
+        {
+          "name": "cpu-companion-rustfmt",
+          "status": "passed"
+        },
+        {
+          "name": "cpu-companion-tests",
+          "status": "unavailable"
+        },
+        {
+          "name": "cpu-companion-whitespace",
           "status": "passed"
         },
         {
@@ -723,6 +747,10 @@
           "status": "failed"
         },
         {
+          "name": "source-inventory-review",
+          "status": "passed"
+        },
+        {
           "name": "source_ci_86dd4c",
           "status": "failed"
         },
@@ -739,7 +767,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "repair",
+      "current_phase": "cpu-startup-source-prepared",
       "custody": {
         "events": [
           {
@@ -872,10 +900,24 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 20
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:21",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 21
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:22",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 22
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 20,
+        "next_sequence": 22,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1222,6 +1264,51 @@
                   "24c706f5 executed1445 library tests with0 failures and3 ignored; CLI enforcement160.3s/contracts107.1s/entrypoints111.8s passed, including init refresh and portable parent retry policy. All CI jobs except dependency lint passed. Scope parking_lot to GPU targets/features, no lint waiver. Reviewed inventory d39eff26f37bdb8e49140867f78e116c4a9b93698ba5e20da8a486c2cca65f78. Native worker still uncompiled/unexecuted.",
                   "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained."
                 ]
+              },
+              {
+                "action": "cpu-startup-repair",
+                "custody_event_id": "event:21",
+                "observations": [
+                  "assets/tools/vega-native/Cargo.toml",
+                  "src/decapod/core/vega_runtime.rs",
+                  "src/decapod/core/vega_readiness.rs",
+                  "src/decapod/core/vega_setup.rs"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 21,
+                "validation_findings": [
+                  "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet."
+                ]
+              },
+              {
+                "action": "cpu-startup-source-prepared",
+                "custody_event_id": "event:22",
+                "observations": [
+                  "src/decapod/core/vega_readiness.rs",
+                  "src/decapod/core/vega_runtime.rs",
+                  "src/decapod/core/vega_setup.rs",
+                  "src/decapod/core/vega_backbone.rs",
+                  "assets/tools/vega_infer.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "Reviewed source inventory af80666ea82e703e48f74a57cf5797e7dceb1cfa820dc314105d9e5bf3cbdf33; substituting only old9d worker entrypoint bytes reproduces prior d39eff26 inventory exactly. No Cargo pins, graph or source carrier changed."
+                ],
+                "proof_refs": [
+                  "cpu-companion-rustfmt",
+                  "cpu-companion-whitespace",
+                  "source-inventory-review",
+                  "cpu-companion-tests"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 22,
+                "validation_findings": [
+                  "New companion binding/probe/classifier/receipt changes and regressions authored, no Rust tests executed for this candidate. Actual worker build/Metal/model/parity/calibration unavailable under current released native-proof contract; no manual build, shadow preflight, Python or artifact workaround used. Preserved native/reference/holdout blockers. Prerequisite5cee green but publication awaits public API rate reset; its candidate controller is not adopted."
+                ]
               }
             ]
           }
@@ -1256,6 +1343,7 @@
         "Released0.118.0 imported accepted transfer01M5470V8JDG8WJA1WX2EJ098Y under receivercodex-vega-metal. Exact source-supplied artifact sha256:5cf05c74167d81052460666ee1ae87112ce5e101335875df65aa5181bb2efec4 verified before import. Taskfeat_01m52fnwybfvhfdj identity and nested provenance retained, destination revision8; journal verify valid without missing/divergent projections. Fresh exclusive claim succeeded. Root ensure refused recreating existing branch; registered worktree was preserved and moved to managed path, then workspace ensure accepted can_work=true. Originalfeature5f2801e581ec9d436c28c5df2a9a64e261efa895 retained, no history rewrite. Normal no-commit merge accepted24490934 underway. Retained original feature governance from committed Git during merge; accepted prerequisite governance remains in merge-parent history. Supported specs.refresh reconciled generated conflict blocks while preserving all authored transfer and Vega prose. All previous validation failures remain; native/independent parity/calibration still unverified.",
         "Released117 authoritative run at87a13363 reached provider_terminal_wait then failed Docs Sync Buildkite1933 uuid01a145a6-9e36-4379-8009-3523c0d6e03d; evidence /tmp/decapod-snapshot-HOyW3w. Actual clippy flags mixed return type_complexity: replaced tuple spelling with meaningful MixedSlotsAndOptions alias, no lint suppression. GHA Docs Sync job117091823692 log contains no complete diff; no archive read. Corrected ordinary config-schema source from exact canonical Rust config declaration, readiness_config_contract literal and repository-readiness include, preserving documented alpha/risk/pins. This is source-derived correction, not locally executed candidate generation; CI equality remains pending. command-contracts already matches its only renderer-source change.",
         "Repaired actual source failures: moved LocalVerification before test module without suppression; init retires only known none/jev selector and preserves unrelated keys, unknown/malformed selectors fail without config overwrite; installation independently verifies private no-clobber copies instead of cache hardlinks while retaining nlink checks. Added cache reuse/corruption/hardlink/cancellation/install-failure regressions and both init-surface dry-run/idempotence/extension/unknown-selector coverage. Tests authored, not executed. Official Cargo metadata reconciliation updates only local decapod version0.117->0.118 and resolver-selected edges among already locked socket/getrandom/Windows packages; native Git identities unchanged. Reviewed supported agent.init inventory f24497519b688749366c03ec1a580bf34fcae4e819593aad1e921351f977cc6b against accepted source; only existing Cargo/native inputs differ, no CI policy/helper/check graph change. Backed up user config then retained all unrelated settings and removed exact retired provider none. Source and governance ready for plain validate; native and numerical/domain acceptance still unverified. Canonical task claim renewed after session expiry; all further controller mutations use consistent machine session.",
+        "Reviewed source inventory af80666ea82e703e48f74a57cf5797e7dceb1cfa820dc314105d9e5bf3cbdf33; substituting only old9d worker entrypoint bytes reproduces prior d39eff26 inventory exactly. No Cargo pins, graph or source carrier changed.",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -1269,9 +1357,13 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39054791735/job/117460563616"
       ],
       "inspected_files": [
+        "assets/tools/vega-native/Cargo.toml",
         "docs/agent/repository-readiness.md",
         "src/decapod/core/proof.rs",
-        "src/decapod/core/validation_runtime.rs"
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/vega_readiness.rs",
+        "src/decapod/core/vega_runtime.rs",
+        "src/decapod/core/vega_setup.rs"
       ],
       "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
       "modified_files": [
@@ -1295,6 +1387,7 @@
       ],
       "next_transitions": [
         "Checkpoint exact feature delta on accepted base; use ordinary validation only after supported released controller is available",
+        "Implement bounded local CPU runtime binding, pre-inference startup classification and regressions; preserve active blockers and run prescribed validation after checkpoint.",
         "Refine plan and declare falsifiable checks",
         "Retry full validate after provider rate-limit reset; retain original task claim and source branch; native proof depends on supported released recipe and independent reference/label artifacts.",
         "Run plain released0.117 validation on the exact release-updated candidate and repair its actual report"
@@ -1313,8 +1406,10 @@
         "24c706f5 executed1445 library tests with0 failures and3 ignored; CLI enforcement160.3s/contracts107.1s/entrypoints111.8s passed, including init refresh and portable parent retry policy. All CI jobs except dependency lint passed. Scope parking_lot to GPU targets/features, no lint waiver. Reviewed inventory d39eff26f37bdb8e49140867f78e116c4a9b93698ba5e20da8a486c2cca65f78. Native worker still uncompiled/unexecuted.",
         "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
+        "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
         "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
         "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
+        "New companion binding/probe/classifier/receipt changes and regressions authored, no Rust tests executed for this candidate. Actual worker build/Metal/model/parity/calibration unavailable under current released native-proof contract; no manual build, shadow preflight, Python or artifact workaround used. Preserved native/reference/holdout blockers. Prerequisite5cee green but publication awaits public API rate reset; its candidate controller is not adopted.",
         "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain.",
         "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
         "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained.",

@@ -647,7 +647,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273`
+- Repository signal fingerprint: `7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -760,3 +760,16 @@ fixtures separately cover successful prepared proof capture and atomic status
 commit. The ignored positive public-CLI full-readiness fixture remains an explicit
 coverage gap, not a passing acceptance test. Completion/runtime edits additionally
 select Gatling so future changes cannot silently omit this regression.
+
+## Separate CPU executable regression obligations
+
+The CUDA-loader correction has authored, unexecuted regressions for strict
+model-free capability envelopes, rejected outcome injection, contradictory
+availability/error pairs, wrong backend/schema, malformed and oversized errors,
+CPU-pin changes before model access, and atomic private binding retention after
+failed CPU registration. Setup rejects an orphan CPU option before cache/network
+access. Existing unsafe-hardlink and inference-negative/abstention retry rejection
+coverage remains required. Rustfmt and whitespace checks pass; these are not
+executed Rust tests. Actual loader fallback, native worker compilation, Metal
+probe/model inference, independent backbone parity and readiness holdout proof
+remain outstanding and must run through the accepted released controller.

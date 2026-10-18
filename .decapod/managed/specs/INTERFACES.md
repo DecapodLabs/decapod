@@ -552,7 +552,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273`
+- Repository signal fingerprint: `7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -596,3 +596,18 @@ both discovered digests for review without updating them or implying proof succe
 retain authored configuration even under `--force`; explicit arguments still change
 it. The generated GitHub validation workflow fetches complete history and supplies
 immutable `CHANGE_EVENT`, `CHANGE_BASE` and `CHANGE_HEAD` to CI-local validation.
+
+## Local CPU companion and model-free startup protocol
+
+`setup vega --runtime <native-worker> --cpu-runtime <cpu-only-worker>` registers
+optional separate CPU bytes privately. The CPU option requires the primary
+runtime and conflicts with read-only update checks. Legacy bindings omit this
+optional field without changing their serialized identity. A loader failure
+cannot be retried through the same unavailable GPU executable.
+
+`decapod.vega-backend-check.v1` binds a requested GPU backend to an availability
+boolean and optional typed bounded error; it has no outcome, model path or state.
+Unknown fields, contradictory status, wrong schema/backend and compute errors
+are rejected. A successful capability check is not a readiness verdict.
+`BackendAttempt` records capability/inference phase and executable SHA-256; the
+receipt's runtime pin identifies the final selected inference executable.

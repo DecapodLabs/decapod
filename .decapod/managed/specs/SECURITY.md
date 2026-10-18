@@ -366,7 +366,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273`
+- Repository signal fingerprint: `7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -419,3 +419,17 @@ authored proof policy continues to deny disallowed programs; missing relevant
 permissions in a present policy and malformed policy fail closed. No policy
 file is rewritten as a repair, and generic callers cannot request the sealed
 capability without the reviewed contract and measured invocation.
+
+## CPU companion and pre-inference startup custody
+
+Both local executable pins are frozen and verified with native-format, owner,
+mode, single-link, bounded-size and SHA-256 checks. Setup verifies the optional
+CPU companion before replacing its private binding; no shared policy path or
+implicit executable discovery selects it. An absent ELF interpreter or empty
+exit 127 can select only an explicitly pinned CPU companion, before a model
+request is supplied. Typed hardware-only startup failures may select the same
+worker's CPU path. Malformed capability reports, other exits/signals, timeout,
+compute failure and negative/abstaining/malformed inference remain non-ready.
+Attempt phase/runtime hashes distinguish startup from inference. A registered
+native executable remains operator-trusted code; headers and self-reports are
+not independent build provenance, dispatch, numerical or calibration evidence.

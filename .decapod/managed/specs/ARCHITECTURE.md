@@ -509,7 +509,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273`
+- Repository signal fingerprint: `7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -599,3 +599,17 @@ retried jobs remain rejection conditions. The complete required catalog chooses
 which configured workflows must run; an inapplicable documentation-sync workflow
 does not become an extra execution obligation. This change establishes neither
 vega inference nor native Apple GPU readiness.
+
+## CPU startup across separate executable pins
+
+`vega_readiness::Installation` may bind a separate `cpu_runtime: RuntimePin`.
+`vega_setup` verifies both executable hashes before atomically registering the
+private local binding; validation freezes and rechecks both pins. This handles
+CUDA dependencies that can prevent a GPU worker from reaching its CPU code.
+A model-free `vega_infer --backend-check` precedes supplying inference state,
+and uses the existing real GPU arithmetic probe. It cannot produce a readiness
+outcome. Typed hardware unavailability may select CPU; absent interpreter or
+empty loader exit 127 requires the separate CPU pin. Invalid reports and all
+other process/numerical failures remain non-ready. Every attempt stays within
+the same deadline and immutable model/calibration binding. These source changes
+are not yet executed native evidence.

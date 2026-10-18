@@ -852,6 +852,9 @@ pub(crate) enum SetupCommand {
         /// Register this maintainer's installed worker without committing its path.
         #[clap(long, conflicts_with = "check_updates")]
         runtime: Option<PathBuf>,
+        /// Register a separate CPU-only worker for machines missing GPU libraries.
+        #[clap(long, requires = "runtime", conflicts_with = "check_updates")]
+        cpu_runtime: Option<PathBuf>,
         #[clap(long, conflicts_with_all = ["refresh", "offline", "rollback"])]
         check_updates: bool,
         #[clap(long, conflicts_with_all = ["check_updates", "offline", "rollback"])]

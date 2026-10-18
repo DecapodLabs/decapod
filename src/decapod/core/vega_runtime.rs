@@ -148,6 +148,11 @@ fn validate_binding(binding: &LocalBinding, manifest: &str) -> io::Result<()> {
         || installation.directory.canonicalize()? != installation.directory
         || installation.runtime.canonicalize()? != installation.runtime
         || !vega_setup::valid_digest(&installation.runtime_sha256)
+        || installation.cpu_runtime.as_ref().is_some_and(|cpu| {
+            !cpu.runtime.is_absolute()
+                || cpu.runtime.canonicalize().ok().as_ref() != Some(&cpu.runtime)
+                || !vega_setup::valid_digest(&cpu.runtime_sha256)
+        })
     {
         return Err(invalid("vega_local_binding_invalid"));
     }
@@ -252,6 +257,7 @@ mod tests {
             manifest_digest: super::super::vega_readiness::hash(b"shared model"),
             runtime,
             runtime_sha256,
+            cpu_runtime: None,
         }
     }
 
@@ -350,5 +356,35 @@ mod tests {
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn cpu_binding_is_private_and_failed_registration_preserves_prior_binding() {
+        let primary = tempfile::tempdir().unwrap();
+        let cpu = tempfile::tempdir().unwrap();
+        let mut installation = fixture(primary.path(), 9);
+        register_at(primary.path(), installation.clone()).unwrap();
+        let path = binding_path(primary.path(), &installation.manifest_digest).unwrap();
+        let before = fs::read(&path).unwrap();
+        let worker = fixture(cpu.path(), 10);
+        installation.cpu_runtime = Some(super::super::vega_readiness::RuntimePin {
+            runtime: cpu.path().join("missing"),
+            runtime_sha256: worker.runtime_sha256.clone(),
+        });
+        assert!(register_at(primary.path(), installation.clone()).is_err());
+        assert_eq!(fs::read(&path).unwrap(), before);
+        installation.cpu_runtime.as_mut().unwrap().runtime = worker.runtime;
+        register_at(primary.path(), installation.clone()).unwrap();
+        assert_eq!(
+            resolve_at(primary.path(), &installation.manifest_digest).unwrap(),
+            installation
+        );
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::{MetadataExt, PermissionsExt};
+            let metadata = fs::metadata(&path).unwrap();
+            assert_eq!(metadata.permissions().mode() & 0o077, 0);
+            assert_eq!(metadata.nlink(), 1);
+        }
     }
 }

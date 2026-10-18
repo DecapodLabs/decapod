@@ -2707,6 +2707,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             SetupCommand::Vega {
                 cache_directory,
                 runtime,
+                cpu_runtime,
                 check_updates,
                 refresh,
                 offline,
@@ -2715,6 +2716,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 let report = core::vega_setup::run(&core::vega_setup::SetupOptions {
                     cache_directory,
                     runtime,
+                    cpu_runtime,
                     check_updates,
                     refresh,
                     offline,

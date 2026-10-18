@@ -39,6 +39,8 @@ pub struct SetupOptions {
     pub cache_directory: Option<PathBuf>,
     /// Explicitly register this maintainer's already installed native worker.
     pub runtime: Option<PathBuf>,
+    /// Optional separately built CPU worker, verified and registered atomically.
+    pub cpu_runtime: Option<PathBuf>,
     pub check_updates: bool,
     pub refresh: bool,
     pub offline: bool,
@@ -1439,13 +1441,15 @@ fn report(
         configuration_toml,
         runtime_installed: false,
         runtime_registered: false,
-        detail: "Model data only, base engine with adapters explicitly off. Optional --runtime registers this maintainer's installed executable bytes privately; it does not build or execute the worker. Apply shared model configuration explicitly; setup does not edit project policy. Inference uses the immutable policy pin and local binding, never the active pointer. Registration and metadata compatibility do not establish numerical parity or readiness-domain calibration.",
+        detail: "Model data only, base engine with adapters explicitly off. Optional --runtime and --cpu-runtime register this maintainer's verified executable pins privately; setup does not build or execute workers. Apply shared model configuration explicitly; setup does not edit project policy. Inference uses the immutable policy pin and local binding, never the active pointer. Registration and metadata compatibility do not establish numerical parity or readiness-domain calibration.",
     })
 }
 fn validate_options(options: &SetupOptions) -> io::Result<()> {
-    if options.check_updates && options.runtime.is_some() {
+    if (options.check_updates && (options.runtime.is_some() || options.cpu_runtime.is_some()))
+        || (options.cpu_runtime.is_some() && options.runtime.is_none())
+    {
         return Err(invalid(
-            "runtime registration cannot be a read-only update check",
+            "CPU runtime registration requires --runtime and cannot be a read-only update check",
         ));
     }
     if [
@@ -1500,12 +1504,29 @@ pub fn run(options: &SetupOptions) -> io::Result<SetupReport> {
             transport.deadline,
             transport.cancellation,
         )?;
+        let cpu_runtime = options
+            .cpu_runtime
+            .as_ref()
+            .map(|path| {
+                let runtime = path.canonicalize()?;
+                let runtime_sha256 = super::vega_runtime::runtime_digest(
+                    &runtime,
+                    transport.deadline,
+                    transport.cancellation,
+                )?;
+                Ok::<_, io::Error>(super::vega_readiness::RuntimePin {
+                    runtime,
+                    runtime_sha256,
+                })
+            })
+            .transpose()?;
         transport.checkpoint()?;
         super::vega_runtime::register(super::vega_readiness::Installation {
             directory,
             manifest_digest,
             runtime,
             runtime_sha256,
+            cpu_runtime,
         })?;
         report.runtime_registered = true;
     }
@@ -2030,6 +2051,10 @@ mod tests {
         let root = scratch.path().join("absent-cache");
         let transport = MemoryTransport::default();
         for options in [
+            SetupOptions {
+                cpu_runtime: Some(PathBuf::from("/unavailable-cpu-worker")),
+                ..Default::default()
+            },
             SetupOptions {
                 offline: true,
                 refresh: true,

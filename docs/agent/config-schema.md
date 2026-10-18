@@ -224,13 +224,28 @@ its `cuda` Cargo feature and NVIDIA toolchain; ordinary CPU builds need no CUDA
 toolkit. AMD/Intel GPU acceleration is not implemented. These source paths still
 require execution evidence before portability can be claimed.
 
-Only an explicit hardware-unavailable result may trigger a fresh CPU process,
-with identical frozen pins and the original overall deadline. Failed checks,
-invalid output, timeout, crash, numerical errors, abstention and negative decisions
-never trigger a retry to seek acceptance. Set `cpu_fallback = false` for an
-accelerator-required operation. Receipts disclose backend and failed attempts;
-a CPU result never proves Metal ran. Each maintainer performs explicit local
-setup once; shared policy never contains their local executable paths.
+A CUDA-linked executable may fail in the OS loader before it can select CPU.
+`setup vega --runtime <gpu-worker> --cpu-runtime <cpu-only-worker>` verifies and
+atomically registers both executable pins in private local metadata. The CPU
+companion uses the same reviewed Rust source with CUDA disabled. Neither path
+belongs in shared project policy; no runtime is built or executed during setup.
+
+After deterministic proof passes, a bounded `--backend-check <metal|cuda>` process
+checks GPU startup and real model-free arithmetic without receiving model paths,
+validation state or an inference request. A typed hardware-unavailable result may
+select CPU. A verified executable reporting an absent ELF interpreter or empty
+loader exit 127 may use only an explicitly pinned CPU companion. Every executable
+pin and the model binding are rechecked before fallback; the overall deadline
+and model/calibration identities stay fixed. Missing companions fail closed.
+
+Malformed or contradictory capability reports, crashes, timeouts and numerical
+errors fail closed. Once inference starts, only typed hardware unavailability
+without any tokens or outcome permits a fresh CPU attempt. Negative decisions,
+abstention and malformed model results never trigger a retry to seek acceptance.
+Set `cpu_fallback = false` to require the selected accelerator. Receipts distinguish
+capability checks from inference and disclose each runtime digest and actual final
+backend. CPU success never proves Metal ran. These paths need actual native
+execution evidence; authored tests and source inspection do not establish it.
 
 The pinned Candle GPU path captures raw blocks 13/19 and pools
 F32 state/question/option/chunk features. The separate Rust CPU path uses the same

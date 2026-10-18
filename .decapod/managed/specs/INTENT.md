@@ -200,7 +200,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a7c67dd143c133d391e563bc602310625162271247b5254b7d9d7711ce026273`
+- Repository signal fingerprint: `7c540bcc1db7a5ec5ee2adc499c43c06f1ca5288dcacf8b5f1d4b87c47df27b3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (209 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -225,3 +225,13 @@ proof cannot be blessed, and only an uncertainty-free positive singleton yes can
 satisfy required assessment. External pinned model setup and explicit refresh
 remain separate from offline inference. Source preparation is not native parity,
 readiness calibration, latency evidence or publication readiness.
+
+## Optional team publication gate
+
+When a team explicitly enables `[vega] mode = "required"`, the agent may create
+a PR only after both deterministic validation and a current positive Vega
+assessment pass. Vega rejection, abstention or missing/stale/malformed evidence
+keeps publication blocked. Disabled policy retains ordinary validation gates.
+The shared configuration and init selection apply to maintainers; local runtime
+paths stay private, and the human retains merge authority. This is the intended
+integration contract; native execution and calibration proof remain outstanding.
