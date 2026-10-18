@@ -1147,6 +1147,13 @@ fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() 
         let f = Fixture::new("[proof]\n");
         fs::create_dir_all(f.options.root.join(TARGET).parent().unwrap()).unwrap();
         fs::write(f.options.root.join(TARGET), "immutable fixture target\n").unwrap();
+        fs::write(
+            f.options
+                .root
+                .join("tests/fixtures/state_commit_repo/other-target.txt"),
+            "in-repository referent\n",
+        )
+        .unwrap();
         symlink("target.txt", f.options.root.join(ALIAS)).unwrap();
         run(&f.options.root, &["add", "."]);
         run(&f.options.root, &["commit", "-m", "reviewed fixture alias"]);
@@ -1179,13 +1186,6 @@ fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() 
             "missing-working-target" => fs::remove_file(f.options.root.join(TARGET)).unwrap(),
             "symlink-target" => {
                 fs::remove_file(f.options.root.join(TARGET)).unwrap();
-                fs::write(
-                    f.options
-                        .root
-                        .join("tests/fixtures/state_commit_repo/other-target.txt"),
-                    "in-repository referent\n",
-                )
-                .unwrap();
                 symlink("other-target.txt", f.options.root.join(TARGET)).unwrap();
             }
             "missing-index-target" | "missing-head-target" => {
@@ -1207,7 +1207,13 @@ fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() 
         // The full material tree binds the fixture, including deletions. Keep
         // the explicit required input inventory on the fixture's Cargo source
         // so missing-target scenarios reach the snapshot's own checks.
-        let inputs = f.inputs();
+        let mut inputs = f.inputs();
+        if scenario == "missing-index-target" {
+            // Removing the index entry leaves a real untracked target. Declare
+            // that test input so the index-target check, not an unrelated
+            // undeclared-file guard, is what must reject the snapshot.
+            inputs.declared_untracked.insert(TARGET.into());
+        }
         let before = run(&f.options.root, &["status", "--porcelain"]);
         let captured =
             native_proof::capture_current_identity(&inputs, &BTreeMap::new(), limits, &cancel);
@@ -1218,7 +1224,7 @@ fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() 
             assert_eq!(run(&f.options.root, &["status", "--porcelain"]), before);
             continue;
         }
-        let identity = captured.unwrap();
+        let identity = captured.unwrap_or_else(|error| panic!("{scenario}: {error}"));
         let denied = if scenario == "denied-alias" {
             BTreeSet::from([ALIAS.into()])
         } else {

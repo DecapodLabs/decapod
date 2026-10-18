@@ -367,6 +367,11 @@
       "id": "reject-escape-before-snapshot",
       "summary": "Repair executed regression: escaping link must fail at material capture; in-tree target symlink independently reaches target-type rejection. Preserve source/validation failures and public-reader reset.",
       "input_digest": "sha256:e2f1ebe44eb8cb77ca531275713be0874d3cb600c886dc8fd8e354313b1fbe9a"
+    },
+    {
+      "id": "declare-snapshot-regression-inputs",
+      "summary": "Repair real test fixture setup: commit in-tree referent background and declare retained untracked target for missing-index case; production safety and failure history unchanged.",
+      "input_digest": "sha256:3096914782e104e30239d40319cdac8ff985a2dcd827e15b63565b442ac9b8fc"
     }
   ],
   "intents": {
@@ -408,22 +413,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Regression expectation now checks earlier material rejection for escaping links and independently exercises in-tree symlink targets; production alias/snapshot contract and safety boundaries are unchanged.",
-          "reviewed_code_fingerprint": "7071f466f35b470706739406c799bdab2baf305f97a0098ebfbd95881c708809",
+          "reason": "Only temporary regression inputs are now declared/committed to reach intended checks. Production exact-alias, no-follow, input and authority contracts remain unchanged.",
+          "reviewed_code_fingerprint": "6674d2ff8f7cfb2f6bc76ac2ee0eb158e2d613a0a036c82e1975e9c56a9dc665",
           "spec_material_hash": "c5d45b45f01b126c122cb281e0357d4fcf8b4134220c4f60467fde0a8d0495f4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Regression expectation now checks earlier material rejection for escaping links and independently exercises in-tree symlink targets; production alias/snapshot contract and safety boundaries are unchanged.",
-          "reviewed_code_fingerprint": "7071f466f35b470706739406c799bdab2baf305f97a0098ebfbd95881c708809",
+          "reason": "Only temporary regression inputs are now declared/committed to reach intended checks. Production exact-alias, no-follow, input and authority contracts remain unchanged.",
+          "reviewed_code_fingerprint": "6674d2ff8f7cfb2f6bc76ac2ee0eb158e2d613a0a036c82e1975e9c56a9dc665",
           "spec_material_hash": "0f3b0b57b5d01999e22dee2b84b7552ede21e1930a338cd36ffe2ce288b84fef"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Regression expectation now checks earlier material rejection for escaping links and independently exercises in-tree symlink targets; production alias/snapshot contract and safety boundaries are unchanged.",
-          "reviewed_code_fingerprint": "7071f466f35b470706739406c799bdab2baf305f97a0098ebfbd95881c708809",
+          "reason": "Only temporary regression inputs are now declared/committed to reach intended checks. Production exact-alias, no-follow, input and authority contracts remain unchanged.",
+          "reviewed_code_fingerprint": "6674d2ff8f7cfb2f6bc76ac2ee0eb158e2d613a0a036c82e1975e9c56a9dc665",
           "spec_material_hash": "810fff8f30cfdfa702cb3a9076669bac11b936b500bf9dc40c731bf660fb9665"
         }
       ],
@@ -437,17 +442,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792294841Z"
+      "updated_at": "1792295464Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Separate controller prerequisite only. Original Vega branch/task preserved and yielded to serialize exclusive claims; no candidate-controller or native Vega acceptance."
       ],
-      "artifact_hash": "sha256:95393ef7046a159b80748fd21f1211c031bf67b2cbb8d44a73d4abe01d2db6c7",
+      "artifact_hash": "sha256:ee5802387ea6f5c0d1ec6cf37f50216469637beedcef8902be0f5f8970ef03b6",
       "checks": [
         {
           "name": "alias_regression_first_execution",
+          "status": "failed"
+        },
+        {
+          "name": "alias_regression_second_execution",
           "status": "failed"
         },
         {
@@ -467,7 +476,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "repair_regression_expectation",
+      "current_phase": "repair_declared_fixture_inputs",
       "custody": {
         "events": [
           {
@@ -502,10 +511,17 @@
             "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M56GQQ03BZZP9D6VS7NNRBHV",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M56GQQ03BZZP9D6VS7NNRBHV": {
@@ -562,6 +578,21 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "repair_declared_fixture_inputs",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "SourceCI39094466981 job117578217557:1397passed/1failed/3ignored; material guard correctly refused undeclared other-target.txt. Commit temporary fixture background and explicitly declare retained missing-index target; no production policy change."
+                ],
+                "proof_refs": [
+                  "alias_regression_second_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -572,7 +603,8 @@
       "evidence": [
         "/private/tmp/vega-snapshot-validation-1.json; https://buildkite.com/decapodlabs/decapod/builds/2101; manifest config_input_hash drift corrected by supported specs.refresh after final inventory pin",
         "/private/tmp/vega-snapshot-validation-2.json: public provider403/reset1792295962; sourceCI39094002907 Supabase library1397passed/1failed/3ignored; new test expected escaping link to survive earlier material capture; expectation repaired without weakening safety.",
-        "Issue1457 documents released119 validation failure from original Vega task; source fixture and immutable vectors untouched."
+        "Issue1457 documents released119 validation failure from original Vega task; source fixture and immutable vectors untouched.",
+        "SourceCI39094466981 job117578217557:1397passed/1failed/3ignored; material guard correctly refused undeclared other-target.txt. Commit temporary fixture background and explicitly declare retained missing-index target; no production policy change."
       ],
       "inspected_files": [
         "src/decapod/core/native_proof/snapshot.rs"
