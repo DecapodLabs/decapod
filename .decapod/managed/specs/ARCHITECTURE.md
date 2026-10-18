@@ -513,7 +513,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8ae6b62255c62ef6eac154c0690956c505fdad8a243cb2eeaf42cb7f75ccc2b3`
+- Repository signal fingerprint: `fc0627d0b46ae8983b391047121e7c110ca967e6e2b21a199de4479d33314421`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -656,3 +656,8 @@ their independent reference and evaluation evidence.
 `assets/tools/vega_infer.rs::diagnose_native` runs the real preferred-device probe, installs only the compiled immutable baseline through `vega_setup::run` into the validation worker's private HOME, and attempts both preferred-device and explicit CPU model inference. Independent attempts are collected even if another backend fails; failed installation is a genuine shared dependency. Collection has no numerical-reference or evaluation-file prerequisite and never fits calibration. Execution errors fail the required worker run after writing diagnostics. The existing accepted controller, source CI, recipe integrity and final freshness checks remain authoritative. This separates evidence collection from the agent's still-unsatisfied parity/calibration publication conditions without changing the kernel or waiving checks.
 
 The separate native worker now also owns verification-only `reference_engine.rs`, `reference_tokenizer.rs` and `evaluation_corpus.rs`. Reference engine outputs use separately coded F64 equations on pinned weights and supplied feature inputs; they do not independently prove the backbone. Corpus construction decodes an integrity-pinned public Rust benchmark subset without executing its scripts. Neither reference nor corpus code participates in production readiness inference. The source-tested v0.119 native snapshot still rejects the repository's golden fixture symlink, so native execution of these modules remains blocked pending a released controller repair.
+
+### Exact source aliases in native snapshots (#1457)
+
+`src/decapod/core/native_proof/snapshot.rs::reviewed_alias` recognizes only the existing Rust toolchain alias and `tests/fixtures/state_commit_repo/symlink_test -> target.txt`. The fixture destination is the regular in-repository `tests/fixtures/state_commit_repo/target.txt`. Index and HEAD link blobs must match exact expected bytes and both planes must contain the regular target. Working capture verifies the link and target types and hashes; fixture parents must be directories, not symlinks. Copying recreates the link without following it, checks its frozen digest, charges link bytes to existing budgets, and verifies the resulting snapshot with the existing material identities. Arbitrary aliases, submodules, special files and source changes remain rejected. No fixture content or immutable golden vector is changed.
+

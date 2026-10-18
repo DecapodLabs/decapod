@@ -368,7 +368,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8ae6b62255c62ef6eac154c0690956c505fdad8a243cb2eeaf42cb7f75ccc2b3`
+- Repository signal fingerprint: `fc0627d0b46ae8983b391047121e7c110ca967e6e2b21a199de4479d33314421`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -455,3 +455,8 @@ not attest all dynamic libraries, driver state or GPU behavior. Private output
 objects retain existing permission/link defenses and byte bounds. A worker's
 successful exit or self-reported backend cannot by itself establish model parity,
 calibration, physical dispatch or publication authority.
+
+### Fixture alias custody (#1457)
+
+The reviewed fixture exception permits only a fixed source path and literal `target.txt` link payload with a separately measured regular file under the same fixture directory. It does not follow a caller-selected path, permit chains, accept a symlink target, skip sensitivity scanning or bypass denied paths. Committed, staged and working material must each satisfy its relevant alias/target checks, preventing a valid working link from laundering a malicious staged or committed link. Existing independent identity remeasurement, source immutability, private scratch, process and byte budgets remain required. This follows the existing reviewed toolchain-alias trust model; it is not an OS sandbox against concurrent malicious filesystem mutation or candidate code.
+
