@@ -13,6 +13,8 @@ extern crate candle_vllm_cuda as candle_vllm;
 mod decoder;
 #[path = "vega-native/evaluation_corpus.rs"]
 mod evaluation_corpus;
+#[path = "vega-native/readiness_evaluation.rs"]
+mod readiness_evaluation;
 #[path = "vega-native/reference_engine.rs"]
 mod reference_engine;
 #[path = "vega-native/reference_tokenizer.rs"]
@@ -95,6 +97,18 @@ fn main() {
 }
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args_os().skip(1).collect::<Vec<_>>();
+    if args.len() == 7
+        && args[0] == "--evaluate-readiness"
+        && args[1] == "--split"
+        && args[3] == "--backend"
+        && args[5] == "--proof-output"
+    {
+        return evaluate_readiness(
+            args[2].to_str().ok_or("invalid split")?,
+            args[4].to_str().ok_or("invalid evaluation backend")?,
+            Path::new(&args[6]),
+        );
+    }
     if args.len() == 3 && args[0] == "--prepare-evaluation" && args[1] == "--proof-output" {
         return prepare_evaluation(Path::new(&args[2]));
     }
@@ -219,6 +233,148 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     println!("{}", serde_json::to_string(&response)?);
+    Ok(())
+}
+
+fn evaluate_readiness(
+    split: &str,
+    backend: &str,
+    proof_path: &Path,
+) -> Result<(), Box<dyn std::error::Error>> {
+    use decapod::core::bounded_process::{
+        BoundedCommand, Cancellation, ProcessLimits, Termination,
+    };
+    use vega_readiness::{Backend, BackendPreference};
+    if !matches!(split, "development" | "holdout") || !matches!(backend, "auto" | "cpu") {
+        return Err("evaluation requires a frozen split and auto or explicit cpu backend".into());
+    }
+    let inputs_path = proof_path.with_extension("evaluation-inputs.json");
+    prepare_evaluation(&inputs_path)?;
+    let receipt: serde_json::Value =
+        serde_json::from_slice(&read_bounded(&inputs_path, MAX_PROOF_BYTES as u64)?)?;
+    let corpus_path = inputs_path.with_extension("corpus.json");
+    let bytes = read_bounded(&corpus_path, 8 * 1024 * 1024)?;
+    if receipt["corpus_sha256"] != vega_readiness::hash(&bytes) {
+        return Err("frozen evaluation input digest changed".into());
+    }
+    let corpus: serde_json::Value = serde_json::from_slice(&bytes)?;
+    let setup = vega_setup::run(&vega_setup::SetupOptions::default())?;
+    let installation = setup
+        .model_directory
+        .ok_or("evaluation installation missing")?;
+    let manifest = setup.manifest.ok_or("evaluation manifest missing")?;
+    let manifest_digest = setup
+        .manifest_digest
+        .ok_or("evaluation manifest digest missing")?;
+    if manifest.revision != vega_setup::BASELINE_REVISION
+        || manifest.backbone_revision != vega_setup::BASELINE_BACKBONE_REVISION
+        || manifest.source_revision != vega_setup::BASELINE_SOURCE_REVISION
+    {
+        return Err("evaluation cannot silently change the pinned baseline".into());
+    }
+    let preferred = if backend == "cpu" {
+        Backend::Cpu
+    } else {
+        BackendPreference::Auto.resolve()
+    };
+    let (selected, fallback) = match vega_backbone::probe_backend(preferred) {
+        Ok(_) => (preferred, None),
+        Err(vega_backbone::BackboneError::HardwareUnavailable(reason)) if backend == "auto" => {
+            vega_backbone::probe_cpu()?;
+            (Backend::Cpu, Some(reason))
+        }
+        Err(error) => return Err(error.into()),
+    };
+    let executable = std::env::current_exe()?;
+    let runtime_sha256 = vega_readiness::hash(&read_bounded(&executable, 256 * 1024 * 1024)?);
+    let mut ordinal = 0;
+    let mut report = readiness_evaluation::run(&corpus, split, |state, deadline| {
+        ordinal += 1;
+        let request = Request {
+            schema: vega_readiness::WORKER_SCHEMA.into(),
+            request_id: format!("frozen-evaluation-{split}-{ordinal}"),
+            input_digest: vega_readiness::hash(state.as_bytes()),
+            installation: installation.clone(),
+            manifest_digest: manifest_digest.clone(),
+            state: state.to_owned(),
+            alpha: "0.1".into(),
+            risk: "0.1".into(),
+            backend: selected,
+        };
+        let temporary = tempfile::tempdir()?;
+        let request_path = temporary.path().join("request.json");
+        let child_proof = temporary.path().join("proof.json");
+        write_private_proof(&request_path, &request)?;
+        // Carry the collector's remaining budget into the actual child, rather
+        // than granting a fresh model timeout after previous cases ran.
+        let capture = std::process::Command::new(&executable)
+            .env_clear()
+            .arg("--request")
+            .arg(&request_path)
+            .arg("--proof-output")
+            .arg(&child_proof)
+            .bounded_capture(
+                ProcessLimits {
+                    timeout: deadline
+                        .checked_duration_since(std::time::Instant::now())
+                        .ok_or("evaluation deadline expired before dispatch")?,
+                    max_output_bytes: 64 * 1024,
+                },
+                &Cancellation::default(),
+            )?;
+        if capture.termination != Termination::Exited || !capture.output.status.success() {
+            return Err(
+                "evaluation child failed or reached the original collection deadline".into(),
+            );
+        }
+        let response: Response = serde_json::from_slice(&capture.output.stdout)?;
+        if response.schema != vega_readiness::WORKER_SCHEMA
+            || response.request_id != request.request_id
+            || response.input_digest != request.input_digest
+            || response.manifest_digest != manifest_digest
+            || response.backend != selected.runtime()
+            || response.device != selected.device()
+            || response.engine_device != "cpu"
+            || !(1..=vega_prompt::MAX_TOKENS).contains(&response.input_tokens)
+            || response.precision != vega_readiness::Precision::supported()
+            || response.error.is_some()
+            || response.error_kind.is_some()
+        {
+            return Err(format!("evaluation child binding/error: {:?}", response.error).into());
+        }
+        let diagnostic: serde_json::Value =
+            serde_json::from_slice(&read_bounded(&child_proof, MAX_PROOF_BYTES as u64)?)?;
+        if diagnostic["request_id"] != request.request_id
+            || diagnostic["input_digest"] != request.input_digest
+            || diagnostic["manifest_digest"] != manifest_digest
+            || diagnostic["outcome"]
+                != serde_json::to_value(response.outcome.as_ref().ok_or("missing model outcome")?)?
+        {
+            return Err("evaluation child proof/response binding differs".into());
+        }
+        Ok(
+            serde_json::json!({"outcome":response.outcome.ok_or("missing model outcome")?,
+            "execution_evidence":{"backend":response.backend,"device":response.device,
+                "precision":response.precision,"input_tokens":response.input_tokens,
+                "manifest_digest":manifest_digest,"runtime_sha256":runtime_sha256,
+                "wall_clock_ms":diagnostic["wall_clock_ms"],"peak_resident_bytes":diagnostic["peak_resident_bytes"],
+                "memory_scope":diagnostic["memory_scope"]}}),
+        )
+    })?;
+    report["manifest"] = serde_json::to_value(manifest)?;
+    report["manifest_digest"] = manifest_digest.into();
+    report["runtime_sha256"] = runtime_sha256.into();
+    report["corpus_sha256"] = receipt["corpus_sha256"].clone();
+    report["corpus_file"] = serde_json::to_value(corpus_path)?;
+    report["selected_backend"] = serde_json::to_value(selected)?;
+    report["evaluation_cpu_selection_reason"] = serde_json::to_value(fallback)?;
+    report["cpu_fallback_scope"] = "This evaluation's selected backend; does not establish the separate production runtime-binding/fallback protocol".into();
+    write_private_proof(proof_path, &report)?;
+    if report["frozen_numeric_criterion_met"] != true
+        || report["production_calibration"] != "verified"
+    {
+        return Err("readiness evaluation does not satisfy final acceptance; inspect measured coverage, risk and label-scope limits".into());
+    }
     Ok(())
 }
 

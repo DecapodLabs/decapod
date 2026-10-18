@@ -13,33 +13,6 @@ pub struct ReferenceTokenizer {
     alphabet: [char; 256],
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn independent_byte_bpe_merges_by_declared_rank() {
-        let json = json!({"normalizer":{"type":"NFC"},"model":{"type":"BPE","ignore_merges":false,
-            "byte_fallback":false,"vocab":{"h":1,"i":2,"hi":3},"merges":["h i"]},
-            "added_tokens":[],"pre_tokenizer":{"pretokenizers":[{"pattern":{"Regex":".+"}}]}});
-        assert_eq!(
-            ReferenceTokenizer::new(&json)
-                .unwrap()
-                .encode("hi")
-                .unwrap(),
-            [3]
-        );
-        let mut unmerged = json;
-        unmerged["model"]["merges"] = json!([]);
-        assert_eq!(
-            ReferenceTokenizer::new(&unmerged)
-                .unwrap()
-                .encode("hi")
-                .unwrap(),
-            [1, 2]
-        );
-        assert!(ReferenceTokenizer::new(&json!({"model":{"type":"WordPiece"}})).is_err());
-    }
-}
 impl ReferenceTokenizer {
     pub fn new(value: &Value) -> Result<Self> {
         if value["normalizer"]["type"] != "NFC"
@@ -222,5 +195,33 @@ impl ReferenceTokenizer {
         Ok(
             json!({"tokens":ids,"spans":{"state":state,"question":{"start":qstart,"end":qend},"options":opts,"last":ids.len()-1}}),
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn independent_byte_bpe_merges_by_declared_rank() {
+        let json = json!({"normalizer":{"type":"NFC"},"model":{"type":"BPE","ignore_merges":false,
+            "byte_fallback":false,"vocab":{"h":1,"i":2,"hi":3},"merges":["h i"]},
+            "added_tokens":[],"pre_tokenizer":{"pretokenizers":[{"pattern":{"Regex":".+"}}]}});
+        assert_eq!(
+            ReferenceTokenizer::new(&json)
+                .unwrap()
+                .encode("hi")
+                .unwrap(),
+            [3]
+        );
+        let mut unmerged = json;
+        unmerged["model"]["merges"] = json!([]);
+        assert_eq!(
+            ReferenceTokenizer::new(&unmerged)
+                .unwrap()
+                .encode("hi")
+                .unwrap(),
+            [1, 2]
+        );
+        assert!(ReferenceTokenizer::new(&json!({"model":{"type":"WordPiece"}})).is_err());
     }
 }

@@ -7,6 +7,8 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
+For the optional Vega readiness integration, collecting native execution evidence must precede final model acceptance. A frozen public-case evaluation may measure scoped benchmark decisions without becoming publication authority. Expected labels stay outside model input, errors and unsupported/deadline cases remain visible, and insufficient independent readiness labels or risk coverage keep acceptance unsatisfied. These authored paths require execution through the released controller before any measured result is claimed.
+
 The record must preserve what was asked, how the agent understood it, what
 scope was accepted, what changed, and what remains unproven. That record stays
 with the project when a conversation, process, model, or agent harness changes.
@@ -200,8 +202,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bc48410df4883d44532f284ff3ce1b7081954bff2bf3fc9443b50c8a3e4b5a63`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (30 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `e558ac556d1b2a551df05d28130cf325186482e39960fcbb4e831ae2ab1b86b1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (31 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

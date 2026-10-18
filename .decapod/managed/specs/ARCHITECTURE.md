@@ -7,6 +7,8 @@ structured RPC. It connects human intent, project authority, coordinated
 execution, and evidence in repository-owned state. Each invocation is finite;
 the repository carries the work between invocations.
 
+Vega's separate native worker keeps evidence collection and final acceptance distinct. Its final frozen-case evaluation invokes fresh inference children with one shared absolute collection deadline, retains private per-case timing/RSS and immutable identities, groups related variants for risk estimates, and excludes deterministic policy fixtures from model-judgment coverage. Agent-authored benchmark proxies and the current small holdout keep production calibration unsatisfied; passing independent earlier diagnostics does not remove that final boundary. No Python runtime, model orchestration or second persistence authority is introduced.
+
 ## Direction
 
 The product is a local-first command-line runtime with a structured process RPC
@@ -509,8 +511,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bc48410df4883d44532f284ff3ce1b7081954bff2bf3fc9443b50c8a3e4b5a63`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (30 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `e558ac556d1b2a551df05d28130cf325186482e39960fcbb4e831ae2ab1b86b1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (31 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

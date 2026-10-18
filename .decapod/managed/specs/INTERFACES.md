@@ -10,6 +10,8 @@ coordination, validation, and publication boundaries. Decapod exposes the state,
 constraints, evidence, and blockers that govern those transitions. Each CLI or
 RPC invocation is ephemeral; repository state preserves continuity between calls.
 
+The separate Vega worker additionally exposes a private bounded frozen-case evaluation mode, `--evaluate-readiness --split holdout --backend auto --proof-output <new-path>` (development and explicit CPU are supported selectors). It runs actual request children after the native diagnostic recipe steps, emits typed outcomes and separate error/abstention/exclusion counts with model/runtime/corpus bindings, and returns failure while final numeric or label-authority acceptance is unsatisfied. Expected labels and variant/split/rationale metadata are excluded from model input. The report is an experiment, never a current validation receipt or publication authority; the frozen public corpus's scoped agent-authored proxy labels cannot establish production calibration.
+
 ## Human and agent entrypoints
 
 ### CI-attested execution declaration
@@ -552,8 +554,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bc48410df4883d44532f284ff3ce1b7081954bff2bf3fc9443b50c8a3e4b5a63`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (30 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `e558ac556d1b2a551df05d28130cf325186482e39960fcbb4e831ae2ab1b86b1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (31 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -516,6 +516,14 @@
       "id": "finite-reference-comparisons",
       "summary": "Reject malformed, nonfinite and overflowed reference comparisons without changing frozen tolerances; tests remain unexecuted and kernel/native acceptance blockers retained.",
       "input_digest": "sha256:3421349743e47e9bb42ba2c12919f3b32d1a869aaef626b749c728e510de3140"
+    },
+    {
+      "id": "vega-bounded-evaluation",
+      "summary": "Author actual frozen-case Rust evaluation after independent native diagnostics; preserve absolute child deadline, typed identity checks, label separation, issue-unit risk, all-case coverage and explicit insufficient-label/23-unit final acceptance. Synthetic metric/deadline regressions remain unexecuted behind released snapshot repair; no thresholds, calibration or holdout changed.",
+      "input_digest": "sha256:4d481ce5218973ee24ed429e54c1f512e80329c4f5a61e0256d3984bc7a462c7",
+      "proof_refs": [
+        "docs/vega-reference-contract.md"
+      ]
     }
   ],
   "intents": {
@@ -557,24 +565,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reference-only finite/shape checks protect comparisons and preserve frozen tolerances; production and independent-publication boundaries remain unchanged. Native execution still requires a released controller repair.",
-          "reviewed_code_fingerprint": "bc48410df4883d44532f284ff3ce1b7081954bff2bf3fc9443b50c8a3e4b5a63",
-          "spec_material_hash": "8d438ebe52c2286fb0791f321cdfad47ad40438d2edc87914b65bce619252f1b"
+          "reason": "Document separate bounded evaluation children, immutable model/runtime/corpus identities, conservative issue-unit risk and continued non-acceptance of agent-authored benchmark proxies.",
+          "reviewed_code_fingerprint": "e558ac556d1b2a551df05d28130cf325186482e39960fcbb4e831ae2ab1b86b1",
+          "spec_material_hash": "997a8910f717968004bd3984900e441f45b807266212f86afd95152cc08e0163"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reference-only finite/shape checks protect comparisons and preserve frozen tolerances; production and independent-publication boundaries remain unchanged. Native execution still requires a released controller repair.",
-          "reviewed_code_fingerprint": "bc48410df4883d44532f284ff3ce1b7081954bff2bf3fc9443b50c8a3e4b5a63",
-          "spec_material_hash": "b6f9510ccebc735f2ae5f567c1e860f5e8c979aa71e16981f275ecde85275034"
+          "reason": "Document explicit split/backend evaluation CLI, omitted label metadata, private reports and nonzero final acceptance with insufficient execution or label authority.",
+          "reviewed_code_fingerprint": "e558ac556d1b2a551df05d28130cf325186482e39960fcbb4e831ae2ab1b86b1",
+          "spec_material_hash": "015de922699e5a0bb515dd509e61d85511485eccead812a758f1429bb576c8a5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reference-only finite/shape checks protect comparisons and preserve frozen tolerances; production and independent-publication boundaries remain unchanged. Native execution still requires a released controller repair.",
-          "reviewed_code_fingerprint": "bc48410df4883d44532f284ff3ce1b7081954bff2bf3fc9443b50c8a3e4b5a63",
+          "reason": "Existing private bounded child execution, verified immutable assets, no credential inheritance and deterministic-authority boundaries apply unchanged. This challenge-set runner never creates proof receipts or publication authority and does not claim production calibration or fallback routing.",
+          "reviewed_code_fingerprint": "e558ac556d1b2a551df05d28130cf325186482e39960fcbb4e831ae2ab1b86b1",
           "spec_material_hash": "e662013621a917085bf3f02b57a7420ea4e07b824f0bbe82c8ddbdeabf2918da"
         }
       ],
@@ -588,7 +596,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792295007Z"
+      "updated_at": "1792299751Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -596,9 +604,10 @@
         "Current claimed task and isolated work branch",
         "Final publication remains prohibited pending independent parity and readiness calibration acceptance; removing the general execution blocker only permits collection. Prior failed validation reports are retained.",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb",
-        "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation."
+        "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation.",
+        "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting."
       ],
-      "artifact_hash": "sha256:2b5c6f979bd748f90a5abb79c1bde6d55d00fdeefcf3b6dc0bdfee12781c58b3",
+      "artifact_hash": "sha256:1320678468c6509407311b65c5f24fd8b0baf21171d9be4ccec4bed6bd5ab02e",
       "blockers": [
         "Released119 native snapshot rejects the existing immutable golden fixture symlink; no supported additional alias review command exists. Native build/probe/model/reference/evaluation remain unexecuted pending an accepted released repair; do not alter the fixture or use a candidate controller."
       ],
@@ -728,6 +737,14 @@
           "status": "unavailable"
         },
         {
+          "name": "native_evaluation",
+          "status": "unavailable"
+        },
+        {
+          "name": "native_execution",
+          "status": "unavailable"
+        },
+        {
           "name": "native_model_execution",
           "status": "unavailable"
         },
@@ -852,7 +869,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "reference_review_while_controller_rate_limited",
+      "current_phase": "bounded-evaluation-source",
       "custody": {
         "events": [
           {
@@ -1048,10 +1065,24 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 29
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:30",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 30
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:31",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 31
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 29,
+        "next_sequence": 31,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1571,6 +1602,48 @@
                 ],
                 "sequence": 29,
                 "validation_findings": []
+              },
+              {
+                "action": "source-preparation",
+                "custody_event_id": "event:30",
+                "observations": [
+                  "assets/tools/vega_infer.rs",
+                  "assets/tools/vega-native/evaluation_corpus.rs",
+                  "docs/vega-reference-contract.md",
+                  "Snapshot prerequisite18a723f3 passed full released119 validation; publication replay is blocked by public-reader quota until2026-10-18T05:12:00Z. Repair task yielded with no active processes to serialize this original claim."
+                ],
+                "proof_refs": [
+                  "native_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 30,
+                "validation_findings": [
+                  "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate."
+                ]
+              },
+              {
+                "action": "bounded-evaluation-source",
+                "command": "cargo fmt --manifest-path assets/tools/vega-native/Cargo.toml",
+                "custody_event_id": "event:31",
+                "observations": [
+                  "assets/tools/vega-native/readiness_evaluation.rs",
+                  "assets/tools/vega_infer.rs",
+                  "assets/tools/vega-native/reference_tokenizer.rs",
+                  "docs/vega-reference-contract.md",
+                  ".decapod/config.toml",
+                  "Authored frozen-case Rust evaluation, explicit absolute-deadline inference children, omission of label/split/variant/rationale metadata, grouped exact binomial risk and all-case coverage. Synthetic tests protect small-sample risk, related-unit counts, errors versus abstention and expired dispatch; these tests are not executed until the required native recipe runs. Corpus split/calibration/tolerances unchanged; final added evaluation run remains non-accepting with current label authority and23units."
+                ],
+                "proof_refs": [
+                  "formatting",
+                  "native_evaluation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 31,
+                "validation_findings": []
               }
             ]
           }
@@ -1581,11 +1654,13 @@
         "Normal history-preserving merge of accepted396f6991854a227c7b0ba4dfd09928f16d61dd93",
         "Selectively reapply git diff f38b28ad..f92f19d5 outside .decapod and authored spec prose only; exclude old journal/generated blocks",
         "Verify official v0.117.0 archive with published SHA-256; released executable hash ec7a04aa72c3d78961e78f27a6e2b7fcdfd247a37d0cf4a95043035f509b8f05",
+        "cargo fmt --manifest-path assets/tools/vega-native/Cargo.toml",
         "cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod (metadata only); bazel mod deps --lockfile_mode=update (metadata only)",
         "cargo update --offline --package decapod; cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod; bazel mod deps --lockfile_mode=update",
         "decapod init --refresh --proof; compare legacy backup template bodies and preserve backups outside workspace",
         "git diff --cached --check",
         "git diff --cached --quiet f92f19d5 -- . :(exclude).decapod",
+        "git diff --check",
         "git fetch origin refs/tags/v0.116.0:refs/tags/v0.116.0 refs/tags/v0.117.0:refs/tags/v0.117.0; cargo update --manifest-path assets/tools/vega-native/Cargo.toml --package decapod-vega-infer",
         "git merge --no-commit origin/master"
       ],
@@ -1595,6 +1670,7 @@
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
         "Actual plain117 third report requires inventory reconciliation. Compared all discovered sources against accepted396f: only Cargo.toml/Cargo.lock/MODULE.bazel.lock changed plus four new native worker files; existing workflows/actions/executor helpers unchanged. Reviewed actual dependency and worker boundary, then explicitly updated only human-editable required-profile reviewed_sources_digest from supported agent.init inventory. No profile/provider/check graph change and no test execution claimed.",
+        "Authored frozen-case Rust evaluation, explicit absolute-deadline inference children, omission of label/split/variant/rationale metadata, grouped exact binomial risk and all-case coverage. Synthetic tests protect small-sample risk, related-unit counts, errors versus abstention and expired dispatch; these tests are not executed until the required native recipe runs. Corpus split/calibration/tolerances unchanged; final added evaluation run remains non-accepting with current label authority and23units.",
         "Cargo metadata regeneration preserved immutable native Git pins and package pins except local decapod0.117; resolver updated several existing Windows/socket dependency edges, retained for ordinary validation. No model weights or native runtime installed; setup still reports runtime_installed=false.",
         "Feature source and authored spec semantics exactly equal preserved f92f19d5baa14e79f3e4ab31c27eff5ff7a3dc9d, with no new feature scope. Earlier source contains63 vega/worker test cases and9 new/reworked existing-suite cases; none executed. Prior supported dependency metadata and exact pins retained unchanged.",
         "Fresh workspace created by supported workspace ensure directly from accepted master29414e61bf6aaf7a1b56f68e2a50b722b4d7be2e with new taskfeat_01m52fnwybfvhfdj and newly seeded governance. No activation commit or old governance/projection imported.",
@@ -1613,6 +1689,7 @@
         "Released117 authoritative run at87a13363 reached provider_terminal_wait then failed Docs Sync Buildkite1933 uuid01a145a6-9e36-4379-8009-3523c0d6e03d; evidence /tmp/decapod-snapshot-HOyW3w. Actual clippy flags mixed return type_complexity: replaced tuple spelling with meaningful MixedSlotsAndOptions alias, no lint suppression. GHA Docs Sync job117091823692 log contains no complete diff; no archive read. Corrected ordinary config-schema source from exact canonical Rust config declaration, readiness_config_contract literal and repository-readiness include, preserving documented alpha/risk/pins. This is source-derived correction, not locally executed candidate generation; CI equality remains pending. command-contracts already matches its only renderer-source change.",
         "Repaired actual source failures: moved LocalVerification before test module without suppression; init retires only known none/jev selector and preserves unrelated keys, unknown/malformed selectors fail without config overwrite; installation independently verifies private no-clobber copies instead of cache hardlinks while retaining nlink checks. Added cache reuse/corruption/hardlink/cancellation/install-failure regressions and both init-surface dry-run/idempotence/extension/unknown-selector coverage. Tests authored, not executed. Official Cargo metadata reconciliation updates only local decapod version0.117->0.118 and resolver-selected edges among already locked socket/getrandom/Windows packages; native Git identities unchanged. Reviewed supported agent.init inventory f24497519b688749366c03ec1a580bf34fcae4e819593aad1e921351f977cc6b against accepted source; only existing Cargo/native inputs differ, no CI policy/helper/check graph change. Backed up user config then retained all unrelated settings and removed exact retired provider none. Source and governance ready for plain validate; native and numerical/domain acceptance still unverified. Canonical task claim renewed after session expiry; all further controller mutations use consistent machine session.",
         "Reviewed source inventory af80666ea82e703e48f74a57cf5797e7dceb1cfa820dc314105d9e5bf3cbdf33; substituting only old9d worker entrypoint bytes reproduces prior d39eff26 inventory exactly. No Cargo pins, graph or source carrier changed.",
+        "Snapshot prerequisite18a723f3 passed full released119 validation; publication replay is blocked by public-reader quota until2026-10-18T05:12:00Z. Repair task yielded with no active processes to serialize this original claim.",
         "docs/vega-reference-contract.md: predeclared tolerances, public source revisions/hashes, corpus grouping/labels and exact controller blocker",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
@@ -1630,7 +1707,10 @@
       ],
       "inspected_files": [
         "assets/tools/vega-native/Cargo.toml",
+        "assets/tools/vega-native/evaluation_corpus.rs",
+        "assets/tools/vega_infer.rs",
         "docs/agent/repository-readiness.md",
+        "docs/vega-reference-contract.md",
         "src/decapod/core/proof.rs",
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/rust_worker.rs",
@@ -1641,12 +1721,16 @@
       "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
+        ".decapod/config.toml",
         ".decapod/managed/specs/VALIDATION.md",
         "assets/tools/vega-native/Cargo.lock",
         "assets/tools/vega-native/Cargo.toml",
         "assets/tools/vega-native/cpu_backbone.rs",
+        "assets/tools/vega-native/readiness_evaluation.rs",
         "assets/tools/vega-native/reference_engine.rs",
+        "assets/tools/vega-native/reference_tokenizer.rs",
         "assets/tools/vega_infer.rs",
+        "docs/vega-reference-contract.md",
         "src/decapod/cli.rs",
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/rust_worker.rs",
@@ -1682,6 +1766,7 @@
       "unresolved_assumptions": [
         "24c706f5 executed1445 library tests with0 failures and3 ignored; CLI enforcement160.3s/contracts107.1s/entrypoints111.8s passed, including init refresh and portable parent retry policy. All CI jobs except dependency lint passed. Scope parking_lot to GPU targets/features, no lint waiver. Reviewed inventory d39eff26f37bdb8e49140867f78e116c4a9b93698ba5e20da8a486c2cca65f78. Native worker still uncompiled/unexecuted.",
         "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
+        "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
         "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
