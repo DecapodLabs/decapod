@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.119.1](https://github.com/DecapodLabs/decapod/compare/v0.119.0...v0.119.1) - 2026-10-18
+
+### Other
+
+- Fix reviewed golden fixture in native snapshots ([#1458](https://github.com/DecapodLabs/decapod/pull/1458))
+
 ## [0.119.0](https://github.com/DecapodLabs/decapod/compare/v0.118.0...v0.119.0) - 2026-10-18
 
 ### Added
