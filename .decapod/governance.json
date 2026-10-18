@@ -377,6 +377,11 @@
       "id": "respect-head-index-material-union",
       "summary": "Repair test declaration using inspected capture_once HEAD/index union; missing-index target stays HEAD-bound. Production classification, safety and failure history unchanged.",
       "input_digest": "sha256:b28a9b7ee2568d7a0eb9d7acdacaa325655b88b5b5ca3d65499fca5677daf7b9"
+    },
+    {
+      "id": "combined-reviewed-alias-layout",
+      "summary": "Exercise toolchain and golden fixture aliases simultaneously with independently verified regular targets, matching actual repository layout; retain all negative scenarios and source failure history.",
+      "input_digest": "sha256:7f6aed27dc7b6912d7aeeca3a444031f44997fccd48df55add650498dd209fcb"
     }
   ],
   "intents": {
@@ -418,22 +423,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The regression now respects existing HEAD/index union tracking; only an invalid test-side untracked declaration was removed. Production safety and source-alias contracts unchanged.",
-          "reviewed_code_fingerprint": "8c469f8dda180af5dbce477384092c23cbeb8437c88c7bfdbbfa7df10bf82041",
+          "reason": "The real regression now checks both reviewed aliases together, matching actual repository layout. Existing exact-path/target, source custody and safety contracts unchanged.",
+          "reviewed_code_fingerprint": "c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5",
           "spec_material_hash": "c5d45b45f01b126c122cb281e0357d4fcf8b4134220c4f60467fde0a8d0495f4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The regression now respects existing HEAD/index union tracking; only an invalid test-side untracked declaration was removed. Production safety and source-alias contracts unchanged.",
-          "reviewed_code_fingerprint": "8c469f8dda180af5dbce477384092c23cbeb8437c88c7bfdbbfa7df10bf82041",
+          "reason": "The real regression now checks both reviewed aliases together, matching actual repository layout. Existing exact-path/target, source custody and safety contracts unchanged.",
+          "reviewed_code_fingerprint": "c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5",
           "spec_material_hash": "0f3b0b57b5d01999e22dee2b84b7552ede21e1930a338cd36ffe2ce288b84fef"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The regression now respects existing HEAD/index union tracking; only an invalid test-side untracked declaration was removed. Production safety and source-alias contracts unchanged.",
-          "reviewed_code_fingerprint": "8c469f8dda180af5dbce477384092c23cbeb8437c88c7bfdbbfa7df10bf82041",
+          "reason": "The real regression now checks both reviewed aliases together, matching actual repository layout. Existing exact-path/target, source custody and safety contracts unchanged.",
+          "reviewed_code_fingerprint": "c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5",
           "spec_material_hash": "810fff8f30cfdfa702cb3a9076669bac11b936b500bf9dc40c731bf660fb9665"
         }
       ],
@@ -447,14 +452,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792296128Z"
+      "updated_at": "1792296231Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Separate controller prerequisite only. Original Vega branch/task preserved and yielded to serialize exclusive claims; no candidate-controller or native Vega acceptance."
       ],
-      "artifact_hash": "sha256:9777bdddb29c4bec8dceb2e088d972fc8f871478436a84e0a038f2d95676aa12",
+      "artifact_hash": "sha256:0791613563634fd0d53897629340028dfb572d20e3f66c5afd1cacd40e8cb3fa",
       "checks": [
         {
           "name": "alias_regression_first_execution",
@@ -467,6 +472,10 @@
         {
           "name": "alias_regression_third_execution",
           "status": "failed"
+        },
+        {
+          "name": "combined_alias_regression",
+          "status": "unavailable"
         },
         {
           "name": "first_validation",
@@ -485,7 +494,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "respect_head_index_material_union",
+      "current_phase": "verify_combined_reviewed_alias_layout",
       "custody": {
         "events": [
           {
@@ -534,10 +543,17 @@
             "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M56GQQ03BZZP9D6VS7NNRBHV",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M56GQQ03BZZP9D6VS7NNRBHV": {
@@ -625,6 +641,21 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "verify_combined_reviewed_alias_layout",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Prepared19eff source-bound handoff remains non-ready. Regression now models actual repository containing both fixed reviewed aliases and independently verifies both targets; no production policy change."
+                ],
+                "proof_refs": [
+                  "combined_alias_regression"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -636,6 +667,7 @@
         "/private/tmp/vega-snapshot-validation-1.json; https://buildkite.com/decapodlabs/decapod/builds/2101; manifest config_input_hash drift corrected by supported specs.refresh after final inventory pin",
         "/private/tmp/vega-snapshot-validation-2.json: public provider403/reset1792295962; sourceCI39094002907 Supabase library1397passed/1failed/3ignored; new test expected escaping link to survive earlier material capture; expectation repaired without weakening safety.",
         "Issue1457 documents released119 validation failure from original Vega task; source fixture and immutable vectors untouched.",
+        "Prepared19eff source-bound handoff remains non-ready. Regression now models actual repository containing both fixed reviewed aliases and independently verifies both targets; no production policy change.",
         "SourceCI39094466981 job117578217557:1397passed/1failed/3ignored; material guard correctly refused undeclared other-target.txt. Commit temporary fixture background and explicitly declare retained missing-index target; no production policy change.",
         "SourceCI39095086960 job117579894757:1397passed/1failed/3ignored; capture_once explicitly unions HEAD/index, so HEAD-bound missing-index target must not be declared untracked. Remove invalid test declaration; preserve production safety/classification and all failures."
       ],

@@ -1112,6 +1112,7 @@ fn native_snapshot_preserves_only_reviewed_toolchain_alias_and_target() {
 #[cfg(unix)]
 #[test]
 fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() {
+    use crate::core::init_reconciliation::{TOOLCHAIN_ALIAS, TOOLCHAIN_TARGET};
     use crate::core::native_proof::snapshot::{SnapshotLimits, SnapshotReview, prepare_snapshot};
     use std::os::unix::fs::symlink;
     const ALIAS: &str = "tests/fixtures/state_commit_repo/symlink_test";
@@ -1145,6 +1146,15 @@ fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() 
         "denied-alias",
     ] {
         let f = Fixture::new("[proof]\n");
+        // Reproduce the actual repository layout: both reviewed aliases must
+        // coexist, each with its own independently bound regular target.
+        fs::create_dir_all(f.options.root.join(TOOLCHAIN_TARGET).parent().unwrap()).unwrap();
+        fs::write(
+            f.options.root.join(TOOLCHAIN_TARGET),
+            "[toolchain]\nchannel='1.96.1'\n",
+        )
+        .unwrap();
+        symlink(TOOLCHAIN_TARGET, f.options.root.join(TOOLCHAIN_ALIAS)).unwrap();
         fs::create_dir_all(f.options.root.join(TARGET).parent().unwrap()).unwrap();
         fs::write(f.options.root.join(TARGET), "immutable fixture target\n").unwrap();
         fs::write(
@@ -1236,6 +1246,14 @@ fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() 
         );
         if scenario == "valid" {
             let snapshot = result.unwrap();
+            assert_eq!(
+                fs::read_link(snapshot.root().join(TOOLCHAIN_ALIAS)).unwrap(),
+                Path::new(TOOLCHAIN_TARGET)
+            );
+            assert_eq!(
+                fs::read(snapshot.root().join(TOOLCHAIN_TARGET)).unwrap(),
+                fs::read(f.options.root.join(TOOLCHAIN_TARGET)).unwrap()
+            );
             assert_eq!(
                 fs::read_link(snapshot.root().join(ALIAS)).unwrap(),
                 Path::new("target.txt")
