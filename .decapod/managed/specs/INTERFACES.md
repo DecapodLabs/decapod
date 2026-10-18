@@ -496,7 +496,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10`
+- Repository signal fingerprint: `c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -571,3 +571,7 @@ validation evidence directory. A run cannot supply its own output destination.
 This is diagnostic custody, not independent validation of model semantics. The
 outer validation report is the only publication-readiness result; supplemental
 command records explicitly carry `publication_ready=false`.
+
+### Native snapshot alias boundary (#1457)
+
+The existing supplemental Rust-worker recipe and private evidence contracts are unchanged. Native snapshot preparation now accepts the exact already reviewed golden-vector fixture symlink in addition to the reviewed toolchain alias. There is no generic symlink permission or caller-controlled target map. `SnapshotReview.denied_paths` remains an additional deny list and takes precedence even for a recognized alias. Missing or retargeted HEAD/index/working links or nonregular targets fail closed; no out-of-repository referent is copied. The accepted released controller remains the authority for validation. Native Vega execution still requires a future published release containing this repair.

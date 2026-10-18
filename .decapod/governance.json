@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "24490934d07be1243dfb9a755c752702446b7742",
-    "release": "v0.118.0",
+    "accepted_commit": "201b504485d64f9a09a7fc0e0560fdff035e8daf",
+    "release": "v0.119.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -36,6 +36,15 @@
       "claim:bounded-preflight-latency": {
         "falsifier": "A stale, missing, malformed, denied, cancelled, failed or mismatched input yields readiness; any applicable source obligation is dropped; bounded resource use is exceeded; or comparable measured collection has no material improvement.",
         "statement": "The collector removes repeated exact-request reads and overlaps bounded independent metadata retrieval, while preserving all exact-source and terminal custody checks; CI optimizations reduce measured critical-path overhead without skipping applicable execution.",
+        "status": "open"
+      },
+      "claim:bounded-rust-worker-proof": {
+        "falsifier": "A recipe bypasses primary checks, changes accepted obligations, runs without typed authority, accepts stale/malformed/link-unsafe proof, omits failing dependent checks or changes source/ref state; or diagnostic/CPU fixture output is treated as Metal/parity/calibration or publication authority.",
+        "proof_refs": [
+          "src/decapod/core/validation_runtime/rust_worker.rs",
+          "src/decapod/core/validation_runtime/tests.rs"
+        ],
+        "statement": "Configured locked Rust worker tests and runs supplement complete strict source proof with bounded immutable execution and private diagnostics; source/policy/tools/accepted target remain current before final readiness. They cannot replace source CI or prove model semantics.",
         "status": "open"
       },
       "claim:build-layout-compatibility:question:bazel-root-marker-policy": {
@@ -321,45 +330,62 @@
       "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
       "trajectory:754f2eaee0aa202d": "Successful clean-run ignored outputs and extra refs/stashes remain outside worktree preservation scope",
       "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
+      "trajectory:802bf27a5c5f8ad9": "User authorized permanent recovery branch. d8cc8305d1e06c7d7f761ba8e7699a2e1b0d9d8c code/test jobs passed; historical a31ac5d1 lacked checkpoint and is rejected. Source-only patch SHA256327cb5cd8ff57daa6c86df99bc083a7f4818a455b2ee4544e4b13bdd2624502f excludes .decapod and release entrypoints; no old governance identity or checkpoint copied. Machine-specific evidence must be regenerated. Source custody is provenance, not current passing validation.",
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
       "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
       "trajectory:da69bbaf7f07e535": "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody.",
+      "trajectory:e41008c0041e3467": "Reviewed inventory fe3d05e86a64d7ad800b48e2757454d50828da77158eadaf8d9713f5cddd69a9 exactly matches prepared source: accepted release117-to118 Cargo own-version changes plus scoped Bazel exclusive scheduling, unchanged required checks/budgets/carrier. Config backed up; no Rust worker recipe enabled. Prior source CI passing checks are provenance only; this exact candidate requires full official validation. Original task session claim recovered after supported expiry cleanup; incidental automatic coordination task yielded, no task replaced.",
       "trajectory:e765d893d1533fc1": "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
   },
   "change": {
-    "id": "change_01M564S58KK38XC4D7VA9WAG97",
-    "base_commit": "24490934d07be1243dfb9a755c752702446b7742",
+    "id": "change_01M56GQPXGDY8FNQVQE0NFVJK2",
+    "base_commit": "201b504485d64f9a09a7fc0e0560fdff035e8daf",
     "target_base": "origin/master"
   },
   "claims": {
-    "bounded-rust-worker-proof": {
-      "statement": "Configured locked Rust worker tests and runs supplement complete strict source proof with bounded immutable execution and private diagnostics; source/policy/tools/accepted target remain current before final readiness. They cannot replace source CI or prove model semantics.",
-      "falsifier": "A recipe bypasses primary checks, changes accepted obligations, runs without typed authority, accepts stale/malformed/link-unsafe proof, omits failing dependent checks or changes source/ref state; or diagnostic/CPU fixture output is treated as Metal/parity/calibration or publication authority.",
-      "status": "open",
-      "proof_refs": [
-        "src/decapod/core/validation_runtime/rust_worker.rs",
-        "src/decapod/core/validation_runtime/tests.rs"
-      ]
+    "reviewed-native-fixture-alias": {
+      "statement": "Native snapshots preserve the exact existing reviewed golden fixture alias and regular target while rejecting unsafe or changed alias identity in any source plane.",
+      "falsifier": "The golden fixture is removed/rewritten, a retargeted/staged/committed/working alias is accepted, a target symlink is followed, or arbitrary symlinks become permitted.",
+      "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "rust-worker-recovery-source",
-      "summary": "Permanent task-owned recovery explicitly authorized by user: carry exact prepared d8cc8305 source after historic a31ac5d1 checkpoint rejection; old branch and Buildkite2032/2042 preserved. Fresh governance and release118 projections, material authored specs, bounded immutable Rust tests/runs after strict source verdict, accepted-recipe preservation, private diagnostic custody and CPU/GPU feature variants. Recipe inactive; no candidate controller adoption or native/model/parity/calibration claim. Exact current candidate requires full released-controller validation.",
-      "input_digest": "sha256:251329edcd01ae86c11844c5a861d440aeb12e713517ca87ec60545f5e7fd1d2",
-      "proof_refs": [
-        "https://buildkite.com/decapodlabs/decapod/builds/2042",
-        "https://github.com/DecapodLabs/decapod/actions/runs/39069755977",
-        "src/decapod/core/validation_runtime/rust_worker.rs",
-        "src/decapod/core/validation_runtime/tests.rs"
-      ]
+      "id": "reviewed-golden-fixture-alias",
+      "summary": "Preserve exact reviewed golden-vector symlink and regular target in bounded native snapshots; reject malformed planes and unrelated links; keep fixtures/golden vectors unchanged.",
+      "input_digest": "sha256:5ccb600c1b9e680d0630bb291436939e2c161e67c9e696498c0a94febb139691"
+    },
+    {
+      "id": "final-config-projection",
+      "summary": "Repair manifest config-input drift reported by Buildkite2101 using specs.refresh after final reviewed config; retain failed report and full source obligations.",
+      "input_digest": "sha256:0e0bc0d588403baef0d4d59f7a0991dde35cb73202b81d7f7cc751e3b3e1f7b7"
+    },
+    {
+      "id": "reject-escape-before-snapshot",
+      "summary": "Repair executed regression: escaping link must fail at material capture; in-tree target symlink independently reaches target-type rejection. Preserve source/validation failures and public-reader reset.",
+      "input_digest": "sha256:e2f1ebe44eb8cb77ca531275713be0874d3cb600c886dc8fd8e354313b1fbe9a"
+    },
+    {
+      "id": "declare-snapshot-regression-inputs",
+      "summary": "Repair real test fixture setup: commit in-tree referent background and declare retained untracked target for missing-index case; production safety and failure history unchanged.",
+      "input_digest": "sha256:3096914782e104e30239d40319cdac8ff985a2dcd827e15b63565b442ac9b8fc"
+    },
+    {
+      "id": "respect-head-index-material-union",
+      "summary": "Repair test declaration using inspected capture_once HEAD/index union; missing-index target stays HEAD-bound. Production classification, safety and failure history unchanged.",
+      "input_digest": "sha256:b28a9b7ee2568d7a0eb9d7acdacaa325655b88b5b5ca3d65499fca5677daf7b9"
+    },
+    {
+      "id": "combined-reviewed-alias-layout",
+      "summary": "Exercise toolchain and golden fixture aliases simultaneously with independently verified regular targets, matching actual repository layout; retain all negative scenarios and source failure history.",
+      "input_digest": "sha256:7f6aed27dc7b6912d7aeeca3a444031f44997fccd48df55add650498dd209fcb"
     }
   ],
   "intents": {
-    "intent:change_01M564S58KK38XC4D7VA9WAG97": {
+    "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -369,11 +395,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
+      "id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Add bounded host-native proof after strict source validation\n\nIndependent prerequisite for issue1445: released0.118 strict validation cannot build/test/probe the separate Rust worker on this Mac. Add the smallest supported supplemental native proof mechanism using existing task/journal/config/readiness authority. Preserve complete strict source CI, exact source/accepted-target/toolchain/input/output custody, bounded process lifetime/output and failure history. Reject stale or candidate-substituted authority and malformed/incomplete proof. Do not execute candidate controller to authorize its own adoption. Separate PR/release required before Vega can use it. No changes to original feat_01m52fnwybfvhfdj ownership, feature history, merge/release or native/parity/calibration claims.",
-      "refined_intent": "Add bounded host-native proof after strict source validation\n\nIndependent prerequisite for issue1445: released0.118 strict validation cannot build/test/probe the separate Rust worker on this Mac. Add the smallest supported supplemental native proof mechanism using existing task/journal/config/readiness authority. Preserve complete strict source CI, exact source/accepted-target/toolchain/input/output custody, bounded process lifetime/output and failure history. Reject stale or candidate-substituted authority and malformed/incomplete proof. Do not execute candidate controller to authorize its own adoption. Separate PR/release required before Vega can use it. No changes to original feat_01m52fnwybfvhfdj ownership, feature history, merge/release or native/parity/calibration claims.",
+      "raw_intent": "Repair reviewed golden fixture alias in native snapshots\n\nSeparate controller prerequisite discovered by released119 Vega validation: retain the immutable golden-vector fixture symlink through bounded native snapshots with exact link/target/identity checks and adversarial regressions. Do not replace original Vega task ownership or use an unmerged controller for feature acceptance. Publish only after normal exact-candidate source validation; maintainer merges/releases.",
+      "refined_intent": "Repair reviewed golden fixture alias in native snapshots\n\nSeparate controller prerequisite discovered by released119 Vega validation: retain the immutable golden-vector fixture symlink through bounded native snapshots with exact link/target/identity checks and adversarial regressions. Do not replace original Vega task ownership or use an unmerged controller for feature acceptance. Publish only after normal exact-candidate source validation; maintainer merges/releases.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -386,148 +412,250 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Extend existing validate with an optional required locked Rust worker test/run phase only after complete strict source proof. Reuse immutable snapshots, existing authorization/bounded process/tool custody/private evidence; recheck source/policy/accepted target afterwards. Keep recipe inactive in this prerequisite until independent acceptance and published release. Permanent recovery explicitly authorized after a31ac5d1 historical checkpoint rejection; preserve old branch and failures, carry d8cc8305 source with provenance and fresh checkpoints under original feat_01m55h3p8vy7d94x. Do not import old governance as current proof or change original Vega branch/custody, merge or release.",
+      "intent": "Repair the observed released119 native snapshot blocker #1457 as the smallest prerequisite for #1445 diagnostics. Preserve exact golden fixture symlink metadata and immutable vectors, verify link bytes and its regular in-repository target in HEAD/index/working copies, keep all unknown or unsafe symlinks rejected, and cover real snapshots adversarially. This separate task has no Vega feature acceptance authority; it must be merged and officially released before use there. Human retains merge/release authority.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate",
-        "adversarial recipe, custody, argv, privacy and immutable Rust execution regressions through required source CI"
+        "Real Git snapshot regression preserves both reviewed aliases, index modes/blob identities, link bytes and regular target bytes; modified staged/HEAD/working links, missing or symlink targets and arbitrary aliases fail.",
+        "Plain released119 decapod validate proves the exact prerequisite candidate with the full required source profile; no native recipe, profile downgrade, fake evidence or candidate controller."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed bounded optional native Rust verification after complete strict source proof, feature variants, typed authorization and private diagnostics. Permanent recovery preserves rejected source provenance; recipe remains inactive until independent release. No model/parity/calibration or current-validation claim.",
-          "reviewed_code_fingerprint": "f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10",
-          "spec_material_hash": "43249a17beb1d52e56bb3ba81af024c0029c8d221dd68dd81795d66e9540ba93"
+          "reason": "The real regression now checks both reviewed aliases together, matching actual repository layout. Existing exact-path/target, source custody and safety contracts unchanged.",
+          "reviewed_code_fingerprint": "c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5",
+          "spec_material_hash": "c5d45b45f01b126c122cb281e0357d4fcf8b4134220c4f60467fde0a8d0495f4"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed bounded optional native Rust verification after complete strict source proof, feature variants, typed authorization and private diagnostics. Permanent recovery preserves rejected source provenance; recipe remains inactive until independent release. No model/parity/calibration or current-validation claim.",
-          "reviewed_code_fingerprint": "f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10",
-          "spec_material_hash": "306a64da8ed2418190f47161354b3bb6c1a5d2034a8b7538d2341903a09473ed"
+          "reason": "The real regression now checks both reviewed aliases together, matching actual repository layout. Existing exact-path/target, source custody and safety contracts unchanged.",
+          "reviewed_code_fingerprint": "c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5",
+          "spec_material_hash": "0f3b0b57b5d01999e22dee2b84b7552ede21e1930a338cd36ffe2ce288b84fef"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed bounded optional native Rust verification after complete strict source proof, feature variants, typed authorization and private diagnostics. Permanent recovery preserves rejected source provenance; recipe remains inactive until independent release. No model/parity/calibration or current-validation claim.",
-          "reviewed_code_fingerprint": "f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10",
-          "spec_material_hash": "1a2cf3d27225d06b0c60ce2a1068abdb9f48c9f0b91e9d1e409bdc1ce69fa1ce"
+          "reason": "The real regression now checks both reviewed aliases together, matching actual repository layout. Existing exact-path/target, source custody and safety contracts unchanged.",
+          "reviewed_code_fingerprint": "c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5",
+          "spec_material_hash": "810fff8f30cfdfa702cb3a9076669bac11b936b500bf9dc40c731bf660fb9665"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Add bounded Rust worker verification after strict source proof",
+      "stop_conditions": [
+        "Do not use this unmerged candidate controller to authorize Vega verification; keep original feature yielded with custody and history intact."
+      ],
+      "title": "Preserve reviewed golden fixture in native execution snapshots",
       "todo_ids": [
-        "feat_01m55h3p8vy7d94x"
+        "bugs_01m56gb781kjmyqt"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792281551Z"
+      "updated_at": "1792296231Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Original task remains owned through supported reclaim; rejected branch retained, no force-push. New permanent branch is actual eventual PR branch. Released0.118 only; no candidate controller adoption, real Vega transfer changes, merge or release."
+        "Separate controller prerequisite only. Original Vega branch/task preserved and yielded to serialize exclusive claims; no candidate-controller or native Vega acceptance."
       ],
-      "artifact_hash": "sha256:cd99c02625a19113d42a584d5fa03c23cbea110b40c18925f0c9c3f0b7a5a246",
+      "artifact_hash": "sha256:0791613563634fd0d53897629340028dfb572d20e3f66c5afd1cacd40e8cb3fa",
       "checks": [
         {
-          "name": "diff-whitespace",
-          "status": "passed"
-        },
-        {
-          "name": "previous-full-validation",
+          "name": "alias_regression_first_execution",
           "status": "failed"
         },
         {
-          "name": "rustfmt",
+          "name": "alias_regression_second_execution",
+          "status": "failed"
+        },
+        {
+          "name": "alias_regression_third_execution",
+          "status": "failed"
+        },
+        {
+          "name": "combined_alias_regression",
+          "status": "unavailable"
+        },
+        {
+          "name": "first_validation",
+          "status": "failed"
+        },
+        {
+          "name": "formatting",
           "status": "passed"
         },
         {
-          "name": "source-carry-integrity",
-          "status": "passed"
+          "name": "native_snapshot_regression",
+          "status": "unavailable"
+        },
+        {
+          "name": "second_validation",
+          "status": "failed"
         }
       ],
-      "current_phase": "prepared-source",
+      "current_phase": "verify_combined_reviewed_alias_layout",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M564S5AZMY4AEJKC7GWSEYRS",
+            "detail": "trajectory:branch_01M56GQQ03BZZP9D6VS7NNRBHV",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M564S5AZMY4AEJKC7GWSEYRS",
+            "detail": "trajectory:branch_01M56GQQ03BZZP9D6VS7NNRBHV",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M56GQQ03BZZP9D6VS7NNRBHV",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M56GQQ03BZZP9D6VS7NNRBHV",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M56GQQ03BZZP9D6VS7NNRBHV",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M56GQQ03BZZP9D6VS7NNRBHV",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M564S5AZMY4AEJKC7GWSEYRS": {
+          "branch_01M56GQQ03BZZP9D6VS7NNRBHV": {
             "evidence_only": true,
-            "id": "branch_01M564S5AZMY4AEJKC7GWSEYRS",
-            "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
+            "id": "branch_01M56GQQ03BZZP9D6VS7NNRBHV",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
             "steps": [
               {
-                "action": "source-recovery",
+                "action": "candidate_preparation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "https://buildkite.com/decapodlabs/decapod/builds/2042",
-                  "https://github.com/DecapodLabs/decapod/actions/runs/39069755977"
+                  "src/decapod/core/native_proof/snapshot.rs",
+                  "src/decapod/core/native_proof/snapshot.rs",
+                  "src/decapod/core/validation_runtime/tests.rs",
+                  "Issue1457 documents released119 validation failure from original Vega task; source fixture and immutable vectors untouched."
                 ],
                 "proof_refs": [
-                  "previous-full-validation"
+                  "formatting",
+                  "native_snapshot_regression"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "User authorized permanent recovery branch. d8cc8305d1e06c7d7f761ba8e7699a2e1b0d9d8c code/test jobs passed; historical a31ac5d1 lacked checkpoint and is rejected. Source-only patch SHA256327cb5cd8ff57daa6c86df99bc083a7f4818a455b2ee4544e4b13bdd2624502f excludes .decapod and release entrypoints; no old governance identity or checkpoint copied. Machine-specific evidence must be regenerated. Source custody is provenance, not current passing validation."
-                ]
+                "validation_findings": []
               },
               {
-                "action": "prepared-source",
+                "action": "repair_config_projection",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/validation_runtime/rust_worker.rs",
-                  "src/decapod/core/validation_runtime/tests.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Private source patch sha256:327cb5cd8ff57daa6c86df99bc083a7f4818a455b2ee4544e4b13bdd2624502f; all16 source/docs files byte-identical to preserved d8cc8305 source."
+                  "/private/tmp/vega-snapshot-validation-1.json; https://buildkite.com/decapodlabs/decapod/builds/2101; manifest config_input_hash drift corrected by supported specs.refresh after final inventory pin"
                 ],
                 "proof_refs": [
-                  "source-carry-integrity",
-                  "rustfmt",
-                  "diff-whitespace"
+                  "first_validation"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": [
-                  "Reviewed inventory fe3d05e86a64d7ad800b48e2757454d50828da77158eadaf8d9713f5cddd69a9 exactly matches prepared source: accepted release117-to118 Cargo own-version changes plus scoped Bazel exclusive scheduling, unchanged required checks/budgets/carrier. Config backed up; no Rust worker recipe enabled. Prior source CI passing checks are provenance only; this exact candidate requires full official validation. Original task session claim recovered after supported expiry cleanup; incidental automatic coordination task yielded, no task replaced."
-                ]
+                "validation_findings": []
+              },
+              {
+                "action": "repair_regression_expectation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "/private/tmp/vega-snapshot-validation-2.json: public provider403/reset1792295962; sourceCI39094002907 Supabase library1397passed/1failed/3ignored; new test expected escaping link to survive earlier material capture; expectation repaired without weakening safety."
+                ],
+                "proof_refs": [
+                  "second_validation",
+                  "alias_regression_first_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "repair_declared_fixture_inputs",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "SourceCI39094466981 job117578217557:1397passed/1failed/3ignored; material guard correctly refused undeclared other-target.txt. Commit temporary fixture background and explicitly declare retained missing-index target; no production policy change."
+                ],
+                "proof_refs": [
+                  "alias_regression_second_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "respect_head_index_material_union",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/readiness_evidence/material.rs",
+                  "SourceCI39095086960 job117579894757:1397passed/1failed/3ignored; capture_once explicitly unions HEAD/index, so HEAD-bound missing-index target must not be declared untracked. Remove invalid test declaration; preserve production safety/classification and all failures."
+                ],
+                "proof_refs": [
+                  "alias_regression_third_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "verify_combined_reviewed_alias_layout",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Prepared19eff source-bound handoff remains non-ready. Regression now models actual repository containing both fixed reviewed aliases and independently verifies both targets; no production policy change."
+                ],
+                "proof_refs": [
+                  "combined_alias_regression"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -536,34 +664,34 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Private source patch sha256:327cb5cd8ff57daa6c86df99bc083a7f4818a455b2ee4544e4b13bdd2624502f; all16 source/docs files byte-identical to preserved d8cc8305 source.",
-        "https://buildkite.com/decapodlabs/decapod/builds/2042",
-        "https://github.com/DecapodLabs/decapod/actions/runs/39069755977"
+        "/private/tmp/vega-snapshot-validation-1.json; https://buildkite.com/decapodlabs/decapod/builds/2101; manifest config_input_hash drift corrected by supported specs.refresh after final inventory pin",
+        "/private/tmp/vega-snapshot-validation-2.json: public provider403/reset1792295962; sourceCI39094002907 Supabase library1397passed/1failed/3ignored; new test expected escaping link to survive earlier material capture; expectation repaired without weakening safety.",
+        "Issue1457 documents released119 validation failure from original Vega task; source fixture and immutable vectors untouched.",
+        "Prepared19eff source-bound handoff remains non-ready. Regression now models actual repository containing both fixed reviewed aliases and independently verifies both targets; no production policy change.",
+        "SourceCI39094466981 job117578217557:1397passed/1failed/3ignored; material guard correctly refused undeclared other-target.txt. Commit temporary fixture background and explicitly declare retained missing-index target; no production policy change.",
+        "SourceCI39095086960 job117579894757:1397passed/1failed/3ignored; capture_once explicitly unions HEAD/index, so HEAD-bound missing-index target must not be declared untracked. Remove invalid test declaration; preserve production safety/classification and all failures."
       ],
       "inspected_files": [
-        "src/decapod/core/validation_runtime/rust_worker.rs",
+        "src/decapod/core/native_proof/snapshot.rs",
+        "src/decapod/core/readiness_evidence/material.rs"
+      ],
+      "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
+      "modified_files": [
+        "src/decapod/core/native_proof/snapshot.rs",
         "src/decapod/core/validation_runtime/tests.rs"
       ],
-      "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
-      "modified_files": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ],
       "next_transitions": [
-        "Carry prepared source and authored prose, regenerate supported projections, review/checkpoint first commit, validate exact permanent candidate.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M564S5AZMY4AEJKC7GWSEYRS",
+      "run_id": "branch_01M56GQQ03BZZP9D6VS7NNRBHV",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m55h3p8vy7d94x",
+      "task_id": "bugs_01m56gb781kjmyqt",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Reviewed inventory fe3d05e86a64d7ad800b48e2757454d50828da77158eadaf8d9713f5cddd69a9 exactly matches prepared source: accepted release117-to118 Cargo own-version changes plus scoped Bazel exclusive scheduling, unchanged required checks/budgets/carrier. Config backed up; no Rust worker recipe enabled. Prior source CI passing checks are provenance only; this exact candidate requires full official validation. Original task session claim recovered after supported expiry cleanup; incidental automatic coordination task yielded, no task replaced.",
-        "User authorized permanent recovery branch. d8cc8305d1e06c7d7f761ba8e7699a2e1b0d9d8c code/test jobs passed; historical a31ac5d1 lacked checkpoint and is rejected. Source-only patch SHA256327cb5cd8ff57daa6c86df99bc083a7f4818a455b2ee4544e4b13bdd2624502f excludes .decapod and release entrypoints; no old governance identity or checkpoint copied. Machine-specific evidence must be regenerated. Source custody is provenance, not current passing validation."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

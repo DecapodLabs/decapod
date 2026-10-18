@@ -520,7 +520,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10`
+- Repository signal fingerprint: `c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -669,3 +669,17 @@ authorized this permanent replacement PR branch under the same prerequisite task
 No old governance identity/checkpoints were imported or retrospectively asserted.
 Fresh governance and released-controller validation must bind this exact candidate;
 prior passing code jobs do not establish its publication readiness.
+
+### Real snapshot regression for #1457
+
+`native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts` builds real Git repositories and snapshots. The positive case checks symlink type, exact payload, regular target bytes, index mode/blob identity and committed link bytes. Negative cases cover working retarget/escape, a bad staged link hidden by valid working bytes, a bad committed link hidden by valid staged/working bytes, missing working/index/HEAD targets, a symlink target, an arbitrary link and explicit deny policy. Source status must remain unchanged. Existing toolchain-alias and golden-vector checks remain required. Tests are authored, not passing until executed through `decapod validate`; full source proof is required for this prerequisite, and it does not imply native model/parity/calibration acceptance for #1445.
+
+The first prerequisite validation failed in Buildkite2101 (Actions39093827919): CI refreshed the specs manifest's `config_input_hash` after the reviewed inventory pin changed. The source/recipe contract was retained; the repair is to refresh supported specs projections after the final config update and checkpoint the exact regenerated candidate. The failed report remains `/private/tmp/vega-snapshot-validation-1.json`. No failed check is waived.
+
+The next source run exposed an expectation error in the new regression: escaping symlinks fail during material capture before snapshot preparation. The test now requires that earlier rejection explicitly. Its separate symlink-target case uses an in-repository referent so it reaches the snapshot target-type check. No material/snapshot safety check was relaxed. Released validation's public provider reader also reported HTTP403 with reset1792295962; preserve that report and wait for the named reset rather than switch authentication routes.
+
+The bfd461da source run additionally rejected an undeclared file introduced by the test's in-tree referent. The referent is now committed as harmless fixture background before mutations. The missing-index-target case explicitly declares its retained untracked target so rejection is attributed to the index contract. Both changes are confined to temporary test repositories; production guards and the real immutable golden fixture remain unchanged. Capture failures include the scenario name for diagnosis.
+
+Material capture binds the union of HEAD and index paths. The 28ec88bf execution exposed that the missing-index-target remains HEAD-bound and cannot be declared untracked. The current regression preserves that contract and removes the invalid declaration; its target is still captured before the independent snapshot index-target check rejects it. Earlier failed test/projection/provider evidence remains in governance history and prior commits. No production input classification was changed.
+
+The real snapshot regression includes both reviewed aliases simultaneously, matching Decapod's actual repository layout. It checks the preserved toolchain link/target as well as the golden fixture link/target, so recognizing the fixture cannot displace the existing toolchain alias or let one target satisfy the other's requirement.

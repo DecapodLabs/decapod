@@ -439,7 +439,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10`
+- Repository signal fingerprint: `c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -555,3 +555,7 @@ replacement `repo.pr-readiness.v1` project selection. Only trusted compiled host
 can provide the existing native external-action authorizer. Recipe declarations
 and worker outputs cannot mint that authority. Numerical/model claims still need
 their independent reference and evaluation evidence.
+
+### Exact source aliases in native snapshots (#1457)
+
+`src/decapod/core/native_proof/snapshot.rs::reviewed_alias` recognizes only the existing Rust toolchain alias and `tests/fixtures/state_commit_repo/symlink_test -> target.txt`. The fixture destination is the regular in-repository `tests/fixtures/state_commit_repo/target.txt`. Index and HEAD link blobs must match exact expected bytes and both planes must contain the regular target. Working capture verifies the link and target types and hashes; fixture parents must be directories, not symlinks. Copying recreates the link without following it, checks its frozen digest, charges link bytes to existing budgets, and verifies the resulting snapshot with the existing material identities. Arbitrary aliases, submodules, special files and source changes remain rejected. No fixture content or immutable golden vector is changed.
