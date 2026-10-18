@@ -40,6 +40,8 @@ pub struct ProofConfiguration {
     pub commands: Vec<super::proof::ProofDef>,
     #[serde(default)]
     pub repository_contract: Option<super::repository_profile::RepositoryContract>,
+    #[serde(default)]
+    pub rust_workers: Option<rust_worker::Configuration>,
 }
 pub use snapshot::ci_attested::Policy as CiAttestedPolicy;
 /// Parse only the canonical tracked project field. No environment fallback,
@@ -240,6 +242,11 @@ pub struct ExecutedSuite {
 }
 
 pub trait Host {
+    /// Additional host execution is closed unless the existing host supplies its
+    /// external-action authorizer. A JSON recipe cannot mint this capability.
+    fn authorize_rust_worker(&mut self, _action: NativeAction<'_>) -> io::Result<()> {
+        Err(invalid("RUST_WORKER_ADAPTER_UNAVAILABLE"))
+    }
     fn evidence_directory(&self) -> Option<&Path> {
         None
     }
@@ -538,6 +545,30 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     )
     .map_err(invalid)?;
     let release = None;
+    let accepted_entries = git(options, budget, &["ls-tree", "-z", &base, "--", CONFIG])?;
+    let accepted = if accepted_entries.is_empty() {
+        ProofConfiguration::default()
+    } else {
+        proof_configuration(&git(
+            options,
+            budget,
+            &["show", &format!("{base}:{CONFIG}")],
+        )?)?
+    };
+    rust_worker::preserve_accepted(
+        configuration.rust_workers.as_ref(),
+        accepted.rust_workers.as_ref(),
+    )?;
+    if configuration.rust_workers.is_some()
+        && configuration
+            .required_profile
+            .as_ref()
+            .is_none_or(|p| p.id != profile::REQUIRED_PROFILE)
+    {
+        return Err(invalid(
+            "RUST_WORKER_STRICT_PROFILE_REQUIRED: supplemental proof cannot replace source CI",
+        ));
+    }
     if let Some(policy) = &configuration.ci_attested {
         let accepted = proof_configuration(&git(
             options,
@@ -868,6 +899,15 @@ fn run(
         report.scope = super::repository_profile::READINESS_SCOPE;
     }
     report.stage_dispositions = project.catalog.stage_dispositions().to_vec();
+    if let Some(configuration) = &project.configuration.rust_workers {
+        report.stage_dispositions.extend(configuration.workers.iter().map(|worker|profile::StageDisposition {
+            stage:format!("supplemental-rust-worker:{}",worker.name),key:None,
+            disposition:profile::StageDispositionKind::Real,
+            policy:configuration.reviewed_recipes_digest.clone(),
+            reason:format!("Required locked tests and {} runs for {}; planned obligations, not an execution claim",worker.runs.len(),worker.manifest),
+            evidence_scope:"supplemental local command evidence; complete strict source proof remains mandatory; no model/parity/calibration inference".into(),
+        }));
+    }
     // Freeze source/governance/accepted target before any remote preparation or
     // useful partial native execution performed by adapter selection. Execution
     // tooling is frozen separately after its independently measured preparation.
@@ -965,22 +1005,22 @@ fn run(
     )?;
     // Independently discover/recompile again. Do not trust the executed envelope
     // for source coverage, target identity, final material or applicability.
-    let current_project = load_project(options, &mut budget)?;
+    let mut current_project = load_project(options, &mut budget)?;
     if current_project.configuration != project.configuration {
         return Err(invalid(
             "STALE_POLICY: canonical proof configuration changed",
         ));
     }
-    let current = publication_state(options, &current_project, &selection, &mut budget)?;
-    let current_profile = profile::compile_plan(
-        current_project.catalog,
+    let mut current = publication_state(options, &current_project, &selection, &mut budget)?;
+    let mut current_profile = profile::compile_plan(
+        current_project.catalog.clone(),
         &selection.policy,
         &selection.bindings,
         &current.identity,
         &current.governance_policy_digest,
     )
     .map_err(|e| invalid(e.to_string()))?;
-    let current_target = TargetObservation {
+    let mut current_target = TargetObservation {
         invocation_id: invocation,
         repository: options.repository.clone(),
         branch: options.base_branch.clone(),
@@ -991,7 +1031,7 @@ fn run(
         Some(failure) => profile::ProviderOutcome::Failed(failure),
         None => profile::ProviderOutcome::Complete(&result.evidence),
     };
-    let verdict = profile::finish(
+    let mut verdict = profile::finish(
         &frozen,
         &current_profile,
         &current,
@@ -999,6 +1039,45 @@ fn run(
         outcome,
     )
     .map_err(|e| invalid(format!("NOT_READY: {e:?}")))?;
+    if verdict == Verdict::Ready && project.configuration.rust_workers.is_some() {
+        rust_worker::execute(
+            options,
+            &project,
+            &state.identity,
+            &directory,
+            &mut budget,
+            &mut |action| host.authorize_rust_worker(action),
+        )?;
+        // Supplementary execution cannot preserve a stale primary pass. Repeat
+        // source, governance, tools, complete plan and fresh accepted-target read.
+        current_project = load_project(options, &mut budget)?;
+        if current_project.configuration != project.configuration {
+            return Err(invalid("STALE_POLICY_AFTER_RUST_WORKER"));
+        }
+        current = publication_state(options, &current_project, &selection, &mut budget)?;
+        current_profile = profile::compile_plan(
+            current_project.catalog,
+            &selection.policy,
+            &selection.bindings,
+            &current.identity,
+            &current.governance_policy_digest,
+        )
+        .map_err(|e| invalid(e.to_string()))?;
+        current_target.revision =
+            host.accepted_target(&options.repository, &options.base_branch, &budget)?;
+        let outcome = match result.failure.as_deref() {
+            Some(failure) => profile::ProviderOutcome::Failed(failure),
+            None => profile::ProviderOutcome::Complete(&result.evidence),
+        };
+        verdict = profile::finish(
+            &frozen,
+            &current_profile,
+            &current,
+            &current_target,
+            outcome,
+        )
+        .map_err(|e| invalid(format!("NOT_READY_AFTER_RUST_WORKER: {e:?}")))?;
+    }
     report.ready = verdict == Verdict::Ready;
     report.agent_guidance = ValidationGuidance::for_outcome(report.ready);
     write_new(
@@ -1535,6 +1614,9 @@ impl<'a> NativeHost<'a> {
     }
 }
 impl Host for NativeHost<'_> {
+    fn authorize_rust_worker(&mut self, action: NativeAction<'_>) -> io::Result<()> {
+        (self.authorize)(action)
+    }
     fn evidence_directory(&self) -> Option<&Path> {
         self.partial_evidence.as_deref()
     }
@@ -2094,3 +2176,4 @@ pub mod snapshot;
 mod executor_contract;
 
 pub mod repository_host;
+pub mod rust_worker;

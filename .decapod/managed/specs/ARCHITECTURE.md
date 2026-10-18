@@ -439,8 +439,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
+- Repository signal fingerprint: `f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -529,3 +529,29 @@ retried jobs remain rejection conditions. The complete required catalog chooses
 which configured workflows must run; an inapplicable documentation-sync workflow
 does not become an extra execution obligation. This change establishes neither
 vega inference nor native Apple GPU readiness.
+
+## Supplemental Rust worker verification
+
+`validation_runtime::rust_worker` adds a required supplemental phase to the strict
+source profile. `run` first verifies the full primary source verdict, then executes
+every configured worker test/run through the existing `native_proof` immutable
+snapshot and bounded process runner. It independently recaptures source, policy,
+primary tooling and a fresh accepted-target observation afterwards before final
+readiness. A native failure leaves private failure evidence and keeps readiness
+false. No alternate source profile or partial-source publication route is added.
+
+`proof.rust_workers` contains reviewed relative Cargo manifests, features and run
+arguments. Installed Rust/Cargo/linker discovery remains controller-owned; shared
+recipes contain no installed tool paths. Cargo tests and runs use `--release` and
+`--locked`, fresh private HOME/CARGO_HOME, and an owned target directory outside
+source. Snapshot source and original Git refs/index remain protected. Optional
+Metal-toolchain inventory on macOS measures xcrun, selected metal/metallib tools
+and macOS/iOS SDK metadata. These measurements identify the declared compiler
+closure, not every OS/runtime dependency or physical GPU execution.
+
+The supplemental subplan reuses the existing local-command evidence kind/verifier
+inside an independently preserved outer strict source plan. It is never a
+replacement `repo.pr-readiness.v1` project selection. Only trusted compiled hosts
+can provide the existing native external-action authorizer. Recipe declarations
+and worker outputs cannot mint that authority. Numerical/model claims still need
+their independent reference and evaluation evidence.

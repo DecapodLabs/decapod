@@ -386,7 +386,14 @@ pub fn authorize_preflight_probe(
                 ["--version", "--verbose"] | ["--print", "sysroot"]
             ))
             || (name == "cargo" && arguments == ["--version", "--verbose"])
-            || (compiler && arguments == ["--version"]));
+            || (compiler && arguments == ["--version"])
+            || (name == "xcode-select" && arguments == ["--print-path"])
+            || (name == "xcrun"
+                && matches!(
+                    arguments,
+                    ["--find", "metal" | "metallib"]
+                        | ["--sdk", "macosx" | "iphoneos", "--show-sdk-path"]
+                )));
     if !allowed {
         return Err(error::DecapodError::ValidationError(
             "PREFLIGHT_PROBE_REJECTED: unsupported executable or probe arguments".into(),
@@ -615,6 +622,9 @@ mod preflight_authorization_tests {
             ("/usr/bin/rustc", vec!["--print", "sysroot"]),
             ("/usr/bin/cargo", vec!["--version", "--verbose"]),
             ("/usr/bin/x86_64-linux-gnu-gcc-12", vec!["--version"]),
+            ("/usr/bin/xcode-select", vec!["--print-path"]),
+            ("/usr/bin/xcrun", vec!["--find", "metal"]),
+            ("/usr/bin/xcrun", vec!["--sdk", "macosx", "--show-sdk-path"]),
         ] {
             authorize_preflight_probe(root, Path::new(program), &args).unwrap();
         }
@@ -625,6 +635,13 @@ mod preflight_authorization_tests {
             ("/usr/bin/sh", vec!["--version"]),
             ("/usr/bin/gcc-shell", vec!["--version"]),
             ("/usr/bin/cc", vec!["--version", "@args"]),
+            ("/usr/bin/xcode-select", vec!["--switch", "/other"]),
+            ("/usr/bin/xcrun", vec!["metal", "shader.metal"]),
+            ("/usr/bin/xcrun", vec!["--find", "sh"]),
+            (
+                "/usr/bin/xcrun",
+                vec!["--sdk", "macosx", "--show-sdk-path", "extra"],
+            ),
         ] {
             assert!(authorize_preflight_probe(root, Path::new(program), &args).is_err());
         }

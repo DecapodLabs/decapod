@@ -238,7 +238,10 @@ def decapod_targets():
             timeout = "long" if path == "tests/group_broker.rs" else "moderate",
             # This suite asserts uncontended process wall-clock budgets. Rust's
             # test-threads flag alone does not isolate concurrent Bazel targets.
-            tags = ["exclusive"] if path == "tests/validate_termination.rs" else [],
+            tags = ["exclusive"] if path in [
+                "tests/validate_termination.rs",
+                "tests/cli_contract_enforcement.rs",
+            ] else [],
             srcs = [path] + [
                 "tests/consumer_readiness.rs",
                 "tests/init_ci_scaffolding.rs",

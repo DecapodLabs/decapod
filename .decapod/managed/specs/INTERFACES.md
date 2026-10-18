@@ -496,8 +496,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
+- Repository signal fingerprint: `f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -540,3 +540,34 @@ both discovered digests for review without updating them or implying proof succe
 retain authored configuration even under `--force`; explicit arguments still change
 it. The generated GitHub validation workflow fetches complete history and supplies
 immutable `CHANGE_EVENT`, `CHANGE_BASE` and `CHANGE_HEAD` to CI-local validation.
+
+## Supplemental Rust worker verification
+
+Optional `[proof.rust_workers]` has `reviewed_recipes_digest` and `workers`.
+Each worker has a unique `name` and a repository-relative `manifest` ending in
+`Cargo.toml`, explicit `timeout_seconds` (1–1800 per test/run), `features` (default
+empty), `metal_toolchain` (default false) and nonempty `runs`. Each run has literal
+`arguments` and optional `proof_output` (default false). The controller always runs
+the worker's tests first. Run arguments follow Cargo's `--` separator. The worker
+must be a separately locked Cargo workspace with explicit `package.rust-version`.
+A manifest may have distinct feature-set variants; exact or reordered duplicate
+variants are rejected. Each variant has independent build scratch. At most four workers, sixteen unique simple feature names and eight runs per
+worker are accepted, with bounded argument counts/bytes and the original overall
+validation deadline. Paths, duplicate declarations, unsupported fields and stale
+review pins fail closed. An accepted recipe cannot be removed or changed by a
+candidate; additional recipes only add required proof.
+
+`rpc agent.init` reports `rust_worker_recipes_digest` as a read-only review aid.
+It neither writes nor approves the recipe pin. Init refresh retains authored
+recipes. A configured recipe requires the strict Decapod source profile and the
+complete existing source proof before native execution. Absent host authorization
+is an explicit unsupported-adapter error. This prerequisite's installed controller
+continues to be v0.118.0; candidate support cannot authorize its own adoption.
+
+`proof_output=true` appends `--proof-output <fresh-private-path>` to that run. The
+controller retains a bounded private JSON object (at most 1 MiB), hashes it, and
+retains command stdout/stderr, timing, termination and failures under the existing
+validation evidence directory. A run cannot supply its own output destination.
+This is diagnostic custody, not independent validation of model semantics. The
+outer validation report is the only publication-readiness result; supplemental
+command records explicitly carry `publication_ready=false`.
