@@ -1179,7 +1179,14 @@ fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() 
             "missing-working-target" => fs::remove_file(f.options.root.join(TARGET)).unwrap(),
             "symlink-target" => {
                 fs::remove_file(f.options.root.join(TARGET)).unwrap();
-                symlink("../../../../Cargo.toml", f.options.root.join(TARGET)).unwrap();
+                fs::write(
+                    f.options
+                        .root
+                        .join("tests/fixtures/state_commit_repo/other-target.txt"),
+                    "in-repository referent\n",
+                )
+                .unwrap();
+                symlink("other-target.txt", f.options.root.join(TARGET)).unwrap();
             }
             "missing-index-target" | "missing-head-target" => {
                 run(&f.options.root, &["rm", "--cached", TARGET]);
@@ -1202,9 +1209,16 @@ fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() 
         // so missing-target scenarios reach the snapshot's own checks.
         let inputs = f.inputs();
         let before = run(&f.options.root, &["status", "--porcelain"]);
-        let identity =
-            native_proof::capture_current_identity(&inputs, &BTreeMap::new(), limits, &cancel)
-                .unwrap();
+        let captured =
+            native_proof::capture_current_identity(&inputs, &BTreeMap::new(), limits, &cancel);
+        if scenario == "working-escape" {
+            let error = captured
+                .expect_err("material capture must reject an escaping link before snapshotting");
+            assert!(error.to_string().contains("escaping symlink target"));
+            assert_eq!(run(&f.options.root, &["status", "--porcelain"]), before);
+            continue;
+        }
+        let identity = captured.unwrap();
         let denied = if scenario == "denied-alias" {
             BTreeSet::from([ALIAS.into()])
         } else {

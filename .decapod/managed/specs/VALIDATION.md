@@ -520,7 +520,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d4f52f91c23a844013ad2d514a7b56ab9d1be01b6753cce3f24a11fad01f05fc`
+- Repository signal fingerprint: `7071f466f35b470706739406c799bdab2baf305f97a0098ebfbd95881c708809`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -675,3 +675,5 @@ prior passing code jobs do not establish its publication readiness.
 `native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts` builds real Git repositories and snapshots. The positive case checks symlink type, exact payload, regular target bytes, index mode/blob identity and committed link bytes. Negative cases cover working retarget/escape, a bad staged link hidden by valid working bytes, a bad committed link hidden by valid staged/working bytes, missing working/index/HEAD targets, a symlink target, an arbitrary link and explicit deny policy. Source status must remain unchanged. Existing toolchain-alias and golden-vector checks remain required. Tests are authored, not passing until executed through `decapod validate`; full source proof is required for this prerequisite, and it does not imply native model/parity/calibration acceptance for #1445.
 
 The first prerequisite validation failed in Buildkite2101 (Actions39093827919): CI refreshed the specs manifest's `config_input_hash` after the reviewed inventory pin changed. The source/recipe contract was retained; the repair is to refresh supported specs projections after the final config update and checkpoint the exact regenerated candidate. The failed report remains `/private/tmp/vega-snapshot-validation-1.json`. No failed check is waived.
+
+The next source run exposed an expectation error in the new regression: escaping symlinks fail during material capture before snapshot preparation. The test now requires that earlier rejection explicitly. Its separate symlink-target case uses an in-repository referent so it reaches the snapshot target-type check. No material/snapshot safety check was relaxed. Released validation's public provider reader also reported HTTP403 with reset1792295962; preserve that report and wait for the named reset rather than switch authentication routes.

@@ -496,7 +496,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d4f52f91c23a844013ad2d514a7b56ab9d1be01b6753cce3f24a11fad01f05fc`
+- Repository signal fingerprint: `7071f466f35b470706739406c799bdab2baf305f97a0098ebfbd95881c708809`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
