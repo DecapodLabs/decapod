@@ -89,6 +89,9 @@ fn main() {
 }
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args_os().skip(1).collect::<Vec<_>>();
+    if args.len() == 3 && args[0] == "--diagnose-native" && args[1] == "--proof-output" {
+        return diagnose_native(Path::new(&args[2]));
+    }
     if args.len() == 2 && args[0] == "--backend-check" {
         use vega_readiness::{BACKEND_CHECK_SCHEMA, Backend, BackendCheck, WorkerErrorKind};
         let backend = match args[1].to_str() {
@@ -208,6 +211,114 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     }
     println!("{}", serde_json::to_string(&response)?);
     Ok(())
+}
+
+/// Collection, not acceptance: attempt each independent backend even when
+/// another fails. Neither missing reference data nor a model's negative answer
+/// prevents dispatch diagnostics. The caller still fails if execution failed.
+fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    use vega_readiness::Backend;
+    let started = std::time::Instant::now();
+    let preferred = vega_readiness::BackendPreference::Auto.resolve();
+    let probe = vega_backbone::probe_backend(preferred);
+    let mut report = serde_json::json!({
+        "schema":"decapod.vega-native-diagnostics.v1",
+        "publication_ready":false,"parity":"unverified","readiness_calibration":"unverified",
+        "probe":match &probe {
+            Ok(value) => serde_json::to_value(value)?,
+            Err(error) => serde_json::json!({"error":error.to_string()})
+        },
+        "scope":"Pinned model execution diagnostics only. CPU/accelerator agreement is not independent model parity. No fitted or held-out readiness coverage is established."
+    });
+    let setup = match vega_setup::run(&vega_setup::SetupOptions::default()) {
+        Ok(setup) => setup,
+        Err(error) => {
+            report["installation_error"] = error.to_string().into();
+            write_private_proof(proof_path, &report)?;
+            return Err(error.into());
+        }
+    };
+    let installation = setup.model_directory.ok_or("installation missing")?;
+    let manifest_digest = setup.manifest_digest.ok_or("manifest missing")?;
+    let manifest = setup.manifest.ok_or("manifest identity missing")?;
+    if manifest.revision != vega_setup::BASELINE_REVISION
+        || manifest.backbone_revision != vega_setup::BASELINE_BACKBONE_REVISION
+        || manifest.source_revision != vega_setup::BASELINE_SOURCE_REVISION
+    {
+        return Err(
+            "diagnostics require the compiled immutable baseline, never a floating activation"
+                .into(),
+        );
+    }
+    // A fixed diagnostic, not a labelled evaluation case or passing proof.
+    let state = r#"{"intent":"Document a CLI option","validation":"passed","obligations":[{"requirement":"Describe CPU fallback explicitly","evidence":"missing"}],"unknowns":[]}"#.to_owned();
+    let (attempts, inference_failed) = collect_diagnostics([preferred, Backend::Cpu], |backend| {
+        let request = Request {
+            schema: vega_readiness::WORKER_SCHEMA.into(),
+            request_id: format!("native-diagnostic-{}", backend.device()),
+            input_digest: vega_readiness::hash(state.as_bytes()),
+            installation: installation.clone(),
+            manifest_digest: manifest_digest.clone(),
+            state: state.clone(),
+            alpha: "0.1".into(),
+            risk: "0.1".into(),
+            backend,
+        };
+        let temporary = tempfile::tempdir()?;
+        let path = temporary.path().join("inference.json");
+        infer(&request, Some(&path))?;
+        Ok(serde_json::from_slice::<serde_json::Value>(&read_bounded(
+            &path,
+            MAX_PROOF_BYTES as u64,
+        )?)?)
+    });
+    report["attempts"] = attempts.into();
+    report["wall_clock_ms"] = (started.elapsed().as_secs_f64() * 1000.0).into();
+    report["cpu_execution_scope"] = "Explicit CPU model execution; production fallback routing is a separate obligation, not inferred from this run".into();
+    write_private_proof(proof_path, &report)?;
+    if probe.is_err() || inference_failed {
+        return Err("one or more native diagnostics failed; inspect private proof".into());
+    }
+    Ok(())
+}
+
+fn collect_diagnostics(
+    backends: impl IntoIterator<Item = vega_readiness::Backend>,
+    mut execute: impl FnMut(
+        vega_readiness::Backend,
+    ) -> Result<serde_json::Value, Box<dyn std::error::Error>>,
+) -> (Vec<serde_json::Value>, bool) {
+    let mut failed = false;
+    let attempts = backends.into_iter().map(|backend| match execute(backend) {
+        Ok(value) => value,
+        Err(error) => {
+            failed = true;
+            serde_json::json!({"backend":backend.device(),"execution":"failed","error":error.to_string()})
+        }
+    }).collect();
+    (attempts, failed)
+}
+
+#[cfg(unix)]
+fn peak_resident_bytes() -> io::Result<u64> {
+    let mut usage = std::mem::MaybeUninit::<libc::rusage>::uninit();
+    // getrusage initializes this platform-defined structure on success.
+    if unsafe { libc::getrusage(libc::RUSAGE_SELF, usage.as_mut_ptr()) } != 0 {
+        return Err(io::Error::last_os_error());
+    }
+    let peak = u64::try_from(unsafe { usage.assume_init() }.ru_maxrss).map_err(io::Error::other)?;
+    Ok(if cfg!(target_os = "macos") {
+        peak
+    } else {
+        peak.saturating_mul(1024)
+    })
+}
+#[cfg(not(unix))]
+fn peak_resident_bytes() -> io::Result<u64> {
+    Err(io::Error::new(
+        io::ErrorKind::Unsupported,
+        "RSS measurement unavailable",
+    ))
 }
 fn tokenize(
     state: &str,
@@ -456,7 +567,9 @@ fn infer(
                     "engine_forward":engine_forward_ms,"calibration":calibration_ms,
                     "installation_reverify":installation_reverify_ms,"inference_total":inference_total_ms
                 },
-                "timing_scope":"single request, monotonic wall clock; inference_total excludes request parsing, diagnostic export and stdout; native stages synchronize queued GPU work; no performance threshold or memory measurement"
+                "timing_scope":"single request, monotonic wall clock; inference_total excludes request parsing, diagnostic export and stdout; native stages synchronize queued GPU work; no performance threshold",
+                "peak_resident_bytes":peak_resident_bytes().ok(),
+                "memory_scope":"getrusage(RUSAGE_SELF) lifetime process high-water resident bytes, includes prior diagnostic attempts; not isolated model allocation or total GPU memory"
             }),
         ] {
             let serde_json::Value::Object(fields) = section else {
@@ -472,6 +585,24 @@ fn infer(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn failed_accelerator_diagnostic_does_not_skip_independent_cpu_collection() {
+        use vega_readiness::Backend;
+        let mut executed = Vec::new();
+        let (attempts, failed) = collect_diagnostics([Backend::Metal, Backend::Cpu], |backend| {
+            executed.push(backend);
+            if backend == Backend::Metal {
+                Err("accelerator inference failed".into())
+            } else {
+                Ok(serde_json::json!({"backend":"cpu","publication_ready":false}))
+            }
+        });
+        assert_eq!(executed, [Backend::Metal, Backend::Cpu]);
+        assert!(failed);
+        assert_eq!(attempts[0]["execution"], "failed");
+        assert_eq!(attempts[1]["backend"], "cpu");
+    }
 
     #[test]
     fn diagnostic_serialization_is_bounded() {

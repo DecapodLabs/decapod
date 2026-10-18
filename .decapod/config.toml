@@ -62,7 +62,7 @@ validation_buildkite_preflights = true
 commands = []
 
 [proof.rust_workers]
-reviewed_recipes_digest = "sha256:d50b0bb7b62ac1e7ea31ba1cb4dbb43c24746af734cb703febcdb26a77a5bee5"
+reviewed_recipes_digest = "sha256:ce391196e5d4c4b7f92ece27ef44089b1b0f3d9e0609ab5c0ce7583ed647e24c"
 
 [[proof.rust_workers.workers]]
 name = "vega-native"
@@ -70,11 +70,14 @@ manifest = "assets/tools/vega-native/Cargo.toml"
 features = []
 metal_toolchain = true
 timeout_seconds = 1800
-runs = [{ arguments = ["--probe-auto"], proof_output = true }]
+runs = [
+    { arguments = ["--probe-auto"], proof_output = true },
+    { arguments = ["--diagnose-native"], proof_output = true },
+]
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:eb0e08b60c29d04a454ae35e72eab3e25de1c4e7a5e6c439ce047556a0b7d3e5"
+reviewed_sources_digest = "sha256:ca728d7aa678dd9a72ded572c5d26cb3699ea0671e990147fd84fdb1db840165"
 
 [custody]
 isolation = "container"

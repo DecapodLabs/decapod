@@ -332,12 +332,11 @@
       "status": "open"
     },
     "vega-native-acceptance": {
-      "statement": "Native Apple-arm64 compilation, real Metal numerical execution, independent pinned-upstream parity, readiness-domain calibration and measured latency/memory are required before feature acceptance; source preparation establishes none of them.",
-      "falsifier": "Source-only review, metadata generation, platform labels, synthetic outputs or missing measurements are represented as native/parity/calibration/performance acceptance.",
+      "statement": "Feature publication requires actual native model execution, independent numerical parity and defensible held-out readiness evaluation; current diagnostic collection does not satisfy these conditions.",
+      "falsifier": "Publication occurs with absent or failed model/parity/calibration evidence, or diagnostics/agent-authored labels are presented as independent acceptance.",
       "status": "blocked",
       "proof_refs": [
-        "assets/tools/vega_infer.rs",
-        "src/decapod/core/vega_backbone.rs"
+        "/private/tmp/vega-119-current-validation.json"
       ]
     },
     "vega-positive-singleton": {
@@ -502,6 +501,11 @@
       "id": "release119-reconciliation",
       "summary": "Integrate accepted v0.119.0 release, refresh release-bound projections through official init, preserve authored Vega-only policy and reconcile the separate worker lock; external domain-evidence blockers remain and full validation must rerun.",
       "input_digest": "sha256:a2ce6edb94cf83ecb8bf9e79cd1691c1539ad1ed77203516d3267b2f10330205"
+    },
+    {
+      "id": "native-diagnostic-collection",
+      "summary": "Collect pinned preferred/CPU model diagnostics independently of missing parity/evaluation inputs; preserve final acceptance conditions and prior failed reports.",
+      "input_digest": "sha256:fa2c73557f5e6bbdb3366dd1d056fd67e18432691a78744234f0a7c513a0b148"
     }
   ],
   "intents": {
@@ -537,40 +541,36 @@
       "intent": "Complete the existing issue1445 Rust-only Vega post-validation integration on its preserved branch and original task. Vega is an optional team configuration selectable during init; shared policy/model/calibration identities must work across maintainers without committed machine paths. Automatic execution prefers Apple Metal on macOS and supported GPU on other systems (initial pinned CUDA/NVIDIA path, other GPU availability explicitly bounded), with safe CPU fallback using the same pinned model and a fresh bounded attempt; record actual backend, precision, runtime identity and fallback failures. Preserve the chosen Candle/candle-vllm hidden-state path and separate SafeTensors worker, external immutable assets/cache/integrity/atomic activation, active Jev removal, minimal bounded validation input, deterministic authority and fail-closed stale/missing/malformed/abstaining decisions. Preserve all source history, original task provenance, existing failed validation and native/parity/readiness-calibration proof obligations. Agent publishes only after exact-source accepted-controller validation and required genuine native/reference/holdout evidence; human retains merge/release authority.",
       "phases": [],
       "proof_hooks": [
-        "Plain decapod validate under an accepted released controller owns feature builds/tests and readiness; no bootstrap exception or candidate-controller acceptance",
-        "Real Apple-arm64 compile/load/probe, independent pinned-upstream numerical parity, readiness-domain calibration, latency/peak-memory and boundary/error evidence required",
-        "The separate native-worker portable unit-test target must execute the moved serialized decoder load/forward/NaN fixture and exact binary16 assertions; root source CI does not establish worker execution",
-        "Init selection/refresh and shared policy must preserve unrelated settings and per-maintainer local bindings; test GPU preference, missing/failed GPU, clean CPU fallback, exact identities, no partial result reuse and explicit real-platform coverage limits",
-        "CPU/CUDA/Metal model behavior needs justified independent numerical evidence before portability or backend equivalence is claimed; unavailable platform evidence remains explicit"
+        "Collect model-free dispatch and pinned-model Metal/explicit-CPU diagnostics independently of numerical-reference and readiness-evaluation acceptance; diagnostic success never satisfies those acceptance conditions.",
+        "Produce reviewable public pinned Rust reference calculations and agent-curated public-snapshot requirements cases; freeze grouped holdout before tuning and report independence and adjudication limits explicitly."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed119 release merge and separate locked native recipe; source/native gates precede Vega and original deadline is preserved. Actual native/model execution, independent parity and readiness holdout remain unverified and publication-blocking.",
-          "reviewed_code_fingerprint": "003bc1b3edaa3356e12fa3eba22652fddf687bdb462b38a363015bf53ab42526",
-          "spec_material_hash": "eb53334fcd43a6fff3bd3021c48038ac492ef65a078540fa10ec969aa8060e75"
+          "reason": "Reviewed independent diagnostic collection, private pinned model setup, CPU/accelerator attempts and honest timing/RSS scopes. Final parity/calibration/fallback acceptance remains unsatisfied.",
+          "reviewed_code_fingerprint": "ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7",
+          "spec_material_hash": "039c9d93edc5e86de6a5d8b905c7a6542b19e29f0431ebf3b326c9c373be9fc0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed119 release merge and separate locked native recipe; source/native gates precede Vega and original deadline is preserved. Actual native/model execution, independent parity and readiness holdout remain unverified and publication-blocking.",
-          "reviewed_code_fingerprint": "003bc1b3edaa3356e12fa3eba22652fddf687bdb462b38a363015bf53ab42526",
-          "spec_material_hash": "942fbaa0ce5aef13ddf4f420a4d051bdf2102082dba0c410caa5676d8a58a6ee"
+          "reason": "Reviewed independent diagnostic collection, private pinned model setup, CPU/accelerator attempts and honest timing/RSS scopes. Final parity/calibration/fallback acceptance remains unsatisfied.",
+          "reviewed_code_fingerprint": "ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7",
+          "spec_material_hash": "c95ab5774d9ce563a9c1c57233ab22d188c6207b5145a4e7611e9c15adf9ca75"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed119 release merge and separate locked native recipe; source/native gates precede Vega and original deadline is preserved. Actual native/model execution, independent parity and readiness holdout remain unverified and publication-blocking.",
-          "reviewed_code_fingerprint": "003bc1b3edaa3356e12fa3eba22652fddf687bdb462b38a363015bf53ab42526",
+          "reason": "Reviewed independent diagnostic collection, private pinned model setup, CPU/accelerator attempts and honest timing/RSS scopes. Final parity/calibration/fallback acceptance remains unsatisfied.",
+          "reviewed_code_fingerprint": "ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7",
           "spec_material_hash": "e662013621a917085bf3f02b57a7420ea4e07b824f0bbe82c8ddbdeabf2918da"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [
-        "Do not publish or claim feature completion until exact-state ordinary validation and genuine native Metal/parity/domain-calibration/performance obligations pass. Native obligations remain unrun and required.",
-        "Stop on explicit authorization or access denial or unsupported controller contract and preserve the exact blocker."
+        "Do not publish the Vega feature on diagnostic/source success alone: independent numerical parity and defensible readiness-domain held-out evidence remain mandatory; agent-curated labels are not human-reviewed production calibration."
       ],
       "title": "Validate accepted-base Rust vega readiness",
       "todo_ids": [
@@ -578,19 +578,17 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792290609Z"
+      "updated_at": "1792292015Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Candidate CLI is local preparation-only, not feature build/test/readiness authority; no bootstrap exception",
         "Current claimed task and isolated work branch",
+        "Final publication remains prohibited pending independent parity and readiness calibration acceptance; removing the general execution blocker only permits collection. Prior failed validation reports are retained.",
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb",
         "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation."
       ],
-      "artifact_hash": "sha256:5b733e3a0221304fcae57c1cc7057cea2835c945c0e911e26093f0703ea0d54d",
-      "blockers": [
-        "Independent pinned tokenization/backbone/pooling/engine reference and independently labelled readiness holdout remain unsupplied; upstream choice results are not these proofs. Feature publication remains prohibited."
-      ],
+      "artifact_hash": "sha256:71d53445cf01829ec06ff477883a5174795fefa181ed803312a2c3a8ed203b72",
       "checks": [
         {
           "name": "clippy-source-repair",
@@ -665,6 +663,10 @@
           "status": "unavailable"
         },
         {
+          "name": "independent_parity",
+          "status": "unavailable"
+        },
+        {
           "name": "independent_parity_reference",
           "status": "unavailable"
         },
@@ -709,6 +711,10 @@
           "status": "unavailable"
         },
         {
+          "name": "native_model_execution",
+          "status": "unavailable"
+        },
+        {
           "name": "native_portable_execution",
           "status": "unavailable"
         },
@@ -742,6 +748,10 @@
         },
         {
           "name": "readiness-holdout",
+          "status": "unavailable"
+        },
+        {
+          "name": "readiness_calibration",
           "status": "unavailable"
         },
         {
@@ -805,7 +815,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "released119_candidate_preparation",
+      "current_phase": "native_diagnostic_collection",
       "custody": {
         "events": [
           {
@@ -980,10 +990,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 26
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:27",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 27
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 26,
+        "next_sequence": 27,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1449,6 +1466,23 @@
                 ],
                 "sequence": 26,
                 "validation_findings": []
+              },
+              {
+                "action": "native_diagnostic_collection",
+                "custody_event_id": "event:27",
+                "observations": [
+                  "/private/tmp/vega-119-current-validation.json retains the earlier pre-execution failure"
+                ],
+                "proof_refs": [
+                  "independent_parity",
+                  "readiness_calibration",
+                  "native_model_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 27,
+                "validation_findings": []
               }
             ]
           }
@@ -1469,6 +1503,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/vega-119-current-validation.json retains the earlier pre-execution failure",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
         "Actual plain117 third report requires inventory reconciliation. Compared all discovered sources against accepted396f: only Cargo.toml/Cargo.lock/MODULE.bazel.lock changed plus four new native worker files; existing workflows/actions/executor helpers unchanged. Reviewed actual dependency and worker boundary, then explicitly updated only human-editable required-profile reviewed_sources_digest from supported agent.init inventory. No profile/provider/check graph change and no test execution claimed.",
         "Cargo metadata regeneration preserved immutable native Git pins and package pins except local decapod0.117; resolver updated several existing Windows/socket dependency edges, retained for ordinary validation. No model weights or native runtime installed; setup still reports runtime_installed=false.",
@@ -1538,7 +1573,8 @@
         "Implement bounded local CPU runtime binding, pre-inference startup classification and regressions; preserve active blockers and run prescribed validation after checkpoint.",
         "Refine plan and declare falsifiable checks",
         "Retry full validate after provider rate-limit reset; retain original task claim and source branch; native proof depends on supported released recipe and independent reference/label artifacts.",
-        "Run plain released0.117 validation on the exact release-updated candidate and repair its actual report"
+        "Run plain released0.117 validation on the exact release-updated candidate and repair its actual report",
+        "Use released119 validation to compile/test/probe/model-diagnose; produce independent Rust reference and public-snapshot held-out evaluation inputs before acceptance."
       ],
       "repo_scope": [
         "root"

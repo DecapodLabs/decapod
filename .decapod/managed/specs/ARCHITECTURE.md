@@ -509,7 +509,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `003bc1b3edaa3356e12fa3eba22652fddf687bdb462b38a363015bf53ab42526`
+- Repository signal fingerprint: `ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -646,3 +646,7 @@ replacement `repo.pr-readiness.v1` project selection. Only trusted compiled host
 can provide the existing native external-action authorizer. Recipe declarations
 and worker outputs cannot mint that authority. Numerical/model claims still need
 their independent reference and evaluation evidence.
+
+### Native diagnostic dependency boundary (#1445)
+
+`assets/tools/vega_infer.rs::diagnose_native` runs the real preferred-device probe, installs only the compiled immutable baseline through `vega_setup::run` into the validation worker's private HOME, and attempts both preferred-device and explicit CPU model inference. Independent attempts are collected even if another backend fails; failed installation is a genuine shared dependency. Collection has no numerical-reference or evaluation-file prerequisite and never fits calibration. Execution errors fail the required worker run after writing diagnostics. The existing accepted controller, source CI, recipe integrity and final freshness checks remain authoritative. This separates evidence collection from the agent's still-unsatisfied parity/calibration publication conditions without changing the kernel or waiving checks.

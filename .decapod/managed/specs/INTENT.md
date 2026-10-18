@@ -200,7 +200,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `003bc1b3edaa3356e12fa3eba22652fddf687bdb462b38a363015bf53ab42526`
+- Repository signal fingerprint: `ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -246,3 +246,7 @@ that successful compilation or a JSON diagnostic proves Metal execution,
 numerical equivalence or readiness-domain calibration. This prerequisite leaves
 the recipe inactive in Decapod's own configuration and needs independent acceptance
 and release before the Vega feature can use its controller support.
+
+### Diagnostic collection and unresolved acceptance (#1445)
+
+Native diagnostics must be executable before independent parity and readiness evaluation are available. Missing reference/holdout inputs are publication acceptance gaps, not dependencies of a device tensor probe or model forward pass. The agent must produce public, reproducible Rust verification inputs and auditable agent-curated repository cases; these labels are not human-reviewed ground truth. Source/native diagnostic success alone must not trigger feature publication or a completion claim.

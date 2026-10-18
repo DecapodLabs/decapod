@@ -647,7 +647,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `003bc1b3edaa3356e12fa3eba22652fddf687bdb462b38a363015bf53ab42526`
+- Repository signal fingerprint: `ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -839,3 +839,7 @@ authorized this permanent replacement PR branch under the same prerequisite task
 No old governance identity/checkpoints were imported or retrospectively asserted.
 Fresh governance and released-controller validation must bind this exact candidate;
 prior passing code jobs do not establish its publication readiness.
+
+### Collection before acceptance (#1445)
+
+The reviewed `proof.rust_workers` recipe runs locked release tests, `--probe-auto` and then `--diagnose-native`. Full `decapod validate` remains the build/test entry point; source proof precedes the native phase under released v0.119.0. The diagnostic command downloads only explicitly pinned baseline assets through normal verified atomic installation; inference then uses immutable verified files. A failed accelerator attempt does not suppress the independent CPU attempt. A new regression protects this collection ordering. Authored tests are unexecuted until the recorded validation runs them. Existing pre-execution failure reports are preserved. Native success is only execution evidence: independent tokenization/block/pooling/engine parity, held-out readiness evaluation, exercised production fallback and boundary/error acceptance remain unsatisfied until measured and reviewed separately.
