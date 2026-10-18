@@ -1217,6 +1217,196 @@ fn successful_validation_preserves_readiness_scope_and_existing_delivery_authori
     assert!(guidance.instruction.contains("existing authorization"));
 }
 
+#[cfg(unix)]
+#[test]
+fn supplemental_worker_executes_locked_rust_and_retains_failure_without_source_writes() {
+    use super::rust_worker::{Configuration, Run, Worker, recipe_digest};
+    // This is real Rust compilation/execution of a dependency-free fixture,
+    // not a Metal/model/parity claim or a substitute for the primary CI suite.
+    let mut f = accepted_executor_fixture();
+    f.options.max_input_bytes = 8 * 1024 * 1024 * 1024;
+    f.options.max_files = 200_000;
+    f.options.timeout = Duration::from_secs(180);
+    let manifest: toml::Value = toml::from_str(include_str!("../../../../Cargo.toml")).unwrap();
+    let version = manifest["package"]["rust-version"].as_str().unwrap();
+    write_source(&f,"assets/tools/probe/Cargo.toml",format!(
+        "[package]\nname='native-fixture'\nversion='0.1.0'\nedition='2024'\nrust-version={version:?}\n[workspace]\n"
+    ).as_bytes());
+    write_source(
+        &f,
+        "assets/tools/probe/Cargo.lock",
+        b"version=4\n[[package]]\nname='native-fixture'\nversion='0.1.0'\n",
+    );
+    write_source(&f,"assets/tools/probe/src/main.rs",br##"
+use std::io::Write;
+fn main() {
+    let args=std::env::args().skip(1).collect::<Vec<_>>();
+    if args.iter().any(|arg|arg=="--fail") { eprintln!("intentional worker failure"); std::process::exit(7); }
+    assert_eq!(&args[..3], &["--manifest-path","/not-a-cargo-manifest","--probe"]);
+    let home=std::path::PathBuf::from(std::env::var_os("HOME").unwrap());
+    assert!(!home.join(".cargo/credentials.toml").exists());
+    let output=r#"{"backend":"cpu","fixture_only":true,"result":7}"#;
+    if let Some(index)=args.iter().position(|arg|arg=="--proof-output") {
+        let mut options=std::fs::OpenOptions::new();
+        options.write(true).create_new(true);
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+        let mut file=options.open(&args[index+1]).unwrap();
+        file.write_all(output.as_bytes()).unwrap(); file.sync_all().unwrap();
+    }
+    println!("{output}");
+}
+#[test] fn arithmetic() { assert_eq!(2_f32 * 3_f32 + 1_f32,7_f32); }
+"##);
+    let workers = vec![Worker {
+        name: "probe".into(),
+        manifest: "assets/tools/probe/Cargo.toml".into(),
+        features: vec![],
+        metal_toolchain: false,
+        runs: vec![Run {
+            arguments: vec![
+                "--manifest-path".into(),
+                "/not-a-cargo-manifest".into(),
+                "--probe".into(),
+            ],
+            proof_output: true,
+        }],
+        timeout_seconds: 90,
+    }];
+    let configuration = Configuration {
+        reviewed_recipes_digest: recipe_digest(&workers).unwrap(),
+        workers,
+    };
+    let sources = discover_source_inventory(&f.options, &Cancellation::default()).unwrap();
+    let config = toml::Value::try_from(super::super::proof::ProjectProofConfig {
+        validation_buildkite_preflights: true,
+        required_profile: Some(ProfileDeclaration {
+            id: profile::REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: sources.digest().unwrap(),
+        }),
+        rust_workers: Some(configuration.clone()),
+        ..Default::default()
+    });
+    // ProofConfiguration is read-only; serialize through the public config type.
+    assert!(config.is_ok());
+    write_source(
+        &f,
+        CONFIG,
+        toml::to_string(&serde_json::json!({"proof":config.unwrap()}))
+            .unwrap()
+            .as_bytes(),
+    );
+    run(&f.options.root, &["add", "."]);
+    run(&f.options.root, &["commit", "-m", "native fixture"]);
+    let original = run(&f.options.root, &["rev-parse", "HEAD"]);
+    let cancel = Cancellation::default();
+    let mut budget = RuntimeBudget {
+        deadline: Instant::now() + Duration::from_secs(180),
+        cancel: &cancel,
+        max_output_bytes: f.options.max_output_bytes,
+        bytes_left: f.options.max_input_bytes,
+    };
+    let mut project = load_project(&f.options, &mut budget).unwrap();
+    let identity = native_proof::capture_current_identity(
+        &project.identity_inputs,
+        &BTreeMap::new(),
+        suite_limits(&f.options, &budget).unwrap(),
+        &cancel,
+    )
+    .unwrap();
+    let success = f.options.evidence_parent.join("success");
+    private_directory(&success).unwrap();
+    let mut authorized = 0;
+    let mut authorize = |_: NativeAction<'_>| {
+        authorized += 1;
+        Ok(())
+    };
+    super::rust_worker::execute(
+        &f.options,
+        &project,
+        &identity,
+        &success,
+        &mut budget,
+        &mut authorize,
+    )
+    .unwrap();
+    assert!(authorized > 0);
+    let output: serde_json::Value = serde_json::from_slice(
+        &fs::read(success.join("rust-workers/worker-0-run-0.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(output["backend"], "cpu");
+    assert_eq!(output["result"], 7);
+    let records: SuiteEvidence =
+        serde_json::from_slice(&fs::read(success.join("rust-workers/observations.json")).unwrap())
+            .unwrap();
+    assert_eq!(records.results.len(), 2);
+    assert_eq!(run(&f.options.root, &["rev-parse", "HEAD"]), original);
+    assert_eq!(run(&f.options.root, &["status", "--porcelain"]), "");
+    // Preserve this failed attempt as independent evidence, with no later run.
+    let config = project.configuration.rust_workers.as_mut().unwrap();
+    config.workers[0].runs.push(Run {
+        arguments: vec!["--fail".into()],
+        proof_output: false,
+    });
+    config.workers[0].runs.push(Run {
+        arguments: vec!["--must-not-run".into()],
+        proof_output: false,
+    });
+    config.reviewed_recipes_digest = recipe_digest(&config.workers).unwrap();
+    let mut authored: toml::Value =
+        toml::from_str(&fs::read_to_string(f.options.root.join(CONFIG)).unwrap()).unwrap();
+    authored["proof"]["rust_workers"] = toml::Value::try_from(config.clone()).unwrap();
+    write_source(&f, CONFIG, toml::to_string(&authored).unwrap().as_bytes());
+    run(&f.options.root, &["add", "."]);
+    run(&f.options.root, &["commit", "-m", "failed native fixture"]);
+    let expected = run(&f.options.root, &["rev-parse", "HEAD"]);
+    let failed = f.options.evidence_parent.join("failed");
+    private_directory(&failed).unwrap();
+    let mut budget = RuntimeBudget {
+        deadline: Instant::now() + Duration::from_secs(180),
+        cancel: &cancel,
+        max_output_bytes: f.options.max_output_bytes,
+        bytes_left: f.options.max_input_bytes,
+    };
+    let project = load_project(&f.options, &mut budget).unwrap();
+    let identity = native_proof::capture_current_identity(
+        &project.identity_inputs,
+        &BTreeMap::new(),
+        suite_limits(&f.options, &budget).unwrap(),
+        &cancel,
+    )
+    .unwrap();
+    let error = super::rust_worker::execute(
+        &f.options,
+        &project,
+        &identity,
+        &failed,
+        &mut budget,
+        &mut |_| Ok(()),
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("RUST_WORKER_FAILED"), "{error}");
+    let records: SuiteEvidence =
+        serde_json::from_slice(&fs::read(failed.join("rust-workers/observations.json")).unwrap())
+            .unwrap();
+    assert!(!records.results.iter().any(|row| row.key.job == "probe-3"));
+    assert!(records.results.iter().any(|row| matches!(
+        row.observation,
+        evidence::Observation::Executed {
+            conclusion: evidence::Conclusion::Failure,
+            ..
+        }
+    )));
+    assert_eq!(run(&f.options.root, &["rev-parse", "HEAD"]), expected);
+    assert_eq!(run(&f.options.root, &["status", "--porcelain"]), "");
+    assert!(
+        success
+            .join("rust-workers/proof-output-digests.json")
+            .is_file()
+    );
+}
+
 #[test]
 fn reviewed_controller_mismatch_is_actionable_without_provider_dispatch_or_readiness() {
     for buildkite in [false, true] {

@@ -520,8 +520,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
+- Repository signal fingerprint: `f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -633,3 +633,39 @@ fixtures separately cover successful prepared proof capture and atomic status
 commit. The ignored positive public-CLI full-readiness fixture remains an explicit
 coverage gap, not a passing acceptance test. Completion/runtime edits additionally
 select Gatling so future changes cannot silently omit this regression.
+
+## Supplemental Rust worker verification
+
+The supplemental Rust-worker prerequisite must pass plain official-controller
+`decapod validate` with its new recipe inactive. It must not use an unmerged
+candidate controller to validate or activate itself. Preserve all strict source
+checks, current accepted-target identity, failures and normal branch history.
+
+New regression obligations cover malformed/oversized/duplicate recipes, stale
+review pins, accepted-recipe removal/reinterpretation, relative path aliases and
+escape attempts, argv separation, proof-output destination control, and finite
+read-only Metal tool probes. A real dependency-free Rust fixture must compile,
+test and execute through the immutable runner, retain a private JSON diagnostic,
+preserve an intentional failure, stop dependent runs and leave original source
+and Git state unchanged. That fixture is CPU arithmetic, not fake Metal, a model
+oracle or calibration data. The real Rust fixture passed in the first candidate source CI, including preserved
+intentional failure and source/ref integrity. The first candidate ran the remaining
+regressions in source CI; its private-output
+permission fixture failed because the general storage check permits read access.
+A stricter proof-only privacy check and its new variant regression require rerun.
+The same attempt also found a malformed fixture insertion and a Clippy failure.
+Its full validation remained non-ready (Buildkite 2032); prior evidence is retained.
+Existing native-runner regressions remain required for source/tool/target drift,
+timeout, cancellation, output limits and cleanup. Actual Vega Metal/model/parity
+and independent readiness holdout measurements remain separate issue #1445 gates.
+
+### Permanent recovery provenance
+
+The prepared source was carried from `d8cc8305d1e06c7d7f761ba8e7699a2e1b0d9d8c`
+after its branch was rejected for the missing historical checkpoint in
+`a31ac5d1377e5c11f268f7952753543d46261b15`. The rejected branch, full
+Buildkite 2032/2042 failures and source-CI history remain preserved. The human
+authorized this permanent replacement PR branch under the same prerequisite task.
+No old governance identity/checkpoints were imported or retrospectively asserted.
+Fresh governance and released-controller validation must bind this exact candidate;
+prior passing code jobs do not establish its publication readiness.

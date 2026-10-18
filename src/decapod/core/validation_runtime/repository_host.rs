@@ -758,6 +758,7 @@ mod tests {
                 commands,
                 repository_contract: Some(contract),
                 ci_attested: None,
+                rust_workers: None,
             },
             sources,
             executor: None,

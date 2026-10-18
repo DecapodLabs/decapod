@@ -409,6 +409,8 @@ pub(crate) struct InitWithCli {
     #[clap(skip)]
     pub existing_repository_contract: Option<crate::core::repository_profile::RepositoryContract>,
     #[clap(skip)]
+    pub existing_rust_workers: Option<crate::core::validation_runtime::rust_worker::Configuration>,
+    #[clap(skip)]
     pub existing_ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
     /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.

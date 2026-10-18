@@ -146,6 +146,8 @@ pub struct ReconciliationReport {
     pub inventory_digest: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub command_contract_digest: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rust_worker_recipes_digest: Option<String>,
     pub discovered_sources: BTreeMap<String, String>,
     pub repair_tasks: Vec<RepairTask>,
 }
@@ -367,9 +369,29 @@ pub fn inspect(
         command_contract_digest: proof.repository_contract.as_ref().and_then(|contract| {
             crate::core::repository_profile::command_contract_digest(&proof.commands, contract).ok()
         }),
+        rust_worker_recipes_digest: proof.rust_workers.as_ref().and_then(|configuration| {
+            crate::core::validation_runtime::rust_worker::recipe_digest(&configuration.workers).ok()
+        }),
         discovered_sources: BTreeMap::new(),
         repair_tasks: Vec::new(),
     };
+    if let Some(configuration) = &proof.rust_workers {
+        if proof
+            .required_profile
+            .as_ref()
+            .is_none_or(|profile| profile.id != readiness_profile::REQUIRED_PROFILE)
+        {
+            report.task("RUST_WORKER_STRICT_PROFILE_REQUIRED", "Preserve complete source proof before supplemental Rust checks", vec![".decapod/config.toml".into()], "Rust worker recipes supplement the strict Decapod profile; they cannot replace source CI.");
+        }
+        if let Err(error) = crate::core::validation_runtime::rust_worker::validate(configuration) {
+            report.task(
+                "RUST_WORKER_CONTRACT_INVALID",
+                "Review the bounded Rust worker recipe",
+                vec![".decapod/config.toml".into()],
+                error.to_string(),
+            );
+        }
+    }
     let discovery = match discover(root) {
         Ok(discovery) => discovery,
         Err(error) => {

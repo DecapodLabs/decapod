@@ -200,7 +200,18 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
+- Repository signal fingerprint: `f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Supplemental Rust worker verification
+
+The native-worker prerequisite for issue #1445 extends verification inside normal
+`decapod validate`. A project may require a separately locked Rust worker's tests
+and bounded runs after the complete strict source profile passes. This preserves
+the existing agent/publication and human/merge boundaries. It does not claim
+that successful compilation or a JSON diagnostic proves Metal execution,
+numerical equivalence or readiness-domain calibration. This prerequisite leaves
+the recipe inactive in Decapod's own configuration and needs independent acceptance
+and release before the Vega feature can use its controller support.

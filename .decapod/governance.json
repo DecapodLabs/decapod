@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "396f6991854a227c7b0ba4dfd09928f16d61dd93",
-    "release": "v0.117.0",
+    "accepted_commit": "24490934d07be1243dfb9a755c752702446b7742",
+    "release": "v0.118.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -266,6 +266,14 @@
         "statement": "Initial protocol rollout preserves strict independently pinned single-root compatibility, and unsupported workflow or execution contracts remain actionable blockers rather than self-authorizing a candidate controller.",
         "status": "open"
       },
+      "claim:task-custody-transfer": {
+        "falsifier": "An active/shared/connected task exports, a sealed source task mutates, a wrong repository/receiver/digest/replay import succeeds, or historical pass becomes current destination proof.",
+        "proof_refs": [
+          "src/decapod/core/task_transfer.rs"
+        ],
+        "statement": "Only a yielded standalone task owned by the source actor can be exported; export seals source mutation. Bound import rejects malformed or mismatched/replayed/conflicting custody and preserves historical evidence without authorizing current proof.",
+        "status": "open"
+      },
       "claim:task-journal-reconstruction": {
         "falsifier": "A supported mutation loses journal custody, replay changes verification bytes or revision, a contradictory chain is accepted, or recovery overwrites an unrelated current projection.",
         "proof_refs": [
@@ -322,78 +330,36 @@
     }
   },
   "change": {
-    "id": "change_01M52WNFQXJBT7M5JQKSVB74GV",
-    "base_commit": "396f6991854a227c7b0ba4dfd09928f16d61dd93",
+    "id": "change_01M564S58KK38XC4D7VA9WAG97",
+    "base_commit": "24490934d07be1243dfb9a755c752702446b7742",
     "target_base": "origin/master"
   },
   "claims": {
-    "recovery-boundary": {
-      "statement": "Durable export recovery remains available for successful4095/4096-history exports and subsequent comments without weakening bounds.",
-      "falsifier": "Focused boundary/recovery tests fail or full-history/package bounds change.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/unit/core/task_transfer_tests.rs"
-      ]
-    },
-    "task-custody-transfer": {
-      "statement": "Only a yielded standalone task owned by the source actor can be exported; export seals source mutation. Bound import rejects malformed or mismatched/replayed/conflicting custody and preserves historical evidence without authorizing current proof.",
-      "falsifier": "An active/shared/connected task exports, a sealed source task mutates, a wrong repository/receiver/digest/replay import succeeds, or historical pass becomes current destination proof.",
+    "bounded-rust-worker-proof": {
+      "statement": "Configured locked Rust worker tests and runs supplement complete strict source proof with bounded immutable execution and private diagnostics; source/policy/tools/accepted target remain current before final readiness. They cannot replace source CI or prove model semantics.",
+      "falsifier": "A recipe bypasses primary checks, changes accepted obligations, runs without typed authority, accepts stale/malformed/link-unsafe proof, omits failing dependent checks or changes source/ref state; or diagnostic/CPU fixture output is treated as Metal/parity/calibration or publication authority.",
       "status": "open",
       "proof_refs": [
-        "src/decapod/core/task_transfer.rs"
+        "src/decapod/core/validation_runtime/rust_worker.rs",
+        "src/decapod/core/validation_runtime/tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "task-transfer-initial",
-      "summary": "Implement explicit yielded-task custody transfer and adversarial regressions for #1452",
-      "input_digest": "sha256:8c1fbd8884e18bb218d7fde67e3920bb9956c0c15d40c0548e036bdd1942f1f6",
+      "id": "rust-worker-recovery-source",
+      "summary": "Permanent task-owned recovery explicitly authorized by user: carry exact prepared d8cc8305 source after historic a31ac5d1 checkpoint rejection; old branch and Buildkite2032/2042 preserved. Fresh governance and release118 projections, material authored specs, bounded immutable Rust tests/runs after strict source verdict, accepted-recipe preservation, private diagnostic custody and CPU/GPU feature variants. Recipe inactive; no candidate controller adoption or native/model/parity/calibration claim. Exact current candidate requires full released-controller validation.",
+      "input_digest": "sha256:251329edcd01ae86c11844c5a861d440aeb12e713517ca87ec60545f5e7fd1d2",
       "proof_refs": [
-        "src/decapod/core/task_transfer.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/unit/core/task_transfer_tests.rs"
-      ]
-    },
-    {
-      "id": "task-transfer-inventory",
-      "summary": "Reconcile unchanged accepted proof inventory under released 0.117 controller",
-      "input_digest": "sha256:1c3512851f9253e721964e5b57b709f865a6839af4cc90aeb60141c48780da76",
-      "proof_refs": [
-        "/private/tmp/task-transfer-validate-01.txt"
-      ]
-    },
-    {
-      "id": "task-transfer-fixture-dir",
-      "summary": "Repair task-transfer fixture path type from exact-head CI compilation failure",
-      "input_digest": "sha256:3bdb9e272c494e83d3acfa04635f0487d229ce2922265082b309005111a4b7af",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/38943329366/job/117116358267"
-      ]
-    },
-    {
-      "id": "task-transfer-spec-reviews",
-      "summary": "Record required content-bound spec reviews and explicit supporting-controller trust limit",
-      "input_digest": "sha256:ab8ddb09b57c7dbc233a5be51aa79bbab167f6bd871ceacc7db968b40e44c382",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/38950038850/job/117139025612",
-        "https://github.com/DecapodLabs/decapod/actions/runs/38950038850/job/117139025617",
-        "https://github.com/DecapodLabs/decapod/actions/runs/38950038850/job/117141027506"
-      ]
-    },
-    {
-      "id": "pr1453-recovery-boundary-fix",
-      "summary": "Recover bounded durable export by task/transfer identity; preserve caps and integrity, add boundary regressions, 67 focused Rust tests and full formatting pass; full controller validation pending original owner.",
-      "input_digest": "sha256:e88bbf8341a9dab0d5adedd3316e1cf442dac173c4cfbda4bedd2ae397343a57",
-      "proof_refs": [
-        "tests/unit/core/events_tests.rs",
-        "tests/unit/core/task_journal_tests.rs",
-        "tests/unit/core/task_transfer_tests.rs"
+        "https://buildkite.com/decapodlabs/decapod/builds/2042",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39069755977",
+        "src/decapod/core/validation_runtime/rust_worker.rs",
+        "src/decapod/core/validation_runtime/tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M52WNFQXJBT7M5JQKSVB74GV": {
+    "intent:change_01M564S58KK38XC4D7VA9WAG97": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -403,11 +369,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+      "id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement task-scoped custody transfer prerequisite for #1445\n\nSeparate recovery feature from current master. Extend existing task journal with yielded source acceptance, bounded non-secret artifact and guarded import preserving identity/provenance; fresh destination proof. Existing Vega task and branch remain untouched until independent release.",
-      "refined_intent": "Implement task-scoped custody transfer prerequisite for #1445\n\nSeparate recovery feature from current master. Extend existing task journal with yielded source acceptance, bounded non-secret artifact and guarded import preserving identity/provenance; fresh destination proof. Existing Vega task and branch remain untouched until independent release.",
+      "raw_intent": "Add bounded host-native proof after strict source validation\n\nIndependent prerequisite for issue1445: released0.118 strict validation cannot build/test/probe the separate Rust worker on this Mac. Add the smallest supported supplemental native proof mechanism using existing task/journal/config/readiness authority. Preserve complete strict source CI, exact source/accepted-target/toolchain/input/output custody, bounded process lifetime/output and failure history. Reject stale or candidate-substituted authority and malformed/incomplete proof. Do not execute candidate controller to authorize its own adoption. Separate PR/release required before Vega can use it. No changes to original feat_01m52fnwybfvhfdj ownership, feature history, merge/release or native/parity/calibration claims.",
+      "refined_intent": "Add bounded host-native proof after strict source validation\n\nIndependent prerequisite for issue1445: released0.118 strict validation cannot build/test/probe the separate Rust worker on this Mac. Add the smallest supported supplemental native proof mechanism using existing task/journal/config/readiness authority. Preserve complete strict source CI, exact source/accepted-target/toolchain/input/output custody, bounded process lifetime/output and failure history. Reject stale or candidate-substituted authority and malformed/incomplete proof. Do not execute candidate controller to authorize its own adoption. Separate PR/release required before Vega can use it. No changes to original feat_01m52fnwybfvhfdj ownership, feature history, merge/release or native/parity/calibration claims.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -420,336 +386,184 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Deliver #1452 as a separate prerequisite for #1445. Add bounded Rust CLI export/recover/import for standalone yielded local tasks using canonical TODO events and existing journal; source freezes after export, receiver/repository/digest/operator-trust bound import retains original history and identity but regenerates local proof. Refuse connected/shared/conflicting tasks. Disconnected global exclusivity and automatic remote source authentication are outside this local trust boundary. No Vega edits or actual transfer before independent release.",
+      "intent": "Extend existing validate with an optional required locked Rust worker test/run phase only after complete strict source proof. Reuse immutable snapshots, existing authorization/bounded process/tool custody/private evidence; recheck source/policy/accepted target afterwards. Keep recipe inactive in this prerequisite until independent acceptance and published release. Permanent recovery explicitly authorized after a31ac5d1 historical checkpoint rejection; preserve old branch and failures, carry d8cc8305 source with provenance and fresh checkpoints under original feat_01m55h3p8vy7d94x. Do not import old governance as current proof or change original Vega branch/custody, merge or release.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "decapod validate",
+        "adversarial recipe, custody, argv, privacy and immutable Rust execution regressions through required source CI"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed existing transfer architecture and canonical event-store boundary. Direct identity lookup changes the recovery access path without changing durable export transaction, provenance model, task lifecycle, pure checkpoint verification or datastore architecture. Detailed bounded-read behavior is updated in INTERFACES.",
-          "reviewed_code_fingerprint": "9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035",
-          "spec_material_hash": "c5cb8e930e06ed442016a753d68570665b17dda062c64d39b05da561f86daa40"
+          "reason": "Reviewed bounded optional native Rust verification after complete strict source proof, feature variants, typed authorization and private diagnostics. Permanent recovery preserves rejected source provenance; recipe remains inactive until independent release. No model/parity/calibration or current-validation claim.",
+          "reviewed_code_fingerprint": "f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10",
+          "spec_material_hash": "43249a17beb1d52e56bb3ba81af024c0029c8d221dd68dd81795d66e9540ba93"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed direct immutable export lookup with unchanged4096-history/4MiB artifact limits against events.rs and task_transfer.rs. Authored recovery boundary, post-seal comments, existing8MiB pre-materialization event limit and integrity bindings. All10 transfer regressions passed including4095/4096 export recovery and oversized/actor rejection.",
-          "reviewed_code_fingerprint": "9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035",
-          "spec_material_hash": "c8d0ff0414f31a3b203259a9d2aab91dca471cf9927e39ffda3ee9559a0b20d1"
+          "reason": "Reviewed bounded optional native Rust verification after complete strict source proof, feature variants, typed authorization and private diagnostics. Permanent recovery preserves rejected source provenance; recipe remains inactive until independent release. No model/parity/calibration or current-validation claim.",
+          "reviewed_code_fingerprint": "f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10",
+          "spec_material_hash": "306a64da8ed2418190f47161354b3bb6c1a5d2034a8b7538d2341903a09473ed"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed recovery trust and transfer operator-trust limits against new exact lookup. Source custody remains local, original actor and repository/digest checks retained, event/task/transfer envelope bindings strengthened, existing byte/history caps unchanged. No new credentials, authority, data sharing, lease service or security assumption.",
-          "reviewed_code_fingerprint": "9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035",
-          "spec_material_hash": "238ffcd80094c9c73feb505cfaa346ffa800cae684a5fa060441a05ec9f16fd5"
+          "reason": "Reviewed bounded optional native Rust verification after complete strict source proof, feature variants, typed authorization and private diagnostics. Permanent recovery preserves rejected source provenance; recipe remains inactive until independent release. No model/parity/calibration or current-validation claim.",
+          "reviewed_code_fingerprint": "f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10",
+          "spec_material_hash": "1a2cf3d27225d06b0c60ce2a1068abdb9f48c9f0b91e9d1e409bdc1ce69fa1ce"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Do not use candidate transfer commands on the real #1445 task before maintainer merge and independent release",
-        "No credentials, manual database writes, replaced original task, or global exclusivity claim"
-      ],
-      "title": "Implement task-scoped custody transfer prerequisite for #1445",
+      "stop_conditions": [],
+      "title": "Add bounded Rust worker verification after strict source proof",
       "todo_ids": [
-        "feat_01m52wmkq11e98x6",
-        "code_01m5433ebpeksx5a"
+        "feat_01m55h3p8vy7d94x"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792213021Z"
+      "updated_at": "1792281551Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Only separately owned prerequisite #1452; original #1445 branch preserved"
+        "Original task remains owned through supported reclaim; rejected branch retained, no force-push. New permanent branch is actual eventual PR branch. Released0.118 only; no candidate controller adoption, real Vega transfer changes, merge or release."
       ],
-      "artifact_hash": "sha256:e2ce9327ce4c8980ceaa36824e93b31c290e463098ef6464efb60fe3655c0c30",
+      "artifact_hash": "sha256:cd99c02625a19113d42a584d5fa03c23cbea110b40c18925f0c9c3f0b7a5a246",
       "checks": [
         {
-          "name": "event_regressions",
+          "name": "diff-whitespace",
           "status": "passed"
         },
         {
-          "name": "full_controller_validation",
-          "status": "unavailable"
+          "name": "previous-full-validation",
+          "status": "failed"
         },
         {
-          "name": "journal_regressions",
+          "name": "rustfmt",
           "status": "passed"
         },
         {
-          "name": "repository_format",
-          "status": "passed"
-        },
-        {
-          "name": "transfer_regressions",
+          "name": "source-carry-integrity",
           "status": "passed"
         }
       ],
-      "current_phase": "validation-recovery",
+      "current_phase": "prepared-source",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+            "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+            "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
+            "detail": "trajectory:branch_01M564S5AZMY4AEJKC7GWSEYRS",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+            "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
+            "detail": "trajectory:branch_01M564S5AZMY4AEJKC7GWSEYRS",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+            "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M52WNFTJFDYM89V30KSDGWX5",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M52WNFTJFDYM89V30KSDGWX5": {
+          "branch_01M564S5AZMY4AEJKC7GWSEYRS": {
             "evidence_only": true,
-            "id": "branch_01M52WNFTJFDYM89V30KSDGWX5",
-            "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+            "id": "branch_01M564S5AZMY4AEJKC7GWSEYRS",
+            "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "source-recovery",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/task_journal.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/workspace.rs",
-                  ".decapod/config.toml",
-                  "Human explicitly authorized separate supported-transfer prerequisite. Created issue1452, claimed fresh feat_01m52wmkq11e98x6, workspace ensure created from accepted396f after sandbox-only .git write denial was retried with escalation. No container GUI or product/root source edits. Orientation has no Decision Gate.",
-                  "Transfer trust requires an operator-reviewed digest from authenticated source handoff; local sealing is cooperative and cannot police disconnected clones or a privileged writer. No claim of cryptographic sender authentication or global single-owner enforcement."
+                  "https://buildkite.com/decapodlabs/decapod/builds/2042",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/39069755977"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "previous-full-validation"
+                ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "User authorized permanent recovery branch. d8cc8305d1e06c7d7f761ba8e7699a2e1b0d9d8c code/test jobs passed; historical a31ac5d1 lacked checkpoint and is rejected. Source-only patch SHA256327cb5cd8ff57daa6c86df99bc083a7f4818a455b2ee4544e4b13bdd2624502f excludes .decapod and release entrypoints; no old governance identity or checkpoint copied. Machine-specific evidence must be regenerated. Source custody is provenance, not current passing validation."
+                ]
               },
               {
-                "action": "implementation",
-                "command": "rustfmt --edition 2024 src/decapod/core/task_transfer.rs src/decapod/core/task_journal.rs src/decapod/core/todo.rs tests/unit/core/task_transfer_tests.rs tests/cli_contract_enforcement.rs src/decapod/core/docs_cli.rs",
+                "action": "prepared-source",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/fleet_coord.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/repo_identity.rs",
-                  "src/decapod/core/task_transfer.rs",
-                  "src/decapod/core/task_journal.rs",
-                  "src/decapod/core/todo.rs",
-                  "tests/unit/core/task_transfer_tests.rs",
-                  "tests/cli_contract_enforcement.rs",
-                  "Implemented bounded standalone yielded-task export/recover/import in existing journal; source export and seal journal atomically before private no-clobber artifact publication. Import retains original source chain as nested provenance and creates explicit local baseline with new revision and unavailable current proof. Uses normal exclusive-claim trust after yield, not active-lease handoff; no global authority or signature guarantee. No candidate transfer on actual1445.",
-                  "Authored unit/adversarial and public CLI roundtrip tests; none executed yet. Updated source/generated command contract and material project specs through authored prose plus supported specs.refresh. First complete proof is plain117 validation after checkpoint."
+                  "src/decapod/core/validation_runtime/rust_worker.rs",
+                  "src/decapod/core/validation_runtime/tests.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Private source patch sha256:327cb5cd8ff57daa6c86df99bc083a7f4818a455b2ee4544e4b13bdd2624502f; all16 source/docs files byte-identical to preserved d8cc8305 source."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "source-carry-integrity",
+                  "rustfmt",
+                  "diff-whitespace"
+                ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation-recovery",
-                "command": "decapod validate",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Plain installed117 validate attempt1 at032cbd54 failed PROOF_PROFILE_RECONCILIATION_REQUIRED before provider submission. Report /private/tmp/task-transfer-validate-01.txt preserved. Reviewed all discovered workflow/helper/build inventory entries by exact Git comparison against accepted origin/master396f: no changed inventory sources. Current supported agent.init inventory is c434f71e; baseline declaration0f2777 is stale under117. Backed up config and explicitly updated only reviewed_sources_digest; check mapping/provider/profile unchanged, no weakened proof or candidate self-transfer.",
-                  "No tests executed; first attempt failed at inventory reconciliation."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "validation-recovery",
-                "command": "git push origin f3bff011:refs/heads/agent/task-transfer/feat_01m52wmkq11e98x6",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Attempts2 and3 plain117 failed SNAPSHOT_UPLOAD_INCOMPLETE GitTransport128, logs task-transfer-validate-02.txt and03.txt, evidence snapshots El8Al6 and B9NzvX preserved. Normal SSH pushed exact f3bff011 to same governed branch; unchanged-source fourth plain validation reached Buildkite provider_terminal_wait with CI1939. Direct HTTPS accepted-target read also succeeded; no credential extraction, URL rewrite, profile change or artifact workaround. GHA current exact-head Clippy job117116358267 reports E0277 in new fixture dir: Some(repo.into()) because TodoCommand Add dir is Option<String>. Corrected explicit path-to-string conversion. No test pass claimed from compile failure; running fourth proof will remain non-ready for old candidate."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "validation-recovery",
-                "command": "decapod govern plan review-spec",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Fourth full117 validation at f3bff011 failed BuildkiteCI1939 uuid01a145da-4fbc-48f8-bc88-488f984f56bf; evidence snapshot wCY1dp preserved. Repaired fixture at7fbc6ecd. Fifth full117 validation uses BuildkiteCI1944 and current GHA38950038850. Actual GHA library job117139025612 executed all8 new transfer regressions successfully:1389 passed0failed3ignored library overall; required ContractConformance job117139025617 ran cli_contract_enforcement target successfully171.1s. GHA selective-cli was not_applicable, not execution evidence. Clippy and docs sync pass. These observations do not substitute for full Buildkite controller readiness.",
-                  "Current governance-artifacts job117141027506 reports SPEC_REVIEW_REQUIRED for INTERFACES. Reviewed actual CLI bounds/custody, journal architecture and operator-trust security with supported review-spec updated transitions for INTERFACES ARCHITECTURE SECURITY. Updated authored security/interface/recovery docs explicitly include older-controller bypass outside cooperative fence. No policy/check waiver and no real1445 transfer."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/task_transfer.rs",
-                  "tests/unit/core/task_transfer_tests.rs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "User explicitly authorized this scoped repair and normal push to PR1453 branch for original agent follow-up. Repair actor dot-transfer-recovery owns separate task code_01m5433ebpeksx5a; original feat_01m52wmkq11e98x6 ownership is unchanged. workspace ensure reported can_work true, and plan check-execute reported EXECUTION_READY. Preserve original PR trajectory and evidence."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "cargo test --locked --offline --lib core::todo::task_journal::transfer::tests",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "Rust 1.96.1 actual test execution: transfer suite 10 passed, 0 failed (including 4095/4096 history + failed publication + actual post-seal comments; bad actor/oversized record rejection); events suite 16 passed, 0 failed; task-journal suite 41 passed, 0 failed. Full cargo fmt check and git diff --check passed. No full library suite, Clippy, full decapod validate or current-candidate CI readiness claimed; original local owner will complete full validation on the authorized PR branch after pull. Normal branch push is permitted before preflight and user explicitly requested it.",
-                  "Proof sources: tests/unit/core/task_transfer_tests.rs, tests/unit/core/events_tests.rs, tests/unit/core/task_journal_tests.rs; executed focused Cargo test filters listed in declared_commands. Independent static review found no blocking issues; artifact and history caps remain unchanged."
-                ],
-                "proof_refs": [
-                  "transfer_regressions",
-                  "event_regressions",
-                  "journal_regressions",
-                  "repository_format",
-                  "full_controller_validation"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 10,
-                "validation_findings": []
+                "validation_findings": [
+                  "Reviewed inventory fe3d05e86a64d7ad800b48e2757454d50828da77158eadaf8d9713f5cddd69a9 exactly matches prepared source: accepted release117-to118 Cargo own-version changes plus scoped Bazel exclusive scheduling, unchanged required checks/budgets/carrier. Config backed up; no Rust worker recipe enabled. Prior source CI passing checks are provenance only; this exact candidate requires full official validation. Original task session claim recovered after supported expiry cleanup; incidental automatic coordination task yielded, no task replaced."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "cargo fmt --all -- --check",
-        "cargo test --locked --offline --lib core::events::tests",
-        "cargo test --locked --offline --lib core::todo::task_journal::tests",
-        "cargo test --locked --offline --lib core::todo::task_journal::transfer::tests",
-        "decapod govern plan review-spec",
-        "decapod validate",
-        "env DECAPOD_AGENT_ID=codex-task-transfer decapod validate",
-        "git push origin f3bff011:refs/heads/agent/task-transfer/feat_01m52wmkq11e98x6",
-        "rustfmt --edition 2024 src/decapod/core/task_transfer.rs src/decapod/core/task_journal.rs src/decapod/core/todo.rs tests/unit/core/task_transfer_tests.rs tests/cli_contract_enforcement.rs src/decapod/core/docs_cli.rs"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Attempts2 and3 plain117 failed SNAPSHOT_UPLOAD_INCOMPLETE GitTransport128, logs task-transfer-validate-02.txt and03.txt, evidence snapshots El8Al6 and B9NzvX preserved. Normal SSH pushed exact f3bff011 to same governed branch; unchanged-source fourth plain validation reached Buildkite provider_terminal_wait with CI1939. Direct HTTPS accepted-target read also succeeded; no credential extraction, URL rewrite, profile change or artifact workaround. GHA current exact-head Clippy job117116358267 reports E0277 in new fixture dir: Some(repo.into()) because TodoCommand Add dir is Option<String>. Corrected explicit path-to-string conversion. No test pass claimed from compile failure; running fourth proof will remain non-ready for old candidate.",
-        "Authored unit/adversarial and public CLI roundtrip tests; none executed yet. Updated source/generated command contract and material project specs through authored prose plus supported specs.refresh. First complete proof is plain117 validation after checkpoint.",
-        "Current governance-artifacts job117141027506 reports SPEC_REVIEW_REQUIRED for INTERFACES. Reviewed actual CLI bounds/custody, journal architecture and operator-trust security with supported review-spec updated transitions for INTERFACES ARCHITECTURE SECURITY. Updated authored security/interface/recovery docs explicitly include older-controller bypass outside cooperative fence. No policy/check waiver and no real1445 transfer.",
-        "Fourth full117 validation at f3bff011 failed BuildkiteCI1939 uuid01a145da-4fbc-48f8-bc88-488f984f56bf; evidence snapshot wCY1dp preserved. Repaired fixture at7fbc6ecd. Fifth full117 validation uses BuildkiteCI1944 and current GHA38950038850. Actual GHA library job117139025612 executed all8 new transfer regressions successfully:1389 passed0failed3ignored library overall; required ContractConformance job117139025617 ran cli_contract_enforcement target successfully171.1s. GHA selective-cli was not_applicable, not execution evidence. Clippy and docs sync pass. These observations do not substitute for full Buildkite controller readiness.",
-        "Human explicitly authorized separate supported-transfer prerequisite. Created issue1452, claimed fresh feat_01m52wmkq11e98x6, workspace ensure created from accepted396f after sandbox-only .git write denial was retried with escalation. No container GUI or product/root source edits. Orientation has no Decision Gate.",
-        "Implemented bounded standalone yielded-task export/recover/import in existing journal; source export and seal journal atomically before private no-clobber artifact publication. Import retains original source chain as nested provenance and creates explicit local baseline with new revision and unavailable current proof. Uses normal exclusive-claim trust after yield, not active-lease handoff; no global authority or signature guarantee. No candidate transfer on actual1445.",
-        "No tests executed; first attempt failed at inventory reconciliation.",
-        "Plain installed117 validate attempt1 at032cbd54 failed PROOF_PROFILE_RECONCILIATION_REQUIRED before provider submission. Report /private/tmp/task-transfer-validate-01.txt preserved. Reviewed all discovered workflow/helper/build inventory entries by exact Git comparison against accepted origin/master396f: no changed inventory sources. Current supported agent.init inventory is c434f71e; baseline declaration0f2777 is stale under117. Backed up config and explicitly updated only reviewed_sources_digest; check mapping/provider/profile unchanged, no weakened proof or candidate self-transfer.",
-        "Proof sources: tests/unit/core/task_transfer_tests.rs, tests/unit/core/events_tests.rs, tests/unit/core/task_journal_tests.rs; executed focused Cargo test filters listed in declared_commands. Independent static review found no blocking issues; artifact and history caps remain unchanged.",
-        "Rust 1.96.1 actual test execution: transfer suite 10 passed, 0 failed (including 4095/4096 history + failed publication + actual post-seal comments; bad actor/oversized record rejection); events suite 16 passed, 0 failed; task-journal suite 41 passed, 0 failed. Full cargo fmt check and git diff --check passed. No full library suite, Clippy, full decapod validate or current-candidate CI readiness claimed; original local owner will complete full validation on the authorized PR branch after pull. Normal branch push is permitted before preflight and user explicitly requested it.",
-        "Transfer trust requires an operator-reviewed digest from authenticated source handoff; local sealing is cooperative and cannot police disconnected clones or a privileged writer. No claim of cryptographic sender authentication or global single-owner enforcement.",
-        "User explicitly authorized this scoped repair and normal push to PR1453 branch for original agent follow-up. Repair actor dot-transfer-recovery owns separate task code_01m5433ebpeksx5a; original feat_01m52wmkq11e98x6 ownership is unchanged. workspace ensure reported can_work true, and plan check-execute reported EXECUTION_READY. Preserve original PR trajectory and evidence."
+        "Private source patch sha256:327cb5cd8ff57daa6c86df99bc083a7f4818a455b2ee4544e4b13bdd2624502f; all16 source/docs files byte-identical to preserved d8cc8305 source.",
+        "https://buildkite.com/decapodlabs/decapod/builds/2042",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39069755977"
       ],
       "inspected_files": [
-        ".decapod/config.toml",
-        "src/decapod/core/events.rs",
-        "src/decapod/core/fleet_coord.rs",
-        "src/decapod/core/repo_identity.rs",
-        "src/decapod/core/task_journal.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/core/workspace.rs"
+        "src/decapod/core/validation_runtime/rust_worker.rs",
+        "src/decapod/core/validation_runtime/tests.rs"
       ],
-      "intent_id": "intent:change_01M52WNFQXJBT7M5JQKSVB74GV",
+      "intent_id": "intent:change_01M564S58KK38XC4D7VA9WAG97",
       "modified_files": [
-        ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/core/events.rs",
-        "src/decapod/core/task_journal.rs",
-        "src/decapod/core/task_transfer.rs",
-        "src/decapod/core/todo.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/unit/core/task_transfer_tests.rs"
+        ".decapod/managed/specs/VALIDATION.md"
       ],
       "next_transitions": [
+        "Carry prepared source and authored prose, regenerate supported projections, review/checkpoint first commit, validate exact permanent candidate.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M52WNFTJFDYM89V30KSDGWX5",
+      "run_id": "branch_01M564S5AZMY4AEJKC7GWSEYRS",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m52wmkq11e98x6",
+      "task_id": "feat_01m55h3p8vy7d94x",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Reviewed inventory fe3d05e86a64d7ad800b48e2757454d50828da77158eadaf8d9713f5cddd69a9 exactly matches prepared source: accepted release117-to118 Cargo own-version changes plus scoped Bazel exclusive scheduling, unchanged required checks/budgets/carrier. Config backed up; no Rust worker recipe enabled. Prior source CI passing checks are provenance only; this exact candidate requires full official validation. Original task session claim recovered after supported expiry cleanup; incidental automatic coordination task yielded, no task replaced.",
+        "User authorized permanent recovery branch. d8cc8305d1e06c7d7f761ba8e7699a2e1b0d9d8c code/test jobs passed; historical a31ac5d1 lacked checkpoint and is rejected. Source-only patch SHA256327cb5cd8ff57daa6c86df99bc083a7f4818a455b2ee4544e4b13bdd2624502f excludes .decapod and release entrypoints; no old governance identity or checkpoint copied. Machine-specific evidence must be regenerated. Source custody is provenance, not current passing validation."
+      ]
     }
   },
   "legacy_digests": {

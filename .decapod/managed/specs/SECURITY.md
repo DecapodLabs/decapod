@@ -334,8 +334,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9d756993f206b1fe92c766002f6d21d350acf701cef666a71de561daefb28035`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (203 files), `tests/` (194 files)
+- Repository signal fingerprint: `f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -387,3 +387,23 @@ authored proof policy continues to deny disallowed programs; missing relevant
 permissions in a present policy and malformed policy fail closed. No policy
 file is rewritten as a repair, and generic callers cannot request the sealed
 capability without the reviewed contract and measured invocation.
+
+## Supplemental Rust worker verification
+
+Supplemental Rust-worker proof preserves source-CI authority. It cannot execute
+before a complete strict source verdict, replace that graph, import caller receipts
+or authorize its own controller adoption. Current-source configuration, committed
+manifest/lock, immutable snapshot, measured installed tools and fresh target reads
+bind execution. Accepted recipes cannot be omitted or rewritten by candidate
+policy. Typed host authorization remains required for both tool probes and checks.
+Only fixed read-only xcrun/xcode-select probes are added; compiler execution,
+developer-directory changes, arbitrary tools and extra probe arguments are rejected
+by that capability. Actual Cargo execution uses the existing proof-exec boundary.
+
+Native execution uses fresh private tool state and no ambient credentials or PATH
+inheritance. This remains the existing reviewed-source model, not an OS sandbox
+against malicious build scripts sharing the account. SDK metadata/tool hashes do
+not attest all dynamic libraries, driver state or GPU behavior. Private output
+objects retain existing permission/link defenses and byte bounds. A worker's
+successful exit or self-reported backend cannot by itself establish model parity,
+calibration, physical dispatch or publication authority.
