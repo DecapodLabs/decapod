@@ -241,9 +241,6 @@ fn evaluate_readiness(
     backend: &str,
     proof_path: &Path,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    use decapod::core::bounded_process::{
-        BoundedCommand, Cancellation, ProcessLimits, Termination,
-    };
     use vega_readiness::{Backend, BackendPreference};
     if !matches!(split, "development" | "holdout") || !matches!(backend, "auto" | "cpu") {
         return Err("evaluation requires a frozen split and auto or explicit cpu backend".into());
@@ -302,64 +299,31 @@ fn evaluate_readiness(
             backend: selected,
         };
         let temporary = tempfile::tempdir()?;
-        let request_path = temporary.path().join("request.json");
-        let child_proof = temporary.path().join("proof.json");
-        write_private_proof(&request_path, &request)?;
-        // Carry the collector's remaining budget into the actual child, rather
-        // than granting a fresh model timeout after previous cases ran.
-        let capture = std::process::Command::new(&executable)
-            .env_clear()
-            .arg("--request")
-            .arg(&request_path)
-            .arg("--proof-output")
-            .arg(&child_proof)
-            .bounded_capture(
-                ProcessLimits {
-                    timeout: deadline
-                        .checked_duration_since(std::time::Instant::now())
-                        .ok_or("evaluation deadline expired before dispatch")?,
-                    max_output_bytes: 64 * 1024,
-                },
-                &Cancellation::default(),
-            )?;
-        if capture.termination != Termination::Exited || !capture.output.status.success() {
-            return Err(
-                "evaluation child failed or reached the original collection deadline".into(),
-            );
+        let case_proof = temporary.path().join("proof.json");
+        if std::time::Instant::now() >= deadline {
+            return Err("evaluation dispatch window expired before inference".into());
         }
-        let response: Response = serde_json::from_slice(&capture.output.stdout)?;
-        if response.schema != vega_readiness::WORKER_SCHEMA
-            || response.request_id != request.request_id
-            || response.input_digest != request.input_digest
-            || response.manifest_digest != manifest_digest
-            || response.backend != selected.runtime()
-            || response.device != selected.device()
-            || response.engine_device != "cpu"
-            || !(1..=vega_prompt::MAX_TOKENS).contains(&response.input_tokens)
-            || response.precision != vega_readiness::Precision::supported()
-            || response.error.is_some()
-            || response.error_kind.is_some()
-        {
-            return Err(format!("evaluation child binding/error: {:?}", response.error).into());
-        }
+        // Stay inside the kernel-owned worker process and its original hard
+        // deadline. Nested independent process groups could escape a parent
+        // SIGKILL on macOS. Every call loads fresh recurrent state; no new
+        // per-case execution budget is granted. The 600s window stops new
+        // dispatches, while the kernel enforces the hard whole-worker limit.
+        let (outcome, tokens) = infer(&request, Some(&case_proof))?;
         let diagnostic: serde_json::Value =
-            serde_json::from_slice(&read_bounded(&child_proof, MAX_PROOF_BYTES as u64)?)?;
+            serde_json::from_slice(&read_bounded(&case_proof, MAX_PROOF_BYTES as u64)?)?;
         if diagnostic["request_id"] != request.request_id
             || diagnostic["input_digest"] != request.input_digest
             || diagnostic["manifest_digest"] != manifest_digest
-            || diagnostic["outcome"]
-                != serde_json::to_value(response.outcome.as_ref().ok_or("missing model outcome")?)?
+            || diagnostic["outcome"] != serde_json::to_value(&outcome)?
         {
-            return Err("evaluation child proof/response binding differs".into());
+            return Err("evaluation proof/outcome binding differs".into());
         }
-        Ok(
-            serde_json::json!({"outcome":response.outcome.ok_or("missing model outcome")?,
-            "execution_evidence":{"backend":response.backend,"device":response.device,
-                "precision":response.precision,"input_tokens":response.input_tokens,
+        Ok(serde_json::json!({"outcome":outcome,
+            "execution_evidence":{"backend":selected.runtime(),"device":selected.device(),
+                "precision":vega_readiness::Precision::supported(),"input_tokens":tokens,
                 "manifest_digest":manifest_digest,"runtime_sha256":runtime_sha256,
                 "wall_clock_ms":diagnostic["wall_clock_ms"],"peak_resident_bytes":diagnostic["peak_resident_bytes"],
-                "memory_scope":diagnostic["memory_scope"]}}),
-        )
+                "memory_scope":diagnostic["memory_scope"]}}))
     })?;
     report["manifest"] = serde_json::to_value(manifest)?;
     report["manifest_digest"] = manifest_digest.into();

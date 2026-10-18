@@ -524,6 +524,14 @@
       "proof_refs": [
         "docs/vega-reference-contract.md"
       ]
+    },
+    {
+      "id": "vega-evaluation-process-owner",
+      "summary": "Keep evaluation inference in the kernel-owned process after pre-execution process-group review; no independent macOS model child can outlive worker termination. Preserve original hard deadline, explicit soft dispatch cutoff, proof/outcome binding and cumulative RSS scope. Native execution remains blocked/unmeasured, with all prior failure evidence and frozen labels retained.",
+      "input_digest": "sha256:e30b6b5faac2427f488dc4ee19de7faf82e2c0446d98d8faed2df86148e481ac",
+      "proof_refs": [
+        "docs/vega-reference-contract.md"
+      ]
     }
   ],
   "intents": {
@@ -567,16 +575,16 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document separate bounded evaluation children, immutable model/runtime/corpus identities, conservative issue-unit risk and continued non-acceptance of agent-authored benchmark proxies.",
-          "reviewed_code_fingerprint": "e558ac556d1b2a551df05d28130cf325186482e39960fcbb4e831ae2ab1b86b1",
-          "spec_material_hash": "997a8910f717968004bd3984900e441f45b807266212f86afd95152cc08e0163"
+          "reason": "Keep model assessments in the kernel-owned worker process: nested new process groups could escape outer macOS SIGKILL. Preserve original hard execution deadline, disclose soft dispatch cutoff and cumulative RSS.",
+          "reviewed_code_fingerprint": "92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3",
+          "spec_material_hash": "dbaf21d4315585b899281c8348f453676a14830b4d5d3b745cb51aea4fd854cd"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document explicit split/backend evaluation CLI, omitted label metadata, private reports and nonzero final acceptance with insufficient execution or label authority.",
-          "reviewed_code_fingerprint": "e558ac556d1b2a551df05d28130cf325186482e39960fcbb4e831ae2ab1b86b1",
-          "spec_material_hash": "015de922699e5a0bb515dd509e61d85511485eccead812a758f1429bb576c8a5"
+          "reason": "Correct evaluation resource/deadline semantics before execution: direct fresh-state assessments, proof/outcome binding, original hard kernel budget and soft new-dispatch cutoff.",
+          "reviewed_code_fingerprint": "92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3",
+          "spec_material_hash": "e221d162dccb31311441f2843aac820630b00231da448d06c3877a52299f5923"
         },
         {
           "disposition": "unchanged_with_reason",
@@ -596,7 +604,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792299751Z"
+      "updated_at": "1792300103Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -607,7 +615,7 @@
         "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation.",
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting."
       ],
-      "artifact_hash": "sha256:1320678468c6509407311b65c5f24fd8b0baf21171d9be4ccec4bed6bd5ab02e",
+      "artifact_hash": "sha256:8de2657087490d07776e03d90f8a54928aeae8a33b8c0973638e60ebfa872a7d",
       "blockers": [
         "Released119 native snapshot rejects the existing immutable golden fixture symlink; no supported additional alias review command exists. Native build/probe/model/reference/evaluation remain unexecuted pending an accepted released repair; do not alter the fixture or use a candidate controller."
       ],
@@ -651,6 +659,10 @@
         {
           "name": "docs-source-correction",
           "status": "partial"
+        },
+        {
+          "name": "evaluation_execution",
+          "status": "unavailable"
         },
         {
           "name": "exact-authored-spec-reapplication",
@@ -869,7 +881,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "bounded-evaluation-source",
+      "current_phase": "evaluation-process-review",
       "custody": {
         "events": [
           {
@@ -1079,10 +1091,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 31
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:32",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 32
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 31,
+        "next_sequence": 32,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1644,6 +1663,25 @@
                 ],
                 "sequence": 31,
                 "validation_findings": []
+              },
+              {
+                "action": "evaluation-process-review",
+                "custody_event_id": "event:32",
+                "observations": [
+                  "src/decapod/core/bounded_process.rs",
+                  "assets/tools/vega_infer.rs",
+                  "assets/tools/vega-native/readiness_evaluation.rs",
+                  "Pre-execution source review of bounded_process::bounded_capture found that nested children create independent process groups and Linux-only PDEATHSIG; a macOS outer SIGKILL could leave the nested model child. Removed nested model processes, retaining direct infer with fresh state in the original kernel-owned process. Hard whole-worker deadline never resets;600s is explicitly soft new-dispatch cutoff. Corrected per-case memory claim to lifetime cumulative RSS. Intermediate96d7b7a2 remains in history, never executed as native proof."
+                ],
+                "proof_refs": [
+                  "formatting",
+                  "evaluation_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 32,
+                "validation_findings": []
               }
             ]
           }
@@ -1683,6 +1721,7 @@
         "Plain0.118 c78b5eb6 first attempt failed GitTransport128 before CI, evidence decapod-snapshot-OZ7aJg. Exact normal SSH push succeeded; second full validation reached Buildkite and failed standalone validation build1994 uuid01a14a84-192c-4ab4-b2b4-e1b945e70136, evidence decapod-snapshot-NxBsV0. GHA39045963267 job117434624175 proves project prerequisite pass189/fail0 but regenerated118 entrypoints, Dockerfile and manifest left tracked drift. Required job exit1 retained. Supported govern project-check --refresh-specs regenerated local projections; local prerequisite observation pass202/fail2 includes host container_workspace_required and is not source/readiness proof. Clippy job117434726646 passed for repaired Rust source. No other unexecuted test or native result is claimed. Commit actual generated projection repair and repeat full validation.",
         "Plain117 fourth validation reached GitTransport and exited128 before provider execution. Normal configured-helper ls-remote succeeds and feature remote branch is absent; no credential extraction or settings change. Static review confirmed committed binary16 mantissa already explicitly cast to u32; use u32::from for clarity, preserve normalization and expand signed zero/subnormal/normal/Inf/NaN assertions. No test execution or numerical parity claimed.",
         "Plain117 second validation stopped PROOF_DISCOVERY_BLOCKED on MODULE.bazel.lock1052029 bytes. Moved unchanged SafeTensors decoder/half conversion and fixtures to sole native owner; root retains typed engine/header/GELU tests and checked schema. Supported metadata regeneration now gives1037341 bytes below1048576. Root graph removes only safetensors0.7/hashbrown0.16/foldhash/allocator-api2; native retains pinned SafeTensors0.7 and immutable model/source pins. Cargo reports0 package additions/updates, but reselects existing socket2/getrandom/Windows dependency edges; retain generator output for actual validation rather than hand-edit locks.",
+        "Pre-execution source review of bounded_process::bounded_capture found that nested children create independent process groups and Linux-only PDEATHSIG; a macOS outer SIGKILL could leave the nested model child. Removed nested model processes, retaining direct infer with fresh state in the original kernel-owned process. Hard whole-worker deadline never resets;600s is explicitly soft new-dispatch cutoff. Corrected per-case memory claim to lifetime cumulative RSS. Intermediate96d7b7a2 remains in history, never executed as native proof.",
         "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance.",
         "Reference rejects nonfinite tolerance comparisons, malformed vector/thermal shapes, F32 overflow and invalid physical/step values. No tolerances changed and no candidate outputs observed. Kernel #1457 release blocker and original validation failures retained.",
         "Released0.118.0 imported accepted transfer01M5470V8JDG8WJA1WX2EJ098Y under receivercodex-vega-metal. Exact source-supplied artifact sha256:5cf05c74167d81052460666ee1ae87112ce5e101335875df65aa5181bb2efec4 verified before import. Taskfeat_01m52fnwybfvhfdj identity and nested provenance retained, destination revision8; journal verify valid without missing/divergent projections. Fresh exclusive claim succeeded. Root ensure refused recreating existing branch; registered worktree was preserved and moved to managed path, then workspace ensure accepted can_work=true. Originalfeature5f2801e581ec9d436c28c5df2a9a64e261efa895 retained, no history rewrite. Normal no-commit merge accepted24490934 underway. Retained original feature governance from committed Git during merge; accepted prerequisite governance remains in merge-parent history. Supported specs.refresh reconciled generated conflict blocks while preserving all authored transfer and Vega prose. All previous validation failures remain; native/independent parity/calibration still unverified.",
@@ -1711,6 +1750,7 @@
         "assets/tools/vega_infer.rs",
         "docs/agent/repository-readiness.md",
         "docs/vega-reference-contract.md",
+        "src/decapod/core/bounded_process.rs",
         "src/decapod/core/proof.rs",
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/rust_worker.rs",

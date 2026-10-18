@@ -7,7 +7,8 @@ use std::time::{Duration, Instant};
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 // Declared before any model observations, consistent with the existing frozen
-// contract. This ceiling bounds collection; it does not make incomplete data pass.
+// contract. This window stops new model dispatches; the kernel's original hard
+// whole-worker deadline bounds active inference. Incomplete data never passes.
 pub const COLLECTION_SECONDS: u64 = 600;
 
 /// Exact one-sided 95% Clopper-Pearson upper limit. Cases from the same issue
@@ -220,7 +221,8 @@ fn run_until(
         "accepted_issue_units":accepted_units.len(),"false_ready_issue_units":false_ready_units.len(),
         "one_sided_95pct_upper_false_ready":upper,"non_abstaining_coverage":coverage,
         "benchmark_resolved_acceptance_coverage":ready_coverage,
-        "frozen_numeric_criterion_met":criterion,"collection_seconds_limit":COLLECTION_SECONDS,
+        "frozen_numeric_criterion_met":criterion,"collection_dispatch_cutoff_seconds":COLLECTION_SECONDS,
+        "execution_deadline":"Original hard kernel Rust-worker deadline; no per-case timeout reset. A synchronous in-flight inference may cross the soft dispatch cutoff.",
         "wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
         "limitations":["Issue-group interval assumes independent exchangeable units; selected repositories and related tasks may violate that assumption.",
             "Benchmark positives certify only upstream scoped test-oracle resolution, not present Decapod proof or all real-world readiness obligations.",

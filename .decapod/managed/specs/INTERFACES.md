@@ -10,7 +10,7 @@ coordination, validation, and publication boundaries. Decapod exposes the state,
 constraints, evidence, and blockers that govern those transitions. Each CLI or
 RPC invocation is ephemeral; repository state preserves continuity between calls.
 
-The separate Vega worker additionally exposes a private bounded frozen-case evaluation mode, `--evaluate-readiness --split holdout --backend auto --proof-output <new-path>` (development and explicit CPU are supported selectors). It runs actual request children after the native diagnostic recipe steps, emits typed outcomes and separate error/abstention/exclusion counts with model/runtime/corpus bindings, and returns failure while final numeric or label-authority acceptance is unsatisfied. Expected labels and variant/split/rationale metadata are excluded from model input. The report is an experiment, never a current validation receipt or publication authority; the frozen public corpus's scoped agent-authored proxy labels cannot establish production calibration.
+The separate Vega worker additionally exposes a private bounded frozen-case evaluation mode, `--evaluate-readiness --split holdout --backend auto --proof-output <new-path>` (development and explicit CPU are supported selectors). It runs actual assessments after the native diagnostic recipe steps in the kernel-owned process, emits typed outcomes and separate error/abstention/exclusion counts with model/runtime/corpus bindings, and returns failure while final numeric or label-authority acceptance is unsatisfied. It does not reset the original hard worker deadline; the 600-second collection window is a soft new-dispatch cutoff. Expected labels and variant/split/rationale metadata are excluded from model input. The report is an experiment, never a current validation receipt or publication authority; the frozen public corpus's scoped agent-authored proxy labels cannot establish production calibration.
 
 ## Human and agent entrypoints
 
@@ -554,7 +554,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e558ac556d1b2a551df05d28130cf325186482e39960fcbb4e831ae2ab1b86b1`
+- Repository signal fingerprint: `92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (31 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
