@@ -506,6 +506,11 @@
       "id": "native-diagnostic-collection",
       "summary": "Collect pinned preferred/CPU model diagnostics independently of missing parity/evaluation inputs; preserve final acceptance conditions and prior failed reports.",
       "input_digest": "sha256:fa2c73557f5e6bbdb3366dd1d056fd67e18432691a78744234f0a7c513a0b148"
+    },
+    {
+      "id": "public-vega-verification-inputs",
+      "summary": "Prepare independently coded Rust tokenizer/engine references and frozen public benchmark-derived inputs; preserve released native snapshot blocker and all unexecuted acceptance gaps.",
+      "input_digest": "sha256:426e0483c91575811c06f43488f355f5bdcae868cd751b12450885a260273958"
     }
   ],
   "intents": {
@@ -549,22 +554,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed independent diagnostic collection, private pinned model setup, CPU/accelerator attempts and honest timing/RSS scopes. Final parity/calibration/fallback acceptance remains unsatisfied.",
-          "reviewed_code_fingerprint": "ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7",
-          "spec_material_hash": "039c9d93edc5e86de6a5d8b905c7a6542b19e29f0431ebf3b326c9c373be9fc0"
+          "reason": "Reviewed reference-only independent equations, integrity-pinned public corpus and honest unexecuted status; released119 fixture-symlink gate prevents native execution. No publication acceptance is asserted.",
+          "reviewed_code_fingerprint": "0adb7e12627ae2ba65e7ca7fb7be15501d09ca38c69b74ddab0db821ff7f10e5",
+          "spec_material_hash": "8d438ebe52c2286fb0791f321cdfad47ad40438d2edc87914b65bce619252f1b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed independent diagnostic collection, private pinned model setup, CPU/accelerator attempts and honest timing/RSS scopes. Final parity/calibration/fallback acceptance remains unsatisfied.",
-          "reviewed_code_fingerprint": "ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7",
-          "spec_material_hash": "c95ab5774d9ce563a9c1c57233ab22d188c6207b5145a4e7611e9c15adf9ca75"
+          "reason": "Reviewed reference-only independent equations, integrity-pinned public corpus and honest unexecuted status; released119 fixture-symlink gate prevents native execution. No publication acceptance is asserted.",
+          "reviewed_code_fingerprint": "0adb7e12627ae2ba65e7ca7fb7be15501d09ca38c69b74ddab0db821ff7f10e5",
+          "spec_material_hash": "b6f9510ccebc735f2ae5f567c1e860f5e8c979aa71e16981f275ecde85275034"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed independent diagnostic collection, private pinned model setup, CPU/accelerator attempts and honest timing/RSS scopes. Final parity/calibration/fallback acceptance remains unsatisfied.",
-          "reviewed_code_fingerprint": "ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7",
+          "reason": "Reviewed reference-only independent equations, integrity-pinned public corpus and honest unexecuted status; released119 fixture-symlink gate prevents native execution. No publication acceptance is asserted.",
+          "reviewed_code_fingerprint": "0adb7e12627ae2ba65e7ca7fb7be15501d09ca38c69b74ddab0db821ff7f10e5",
           "spec_material_hash": "e662013621a917085bf3f02b57a7420ea4e07b824f0bbe82c8ddbdeabf2918da"
         }
       ],
@@ -578,7 +583,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792292015Z"
+      "updated_at": "1792293495Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -588,7 +593,10 @@
         "Old stacked branch agent/vega-followup/feat_01m51r7pzw2pcv9g remains untouched at2aeb3e8272656ba8796e2222f1f9482a005469fb",
         "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation."
       ],
-      "artifact_hash": "sha256:71d53445cf01829ec06ff477883a5174795fefa181ed803312a2c3a8ed203b72",
+      "artifact_hash": "sha256:0f96cbb8e05ed53fe61315354f6a1b8e86447640d6df3d65e872b8a708858663",
+      "blockers": [
+        "Released119 native snapshot rejects the existing immutable golden fixture symlink; no supported additional alias review command exists. Native build/probe/model/reference/evaluation remain unexecuted pending an accepted released repair; do not alter the fixture or use a candidate controller."
+      ],
       "checks": [
         {
           "name": "clippy-source-repair",
@@ -652,6 +660,10 @@
         },
         {
           "name": "full119_validation",
+          "status": "failed"
+        },
+        {
+          "name": "full_validation_4de86774",
           "status": "failed"
         },
         {
@@ -755,6 +767,10 @@
           "status": "unavailable"
         },
         {
+          "name": "readiness_evaluation",
+          "status": "unavailable"
+        },
+        {
           "name": "readiness_holdout",
           "status": "unavailable"
         },
@@ -783,6 +799,10 @@
           "status": "failed"
         },
         {
+          "name": "separate_reference",
+          "status": "unavailable"
+        },
+        {
           "name": "source-ci",
           "status": "passed"
         },
@@ -796,6 +816,10 @@
         },
         {
           "name": "source-inventory-review",
+          "status": "passed"
+        },
+        {
+          "name": "source_ci_4de86774",
           "status": "passed"
         },
         {
@@ -815,7 +839,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "native_diagnostic_collection",
+      "current_phase": "released_native_snapshot_repair_required",
       "custody": {
         "events": [
           {
@@ -997,10 +1021,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 27
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:28",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 28
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 27,
+        "next_sequence": 28,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1483,6 +1514,26 @@
                 ],
                 "sequence": 27,
                 "validation_findings": []
+              },
+              {
+                "action": "released_native_snapshot_repair_required",
+                "custody_event_id": "event:28",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/39091789504",
+                  "/private/tmp/vega-native-diagnostic-validation-3.json",
+                  "docs/vega-reference-contract.md: predeclared tolerances, public source revisions/hashes, corpus grouping/labels and exact controller blocker"
+                ],
+                "proof_refs": [
+                  "source_ci_4de86774",
+                  "full_validation_4de86774",
+                  "separate_reference",
+                  "readiness_evaluation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 28,
+                "validation_findings": []
               }
             ]
           }
@@ -1504,6 +1555,7 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/vega-119-current-validation.json retains the earlier pre-execution failure",
+        "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
         "Actual plain117 third report requires inventory reconciliation. Compared all discovered sources against accepted396f: only Cargo.toml/Cargo.lock/MODULE.bazel.lock changed plus four new native worker files; existing workflows/actions/executor helpers unchanged. Reviewed actual dependency and worker boundary, then explicitly updated only human-editable required-profile reviewed_sources_digest from supported agent.init inventory. No profile/provider/check graph change and no test execution claimed.",
         "Cargo metadata regeneration preserved immutable native Git pins and package pins except local decapod0.117; resolver updated several existing Windows/socket dependency edges, retained for ordinary validation. No model weights or native runtime installed; setup still reports runtime_installed=false.",
@@ -1523,6 +1575,7 @@
         "Released117 authoritative run at87a13363 reached provider_terminal_wait then failed Docs Sync Buildkite1933 uuid01a145a6-9e36-4379-8009-3523c0d6e03d; evidence /tmp/decapod-snapshot-HOyW3w. Actual clippy flags mixed return type_complexity: replaced tuple spelling with meaningful MixedSlotsAndOptions alias, no lint suppression. GHA Docs Sync job117091823692 log contains no complete diff; no archive read. Corrected ordinary config-schema source from exact canonical Rust config declaration, readiness_config_contract literal and repository-readiness include, preserving documented alpha/risk/pins. This is source-derived correction, not locally executed candidate generation; CI equality remains pending. command-contracts already matches its only renderer-source change.",
         "Repaired actual source failures: moved LocalVerification before test module without suppression; init retires only known none/jev selector and preserves unrelated keys, unknown/malformed selectors fail without config overwrite; installation independently verifies private no-clobber copies instead of cache hardlinks while retaining nlink checks. Added cache reuse/corruption/hardlink/cancellation/install-failure regressions and both init-surface dry-run/idempotence/extension/unknown-selector coverage. Tests authored, not executed. Official Cargo metadata reconciliation updates only local decapod version0.117->0.118 and resolver-selected edges among already locked socket/getrandom/Windows packages; native Git identities unchanged. Reviewed supported agent.init inventory f24497519b688749366c03ec1a580bf34fcae4e819593aad1e921351f977cc6b against accepted source; only existing Cargo/native inputs differ, no CI policy/helper/check graph change. Backed up user config then retained all unrelated settings and removed exact retired provider none. Source and governance ready for plain validate; native and numerical/domain acceptance still unverified. Canonical task claim renewed after session expiry; all further controller mutations use consistent machine session.",
         "Reviewed source inventory af80666ea82e703e48f74a57cf5797e7dceb1cfa820dc314105d9e5bf3cbdf33; substituting only old9d worker entrypoint bytes reproduces prior d39eff26 inventory exactly. No Cargo pins, graph or source carrier changed.",
+        "docs/vega-reference-contract.md: predeclared tolerances, public source revisions/hashes, corpus grouping/labels and exact controller blocker",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -1534,6 +1587,7 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39054791735/job/117460563561",
         "https://github.com/DecapodLabs/decapod/actions/runs/39054791735/job/117460563614",
         "https://github.com/DecapodLabs/decapod/actions/runs/39054791735/job/117460563616",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39091789504",
         "v0.119.0 published and installed; obsolete118 unsupported-adapter blocker resolved only. First released119 validate failed READINESS_BLOCKED on recorded trajectory gaps; report/private/tmp/vega-119-first-validation.json preserved and no builds ran. Domain proof requirements remain enforced; no failed check waived."
       ],
       "inspected_files": [

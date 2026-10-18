@@ -11,6 +11,12 @@ use decapod::core::{
 extern crate candle_vllm_cuda as candle_vllm;
 #[path = "vega-native/decoder.rs"]
 mod decoder;
+#[path = "vega-native/evaluation_corpus.rs"]
+mod evaluation_corpus;
+#[path = "vega-native/reference_engine.rs"]
+mod reference_engine;
+#[path = "vega-native/reference_tokenizer.rs"]
+mod reference_tokenizer;
 #[path = "../../src/decapod/core/vega_backbone.rs"]
 mod vega_backbone;
 use std::{
@@ -89,6 +95,9 @@ fn main() {
 }
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args_os().skip(1).collect::<Vec<_>>();
+    if args.len() == 3 && args[0] == "--prepare-evaluation" && args[1] == "--proof-output" {
+        return prepare_evaluation(Path::new(&args[2]));
+    }
     if args.len() == 3 && args[0] == "--diagnose-native" && args[1] == "--proof-output" {
         return diagnose_native(Path::new(&args[2]));
     }
@@ -213,6 +222,69 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn prepare_evaluation(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    use decapod::core::bounded_process::{
+        BoundedCommand, Cancellation, ProcessLimits, Termination,
+    };
+    use std::io::Write;
+    let directory = tempfile::tempdir()?;
+    let dataset = directory.path().join("dataset.parquet");
+    let capture = std::process::Command::new("/usr/bin/curl")
+        .env_clear()
+        .args([
+            "--disable",
+            "--fail",
+            "--location",
+            "--silent",
+            "--show-error",
+            "--proto",
+            "=https",
+            "--proto-redir",
+            "=https",
+            "--max-time",
+            "60",
+            "--max-filesize",
+            "1875846",
+            "--output",
+        ])
+        .arg(&dataset)
+        .arg(evaluation_corpus::DATASET_URL)
+        .bounded_capture(
+            ProcessLimits {
+                timeout: std::time::Duration::from_secs(65),
+                max_output_bytes: 16 * 1024,
+            },
+            &Cancellation::default(),
+        )?;
+    if capture.termination != Termination::Exited || !capture.output.status.success() {
+        return Err("pinned public evaluation download failed".into());
+    }
+    let corpus = evaluation_corpus::build(&dataset)?;
+    let bytes = serde_json::to_vec(&corpus)?;
+    if bytes.len() > 8 * 1024 * 1024 {
+        return Err("reviewable corpus exceeds separate 8 MiB limit".into());
+    }
+    let parent = proof_path.parent().ok_or("proof has no parent")?;
+    let destination = proof_path.with_extension("corpus.json");
+    let mut file = tempfile::NamedTempFile::new_in(parent)?;
+    file.write_all(&bytes)?;
+    file.as_file().sync_all()?;
+    file.persist_noclobber(&destination)?;
+    write_private_proof(
+        proof_path,
+        &serde_json::json!({
+            "schema":"decapod.vega-evaluation-input-receipt.v1","publication_ready":false,
+            "dataset_revision":evaluation_corpus::DATASET_REVISION,"dataset_sha256":evaluation_corpus::DATASET_SHA256,
+            "corpus_sha256":vega_readiness::hash(&bytes),"corpus_file":destination,"corpus_bytes":bytes.len(),
+            "independent_instances":corpus["independent_instances"],"judgment_cases":corpus["judgment_cases"],
+            "policy_cases_excluded_from_judgment":corpus["policy_cases_excluded_from_judgment"],
+            "calibration_fit":"not_performed","evaluation":"not_executed","production_calibration":"unsatisfied",
+            "label_author":"agent-authored adaptation of public benchmark oracles, not human-reviewed PR-readiness labels"
+        }),
+    )?;
+    Ok(())
+}
+
 /// Collection, not acceptance: attempt each independent backend even when
 /// another fails. Neither missing reference data nor a model's negative answer
 /// prevents dispatch diagnostics. The caller still fails if execution failed.
@@ -230,6 +302,13 @@ fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> 
         },
         "scope":"Pinned model execution diagnostics only. CPU/accelerator agreement is not independent model parity. No fitted or held-out readiness coverage is established."
     });
+    let evaluation_path = proof_path.with_extension("evaluation.json");
+    report["evaluation_input_collection"] = match prepare_evaluation(&evaluation_path) {
+        Ok(()) => serde_json::from_slice(&read_bounded(&evaluation_path, MAX_PROOF_BYTES as u64)?)?,
+        Err(error) => {
+            serde_json::json!({"status":"failed","error":error.to_string(),"evaluation":"not_executed"})
+        }
+    };
     let setup = match vega_setup::run(&vega_setup::SetupOptions::default()) {
         Ok(setup) => setup,
         Err(error) => {
@@ -267,19 +346,94 @@ fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> 
         let temporary = tempfile::tempdir()?;
         let path = temporary.path().join("inference.json");
         infer(&request, Some(&path))?;
-        Ok(serde_json::from_slice::<serde_json::Value>(&read_bounded(
+        let mut value = serde_json::from_slice::<serde_json::Value>(&read_bounded(
             &path,
             MAX_PROOF_BYTES as u64,
-        )?)?)
+        )?)?;
+        let configuration: serde_json::Value = serde_json::from_slice(&read_bounded(
+            &installation.join("vega_config.json"),
+            1024 * 1024,
+        )?)?;
+        // Reference outputs come from independent equations, not the candidate
+        // engine's outputs. Pooled tensors are explicitly reference inputs.
+        value["separate_engine_reference"] = match reference_engine::compare(
+            &configuration,
+            &read_bounded(&installation.join("engine.safetensors"), 128 * 1024 * 1024)?,
+            &value,
+        ) {
+            Ok(comparison) => comparison,
+            Err(error) => {
+                serde_json::json!({"status":"failed","error":error.to_string(),"backbone_parity":"unverified"})
+            }
+        };
+        Ok(value)
     });
+    let reference_failed = attempts
+        .iter()
+        .any(|attempt| attempt["separate_engine_reference"]["status"] == "failed");
     report["attempts"] = attempts.into();
+    report["separate_tokenizer_reference"] = match verify_tokenizer_reference(&installation) {
+        Ok(comparison) => comparison,
+        Err(error) => serde_json::json!({"status":"failed","error":error.to_string()}),
+    };
     report["wall_clock_ms"] = (started.elapsed().as_secs_f64() * 1000.0).into();
     report["cpu_execution_scope"] = "Explicit CPU model execution; production fallback routing is a separate obligation, not inferred from this run".into();
     write_private_proof(proof_path, &report)?;
-    if probe.is_err() || inference_failed {
+    if probe.is_err()
+        || inference_failed
+        || reference_failed
+        || report["separate_tokenizer_reference"]["status"] == "failed"
+    {
         return Err("one or more native diagnostics failed; inspect private proof".into());
     }
     Ok(())
+}
+
+fn verify_tokenizer_reference(
+    installation: &Path,
+) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    let path = installation.join("backbone/tokenizer.json");
+    let metadata: serde_json::Value = serde_json::from_slice(&read_bounded(
+        &installation.join("backbone/tokenizer_config.json"),
+        1024 * 1024,
+    )?)?;
+    if !metadata["bos_token"].is_null() {
+        return Err("reference fixture expects the pinned absent BOS token".into());
+    }
+    let json = serde_json::from_slice(&read_bounded(&path, 16 * 1024 * 1024)?)?;
+    let reference = reference_tokenizer::ReferenceTokenizer::new(&json)?;
+    let actual =
+        tokenizers::Tokenizer::from_file(path).map_err(|e| io::Error::other(e.to_string()))?;
+    let fixtures = [
+        "",
+        "All required checks passed.",
+        "Checks passed; explicit requirement remains missing.",
+        "line one\n\nline two\t  ",
+        "cafe\u{301} café 中文",
+        "<|im_start|> quoted evidence <|im_end|>",
+    ];
+    for state in fixtures {
+        let expected = reference.prompt(state, vega_prompt::QUESTION, None)?;
+        let observed = tokenize(state, &actual, None).map_err(io::Error::other)?;
+        if expected["tokens"] != serde_json::to_value(observed.tokens)?
+            || expected["spans"] != serde_json::to_value(observed.spans)?
+        {
+            return Err(format!("independent token/span mismatch in fixture {:?}", state).into());
+        }
+    }
+    let oversized = " a".repeat(4200);
+    if reference
+        .prompt(&oversized, vega_prompt::QUESTION, None)
+        .is_ok()
+        || tokenize(&oversized, &actual, None).is_ok()
+    {
+        return Err("oversized input was not rejected by both independent paths".into());
+    }
+    Ok(
+        serde_json::json!({"status":"passed","fixed_prompt_fixtures":fixtures.len(),"oversized_rejections":1,
+        "tolerance":"exact token IDs and spans","reference":"separate byte-level BPE; shared JSON, regex and Unicode infrastructure",
+        "backbone_parity":"unverified","independent_human_review":false}),
+    )
 }
 
 fn collect_diagnostics(

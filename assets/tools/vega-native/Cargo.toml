@@ -24,6 +24,10 @@ serde = { version = "1.0", features = ["derive"] }
 thiserror = "2"
 tempfile = "3"
 libc = "0.2"
+libm = "0.2"
+fancy-regex = "0.17"
+unicode-normalization = "0.1"
+parquet = { version = "=57.0.0", default-features = false, features = ["snap", "json"] }
 safetensors = "0.7"
 candle-core = { git = "https://github.com/guoqingbao/candle.git", rev = "b60efcf", default-features = false }
 candle-nn = { git = "https://github.com/guoqingbao/candle.git", rev = "b60efcf", default-features = false }

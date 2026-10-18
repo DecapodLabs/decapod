@@ -509,8 +509,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `0adb7e12627ae2ba65e7ca7fb7be15501d09ca38c69b74ddab0db821ff7f10e5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (30 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -650,3 +650,5 @@ their independent reference and evaluation evidence.
 ### Native diagnostic dependency boundary (#1445)
 
 `assets/tools/vega_infer.rs::diagnose_native` runs the real preferred-device probe, installs only the compiled immutable baseline through `vega_setup::run` into the validation worker's private HOME, and attempts both preferred-device and explicit CPU model inference. Independent attempts are collected even if another backend fails; failed installation is a genuine shared dependency. Collection has no numerical-reference or evaluation-file prerequisite and never fits calibration. Execution errors fail the required worker run after writing diagnostics. The existing accepted controller, source CI, recipe integrity and final freshness checks remain authoritative. This separates evidence collection from the agent's still-unsatisfied parity/calibration publication conditions without changing the kernel or waiving checks.
+
+The separate native worker now also owns verification-only `reference_engine.rs`, `reference_tokenizer.rs` and `evaluation_corpus.rs`. Reference engine outputs use separately coded F64 equations on pinned weights and supplied feature inputs; they do not independently prove the backbone. Corpus construction decodes an integrity-pinned public Rust benchmark subset without executing its scripts. Neither reference nor corpus code participates in production readiness inference. The source-tested v0.119 native snapshot still rejects the repository's golden fixture symlink, so native execution of these modules remains blocked pending a released controller repair.

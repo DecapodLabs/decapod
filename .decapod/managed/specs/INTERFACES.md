@@ -552,8 +552,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ed61b7199e590480cf35e713f79b41fe474c084c4c288fbcc1caf7240e2a7ab7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (27 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `0adb7e12627ae2ba65e7ca7fb7be15501d09ca38c69b74ddab0db821ff7f10e5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (30 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -654,3 +654,5 @@ command records explicitly carry `publication_ready=false`.
 ### Private native collection interface (#1445)
 
 `decapod-vega-infer --diagnose-native --proof-output <fresh-private-path>` is a diagnostic-only worker command for the reviewed native recipe. It records pinned installation identities, actual per-backend inference outputs/errors, synchronized stage timings and lifetime-process RSS high water (macOS bytes; other Unix ru_maxrss converted from KiB). It reports `publication_ready=false`, parity and readiness calibration unverified. Explicit CPU execution does not itself establish production fallback routing. No model paths, weights, credentials or private input are committed. The 1 MiB private-export cap remains unchanged. Preferred and CPU attempts share a process, so RSS includes earlier attempts and is not isolated GPU/model allocation. Production request/response, deterministic gates and abstention behavior are unchanged.
+
+Verification-only `--prepare-evaluation --proof-output <fresh-private-path>` writes a bounded private input receipt and an 8 MiB capped sibling corpus without clobbering. The pinned dataset, grouped split, agent-authored label scope, benchmark-reported evidence and constructed conditions are explicit. `--diagnose-native` collects it independently of model setup and adds separate tokenization/engine reference comparisons with frozen tolerances; neither command claims full-backbone parity or readiness calibration. See `docs/vega-reference-contract.md` for exact hashes, provenance, commands and unsatisfied criteria.
