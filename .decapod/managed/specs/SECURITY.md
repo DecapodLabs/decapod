@@ -366,7 +366,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0adb7e12627ae2ba65e7ca7fb7be15501d09ca38c69b74ddab0db821ff7f10e5`
+- Repository signal fingerprint: `bc48410df4883d44532f284ff3ce1b7081954bff2bf3fc9443b50c8a3e4b5a63`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (30 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

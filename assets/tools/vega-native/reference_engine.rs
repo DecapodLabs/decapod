@@ -324,9 +324,21 @@ pub fn calibrate(config: &Value, row: &Value, steps: usize) -> Result<Value> {
     if logits.len() != 2 || steps == 0 {
         return Err("reference requires boolean logits and steps".into());
     }
+    if logits.iter().any(|x| !x.is_finite()) {
+        return Err("reference logit overflows F32 input".into());
+    }
     let kinetic = row["kinetic"].as_f64().ok_or("missing kinetic")? as f32;
     let nearest = row["nearest"].as_f64().ok_or("missing nearest")? as f32;
     let used = usize_field(row, "steps_used")?;
+    if !kinetic.is_finite()
+        || !nearest.is_finite()
+        || kinetic < 0.0
+        || nearest < 0.0
+        || used == 0
+        || used > steps
+    {
+        return Err("invalid reference physical readout".into());
+    }
     let features = [
         kinetic.ln_1p() as f64,
         nearest.ln_1p() as f64,
@@ -334,6 +346,9 @@ pub fn calibrate(config: &Value, row: &Value, steps: usize) -> Result<Value> {
         2_f32.ln() as f64,
     ];
     let theta = array(&config["calibration"]["theta"][2])?;
+    if theta.len() != 5 {
+        return Err("reference requires exactly five thermal parameters".into());
+    }
     let temperature = (theta[0]
         + theta[1..]
             .iter()
@@ -353,11 +368,30 @@ pub fn calibrate(config: &Value, row: &Value, steps: usize) -> Result<Value> {
     let unbound = config["calibration"]["unbound_threshold"]
         .as_f64()
         .ok_or("missing unbound threshold")?;
+    if !temperature.is_finite()
+        || probabilities.iter().any(|p| !p.is_finite())
+        || !threshold.is_finite()
+        || !(0.0..=1.0).contains(&threshold)
+        || !abstain.is_finite()
+        || !(0.0..=1.0).contains(&abstain)
+        || !unbound.is_finite()
+        || unbound < 0.0
+    {
+        return Err("nonfinite reference result or invalid calibration threshold".into());
+    }
     Ok(
         json!({"probabilities":probabilities,"temperature":temperature,
         "prediction_set":(0..2).filter(|i|*i==best || probabilities[*i]>=(1.0-threshold).max(1e-12)).collect::<Vec<_>>(),
         "abstain":probabilities[best]<abstain,"unbound":nearest as f64>unbound}),
     )
+}
+
+fn within_tolerance(expected: f64, actual: f64, absolute: f64, relative: f64) -> bool {
+    let error = (expected - actual).abs();
+    expected.is_finite()
+        && actual.is_finite()
+        && error.is_finite()
+        && error <= absolute + relative * expected.abs()
 }
 
 /// Fixed tolerances are documented before execution in the reference contract.
@@ -374,7 +408,7 @@ pub fn compare(config: &Value, checkpoint: &[u8], proof: &Value) -> Result<Value
         for (expected, actual) in expected.iter().zip(actual) {
             let error = (expected - actual).abs();
             maximum = maximum.max(error);
-            if error > 0.001 + 0.0001 * expected.abs() {
+            if !within_tolerance(*expected, actual, 0.001, 0.0001) {
                 return Err(format!(
                     "reference engine {name} error {error} exceeds frozen tolerance"
                 )
@@ -389,7 +423,7 @@ pub fn compare(config: &Value, checkpoint: &[u8], proof: &Value) -> Result<Value
         let actual = observed[name].as_f64().ok_or("missing observed readout")?;
         let error = (expected - actual).abs();
         maximum = maximum.max(error);
-        if error > 0.001 + 0.0001 * expected.abs() {
+        if !within_tolerance(expected, actual, 0.001, 0.0001) {
             return Err(
                 format!("reference engine {name} error {error} exceeds frozen tolerance").into(),
             );
@@ -409,18 +443,22 @@ pub fn compare(config: &Value, checkpoint: &[u8], proof: &Value) -> Result<Value
     }
     let expected = array(&answer["probabilities"])?;
     let observed = array(&actual["probabilities"])?;
-    if expected
-        .iter()
-        .zip(observed)
-        .any(|(a, b)| (a - b).abs() > 1e-10)
-        || (answer["temperature"]
-            .as_f64()
-            .ok_or("missing temperature")?
-            - actual["temperature"]
+    if expected.len() != 2
+        || observed.len() != 2
+        || expected
+            .iter()
+            .zip(observed)
+            .any(|(a, b)| !within_tolerance(*a, b, 1e-10, 0.0))
+        || !within_tolerance(
+            answer["temperature"]
                 .as_f64()
-                .ok_or("missing observed temperature")?)
-        .abs()
-            > 1e-10
+                .ok_or("missing temperature")?,
+            actual["temperature"]
+                .as_f64()
+                .ok_or("missing observed temperature")?,
+            1e-10,
+            0.0,
+        )
     {
         return Err("reference calibrated probability/temperature mismatch".into());
     }
@@ -448,5 +486,28 @@ mod tests {
         assert_eq!(result["unbound"], false);
         assert!(calibrate(&config, &row, 0).is_err());
         assert!(calibrate(&config, &json!({"logits":[null,0.]}), 12).is_err());
+        for replacement in [json!(-1.0), json!(1e300)] {
+            let mut invalid = row.clone();
+            invalid["kinetic"] = replacement;
+            assert!(calibrate(&config, &invalid, 12).is_err());
+        }
+        let mut invalid = config.clone();
+        invalid["calibration"]["theta"][2] = json!([]);
+        assert!(calibrate(&invalid, &row, 12).is_err());
+        let mut invalid = row;
+        invalid["steps_used"] = json!(13);
+        assert!(calibrate(&config, &invalid, 12).is_err());
+    }
+    #[test]
+    fn tolerance_never_accepts_nan_infinity_or_overflowed_error() {
+        for pair in [
+            (f64::NAN, 0.0),
+            (0.0, f64::NAN),
+            (f64::INFINITY, f64::INFINITY),
+            (f64::MAX, -f64::MAX),
+        ] {
+            assert!(!within_tolerance(pair.0, pair.1, 0.001, 0.0001));
+        }
+        assert!(within_tolerance(1.0, 1.00001, 0.001, 0.0001));
     }
 }

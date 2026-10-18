@@ -647,7 +647,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0adb7e12627ae2ba65e7ca7fb7be15501d09ca38c69b74ddab0db821ff7f10e5`
+- Repository signal fingerprint: `bc48410df4883d44532f284ff3ce1b7081954bff2bf3fc9443b50c8a3e4b5a63`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (30 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -845,3 +845,5 @@ prior passing code jobs do not establish its publication readiness.
 The reviewed `proof.rust_workers` recipe runs locked release tests, `--probe-auto` and then `--diagnose-native`. Full `decapod validate` remains the build/test entry point; source proof precedes the native phase under released v0.119.0. The diagnostic command downloads only explicitly pinned baseline assets through normal verified atomic installation; inference then uses immutable verified files. A failed accelerator attempt does not suppress the independent CPU attempt. A new regression protects this collection ordering. Authored tests are unexecuted until the recorded validation runs them. Existing pre-execution failure reports are preserved. Native success is only execution evidence: independent tokenization/block/pooling/engine parity, held-out readiness evaluation, exercised production fallback and boundary/error acceptance remain unsatisfied until measured and reviewed separately.
 
 Candidate 4de86774 source CI passed (Actions run 39091789504); full released119 validation retained a native-snapshot failure at `/private/tmp/vega-native-diagnostic-validation-3.json`, with 42 source observations under its evidence path and no native build executed. Two earlier transport failures are retained separately. The native snapshot has a reviewed toolchain-alias exception but rejects the existing golden fixture symlink, with no supported additional review field. Do not change that fixture or use an unmerged controller to evade the failure. New separate reference/corpus code and its tests are unexecuted; frozen corpus groups contain 20 development and 23 holdout original tasks and cannot establish the required broad risk bound by multiplying related variants.
+
+Reference review additionally requires finite comparisons: NaN/infinity or overflowed differences cannot satisfy a tolerance, calibrated vectors must have exactly two elements, F32-overflowing/negative physical inputs and out-of-budget steps must be rejected, and the thermal parameter vector must have exactly five values. New reference-only regressions cover these malformed/boundary cases. They remain unexecuted with the separate native worker; no model/parity/calibration acceptance is implied by source review.
