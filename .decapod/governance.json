@@ -372,6 +372,11 @@
       "id": "declare-snapshot-regression-inputs",
       "summary": "Repair real test fixture setup: commit in-tree referent background and declare retained untracked target for missing-index case; production safety and failure history unchanged.",
       "input_digest": "sha256:3096914782e104e30239d40319cdac8ff985a2dcd827e15b63565b442ac9b8fc"
+    },
+    {
+      "id": "respect-head-index-material-union",
+      "summary": "Repair test declaration using inspected capture_once HEAD/index union; missing-index target stays HEAD-bound. Production classification, safety and failure history unchanged.",
+      "input_digest": "sha256:b28a9b7ee2568d7a0eb9d7acdacaa325655b88b5b5ca3d65499fca5677daf7b9"
     }
   ],
   "intents": {
@@ -413,22 +418,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only temporary regression inputs are now declared/committed to reach intended checks. Production exact-alias, no-follow, input and authority contracts remain unchanged.",
-          "reviewed_code_fingerprint": "6674d2ff8f7cfb2f6bc76ac2ee0eb158e2d613a0a036c82e1975e9c56a9dc665",
+          "reason": "The regression now respects existing HEAD/index union tracking; only an invalid test-side untracked declaration was removed. Production safety and source-alias contracts unchanged.",
+          "reviewed_code_fingerprint": "8c469f8dda180af5dbce477384092c23cbeb8437c88c7bfdbbfa7df10bf82041",
           "spec_material_hash": "c5d45b45f01b126c122cb281e0357d4fcf8b4134220c4f60467fde0a8d0495f4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Only temporary regression inputs are now declared/committed to reach intended checks. Production exact-alias, no-follow, input and authority contracts remain unchanged.",
-          "reviewed_code_fingerprint": "6674d2ff8f7cfb2f6bc76ac2ee0eb158e2d613a0a036c82e1975e9c56a9dc665",
+          "reason": "The regression now respects existing HEAD/index union tracking; only an invalid test-side untracked declaration was removed. Production safety and source-alias contracts unchanged.",
+          "reviewed_code_fingerprint": "8c469f8dda180af5dbce477384092c23cbeb8437c88c7bfdbbfa7df10bf82041",
           "spec_material_hash": "0f3b0b57b5d01999e22dee2b84b7552ede21e1930a338cd36ffe2ce288b84fef"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Only temporary regression inputs are now declared/committed to reach intended checks. Production exact-alias, no-follow, input and authority contracts remain unchanged.",
-          "reviewed_code_fingerprint": "6674d2ff8f7cfb2f6bc76ac2ee0eb158e2d613a0a036c82e1975e9c56a9dc665",
+          "reason": "The regression now respects existing HEAD/index union tracking; only an invalid test-side untracked declaration was removed. Production safety and source-alias contracts unchanged.",
+          "reviewed_code_fingerprint": "8c469f8dda180af5dbce477384092c23cbeb8437c88c7bfdbbfa7df10bf82041",
           "spec_material_hash": "810fff8f30cfdfa702cb3a9076669bac11b936b500bf9dc40c731bf660fb9665"
         }
       ],
@@ -442,14 +447,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792295464Z"
+      "updated_at": "1792296128Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Separate controller prerequisite only. Original Vega branch/task preserved and yielded to serialize exclusive claims; no candidate-controller or native Vega acceptance."
       ],
-      "artifact_hash": "sha256:ee5802387ea6f5c0d1ec6cf37f50216469637beedcef8902be0f5f8970ef03b6",
+      "artifact_hash": "sha256:9777bdddb29c4bec8dceb2e088d972fc8f871478436a84e0a038f2d95676aa12",
       "checks": [
         {
           "name": "alias_regression_first_execution",
@@ -457,6 +462,10 @@
         },
         {
           "name": "alias_regression_second_execution",
+          "status": "failed"
+        },
+        {
+          "name": "alias_regression_third_execution",
           "status": "failed"
         },
         {
@@ -476,7 +485,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "repair_declared_fixture_inputs",
+      "current_phase": "respect_head_index_material_union",
       "custody": {
         "events": [
           {
@@ -518,10 +527,17 @@
             "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M56GQQ03BZZP9D6VS7NNRBHV",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M56GQQ03BZZP9D6VS7NNRBHV": {
@@ -593,6 +609,22 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "respect_head_index_material_union",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/readiness_evidence/material.rs",
+                  "SourceCI39095086960 job117579894757:1397passed/1failed/3ignored; capture_once explicitly unions HEAD/index, so HEAD-bound missing-index target must not be declared untracked. Remove invalid test declaration; preserve production safety/classification and all failures."
+                ],
+                "proof_refs": [
+                  "alias_regression_third_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -604,10 +636,12 @@
         "/private/tmp/vega-snapshot-validation-1.json; https://buildkite.com/decapodlabs/decapod/builds/2101; manifest config_input_hash drift corrected by supported specs.refresh after final inventory pin",
         "/private/tmp/vega-snapshot-validation-2.json: public provider403/reset1792295962; sourceCI39094002907 Supabase library1397passed/1failed/3ignored; new test expected escaping link to survive earlier material capture; expectation repaired without weakening safety.",
         "Issue1457 documents released119 validation failure from original Vega task; source fixture and immutable vectors untouched.",
-        "SourceCI39094466981 job117578217557:1397passed/1failed/3ignored; material guard correctly refused undeclared other-target.txt. Commit temporary fixture background and explicitly declare retained missing-index target; no production policy change."
+        "SourceCI39094466981 job117578217557:1397passed/1failed/3ignored; material guard correctly refused undeclared other-target.txt. Commit temporary fixture background and explicitly declare retained missing-index target; no production policy change.",
+        "SourceCI39095086960 job117579894757:1397passed/1failed/3ignored; capture_once explicitly unions HEAD/index, so HEAD-bound missing-index target must not be declared untracked. Remove invalid test declaration; preserve production safety/classification and all failures."
       ],
       "inspected_files": [
-        "src/decapod/core/native_proof/snapshot.rs"
+        "src/decapod/core/native_proof/snapshot.rs",
+        "src/decapod/core/readiness_evidence/material.rs"
       ],
       "intent_id": "intent:change_01M56GQPXGDY8FNQVQE0NFVJK2",
       "modified_files": [

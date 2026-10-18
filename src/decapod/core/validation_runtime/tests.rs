@@ -1207,13 +1207,10 @@ fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() 
         // The full material tree binds the fixture, including deletions. Keep
         // the explicit required input inventory on the fixture's Cargo source
         // so missing-target scenarios reach the snapshot's own checks.
-        let mut inputs = f.inputs();
-        if scenario == "missing-index-target" {
-            // Removing the index entry leaves a real untracked target. Declare
-            // that test input so the index-target check, not an unrelated
-            // undeclared-file guard, is what must reject the snapshot.
-            inputs.declared_untracked.insert(TARGET.into());
-        }
+        // Capture's tracked set is the union of HEAD and index: the target
+        // removed only from the index remains bound by HEAD and must not be
+        // relabelled as a declared untracked input.
+        let inputs = f.inputs();
         let before = run(&f.options.root, &["status", "--porcelain"]);
         let captured =
             native_proof::capture_current_identity(&inputs, &BTreeMap::new(), limits, &cancel);

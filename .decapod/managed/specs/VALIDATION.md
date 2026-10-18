@@ -520,7 +520,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6674d2ff8f7cfb2f6bc76ac2ee0eb158e2d613a0a036c82e1975e9c56a9dc665`
+- Repository signal fingerprint: `8c469f8dda180af5dbce477384092c23cbeb8437c88c7bfdbbfa7df10bf82041`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -679,3 +679,5 @@ The first prerequisite validation failed in Buildkite2101 (Actions39093827919): 
 The next source run exposed an expectation error in the new regression: escaping symlinks fail during material capture before snapshot preparation. The test now requires that earlier rejection explicitly. Its separate symlink-target case uses an in-repository referent so it reaches the snapshot target-type check. No material/snapshot safety check was relaxed. Released validation's public provider reader also reported HTTP403 with reset1792295962; preserve that report and wait for the named reset rather than switch authentication routes.
 
 The bfd461da source run additionally rejected an undeclared file introduced by the test's in-tree referent. The referent is now committed as harmless fixture background before mutations. The missing-index-target case explicitly declares its retained untracked target so rejection is attributed to the index contract. Both changes are confined to temporary test repositories; production guards and the real immutable golden fixture remain unchanged. Capture failures include the scenario name for diagnosis.
+
+Material capture binds the union of HEAD and index paths. The 28ec88bf execution exposed that the missing-index-target remains HEAD-bound and cannot be declared untracked. The current regression preserves that contract and removes the invalid declaration; its target is still captured before the independent snapshot index-target check rejects it. Earlier failed test/projection/provider evidence remains in governance history and prior commits. No production input classification was changed.
