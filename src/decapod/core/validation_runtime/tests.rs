@@ -1109,6 +1109,154 @@ fn native_snapshot_preserves_only_reviewed_toolchain_alias_and_target() {
     );
 }
 
+#[cfg(unix)]
+#[test]
+fn native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts() {
+    use crate::core::native_proof::snapshot::{SnapshotLimits, SnapshotReview, prepare_snapshot};
+    use std::os::unix::fs::symlink;
+    const ALIAS: &str = "tests/fixtures/state_commit_repo/symlink_test";
+    const TARGET: &str = "tests/fixtures/state_commit_repo/target.txt";
+    let cancel = Cancellation::default();
+    let limits = native_proof::SuiteLimits {
+        timeout: Duration::from_secs(30),
+        max_hashed_bytes: 128 * 1024 * 1024,
+        max_checks: 1,
+        max_output_bytes: 1024 * 1024,
+        git_output_limit: 1024 * 1024,
+    };
+    let snapshot_limits = SnapshotLimits {
+        timeout: Duration::from_secs(30),
+        max_snapshot_bytes: 16 * 1024 * 1024,
+        max_files: 1000,
+        max_io_bytes: 128 * 1024 * 1024,
+        git_output_limit: 1024 * 1024,
+    };
+    for scenario in [
+        "valid",
+        "working-retarget",
+        "working-escape",
+        "staged-retarget",
+        "committed-retarget",
+        "missing-working-target",
+        "symlink-target",
+        "missing-index-target",
+        "missing-head-target",
+        "unreviewed-alias",
+        "denied-alias",
+    ] {
+        let f = Fixture::new("[proof]\n");
+        fs::create_dir_all(f.options.root.join(TARGET).parent().unwrap()).unwrap();
+        fs::write(f.options.root.join(TARGET), "immutable fixture target\n").unwrap();
+        symlink("target.txt", f.options.root.join(ALIAS)).unwrap();
+        run(&f.options.root, &["add", "."]);
+        run(&f.options.root, &["commit", "-m", "reviewed fixture alias"]);
+        match scenario {
+            "working-retarget" | "working-escape" | "staged-retarget" | "committed-retarget" => {
+                fs::remove_file(f.options.root.join(ALIAS)).unwrap();
+                symlink(
+                    if scenario == "working-escape" {
+                        "../../../../outside"
+                    } else {
+                        "other.txt"
+                    },
+                    f.options.root.join(ALIAS),
+                )
+                .unwrap();
+                if scenario == "staged-retarget" || scenario == "committed-retarget" {
+                    run(&f.options.root, &["add", ALIAS]);
+                    if scenario == "committed-retarget" {
+                        run(&f.options.root, &["commit", "-m", "wrong committed link"]);
+                    }
+                    fs::remove_file(f.options.root.join(ALIAS)).unwrap();
+                    symlink("target.txt", f.options.root.join(ALIAS)).unwrap();
+                    // Restore the index as well: a wrong committed link must
+                    // still fail when both index and working link look valid.
+                    if scenario == "committed-retarget" {
+                        run(&f.options.root, &["add", ALIAS]);
+                    }
+                }
+            }
+            "missing-working-target" => fs::remove_file(f.options.root.join(TARGET)).unwrap(),
+            "symlink-target" => {
+                fs::remove_file(f.options.root.join(TARGET)).unwrap();
+                symlink("../../../../Cargo.toml", f.options.root.join(TARGET)).unwrap();
+            }
+            "missing-index-target" | "missing-head-target" => {
+                run(&f.options.root, &["rm", "--cached", TARGET]);
+                if scenario == "missing-head-target" {
+                    run(
+                        &f.options.root,
+                        &["commit", "-m", "missing committed target"],
+                    );
+                    run(&f.options.root, &["add", TARGET]);
+                }
+            }
+            "unreviewed-alias" => {
+                symlink("Cargo.toml", f.options.root.join("unexpected-link")).unwrap();
+                run(&f.options.root, &["add", "unexpected-link"]);
+            }
+            _ => {}
+        }
+        // The full material tree binds the fixture, including deletions. Keep
+        // the explicit required input inventory on the fixture's Cargo source
+        // so missing-target scenarios reach the snapshot's own checks.
+        let inputs = f.inputs();
+        let before = run(&f.options.root, &["status", "--porcelain"]);
+        let identity =
+            native_proof::capture_current_identity(&inputs, &BTreeMap::new(), limits, &cancel)
+                .unwrap();
+        let denied = if scenario == "denied-alias" {
+            BTreeSet::from([ALIAS.into()])
+        } else {
+            BTreeSet::new()
+        };
+        let result = prepare_snapshot(
+            &inputs,
+            &SnapshotReview::frozen(&identity, denied),
+            snapshot_limits,
+            &f.options.evidence_parent,
+            &cancel,
+        );
+        if scenario == "valid" {
+            let snapshot = result.unwrap();
+            assert_eq!(
+                fs::read_link(snapshot.root().join(ALIAS)).unwrap(),
+                Path::new("target.txt")
+            );
+            assert!(
+                fs::symlink_metadata(snapshot.root().join(ALIAS))
+                    .unwrap()
+                    .file_type()
+                    .is_symlink()
+            );
+            assert!(
+                fs::symlink_metadata(snapshot.root().join(TARGET))
+                    .unwrap()
+                    .is_file()
+            );
+            assert_eq!(
+                fs::read(snapshot.root().join(TARGET)).unwrap(),
+                b"immutable fixture target\n"
+            );
+            assert_eq!(
+                run(snapshot.root(), &["ls-files", "--stage", "--", ALIAS]),
+                run(&f.options.root, &["ls-files", "--stage", "--", ALIAS])
+            );
+            assert_eq!(
+                run(snapshot.root(), &["show", &format!("HEAD:{ALIAS}")]),
+                "target.txt"
+            );
+        } else {
+            assert!(result.is_err(), "unsafe fixture accepted: {scenario}");
+        }
+        assert_eq!(
+            run(&f.options.root, &["status", "--porcelain"]),
+            before,
+            "source mutated: {scenario}"
+        );
+    }
+}
+
 #[test]
 fn validation_guidance_reuses_existing_authority_without_overriding_cancellation() {
     for ready in [false, true] {

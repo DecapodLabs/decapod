@@ -10,16 +10,53 @@ use super::*;
 use crate::core::init_reconciliation::{TOOLCHAIN_ALIAS, TOOLCHAIN_TARGET, reviewed_source_alias};
 use std::io::Write;
 
-fn source_alias(root: &Path, relative: &str) -> io::Result<Vec<u8>> {
-    reviewed_source_alias(root, relative)
-        .map_err(|error| invalid(error.to_string()))?
-        .ok_or_else(|| invalid("snapshot only supports the reviewed Rust toolchain alias"))
+const FIXTURE_ALIAS: &str = "tests/fixtures/state_commit_repo/symlink_test";
+const FIXTURE_TARGET: &str = "tests/fixtures/state_commit_repo/target.txt";
+
+// These are exact, source-reviewed repository aliases, not a general permit
+// for symlinks. In particular the immutable golden-vector fixture must retain
+// its Git mode and link bytes; copying its referent as a regular file changes
+// that proof. Targets must independently exist as regular repository material.
+fn reviewed_alias(relative: &str) -> Option<(&'static str, &'static str)> {
+    match relative {
+        TOOLCHAIN_ALIAS => Some((TOOLCHAIN_TARGET, TOOLCHAIN_TARGET)),
+        FIXTURE_ALIAS => Some(("target.txt", FIXTURE_TARGET)),
+        _ => None,
+    }
 }
-fn alias_blob(root: &Path, oid: &str, budget: &mut Budget<'_>) -> io::Result<()> {
-    if budget.git(root, &["cat-file", "blob", oid])? != TOOLCHAIN_TARGET.as_bytes() {
-        return Err(invalid(
-            "snapshot committed/index toolchain alias target differs",
-        ));
+
+fn source_alias(root: &Path, relative: &str) -> io::Result<Vec<u8>> {
+    if relative == TOOLCHAIN_ALIAS {
+        return reviewed_source_alias(root, relative)
+            .map_err(|error| invalid(error.to_string()))?
+            .ok_or_else(|| invalid("snapshot requires the reviewed Rust toolchain alias"));
+    }
+    let (link, target) = reviewed_alias(relative)
+        .ok_or_else(|| invalid("snapshot only supports exact reviewed source aliases"))?;
+    let mut parent = root.to_path_buf();
+    for component in Path::new(relative).parent().unwrap().components() {
+        parent.push(component);
+        let metadata = fs::symlink_metadata(&parent)?;
+        if !metadata.is_dir() || metadata.file_type().is_symlink() {
+            return Err(invalid("snapshot reviewed alias has an unsafe parent"));
+        }
+    }
+    let metadata = fs::symlink_metadata(root.join(relative))?;
+    let target_metadata = fs::symlink_metadata(root.join(target))?;
+    if !metadata.file_type().is_symlink()
+        || fs::read_link(root.join(relative))? != Path::new(link)
+        || !target_metadata.is_file()
+        || target_metadata.file_type().is_symlink()
+    {
+        return Err(invalid("snapshot reviewed alias or regular target differs"));
+    }
+    Ok(link.as_bytes().to_vec())
+}
+fn alias_blob(root: &Path, relative: &str, oid: &str, budget: &mut Budget<'_>) -> io::Result<()> {
+    let (link, _) =
+        reviewed_alias(relative).ok_or_else(|| invalid("snapshot unreviewed alias blob"))?;
+    if budget.git(root, &["cat-file", "blob", oid])? != link.as_bytes() {
+        return Err(invalid("snapshot committed/index alias target differs"));
     }
     Ok(())
 }
@@ -177,7 +214,7 @@ fn parse_index(bytes: &[u8], review: &SnapshotReview) -> io::Result<BTreeMap<Str
         if fields.len() != 3
             || fields[2] != "0"
             || !(matches!(fields[0], "100644" | "100755")
-                || (fields[0] == "120000" && path == TOOLCHAIN_ALIAS))
+                || (fields[0] == "120000" && reviewed_alias(path).is_some()))
         {
             return Err(invalid(
                 "snapshot does not support index conflicts, unreviewed symlinks or submodules",
@@ -210,13 +247,11 @@ fn validate_source(
         &budget.git(&paths.root, &["ls-files", "--stage", "-z"])?,
         review,
     )?;
-    if let Some(alias) = index
-        .get(TOOLCHAIN_ALIAS)
-        .filter(|entry| entry.mode == "120000")
-    {
-        alias_blob(&paths.root, &alias.oid, budget)?;
+    for alias in index.values().filter(|entry| entry.mode == "120000") {
+        alias_blob(&paths.root, &alias.path, &alias.oid, budget)?;
+        let (_, target) = reviewed_alias(&alias.path).unwrap();
         if !index
-            .get(TOOLCHAIN_TARGET)
+            .get(target)
             .is_some_and(|entry| matches!(entry.mode.as_str(), "100644" | "100755"))
         {
             return Err(invalid(
@@ -224,8 +259,8 @@ fn validate_source(
             ));
         }
     }
-    let mut tree_alias = false;
-    let mut tree_target = false;
+    let mut tree_alias_targets = BTreeSet::new();
+    let mut tree_regular = BTreeSet::new();
     let tree = budget.git(&paths.root, &["ls-tree", "-rz", "--full-tree", "HEAD"])?;
     for record in tree.split(|b| *b == 0).filter(|b| !b.is_empty()) {
         let record = std::str::from_utf8(record)
@@ -237,25 +272,27 @@ fn validate_source(
             continue;
         }
         check_input(path, review)?;
-        if path == TOOLCHAIN_TARGET
-            && (metadata.starts_with("100644 blob ") || metadata.starts_with("100755 blob "))
-        {
-            tree_target = true;
+        if metadata.starts_with("100644 blob ") || metadata.starts_with("100755 blob ") {
+            tree_regular.insert(path.to_owned());
         }
-        if path == TOOLCHAIN_ALIAS && metadata.starts_with("120000 blob ") {
+        if reviewed_alias(path).is_some() && metadata.starts_with("120000 blob ") {
             alias_blob(
                 &paths.root,
+                path,
                 metadata.strip_prefix("120000 blob ").unwrap(),
                 budget,
             )?;
-            tree_alias = true;
+            tree_alias_targets.insert(reviewed_alias(path).unwrap().1);
         } else if !metadata.starts_with("100644 blob ") && !metadata.starts_with("100755 blob ") {
             return Err(invalid(
                 "snapshot does not support unreviewed tree symlinks or submodules",
             ));
         }
     }
-    if tree_alias && !tree_target {
+    if tree_alias_targets
+        .iter()
+        .any(|target| !tree_regular.contains(*target))
+    {
         return Err(invalid(
             "snapshot committed alias lacks its regular destination",
         ));
@@ -269,12 +306,13 @@ fn validate_source(
     }
     for (path, entry) in &captured.files {
         check_input(path, review)?;
-        if entry.mode == "120000" && path == TOOLCHAIN_ALIAS {
+        if entry.mode == "120000" && reviewed_alias(path).is_some() {
             let link = source_alias(&paths.root, path)?;
+            let (_, target) = reviewed_alias(path).unwrap();
             if entry.content_digest.as_deref() != Some(&bytes_digest(&link))
                 || !captured
                     .files
-                    .get(TOOLCHAIN_TARGET)
+                    .get(target)
                     .is_some_and(|target| matches!(target.mode.as_str(), "100644" | "100755"))
             {
                 return Err(invalid(
@@ -391,10 +429,14 @@ fn tree_bytes(path: &Path, budget: &mut Budget<'_>, limit: u64) -> io::Result<u6
             let entry = entry?;
             let metadata = fs::symlink_metadata(entry.path())?;
             if metadata.file_type().is_symlink() {
-                if entry.path() != owned_checkout.join(TOOLCHAIN_ALIAS) {
-                    return Err(invalid("snapshot metadata contains an unsupported symlink"));
-                }
-                let link = source_alias(&owned_checkout, TOOLCHAIN_ALIAS)?;
+                let full = entry.path();
+                let relative = full
+                    .strip_prefix(&owned_checkout)
+                    .ok()
+                    .and_then(Path::to_str)
+                    .filter(|relative| reviewed_alias(relative).is_some())
+                    .ok_or_else(|| invalid("snapshot metadata contains an unsupported symlink"))?;
+                let link = source_alias(&owned_checkout, relative)?;
                 total = total
                     .checked_add(link.len() as u64)
                     .ok_or_else(|| invalid("snapshot size overflow"))?;
@@ -445,7 +487,10 @@ fn copy_material(
             .ok_or_else(|| invalid("snapshot byte budget exceeded"))?;
         #[cfg(unix)]
         {
-            std::os::unix::fs::symlink(TOOLCHAIN_TARGET, destination.join(relative))?;
+            let (link, _) = reviewed_alias(relative).unwrap();
+            let path = destination.join(relative);
+            fs::create_dir_all(path.parent().unwrap())?;
+            std::os::unix::fs::symlink(link, path)?;
         }
         #[cfg(not(unix))]
         {

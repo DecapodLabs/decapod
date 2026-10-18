@@ -200,7 +200,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f8d5bfaa58e23cc72bf3a624e4cbc5aab3da00be21d74cfddd78cc47d138ef10`
+- Repository signal fingerprint: `d4f52f91c23a844013ad2d514a7b56ab9d1be01b6753cce3f24a11fad01f05fc`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -215,3 +215,7 @@ that successful compilation or a JSON diagnostic proves Metal execution,
 numerical equivalence or readiness-domain calibration. This prerequisite leaves
 the recipe inactive in Decapod's own configuration and needs independent acceptance
 and release before the Vega feature can use its controller support.
+
+### Reviewed native fixture preservation (#1457)
+
+Native worker preparation must preserve the repository's existing immutable state-commit fixture instead of rejecting its known symlink or rewriting its golden vectors. This is a controller prerequisite for #1445, not acceptance of Vega's model or readiness claims. The user retains merge/release authority; this candidate cannot authorize its own use for native feature proof.
