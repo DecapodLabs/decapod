@@ -8,6 +8,8 @@ pub const DATASET_REVISION: &str = "846e647b9f33c0b51b739d005d13d85493c9af09";
 pub const DATASET_SHA256: &str =
     "sha256:92abca7cb527b41a9f66d03a26ce441ff7319e3a49f985998fd56be4bb9b08b2";
 pub const DATASET_BYTES: u64 = 1_875_846;
+pub const CORPUS_SCHEMA: &str = "decapod.vega-evaluation-inputs.v2";
+pub const JUDGMENT_VARIANTS: usize = 6;
 pub const DATASET_URL: &str = "https://huggingface.co/datasets/SWE-bench/SWE-bench_Multilingual/resolve/846e647b9f33c0b51b739d005d13d85493c9af09/data/test-00000-of-00001.parquet";
 // Related repositories stay on the same side; every variant inherits its
 // original repository/issue group. Holdout was selected before any model runs.
@@ -44,6 +46,7 @@ fn case(
         "missing-obligation"=>"The extra explicit obligation has no supporting evidence even if the issue-specific patch is correct.",
         "changed-requirements"=>"The amended requirement adds an obligation not covered by the accepted benchmark oracle.",
         "ambiguous"=>"The subjective amended requirement has no threshold or acceptance measurement; abstention is required.",
+        "contradictory-evidence"=>"Two constructed semantic acceptance reports conflict about the same explicit requirement, and no independently checkable resolution is supplied. This is not a claim about actual upstream checks; abstention is required.",
         _=>"A failed, stale or missing required proof independently prohibits publication; exclude this from model-judgment coverage."
     }})
 }
@@ -128,6 +131,13 @@ pub fn build(path: &Path) -> Result<Value> {
                 "The change must be fast enough for our users. No workload or numeric threshold is specified.",
             ),
             (
+                "contradictory-evidence",
+                "abstain",
+                false,
+                patch,
+                "Constructed semantic-evidence conflict beyond deterministic checks: report A says the patch satisfies the stated user requirement, while report B says the same behavior violates that requirement. Neither supplies a source-bound measurement or a reproducible example resolving their disagreement. These are evaluation scenarios, not fabricated claims about actual benchmark CI.",
+            ),
+            (
                 "failed-proof",
                 "not_ready",
                 true,
@@ -164,19 +174,18 @@ pub fn build(path: &Path) -> Result<Value> {
         return Err("frozen Rust corpus count changed".into());
     }
     cases.sort_by(|a, b| a["id"].as_str().cmp(&b["id"].as_str()));
-    Ok(
-        json!({"schema":"decapod.vega-evaluation-inputs.v1","dataset_url":DATASET_URL,
+    Ok(json!({"schema":CORPUS_SCHEMA,"dataset_url":DATASET_URL,
         "dataset_revision":DATASET_REVISION,"dataset_sha256":DATASET_SHA256,"dataset_license":"MIT; source repository patches retain their respective licences",
         "upstream_scope":"SWE-bench Multilingual manually curated issue/PR test oracles; not independent labels of general PR readiness",
         "split_frozen_before_inference":true,"fitting_performed":false,"upstream_calibration_modified":false,
-        "independent_instances":{"development":development,"holdout":holdout},
-        "judgment_cases":43*5,"policy_cases_excluded_from_judgment":43*3,
+        "benchmark_units":{"development":development,"holdout":holdout},
+        "judgment_cases":43*JUDGMENT_VARIANTS,"policy_cases_excluded_from_judgment":43*3,
+        "revision_rationale":"v2 adds contradictory semantic-evidence abstention cases before any model outputs or fitting; v1 remains in Git. Original cases and project split unchanged.",
         "caveats":["Same-issue variants are dependent; repositories share domain and possible training contamination.",
             "Source snapshots, patches and oracle tests are pinned; benchmark execution has not been repeated by this builder.",
             "Positive labels cover only the benchmark requirement, not current Decapod proof or production readiness.",
             "Even 23 independent held-out accepts with zero false-ready outcomes cannot meet a 5% one-sided 95% risk bound; variants must not inflate n."],
         "acceptance":{"zero_false_ready":true,"one_sided_95pct_upper_risk_max":0.05,
             "non_abstaining_coverage_min":0.5,"ready_case_acceptance_coverage_min":0.5,
-            "production_calibration":"unsatisfied"},"cases":cases}),
-    )
+            "production_calibration":"unsatisfied"},"cases":cases}))
 }

@@ -16,6 +16,8 @@ agent performs validation and coordination.
 
 Publication spec reviews bind current code as well as authored prose (`workspace_publication.rs`, `STALE_SPEC_REVIEW`). After changing implementation, re-review Architecture, Interfaces and Security against that final source even when a specification remains semantically unchanged; record the reason through the supported command. Refreshing fingerprints does not renew that review. Vega candidate `660974b4` failed source CI `39099541876` because Security retained the review from before the process-owner correction. Its failed run remains evidence; a current-content review and a new checkpoint repair the head without rewriting history or claiming unexecuted native tests passed.
 
+The public readiness challenge construction is explicitly versioned. Before any model evaluation or fitting, v2 adds the requested contradictory semantic-evidence abstention case to each of the same 43 originals, without removing v1 cases or changing repository split membership, calibration or numeric thresholds. The result is 258 judgment cases and 129 separately excluded policy cases. Expected abstentions have correct, incorrectly decisive and unobserved counts; zero false-ready alone does not make a confident rejection of ambiguity a successful abstention. Existing v1 source is retained through `4a96c804`; no model result informed this addition. These are still scoped agent-authored benchmark proxies, not production ground truth, and the 23-issue holdout remains insufficient for the declared risk criterion.
+
 ## Runtime recovery proof obligations
 
 The durability slice requires adversarial proof at real domain boundaries:
@@ -649,7 +651,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3`
+- Repository signal fingerprint: `52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (31 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -329,6 +329,7 @@ fn evaluate_readiness(
     report["manifest_digest"] = manifest_digest.into();
     report["runtime_sha256"] = runtime_sha256.into();
     report["corpus_sha256"] = receipt["corpus_sha256"].clone();
+    report["corpus_schema"] = evaluation_corpus::CORPUS_SCHEMA.into();
     report["corpus_file"] = serde_json::to_value(corpus_path)?;
     report["selected_backend"] = serde_json::to_value(selected)?;
     report["evaluation_cpu_selection_reason"] = serde_json::to_value(fallback)?;
@@ -393,10 +394,11 @@ fn prepare_evaluation(proof_path: &Path) -> Result<(), Box<dyn std::error::Error
     write_private_proof(
         proof_path,
         &serde_json::json!({
-            "schema":"decapod.vega-evaluation-input-receipt.v1","publication_ready":false,
+            "schema":"decapod.vega-evaluation-input-receipt.v2","publication_ready":false,
             "dataset_revision":evaluation_corpus::DATASET_REVISION,"dataset_sha256":evaluation_corpus::DATASET_SHA256,
             "corpus_sha256":vega_readiness::hash(&bytes),"corpus_file":destination,"corpus_bytes":bytes.len(),
-            "independent_instances":corpus["independent_instances"],"judgment_cases":corpus["judgment_cases"],
+            "corpus_schema":evaluation_corpus::CORPUS_SCHEMA,
+            "benchmark_units":corpus["benchmark_units"],"judgment_cases":corpus["judgment_cases"],
             "policy_cases_excluded_from_judgment":corpus["policy_cases_excluded_from_judgment"],
             "calibration_fit":"not_performed","evaluation":"not_executed","production_calibration":"unsatisfied",
             "label_author":"agent-authored adaptation of public benchmark oracles, not human-reviewed PR-readiness labels"

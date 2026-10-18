@@ -540,6 +540,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/39099541876/job/117593631622"
       ]
+    },
+    {
+      "id": "vega-v2-contradiction-abstention",
+      "summary": "Preregister missing contradiction/abstention coverage before any model observation or fitting; retain v1 and unchanged project split/artifact/model/calibration/risk pins. Report benchmark units without independence claims and required-abstention misses separately. Authored regressions/source only; native release blocker and failed history retained.",
+      "input_digest": "sha256:c101b2ec08fdab6024763c15e8f49771dd5062b221dd4bd551848aeca502b0fb",
+      "proof_refs": [
+        "docs/vega-reference-contract.md"
+      ]
     }
   ],
   "intents": {
@@ -583,22 +591,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review current660974b4 implementation and authored validation recovery semantics: evaluation retains original kernel process/deadline, separates label authority and numeric acceptance, and records cumulative RSS; existing specification prose remains accurate. Renew current-code binding after actual STALE_SPEC_REVIEW failure; no native execution or calibration success claimed.",
-          "reviewed_code_fingerprint": "92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3",
+          "reason": "Review current final v2 corpus/evaluation source before checkpoint: add explicit contradictory semantic-evidence cases before any observations/fitting, preserve v1/project splits/pins/numeric thresholds, report benchmark units without claiming independence, and score required abstentions separately. Private bounded in-process evaluation and unsatisfied final acceptance preserve existing architecture and security authority.",
+          "reviewed_code_fingerprint": "52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f",
           "spec_material_hash": "dbaf21d4315585b899281c8348f453676a14830b4d5d3b745cb51aea4fd854cd"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review current660974b4 implementation and authored validation recovery semantics: evaluation retains original kernel process/deadline, separates label authority and numeric acceptance, and records cumulative RSS; existing specification prose remains accurate. Renew current-code binding after actual STALE_SPEC_REVIEW failure; no native execution or calibration success claimed.",
-          "reviewed_code_fingerprint": "92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3",
-          "spec_material_hash": "e221d162dccb31311441f2843aac820630b00231da448d06c3877a52299f5923"
+          "reason": "Review current final v2 corpus/evaluation source before checkpoint: add explicit contradictory semantic-evidence cases before any observations/fitting, preserve v1/project splits/pins/numeric thresholds, report benchmark units without claiming independence, and score required abstentions separately. Private bounded in-process evaluation and unsatisfied final acceptance preserve existing architecture and security authority.",
+          "reviewed_code_fingerprint": "52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f",
+          "spec_material_hash": "f8f494f89608a776855bd70f91b02947e69845c37e4e0f8495084f3fc3fb7c6d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review current660974b4 implementation and authored validation recovery semantics: evaluation retains original kernel process/deadline, separates label authority and numeric acceptance, and records cumulative RSS; existing specification prose remains accurate. Renew current-code binding after actual STALE_SPEC_REVIEW failure; no native execution or calibration success claimed.",
-          "reviewed_code_fingerprint": "92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3",
+          "reason": "Review current final v2 corpus/evaluation source before checkpoint: add explicit contradictory semantic-evidence cases before any observations/fitting, preserve v1/project splits/pins/numeric thresholds, report benchmark units without claiming independence, and score required abstentions separately. Private bounded in-process evaluation and unsatisfied final acceptance preserve existing architecture and security authority.",
+          "reviewed_code_fingerprint": "52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f",
           "spec_material_hash": "e662013621a917085bf3f02b57a7420ea4e07b824f0bbe82c8ddbdeabf2918da"
         }
       ],
@@ -612,7 +620,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792300823Z"
+      "updated_at": "1792301380Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -623,7 +631,7 @@
         "Original task reclaimed through supported kernel, prerequisite yielded and clean5cee retained; no candidate controller adoption. Feature PR remains blocked on genuine native/parity/calibration and exact full validation.",
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting."
       ],
-      "artifact_hash": "sha256:91964465a553be1f22221fdd7bfdf0425aff965da2793890d82e9c69239d14f2",
+      "artifact_hash": "sha256:da5e04c05f3e1635f9e88f71ba66dfe1797622ef22b83f9275ef411bc8275b83",
       "blockers": [
         "Released119 native snapshot rejects the existing immutable golden fixture symlink; no supported additional alias review command exists. Native build/probe/model/reference/evaluation remain unexecuted pending an accepted released repair; do not alter the fixture or use a candidate controller."
       ],
@@ -893,7 +901,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "repair-current-spec-review",
+      "current_phase": "freeze-v2-before-model-observations",
       "custody": {
         "events": [
           {
@@ -1117,10 +1125,24 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 33
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:34",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 34
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:35",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 35
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 33,
+        "next_sequence": 35,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1718,6 +1740,43 @@
                 ],
                 "sequence": 33,
                 "validation_findings": []
+              },
+              {
+                "action": "preregister-contradiction-coverage",
+                "custody_event_id": "event:34",
+                "observations": [
+                  "assets/tools/vega-native/evaluation_corpus.rs",
+                  "assets/tools/vega-native/readiness_evaluation.rs"
+                ],
+                "proof_refs": [
+                  "evaluation_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 34,
+                "validation_findings": [
+                  "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change."
+                ]
+              },
+              {
+                "action": "freeze-v2-before-model-observations",
+                "custody_event_id": "event:35",
+                "observations": [
+                  "assets/tools/vega-native/evaluation_corpus.rs",
+                  "assets/tools/vega-native/readiness_evaluation.rs",
+                  "assets/tools/vega_infer.rs",
+                  "Preregistered v2: same43benchmark originals/project groups/pinned artifact/upstream calibration/risktolerances; add one explicit contradictory-evidence abstention case per original before any model outputs,258judgment/129policy cases. V1 retained through4a96c804. Separate required-abstention accuracy and errors/unobserved counts; confident ambiguous rejection is not correct abstention. No fitting or production-calibration claim. Source-only fixtures remain unexecuted."
+                ],
+                "proof_refs": [
+                  "formatting",
+                  "native_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 35,
+                "validation_findings": []
               }
             ]
           }
@@ -1759,6 +1818,7 @@
         "Plain117 fourth validation reached GitTransport and exited128 before provider execution. Normal configured-helper ls-remote succeeds and feature remote branch is absent; no credential extraction or settings change. Static review confirmed committed binary16 mantissa already explicitly cast to u32; use u32::from for clarity, preserve normalization and expand signed zero/subnormal/normal/Inf/NaN assertions. No test execution or numerical parity claimed.",
         "Plain117 second validation stopped PROOF_DISCOVERY_BLOCKED on MODULE.bazel.lock1052029 bytes. Moved unchanged SafeTensors decoder/half conversion and fixtures to sole native owner; root retains typed engine/header/GELU tests and checked schema. Supported metadata regeneration now gives1037341 bytes below1048576. Root graph removes only safetensors0.7/hashbrown0.16/foldhash/allocator-api2; native retains pinned SafeTensors0.7 and immutable model/source pins. Cargo reports0 package additions/updates, but reselects existing socket2/getrandom/Windows dependency edges; retain generator output for actual validation rather than hand-edit locks.",
         "Pre-execution source review of bounded_process::bounded_capture found that nested children create independent process groups and Linux-only PDEATHSIG; a macOS outer SIGKILL could leave the nested model child. Removed nested model processes, retaining direct infer with fresh state in the original kernel-owned process. Hard whole-worker deadline never resets;600s is explicitly soft new-dispatch cutoff. Corrected per-case memory claim to lifetime cumulative RSS. Intermediate96d7b7a2 remains in history, never executed as native proof.",
+        "Preregistered v2: same43benchmark originals/project groups/pinned artifact/upstream calibration/risktolerances; add one explicit contradictory-evidence abstention case per original before any model outputs,258judgment/129policy cases. V1 retained through4a96c804. Separate required-abstention accuracy and errors/unobserved counts; confident ambiguous rejection is not correct abstention. No fitting or production-calibration claim. Source-only fixtures remain unexecuted.",
         "Prior history-preserving merge2aeb3e8272656ba8796e2222f1f9482a005469fb was clean but verifier rejected old activation73f5d03b as different PR after squash acceptance. Preserved old branch, yielded old task, and used a fresh accepted-base journal rather than rewriting history or manufacturing acceptance.",
         "Reference rejects nonfinite tolerance comparisons, malformed vector/thermal shapes, F32 overflow and invalid physical/step values. No tolerances changed and no candidate outputs observed. Kernel #1457 release blocker and original validation failures retained.",
         "Released0.118.0 imported accepted transfer01M5470V8JDG8WJA1WX2EJ098Y under receivercodex-vega-metal. Exact source-supplied artifact sha256:5cf05c74167d81052460666ee1ae87112ce5e101335875df65aa5181bb2efec4 verified before import. Taskfeat_01m52fnwybfvhfdj identity and nested provenance retained, destination revision8; journal verify valid without missing/divergent projections. Fresh exclusive claim succeeded. Root ensure refused recreating existing branch; registered worktree was preserved and moved to managed path, then workspace ensure accepted can_work=true. Originalfeature5f2801e581ec9d436c28c5df2a9a64e261efa895 retained, no history rewrite. Normal no-commit merge accepted24490934 underway. Retained original feature governance from committed Git during merge; accepted prerequisite governance remains in merge-parent history. Supported specs.refresh reconciled generated conflict blocks while preserving all authored transfer and Vega prose. All previous validation failures remain; native/independent parity/calibration still unverified.",
@@ -1785,6 +1845,7 @@
       "inspected_files": [
         "assets/tools/vega-native/Cargo.toml",
         "assets/tools/vega-native/evaluation_corpus.rs",
+        "assets/tools/vega-native/readiness_evaluation.rs",
         "assets/tools/vega_infer.rs",
         "docs/agent/repository-readiness.md",
         "docs/vega-reference-contract.md",
@@ -1804,6 +1865,7 @@
         "assets/tools/vega-native/Cargo.lock",
         "assets/tools/vega-native/Cargo.toml",
         "assets/tools/vega-native/cpu_backbone.rs",
+        "assets/tools/vega-native/evaluation_corpus.rs",
         "assets/tools/vega-native/readiness_evaluation.rs",
         "assets/tools/vega-native/reference_engine.rs",
         "assets/tools/vega-native/reference_tokenizer.rs",
@@ -1850,6 +1912,7 @@
         "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
         "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
         "New companion binding/probe/classifier/receipt changes and regressions authored, no Rust tests executed for this candidate. Actual worker build/Metal/model/parity/calibration unavailable under current released native-proof contract; no manual build, shadow preflight, Python or artifact workaround used. Preserved native/reference/holdout blockers. Prerequisite5cee green but publication awaits public API rate reset; its candidate controller is not adopted.",
+        "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change.",
         "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain.",
         "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
         "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained.",

@@ -86,7 +86,7 @@ fn run_until(
     deadline: Instant,
 ) -> Result<Value> {
     if !matches!(split, "development" | "holdout")
-        || corpus["schema"] != "decapod.vega-evaluation-inputs.v1"
+        || corpus["schema"] != super::evaluation_corpus::CORPUS_SCHEMA
         || corpus["dataset_revision"] != super::evaluation_corpus::DATASET_REVISION
         || corpus["dataset_sha256"] != super::evaluation_corpus::DATASET_SHA256
         || corpus["split_frozen_before_inference"] != true
@@ -108,6 +108,9 @@ fn run_until(
     let mut ready_cases = 0;
     let mut ready_accepts = 0;
     let mut abstentions = 0;
+    let mut required_abstentions = 0;
+    let mut correct_required_abstentions = 0;
+    let mut decisive_ambiguity_errors = 0;
     let mut non_abstaining = 0;
     let mut executed = 0;
     let mut failed = 0;
@@ -130,6 +133,7 @@ fn run_until(
         }
         units.insert(unit.to_owned());
         ready_cases += usize::from(label == "benchmark_resolved");
+        required_abstentions += usize::from(label == "abstain");
         let mut record = json!({"id":id,"issue_lineage":unit,"label":label});
         if Instant::now() >= deadline {
             unexecuted += 1;
@@ -159,8 +163,10 @@ fn run_until(
                         record["decision"] = serde_json::to_value(decision)?;
                         if decision == Decision::Abstain {
                             abstentions += 1;
+                            correct_required_abstentions += usize::from(label == "abstain");
                         } else {
                             non_abstaining += 1;
+                            decisive_ambiguity_errors += usize::from(label == "abstain");
                         }
                         if decision == Decision::Accept {
                             accepted_cases += 1;
@@ -188,11 +194,11 @@ fn run_until(
         records.push(record);
     }
     let total = records.len();
-    let expected_units = corpus["independent_instances"][split]
+    let expected_units = corpus["benchmark_units"][split]
         .as_u64()
         .ok_or("missing frozen split count")? as usize;
     if units.len() != expected_units
-        || total != expected_units * 5
+        || total != expected_units * super::evaluation_corpus::JUDGMENT_VARIANTS
         || policy_excluded != expected_units * 3
     {
         return Err("frozen split coverage changed".into());
@@ -206,6 +212,7 @@ fn run_until(
         && unsupported == 0
         && unexecuted == 0
         && false_ready_cases == 0
+        && correct_required_abstentions == required_abstentions
         && upper.is_some_and(|upper| upper <= 0.05)
         && coverage >= 0.5
         && ready_coverage >= 0.5;
@@ -217,6 +224,9 @@ fn run_until(
         "sample_units":units.len(),"judgment_cases":total,"policy_cases_excluded":policy_excluded,
         "executed":executed,"inference_failures":failed,"unsupported_inputs":unsupported,
         "not_executed_deadline":unexecuted,"abstentions":abstentions,
+        "abstention_labels":{"required":required_abstentions,"correct":correct_required_abstentions,
+            "incorrect_definitive_answers":decisive_ambiguity_errors,
+            "unobserved":required_abstentions-correct_required_abstentions-decisive_ambiguity_errors},
         "accepted_cases":accepted_cases,"false_ready_cases":false_ready_cases,
         "accepted_issue_units":accepted_units.len(),"false_ready_issue_units":false_ready_units.len(),
         "one_sided_95pct_upper_false_ready":upper,"non_abstaining_coverage":coverage,
@@ -243,6 +253,7 @@ mod tests {
             "not_ready",
             "not_ready",
             "abstain",
+            "abstain",
         ]
         .into_iter()
         .enumerate()
@@ -256,11 +267,11 @@ mod tests {
         for i in 0..3 {
             cases.push(json!({"id":format!("policy:{i}"),"split":"holdout","deterministic_policy_case":true}));
         }
-        json!({"schema":"decapod.vega-evaluation-inputs.v1",
+        json!({"schema":super::super::evaluation_corpus::CORPUS_SCHEMA,
             "dataset_revision":super::super::evaluation_corpus::DATASET_REVISION,
             "dataset_sha256":super::super::evaluation_corpus::DATASET_SHA256,
             "split_frozen_before_inference":true,"fitting_performed":false,
-            "upstream_calibration_modified":false,"independent_instances":{"holdout":1},"cases":cases})
+            "upstream_calibration_modified":false,"benchmark_units":{"holdout":1},"cases":cases})
     }
     fn accepted() -> Value {
         json!({"outcome":{"probabilities":[0.1,0.9],"prediction_set":[true],"abstain":false,
@@ -270,9 +281,13 @@ mod tests {
     #[test]
     fn related_variants_cannot_inflate_independent_accept_count() {
         let report = run(&fixture(), "holdout", |_, _| Ok(accepted())).unwrap();
-        assert_eq!(report["executed"], 5);
-        assert_eq!(report["accepted_cases"], 5);
-        assert_eq!(report["false_ready_cases"], 4);
+        assert_eq!(report["executed"], 6);
+        assert_eq!(report["accepted_cases"], 6);
+        assert_eq!(report["false_ready_cases"], 5);
+        assert_eq!(
+            report["abstention_labels"]["incorrect_definitive_answers"],
+            2
+        );
         assert_eq!(report["accepted_issue_units"], 1);
         assert_eq!(report["false_ready_issue_units"], 1);
         assert_eq!(report["policy_cases_excluded"], 3);
@@ -282,7 +297,7 @@ mod tests {
     #[test]
     fn errors_are_not_abstentions_and_expired_budget_never_dispatches() {
         let report = run(&fixture(), "holdout", |_, _| Err("fixture failure".into())).unwrap();
-        assert_eq!(report["inference_failures"], 5);
+        assert_eq!(report["inference_failures"], 6);
         assert_eq!(report["abstentions"], 0);
         assert_eq!(report["non_abstaining_coverage"], 0.0);
         let now = Instant::now();
@@ -295,8 +310,28 @@ mod tests {
         )
         .unwrap();
         assert_eq!(report["executed"], 0);
-        assert_eq!(report["not_executed_deadline"], 5);
+        assert_eq!(report["not_executed_deadline"], 6);
         assert_eq!(report["abstentions"], 0);
+        assert_eq!(report["frozen_numeric_criterion_met"], false);
+    }
+    #[test]
+    fn required_abstention_accuracy_is_separate_from_zero_decision_coverage() {
+        let report = run(&fixture(), "holdout", |_, _| {
+            let mut value = accepted();
+            value["outcome"]["probabilities"] = json!([0.5, 0.5]);
+            value["outcome"]["confidence"] = json!(0.5);
+            value["outcome"]["abstain"] = json!(true);
+            Ok(value)
+        })
+        .unwrap();
+        assert_eq!(report["abstentions"], 6);
+        assert_eq!(report["abstention_labels"]["required"], 2);
+        assert_eq!(report["abstention_labels"]["correct"], 2);
+        assert_eq!(
+            report["abstention_labels"]["incorrect_definitive_answers"],
+            0
+        );
+        assert_eq!(report["non_abstaining_coverage"], 0.0);
         assert_eq!(report["frozen_numeric_criterion_met"], false);
     }
     #[test]

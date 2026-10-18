@@ -10,6 +10,8 @@ coordination, validation, and publication boundaries. Decapod exposes the state,
 constraints, evidence, and blockers that govern those transitions. Each CLI or
 RPC invocation is ephemeral; repository state preserves continuity between calls.
 
+The private evaluation corpus and input receipt use v2 for the pre-execution addition of contradictory semantic-evidence cases. `benchmark_units` counts original benchmark tasks, without asserting statistical independence. Model output records distinguish correct required abstentions, incorrectly decisive answers and unobserved cases. Existing project split, underlying artifact hash and model/calibration pins remain unchanged; v1 construction remains in Git and no model result informed the revision.
+
 The separate Vega worker additionally exposes a private bounded frozen-case evaluation mode, `--evaluate-readiness --split holdout --backend auto --proof-output <new-path>` (development and explicit CPU are supported selectors). It runs actual assessments after the native diagnostic recipe steps in the kernel-owned process, emits typed outcomes and separate error/abstention/exclusion counts with model/runtime/corpus bindings, and returns failure while final numeric or label-authority acceptance is unsatisfied. It does not reset the original hard worker deadline; the 600-second collection window is a soft new-dispatch cutoff. Expected labels and variant/split/rationale metadata are excluded from model input. The report is an experiment, never a current validation receipt or publication authority; the frozen public corpus's scoped agent-authored proxy labels cannot establish production calibration.
 
 ## Human and agent entrypoints
@@ -554,7 +556,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `92037ad721de36fb9c572f487c5d2a08b7ef076a489cecf7a7ec22f8912538a3`
+- Repository signal fingerprint: `52c212cc14d91a348ad1f18e4c62b0a460709d0e51e8eae36e8bd39f3b8a090f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (31 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
