@@ -13,6 +13,16 @@ pub const SHARDS: usize = 6;
 const CONTEXT: &str = "vega-scientific-context.json";
 const SCHEMA: &str = "decapod.vega-scientific-collection.v1";
 
+// This worker's ephemeral nonce is not a model-installation API or credential.
+fn valid_nonce(value: &str) -> bool {
+    value.strip_prefix("sha256:").is_some_and(|hex| {
+        hex.len() == 64
+            && hex
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    })
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Phase {
@@ -162,7 +172,7 @@ impl Collection {
             || record.directory != directory
             || record.shards != SHARDS
             || record.runtime_sha256 != runtime_sha256
-            || !decapod::core::vega_setup::valid_digest(&record.nonce)
+            || !valid_nonce(&record.nonce)
         {
             return Err("foreign, malformed or stale scientific collection context".into());
         }
@@ -270,6 +280,21 @@ impl Collection {
 #[cfg(all(test, unix))]
 mod tests {
     use super::*;
+    #[test]
+    fn nonce_requires_the_canonical_local_hash_format() {
+        assert!(valid_nonce(&decapod::core::vega_readiness::hash(
+            b"unit fixture"
+        )));
+        for malformed in [
+            String::new(),
+            "f".repeat(64),
+            format!("sha256:{}", "f".repeat(63)),
+            format!("sha256:{}", "F".repeat(64)),
+            format!("sha256:{}", "g".repeat(64)),
+        ] {
+            assert!(!valid_nonce(&malformed));
+        }
+    }
     fn fixture() -> (tempfile::TempDir, Collection) {
         let directory = tempfile::tempdir().unwrap();
         let collection = Collection::create(&directory.path().join("numeric.json")).unwrap();

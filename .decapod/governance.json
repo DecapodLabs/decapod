@@ -635,6 +635,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T063311Z.json"
       ]
+    },
+    {
+      "id": "vega1191-local-nonce-boundary",
+      "summary": "Repair measured native E0603 by keeping ephemeral nonce validation inside the separate worker, with malformed-format regression and source-bound interface specification; preserve4c source passes/compile failure and all scientific gates without exporting private model API",
+      "input_digest": "sha256:fc0d6da4097159e445052ad918382407d2a4cc2f5d1376ce855a35e6bcc72d01",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T065312Z.json"
+      ]
     }
   ],
   "intents": {
@@ -678,22 +686,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Validation132fd505 stopped before native execution because source documentation proof2225 rejected a stale config-schema projection of repository-readiness. Followed its explicit source-built docs build repair, reviewed the generated Vega-only paragraph changes and recorded source-to-generated interface semantics. The candidate documentation tool only generated Markdown, not custody/proof/readiness authority; official1191 remains controller. Source inventory590180d9 and eight-run reciped6d9c7ff unchanged; all new scientific tests remain unexecuted, prioraa30tests/limitedMetalCPU parity and failed holdout remain separate preserved history. No model/calibration/corpus/criterion/policy waiver or branch change.",
-          "reviewed_code_fingerprint": "db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047",
+          "reason": "Full4cdcd25d validation passed BK2226 all39 and documentation2230 but native compilation failed E0603: separate worker called crate-private model valid_digest. Preserve interface boundary by validating only this ephemeral context nonce locally, with canonical-format regression, no public API exposure or relaxed storage checks. Reviewed inventory190c4da3, unchanged8runreciped6d9c7ff, all source/model/calibration/corpus/tolerance/risk/time limits retained. No new native test or inference executed on4c. PreviousAA30native tests and limited MetalCPU parity remain history, not current acceptance. New tests and full scientific acceptance require first successful compile/execution through official1191 validate.",
+          "reviewed_code_fingerprint": "f719f0a00583ceb0a35d0726b6b24ef5c5019c041e5ac0b5e448044d666808d2",
           "spec_material_hash": "ce23a10f37d0930c5f222759323b31b2dd181509e17ede6d0940d2e1e05e30c2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Validation132fd505 stopped before native execution because source documentation proof2225 rejected a stale config-schema projection of repository-readiness. Followed its explicit source-built docs build repair, reviewed the generated Vega-only paragraph changes and recorded source-to-generated interface semantics. The candidate documentation tool only generated Markdown, not custody/proof/readiness authority; official1191 remains controller. Source inventory590180d9 and eight-run reciped6d9c7ff unchanged; all new scientific tests remain unexecuted, prioraa30tests/limitedMetalCPU parity and failed holdout remain separate preserved history. No model/calibration/corpus/criterion/policy waiver or branch change.",
-          "reviewed_code_fingerprint": "db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047",
-          "spec_material_hash": "b9d15cbc54d51f177ebd08b22c62db9c1c574a0d3c97577234dbc04d9c7c15c0"
+          "reason": "Full4cdcd25d validation passed BK2226 all39 and documentation2230 but native compilation failed E0603: separate worker called crate-private model valid_digest. Preserve interface boundary by validating only this ephemeral context nonce locally, with canonical-format regression, no public API exposure or relaxed storage checks. Reviewed inventory190c4da3, unchanged8runreciped6d9c7ff, all source/model/calibration/corpus/tolerance/risk/time limits retained. No new native test or inference executed on4c. PreviousAA30native tests and limited MetalCPU parity remain history, not current acceptance. New tests and full scientific acceptance require first successful compile/execution through official1191 validate.",
+          "reviewed_code_fingerprint": "f719f0a00583ceb0a35d0726b6b24ef5c5019c041e5ac0b5e448044d666808d2",
+          "spec_material_hash": "3035b926106234dde8c4ac02731a29a6e08bcdebcfa69adfeed648afa0780694"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Validation132fd505 stopped before native execution because source documentation proof2225 rejected a stale config-schema projection of repository-readiness. Followed its explicit source-built docs build repair, reviewed the generated Vega-only paragraph changes and recorded source-to-generated interface semantics. The candidate documentation tool only generated Markdown, not custody/proof/readiness authority; official1191 remains controller. Source inventory590180d9 and eight-run reciped6d9c7ff unchanged; all new scientific tests remain unexecuted, prioraa30tests/limitedMetalCPU parity and failed holdout remain separate preserved history. No model/calibration/corpus/criterion/policy waiver or branch change.",
-          "reviewed_code_fingerprint": "db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047",
+          "reason": "Full4cdcd25d validation passed BK2226 all39 and documentation2230 but native compilation failed E0603: separate worker called crate-private model valid_digest. Preserve interface boundary by validating only this ephemeral context nonce locally, with canonical-format regression, no public API exposure or relaxed storage checks. Reviewed inventory190c4da3, unchanged8runreciped6d9c7ff, all source/model/calibration/corpus/tolerance/risk/time limits retained. No new native test or inference executed on4c. PreviousAA30native tests and limited MetalCPU parity remain history, not current acceptance. New tests and full scientific acceptance require first successful compile/execution through official1191 validate.",
+          "reviewed_code_fingerprint": "f719f0a00583ceb0a35d0726b6b24ef5c5019c041e5ac0b5e448044d666808d2",
           "spec_material_hash": "c055dbb247f9408bf9ab4edacc17ebf54e33ee22380e915cad26a5093e2bb3bf"
         }
       ],
@@ -707,7 +715,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792392660Z"
+      "updated_at": "1792394409Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -719,7 +727,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:a8ac2493754696340ac7606513537d64bad1a87844e91afee012de0e145fe002",
+      "artifact_hash": "sha256:a7a6c3c593f3f7586a613de3df71b69c97f631a0b3f85b82c7f670dfe98292c3",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -910,6 +918,10 @@
           "status": "unavailable"
         },
         {
+          "name": "native_compile_4c",
+          "status": "failed"
+        },
+        {
           "name": "native_compile_aa36",
           "status": "failed"
         },
@@ -959,6 +971,14 @@
         },
         {
           "name": "new_collection",
+          "status": "unavailable"
+        },
+        {
+          "name": "new_model_inference",
+          "status": "unavailable"
+        },
+        {
+          "name": "new_native_tests",
           "status": "unavailable"
         },
         {
@@ -1083,6 +1103,10 @@
         },
         {
           "name": "source5d",
+          "status": "passed"
+        },
+        {
+          "name": "source_4c",
           "status": "passed"
         },
         {
@@ -1433,10 +1457,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 46
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:47",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 47
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 46,
+        "next_sequence": 47,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2358,6 +2389,32 @@
                 "validation_findings": [
                   "Source-built generator is used solely for report-prescribed Markdown regeneration and grants no kernel authority. No native build or scientific test executed on132because source docs proof failed. All earlier failed reports retained. Return to official1191 plain validate on exact repaired candidate; no bootstrap exception or manual shadow preflight."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:47",
+                "observations": [
+                  "src/decapod/core/vega_setup.rs",
+                  "assets/tools/vega-native/scientific_collection.rs",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "/private/tmp/vega-1191-validation-20261019T065312Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2226"
+                ],
+                "proof_refs": [
+                  "source_4c",
+                  "native_compile_4c",
+                  "new_native_tests",
+                  "new_model_inference",
+                  "fmt"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 47,
+                "validation_findings": [
+                  "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority."
+                ]
               }
             ]
           }
@@ -2389,6 +2446,7 @@
         "/private/tmp/vega-1191-validation-20261019T035404Z.json",
         "/private/tmp/vega-1191-validation-20261019T045602Z.json",
         "/private/tmp/vega-1191-validation-20261019T063311Z.json",
+        "/private/tmp/vega-1191-validation-20261019T065312Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
@@ -2426,6 +2484,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2211",
         "https://buildkite.com/decapodlabs/decapod/builds/2216",
         "https://buildkite.com/decapodlabs/decapod/builds/2225",
+        "https://buildkite.com/decapodlabs/decapod/builds/2226",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -2538,6 +2597,7 @@
         "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
+        "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority.",
         "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
         "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
         "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",

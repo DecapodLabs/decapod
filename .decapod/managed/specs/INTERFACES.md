@@ -18,6 +18,8 @@ The standalone --evaluate-readiness --split holdout --backend auto --proof-outpu
 
 ## Human and agent entrypoints
 
+The separate scientific worker validates its own ephemeral nonce format locally (sha256: plus64lowercase hexadecimal digits). It does not call or expose the main crate's private model-installation digest helper. Candidate4cdcd25d native compilation rejected that cross-crate call with E0603 before any new test or model execution; repair preserves the abstraction boundary and leaves all receipt/acceptance checks intact. A canonical nonce detects malformed bookkeeping, not authenticated global ownership.
+
 `docs_cli::build_docs` projects the optional Vega contract from `docs/agent/repository-readiness.md` into generated `docs/agent/config-schema.md`. Editing the source contract requires regenerating and reviewing that projection; a stale generated copy fails documentation source proof before native collection. Candidate132fd505 retained this failure in validation063311Z/Buildkite2225. The prescribed source-built documentation generator repairs Markdown only; installed official v0.119.1 continues to govern ownership and validation. Generation success is not a test, numerical result or publication permission.
 
 Native probes report attention_metal_gdn_source_sha256 separately from the upstream attention revision, with null on CPU. Actual aa66c8e4 Metal primitives and two model fixtures passed; status is not a general parity certificate. Scientific context/envelope JSON is private and scoped to one kernel evidence directory; source/runtime/model/corpus bindings detect stale or incomplete collection, not malicious same-user forgery or global task ownership. Private context and phase files require local ownership, restrictive permissions, single links, exclusive creation, bounded parsing and safe filenames. Production request/decision schemas and deterministic authority remain unchanged: failed, missing or stale proof returns before optional Vega assessment.
@@ -562,7 +564,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047`
+- Repository signal fingerprint: `f719f0a00583ceb0a35d0726b6b24ef5c5019c041e5ac0b5e448044d666808d2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
