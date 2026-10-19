@@ -724,20 +724,18 @@ fn verify_backbone_reference(
         reference_tokenizer::ReferenceTokenizer::new(&serde_json::from_slice(&tokenizer_bytes)?)?;
     let prompt = tokenizer.prompt(state, vega_prompt::QUESTION, None)?;
     let config = read_bounded(&installation.join("backbone/config.json"), 1024 * 1024)?;
+    let engine_config = read_bounded(&installation.join("vega_config.json"), 1024 * 1024)?;
     let weights = read_bounded(
         &installation.join("backbone/model.safetensors-00001-of-00001.safetensors"),
         2 * 1024 * 1024 * 1024,
     )?;
-    let expected = reference_backbone::compute(&config, &weights, &prompt)?;
+    let expected = reference_backbone::compute(&config, &engine_config, &weights, &prompt)?;
     drop(weights);
     let reference_path = proof_path.with_extension("reference.json");
     write_private_proof(&reference_path, &expected)?;
     let reference_digest =
         vega_readiness::hash(&read_bounded(&reference_path, MAX_PROOF_BYTES as u64)?);
-    let configuration: serde_json::Value = serde_json::from_slice(&read_bounded(
-        &installation.join("vega_config.json"),
-        1024 * 1024,
-    )?)?;
+    let configuration: serde_json::Value = serde_json::from_slice(&engine_config)?;
     let engine_weights = read_bounded(&installation.join("engine.safetensors"), 128 * 1024 * 1024)?;
     let mut compared = 0;
     for attempt in attempts {

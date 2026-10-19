@@ -558,7 +558,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2`
+- Repository signal fingerprint: `4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -664,6 +664,8 @@ command records explicitly carry `publication_ready=false`.
 Verification-only `--prepare-evaluation --proof-output <fresh-private-path>` writes a bounded private input receipt and an 8 MiB capped sibling corpus without clobbering. The pinned dataset, grouped split, agent-authored label scope, benchmark-reported evidence and constructed conditions are explicit. `--diagnose-native` collects it independently of model setup and adds separate tokenization/engine reference comparisons with frozen tolerances; neither command claims full-backbone parity or readiness calibration. See `docs/vega-reference-contract.md` for exact hashes, provenance, commands and unsatisfied criteria.
 
 ### Native snapshot alias boundary (#1457)
+
+Candidate76 receipts now establish26worker tests and the short Metal/CPU model/reference subset; both heldout evaluations returned nonaccepting results. reference_backbone::compute additionally receives exact pinned engine-config bytes and verifies SHA12f4f737 before independently calculating active memory chunks, with source revision/hash recorded in private reference exports. It retains its512-token pure-text bound and exact masks, existing mixed numerical tolerances and fail-closed unsupported inputs. The correction remains unexecuted until fresh validation; neither old receipts nor conditional engine agreement establish nonempty chunk or long-context parity. No production IPC authority, receipt size, timeout, calibration or model pin changes.
 
 The existing supplemental Rust-worker recipe and private evidence contracts are unchanged. Native snapshot preparation accepts the exact already reviewed golden-vector fixture symlink in addition to the reviewed toolchain alias. There is no generic symlink permission or caller-controlled target map. `SnapshotReview.denied_paths` remains an additional deny list and takes precedence even for a recognized alias. Missing or retargeted HEAD/index/working links or nonregular targets fail closed; no out-of-repository referent is copied. Official published controller v0.119.1 contains this repair and successfully compiled/executed candidate `2f785c82` through the required recipe. Its real Metal arithmetic and limited CPU/reference receipts do not establish successful Metal model execution or the later repair. The accepted released controller retains validation authority; public provider logs are diagnostic inputs, never substitute proof or publication permission.
 

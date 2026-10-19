@@ -2,6 +2,8 @@
 
 ## Validation Overview
 
+Candidate76e87da2 full1191 validation passed source proof, native compilation and26worker tests, then failed required scientific acceptance. Actual short138-token Metal and CPU model/reference comparisons passed unchanged criteria;314-token active-memory comparison exposed the reference's all-zero memory omission. The new own-F64 floor-bucket pooling repair verifies engine-config SHA12f4f737 and adds analytic length/offset/invalid-input tests, unexecuted until the next exact-candidate validation. Partial heldout Metal32outcomes/15false-ready/26token errors/80deadline exclusions and CPU14outcomes/6false-ready/11token errors/113deadline exclusions remain nonready; labels are agent-proxy, not human adjudication, and long inputs exceed the512-token independent reference. Preserve report031409Z/readiness-uiU9Ek and use the existing full recipe. No tolerance, model, calibration, corpus, deadline or final gate is waived. docs/vega-reference-contract.md records timings, memory and narrower trust boundaries.
+
 Decapod validates whether identified work satisfies the project's stated
 boundaries and required proof. Validation preserves the difference between what
 the human requested, what the agent understood, what ran, and what the evidence
@@ -653,7 +655,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2`
+- Repository signal fingerprint: `4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

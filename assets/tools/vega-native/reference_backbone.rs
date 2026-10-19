@@ -12,6 +12,8 @@ const PREFIX: &str = "model.language_model";
 pub const MAX_REFERENCE_TOKENS: usize = 512;
 const MODEL_HASH: &str = "sha256:04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696";
 const CONFIG_HASH: &str = "sha256:b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204";
+const ENGINE_CONFIG_HASH: &str =
+    "sha256:12f4f73784d58532ef244288c425df24944a8bda9c8414aa7c0981dfd2d88494";
 const SPEC_REVISION: &str = "aad13b87ed59f2afcfaebc985f403301887a35fc";
 const SPEC_SHA256: &str = "0e7410f5251e5c324a5628c5340ee3551f7a6a505ce398569fcc3b5f3ac07f7a";
 
@@ -353,15 +355,83 @@ fn mean(hidden: &[f64], range: &std::ops::Range<usize>) -> Vec<f64> {
     }
     out
 }
-pub fn compute(config: &[u8], checkpoint: &[u8], prompt: &Value) -> Result<Value> {
+// Independently follows vegaml21a17::_chunk_pool: assign each state token
+// directly to floor(i*k/n), rather than calling candidate chunk_ranges.
+fn memory_pool(
+    hidden: &[f64],
+    width: usize,
+    state: &std::ops::Range<usize>,
+    capacity: usize,
+    minimum: usize,
+    chunk_tokens: usize,
+) -> Result<(Vec<f64>, Vec<bool>)> {
+    if width == 0
+        || capacity < 2
+        || capacity > 16
+        || chunk_tokens == 0
+        || hidden.len() % width != 0
+        || state.start >= state.end
+        || state.end > hidden.len() / width
+    {
+        return Err("reference memory shape or profile".into());
+    }
+    let rows = &hidden[state.start * width..state.end * width];
+    finite(rows)?;
+    let mut pooled = vec![0.0; capacity * width];
+    let mut mask = vec![false; capacity];
+    let n = state.len();
+    if n < minimum.max(2) {
+        return Ok((pooled, mask));
+    }
+    let k = (n / chunk_tokens).min(capacity).max(2);
+    let mut counts = vec![0usize; k];
+    for (i, row) in rows.chunks_exact(width).enumerate() {
+        let bucket = i.checked_mul(k).ok_or("reference memory index overflow")? / n;
+        counts[bucket] += 1;
+        for (out, value) in pooled[bucket * width..(bucket + 1) * width]
+            .iter_mut()
+            .zip(row)
+        {
+            *out += value;
+        }
+    }
+    for bucket in 0..k {
+        if counts[bucket] == 0 {
+            return Err("reference empty active memory bucket".into());
+        }
+        for value in &mut pooled[bucket * width..(bucket + 1) * width] {
+            *value /= counts[bucket] as f64;
+        }
+        mask[bucket] = true;
+    }
+    finite(&pooled)?;
+    Ok((pooled, mask))
+}
+
+pub fn compute(
+    config: &[u8],
+    engine_config: &[u8],
+    checkpoint: &[u8],
+    prompt: &Value,
+) -> Result<Value> {
     // Hashing is shared generic infrastructure, not a numerical oracle.
     if decapod::core::vega_readiness::hash(config) != CONFIG_HASH
+        || decapod::core::vega_readiness::hash(engine_config) != ENGINE_CONFIG_HASH
         || checkpoint.len() != 1_746_942_600
         || decapod::core::vega_readiness::hash(checkpoint) != MODEL_HASH
     {
         return Err("reference immutable backbone identity differs".into());
     }
     let config: Value = serde_json::from_slice(config)?;
+    let engine: Value = serde_json::from_slice(engine_config)?;
+    if engine["memory_chunks"] != 16
+        || engine["memory_min_tokens"] != 128
+        || engine["memory_chunk_tokens"] != 128
+        || engine["feature_layers"] != json!([13, 19])
+        || engine["option_layers"] != json!([19])
+    {
+        return Err("reference immutable pooling profile differs".into());
+    }
     let cfg = &config["text_config"];
     if cfg["hidden_size"] != 1024
         || cfg["num_hidden_layers"] != 24
@@ -449,9 +519,13 @@ pub fn compute(config: &[u8], checkpoint: &[u8], prompt: &Value) -> Result<Value
     }
     let mut opts = mean(&captures[1], &no);
     opts.extend(mean(&captures[1], &yes));
+    let (chunks, chunk_mask) = memory_pool(&captures[1], WIDTH, &state, 16, 128, 128)?;
     Ok(
-        json!({"pooled_feats":feats,"pooled_opts":opts,"pooled_chunks":vec![0.0;16*WIDTH],
-        "chunk_mask":vec![false;16],"sample_positions":positions,"sampled_hidden":samples,
+        json!({"pooled_feats":feats,"pooled_opts":opts,"pooled_chunks":chunks,
+        "chunk_mask":chunk_mask,"sample_positions":positions,"sampled_hidden":samples,
+        "reference_pooling_spec_revision":"21a17c90624aa85cec60b1092fa72cb8b720f71a",
+        "reference_pooling_spec_sha256":"34f6fa580d30828bc4a4663fd0a6a870eee783d250a70a64cfdd1d683bb92cfc",
+        "reference_engine_config_sha256":ENGINE_CONFIG_HASH,
         "feature_layers":[13,19],"option_layers":[19],"input_tokens":tokens.len(),
         "reference_spec_revision":SPEC_REVISION,"reference_spec_sha256":SPEC_SHA256,
         "reference_arithmetic":"Scalar F64; scoped token-row threads, no candidate model/tensor kernel calls",
@@ -530,6 +604,47 @@ pub fn compare(expected: &Value, observed: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn memory_bucket_means_have_independent_analytic_anchors() {
+        // Arithmetic-series means, including floor-bucket asymmetry at odd n.
+        for (n, expected) in [
+            (128, vec![31.5, 95.5]),
+            (129, vec![32.0, 96.5]),
+            (209, vec![52.0, 156.5]),
+            (384, vec![63.5, 191.5, 319.5]),
+            (512, vec![63.5, 191.5, 319.5, 447.5]),
+        ] {
+            let rows = (0..n).map(|i| i as f64).collect::<Vec<_>>();
+            let (pooled, mask) = memory_pool(&rows, 1, &(0..n), 16, 128, 128).unwrap();
+            assert_eq!(&pooled[..expected.len()], expected.as_slice());
+            assert!(pooled[expected.len()..].iter().all(|v| *v == 0.0));
+            assert!(mask[..expected.len()].iter().all(|v| *v));
+            assert!(mask[expected.len()..].iter().all(|v| !*v));
+        }
+        let rows = (0..127).map(|i| i as f64).collect::<Vec<_>>();
+        let (pooled, mask) = memory_pool(&rows, 1, &(0..127), 16, 128, 128).unwrap();
+        assert_eq!(pooled, vec![0.0; 16]);
+        assert_eq!(mask, vec![false; 16]);
+    }
+    #[test]
+    fn memory_uses_only_state_rows_and_rejects_invalid_or_nonfinite_inputs() {
+        let mut rows = vec![f64::NAN; 2];
+        for i in 0..129 {
+            rows.extend([i as f64, -(i as f64)]);
+        }
+        rows.extend([f64::INFINITY; 2]);
+        let (pooled, mask) = memory_pool(&rows, 2, &(1..130), 16, 128, 128).unwrap();
+        assert_eq!(&pooled[..4], &[32.0, -32.0, 96.5, -96.5]);
+        assert_eq!(mask.iter().filter(|v| **v).count(), 2);
+        rows[2] = f64::NAN;
+        assert!(memory_pool(&rows, 2, &(1..130), 16, 128, 128).is_err());
+        assert!(memory_pool(&[0.0; 128], 0, &(0..128), 16, 128, 128).is_err());
+        assert!(memory_pool(&[0.0; 128], 1, &(0..129), 16, 128, 128).is_err());
+        assert!(memory_pool(&[0.0; 128], 1, &(0..0), 16, 128, 128).is_err());
+        assert!(memory_pool(&[0.0; 128], 1, &(0..128), 1, 128, 128).is_err());
+        assert!(memory_pool(&[0.0; 128], 1, &(0..128), 16, 128, 0).is_err());
+        assert!(memory_pool(&[f64::MAX; 128], 1, &(0..128), 16, 128, 128).is_err());
+    }
     #[test]
     fn hand_anchored_projection_and_causal_convolution() {
         assert_eq!(

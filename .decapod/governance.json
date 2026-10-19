@@ -598,6 +598,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T020535Z.json"
       ]
+    },
+    {
+      "id": "vega1191-independent-memory-reference",
+      "summary": "Repair measured scalar-reference zero-memory omission using pinned upstream floor-bucket specification and own F64 rows; add analytic boundary tests and preserve actual Metal/CPU and failed heldout evidence without changing acceptance",
+      "input_digest": "sha256:6ff429954aee29848145ee5974a63f3e2f1c1eee2f32d5d4d60438078727839c",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T031409Z.json"
+      ]
     }
   ],
   "intents": {
@@ -641,23 +649,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile current authored semantics with actual2f native25tests/CPU scalar-reference subset and realMetal arithmetic; retain unexecuted719 Metal model repair/fallback/chunk/holdout. Audit23original label/lineage/P2P limits and pinned public alternatives without changing dataset, calibration, tolerances, runtime, recipe or required gates. Public CI bootstrap logs diagnose a missing helper launch but do not mint proof or require login for inspection.",
-          "reviewed_code_fingerprint": "5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2",
-          "spec_material_hash": "1de84e11fd68b7b1906a7cb07de845a096810bad5cb9bf7a339931dccfdd1630"
+          "reason": "Completed76 full validation passed source proof and26native tests, short actualMetal/CPU model and independent Rust comparison; required scientific acceptance failed. Reference nonempty memory was hardcoded zero: repair independently computes ownF64 block19 bucket means from pinned vegaml21a17 and engineconfig12f4f737, adding analytic boundary/offset/nonfinite tests. Reviewed source inventory4bd420b0 changes only reference and caller; recipe/model/calibration/holdout/tolerances unchanged. Partial heldout false-ready/input-limit/deadline/23lineage/label-authority failures remain required; no publication claim.",
+          "reviewed_code_fingerprint": "4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b",
+          "spec_material_hash": "7275482c6a015f967e17e749325695b063db1637e25314e2da2ccbf232f6ae2a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile current authored semantics with actual2f native25tests/CPU scalar-reference subset and realMetal arithmetic; retain unexecuted719 Metal model repair/fallback/chunk/holdout. Audit23original label/lineage/P2P limits and pinned public alternatives without changing dataset, calibration, tolerances, runtime, recipe or required gates. Public CI bootstrap logs diagnose a missing helper launch but do not mint proof or require login for inspection.",
-          "reviewed_code_fingerprint": "5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2",
-          "spec_material_hash": "b6263e50e73d3b548d43fcd76126911b2947d02e310b9778450ac4d1b5d2e944"
+          "reason": "Completed76 full validation passed source proof and26native tests, short actualMetal/CPU model and independent Rust comparison; required scientific acceptance failed. Reference nonempty memory was hardcoded zero: repair independently computes ownF64 block19 bucket means from pinned vegaml21a17 and engineconfig12f4f737, adding analytic boundary/offset/nonfinite tests. Reviewed source inventory4bd420b0 changes only reference and caller; recipe/model/calibration/holdout/tolerances unchanged. Partial heldout false-ready/input-limit/deadline/23lineage/label-authority failures remain required; no publication claim.",
+          "reviewed_code_fingerprint": "4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b",
+          "spec_material_hash": "42eb2ec15182d3402ca86d2ed88d2c6f2d0a3ecb6ef12e5cf0b53e208c01ed75"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile current authored semantics with actual2f native25tests/CPU scalar-reference subset and realMetal arithmetic; retain unexecuted719 Metal model repair/fallback/chunk/holdout. Audit23original label/lineage/P2P limits and pinned public alternatives without changing dataset, calibration, tolerances, runtime, recipe or required gates. Public CI bootstrap logs diagnose a missing helper launch but do not mint proof or require login for inspection.",
-          "reviewed_code_fingerprint": "5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2",
-          "spec_material_hash": "933aab32a6698accfccf0b857665d84d2a446227342a9eb84f8f0c0571e94632"
+          "reason": "Completed76 full validation passed source proof and26native tests, short actualMetal/CPU model and independent Rust comparison; required scientific acceptance failed. Reference nonempty memory was hardcoded zero: repair independently computes ownF64 block19 bucket means from pinned vegaml21a17 and engineconfig12f4f737, adding analytic boundary/offset/nonfinite tests. Reviewed source inventory4bd420b0 changes only reference and caller; recipe/model/calibration/holdout/tolerances unchanged. Partial heldout false-ready/input-limit/deadline/23lineage/label-authority failures remain required; no publication claim.",
+          "reviewed_code_fingerprint": "4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b",
+          "spec_material_hash": "c1d65cbfd28cd890de96b440908ba82701b61a4ec79dd31aa48c739a03f15145"
         }
       ],
       "state": "APPROVED",
@@ -670,7 +678,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792378656Z"
+      "updated_at": "1792382010Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -682,11 +690,15 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:8487e4953dcf4780704989ae529aaf3443fc56631eeb1ab8222c3b375875aee6",
+      "artifact_hash": "sha256:5bccfb5b97bd8e0570ec19a355844194201a49e1c0617a13d739e2f0334d581c",
       "checks": [
         {
           "name": "branch_reconciliation",
           "status": "passed"
+        },
+        {
+          "name": "chunk_reference_76",
+          "status": "failed"
         },
         {
           "name": "clippy-source-repair",
@@ -781,6 +793,10 @@
           "status": "passed"
         },
         {
+          "name": "heldout_76",
+          "status": "failed"
+        },
+        {
           "name": "independent-parity",
           "status": "unavailable"
         },
@@ -863,6 +879,10 @@
         {
           "name": "native_snapshot5d",
           "status": "failed"
+        },
+        {
+          "name": "native_tests_76",
+          "status": "passed"
         },
         {
           "name": "native_worker_execution",
@@ -967,6 +987,10 @@
         {
           "name": "separate_reference",
           "status": "unavailable"
+        },
+        {
+          "name": "short_metal_cpu_reference_76",
+          "status": "passed"
         },
         {
           "name": "source-ci",
@@ -1304,10 +1328,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 42
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:43",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 43
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 42,
+        "next_sequence": 43,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2103,6 +2134,36 @@
                 "validation_findings": [
                   "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim."
                 ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:43",
+                "observations": [
+                  "assets/tools/vega-native/readiness_evaluation.rs",
+                  "assets/tools/vega-native/reference_backbone.rs",
+                  "assets/tools/vega_infer.rs",
+                  "docs/vega-reference-contract.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/vega-1191-validation-20261019T031409Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2206",
+                  "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6259258948"
+                ],
+                "proof_refs": [
+                  "native_tests_76",
+                  "short_metal_cpu_reference_76",
+                  "chunk_reference_76",
+                  "heldout_76"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 43,
+                "validation_findings": [
+                  "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication."
+                ]
               }
             ]
           }
@@ -2130,6 +2191,7 @@
         "/private/tmp/vega-1191-validation-20261018T224908Z.json",
         "/private/tmp/vega-1191-validation-20261018T232831Z.json",
         "/private/tmp/vega-1191-validation-20261019T020535Z.json",
+        "/private/tmp/vega-1191-validation-20261019T031409Z.json",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
@@ -2162,6 +2224,7 @@
         "docs/vega-reference-contract.md: predeclared tolerances, public source revisions/hashes, corpus grouping/labels and exact controller blocker",
         "https://buildkite.com/decapodlabs/decapod/builds/2186",
         "https://buildkite.com/decapodlabs/decapod/builds/2201",
+        "https://buildkite.com/decapodlabs/decapod/builds/2206",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -2178,6 +2241,7 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39172229105",
         "https://github.com/DecapodLabs/decapod/actions/runs/39173829817",
         "https://github.com/DecapodLabs/decapod/actions/runs/39183631846",
+        "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6259258948",
         "https://github.com/DecapodLabs/decapod/pull/1458",
         "https://github.com/DecapodLabs/decapod/releases/tag/v0.119.1",
         "https://github.com/EricLBuehler/candle-vllm/commit/b1055eca63de76b548d0d4b0daa96ff8cd1d0596",
@@ -2262,6 +2326,7 @@
         "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
+        "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
         "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
         "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
         "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
