@@ -653,8 +653,36 @@ fn recheck_numeric_exports(
     Ok(passed)
 }
 fn verify_scientific_collection(proof: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    use scientific_collection::{Collection, Phase, SHARDS};
-    let context = Collection::load(proof)?;
+    let context = scientific_collection::Collection::load(proof)?;
+    let diagnostics = context.diagnostics();
+    let verified = verify_scientific_contents(&context, proof);
+    let (mut report, failure) = match verified {
+        Ok(report) => {
+            let failure = (report["all_required_scientific_conditions_passed"] != true)
+                .then(|| "required scientific acceptance unsatisfied; inspect numerical results and frozen risk/coverage/label limits".to_owned());
+            (report, failure)
+        }
+        Err(error) => (
+            serde_json::json!({
+                "schema":"decapod.vega-scientific-aggregate.v1","publication_ready":false,
+                "all_required_scientific_conditions_passed":false,
+                "strict_verification_error":error.to_string()
+            }),
+            Some(error.to_string()),
+        ),
+    };
+    report["available_phase_diagnostics"] = diagnostics;
+    write_private_proof(proof, &report)?;
+    if let Some(error) = failure {
+        return Err(error.into());
+    }
+    Ok(())
+}
+fn verify_scientific_contents(
+    context: &scientific_collection::Collection,
+    proof: &Path,
+) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    use scientific_collection::{Phase, SHARDS};
     let numeric = context.read(Phase::Numeric)?;
     let setup = vega_setup::run(&vega_setup::SetupOptions::default())?;
     if setup.manifest_digest.as_deref() != Some(SCIENTIFIC_BASELINE) {
@@ -684,7 +712,7 @@ fn verify_scientific_collection(proof: &Path) -> Result<(), Box<dyn std::error::
         let child = context.read_reference(&numeric.report["outputs"][name])?;
         numeric_passed &= numeric_child_passes(name, &child);
         numeric_passed &=
-            recheck_numeric_exports(&context, name, &child, &reference, &configuration, &weights)?;
+            recheck_numeric_exports(context, name, &child, &reference, &configuration, &weights)?;
     }
     let inputs = proof.with_extension("evaluation-inputs.json");
     prepare_evaluation(&inputs)?;
@@ -721,20 +749,13 @@ fn verify_scientific_collection(proof: &Path) -> Result<(), Box<dyn std::error::
             report["frozen_numeric_criterion_met"] == true
                 && report["production_calibration"] == "verified"
         });
-    write_private_proof(
-        proof,
-        &serde_json::json!({
-            "schema":"decapod.vega-scientific-aggregate.v1","publication_ready":false,
-            "numeric_checks_passed":numeric_passed,"readiness_evaluation":backends,
-            "runtime_sha256":context.runtime_sha256,"manifest_digest":SCIENTIFIC_BASELINE,
-            "corpus_sha256":SCIENTIFIC_CORPUS,"all_required_scientific_conditions_passed":accepted,
-            "scope":"Strict current-run aggregate; diagnostic collection never waives numerical, coverage, risk or label-authority conditions. Kernel retains final validation authority."
-        }),
-    )?;
-    if !accepted {
-        return Err("required scientific acceptance unsatisfied; inspect numerical results and full frozen risk/coverage/label limits".into());
-    }
-    Ok(())
+    Ok(serde_json::json!({
+        "schema":"decapod.vega-scientific-aggregate.v1","publication_ready":false,
+        "numeric_checks_passed":numeric_passed,"readiness_evaluation":backends,
+        "runtime_sha256":context.runtime_sha256,"manifest_digest":SCIENTIFIC_BASELINE,
+        "corpus_sha256":SCIENTIFIC_CORPUS,"all_required_scientific_conditions_passed":accepted,
+        "scope":"Strict current-run aggregate; diagnostic collection never waives numerical, coverage, risk or label-authority conditions. Kernel retains final validation authority."
+    }))
 }
 
 fn evaluate_readiness(
@@ -1638,6 +1659,39 @@ fn infer(
 
 #[cfg(test)]
 mod tests {
+    #[cfg(unix)]
+    #[test]
+    fn strict_missing_numeric_phase_writes_failure_and_preserves_later_phase() {
+        let directory = tempfile::tempdir().unwrap();
+        let proof = directory.path().join("aggregate.json");
+        let context = scientific_collection::Collection::create(&proof).unwrap();
+        context
+            .publish(
+                scientific_collection::Phase::Shard(5),
+                &directory.path().join("later.json"),
+                false,
+                serde_json::json!({"available_receipt":"later_cpu_diagnostic"}),
+            )
+            .unwrap();
+        assert!(super::verify_scientific_collection(&proof).is_err());
+        let report: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&proof).unwrap()).unwrap();
+        assert_eq!(report["publication_ready"], false);
+        assert_eq!(report["all_required_scientific_conditions_passed"], false);
+        assert!(report["strict_verification_error"].is_string());
+        assert_eq!(
+            report["available_phase_diagnostics"]["phases"][6]["report"]["available_receipt"],
+            "later_cpu_diagnostic"
+        );
+        assert_eq!(
+            report["available_phase_diagnostics"]["phases"][6]["scientific_contents_reverified"],
+            false
+        );
+        // Retrying cannot clobber the failure report or confer readiness.
+        let original = std::fs::read(&proof).unwrap();
+        assert!(super::verify_scientific_collection(&proof).is_err());
+        assert_eq!(std::fs::read(&proof).unwrap(), original);
+    }
     use super::*;
 
     #[test]

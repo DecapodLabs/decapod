@@ -11,6 +11,15 @@ Vega's separate native worker keeps evidence collection and final acceptance dis
 
 ## Direction
 
+The d3ebad07 eight-run recipe actually compiled and passed40native tests and
+real Metal probe/32recurrence comparisons. Pinned download failures56/28
+prevented all three numerical model comparisons and most evaluation phases.
+The last CPU shard executed22cases, with4false-ready proxy outcomes,
+11abstentions and1unsupported-length case; this is incomplete evaluation.
+The final aggregate remains strict, but now retains independently collected
+phase diagnostics even if an earlier missing numeric export stops scientific
+verification. An error report is not acceptance or new model-equivalence proof.
+
 The native worker's pinned Metal recurrence implementation is isolated in assets/tools/vega-native/vendor/metal-kernels, preserving upstream f22e42c API, arithmetic and other kernels. Three end-token barriers repair shared-key synchronization between SIMD groups. Under official1191 candidate aa66c8e4 passed all30native tests,32fresh-state primitive repetitions per diagnostic and138/314-token actual Metal/CPU model comparisons with the separate F64 reference. The earlier19combined-engine failures remain preserved. Probe provenance binds patched shader SHA3ba973f4 separately from upstream revision. This execution establishes only recorded fixtures, not all-context equivalence or readiness calibration. The vendored license now uses the official standard Apache text instead of a copied project-specific appendix; shader bytes and external model/calibration assets are unchanged.
 
 Verification-only assets/tools/vega-native/reference_backbone.rs computes selected raw blocks13/19, pooling and engine inputs with its own scalar F64 equations from pinned upstream sources, outside candidate tensor/model kernels. Shared generic parsing/hash infrastructure, weights and same-agent authorship limit independence; no separate human review or empirical HF execution is claimed. Its resource cap is extended from512to4096fresh unpadded pure-text tokens for a predeclared exact-limit fixture selected only with the independent tokenizer. The long fixture,16active memory slots and4096/4097token boundaries are authored and unexecuted. Measured evidence remains the two earlier short prompts, including two active memory chunks. Production Candle/candle-vllm/CPU paths and normal pooled-only responses remain separate.
@@ -515,7 +524,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f719f0a00583ceb0a35d0726b6b24ef5c5019c041e5ac0b5e448044d666808d2`
+- Repository signal fingerprint: `f4e9119844ff295c4e0a556504d6e25341ce066237a647a730ce4670a141bdc6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

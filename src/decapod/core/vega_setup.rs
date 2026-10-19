@@ -995,8 +995,9 @@ impl Transport for PublicCurl<'_> {
         }
         if capture.termination != Termination::Exited || !capture.output.status.success() {
             return Err(invalid(format!(
-                "public Vega download failed ({:?}, exit {:?}); no checkpoint activated",
+                "public Vega download failed ({:?}, HTTP {:?}, exit {:?}); no checkpoint activated",
                 capture.termination,
+                http_status,
                 capture.output.status.code()
             )));
         }
@@ -1279,7 +1280,17 @@ fn component(
     if let Some(metadata) = metadata {
         write_new(&path, &read_bounded(metadata, pin.bytes)?)?;
     } else {
-        transport.download(&artifact_url(pin), &path, pin.bytes)?;
+        transport
+            .download(&artifact_url(pin), &path, pin.bytes)
+            .map_err(|error| {
+                io::Error::new(
+                    error.kind(),
+                    format!(
+                        "Vega artifact {}@{}/{}: {error}",
+                        pin.repository, pin.revision, pin.upstream_path
+                    ),
+                )
+            })?;
     }
     verify_file(&path, pin, transport)?;
     transport.checkpoint()?;
@@ -2120,6 +2131,38 @@ mod tests {
                 fs::metadata(another).unwrap().ino()
             );
         }
+    }
+
+    #[test]
+    fn failed_component_identifies_pin_and_preserves_access_denial_without_activation() {
+        struct Denied;
+        impl Transport for Denied {
+            fn checkpoint(&self) -> io::Result<()> {
+                Ok(())
+            }
+            fn download(&self, _: &str, _: &Path, _: u64) -> io::Result<()> {
+                Err(io::Error::new(
+                    io::ErrorKind::PermissionDenied,
+                    "public access denied",
+                ))
+            }
+        }
+        let root = temporary();
+        let pin = small_pin(b"not downloaded");
+        let error = component(&Denied, root.path(), &pin, None).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::PermissionDenied);
+        assert!(error.to_string().contains(&format!(
+            "{}@{}/{}",
+            pin.repository, pin.revision, pin.upstream_path
+        )));
+        assert!(
+            !root
+                .path()
+                .join("components")
+                .join(&pin.sha256[7..])
+                .exists()
+        );
+        assert!(!root.path().join("active.json").exists());
     }
 
     #[test]

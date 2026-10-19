@@ -140,6 +140,25 @@ fn private_bytes(_: &Path) -> Result<Vec<u8>> {
 }
 
 impl Collection {
+    /// Preserve every independently collected phase even when strict aggregate
+    /// verification stops at an earlier missing export. These are bound
+    /// diagnostics, not a substitute for rechecking their scientific contents.
+    pub fn diagnostics(&self) -> Value {
+        let phases = std::iter::once(Phase::Numeric).chain((0..SHARDS).map(Phase::Shard));
+        let reports: Vec<_> = phases
+            .map(|phase| match self.read(phase) {
+                Ok(envelope) => serde_json::json!({
+                    "phase":phase,"binding_verified":true,
+                    "scientific_contents_reverified":false,"report":envelope.report
+                }),
+                Err(error) => serde_json::json!({
+                    "phase":phase,"binding_verified":false,"error":error.to_string()
+                }),
+            })
+            .collect();
+        serde_json::json!({"publication_ready":false,"phases":reports})
+    }
+
     pub fn create(proof: &Path) -> Result<Self> {
         let directory = directory(proof)?;
         let runtime_sha256 = runtime_digest()?;
@@ -299,6 +318,29 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let collection = Collection::create(&directory.path().join("numeric.json")).unwrap();
         (directory, collection)
+    }
+    #[test]
+    fn missing_early_phase_keeps_later_diagnostics_without_authorizing_readiness() {
+        let (dir, context) = fixture();
+        context
+            .publish(
+                Phase::Shard(5),
+                &dir.path().join("last.json"),
+                false,
+                serde_json::json!({"cpu_receipt":"available_private_evidence"}),
+            )
+            .unwrap();
+        let diagnostics = context.diagnostics();
+        assert_eq!(diagnostics["publication_ready"], false);
+        let phases = diagnostics["phases"].as_array().unwrap();
+        assert_eq!(phases.len(), SHARDS + 1);
+        assert_eq!(phases[0]["binding_verified"], false);
+        assert_eq!(phases[6]["binding_verified"], true);
+        assert_eq!(phases[6]["scientific_contents_reverified"], false);
+        assert_eq!(
+            phases[6]["report"]["cpu_receipt"],
+            "available_private_evidence"
+        );
     }
     #[test]
     fn collection_success_is_not_scientific_acceptance_and_replay_never_overwrites() {

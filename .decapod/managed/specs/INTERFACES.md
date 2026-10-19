@@ -564,7 +564,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f719f0a00583ceb0a35d0726b6b24ef5c5019c041e5ac0b5e448044d666808d2`
+- Repository signal fingerprint: `f4e9119844ff295c4e0a556504d6e25341ce066237a647a730ce4670a141bdc6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -664,6 +664,19 @@ outer validation report is the only publication-readiness result; supplemental
 command records explicitly carry `publication_ready=false`.
 
 ### Private native collection interface (#1445)
+
+`verify_scientific_collection` always writes its bounded private final failure
+report after loading a valid local collection context, including available phase
+diagnostics when strict verification encounters a missing numeric export. Each
+phase independently retains its context binding or an explicit read error;
+binding verification does not mean its scientific contents passed. Missing,
+unsafe or malformed evidence still fails the required command and cannot be
+replaced by later diagnostic success. The d3ebad07 run exposed this reporting
+gap after public download failures: all40 native tests passed, but only the
+last CPU shard produced model outcomes, and no complete numerical result was
+available. Installation errors now identify the immutable public component pin
+and HTTP status where available, preserving the original I/O error kind and
+access-denial behavior. These diagnostic fields add no retry or transport route.
 
 `decapod-vega-infer --diagnose-native --proof-output <fresh-private-path>` is a diagnostic-only worker command for the reviewed native recipe. It records pinned installation identities, actual per-backend inference outputs/errors, synchronized stage timings and lifetime-process RSS high water (macOS bytes; other Unix ru_maxrss converted from KiB). It reports `publication_ready=false`, parity and readiness calibration unverified. Explicit CPU execution does not itself establish production fallback routing. No model paths, weights, credentials or private input are committed. The 1 MiB private-export cap remains unchanged. Preferred and CPU attempts share a process, so RSS includes earlier attempts and is not isolated GPU/model allocation. Production request/response, deterministic gates and abstention behavior are unchanged.
 

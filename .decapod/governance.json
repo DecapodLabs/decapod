@@ -643,6 +643,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T065312Z.json"
       ]
+    },
+    {
+      "id": "vega1191-scientific-failure-diagnostics",
+      "summary": "Preserve independently collected phase diagnostics in a strict final failure receipt, identify pinned download failures without changing denial behavior, and record actual40native tests/Metal primitive evidence and incomplete false-ready CPU evaluation; retain every scientific acceptance gate",
+      "input_digest": "sha256:e5862ab3daa4b8dedea14b9249153854fbdf1d55c9968034f48a7864323f3724",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T072203Z.json"
+      ]
     }
   ],
   "intents": {
@@ -686,22 +694,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Full4cdcd25d validation passed BK2226 all39 and documentation2230 but native compilation failed E0603: separate worker called crate-private model valid_digest. Preserve interface boundary by validating only this ephemeral context nonce locally, with canonical-format regression, no public API exposure or relaxed storage checks. Reviewed inventory190c4da3, unchanged8runreciped6d9c7ff, all source/model/calibration/corpus/tolerance/risk/time limits retained. No new native test or inference executed on4c. PreviousAA30native tests and limited MetalCPU parity remain history, not current acceptance. New tests and full scientific acceptance require first successful compile/execution through official1191 validate.",
-          "reviewed_code_fingerprint": "f719f0a00583ceb0a35d0726b6b24ef5c5019c041e5ac0b5e448044d666808d2",
-          "spec_material_hash": "ce23a10f37d0930c5f222759323b31b2dd181509e17ede6d0940d2e1e05e30c2"
+          "reason": "d3ebad07 passed all39 Buildkite2231 checks and40 native tests with realMetal probe/32recurrence comparisons; model-download56/28 errors prevented numerical model results and most heldout collections. LastCPU shard22outcomes included4falseReady and11abstentions,1unsupported. Repair final reporting so an earlier strict error preserves all available bound phase diagnostics without authorizing acceptance; retain immutable pin and HTTP error identity and original denial kind. New reporting/replay/access-denial regressions unexecuted pending normal validate. Reviewed a3329f8d source inventory, unchanged8runreciped6d9c7ff and all models/calibration/corpus/criteria/budgets. Same originaltask/history, no production authority or transport bypass.",
+          "reviewed_code_fingerprint": "f4e9119844ff295c4e0a556504d6e25341ce066237a647a730ce4670a141bdc6",
+          "spec_material_hash": "4b0e937047d5e15bb3cedf5f176dc89245d89f65fce9457129b99b26b3a4a90b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Full4cdcd25d validation passed BK2226 all39 and documentation2230 but native compilation failed E0603: separate worker called crate-private model valid_digest. Preserve interface boundary by validating only this ephemeral context nonce locally, with canonical-format regression, no public API exposure or relaxed storage checks. Reviewed inventory190c4da3, unchanged8runreciped6d9c7ff, all source/model/calibration/corpus/tolerance/risk/time limits retained. No new native test or inference executed on4c. PreviousAA30native tests and limited MetalCPU parity remain history, not current acceptance. New tests and full scientific acceptance require first successful compile/execution through official1191 validate.",
-          "reviewed_code_fingerprint": "f719f0a00583ceb0a35d0726b6b24ef5c5019c041e5ac0b5e448044d666808d2",
-          "spec_material_hash": "3035b926106234dde8c4ac02731a29a6e08bcdebcfa69adfeed648afa0780694"
+          "reason": "d3ebad07 passed all39 Buildkite2231 checks and40 native tests with realMetal probe/32recurrence comparisons; model-download56/28 errors prevented numerical model results and most heldout collections. LastCPU shard22outcomes included4falseReady and11abstentions,1unsupported. Repair final reporting so an earlier strict error preserves all available bound phase diagnostics without authorizing acceptance; retain immutable pin and HTTP error identity and original denial kind. New reporting/replay/access-denial regressions unexecuted pending normal validate. Reviewed a3329f8d source inventory, unchanged8runreciped6d9c7ff and all models/calibration/corpus/criteria/budgets. Same originaltask/history, no production authority or transport bypass.",
+          "reviewed_code_fingerprint": "f4e9119844ff295c4e0a556504d6e25341ce066237a647a730ce4670a141bdc6",
+          "spec_material_hash": "e47ec224870d5c505109962f404170e746d755a7d8ca211518d27dcefa2c2029"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Full4cdcd25d validation passed BK2226 all39 and documentation2230 but native compilation failed E0603: separate worker called crate-private model valid_digest. Preserve interface boundary by validating only this ephemeral context nonce locally, with canonical-format regression, no public API exposure or relaxed storage checks. Reviewed inventory190c4da3, unchanged8runreciped6d9c7ff, all source/model/calibration/corpus/tolerance/risk/time limits retained. No new native test or inference executed on4c. PreviousAA30native tests and limited MetalCPU parity remain history, not current acceptance. New tests and full scientific acceptance require first successful compile/execution through official1191 validate.",
-          "reviewed_code_fingerprint": "f719f0a00583ceb0a35d0726b6b24ef5c5019c041e5ac0b5e448044d666808d2",
+          "reason": "d3ebad07 passed all39 Buildkite2231 checks and40 native tests with realMetal probe/32recurrence comparisons; model-download56/28 errors prevented numerical model results and most heldout collections. LastCPU shard22outcomes included4falseReady and11abstentions,1unsupported. Repair final reporting so an earlier strict error preserves all available bound phase diagnostics without authorizing acceptance; retain immutable pin and HTTP error identity and original denial kind. New reporting/replay/access-denial regressions unexecuted pending normal validate. Reviewed a3329f8d source inventory, unchanged8runreciped6d9c7ff and all models/calibration/corpus/criteria/budgets. Same originaltask/history, no production authority or transport bypass.",
+          "reviewed_code_fingerprint": "f4e9119844ff295c4e0a556504d6e25341ce066237a647a730ce4670a141bdc6",
           "spec_material_hash": "c055dbb247f9408bf9ab4edacc17ebf54e33ee22380e915cad26a5093e2bb3bf"
         }
       ],
@@ -715,7 +723,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792394409Z"
+      "updated_at": "1792425679Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -727,7 +735,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:a7a6c3c593f3f7586a613de3df71b69c97f631a0b3f85b82c7f670dfe98292c3",
+      "artifact_hash": "sha256:6ed029aad5f5888bfb7c31351add9b113ccd2d5a640addf849d44c28e9a32339",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -962,6 +970,10 @@
           "status": "passed"
         },
         {
+          "name": "native_tests_d3",
+          "status": "passed"
+        },
+        {
           "name": "native_worker_execution",
           "status": "unavailable"
         },
@@ -979,6 +991,10 @@
         },
         {
           "name": "new_native_tests",
+          "status": "unavailable"
+        },
+        {
+          "name": "new_regressions",
           "status": "unavailable"
         },
         {
@@ -1074,6 +1090,10 @@
           "status": "unavailable"
         },
         {
+          "name": "scientific_acceptance_d3",
+          "status": "failed"
+        },
+        {
           "name": "selective-cli",
           "status": "failed"
         },
@@ -1128,6 +1148,10 @@
         {
           "name": "source_ci_86dd4c",
           "status": "failed"
+        },
+        {
+          "name": "source_d3",
+          "status": "passed"
         },
         {
           "name": "task-transfer",
@@ -1464,10 +1488,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 47
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:48",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 48
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 47,
+        "next_sequence": 48,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2415,6 +2446,33 @@
                 "validation_findings": [
                   "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:48",
+                "observations": [
+                  "src/decapod/core/vega_setup.rs",
+                  "assets/tools/vega-native/scientific_collection.rs",
+                  "assets/tools/vega_infer.rs",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "/private/tmp/vega-1191-validation-20261019T072203Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2231"
+                ],
+                "proof_refs": [
+                  "source_d3",
+                  "native_tests_d3",
+                  "scientific_acceptance_d3",
+                  "new_regressions",
+                  "fmt"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 48,
+                "validation_findings": [
+                  "Actual40 native tests and real Metal primitive checks pass, but download failures and incomplete CPU holdout with false-ready outcomes are not model parity or production calibration. Preserve later diagnostics on early strict aggregate error without making collection success readiness. Pin/error reporting preserves denial kinds and all setup safety. New source must run through official1191 validation; no manual builds or source-proof reuse as current scientific acceptance."
+                ]
               }
             ]
           }
@@ -2447,6 +2505,7 @@
         "/private/tmp/vega-1191-validation-20261019T045602Z.json",
         "/private/tmp/vega-1191-validation-20261019T063311Z.json",
         "/private/tmp/vega-1191-validation-20261019T065312Z.json",
+        "/private/tmp/vega-1191-validation-20261019T072203Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
@@ -2485,6 +2544,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2216",
         "https://buildkite.com/decapodlabs/decapod/builds/2225",
         "https://buildkite.com/decapodlabs/decapod/builds/2226",
+        "https://buildkite.com/decapodlabs/decapod/builds/2231",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -2594,6 +2654,7 @@
         "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
         "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
         "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
+        "Actual40 native tests and real Metal primitive checks pass, but download failures and incomplete CPU holdout with false-ready outcomes are not model parity or production calibration. Preserve later diagnostics on early strict aggregate error without making collection success readiness. Pin/error reporting preserves denial kinds and all setup safety. New source must run through official1191 validation; no manual builds or source-proof reuse as current scientific acceptance.",
         "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
