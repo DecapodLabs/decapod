@@ -513,7 +513,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b41f7215117f4ac5b63af90d7d8afdeea95b7425c261bdc965e6097adbb91ec2`
+- Repository signal fingerprint: `5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -664,3 +664,7 @@ The separate native worker now also owns verification-only `reference_engine.rs`
 ### Vega native runtime compatibility revision
 
 The separate Rust worker explicitly pins candle-vllm b1055eca63de76b548d0d4b0daa96ff8cd1d0596, Candle23a6f388a82a71c88067ad2b0d64ac9d00f24aac and attentionf22e42cf27dd31efd2d1b838bd9e4cbf85bd2305 after the first actual native compile exposed upstream Metal DFlash symbol gating. The candle-vllm successor changes only dependency pins, preserving the reviewed Qwen3.5 block-capture implementation. No model or calibration artifact changes. Rust runtime revisions are diagnostic provenance; they do not prove native execution or numerical equivalence.
+
+### One-shot GPU ownership and independent verification collection
+
+Measured Metal model load failed because upstream reset_all uses CUDA-only zero_, despite successful real Metal arithmetic. The worker now consumes an owned fresh GPU model for one pooling attempt and discards its complete recurrent state on success, failure or unwind. It synchronizes completion and resource release and refuses a second attempt on that instance; production already uses a fresh worker per request. This changes no persistent installation/task/storage responsibilities and does not ignore a reset failure. The existing Rust recipe collects diagnostics and automatic/CPU holdout evidence independently before a required aggregate verdict, so missing parity or a negative calibration result cannot suppress unrelated collection. The kernel retains the hard deadline and publication authority. Exact prior CPU/model/reference measurements and their single138-token scope are recorded in `docs/vega-reference-contract.md`; new GPU/fallback/collector behavior remains unverified until executed.

@@ -450,10 +450,9 @@ mod native {
     /// Owned single-request runtime. `pooled` requires &mut self, so requests
     /// cannot share or race recurrent state through this interface.
     pub struct GpuBackbone {
-        model: Qwen3_5,
+        model: Option<Qwen3_5>,
         device: Device,
         probe: MetalProbe,
-        poisoned: bool,
     }
 
     impl GpuBackbone {
@@ -513,13 +512,16 @@ mod native {
                     "the loaded backbone is not F32 on Metal".into(),
                 ));
             }
-            model.reset_mamba_cache().map_err(compute)?;
+            if model.has_mamba_slot_for_sequence(SEQUENCE_ID) {
+                return Err(BackboneError::Checkpoint(
+                    "newly loaded model unexpectedly contains sequence state".into(),
+                ));
+            }
             device.synchronize().map_err(compute)?;
             Ok(Self {
-                model,
+                model: Some(model),
                 device,
                 probe,
-                poisoned: false,
             })
         }
 
@@ -529,37 +531,36 @@ mod native {
 
         pub fn pooled(&mut self, prompt: &Prompt, collect_samples: bool) -> Result<PooledFeatures> {
             validate_input(&prompt.tokens, &prompt.spans)?;
-            if self.poisoned {
-                return Err(BackboneError::Cleanup(
-                    "previous cleanup did not succeed".into(),
-                ));
-            }
-            if let Err(error) = self.model.reset_mamba_cache() {
-                self.poisoned = true;
-                return Err(BackboneError::Cleanup(error.to_string()));
-            }
-            let cleanup = StateCleanup {
-                model: &self.model,
-                finished: false,
-            };
-            let result = self.pooled_inner(prompt, collect_samples);
-            if let Err(error) = cleanup.finish() {
-                self.poisoned = true;
-                let detail = match result {
-                    Ok(_) => error.to_string(),
-                    Err(inference) => format!("{error}; inference also failed: {inference}"),
-                };
-                return Err(BackboneError::Cleanup(detail));
-            }
-            // Include queued cleanup in completion and wall-clock measurement.
-            if let Err(error) = self.device.synchronize() {
-                self.poisoned = true;
-                return Err(BackboneError::Cleanup(error.to_string()));
+            // This worker owns one fresh model per request. Upstream reset_all
+            // calls CUDA-only Tensor::zero_ even on Metal; do not suppress that
+            // error or reuse uncleared state. Consume and discard the entire
+            // owned model on success, failure or unwind instead.
+            let model = self.model.take().ok_or_else(|| {
+                BackboneError::Cleanup(
+                    "one-shot model consumed; reload before another request".into(),
+                )
+            })?;
+            let result = self.pooled_inner(&model, prompt, collect_samples);
+            let completed = self.device.synchronize();
+            drop(model);
+            let released = self.device.synchronize();
+            if completed.is_err() || released.is_err() {
+                return Err(BackboneError::Cleanup(format!(
+                    "completion={:?}; release={:?}; inference={:?}",
+                    completed.err().map(|error| error.to_string()),
+                    released.err().map(|error| error.to_string()),
+                    result.as_ref().err().map(ToString::to_string)
+                )));
             }
             result
         }
 
-        fn pooled_inner(&self, prompt: &Prompt, collect_samples: bool) -> Result<PooledFeatures> {
+        fn pooled_inner(
+            &self,
+            model: &Qwen3_5,
+            prompt: &Prompt,
+            collect_samples: bool,
+        ) -> Result<PooledFeatures> {
             let length = prompt.tokens.len();
             let length_u32 = u32::try_from(length)
                 .map_err(|_| BackboneError::Input("token length exceeds u32".into()))?;
@@ -596,8 +597,7 @@ mod native {
             };
             // B1, fresh causal prefill. Native API returns full-token,
             // pre-final-norm layer tensors in increasing layer order.
-            let (logits, layers) = self
-                .model
+            let (logits, layers) = model
                 .forward_collecting_layers(&ids, &positions, None, &metadata, &FEATURE_LAYERS)
                 .map_err(compute)?;
             // Upstream currently computes final logits even for collection.
@@ -712,30 +712,6 @@ mod native {
             return Err(BackboneError::NonFinite(label));
         }
         Ok(values)
-    }
-
-    struct StateCleanup<'a> {
-        model: &'a Qwen3_5,
-        finished: bool,
-    }
-
-    impl StateCleanup<'_> {
-        fn finish(mut self) -> candle_core::Result<()> {
-            self.model.release_sequence_state(SEQUENCE_ID);
-            // free_slot logs errors; reset_all returns them so fail closed.
-            let result = self.model.reset_mamba_cache();
-            self.finished = true;
-            result
-        }
-    }
-
-    impl Drop for StateCleanup<'_> {
-        fn drop(&mut self) {
-            if !self.finished {
-                self.model.release_sequence_state(SEQUENCE_ID);
-                let _ = self.model.reset_mamba_cache();
-            }
-        }
     }
 
     fn load_profile_config(path: &Path) -> Result<Config> {

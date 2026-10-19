@@ -62,7 +62,7 @@ validation_buildkite_preflights = true
 commands = []
 
 [proof.rust_workers]
-reviewed_recipes_digest = "sha256:61a76b11ccd06b6309c8b74eed40ec9fd4205ed1c28deaf7d1f9d4f89c82b958"
+reviewed_recipes_digest = "sha256:c6d245599beb7bb8fabd3c1f7078d6cb51c938d124ff41c76e00f4ae59511fc6"
 
 [[proof.rust_workers.workers]]
 name = "vega-native"
@@ -72,13 +72,12 @@ metal_toolchain = true
 timeout_seconds = 1800
 runs = [
     { arguments = ["--probe-auto"], proof_output = true },
-    { arguments = ["--diagnose-native"], proof_output = true },
-    { arguments = ["--evaluate-readiness", "--split", "holdout", "--backend", "auto"], proof_output = true },
+    { arguments = ["--collect-native-verification"], proof_output = true },
 ]
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:7c924ac284d86df6598c6b0319f881e5e64a15760cdbd7fe1221424b582fc669"
+reviewed_sources_digest = "sha256:2706cf848e8131b65f1ca80174a93c418a95fd4df6e7ecbe4a1d71e21ccc4d4a"
 
 [custody]
 isolation = "container"

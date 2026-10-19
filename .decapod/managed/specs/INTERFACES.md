@@ -558,7 +558,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b41f7215117f4ac5b63af90d7d8afdeea95b7425c261bdc965e6097adbb91ec2`
+- Repository signal fingerprint: `5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -668,3 +668,5 @@ Verification-only `--prepare-evaluation --proof-output <fresh-private-path>` wri
 The existing supplemental Rust-worker recipe and private evidence contracts are unchanged. Native snapshot preparation now accepts the exact already reviewed golden-vector fixture symlink in addition to the reviewed toolchain alias. There is no generic symlink permission or caller-controlled target map. `SnapshotReview.denied_paths` remains an additional deny list and takes precedence even for a recognized alias. Missing or retargeted HEAD/index/working links or nonregular targets fail closed; no out-of-repository referent is copied. The accepted released controller remains the authority for validation. Official published controller v0.119.1 contains this repair; native execution remains to be measured through the required recipe.
 
 Native device-probe receipts now include the exact attention source revision alongside Candle provenance. Source compatibility is explicitly advanced to candle-vllm b1055eca/Candle23a6f38/attentionf22e42c; external model/tokenizer/engine/calibration identities and selected raw blocks13/19 remain fixed. Unsupported model modes and malformed/abstaining/stale proof still cannot authorize readiness.
+
+The worker's `--collect-native-verification --proof-output <new-private-path>` runs native diagnostics and heldout automatic/explicit-CPU evaluation independently. It records bounded private child receipts with digest references, then fails if any required phase failed or a receipt is missing/malformed. Each phase retains its scientific acceptance checks; collection is not readiness. The existing controller timeout still bounds the whole command, and evaluation retains its600-second soft dispatch window. `Response::permits_cpu_retry` is a public pure classifier shared by production and native diagnostics, never proof/publication authority. Diagnostic fallback uses a real unsupported alternate GPU API; it does not claim available Metal failed or that kernel custody/loader companion routing executed. Private GPU model proofs also require consumed-model reuse rejection.

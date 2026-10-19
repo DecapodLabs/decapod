@@ -117,6 +117,10 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     if args.len() == 3 && args[0] == "--diagnose-native" && args[1] == "--proof-output" {
         return diagnose_native(Path::new(&args[2]));
     }
+    if args.len() == 3 && args[0] == "--collect-native-verification" && args[1] == "--proof-output"
+    {
+        return collect_native_verification(Path::new(&args[2]));
+    }
     if args.len() == 2 && args[0] == "--backend-check" {
         use vega_readiness::{BACKEND_CHECK_SCHEMA, Backend, BackendCheck, WorkerErrorKind};
         let backend = match args[1].to_str() {
@@ -196,6 +200,17 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     {
         return Err("invalid request binding".into());
     }
+    let proof_path = if args.len() == 4 {
+        Some(Path::new(&args[3]))
+    } else {
+        None
+    };
+    let response = inference_response(&request, proof_path);
+    println!("{}", serde_json::to_string(&response)?);
+    Ok(())
+}
+
+fn inference_response(request: &Request, proof_path: Option<&Path>) -> Response {
     let mut response = Response {
         schema: vega_readiness::WORKER_SCHEMA.into(),
         request_id: request.request_id.clone(),
@@ -210,12 +225,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         error: None,
         error_kind: None,
     };
-    let proof_path = if args.len() == 4 {
-        Some(Path::new(&args[3]))
-    } else {
-        None
-    };
-    match infer(&request, proof_path) {
+    match infer(request, proof_path) {
         Ok((outcome, tokens)) => {
             response.outcome = Some(outcome);
             response.input_tokens = tokens;
@@ -234,8 +244,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             response.error = Some(error.to_string().chars().take(512).collect());
         }
     }
-    println!("{}", serde_json::to_string(&response)?);
-    Ok(())
+    response
 }
 
 fn evaluation_probe(
@@ -246,6 +255,74 @@ fn evaluation_probe(
     } else {
         vega_backbone::probe_backend(backend)
     }
+}
+
+/// Execute independent scientific checks before deciding aggregate success.
+/// The kernel still owns the original hard worker deadline and final verdict.
+fn collect_verification_steps(
+    mut step: impl FnMut(&str) -> Result<(), Box<dyn std::error::Error>>,
+) -> Vec<serde_json::Value> {
+    [
+        "native_diagnostics",
+        "native_chunk_diagnostics",
+        "holdout_auto",
+        "holdout_cpu",
+    ]
+    .into_iter()
+    .map(|name| match step(name) {
+        Ok(()) => serde_json::json!({"name":name,"status":"passed"}),
+        Err(error) => {
+            serde_json::json!({"name":name,"status":"failed","error":error.to_string()})
+        }
+    })
+    .collect()
+}
+
+fn collect_native_verification(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let started = std::time::Instant::now();
+    let mut outputs = serde_json::Map::new();
+    let steps = collect_verification_steps(|name| {
+        let path = proof_path.with_extension(format!("{name}.json"));
+        let result = match name {
+            "native_diagnostics" => diagnose_native(&path),
+            "native_chunk_diagnostics" => diagnose_native_state(&path,
+                "Required coverage item: preserve deterministic checks and report explicitly missing evidence. ".repeat(16), true),
+            "holdout_auto" => evaluate_readiness("holdout", "auto", &path),
+            "holdout_cpu" => evaluate_readiness("holdout", "cpu", &path),
+            _ => unreachable!(),
+        };
+        let receipt = match read_bounded(&path, MAX_PROOF_BYTES as u64) {
+            Ok(bytes) => {
+                let _: serde_json::Value = serde_json::from_slice(&bytes)?;
+                serde_json::json!({"file":path,"sha256":vega_readiness::hash(&bytes),"bytes":bytes.len()})
+            }
+            Err(error) => serde_json::json!({"file":path,"unavailable":error.to_string()}),
+        };
+        let missing = receipt.get("unavailable").is_some();
+        outputs.insert(name.into(), receipt);
+        result?;
+        if missing {
+            return Err("required collection receipt missing".into());
+        }
+        Ok(())
+    });
+    let failed = steps.iter().any(|step| step["status"] != "passed");
+    write_private_proof(
+        proof_path,
+        &serde_json::json!({
+            "schema":"decapod.vega-verification-collection.v1","publication_ready":false,
+            "required_steps":steps,"outputs":outputs,"all_required_steps_passed":!failed,
+            "wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
+            "scope":"Independent collection; no failed phase is waived. Kernel hard deadline unchanged; scientific acceptance failure remains nonzero."
+        }),
+    )?;
+    if failed {
+        return Err(
+            "one or more required native verification phases failed; inspect independent receipts"
+                .into(),
+        );
+    }
+    Ok(())
 }
 
 fn evaluate_readiness(
@@ -424,6 +501,15 @@ fn prepare_evaluation(proof_path: &Path) -> Result<(), Box<dyn std::error::Error
 /// another fails. Neither missing reference data nor a model's negative answer
 /// prevents dispatch diagnostics. The caller still fails if execution failed.
 fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    // Fixed numerical diagnostic; not a labelled evaluation or passing proof.
+    diagnose_native_state(proof_path, r#"{"intent":"Document a CLI option","validation":"passed","obligations":[{"requirement":"Describe CPU fallback explicitly","evidence":"missing"}],"unknowns":[]}"#.into(), false)
+}
+
+fn diagnose_native_state(
+    proof_path: &Path,
+    state: String,
+    require_chunks: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
     use vega_readiness::Backend;
     let started = std::time::Instant::now();
     let preferred = vega_readiness::BackendPreference::Auto.resolve();
@@ -464,8 +550,6 @@ fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> 
                 .into(),
         );
     }
-    // A fixed diagnostic, not a labelled evaluation case or passing proof.
-    let state = r#"{"intent":"Document a CLI option","validation":"passed","obligations":[{"requirement":"Describe CPU fallback explicitly","evidence":"missing"}],"unknowns":[]}"#.to_owned();
     let (mut attempts, inference_failed) = collect_diagnostics(
         [preferred, Backend::Cpu],
         |backend| {
@@ -480,6 +564,38 @@ fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> 
                 risk: "0.1".into(),
                 backend,
             };
+            let component_fallback = if backend == Backend::Cpu {
+                // Exercise a genuinely unsupported alternate GPU API on this
+                // host, not a mocked failure of the available preferred GPU.
+                let unavailable_backend = if cfg!(target_os = "macos") {
+                    Backend::Cuda
+                } else {
+                    Backend::Metal
+                };
+                let unavailable_request = Request {
+                    request_id: format!("native-unavailable-{}", unavailable_backend.device()),
+                    backend: unavailable_backend,
+                    schema: request.schema.clone(),
+                    input_digest: request.input_digest.clone(),
+                    installation: request.installation.clone(),
+                    manifest_digest: request.manifest_digest.clone(),
+                    state: request.state.clone(),
+                    alpha: request.alpha.clone(),
+                    risk: request.risk.clone(),
+                };
+                let failure = inference_response(&unavailable_request, None);
+                if !failure.permits_cpu_retry(unavailable_backend, true)
+                    || failure.permits_cpu_retry(unavailable_backend, false)
+                {
+                    return Err("actual unsupported alternate GPU API did not satisfy the strict CPU retry classifier".into());
+                }
+                Some(serde_json::json!({"requested_backend":unavailable_backend,
+                    "actual_failure_response":failure,"strict_cpu_retry_permitted":true,
+                    "disabled_retry_rejected":true,
+                    "scope":"Actual unsupported alternate GPU API followed by this fresh CPU inference using the production retry classifier. Does not simulate failure of available Metal or establish the kernel custody/loader-companion publication protocol."}))
+            } else {
+                None
+            };
             let temporary = tempfile::tempdir()?;
             let path = temporary.path().join("inference.json");
             infer(&request, Some(&path))?;
@@ -487,6 +603,7 @@ fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> 
                 &path,
                 MAX_PROOF_BYTES as u64,
             )?)?;
+            value["component_cpu_fallback"] = serde_json::to_value(component_fallback)?;
             let configuration: serde_json::Value = serde_json::from_slice(&read_bounded(
                 &installation.join("vega_config.json"),
                 1024 * 1024,
@@ -519,6 +636,20 @@ fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> 
             serde_json::json!({"status":"failed","error":error.to_string(),"backbone_parity":"unverified"})
         }
     };
+    let missing_chunk_evidence = require_chunks
+        && (attempts
+            .iter()
+            .filter(|attempt| !attempt["outcome"].is_null())
+            .count()
+            != 2
+            || attempts.iter().any(|attempt| {
+                !attempt["outcome"].is_null()
+                    && !attempt["chunk_mask"].as_array().is_some_and(|mask| {
+                        mask.iter().any(|active| active.as_bool() == Some(true))
+                    })
+            }));
+    report["requires_nonempty_memory_chunks"] = require_chunks.into();
+    report["required_chunk_evidence_missing"] = missing_chunk_evidence.into();
     let reference_failed = report["separate_backbone_reference"]["status"] == "failed"
         || attempts.iter().any(|attempt| {
             attempt["separate_engine_reference"]["status"] == "failed"
@@ -560,9 +691,10 @@ fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> 
         Err(error) => serde_json::json!({"status":"failed","error":error.to_string()}),
     };
     report["wall_clock_ms"] = (started.elapsed().as_secs_f64() * 1000.0).into();
-    report["cpu_execution_scope"] = "Explicit CPU model execution; production fallback routing is a separate obligation, not inferred from this run".into();
+    report["cpu_execution_scope"] = "CPU model execution after a real unsupported alternate GPU API using the production retry classifier; available preferred-GPU failure and kernel custody/loader-companion routing remain separate obligations".into();
     write_private_proof(proof_path, &report)?;
     if probe.is_err()
+        || missing_chunk_evidence
         || inference_failed
         || reference_failed
         || report["separate_tokenizer_reference"]["status"] == "failed"
@@ -811,7 +943,22 @@ fn infer(
     let backbone_load_including_probe_ms = stage.elapsed().as_secs_f64() * 1000.0;
     let stage = Instant::now();
     let pooled = backbone.pooled(&prompt, proof_path.is_some())?;
+    if pooled.d_model != vega_backbone::D_MODEL || pooled.option_count != 2 {
+        return Err("backbone pooling metadata differs from the pinned profile".into());
+    }
     let backbone_inference_pooling_readback_cleanup_ms = stage.elapsed().as_secs_f64() * 1000.0;
+    let one_shot_reuse_rejected =
+        if proof_path.is_some() && request.backend != vega_readiness::Backend::Cpu {
+            if !matches!(
+                backbone.pooled(&prompt, false),
+                Err(vega_backbone::BackboneError::Cleanup(_))
+            ) {
+                return Err("consumed one-shot GPU model did not reject reuse".into());
+            }
+            Some(true)
+        } else {
+            None
+        };
     let stage = Instant::now();
     let engine_config = EngineConfig::from_json(&config)?;
     let steps = engine_config.n_steps;
@@ -943,6 +1090,7 @@ fn infer(
                 "backend":request.backend.runtime(),"device":request.backend.device(),"engine_device":"cpu",
                 "precision":vega_readiness::Precision::supported(),
                 "device_probe":backbone.device_probe(),
+                "one_shot_reuse_rejected":one_shot_reuse_rejected,
                 "cpu_source":"assets/tools/vega-native/cpu_backbone.rs; separately implemented, not independently reviewed"
             }),
             serde_json::json!({
@@ -999,6 +1147,36 @@ fn infer(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn verification_failures_do_not_suppress_other_required_phases() {
+        let mut called = Vec::new();
+        let results = collect_verification_steps(|name| {
+            called.push(name.to_owned());
+            match name {
+                "native_diagnostics" => Err("independent parity failed".into()),
+                "native_chunk_diagnostics" => Ok(()),
+                "holdout_auto" => Err("calibration authority unsatisfied".into()),
+                "holdout_cpu" => Ok(()),
+                _ => unreachable!(),
+            }
+        });
+        assert_eq!(
+            called,
+            [
+                "native_diagnostics",
+                "native_chunk_diagnostics",
+                "holdout_auto",
+                "holdout_cpu"
+            ]
+        );
+        assert_eq!(results.len(), 4);
+        assert_eq!(results[0]["status"], "failed");
+        assert_eq!(results[1]["status"], "passed");
+        assert_eq!(results[2]["status"], "failed");
+        assert_eq!(results[3]["status"], "passed");
+        assert!(results.iter().any(|step| step["status"] != "passed"));
+    }
     #[test]
     fn explicit_cpu_evaluation_probe_dispatches_cpu_arithmetic() {
         let probe = evaluation_probe(vega_readiness::Backend::Cpu).unwrap();

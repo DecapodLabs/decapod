@@ -258,7 +258,9 @@ impl Response {
     /// no partial model answer or tokenization evidence. A normal abstention,
     /// malformed IPC, crash, timeout, negative verdict or arithmetic failure
     /// never authorizes another attempt to seek a positive answer.
-    fn permits_cpu_retry(&self, requested: Backend, enabled: bool) -> bool {
+    /// This classifier grants no validation or publication authority. Native
+    /// clients also use it to verify fallback after a real unsupported backend.
+    pub fn permits_cpu_retry(&self, requested: Backend, enabled: bool) -> bool {
         enabled
             && requested != Backend::Cpu
             && self.error_kind == Some(WorkerErrorKind::HardwareUnavailable)

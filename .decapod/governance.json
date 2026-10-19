@@ -582,6 +582,14 @@
         "/private/tmp/vega-1191-validation-20261018T224908Z.json",
         "https://github.com/EricLBuehler/candle-vllm/commit/b1055eca63de76b548d0d4b0daa96ff8cd1d0596"
       ]
+    },
+    {
+      "id": "vega1191-one-shot-metal-and-independent-collection",
+      "summary": "Repair measured Metal CUDA-only reset via owned one-shot model discard; collect original/chunk numerical diagnostics and both holdout backends independently; retain actual CPU/reference/probe evidence and all unsatisfied acceptance",
+      "input_digest": "sha256:1009890e4318b0674087610d6867c6a8aab611a4a4becb102758d4d0c7aba62d",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261018T232831Z.json"
+      ]
     }
   ],
   "intents": {
@@ -625,23 +633,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Explicitly reviewed compatible native runtime successor b1055eca changes only upstream Cargo pins; Qwen hidden-state implementation unchanged. Candle23a6f38 alters CUDA workspace only, attentionf22e42c provides missing genuine Metal DFlash functions/build fixes plus unused Qwen4/MoE/GGUF changes. External model/tokenizer/engine/calibration pins, independent scalar equations, tolerances and holdout unchanged. Probe reports transitive attention revision; authored lock/receipt provenance regression requires native execution. No controller change or source proof waiver.",
-          "reviewed_code_fingerprint": "b41f7215117f4ac5b63af90d7d8afdeea95b7425c261bdc965e6097adbb91ec2",
-          "spec_material_hash": "32615778c3b45f68b8a4c359cd7208a5d22f8e3d0cea01f53e7d57c269425f71"
+          "reason": "Measured2f native25tests/probe/CPU short-reference passed, but Metal model hit upstream CUDA-only reset_all. GPU now consumes/discards owned one-shot model, synchronizes and rejects reuse instead of ignoring unsafe reset. Independent collector attempts original short plus frozen nonempty-chunk numerical case and automatic/CPU holdout before failing on any required condition. Strict public retry classifier also checks real unsupported alternate GPU API then fresh CPU model; does not simulate available Metal failure or kernel custody. Preserve model pins, scalar tolerances, holdout and deterministic authority; measured scope and unexecuted repairs explicit.",
+          "reviewed_code_fingerprint": "5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2",
+          "spec_material_hash": "29fedcfc3a15bdb5d9f4f71958219d40f88ff40a6e53cafcbe015443248642cf"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Explicitly reviewed compatible native runtime successor b1055eca changes only upstream Cargo pins; Qwen hidden-state implementation unchanged. Candle23a6f38 alters CUDA workspace only, attentionf22e42c provides missing genuine Metal DFlash functions/build fixes plus unused Qwen4/MoE/GGUF changes. External model/tokenizer/engine/calibration pins, independent scalar equations, tolerances and holdout unchanged. Probe reports transitive attention revision; authored lock/receipt provenance regression requires native execution. No controller change or source proof waiver.",
-          "reviewed_code_fingerprint": "b41f7215117f4ac5b63af90d7d8afdeea95b7425c261bdc965e6097adbb91ec2",
-          "spec_material_hash": "58f16e3ceb9c2d7888c8910300dcae6456d01ee1e7058291f00bca669f10e4a4"
+          "reason": "Measured2f native25tests/probe/CPU short-reference passed, but Metal model hit upstream CUDA-only reset_all. GPU now consumes/discards owned one-shot model, synchronizes and rejects reuse instead of ignoring unsafe reset. Independent collector attempts original short plus frozen nonempty-chunk numerical case and automatic/CPU holdout before failing on any required condition. Strict public retry classifier also checks real unsupported alternate GPU API then fresh CPU model; does not simulate available Metal failure or kernel custody. Preserve model pins, scalar tolerances, holdout and deterministic authority; measured scope and unexecuted repairs explicit.",
+          "reviewed_code_fingerprint": "5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2",
+          "spec_material_hash": "7ef765a408a75313c5b205eb3d27a461827581a5b946b297c0f7db70276a285e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Explicitly reviewed compatible native runtime successor b1055eca changes only upstream Cargo pins; Qwen hidden-state implementation unchanged. Candle23a6f38 alters CUDA workspace only, attentionf22e42c provides missing genuine Metal DFlash functions/build fixes plus unused Qwen4/MoE/GGUF changes. External model/tokenizer/engine/calibration pins, independent scalar equations, tolerances and holdout unchanged. Probe reports transitive attention revision; authored lock/receipt provenance regression requires native execution. No controller change or source proof waiver.",
-          "reviewed_code_fingerprint": "b41f7215117f4ac5b63af90d7d8afdeea95b7425c261bdc965e6097adbb91ec2",
-          "spec_material_hash": "5865ac210d81f7ec1b12a40aa6bec84585007c3a8dd1684ed97da5a3efc3ed13"
+          "reason": "Measured2f native25tests/probe/CPU short-reference passed, but Metal model hit upstream CUDA-only reset_all. GPU now consumes/discards owned one-shot model, synchronizes and rejects reuse instead of ignoring unsafe reset. Independent collector attempts original short plus frozen nonempty-chunk numerical case and automatic/CPU holdout before failing on any required condition. Strict public retry classifier also checks real unsupported alternate GPU API then fresh CPU model; does not simulate available Metal failure or kernel custody. Preserve model pins, scalar tolerances, holdout and deterministic authority; measured scope and unexecuted repairs explicit.",
+          "reviewed_code_fingerprint": "5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2",
+          "spec_material_hash": "d2b4b0248f78e61ad0420cc56a7805635d590e6c773946307ed1165be651d914"
         }
       ],
       "state": "APPROVED",
@@ -654,7 +662,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792365983Z"
+      "updated_at": "1792371855Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -666,7 +674,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:02b5c6c54abb27571402f0814862a6cbc810e845a76aa48892adfb9ad86bf5e3",
+      "artifact_hash": "sha256:23de14cd29dd60d5b4baae631982baff8ccfe2d77cac63fbf4a9b3bbd015f9dd",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -690,6 +698,10 @@
         },
         {
           "name": "cpu-companion-whitespace",
+          "status": "passed"
+        },
+        {
+          "name": "cpu_model_short_reference_2f",
           "status": "passed"
         },
         {
@@ -793,6 +805,10 @@
           "status": "partial"
         },
         {
+          "name": "metal_model_2f",
+          "status": "failed"
+        },
+        {
           "name": "native-acceptance",
           "status": "unavailable"
         },
@@ -835,6 +851,10 @@
         {
           "name": "native_worker_execution",
           "status": "unavailable"
+        },
+        {
+          "name": "native_worker_tests_2f",
+          "status": "passed"
         },
         {
           "name": "numerical_execution",
@@ -883,6 +903,14 @@
         {
           "name": "readiness_holdout",
           "status": "unavailable"
+        },
+        {
+          "name": "readiness_holdout_2f",
+          "status": "unavailable"
+        },
+        {
+          "name": "real_metal_probe_2f",
+          "status": "passed"
         },
         {
           "name": "reference_execution",
@@ -1242,10 +1270,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 40
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:41",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 41
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 40,
+        "next_sequence": 41,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -1986,6 +2021,32 @@
                 "validation_findings": [
                   "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending."
                 ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:41",
+                "observations": [
+                  "src/decapod/core/vega_backbone.rs",
+                  "assets/tools/vega_infer.rs",
+                  "src/decapod/core/vega_backbone.rs",
+                  "src/decapod/core/vega_readiness.rs",
+                  "/private/tmp/vega-1191-validation-20261018T232831Z.json",
+                  "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json"
+                ],
+                "proof_refs": [
+                  "native_worker_tests_2f",
+                  "real_metal_probe_2f",
+                  "cpu_model_short_reference_2f",
+                  "metal_model_2f",
+                  "readiness_holdout_2f"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 41,
+                "validation_findings": [
+                  "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim."
+                ]
               }
             ]
           }
@@ -2011,7 +2072,9 @@
         "/private/tmp/vega-119-current-validation.json retains the earlier pre-execution failure",
         "/private/tmp/vega-1191-validation-20261018T222725Z.json",
         "/private/tmp/vega-1191-validation-20261018T224908Z.json",
+        "/private/tmp/vega-1191-validation-20261018T232831Z.json",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
+        "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
         "Actual CI error STALE_SPEC_REVIEW SECURITY.md or code changed after review; Architecture/Interfaces were current, Security needed supported current-code review after660974b4. Re-reviewed Security unchanged-with-reason and refreshed projections, retaining all failures and native-release blocker.",
         "Actual plain117 third report requires inventory reconciliation. Compared all discovered sources against accepted396f: only Cargo.toml/Cargo.lock/MODULE.bazel.lock changed plus four new native worker files; existing workflows/actions/executor helpers unchanged. Reviewed actual dependency and worker boundary, then explicitly updated only human-editable required-profile reviewed_sources_digest from supported agent.init inventory. No profile/provider/check graph change and no test execution claimed.",
@@ -2073,6 +2136,7 @@
         "src/decapod/core/proof.rs",
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/rust_worker.rs",
+        "src/decapod/core/vega_backbone.rs",
         "src/decapod/core/vega_readiness.rs",
         "src/decapod/core/vega_runtime.rs",
         "src/decapod/core/vega_setup.rs",
@@ -2130,6 +2194,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "24c706f5 executed1445 library tests with0 failures and3 ignored; CLI enforcement160.3s/contracts107.1s/entrypoints111.8s passed, including init refresh and portable parent retry policy. All CI jobs except dependency lint passed. Scope parking_lot to GPU targets/features, no lint waiver. Reviewed inventory d39eff26f37bdb8e49140867f78e116c4a9b93698ba5e20da8a486c2cca65f78. Native worker still uncompiled/unexecuted.",
+        "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
         "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
         "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
         "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
