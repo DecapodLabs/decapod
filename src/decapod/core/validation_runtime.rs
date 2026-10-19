@@ -187,6 +187,28 @@ impl ValidationReport {
     pub fn exit_code(&self) -> i32 {
         if self.ready { 0 } else { 1 }
     }
+    fn finish(mut self, result: io::Result<()>) -> Self {
+        if let Err(error) = result {
+            // A late evidence write/sync failure must revoke an earlier verdict
+            // and its delivery instructions, even after proof and Vega passed.
+            self.ready = false;
+            self.agent_guidance = ValidationGuidance::for_outcome(false);
+            let unsupported_controller = matches!(
+                error
+                    .get_ref()
+                    .and_then(|cause| cause.downcast_ref::<profile::PlanningFailure>()),
+                Some(profile::PlanningFailure::ControllerContractUnsupported(_))
+            );
+            let code = if unsupported_controller {
+                self.agent_guidance = ValidationGuidance::for_controller_contract_unsupported();
+                "CONTROLLER_CONTRACT_UNSUPPORTED"
+            } else {
+                "READINESS_BLOCKED"
+            };
+            self.blockers.push(Blocker::new(code, error.to_string()));
+        }
+        self
+    }
 }
 
 /// The one invocation deadline is passed through every adapter. The adapter must
@@ -888,22 +910,7 @@ pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -
         evidence_path: None,
     };
     let result = run(options, host, cancel, &mut report);
-    if let Err(error) = result {
-        let unsupported_controller = matches!(
-            error
-                .get_ref()
-                .and_then(|cause| cause.downcast_ref::<profile::PlanningFailure>()),
-            Some(profile::PlanningFailure::ControllerContractUnsupported(_))
-        );
-        let code = if unsupported_controller {
-            report.agent_guidance = ValidationGuidance::for_controller_contract_unsupported();
-            "CONTROLLER_CONTRACT_UNSUPPORTED"
-        } else {
-            "READINESS_BLOCKED"
-        };
-        report.blockers.push(Blocker::new(code, error.to_string()));
-    }
-    report
+    report.finish(result)
 }
 fn run(
     options: &Options,

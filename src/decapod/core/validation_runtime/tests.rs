@@ -1548,6 +1548,48 @@ fn vega_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
     }
 }
 
+#[test]
+fn late_verdict_write_failure_revokes_readiness_and_pr_instructions() {
+    use crate::core::vega_readiness::{Decision, Mode};
+    let directory = tempfile::tempdir().unwrap();
+    let verdict = directory.path().join("verdict.json");
+    write_new(&verdict, b"preserve existing evidence").unwrap();
+    let report = ValidationReport {
+        ready: true,
+        proof_ready: true,
+        vega_readiness: None,
+        scope: READINESS_SCOPE,
+        agent_guidance: ValidationGuidance::for_vega_outcome(
+            true,
+            Mode::Required,
+            Decision::Accept,
+        ),
+        stage_dispositions: Vec::new(),
+        blockers: Vec::new(),
+        evidence_path: Some(directory.path().to_owned()),
+    };
+    let report = report.finish(Ok(()));
+    assert!(report.ready);
+    assert_eq!(report.exit_code(), 0);
+    assert_eq!(report.agent_guidance.next_action, "create_authorized_pr");
+    // The final create_new write can fail after successful checks and assessment.
+    // Its failure must dominate the earlier in-memory readiness decision.
+    let error = write_new(&verdict, b"new final report").unwrap_err();
+    assert_eq!(error.kind(), io::ErrorKind::AlreadyExists);
+    let failed = report.finish(Err(error));
+    assert!(!failed.ready);
+    assert_eq!(failed.exit_code(), 1);
+    assert_eq!(failed.agent_guidance.next_action, "repair_and_revalidate");
+    assert_eq!(failed.blockers.last().unwrap().code, "READINESS_BLOCKED");
+    // Completed proof remains diagnostic information, never publication authority.
+    assert!(failed.proof_ready);
+    assert_eq!(failed.evidence_path.as_deref(), Some(directory.path()));
+    assert_eq!(fs::read(&verdict).unwrap(), b"preserve existing evidence");
+    let value = serde_json::to_value(failed).unwrap();
+    assert_eq!(value["ready"], false);
+    assert_eq!(value["agent_guidance"]["phase"], "validation");
+}
+
 #[cfg(unix)]
 #[test]
 fn supplemental_worker_executes_locked_rust_and_retains_failure_without_source_writes() {
