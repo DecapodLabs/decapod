@@ -331,6 +331,11 @@
       "falsifier": "A near-expired real Rust slow probe obtains a fresh discovery budget or launches after expiry.",
       "status": "open"
     },
+    "vega-agent-readiness-guidance": {
+      "statement": "The optional Vega post-validation result instructs the agent: accepted current required proof and accepted Vega allow an already authorized PR; rejection requires requirement/evidence review and further work; abstention requires resolving the reported gap; failed or stale required proof always requires repair and revalidation. No result grants merge or release authority.",
+      "falsifier": "Failed or stale proof produces PR instructions, rejection or abstention produces PR instructions, disabled mode changes delivery authority, or boolean model output is presented as a textual defect explanation.",
+      "status": "open"
+    },
     "vega-current-run-scientific-collection": {
       "statement": "Scientific collection is separate from acceptance: eight reviewed Rust runs collect three fixed numerical fixtures and six disjoint heldout shards, while a mandatory current-run final aggregate rechecks identity, numeric exports and full frozen risk/coverage/label conditions; no collection-only success authorizes publication.",
       "falsifier": "A missing, replayed, mixed, unsafe or malformed phase, changed frozen label/input, inconsistent decision, numerical disagreement, incomplete required coverage or unsatisfied risk/independent-label criterion permits the final required scientific command to succeed.",
@@ -659,6 +664,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T162027Z.json"
       ]
+    },
+    {
+      "id": "vega1191-agent-readiness-guidance",
+      "summary": "Give the agent distinct instructions after completed validation: authorized PR after Vega acceptance, further requirements work after rejection, evidence/runtime resolution after abstention; preserve failed-proof repair, disabled behavior, human merge authority and all scientific acceptance conditions",
+      "input_digest": "sha256:895ba7f8155a55608ca6e365ab12d695f559f18cc47db907254e643175935733",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T162027Z.json"
+      ]
     }
   ],
   "intents": {
@@ -702,22 +715,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "334 passed all39Buildkite2236 source checks but current native regressions remain unexecuted: fullvalidate stopped on publicAPI timeout then403/reset17:02:47UTC. Audit measured d3 final reducer10.69seconds after knownfailed numeric collection. Add early failed-numeric disposition guard before model setup and meaningful failed-numeric/later-diagnostic regression; preserve independent earlier numerical/shard execution and all strict acceptance checks. Inventory19fd705d and unchanged8runreciped6d9c7ff. No models/calibration/corpus/risk/tolerances/budgets changed; no denied-route retries, source-proof reuse for new source, manual tests, candidate-controller authority or task changes.",
-          "reviewed_code_fingerprint": "8e315a598ad5cf6de56ef55e91985959dec3bed97c9937c363cdac2ca39b2d34",
+          "reason": "User reaffirms intended post-validation flow: required local or Buildkite proof, then optional Vega readiness assessment and agent instructions. Production sequencing already correct; replace generic build/test repair advice after Vega with typed accept/reject/abstain guidance. Accepted instructs an already-authorized PR with freshness and human authority retained; rejection reviews unmet obligations without inventing model explanations; abstention resolves evidence/runtime gaps; failed proof always repairs. Regression matrix authored, fmt passed, tests await prescribed validation. Preserve c831 failed bootstrap2241 upstream installer publicAPI403 and334 source-pass/fullvalidation-denial history. Same19fd inventory and8runreciped6d9, unchanged model/calibration/corpus/risk/tolerances/budgets and acceptance checks. No manual test, task change, merge or release.",
+          "reviewed_code_fingerprint": "84dc12693fdb157826d7fdff297ae2ee56c6def31a09ab44e5ff01f9564cb3ec",
           "spec_material_hash": "4b0e937047d5e15bb3cedf5f176dc89245d89f65fce9457129b99b26b3a4a90b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "334 passed all39Buildkite2236 source checks but current native regressions remain unexecuted: fullvalidate stopped on publicAPI timeout then403/reset17:02:47UTC. Audit measured d3 final reducer10.69seconds after knownfailed numeric collection. Add early failed-numeric disposition guard before model setup and meaningful failed-numeric/later-diagnostic regression; preserve independent earlier numerical/shard execution and all strict acceptance checks. Inventory19fd705d and unchanged8runreciped6d9c7ff. No models/calibration/corpus/risk/tolerances/budgets changed; no denied-route retries, source-proof reuse for new source, manual tests, candidate-controller authority or task changes.",
-          "reviewed_code_fingerprint": "8e315a598ad5cf6de56ef55e91985959dec3bed97c9937c363cdac2ca39b2d34",
-          "spec_material_hash": "82745cf018bcfd534af6942395d40fd076c16a50b2ea773d6f5af7d7b4814c0e"
+          "reason": "User reaffirms intended post-validation flow: required local or Buildkite proof, then optional Vega readiness assessment and agent instructions. Production sequencing already correct; replace generic build/test repair advice after Vega with typed accept/reject/abstain guidance. Accepted instructs an already-authorized PR with freshness and human authority retained; rejection reviews unmet obligations without inventing model explanations; abstention resolves evidence/runtime gaps; failed proof always repairs. Regression matrix authored, fmt passed, tests await prescribed validation. Preserve c831 failed bootstrap2241 upstream installer publicAPI403 and334 source-pass/fullvalidation-denial history. Same19fd inventory and8runreciped6d9, unchanged model/calibration/corpus/risk/tolerances/budgets and acceptance checks. No manual test, task change, merge or release.",
+          "reviewed_code_fingerprint": "84dc12693fdb157826d7fdff297ae2ee56c6def31a09ab44e5ff01f9564cb3ec",
+          "spec_material_hash": "806cecac77a2625ded8f0d4ca07e3f84d306e55d1854aabf08ca833e7397d53e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "334 passed all39Buildkite2236 source checks but current native regressions remain unexecuted: fullvalidate stopped on publicAPI timeout then403/reset17:02:47UTC. Audit measured d3 final reducer10.69seconds after knownfailed numeric collection. Add early failed-numeric disposition guard before model setup and meaningful failed-numeric/later-diagnostic regression; preserve independent earlier numerical/shard execution and all strict acceptance checks. Inventory19fd705d and unchanged8runreciped6d9c7ff. No models/calibration/corpus/risk/tolerances/budgets changed; no denied-route retries, source-proof reuse for new source, manual tests, candidate-controller authority or task changes.",
-          "reviewed_code_fingerprint": "8e315a598ad5cf6de56ef55e91985959dec3bed97c9937c363cdac2ca39b2d34",
+          "reason": "User reaffirms intended post-validation flow: required local or Buildkite proof, then optional Vega readiness assessment and agent instructions. Production sequencing already correct; replace generic build/test repair advice after Vega with typed accept/reject/abstain guidance. Accepted instructs an already-authorized PR with freshness and human authority retained; rejection reviews unmet obligations without inventing model explanations; abstention resolves evidence/runtime gaps; failed proof always repairs. Regression matrix authored, fmt passed, tests await prescribed validation. Preserve c831 failed bootstrap2241 upstream installer publicAPI403 and334 source-pass/fullvalidation-denial history. Same19fd inventory and8runreciped6d9, unchanged model/calibration/corpus/risk/tolerances/budgets and acceptance checks. No manual test, task change, merge or release.",
+          "reviewed_code_fingerprint": "84dc12693fdb157826d7fdff297ae2ee56c6def31a09ab44e5ff01f9564cb3ec",
           "spec_material_hash": "c055dbb247f9408bf9ab4edacc17ebf54e33ee22380e915cad26a5093e2bb3bf"
         }
       ],
@@ -731,7 +744,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792428282Z"
+      "updated_at": "1792429301Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -743,7 +756,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:0c63cb6596e018995cea9a72cf17124b57ba12220c723232748f51ccbb8474ab",
+      "artifact_hash": "sha256:ecae0dab00ee3a11c39768ab4cc96e0db29f8d4006eaa34baa9a587e58f435ad",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -1154,6 +1167,10 @@
           "status": "passed"
         },
         {
+          "name": "source_c831",
+          "status": "failed"
+        },
+        {
           "name": "source_ci_4de86774",
           "status": "passed"
         },
@@ -1518,10 +1535,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 49
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:50",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 50
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 49,
+        "next_sequence": 50,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2521,6 +2545,31 @@
                 "validation_findings": [
                   "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:50",
+                "observations": [
+                  "src/decapod/core/vega_readiness.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_runtime/tests.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "/private/tmp/vega-c831-buildkite-2241-bootstrap.log",
+                  "/private/tmp/vega-1191-validation-20261019T162027Z.json"
+                ],
+                "proof_refs": [
+                  "source_c831",
+                  "full_validate_334",
+                  "new_regressions",
+                  "fmt"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 50,
+                "validation_findings": [
+                  "User clarification concerns product flow and instructions, not a waiver of scientific acceptance. Preserve all checks and original ownership. After quota reset run plain validate on genuinely changed candidate; no empty retry commit, authentication substitution for denied public read, manual build or shadow preflight. OAuth timed out with no credentials; public diagnostics remain readable without login."
+                ]
               }
             ]
           }
@@ -2556,6 +2605,7 @@
         "/private/tmp/vega-1191-validation-20261019T072203Z.json",
         "/private/tmp/vega-1191-validation-20261019T162027Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
+        "/private/tmp/vega-c831-buildkite-2241-bootstrap.log",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
@@ -2725,6 +2775,7 @@
         "Source-built generator is used solely for report-prescribed Markdown regeneration and grants no kernel authority. No native build or scientific test executed on132because source docs proof failed. All earlier failed reports retained. Return to official1191 plain validate on exact repaired candidate; no bootstrap exception or manual shadow preflight.",
         "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain.",
         "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
+        "User clarification concerns product flow and instructions, not a waiver of scientific acceptance. Preserve all checks and original ownership. After quota reset run plain validate on genuinely changed candidate; no empty retry commit, authentication substitution for denied public read, manual build or shadow preflight. OAuth timed out with no credentials; public diagnostics remain readable without login.",
         "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked.",
         "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership."
       ]

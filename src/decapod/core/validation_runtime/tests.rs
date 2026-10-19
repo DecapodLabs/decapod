@@ -1497,6 +1497,57 @@ fn successful_validation_preserves_readiness_scope_and_existing_delivery_authori
     assert!(guidance.instruction.contains("existing authorization"));
 }
 
+#[test]
+fn vega_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
+    use crate::core::vega_readiness::{Decision, Mode};
+    for (mode, decision, expected) in [
+        (Mode::Required, Decision::Accept, "create_authorized_pr"),
+        (
+            Mode::Required,
+            Decision::Reject,
+            "address_readiness_gaps_and_revalidate",
+        ),
+        (
+            Mode::Required,
+            Decision::Abstain,
+            "resolve_readiness_abstention_and_revalidate",
+        ),
+        (
+            Mode::Required,
+            Decision::Disabled,
+            "resolve_readiness_abstention_and_revalidate",
+        ),
+        (
+            Mode::Disabled,
+            Decision::Disabled,
+            "review_delivery_readiness",
+        ),
+    ] {
+        let guidance = ValidationGuidance::for_vega_outcome(true, mode, decision);
+        assert_eq!(guidance.next_action, expected);
+        assert_eq!(guidance.owner, "agent");
+        assert_eq!(guidance.entry_command, "decapod validate");
+        if mode == Mode::Required {
+            assert_eq!(guidance.phase, "post_validation_readiness");
+            assert!(guidance.instruction.contains("Required validation passed"));
+            if decision == Decision::Accept {
+                assert!(guidance.instruction.contains("already authorized"));
+                assert!(
+                    guidance
+                        .instruction
+                        .contains("does not authorize merge or release")
+                );
+            } else {
+                assert!(guidance.instruction.contains("not create the PR"));
+            }
+        }
+        // Even an accepting model cannot turn failed or stale proof into PR guidance.
+        let failed = ValidationGuidance::for_vega_outcome(false, mode, decision);
+        assert_eq!(failed.phase, "validation");
+        assert_eq!(failed.next_action, "repair_and_revalidate");
+    }
+}
+
 #[cfg(unix)]
 #[test]
 fn supplemental_worker_executes_locked_rust_and_retains_failure_without_source_writes() {

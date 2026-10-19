@@ -468,6 +468,16 @@ endpoint's credentials, and Supabase authentication/data transports reject
 redirects. Fixture tests alone do not establish hosted authorization or atomicity.
 
 `[vega]` selects disabled or required assessment, with explicit alpha/risk keys.
+After required local or Buildkite proof passes, `validation_runtime::ValidationGuidance`
+distinguishes the optional post-validation assessment from validation repair.
+Required Vega acceptance instructs the already-authorized agent to create the PR
+on the exact validated branch, subject to freshness and existing delivery authority.
+Rejection instructs the agent to inspect unmet intent and requirements, complete
+work and revalidate; abstention instructs it to inspect the receipt and resolve
+evidence or installation/runtime gaps. A boolean verdict supplies no invented
+defect explanation. Failed or stale proof always returns validation repair guidance,
+including when a model previously accepted. These instructions grant no merge or
+release authority and leave disabled-mode delivery guidance unchanged.
 Both `init --vega-decisions[=true|false]` and `init with --vega-decisions[=true|false]`
 select that policy. Interactive init offers the same choice; refresh preserves it
 unless explicitly changed. Init does not install models or execute inference.
@@ -564,7 +574,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8e315a598ad5cf6de56ef55e91985959dec3bed97c9937c363cdac2ca39b2d34`
+- Repository signal fingerprint: `84dc12693fdb157826d7fdff297ae2ee56c6def31a09ab44e5ff01f9564cb3ec`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

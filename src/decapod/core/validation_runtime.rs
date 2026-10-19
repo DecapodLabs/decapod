@@ -127,6 +127,40 @@ impl ValidationGuidance {
         }
     }
 
+    fn for_vega_outcome(
+        proof_ready: bool,
+        mode: super::vega_readiness::Mode,
+        decision: super::vega_readiness::Decision,
+    ) -> Self {
+        use super::vega_readiness::{Decision, Mode};
+        if !proof_ready {
+            return Self::for_outcome(false);
+        }
+        if mode == Mode::Disabled && decision == Decision::Disabled {
+            return Self::for_outcome(true);
+        }
+        let (next_action, instruction) = match (mode, decision) {
+            (Mode::Required, Decision::Accept) => (
+                "create_authorized_pr",
+                "Required validation passed and Vega accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Vega evidence. This result does not authorize merge or release; preserve human review and existing delivery authority.",
+            ),
+            (Mode::Required, Decision::Reject) => (
+                "address_readiness_gaps_and_revalidate",
+                "Required validation passed, but Vega did not find the validated change ready. Agent: review the declared intent, remaining requirements and bound evidence, complete any unmet work, checkpoint the correction and rerun decapod validate. The boolean verdict does not identify a specific defect by itself; do not invent a model explanation or retry unchanged inputs to seek acceptance. Do not create the PR.",
+            ),
+            _ => (
+                "resolve_readiness_abstention_and_revalidate",
+                "Required validation passed, but Vega supplied no usable readiness approval. Agent: inspect the Vega receipt reason and backend attempts, resolve missing, stale, contradictory or unsupported evidence and any reported installation/runtime error, then rerun decapod validate. Abstention is not approval or a diagnosed code defect. Do not create the PR, weaken required proof or retry unchanged inputs to seek acceptance.",
+            ),
+        };
+        Self {
+            phase: "post_validation_readiness",
+            next_action,
+            instruction,
+            ..Self::for_outcome(false)
+        }
+    }
+
     fn for_controller_contract_unsupported() -> Self {
         Self {
             next_action: "obtain_supported_controller",
@@ -1204,13 +1238,14 @@ fn run(
             decision.reason.clone(),
         ));
     }
+    report.agent_guidance =
+        ValidationGuidance::for_vega_outcome(report.proof_ready, decision.mode, decision.decision);
     report.vega_readiness = Some(decision);
     if let Err(error) = final_proof {
         return Err(invalid(format!(
             "STALE_POST_VALIDATION_DECISION: {error:?}"
         )));
     }
-    report.agent_guidance = ValidationGuidance::for_outcome(report.ready);
     write_new(
         &directory.join("verdict.json"),
         &serde_json::to_vec_pretty(report).map_err(io::Error::other)?,
