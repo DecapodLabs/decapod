@@ -7,7 +7,17 @@ structured RPC. It connects human intent, project authority, coordinated
 execution, and evidence in repository-owned state. Each invocation is finite;
 the repository carries the work between invocations.
 
-Vega's separate native worker keeps evidence collection and final acceptance distinct. The reviewed recipe has one numerical collection, six disjoint frozen holdout shards and a required final aggregate, inside the existing kernel-owned Rust execution mechanism. Scientific collection receipts bind the current private directory/context, executable, model and corpus and explicitly cannot authorize publication. Every selected supported case uses fresh recurrent state and complete artifact verification; an owned pinned tokenizer only rejects out-of-scope inputs early. Each shard carries one absolute1600-second soft dispatch deadline across preparation and both backends; kernel1800-command/7200-overall limits remain authoritative. The final reducer rechecks file custody and independently calculated numeric exports and recomputes grouped metrics from frozen labels/outcomes. New paths remain unexecuted. No nested process groups, Python runtime, orchestrator or second persistence authority is introduced.
+Vega's separate native worker keeps evidence collection and final acceptance distinct. The reviewed recipe has one numerical collection, six disjoint frozen holdout shards and a required final aggregate, inside the existing kernel-owned Rust execution mechanism. Scientific receipts bind the current private directory/context, executable, model and corpus and cannot authorize publication. Every selected supported case uses fresh recurrent state and complete artifact verification; an owned pinned tokenizer rejects out-of-scope inputs early. Each shard carries one absolute 1,600-second soft dispatch deadline across preparation and both backends; kernel 1,800-second command and 7,200-second overall limits remain authoritative. The final reducer rechecks file custody and independent numerical exports and recomputes grouped metrics from frozen labels/outcomes. On `30015be0`, all 43 worker tests and the three fixed Metal/CPU numerical fixtures passed, but the complete heldout evaluation failed its declared risk and coverage conditions. No nested process groups, Python runtime, orchestrator or second persistence authority is introduced.
+
+The production assessment retains declared plan obligations as well as intent:
+proof hooks, unresolved/deferred questions, contradictions, stop conditions and
+phase gates. These declarations are distinct from execution evidence and are
+serialized without clipping under the existing byte/token bounds. Final
+governance custody remains authoritative. A separate verification-only Rust
+source audit (`assets/tools/vega-native/public_review_sources.rs`) prepares
+prospective public review inputs without fitting or inference. Its independently
+collected report cannot satisfy numerical or readiness-calibration acceptance;
+missing source research cannot suppress independent Metal/CPU diagnostics.
 
 ## Direction
 
@@ -22,7 +32,7 @@ verification. An error report is not acceptance or new model-equivalence proof.
 
 The native worker's pinned Metal recurrence implementation is isolated in assets/tools/vega-native/vendor/metal-kernels, preserving upstream f22e42c API, arithmetic and other kernels. Three end-token barriers repair shared-key synchronization between SIMD groups. Under official1191 candidate aa66c8e4 passed all30native tests,32fresh-state primitive repetitions per diagnostic and138/314-token actual Metal/CPU model comparisons with the separate F64 reference. The earlier19combined-engine failures remain preserved. Probe provenance binds patched shader SHA3ba973f4 separately from upstream revision. This execution establishes only recorded fixtures, not all-context equivalence or readiness calibration. The vendored license now uses the official standard Apache text instead of a copied project-specific appendix; shader bytes and external model/calibration assets are unchanged.
 
-Verification-only assets/tools/vega-native/reference_backbone.rs computes selected raw blocks13/19, pooling and engine inputs with its own scalar F64 equations from pinned upstream sources, outside candidate tensor/model kernels. Shared generic parsing/hash infrastructure, weights and same-agent authorship limit independence; no separate human review or empirical HF execution is claimed. Its resource cap is extended from512to4096fresh unpadded pure-text tokens for a predeclared exact-limit fixture selected only with the independent tokenizer. The long fixture,16active memory slots and4096/4097token boundaries are authored and unexecuted. Measured evidence remains the two earlier short prompts, including two active memory chunks. Production Candle/candle-vllm/CPU paths and normal pooled-only responses remain separate.
+Verification-only `assets/tools/vega-native/reference_backbone.rs` computes selected raw blocks 13/19, pooling and engine inputs with its own scalar F64 equations from pinned upstream sources, outside candidate tensor/model kernels. Shared generic parsing/hash infrastructure, weights and same-agent authorship limit independence; no separate human review or empirical HF execution is claimed. Its cap is 4,096 fresh unpadded pure-text tokens. Candidate `30015be0` executed all three predeclared fixed fixtures, including all 16 memory slots and the 4,096/4,097-token boundaries. Production Candle/candle-vllm/CPU paths and normal pooled-only responses remain separate. See `docs/vega-reference-contract.md` for measured errors, timing and the actual supported scope.
 
 The product is a local-first command-line runtime with a structured process RPC
 surface. Agents invoke it at decision and state-transition boundaries. Durable
@@ -524,8 +534,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `372fd097843e5e54a843b67b8012c0feab3f8d643a30eab9e8504e14d479574a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `15f118cf1a731f4a3f033eb326fc9f1913637882eb8f950723265420dba8ab24`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (39 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -7,7 +7,7 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
-Vega is an optional team choice during init and in shared project configuration. Each maintainer resolves a verified private local runtime/model installation; selecting the option does not add this repository's research corpus or Mac-specific verification recipe to other projects. Failed/incomplete/stale deterministic proof exits before Vega; only successful proof can reach bounded readiness assessment. Vega cannot waive proof or create a PR, and the human retains merge authority. Candidate aa66c8e4 executed real M1 Max Metal and CPU inference,30native tests and two independent numerical fixtures successfully, but required heldout risk/coverage failed. New longer-reference and disjoint collection paths are authored and require fresh released-controller validation. Labels remain outside model input; errors, unsupported cases and unavailable independent adjudication cannot be converted into acceptance.
+Vega is an optional team choice during init and in shared project configuration. Each maintainer resolves a verified private local runtime/model installation; selecting the option does not add this repository's research corpus or Mac-specific verification recipe to other projects. Failed, incomplete or stale deterministic proof exits before Vega; only successful proof can reach bounded readiness assessment. Explicit plan obligations accompany intent and check outcomes, so successful tests cannot hide a declared unmet requirement. Vega cannot waive proof or create a PR, and the human retains merge authority. Candidate `30015be0` executed real M1 Max Metal and CPU inference, 43 native tests and three fixed numerical comparisons through 4,096 tokens successfully, but the complete heldout evaluation failed its risk and coverage criteria. Prospective public review inputs require source and semantic audits before any new evaluation or fitting; an external review proxy is not automatically ground truth. Labels remain outside model input, and errors, unsupported cases or missing independent adjudication cannot be converted into acceptance.
 
 The record must preserve what was asked, how the agent understood it, what
 scope was accepted, what changed, and what remains unproven. That record stays
@@ -202,8 +202,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `372fd097843e5e54a843b67b8012c0feab3f8d643a30eab9e8504e14d479574a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `15f118cf1a731f4a3f033eb326fc9f1913637882eb8f950723265420dba8ab24`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (39 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

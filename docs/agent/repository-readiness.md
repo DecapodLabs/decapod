@@ -162,6 +162,12 @@ material, intent, proof, configuration and model/runtime pins. Negative singleto
 rejects; ambiguous/missing sets, invalid numerical output and unavailable runtime
 abstain. Upstream confidence and conformal settings are not established
 code-readiness risk guarantees.
+The bounded `validation-results.v3` input retains declared proof hooks,
+unresolved and deferred questions, contradictions, stop conditions and phase
+gates alongside intent and actual check observations. Gate satisfaction flags
+remain plan declarations, not independent execution proof. Oversized inputs
+are refused without truncating obligations; administrative metadata and raw
+logs are not supplied. The final custody check rejects changed governance.
 Supported `alpha` values are `"0.1"` and `"0.05"`; `risk` values are `"0.05"`,
 `"0.1"` and `"0.2"`. These select pinned upstream calibration entries, not
 readiness-domain guarantees. `[vega].model_manifest_digest` is the shared immutable
@@ -258,4 +264,4 @@ path and fresh recurrent state for every request.
 
 ### Honest native evidence
 
-The private bounded --proof-output diagnostic contains exact tokens/spans, pooled vectors, engine readouts, calibrated outcomes, hashes and synchronized stage durations. Ordinary responses retain parity=unverified. Candidate aa66c8e4 executed30native tests, real M1 Max recurrence and138/314-token Metal/CPU model comparisons against separately implemented pinned Rust calculations; this is bounded fixture evidence with shared infrastructure/authorship, not all-input or independently reviewed equivalence. CPU fallback was exercised through actual unsupported CUDA and fresh CPU inference; Linux loader-companion routing remains separate. Full acceptance failed proxy-label risk/coverage. See docs/vega-reference-contract.md for revisions, tolerances, sample counts, timings, cumulative memory and preserved failures. New exact4096/4097boundaries and the eight-phase collection recipe remain authored and unexecuted. Collection-only success never removes the required final scientific aggregate, risk/coverage/independent-label conditions or kernel validation gates.
+The private bounded `--proof-output` diagnostic contains exact tokens/spans, pooled vectors, engine readouts, calibrated outcomes, hashes and synchronized stage durations. Ordinary responses retain `parity=unverified`. Candidate `30015be0` executed 43 native tests, real M1 Max recurrence and three fixed 138/314/4,096-token Metal/CPU model comparisons against separately implemented pinned Rust calculations. Exact token-limit rejection and all 16 memory slots were exercised. This is bounded fixture evidence with shared infrastructure/authorship, not all-input or independently reviewed equivalence. CPU fallback was exercised through actual unsupported CUDA and fresh CPU inference; Linux loader-companion routing remains separate. All six frozen holdout groups completed, but the final acceptance check failed risk/coverage with 23 false-ready proxy outcomes per backend. See `docs/vega-reference-contract.md` for revisions, tolerances, sample counts, timings, lifetime memory and preserved failures. Collection-only success never removes the required final scientific aggregate, risk/coverage/independent-label conditions or kernel validation gates.

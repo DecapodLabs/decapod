@@ -354,6 +354,11 @@
         "/private/tmp/vega-119-current-validation.json"
       ]
     },
+    "vega-plan-obligations": {
+      "statement": "The bounded post-validation assessment preserves declared proof hooks, unresolved questions, contradictions, stop conditions and phase gates as well as intent; none is silently omitted or truncated to fit model input.",
+      "falsifier": "An explicit deferred obligation, phase acceptance gate or adverse plan fact disappears from the assessment; overflow produces a partial assessment instead of abstention; stale governance authorizes publication.",
+      "status": "open"
+    },
     "vega-positive-singleton": {
       "statement": "Required vega may permit readiness only after deterministic proof and exact freshness, accepted policy integrity and a positive singleton yes without abstention/OOD; failed, stale, uncertain or changed identities remain blocked.",
       "falsifier": "A disabled or repinned accepted required policy, failed/stale check, adverse projection omission, changed binding, negative/ambiguous/OOD/abstaining result can establish readiness.",
@@ -362,6 +367,11 @@
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/vega_readiness.rs"
       ]
+    },
+    "vega-public-review-source-audit": {
+      "statement": "Prospective public review records are pinned and structurally audited in Rust before model use. Source review labels/rationale and future CI do not enter input; post-decision edits, conflicting verdicts, wrong identities, incomplete history and prior-corpus owner families are excluded or explicitly malformed. Collection alone grants no calibration or publication readiness.",
+      "falsifier": "The audit includes a selected verdict/rationale or later check in pre-decision input; counts a wrong-commit or edited requirement as eligible; presents source membership or grouping as independent ground truth; suppresses independent native checks; or waives the existing strict acceptance criterion.",
+      "status": "open"
     }
   },
   "checkpoints": [
@@ -693,6 +703,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T170256Z.json"
       ]
+    },
+    {
+      "id": "vega1191-plan-obligations-public-source-audit",
+      "summary": "Preserve explicit plan obligations in bounded post-validation assessment; add pinned Rust audit of public review-source inputs without replacing failed scientific acceptance or suppressing native diagnostics",
+      "input_digest": "sha256:a99cc68872ebfe8ca4dc18a1da2e391ef302072c006fc16afe4b245ef76a8eaf",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T182235Z.json"
+      ]
     }
   ],
   "intents": {
@@ -722,7 +740,7 @@
         "forbidden_paths": []
       },
       "deferred_questions": [
-        "Mandatory acceptance evidence remains outstanding: actual Apple-arm64 compile/load/Metal probe, independent authenticated pinned-upstream token/span/pooled/engine/calibration parity, readiness-domain calibration, native latency and peak memory, repeated-error cleanup and 4096/4097-token boundaries."
+        "Readiness-domain calibration remains unsatisfied: complete frozenv2 collection on30015 produced23false-ready proxy outcomes/backend,36unsupported lengths and inadequate coverage across23issue originals. Preserve the original corpus and zero-false-ready/one-sided95percent5percent-risk/50percentcoverage/correct-abstention criterion. Audit prospective public review inputs for exact source identity, temporal/semantic scope, independent external judgment and grouped holdout separation before any fitting/inference; no source approval or structural filter alone is ground truth. Actual30015 native43tests and fixed138/314/4096-token Metal/CPU independent Rust comparisons passed unchanged tolerances, but shared infrastructure/same-agent authorship and untested modes remain explicit limits. New plan-obligation preservation and source-audit regressions are authored, awaiting exact-candidate validation. No claim of universal parity, NVIDIA hardware or Linux loader-companion execution."
       ],
       "human_questions": [],
       "intent": "Complete the existing issue1445 Rust-only Vega post-validation integration on its preserved branch and original task. Vega is an optional team configuration selectable during init; shared policy/model/calibration identities must work across maintainers without committed machine paths. Automatic execution prefers Apple Metal on macOS and supported GPU on other systems (initial pinned CUDA/NVIDIA path, other GPU availability explicitly bounded), with safe CPU fallback using the same pinned model and a fresh bounded attempt; record actual backend, precision, runtime identity and fallback failures. Preserve the chosen Candle/candle-vllm hidden-state path and separate SafeTensors worker, external immutable assets/cache/integrity/atomic activation, active Jev removal, minimal bounded validation input, deterministic authority and fail-closed stale/missing/malformed/abstaining decisions. Preserve all source history, original task provenance, existing failed validation and native/parity/readiness-calibration proof obligations. Agent publishes only after exact-source accepted-controller validation and required genuine native/reference/holdout evidence; human retains merge/release authority.",
@@ -736,23 +754,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Guidance52759/2458 passed all39sourcechecks2246/2251. Fullvalidate170256Z was explicitly SIGINT-cancelled to verified ownedPID62606 before native, reportpublicreadcancelled preserved. Static audit found late write_new verdict.json error could leave priorreadytrue and PRguidance because wrapper only appendedblocker; acceptedmaster shares genericbug, no activeIOoccurrenceclaimed. Common ValidationReport::finish now revokesready and resetsrepairguidance on everyrunErr, preserving diagnosticproof/evidence and unsupportedcontrollerrecovery. Realcreate_new conflict regression covers prior success, failing exit/noPRguidance and preserved existing evidence. Fmtpassed, regressionawaits prescribedvalidation. Same19fd inventory and8runreciped6d9, no model/calibration/corpus/risk/tolerance/budget or requiredcheck change. Originaltask/custody/branch/history preserved; no manual test, new prerequisite, merge or release.",
-          "reviewed_code_fingerprint": "372fd097843e5e54a843b67b8012c0feab3f8d643a30eab9e8504e14d479574a",
-          "spec_material_hash": "4b0e937047d5e15bb3cedf5f176dc89245d89f65fce9457129b99b26b3a4a90b"
+          "reason": "Current code retains declared proof hooks, unresolved/deferred questions, stop conditions, contradictions and phase gates in bounded validation-results.v3; flags remain declarations and overflow abstains. New preservation/overflow tests are authored, not executed. Verification-only Rust public-source audit pins356public snapshots/274repos, checks exact review/commit/source identities, temporal ordering, complete histories, conflicts and later edits; selected review labels and futureCI are excluded from input. Six new audit tests await validation. Prospective input capture stays in tests/fixtures and outside publishedcrate, raw/API/auth/private machine evidence stays outsideGit. Sourceaudit is independent non-authorizing research: failure cannot suppress native checks or waive unchanged v2 numerical/heldout final acceptance. All current-source CI workflows, actions and existing executor/native recipe unchanged; review changed Cargo packaging, finite worker diagnostic and new Rust helper coverage before declaring bf95 inventory. Same8runreciped6d9 and originaltask/branch/custody. Preserve completed30015 source1459/native43/numerical3 passes and complete failedholdout23false-ready/backend; newsource capture is not adjudication, inference, fitting or readiness.",
+          "reviewed_code_fingerprint": "15f118cf1a731f4a3f033eb326fc9f1913637882eb8f950723265420dba8ab24",
+          "spec_material_hash": "f909fb997cc6b40fd7a8805caa79c001a012a6de06268749491225b2d54aeb6f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Guidance52759/2458 passed all39sourcechecks2246/2251. Fullvalidate170256Z was explicitly SIGINT-cancelled to verified ownedPID62606 before native, reportpublicreadcancelled preserved. Static audit found late write_new verdict.json error could leave priorreadytrue and PRguidance because wrapper only appendedblocker; acceptedmaster shares genericbug, no activeIOoccurrenceclaimed. Common ValidationReport::finish now revokesready and resetsrepairguidance on everyrunErr, preserving diagnosticproof/evidence and unsupportedcontrollerrecovery. Realcreate_new conflict regression covers prior success, failing exit/noPRguidance and preserved existing evidence. Fmtpassed, regressionawaits prescribedvalidation. Same19fd inventory and8runreciped6d9, no model/calibration/corpus/risk/tolerance/budget or requiredcheck change. Originaltask/custody/branch/history preserved; no manual test, new prerequisite, merge or release.",
-          "reviewed_code_fingerprint": "372fd097843e5e54a843b67b8012c0feab3f8d643a30eab9e8504e14d479574a",
-          "spec_material_hash": "e158049ad21ea4f4bdab0a7605dcf594489ff979d8f4330268988988e9d6da1b"
+          "reason": "Current code retains declared proof hooks, unresolved/deferred questions, stop conditions, contradictions and phase gates in bounded validation-results.v3; flags remain declarations and overflow abstains. New preservation/overflow tests are authored, not executed. Verification-only Rust public-source audit pins356public snapshots/274repos, checks exact review/commit/source identities, temporal ordering, complete histories, conflicts and later edits; selected review labels and futureCI are excluded from input. Six new audit tests await validation. Prospective input capture stays in tests/fixtures and outside publishedcrate, raw/API/auth/private machine evidence stays outsideGit. Sourceaudit is independent non-authorizing research: failure cannot suppress native checks or waive unchanged v2 numerical/heldout final acceptance. All current-source CI workflows, actions and existing executor/native recipe unchanged; review changed Cargo packaging, finite worker diagnostic and new Rust helper coverage before declaring bf95 inventory. Same8runreciped6d9 and originaltask/branch/custody. Preserve completed30015 source1459/native43/numerical3 passes and complete failedholdout23false-ready/backend; newsource capture is not adjudication, inference, fitting or readiness.",
+          "reviewed_code_fingerprint": "15f118cf1a731f4a3f033eb326fc9f1913637882eb8f950723265420dba8ab24",
+          "spec_material_hash": "33b8e295dcce7990c8bf70686b7bb1f7732b3c7467305ed45e79b7d3d7301ff0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Guidance52759/2458 passed all39sourcechecks2246/2251. Fullvalidate170256Z was explicitly SIGINT-cancelled to verified ownedPID62606 before native, reportpublicreadcancelled preserved. Static audit found late write_new verdict.json error could leave priorreadytrue and PRguidance because wrapper only appendedblocker; acceptedmaster shares genericbug, no activeIOoccurrenceclaimed. Common ValidationReport::finish now revokesready and resetsrepairguidance on everyrunErr, preserving diagnosticproof/evidence and unsupportedcontrollerrecovery. Realcreate_new conflict regression covers prior success, failing exit/noPRguidance and preserved existing evidence. Fmtpassed, regressionawaits prescribedvalidation. Same19fd inventory and8runreciped6d9, no model/calibration/corpus/risk/tolerance/budget or requiredcheck change. Originaltask/custody/branch/history preserved; no manual test, new prerequisite, merge or release.",
-          "reviewed_code_fingerprint": "372fd097843e5e54a843b67b8012c0feab3f8d643a30eab9e8504e14d479574a",
-          "spec_material_hash": "c055dbb247f9408bf9ab4edacc17ebf54e33ee22380e915cad26a5093e2bb3bf"
+          "reason": "Current code retains declared proof hooks, unresolved/deferred questions, stop conditions, contradictions and phase gates in bounded validation-results.v3; flags remain declarations and overflow abstains. New preservation/overflow tests are authored, not executed. Verification-only Rust public-source audit pins356public snapshots/274repos, checks exact review/commit/source identities, temporal ordering, complete histories, conflicts and later edits; selected review labels and futureCI are excluded from input. Six new audit tests await validation. Prospective input capture stays in tests/fixtures and outside publishedcrate, raw/API/auth/private machine evidence stays outsideGit. Sourceaudit is independent non-authorizing research: failure cannot suppress native checks or waive unchanged v2 numerical/heldout final acceptance. All current-source CI workflows, actions and existing executor/native recipe unchanged; review changed Cargo packaging, finite worker diagnostic and new Rust helper coverage before declaring bf95 inventory. Same8runreciped6d9 and originaltask/branch/custody. Preserve completed30015 source1459/native43/numerical3 passes and complete failedholdout23false-ready/backend; newsource capture is not adjudication, inference, fitting or readiness.",
+          "reviewed_code_fingerprint": "15f118cf1a731f4a3f033eb326fc9f1913637882eb8f950723265420dba8ab24",
+          "spec_material_hash": "d22b96974fa42a386a9bffb7a0e118243b3ef7ad15d07f65e252b1ee1339d2e4"
         }
       ],
       "state": "APPROVED",
@@ -765,7 +783,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792431877Z"
+      "updated_at": "1792446301Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -777,7 +795,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:465d8e1680ff4f3b1842af19c9fdb286f7c0e384dbc7cb6a887ac76b3031d13c",
+      "artifact_hash": "sha256:6f1da7b419cea26d1138c2d66c0b839d81835b91727cc84e2ce2c7df92fd6de1",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -912,6 +930,10 @@
           "status": "failed"
         },
         {
+          "name": "heldout_v2_30015",
+          "status": "failed"
+        },
+        {
           "name": "independent-parity",
           "status": "unavailable"
         },
@@ -976,6 +998,10 @@
           "status": "unavailable"
         },
         {
+          "name": "native_30015",
+          "status": "passed"
+        },
+        {
           "name": "native_compile_4c",
           "status": "failed"
         },
@@ -1000,6 +1026,10 @@
           "status": "unavailable"
         },
         {
+          "name": "native_numeric_30015",
+          "status": "passed"
+        },
+        {
           "name": "native_portable_execution",
           "status": "unavailable"
         },
@@ -1009,6 +1039,10 @@
         },
         {
           "name": "native_tests_19",
+          "status": "passed"
+        },
+        {
+          "name": "native_tests_30015",
           "status": "passed"
         },
         {
@@ -1050,6 +1084,14 @@
         {
           "name": "new_regressions",
           "status": "unavailable"
+        },
+        {
+          "name": "new_tests",
+          "status": "unavailable"
+        },
+        {
+          "name": "numerical_30015",
+          "status": "passed"
         },
         {
           "name": "numerical_execution",
@@ -1184,6 +1226,10 @@
           "status": "passed"
         },
         {
+          "name": "source_30015",
+          "status": "passed"
+        },
+        {
           "name": "source_334",
           "status": "passed"
         },
@@ -1232,7 +1278,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "recovery",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -1589,10 +1635,24 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 52
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:53",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 53
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:54",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 54
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 52,
+        "next_sequence": 54,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2667,6 +2727,62 @@
                 "validation_findings": [
                   "Preserve explicit cancellation and all remote sourcepass evidence. Late final report failure must dominate earlier readiness; this repair changes no scientific threshold or model result. Sourcepass is not nativeverification. Continue official validate exactnewcandidate on originalbranch; no new ownership, manual tests, forcepush, PR while acceptance fails, merge or release."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:53",
+                "observations": [
+                  "src/decapod/core/vega_readiness.rs",
+                  "src/decapod/plan_governance.rs",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2261",
+                  "/private/tmp/vega-1191-validation-20261019T182235Z.json"
+                ],
+                "proof_refs": [
+                  "source_30015",
+                  "native_numeric_30015",
+                  "native_tests_30015",
+                  "heldout_v2_30015"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 53,
+                "validation_findings": [
+                  "All six frozen v2 holdout shards completed: each backend executed102 cases with36 unsupported lengths,52 abstentions,29 acceptances and23 false-ready proxy outcomes. Preserve this failure and original corpus/criteria. Actual source1459 tests, native43 tests and138/314/4096-token fixed numerical comparisons passed. Public review corpus remains prospective and unverified; no fitting or heldout inference has used it. Inspection confirmed projection includes plan.intent only, omitting proof_hooks/deferred questions/stop conditions and phase gates. Add bounded obligation facts without whole-plan metadata, model changes, relaxed gates or fabricated rationale. Final source/material/governance identity checks remain authoritative."
+                ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:54",
+                "observations": [
+                  "src/decapod/core/vega_readiness.rs",
+                  "assets/tools/vega_infer.rs",
+                  "assets/tools/vega-native/public_review_sources.rs",
+                  "tests/fixtures/vega-public-review-sources/source-records.json",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2261",
+                  "/private/tmp/vega-1191-validation-20261019T182235Z.json",
+                  "/private/tmp/vega-1191-public-source-init.json"
+                ],
+                "proof_refs": [
+                  "source_30015",
+                  "native_30015",
+                  "numerical_30015",
+                  "heldout_v2_30015",
+                  "new_tests",
+                  "fmt"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 54,
+                "validation_findings": [
+                  "All failure history and scientific criteria remain. New4.5MiBpublic fixture initiallyplaced underexecutable-discoveryroot triggeredDISCOVERY_BLOCKED; movedunchanged into existingtests/fixtures data boundary, hash50ce9421unchanged; executableauditor remains discovered. Reviewed allchanged authored sources/coverage and explicit user-configbf95 pin withoutchanging workflow/executor/requiredness/recipe/model/calibration. No newprerequisite/manualtest or candidatecontrollerauthority. Newcorpus sourceaudit is provisional, not independentlyadjudicated labels or risk proof; no newinference/fitting/holdoutselection basedon model results."
+                ]
               }
             ]
           }
@@ -2690,6 +2806,7 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/vega-119-current-validation.json retains the earlier pre-execution failure",
+        "/private/tmp/vega-1191-public-source-init.json",
         "/private/tmp/vega-1191-validation-20261018T222725Z.json",
         "/private/tmp/vega-1191-validation-20261018T224908Z.json",
         "/private/tmp/vega-1191-validation-20261018T232831Z.json",
@@ -2702,6 +2819,7 @@
         "/private/tmp/vega-1191-validation-20261019T072203Z.json",
         "/private/tmp/vega-1191-validation-20261019T162027Z.json",
         "/private/tmp/vega-1191-validation-20261019T170256Z.json",
+        "/private/tmp/vega-1191-validation-20261019T182235Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-c831-buildkite-2241-bootstrap.log",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
@@ -2744,6 +2862,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2231",
         "https://buildkite.com/decapodlabs/decapod/builds/2236",
         "https://buildkite.com/decapodlabs/decapod/builds/2251",
+        "https://buildkite.com/decapodlabs/decapod/builds/2261",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -2786,6 +2905,7 @@
         "src/decapod/core/vega_readiness.rs",
         "src/decapod/core/vega_runtime.rs",
         "src/decapod/core/vega_setup.rs",
+        "src/decapod/plan_governance.rs",
         "tests/unit/core/gatekeeper_tests.rs",
         "tests/unit/core/trace_tests.rs"
       ],
@@ -2803,6 +2923,7 @@
         "assets/tools/vega-native/cpu_backbone.rs",
         "assets/tools/vega-native/evaluation_corpus.rs",
         "assets/tools/vega-native/metal_recurrence_reference.rs",
+        "assets/tools/vega-native/public_review_sources.rs",
         "assets/tools/vega-native/readiness_evaluation.rs",
         "assets/tools/vega-native/reference_backbone.rs",
         "assets/tools/vega-native/reference_engine.rs",
@@ -2825,6 +2946,7 @@
         "src/decapod/lib.rs",
         "tests/cli_contract_enforcement.rs",
         "tests/cli_contracts.rs",
+        "tests/fixtures/vega-public-review-sources/source-records.json",
         "tests/init_config_behavior.rs",
         "tests/support/cli_workunit_recovery.rs",
         "tests/unit/core/gatekeeper_tests.rs",
@@ -2854,6 +2976,8 @@
         "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
         "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
         "Actual40 native tests and real Metal primitive checks pass, but download failures and incomplete CPU holdout with false-ready outcomes are not model parity or production calibration. Preserve later diagnostics on early strict aggregate error without making collection success readiness. Pin/error reporting preserves denial kinds and all setup safety. New source must run through official1191 validation; no manual builds or source-proof reuse as current scientific acceptance.",
+        "All failure history and scientific criteria remain. New4.5MiBpublic fixture initiallyplaced underexecutable-discoveryroot triggeredDISCOVERY_BLOCKED; movedunchanged into existingtests/fixtures data boundary, hash50ce9421unchanged; executableauditor remains discovered. Reviewed allchanged authored sources/coverage and explicit user-configbf95 pin withoutchanging workflow/executor/requiredness/recipe/model/calibration. No newprerequisite/manualtest or candidatecontrollerauthority. Newcorpus sourceaudit is provisional, not independentlyadjudicated labels or risk proof; no newinference/fitting/holdoutselection basedon model results.",
+        "All six frozen v2 holdout shards completed: each backend executed102 cases with36 unsupported lengths,52 abstentions,29 acceptances and23 false-ready proxy outcomes. Preserve this failure and original corpus/criteria. Actual source1459 tests, native43 tests and138/314/4096-token fixed numerical comparisons passed. Public review corpus remains prospective and unverified; no fitting or heldout inference has used it. Inspection confirmed projection includes plan.intent only, omitting proof_hooks/deferred questions/stop conditions and phase gates. Add bounded obligation facts without whole-plan metadata, model changes, relaxed gates or fabricated rationale. Final source/material/governance identity checks remain authoritative.",
         "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",

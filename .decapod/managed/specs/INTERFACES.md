@@ -10,11 +10,24 @@ coordination, validation, and publication boundaries. Decapod exposes the state,
 constraints, evidence, and blockers that govern those transitions. Each CLI or
 RPC invocation is ephemeral; repository state preserves continuity between calls.
 
-Private Vega numerical exports record raw block samples only when --proof-output is requested; normal requests return pooled features. Each actual and independent reference export retains its1MiB bound. reference_backbone accepts at most4096fresh unpadded pure-text tokens, but aa66c8e4 measured only138/314-token fixtures. The new exact4096fixture and one-token4097rejection are predeclared, generated solely by the independent tokenizer from a fixed repeated sentence and bounded literal suffixes. Token/span/mask/layer comparisons and frozen numerical tolerances remain exact or unchanged. Full production runtime-binding/loader-companion fallback remains separate from the exercised unavailable-CUDA-to-CPU component path.
+The optional post-validation Vega request uses `validation-results.v3` in
+`core::vega_readiness::projection`. It retains the plan's declared proof hooks,
+unknowns, human and deferred questions, stop conditions, contradictions and
+phase entry/exit gates alongside the intent and actual validation observations.
+Gate descriptions, artifacts, checks and satisfaction flags are declarations,
+not independent execution evidence. Administrative plan metadata and raw logs
+are omitted. The complete serialized input must fit the existing 32 KiB and
+token limits; an oversized obligation produces abstention rather than a clipped
+or selectively reassuring assessment. The existing final material/governance
+identity recheck still rejects an assessment made stale by a changed plan.
+Preservation and overflow regressions are authored and await the next prescribed
+validation; they are not yet passing-test claims.
+
+Private Vega numerical exports record raw block samples only when `--proof-output` is requested; normal requests return pooled features. Each actual and independent reference export retains its 1 MiB bound. `reference_backbone` accepts at most 4,096 fresh unpadded pure-text tokens. Candidate `30015be0` executed all three fixed 138/314/4,096-token Metal and CPU comparisons, including the exact boundary and 4,097-token rejection. These fixtures use the independent tokenizer, fixed repeated sentences and bounded literal suffixes; token/span/mask/layer comparisons and frozen numerical tolerances remain exact or unchanged. This is fixed-fixture evidence, not all-input equivalence. Full production loader-companion fallback remains separate from the exercised unavailable-CUDA-to-CPU component path.
 
 The private evaluation corpus and input receipt use v2 for the pre-execution addition of contradictory semantic-evidence cases. `benchmark_units` counts original benchmark tasks, without asserting statistical independence. Model output records distinguish correct required abstentions, incorrectly decisive answers and unobserved cases. Existing project split, underlying artifact hash and model/calibration pins remain unchanged; v1 construction remains in Git and no model result informed the revision.
 
-The standalone --evaluate-readiness --split holdout --backend auto --proof-output command remains a strict experiment with a600-second soft dispatch window. The configured eight-run verification recipe instead uses --collect-scientific-numerics, six --collect-readiness-shard --index 0..5 commands and a mandatory --verify-scientific-collection. All receive fresh kernel-supplied proof paths. Collection success means only bounded receipt collection with publication_ready=false; no scientific acceptance is granted until the final required check. The final check rejects missing, malformed, mixed-runtime/model/corpus, replayed or incomplete records, rechecks numerical exports and rederives full grouped metrics. Shards share one absolute1600-second cutoff per command across preparation and both backends, under original kernel hard bounds. Unsupported tokens are explicit coverage failures, never model abstentions. New protocol tests/measurements are pending; proxy labels and23lineages still leave readiness calibration unsatisfied.
+The standalone `--evaluate-readiness --split holdout --backend auto --proof-output` command remains a strict experiment with a 600-second soft dispatch window. The configured eight-run recipe instead uses `--collect-scientific-numerics`, six `--collect-readiness-shard --index 0..5` commands and a mandatory `--verify-scientific-collection`. All receive fresh kernel-supplied proof paths. Collection success means only bounded receipt collection with `publication_ready=false`; the final required check must establish scientific acceptance. It rejects missing, malformed, mixed-runtime/model/corpus, replayed or incomplete records, rechecks numerical exports and rederives grouped metrics. Shards share one absolute 1,600-second cutoff per command across preparation and both backends, under original kernel hard bounds. Unsupported tokens are coverage failures, never model abstentions. On `30015be0` all 43 worker tests and three numerical fixtures passed; the complete frozen v2 holdout nevertheless failed with 23 false-ready proxy outcomes per backend. The final aggregate correctly blocked publication. See `docs/vega-reference-contract.md` for measured counts, conditions and limits.
 
 ## Human and agent entrypoints
 
@@ -582,8 +595,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `372fd097843e5e54a843b67b8012c0feab3f8d643a30eab9e8504e14d479574a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `15f118cf1a731f4a3f033eb326fc9f1913637882eb8f950723265420dba8ab24`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (39 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

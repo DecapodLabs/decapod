@@ -12,6 +12,54 @@ Predeclared comparison criteria: token IDs/spans/selected block indices exact; s
 
 Evaluation: group by repository/issue lineage, freeze held-out case bytes and digest before inference or any tuning. Preserve pinned upstream calibration. Zero false-ready and one-sided 95% upper bound <=5% among accepted independent cases requires at least 59 independent accepts with zero errors; coverage >=50% overall and among ready cases. Related variants are not independent samples. Agent-curated static and counterfactual cases establish bounded regressions, not production calibration. Report deterministic gate cases separately from model-judgment cases. No fitting on holdout, no claim that policy rejection demonstrates model understanding.
 
+## Prospective source audit and assessment-input correction
+
+`core::vega_readiness::projection` previously serialized the plan intent but
+omitted its declared proof hooks, deferred questions, stop conditions and phase
+gates. `validation-results.v3` preserves those obligations and other unresolved
+plan facts under the same byte/token limits. Gate flags are declarations, not
+execution proof; overflow abstains without truncation. This input correction
+does not alter the frozen v2 evaluation, pinned upstream calibration or risk
+criterion. Its preservation and overflow tests await prescribed validation.
+
+`tests/fixtures/vega-public-review-sources/README.md` records the prospective public
+source capture: 356 review snapshots from 274 repositories, with exact source
+review and commit identities, requirements and observed CI contexts. The pinned
+Rust audit checks complete histories, temporal binding, later requirements edits
+and conflicting verdicts, excludes previous-corpus owner families and prevents
+selected verdicts or future CI from entering prospective input. It runs as an
+independent diagnostic in numerical collection and cannot replace any existing
+scientific acceptance condition. Source-audit failure does not suppress native
+model checks. New source records have not been used for inference or fitting;
+source membership, structural eligibility and a public approval alone are not
+semantic ground truth or independent human adjudication. The new heldout inputs
+are not yet frozen for inference. All source-audit regression results are pending.
+
+## Executed candidate 30015be0 (2026-10-19 UTC)
+
+Official v0.119.1 collected [Buildkite 2261, all 39 source steps](https://buildkite.com/decapodlabs/decapod/builds/2261), including 1,459 passing library tests and 3 ignored tests. It then compiled the native worker on this Mac and executed **43 passing worker tests, none ignored**. Full validation `vega-1191-validation-20261019T182235Z` correctly failed the required strict scientific aggregate (`vega-native-8`). All six evaluation groups completed on both backends. No inference failed and no case was excluded by a dispatch deadline. Failed bootstrap, public-reader and earlier snapshot attempts remain preserved failures. The successful source retry used existing GitHub authorization to redeliver the original signed push, without a Buildkite login.
+
+All three fixed **138/314/4,096-token** numerical fixtures passed on actual Apple M1 Max Metal and CPU. The 314-token fixture activates two memory slots; the 4,096-token fixture activates all 16. Six tokenizer fixtures, the exact 4,096-token boundary and two 4,097-token rejections matched the separate byte-BPE calculation without truncation. Selected raw blocks 13/19, pooling, the separate scalar-F64 engine, identical-readout calibration and combined independently computed backbone/engine comparisons passed unchanged tolerances. These are three fresh pure-text prompts and six backend comparisons, not six independent prompts, human review of the reference, empirical HF execution or all-input/streamed/cache/image equivalence.
+
+At 4,096 tokens, 8,192 sampled Metal block scalars had maximum absolute error `5.151912539e-5` and normalized RMS `2.715368673e-5`; 16,384 pooled chunk scalars had maximum error `3.140849326e-5` and normalized RMS `1.233811494e-5`. Combined engine maximum errors were `0.000198801880` on Metal and `0.000037234818` on CPU. Both long-fixture decisions abstained and were unbound, matching the independent calculation; neither authorizes readiness. The scalar-F64 long calculation took 694.831 seconds. The real eight-F32 Metal probe was bit-exact with synchronized readback; 32 fresh-state recurrence comparisons also passed. The patched shader identity remains `3ba973f49a14c320b748c256a40ab08190ba9ae611319397d2279e4fdd4b9568`.
+
+| Tokens | Backend | Synchronized backbone/pooling/readback/cleanup | Whole verified request |
+| --- | --- | ---: | ---: |
+| 138 | Metal | 181.345ms | 11.614s |
+| 138 | CPU | 1.503s | 12.956s |
+| 314 | Metal | 318.283ms | 11.745s |
+| 314 | CPU | 3.165s | 14.547s |
+| 4096 | Metal | 4.570s | 15.990s |
+| 4096 | CPU | 41.264s | 52.677s |
+
+Conditions: M1 Max with 24 GPU cores and 64 GiB memory, macOS 27.0.1, Rust 1.96.1, Xcode 27; F32 backbone/CPU engine and F64 calibration. These are uncontrolled one-shot observations, with installation verification/reverification included in request totals, not controlled cold/warm benchmarks. Maximum numeric-process lifetime RSS was 5,016,993,792 bytes, including earlier attempts and allocations; it is not isolated model allocation or total GPU memory. Actual unsupported CUDA returned `hardware_unavailable`, zero tokens and no outcome; the production classifier permitted enabled CPU fallback and rejected disabled fallback, followed by genuine fresh CPU inference. Failure of available Metal, NVIDIA hardware and full Linux loader-companion routing were not exercised.
+
+The frozen v2 holdout still fails the declared criterion. **Per backend:** 138 judgment cases from 23 issue lineages; 102 actual outcomes, 36 unsupported-token cases, no inference failures or deadline exclusions, 52 abstentions and 29 acceptances, including **23 false-ready outcomes** against the proxy labels. Nine issue units had an acceptance and all nine had an erroneous acceptance, giving the reported one-sided 95% upper limit of 1.0 under the interval assumptions. Nonabstaining coverage was 36.23%; benchmark-resolved acceptance coverage was 26.09%. Required-abstention labels had 17 correct, 15 incorrectly definitive and 14 unobserved outcomes. These are complete collection dispositions, not complete supported-input coverage or production calibration. Source authorship, dependence across four repositories, full-patch representation and the 23-original sample remain limitations; no fitting or thresholds changed.
+
+Across102executed requests per backend, nearest-rank p50/p95 whole-request latency was13.812/16.309sMetal and30.944/47.842sCPU. Synchronized compute p50/p95 was1.958/4.037sMetal and19.375/36.191sCPU. Maximum evaluation-process lifetime RSS was3,726,934,016BMetal and4,951,293,952BCPU. Related examples, fixed ordering, full per-request integrity hashing and concurrent read-only source investigation limit performance interpretation.
+
+Current runtime SHA is `73f1c6f90cbc3e23e60810f9ddb3cca829ea5aa0de985fee5dee82f4aa566f5d`; compound model and v2 corpus pins remain `2b985edf9a5641fabe12b54f5f94bdff2ca888f19551593b8d9f87cd088cf9fc` and `09df504b0d50004499172c1cebf9fbf414ed91d72a703ebd0b0a634e3a7e3e88`. The precise model digest is carried by the private proof manifest; original private exports and failed validation are retained outside Git. Current public execution details are linked from [issue1445](https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6273527599). No feature PR readiness is established.
+
 ## Executed candidate d3ebad07 (2026-10-19 UTC)
 
 Official v0.119.1 completed [Buildkite2231, all39steps](https://buildkite.com/decapodlabs/decapod/builds/2231) and all40native tests. The real M1 Max eight-F32 dispatch/synchronization/readback was bit-exact in4.606750ms (device creation excluded). All32fresh-state recurrence comparisons passed in197.947833ms, with unchanged maximum output/state errors3.515577587e-41/3.725290298e-9 and declared tolerances. These are primitive results, not new model parity.
@@ -32,15 +80,15 @@ Representative short Metal output in `[false,true]` order was `[0.70821033552413
 
 Both heldouts completed their bounded collection. Automatic Metal:27outcomes,21token-limit errors,90deadline exclusions,18accepts including15false-ready against proxy labels,9abstentions. CPU:12outcomes, no inference errors,126deadline exclusions,5accepts including4false-ready,7abstentions. Accepted issue units5/1 were all erroneous; one-sided95% upper risk1.0. Required-abstention labels: Metal2correct/6incorrect definitive/38unobserved; CPU2/2/42. Model-judgment coverage is incomplete and nonaccepting. Collection wall times609152.854666/612409.243833ms crossed the600-second soft cutoff in an in-flight request; the entire1520609.707541ms collector stayed within its1800-second hard bound. These full-patch benchmark proxies are not the production bounded-validation-summary distribution or human readiness ground truth. Long inputs and input representation limit attribution of these outcomes to production calibration; the observed criterion failures remain failures.
 
-## Authored next coverage protocol, not yet executed
+## Coverage protocol subsequently executed on 30015be0
 
-The worker now permits a scalar reference resource range up to4096fresh pure-text tokens. It changes no equations, weights, calibrated outputs, tolerance, risk criterion or holdout membership. Before long-model observations, a third fixture is frozen: the same literal coverage sentence below repeated306times, followed by the first0..32literal ` x` suffixes whose **independent** tokenizer prompt has exactly4096tokens. Candidate tokenization and model outcomes do not select this fixture. Both model backends must match that independent token/span layout and activate all16memory slots. A separate one-token extension must be exactly4097and rejected without truncation by both tokenizers. Failure to construct the frozen fixture is reported, never replaced after seeing model results. These new boundaries and long-model comparisons require execution; increasing a supported range alone proves nothing.
+The worker permits a scalar reference resource range up to4096fresh pure-text tokens. It changes no equations, weights, calibrated outputs, tolerance, risk criterion or holdout membership. Before long-model observations, a third fixture was frozen: the same literal coverage sentence below repeated306times, followed by the first0..32literal ` x` suffixes whose **independent** tokenizer prompt has exactly4096tokens. Candidate tokenization and model outcomes do not select this fixture. Both model backends must match that independent token/span layout and activate all16memory slots. A separate one-token extension must be exactly4097and rejected without truncation by both tokenizers. Failure to construct the frozen fixture is reported, never replaced after seeing model results. These boundaries and long-model comparisons now have the measured30015execution above; the earlier authored resource-range change alone was not proof.
 
 The reviewed recipe uses the existing eight-run limit: `--collect-scientific-numerics`, six `--collect-readiness-shard --index 0..5` runs, then **required** `--verify-scientific-collection`, each with the kernel-supplied `--proof-output`. Numeric collection attempts all three fixtures independently. Each shard selects ordinal modulo6 from the unchanged frozen judgment cases and attempts automatic Metal and explicit CPU under one absolute1600-second soft dispatch deadline covering preparation and both backends. The original1800-second command and7200-second overall kernel bounds remain, without per-case reset. No nested process groups or alternative preflight are introduced. Exhausted or unsupported cases remain explicit coverage failures; dispatching fewer cases cannot satisfy acceptance.
 
 Collection phases return success only for collection/publication of bounded private receipts, marked collection_only/publication_ready=false and acceptance_pending. They do not claim passing scientific acceptance. The last mandatory command rechecks current-directory/context/runtime/model/corpus bindings, exclusive phase identities and private single-link files, rereads numeric exports and recomputes numerical comparisons and all grouped evaluation metrics. Missing/malformed/replayed/mixed receipts, altered labels, inconsistent outcomes or any unsatisfied numerical/risk/coverage/independent-label condition fail. The kernel retains the final verdict. These ephemeral receipts neither reconstruct task custody nor authenticate against a malicious worker/same-user forgery. Previous-run files are never imported.
 
-One immutable hash-verified tokenizer snapshot per backend collection identifies genuinely over-limit states before model loading. It only rejects unsupported inputs; every supported state still runs complete before/after model verification and real inference. Token overflows are reported as unsupported_input_tokens, not model abstentions. New reducer, shard, private-file, identity and tokenizer-snapshot tests are authored and unexecuted. The23lineages, dependence, same-agent proxy labels and known failed baseline outcomes still cannot establish the frozen production calibration criterion. No fitting or new calibration pin is introduced. The vendored license now uses the official Apache standard text, correcting a copied project-specific appendix without changing shader bytes.
+One immutable hash-verified tokenizer snapshot per backend collection identifies genuinely over-limit states before model loading. It only rejects unsupported inputs; every supported state still runs complete before/after model verification and real inference. Token overflows are reported as unsupported_input_tokens, not model abstentions. Reducer, shard, private-file, identity and tokenizer-snapshot regressions are among the43worker tests executed on30015. The23lineages, dependence, same-agent proxy labels and known failed baseline outcomes still cannot establish the frozen production calibration criterion. No fitting or new calibration pin is introduced. The vendored license uses the official Apache standard text, correcting a copied project-specific appendix without changing shader bytes.
 
 ## Historical candidate 19bdaaf3 and pending Metal repair (2026-10-19)
 

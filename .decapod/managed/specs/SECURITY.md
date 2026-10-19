@@ -16,7 +16,18 @@ fallback. Runtime labels must match the explicit physical-backend request. New
 CPU and CUDA paths still require actual execution and numerical verification;
 neither a CPU answer nor a capability declaration proves Metal execution.
 
-The verification-only scalar F64 reference verifies immutable model/config hashes and calculates expected values without candidate tensor/model math, while sharing generic infrastructure, weights and authorship. Candidate aa66c8e4 executed the138/314-token Metal/CPU subset; neither that success nor the new4096resource cap establishes all-input equivalence or independent human review. New exact-limit and phased-collection code is unexecuted. Raw tensors stay in bounded private exports; the final required scientific command rechecks referenced bytes and comparisons without importing earlier-run artifacts. Proxy labels, observed false-ready outcomes, incomplete coverage and23lineages retain the unsatisfied readiness-calibration gate.
+The verification-only scalar F64 reference verifies immutable model/config hashes and calculates expected values without candidate tensor/model math, while sharing generic infrastructure, weights and authorship. Candidate `30015be0` executed three fixed 138/314/4,096-token Metal/CPU comparisons, the exact token boundary and all 16 memory slots; this does not establish all-input equivalence or independent human review. Raw tensors stay in bounded private exports. The final required scientific command rechecks referenced bytes and comparisons without importing earlier-run artifacts. The complete v2 collection nevertheless produced 23 false-ready proxy outcomes per backend. Proxy labels, incomplete supported coverage and 23 source lineages retain the unsatisfied readiness-calibration gate.
+
+The new bounded plan projection preserves explicit obligations without treating
+plan gate flags as proof. Its overflow path abstains; final governance identity
+checks reject changed intent or obligations. The verification-only public review
+capture contains source facts, not private sessions or controller evidence, and
+is excluded from the published crate. Its Rust audit pins bytes and checks exact
+review/commit binding, timestamps, edits and complete pagination. Selected review
+verdicts and rationale are excluded from prospective model input; future CI is
+not backfilled. Public `User`/maintainer identity is not proof of unaided human
+authorship, and owner grouping is not a guarantee of statistical independence.
+Structural eligibility alone never grants a calibration or publication pass.
 
 ## Explicit local task-transfer trust
 
@@ -370,8 +381,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `372fd097843e5e54a843b67b8012c0feab3f8d643a30eab9e8504e14d479574a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `15f118cf1a731f4a3f033eb326fc9f1913637882eb8f950723265420dba8ab24`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (39 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

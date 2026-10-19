@@ -1,0 +1,67 @@
+# Public review-source capture
+
+`source-records.json` is a frozen public input dataset, not a validation log,
+controller receipt, calibration result or published model asset. Its SHA256 is
+`50ce9421f775db9145c8bef8540a32e0b2f8581222627dd426de460d25cf33c2`.
+It is excluded from the published Decapod crate. No authentication headers,
+session credentials, machine paths or private repository records are included.
+
+The capture contains 356 snapshots from 274 public repositories: 263 structured
+approval candidates and 93 change-request candidates. Candidates came from the
+first six pages of GitHub repository search, ordered by stars, for
+`language:Rust stars:>500 archived:false fork:false`, excluding the seven
+repositories in the prior benchmark corpus. The most recently updated 20
+closed/merged PRs in each of 593 unique repositories were inspected. For each
+repository and outcome, the first indexed eligible candidate was retained:
+an external source OWNER/MEMBER/COLLABORATOR `User` review naming the snapshot
+commit and a currently successful CI rollup. These are *discovery filters*;
+they do not establish that CI preceded the review, historical branch policy,
+complete semantic labels, independent samples or calibration.
+
+The records were retrieved through GitHub's public GraphQL API on 2026-10-19.
+Each includes repository identity and observed SPDX metadata, exact commit,
+PR number, selected review ID/URL/time, requirements title/body, title-edit
+events, review identities and the commit's check contexts with conclusions,
+completion times and observed requiredness. Review bodies and inline comments
+are deliberately omitted; selected verdicts and later review reasoning must
+never enter model input. Public review URLs identify the original rationale
+for subsequent case-by-case semantic audit. A repository's observed SPDX ID
+describes the source project; it does not establish separate dataset authorship
+or independent adjudication of this adaptation.
+
+Source verification uses `repository(owner:,name:)`, `object(oid:)`,
+`pullRequest(number:)`, `reviews(first:100)`, title-renaming timeline events and
+`statusCheckRollup.contexts(first:100)`. All returned pagination/completeness
+fields are retained. `CheckRun.isRequired(pullRequestNumber:)` and the equivalent
+status-context field describe policy at retrieval, not authenticated policy at
+the historical decision. Re-query using `gh api graphql --input <query.json>`
+and compare the pinned snapshot and selected review/commit identities. Later
+edits, dismissed reviews, re-run checks or policy changes can make live API
+responses differ; they must not silently rewrite this frozen capture.
+
+`public_review_sources.rs` audits identity, external reviewer binding, complete
+review/check history, requirements edited after the decision, conflicting
+same-commit verdicts and CI timestamps. Future or unfinished checks cannot be
+backfilled into the pre-decision input. Repositories sharing a source owner use
+the same prospective split, chosen by the first SHA256 byte of
+`vega-public-review-split-v1:<lowercase-owner>` (below 128 is development).
+Owners used by the previous corpus are excluded from prospective inference.
+Owner grouping reduces direct leakage; it does not establish statistical
+independence across projects, maintainers or organizations.
+
+The existing numerical collection attempts this source audit independently and
+exports its private report. `--audit-public-review-sources --proof-output
+<new-private-file>` exposes the same data preparation only. Run it through a
+reviewed Decapod native-worker recipe, with `decapod validate` as the entrypoint.
+Audit errors do not suppress independent native model diagnostics. The existing
+strict numerical and heldout acceptance conditions are unchanged.
+
+No candidate inference, calibration fitting or new heldout evaluation has used
+these records. Passing structural filters means only that a source record can
+be audited further. Its source verdict remains an external review proxy, not
+human-reviewed ground truth for all obligations in the bounded input. Semantic
+requirements, evidence relevance, ambiguity, temporal completeness and related
+case groups must be adjudicated before freezing a new evaluation corpus. The
+audit explicitly reports `production_calibration = "unsatisfied"` and
+`holdout_frozen_for_inference = false`. The prior failed corpus and its frozen
+zero-false-ready, one-sided 95%/5% risk and 50% coverage criteria remain intact.

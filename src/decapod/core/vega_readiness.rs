@@ -430,6 +430,37 @@ fn bounded_projection(value: &serde_json::Value) -> io::Result<String> {
     }
     Ok(state)
 }
+/// Keep explicit acceptance obligations rather than inferring them from a
+/// successful check list. Administrative plan metadata is not model input.
+fn plan_obligations(plan: &crate::plan_governance::GovernedPlan) -> serde_json::Value {
+    let gates = |gates: &[crate::plan_governance::Gate]| {
+        gates
+            .iter()
+            .map(|gate| {
+                serde_json::json!({
+                    "description":gate.description,
+                    "required_artifacts":gate.required_artifacts,
+                    "validation_checks":gate.validation_checks,
+                    "satisfied":gate.satisfied
+                })
+            })
+            .collect::<Vec<_>>()
+    };
+    serde_json::json!({
+        "proof_hooks":plan.proof_hooks,
+        "unknowns":plan.unknowns,
+        "human_questions":plan.human_questions,
+        "stop_conditions":plan.stop_conditions,
+        "unresolved_contradictions":plan.unresolved_contradictions,
+        "deferred_questions":plan.deferred_questions,
+        "phases":plan.phases.iter().map(|phase| serde_json::json!({
+            "id":phase.id,"name":phase.name,"description":phase.description,
+            "entered":phase.entered,"completed":phase.completed,
+            "entry_gates":gates(&phase.entry_gates),
+            "exit_gates":gates(&phase.exit_gates)
+        })).collect::<Vec<_>>()
+    })
+}
 fn projection(
     root: &Path,
     binding: &Binding,
@@ -449,13 +480,14 @@ fn projection(
         return Err(invalid("stale_trajectory"));
     }
     bounded_projection(&serde_json::json!({
-        "projection":"validation-results.v2",
+        "projection":"validation-results.v3",
         "publication_actor":"agent through existing validation gates",
         "intent":plan.intent,"validation":results,
+        "plan_obligations":plan_obligations(&plan),
         "unresolved_assumptions":trajectory.unresolved_assumptions,
         "shortcut_risk_signals":trajectory.shortcut_risk_signals,
         "trajectory_blockers":trajectory.blockers,
-        "coverage":"all check outcomes, stage dispositions and adverse facts; repeated facts are indexed once. Exact custody hashes bind the complete evidence outside this prompt. No raw logs, full plan or source diff; unrepresented warnings and untested intent remain unknown"
+        "coverage":"all check outcomes, stage dispositions, declared plan obligations and adverse facts; repeated facts are indexed once. Plan declarations and gate satisfaction flags are not independent execution proof. Exact custody hashes bind the complete evidence outside this prompt. No raw logs, administrative plan metadata or source diff; unrepresented warnings and untested intent remain unknown"
     }))
 }
 
@@ -1002,6 +1034,68 @@ pub(crate) fn assess(
 #[cfg(test)]
 mod projection_tests {
     use super::*;
+    fn obligation_fixture() -> crate::plan_governance::GovernedPlan {
+        serde_json::from_value(serde_json::json!({
+            "schema_version":"1.1.0","title":"bounded readiness",
+            "intent":"meet the declared requirements","state":"APPROVED",
+            "updated_at":"123Z",
+            "proof_hooks":["measure peak memory on the supported workload"],
+            "unknowns":["supported workload not established"],
+            "human_questions":["which latency bound applies?"],
+            "stop_conditions":["stop if the workload cannot be reproduced"],
+            "unresolved_contradictions":["two reports disagree about the memory limit"],
+            "deferred_questions":["green tests do not establish the memory requirement"],
+            "phases":[{
+                "id":"measurement","name":"measure","description":"verify resource bounds",
+                "entered":true,"completed":false,
+                "entry_gates":[{"description":"pin workload","required_artifacts":["workload.json"],
+                    "validation_checks":["integrity"],"satisfied":true,"satisfied_at":"122Z"}],
+                "exit_gates":[{"description":"memory under limit","required_artifacts":["memory.json"],
+                    "validation_checks":["peak_memory"],"satisfied":false}]
+            }]
+        })).unwrap()
+    }
+    #[test]
+    fn plan_projection_retains_requirements_beyond_successful_checks() {
+        let plan = obligation_fixture();
+        let value = plan_obligations(&plan);
+        for key in [
+            "proof_hooks",
+            "unknowns",
+            "human_questions",
+            "stop_conditions",
+            "unresolved_contradictions",
+            "deferred_questions",
+        ] {
+            assert_eq!(value[key], serde_json::to_value(&plan).unwrap()[key]);
+        }
+        let phase = &value["phases"][0];
+        assert_eq!(phase["completed"], false);
+        assert_eq!(phase["entry_gates"][0]["satisfied"], true);
+        assert_eq!(phase["exit_gates"][0]["satisfied"], false);
+        assert_eq!(
+            phase["exit_gates"][0]["validation_checks"][0],
+            "peak_memory"
+        );
+        assert_eq!(
+            phase["exit_gates"][0]["required_artifacts"][0],
+            "memory.json"
+        );
+        assert!(value.get("state").is_none());
+        assert!(value.get("updated_at").is_none());
+        assert!(phase["entry_gates"][0].get("satisfied_at").is_none());
+    }
+    #[test]
+    fn oversized_deferred_obligation_cannot_be_silently_dropped() {
+        let mut plan = obligation_fixture();
+        plan.deferred_questions = vec!["unresolved requirement ".repeat(MAX_INPUT)];
+        assert!(
+            bounded_projection(&serde_json::json!({
+                "intent":plan.intent,"plan_obligations":plan_obligations(&plan)
+            }))
+            .is_err()
+        );
+    }
     fn fixture() -> (Binding, evidence::SuiteEvidence) {
         let material = evidence::MaterialIdentity {
             repository: "example/repo".into(),

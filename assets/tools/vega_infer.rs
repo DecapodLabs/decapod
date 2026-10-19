@@ -15,6 +15,8 @@ mod decoder;
 mod evaluation_corpus;
 #[path = "vega-native/metal_recurrence_reference.rs"]
 mod metal_recurrence_reference;
+#[path = "vega-native/public_review_sources.rs"]
+mod public_review_sources;
 #[path = "vega-native/readiness_evaluation.rs"]
 mod readiness_evaluation;
 #[path = "vega-native/reference_backbone.rs"]
@@ -136,6 +138,10 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     }
     if args.len() == 3 && args[0] == "--prepare-evaluation" && args[1] == "--proof-output" {
         return prepare_evaluation(Path::new(&args[2]));
+    }
+    if args.len() == 3 && args[0] == "--audit-public-review-sources" && args[1] == "--proof-output"
+    {
+        return audit_public_review_sources(Path::new(&args[2]));
     }
     if args.len() == 3 && args[0] == "--diagnose-native" && args[1] == "--proof-output" {
         return diagnose_native(Path::new(&args[2]));
@@ -467,6 +473,18 @@ fn collect_scientific_numerics(proof: &Path) -> Result<(), Box<dyn std::error::E
     let started = std::time::Instant::now();
     let mut steps = Vec::new();
     let mut outputs = serde_json::Map::new();
+    // Independently collect prospective input research. Its absence/failure
+    // must not suppress Metal/CPU execution, and its collection cannot replace
+    // any existing numerical or heldout acceptance condition.
+    let source_path = proof.with_extension("public-review-sources.json");
+    let source_audit = match audit_public_review_sources(&source_path)
+        .and_then(|()| context.reference(&source_path))
+    {
+        Ok(reference) => serde_json::json!({"collected":true,"publication_ready":false,
+            "receipt":reference}),
+        Err(error) => serde_json::json!({"collected":false,"publication_ready":false,
+            "error":error.to_string()}),
+    };
     for name in NUMERICAL_PHASES {
         let path = proof.with_extension(format!("{name}.json"));
         let result = match name {
@@ -498,6 +516,7 @@ fn collect_scientific_numerics(proof: &Path) -> Result<(), Box<dyn std::error::E
     let passed = steps.iter().all(|step| step["passed"] == true);
     context.publish(Phase::Numeric,proof,passed,serde_json::json!({
         "status":"collected_acceptance_pending","publication_ready":false,
+        "public_review_source_audit":source_audit,
         "required_steps":steps,"outputs":outputs,"wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
         "scope":"Numerical collection only; failures preserved for required final aggregate, not passing scientific acceptance."
     }))
@@ -913,6 +932,38 @@ fn evaluate_readiness_selected(
     {
         return Err("readiness evaluation does not satisfy final acceptance; inspect measured coverage, risk and label-scope limits".into());
     }
+    Ok(())
+}
+
+fn audit_public_review_sources(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    // Public source fixtures are data, not imported controller proof. The
+    // audit deliberately performs no model inference and grants no readiness.
+    let source = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../tests/fixtures/vega-public-review-sources/source-records.json");
+    let bytes = read_bounded(&source, 8 * 1024 * 1024)?;
+    let audit = public_review_sources::audit_bundle(&bytes)?;
+    let bytes = serde_json::to_vec(&audit)?;
+    if bytes.len() > 8 * 1024 * 1024 {
+        return Err("public review-source audit exceeds separate 8 MiB bound".into());
+    }
+    let destination = proof_path.with_extension("source-audit.json");
+    let parent = proof_path.parent().ok_or("proof has no parent")?;
+    let mut file = tempfile::NamedTempFile::new_in(parent)?;
+    file.write_all(&bytes)?;
+    file.as_file().sync_all()?;
+    file.persist_noclobber(&destination)?;
+    write_private_proof(
+        proof_path,
+        &serde_json::json!({
+            "schema":"decapod.vega.public-review-source-audit-receipt.v1",
+            "publication_ready":false,"source_sha256":audit["source_sha256"],
+            "source_records":audit["source_records"],"source_binding_eligible":audit["source_binding_eligible"],
+            "malformed_records":audit["malformed"].as_array().map(Vec::len),
+            "audit_sha256":vega_readiness::hash(&bytes),"audit_file":destination,
+            "model_inference":"not_executed","calibration_fit":"not_performed",
+            "production_calibration":"unsatisfied","holdout_frozen_for_inference":false
+        }),
+    )?;
     Ok(())
 }
 
