@@ -7,7 +7,7 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
-For the optional Vega readiness integration, collecting native execution evidence must precede final model acceptance. A frozen public-case evaluation may measure scoped benchmark decisions without becoming publication authority. Expected labels stay outside model input, errors and unsupported/deadline cases remain visible, and insufficient independent readiness labels or risk coverage keep acceptance unsatisfied. These authored paths require execution through the released controller before any measured result is claimed.
+Vega is an optional team choice during init and in shared project configuration. Each maintainer resolves a verified private local runtime/model installation; selecting the option does not add this repository's research corpus or Mac-specific verification recipe to other projects. Failed/incomplete/stale deterministic proof exits before Vega; only successful proof can reach bounded readiness assessment. Vega cannot waive proof or create a PR, and the human retains merge authority. Candidate aa66c8e4 executed real M1 Max Metal and CPU inference,30native tests and two independent numerical fixtures successfully, but required heldout risk/coverage failed. New longer-reference and disjoint collection paths are authored and require fresh released-controller validation. Labels remain outside model input; errors, unsupported cases and unavailable independent adjudication cannot be converted into acceptance.
 
 The record must preserve what was asked, how the agent understood it, what
 scope was accepted, what changed, and what remains unproven. That record stays
@@ -202,8 +202,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (37 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

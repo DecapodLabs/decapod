@@ -62,7 +62,7 @@ validation_buildkite_preflights = true
 commands = []
 
 [proof.rust_workers]
-reviewed_recipes_digest = "sha256:c6d245599beb7bb8fabd3c1f7078d6cb51c938d124ff41c76e00f4ae59511fc6"
+reviewed_recipes_digest = "sha256:d6d9c7ff0ea68ac067f2c25e5c3544407d9ed00a63d021330061e47244cfe1c1"
 
 [[proof.rust_workers.workers]]
 name = "vega-native"
@@ -71,13 +71,19 @@ features = []
 metal_toolchain = true
 timeout_seconds = 1800
 runs = [
-    { arguments = ["--probe-auto"], proof_output = true },
-    { arguments = ["--collect-native-verification"], proof_output = true },
+    { arguments = ["--collect-scientific-numerics"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "0"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "1"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "2"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "3"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "4"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "5"], proof_output = true },
+    { arguments = ["--verify-scientific-collection"], proof_output = true },
 ]
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:03537c0aebf06d4599269d5e17bb9a5dafcb961bf3bbbeefe307cde9bcf04176"
+reviewed_sources_digest = "sha256:590180d98e2576c16e62ee75162edbc2c35e77dff1261f64a136b8c97fef8ce3"
 
 [custody]
 isolation = "container"

@@ -16,11 +16,11 @@ fallback. Runtime labels must match the explicit physical-backend request. New
 CPU and CUDA paths still require actual execution and numerical verification;
 neither a CPU answer nor a capability declaration proves Metal execution.
 
-The verification-only scalar-F64 reference verifies complete immutable model/config hashes before computing expected values. It uses no candidate model or tensor math, while sharing generic parsing/hash infrastructure and the same author; these limits and its short-text scope prevent a claim of independently reviewed full-context equivalence. Raw block samples and expected tensors remain bounded private diagnostic exports outside Git. The primary receipt binds their paths/digests but does not elevate them into kernel publication authority. A missing, malformed, unsupported or disagreeing reference fails after independent native attempts have been collected. No Python specification code executes and no model weights enter the published crate. Required readiness evaluation and deterministic freshness gates remain authoritative even if numerical subset comparisons later pass.
+The verification-only scalar F64 reference verifies immutable model/config hashes and calculates expected values without candidate tensor/model math, while sharing generic infrastructure, weights and authorship. Candidate aa66c8e4 executed the138/314-token Metal/CPU subset; neither that success nor the new4096resource cap establishes all-input equivalence or independent human review. New exact-limit and phased-collection code is unexecuted. Raw tensors stay in bounded private exports; the final required scientific command rechecks referenced bytes and comparisons without importing earlier-run artifacts. Proxy labels, observed false-ready outcomes, incomplete coverage and23lineages retain the unsatisfied readiness-calibration gate.
 
 ## Explicit local task-transfer trust
 
-The separate worker's vendored Metal subpackage is an explicitly reviewed runtime-source modification, not an update to external model weights. Its manifest pins base commit/subtree, original and modified shader hashes and redistribution terms. Probe and scalar-regression receipts bind the modified shader hash and verify included source bytes. No Cargo-cache mutation, floating dependency, candidate controller or tolerance relaxation is allowed. A numerical hazard repair remains unverified until actual execution: candidate19's two failed Metal combined-engine comparisons and partial heldout false-ready/error/deadline results remain authoritative failures. Thirty-two repeated primitive comparisons cannot establish long-context equivalence or semantic readiness. Agent-proxy labels, only23heldout lineages and failed risk/coverage keep publication blocked independently of source success.
+The separate worker's vendored Metal subpackage preserves its exact upstream base/tree and explicit three-barrier source modification. Patched shader identity is separate from the upstream revision; the standard Apache text corrects a prior project-specific appendix without inventing an upstream holder. aa66c8e4 actually passed its repeated primitive and two model fixtures after earlier measured Metal failures. The new scientific collection context is ephemeral evidence bookkeeping, not a task control plane or authentication against a malicious worker/same-user forgery. Exclusive files, current-directory/runtime/model/corpus binding, no-follow single-link reads and strict final aggregation reject accidental replay/mixing, altered labels, inconsistent decisions and missing coverage. A collection-only successful exit cannot waive the last required command or any kernel gate.
 
 `src/decapod/core/task_transfer.rs` accepts source custody only with an independently
 supplied artifact digest and explicit operator acceptance. Git origin and agent
@@ -370,8 +370,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (37 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -331,6 +331,11 @@
       "falsifier": "A near-expired real Rust slow probe obtains a fresh discovery budget or launches after expiry.",
       "status": "open"
     },
+    "vega-current-run-scientific-collection": {
+      "statement": "Scientific collection is separate from acceptance: eight reviewed Rust runs collect three fixed numerical fixtures and six disjoint heldout shards, while a mandatory current-run final aggregate rechecks identity, numeric exports and full frozen risk/coverage/label conditions; no collection-only success authorizes publication.",
+      "falsifier": "A missing, replayed, mixed, unsafe or malformed phase, changed frozen label/input, inconsistent decision, numerical disagreement, incomplete required coverage or unsatisfied risk/independent-label criterion permits the final required scientific command to succeed.",
+      "status": "open"
+    },
     "vega-native-acceptance": {
       "statement": "Feature publication requires actual native model execution, independent numerical parity and defensible held-out readiness evaluation; current diagnostic collection does not satisfy these conditions.",
       "falsifier": "Publication occurs with absent or failed model/parity/calibration evidence, or diagnostics/agent-authored labels are presented as independent acceptance.",
@@ -614,6 +619,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T035404Z.json"
       ]
+    },
+    {
+      "id": "vega1191-bounded-scientific-collection",
+      "summary": "Preserve measured repaired Metal/CPU parity and30passed tests; extend independent exact-limit coverage and collect unchanged frozen holdout in disjoint current-run shards with strict final acceptance, adversarial guards and original hard limits; correct license appendix, without model/calibration/tolerance/criterion changes",
+      "input_digest": "sha256:1262369c648cd91408230c997ea528433759eaea86a1271ae0af15c8b8977c6f",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T045602Z.json"
+      ]
     }
   ],
   "intents": {
@@ -657,23 +670,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Completed19 full validation passed required Buildkite2211,28native tests and both CPU numerical fixtures, but actual Metal combined engine errors0.001178/0.001728 failed frozen criteria. Review exact upstream metal-kernels0.2.6 subtree and isolated three end-token barriers to repair cross-SIMD shared-key hazard; source/license/original and patched hashes preserved, no candidate controller or cache edits. New real-Metal32repetition primitive test uses own indexed scalarF64 oracle, fixed dyadic inputs and predeclared tolerances; unexecuted until nextvalidate. Reviewed inventory03537c0a and unchanged recipe; all model/calibration/corpus/risk/timeout criteria retained. Partial heldout failures,512-token reference and label-authority gaps still block publication. Failed deterministic validation returns before optional Vega.",
-          "reviewed_code_fingerprint": "d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326",
-          "spec_material_hash": "93d5f3fdc90b30497b0c1d5e9dba52740c0855ec2862b610ecd209666b5960bb"
+          "reason": "Measured aa66 official1191 validation passed required BK2216 all39,30native tests,32realMetal recurrence repetitions and138/314token CPU/Metal ownF64 comparisons; heldout proxy risk/coverage still failed. New verification-only eight-run collector preserves original1800command/7200global bounds, fixed modulo6 membership, exclusive current-directory/runtime/model/corpus receipts and strict final numeric/metrics reduction. One absolute1600 dispatch cutoff spans both backends and preparation. Independent tokenizer alone selects a frozen exact4096 fixture from306literal coverage sentences plus0..32x suffixes;4097 must reject,16memory slots required, no tolerance or asset/label/risk changes. New adversarial tests are authored, not executed. Official standard Apache text corrects copied appendix without shader changes. Reviewed inventory590180d9 and reciped6d9c7ff; no kernel authority, task custody, main/Bazel lock, production schema or failed-validation-skips-Vega change. Calibration and production fallback/unsupported-mode limits remain explicit.",
+          "reviewed_code_fingerprint": "db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047",
+          "spec_material_hash": "ce23a10f37d0930c5f222759323b31b2dd181509e17ede6d0940d2e1e05e30c2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Completed19 full validation passed required Buildkite2211,28native tests and both CPU numerical fixtures, but actual Metal combined engine errors0.001178/0.001728 failed frozen criteria. Review exact upstream metal-kernels0.2.6 subtree and isolated three end-token barriers to repair cross-SIMD shared-key hazard; source/license/original and patched hashes preserved, no candidate controller or cache edits. New real-Metal32repetition primitive test uses own indexed scalarF64 oracle, fixed dyadic inputs and predeclared tolerances; unexecuted until nextvalidate. Reviewed inventory03537c0a and unchanged recipe; all model/calibration/corpus/risk/timeout criteria retained. Partial heldout failures,512-token reference and label-authority gaps still block publication. Failed deterministic validation returns before optional Vega.",
-          "reviewed_code_fingerprint": "d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326",
-          "spec_material_hash": "21eb8b7e4b2e17ac0eec233ceb85a3fbb19ba9b9ed3009d53aa284cf1ba7c67e"
+          "reason": "Measured aa66 official1191 validation passed required BK2216 all39,30native tests,32realMetal recurrence repetitions and138/314token CPU/Metal ownF64 comparisons; heldout proxy risk/coverage still failed. New verification-only eight-run collector preserves original1800command/7200global bounds, fixed modulo6 membership, exclusive current-directory/runtime/model/corpus receipts and strict final numeric/metrics reduction. One absolute1600 dispatch cutoff spans both backends and preparation. Independent tokenizer alone selects a frozen exact4096 fixture from306literal coverage sentences plus0..32x suffixes;4097 must reject,16memory slots required, no tolerance or asset/label/risk changes. New adversarial tests are authored, not executed. Official standard Apache text corrects copied appendix without shader changes. Reviewed inventory590180d9 and reciped6d9c7ff; no kernel authority, task custody, main/Bazel lock, production schema or failed-validation-skips-Vega change. Calibration and production fallback/unsupported-mode limits remain explicit.",
+          "reviewed_code_fingerprint": "db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047",
+          "spec_material_hash": "f00b6d61207b4ba2b51c36bef718673eaecc16d1d6e97528ff58a7435a88f147"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Completed19 full validation passed required Buildkite2211,28native tests and both CPU numerical fixtures, but actual Metal combined engine errors0.001178/0.001728 failed frozen criteria. Review exact upstream metal-kernels0.2.6 subtree and isolated three end-token barriers to repair cross-SIMD shared-key hazard; source/license/original and patched hashes preserved, no candidate controller or cache edits. New real-Metal32repetition primitive test uses own indexed scalarF64 oracle, fixed dyadic inputs and predeclared tolerances; unexecuted until nextvalidate. Reviewed inventory03537c0a and unchanged recipe; all model/calibration/corpus/risk/timeout criteria retained. Partial heldout failures,512-token reference and label-authority gaps still block publication. Failed deterministic validation returns before optional Vega.",
-          "reviewed_code_fingerprint": "d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326",
-          "spec_material_hash": "c1ac8b7fba988e01719180ba55b5bbcc064883f4b4c146d134010da298f5a426"
+          "reason": "Measured aa66 official1191 validation passed required BK2216 all39,30native tests,32realMetal recurrence repetitions and138/314token CPU/Metal ownF64 comparisons; heldout proxy risk/coverage still failed. New verification-only eight-run collector preserves original1800command/7200global bounds, fixed modulo6 membership, exclusive current-directory/runtime/model/corpus receipts and strict final numeric/metrics reduction. One absolute1600 dispatch cutoff spans both backends and preparation. Independent tokenizer alone selects a frozen exact4096 fixture from306literal coverage sentences plus0..32x suffixes;4097 must reject,16memory slots required, no tolerance or asset/label/risk changes. New adversarial tests are authored, not executed. Official standard Apache text corrects copied appendix without shader changes. Reviewed inventory590180d9 and reciped6d9c7ff; no kernel authority, task custody, main/Bazel lock, production schema or failed-validation-skips-Vega change. Calibration and production fallback/unsupported-mode limits remain explicit.",
+          "reviewed_code_fingerprint": "db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047",
+          "spec_material_hash": "c055dbb247f9408bf9ab4edacc17ebf54e33ee22380e915cad26a5093e2bb3bf"
         }
       ],
       "state": "APPROVED",
@@ -686,7 +699,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792385748Z"
+      "updated_at": "1792391493Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -698,7 +711,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:53c24a181909f30f0ece0d03d331f1b3692e128e564e06122f4aa2c4e3fb9921",
+      "artifact_hash": "sha256:4c49edc1b493ac388b2d63b10856192ba91f2f69020226cb756700e74c27dc04",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -775,6 +788,10 @@
         {
           "name": "feature-build-tests",
           "status": "unavailable"
+        },
+        {
+          "name": "fmt",
+          "status": "passed"
         },
         {
           "name": "formatting",
@@ -857,6 +874,10 @@
           "status": "failed"
         },
         {
+          "name": "metal_cpu_reference_aa",
+          "status": "passed"
+        },
+        {
           "name": "metal_model_2f",
           "status": "failed"
         },
@@ -909,12 +930,20 @@
           "status": "passed"
         },
         {
+          "name": "native_tests_aa",
+          "status": "passed"
+        },
+        {
           "name": "native_worker_execution",
           "status": "unavailable"
         },
         {
           "name": "native_worker_tests_2f",
           "status": "passed"
+        },
+        {
+          "name": "new_collection",
+          "status": "unavailable"
         },
         {
           "name": "numerical_execution",
@@ -951,6 +980,10 @@
         {
           "name": "readiness-holdout",
           "status": "unavailable"
+        },
+        {
+          "name": "readiness_aa",
+          "status": "failed"
         },
         {
           "name": "readiness_calibration",
@@ -1034,6 +1067,10 @@
         },
         {
           "name": "source5d",
+          "status": "passed"
+        },
+        {
+          "name": "source_aa",
           "status": "passed"
         },
         {
@@ -1366,10 +1403,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 44
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:45",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 45
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 44,
+        "next_sequence": 45,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2229,6 +2273,43 @@
                 "validation_findings": [
                   "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain."
                 ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:45",
+                "observations": [
+                  "src/decapod/core/validation_runtime.rs",
+                  "assets/tools/vega-native/scientific_collection.rs",
+                  "assets/tools/vega-native/readiness_evaluation.rs",
+                  "assets/tools/vega-native/reference_backbone.rs",
+                  "assets/tools/vega_infer.rs",
+                  "assets/tools/vega-native/vendor/metal-kernels/LICENSE-APACHE",
+                  "docs/vega-reference-contract.md",
+                  "docs/agent/repository-readiness.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/vega-1191-validation-20261019T045602Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2216",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/39201940594"
+                ],
+                "proof_refs": [
+                  "source_aa",
+                  "native_tests_aa",
+                  "metal_cpu_reference_aa",
+                  "readiness_aa",
+                  "new_collection",
+                  "fmt"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 45,
+                "validation_findings": [
+                  "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback."
+                ]
               }
             ]
           }
@@ -2258,6 +2339,7 @@
         "/private/tmp/vega-1191-validation-20261019T020535Z.json",
         "/private/tmp/vega-1191-validation-20261019T031409Z.json",
         "/private/tmp/vega-1191-validation-20261019T035404Z.json",
+        "/private/tmp/vega-1191-validation-20261019T045602Z.json",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
@@ -2292,6 +2374,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2201",
         "https://buildkite.com/decapodlabs/decapod/builds/2206",
         "https://buildkite.com/decapodlabs/decapod/builds/2211",
+        "https://buildkite.com/decapodlabs/decapod/builds/2216",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -2309,6 +2392,7 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39173829817",
         "https://github.com/DecapodLabs/decapod/actions/runs/39183631846",
         "https://github.com/DecapodLabs/decapod/actions/runs/39196818895",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39201940594",
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6259258948",
         "https://github.com/DecapodLabs/decapod/pull/1458",
         "https://github.com/DecapodLabs/decapod/releases/tag/v0.119.1",
@@ -2339,6 +2423,7 @@
         ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/VALIDATION.md",
@@ -2351,8 +2436,11 @@
         "assets/tools/vega-native/reference_backbone.rs",
         "assets/tools/vega-native/reference_engine.rs",
         "assets/tools/vega-native/reference_tokenizer.rs",
+        "assets/tools/vega-native/scientific_collection.rs",
+        "assets/tools/vega-native/vendor/metal-kernels/LICENSE-APACHE",
         "assets/tools/vega-native/vendor/metal-kernels/src/gdn.metal",
         "assets/tools/vega_infer.rs",
+        "docs/agent/repository-readiness.md",
         "docs/vega-reference-contract.md",
         "src/decapod/cli.rs",
         "src/decapod/core/validation_runtime.rs",
@@ -2401,6 +2489,7 @@
         "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
         "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
         "New companion binding/probe/classifier/receipt changes and regressions authored, no Rust tests executed for this candidate. Actual worker build/Metal/model/parity/calibration unavailable under current released native-proof contract; no manual build, shadow preflight, Python or artifact workaround used. Preserved native/reference/holdout blockers. Prerequisite5cee green but publication awaits public API rate reset; its candidate controller is not adopted.",
+        "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback.",
         "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change.",
         "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain.",
         "Only released119 snapshot blocker retired: merged fix is officially published1191. Native/parity/calibration acceptance remains unverified and required recipe remains nonaccepting until actual evidence; authored inputs and frozen criteria unchanged.",

@@ -23,6 +23,8 @@ mod reference_backbone;
 mod reference_engine;
 #[path = "vega-native/reference_tokenizer.rs"]
 mod reference_tokenizer;
+#[path = "vega-native/scientific_collection.rs"]
+mod scientific_collection;
 #[path = "../../src/decapod/core/vega_backbone.rs"]
 mod vega_backbone;
 use std::{
@@ -101,6 +103,25 @@ fn main() {
 }
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = std::env::args_os().skip(1).collect::<Vec<_>>();
+    if args.len() == 3 && args[1] == "--proof-output" {
+        if args[0] == "--collect-scientific-numerics" {
+            return collect_scientific_numerics(Path::new(&args[2]));
+        }
+        if args[0] == "--verify-scientific-collection" {
+            return verify_scientific_collection(Path::new(&args[2]));
+        }
+    }
+    if args.len() == 5
+        && args[0] == "--collect-readiness-shard"
+        && args[1] == "--index"
+        && args[3] == "--proof-output"
+    {
+        let index = args[2]
+            .to_str()
+            .ok_or("invalid shard index")?
+            .parse::<usize>()?;
+        return collect_readiness_shard(index, Path::new(&args[4]));
+    }
     if args.len() == 7
         && args[0] == "--evaluate-readiness"
         && args[1] == "--split"
@@ -327,10 +348,408 @@ fn collect_native_verification(proof_path: &Path) -> Result<(), Box<dyn std::err
     Ok(())
 }
 
+const SCIENTIFIC_BASELINE: &str =
+    "sha256:2b985edf9a5641fabe12b54f5f94bdff2ca888f19551593b8d9f87cd088cf9fc";
+const SCIENTIFIC_CORPUS: &str =
+    "sha256:09df504b0d50004499172c1cebf9fbf414ed91d72a703ebd0b0a634e3a7e3e88";
+const NUMERICAL_PHASES: [&str; 3] = [
+    "native_diagnostics",
+    "native_chunk_diagnostics",
+    "native_limit_diagnostics",
+];
+const COVERAGE_SENTENCE: &str = "Required coverage item: preserve deterministic checks and report explicitly missing evidence. ";
+const SHORT_NUMERICAL_STATE: &str = r#"{"intent":"Document a CLI option","validation":"passed","obligations":[{"requirement":"Describe CPU fallback explicitly","evidence":"missing"}],"unknowns":[]}"#;
+
+/// Frozen before long-model observations: start with306literal sentences and
+/// append at most32 literal " x" suffixes. Only the independent tokenizer may
+/// select the suffix count, to reach exactly4096 without truncation. No model
+/// output or candidate tokenizer participates in fixture selection.
+fn independent_limit_state(
+    reference: &reference_tokenizer::ReferenceTokenizer,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let base = COVERAGE_SENTENCE.repeat(306);
+    for suffix in 0..=32 {
+        let state = format!("{base}{}", " x".repeat(suffix));
+        let prompt = reference.prompt(&state, vega_prompt::QUESTION, None)?;
+        if prompt["tokens"]
+            .as_array()
+            .ok_or("missing independent limit tokens")?
+            .len()
+            == 4096
+        {
+            return Ok(state);
+        }
+    }
+    Err("frozen independent limit fixture did not reach4096; do not replace it after model observations".into())
+}
+fn long_numerical_state() -> Result<String, Box<dyn std::error::Error>> {
+    let setup = vega_setup::run(&vega_setup::SetupOptions::default())?;
+    if setup.manifest_digest.as_deref() != Some(SCIENTIFIC_BASELINE) {
+        return Err("scientific model pin changed".into());
+    }
+    let installation = setup
+        .model_directory
+        .ok_or("missing verified installation")?;
+    long_numerical_state_from(&installation)
+}
+fn long_numerical_state_from(installation: &Path) -> Result<String, Box<dyn std::error::Error>> {
+    let bytes = read_bounded(
+        &installation.join("backbone/tokenizer.json"),
+        16 * 1024 * 1024,
+    )?;
+    let config = read_bounded(
+        &installation.join("backbone/tokenizer_config.json"),
+        1024 * 1024,
+    )?;
+    if vega_readiness::hash(&bytes)
+        != "sha256:5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42"
+        || vega_readiness::hash(&config)
+            != "sha256:49e2b6e395f959f077f1e992b338919c0d4a9732fc6e613995e06557f843500c"
+        || !serde_json::from_slice::<serde_json::Value>(&config)?["bos_token"].is_null()
+    {
+        return Err("independent limit tokenizer/config pin differs".into());
+    }
+    let reference = reference_tokenizer::ReferenceTokenizer::new(&serde_json::from_slice(&bytes)?)?;
+    independent_limit_state(&reference)
+}
+fn numeric_child_passes(name: &str, report: &serde_json::Value) -> bool {
+    if report["schema"] != "decapod.vega-native-diagnostics.v1"
+        || report["probe"]["backend"] != "candle-metal"
+        || report["probe"]["status"] != "passed"
+        || report["probe"]["synchronized"] != true
+        || report["probe"]["bit_exact"] != true
+        || report["probe"]["actual"].as_array().map(Vec::len) != Some(8)
+        || report["probe"]["actual"] != report["probe"]["expected"]
+        || report["probe"]["attention_metal_gdn_source_sha256"]
+            != vega_backbone::METAL_GDN_SOURCE_SHA256
+        || report["metal_recurrence_reference"]["status"] != "passed_scalar_recurrence"
+        || report["metal_recurrence_reference"]["repetitions"] != 32
+        || report["metal_recurrence_reference"]["all_repetitions_required"] != true
+        || report["metal_recurrence_reference"]["synchronized"] != true
+        || report["metal_recurrence_reference"]["metal_gdn_source_sha256"]
+            != vega_backbone::METAL_GDN_SOURCE_SHA256
+        || report["separate_tokenizer_reference"]["status"] != "passed"
+        || report["separate_backbone_reference"]["backend_comparisons"] != 2
+        || report["required_chunk_evidence_missing"] != false
+    {
+        return false;
+    }
+    let Some(attempts) = report["attempts"].as_array() else {
+        return false;
+    };
+    if attempts.len() != 2 {
+        return false;
+    }
+    for (attempt, backend) in attempts.iter().zip(["candle-metal", "candle-cpu"]) {
+        if attempt["backend"] != backend
+            || attempt["manifest_digest"] != SCIENTIFIC_BASELINE
+            || attempt["separate_backbone_reference"]["status"] != "passed_backbone_subset"
+            || attempt["combined_reference_engine"]["status"] != "passed_engine_only"
+            || attempt["separate_engine_reference"]["status"] != "passed_engine_only"
+        {
+            return false;
+        }
+        if name == "native_limit_diagnostics"
+            && (report["separate_backbone_reference"]["input_tokens"] != 4096
+                || attempt["prompt_spans"]["last"] != 4095
+                || attempt["chunk_mask"]
+                    .as_array()
+                    .is_none_or(|mask| mask.len() != 16 || mask.iter().any(|v| v != true)))
+        {
+            return false;
+        }
+    }
+    true
+}
+fn collect_scientific_numerics(proof: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    use scientific_collection::{Collection, Phase};
+    let context = Collection::create(proof)?;
+    let started = std::time::Instant::now();
+    let mut steps = Vec::new();
+    let mut outputs = serde_json::Map::new();
+    for name in NUMERICAL_PHASES {
+        let path = proof.with_extension(format!("{name}.json"));
+        let result = match name {
+            "native_diagnostics" => diagnose_native(&path),
+            "native_chunk_diagnostics" => {
+                diagnose_native_state(&path, COVERAGE_SENTENCE.repeat(16), true)
+            }
+            "native_limit_diagnostics" => {
+                long_numerical_state().and_then(|state| diagnose_native_state(&path, state, true))
+            }
+            _ => unreachable!(),
+        };
+        let reference = context.reference(&path);
+        let checked = reference
+            .as_ref()
+            .ok()
+            .and_then(|r| context.read_reference(r).ok())
+            .is_some_and(|report| numeric_child_passes(name, &report));
+        let passed = result.is_ok() && checked;
+        steps.push(serde_json::json!({"name":name,"passed":passed,"error":result.err().map(|e|e.to_string())}));
+        outputs.insert(
+            name.into(),
+            match reference {
+                Ok(value) => value,
+                Err(error) => serde_json::json!({"unavailable":error.to_string()}),
+            },
+        );
+    }
+    let passed = steps.iter().all(|step| step["passed"] == true);
+    context.publish(Phase::Numeric,proof,passed,serde_json::json!({
+        "status":"collected_acceptance_pending","publication_ready":false,
+        "required_steps":steps,"outputs":outputs,"wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
+        "scope":"Numerical collection only; failures preserved for required final aggregate, not passing scientific acceptance."
+    }))
+}
+fn collect_readiness_shard(index: usize, proof: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    use scientific_collection::{Collection, Phase, SHARDS};
+    if index >= SHARDS {
+        return Err("invalid frozen shard index".into());
+    }
+    let context = Collection::load(proof)?;
+    let started = std::time::Instant::now();
+    // One absolute cutoff covers preparation and both backend phases. The
+    // kernel retains1800s/command and7200s/whole validation, with no resets.
+    let deadline = started + std::time::Duration::from_secs(1600);
+    let mut reports = serde_json::Map::new();
+    for backend in ["auto", "cpu"] {
+        let path = proof.with_extension(format!("{backend}.json"));
+        let result = evaluate_readiness_selected(
+            "holdout",
+            backend,
+            &path,
+            Some(readiness_evaluation::Shard {
+                index,
+                count: SHARDS,
+            }),
+            Some(deadline),
+        );
+        let reference = context.reference(&path);
+        let receipt = reference
+            .as_ref()
+            .ok()
+            .and_then(|r| context.read_reference(r).ok());
+        reports.insert(
+            backend.into(),
+            serde_json::json!({
+                "collection_completed":result.is_ok() && receipt.is_some(),
+                "error":result.err().map(|e|e.to_string()),
+                "receipt":reference.ok()
+            }),
+        );
+    }
+    context.publish(Phase::Shard(index),proof,false,serde_json::json!({
+        "status":"collected_acceptance_pending","publication_ready":false,
+        "shard":{"index":index,"count":SHARDS},"reports":reports,
+        "absolute_soft_dispatch_seconds":1600,"wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
+        "scope":"Both backend collections attempted; no per-shard readiness assertion or acceptance waiver."
+    }))
+}
+fn check_evaluation_binding(
+    report: &serde_json::Value,
+    runtime: &str,
+    backend: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if report["manifest_digest"] != SCIENTIFIC_BASELINE
+        || report["runtime_sha256"] != runtime
+        || report["corpus_sha256"] != SCIENTIFIC_CORPUS
+        || report["split"] != "holdout"
+        || report["fitting_performed"] != false
+        || report["upstream_calibration_modified"] != false
+        || report["collection_only"] != true
+    {
+        return Err("foreign or changed scientific evaluation identity".into());
+    }
+    let selected = if backend == "cpu" { "cpu" } else { "metal" };
+    if report["selected_backend"] != selected {
+        return Err("required evaluation backend differs".into());
+    }
+    for record in report["records"]
+        .as_array()
+        .ok_or("missing evaluation records")?
+    {
+        if record["execution"] == "executed" {
+            let evidence = &record["execution_evidence"];
+            if evidence["manifest_digest"] != SCIENTIFIC_BASELINE
+                || evidence["runtime_sha256"] != runtime
+                || evidence["backend"]
+                    != if backend == "cpu" {
+                        "candle-cpu"
+                    } else {
+                        "candle-metal"
+                    }
+                || evidence["input_tokens"]
+                    .as_u64()
+                    .is_none_or(|tokens| tokens == 0 || tokens > 4096)
+            {
+                return Err("recorded model execution binding differs".into());
+            }
+        }
+    }
+    Ok(())
+}
+fn recheck_numeric_exports(
+    context: &scientific_collection::Collection,
+    name: &str,
+    child: &serde_json::Value,
+    reference: &reference_tokenizer::ReferenceTokenizer,
+    configuration: &serde_json::Value,
+    weights: &[u8],
+) -> Result<bool, Box<dyn std::error::Error>> {
+    let state = match name {
+        "native_diagnostics" => SHORT_NUMERICAL_STATE.to_owned(),
+        "native_chunk_diagnostics" => COVERAGE_SENTENCE.repeat(16),
+        "native_limit_diagnostics" => independent_limit_state(reference)?,
+        _ => return Err("unknown numerical fixture".into()),
+    };
+    let prompt = reference.prompt(&state, vega_prompt::QUESTION, None)?;
+    let expected = context.read_export(&serde_json::json!({
+        "file":child["separate_backbone_reference"]["expected_file"],
+        "sha256":child["separate_backbone_reference"]["expected_sha256"],
+        "max_bytes":child["separate_backbone_reference"]["maximum_export_bytes"]
+    }))?;
+    if expected["input_tokens"]
+        != prompt["tokens"]
+            .as_array()
+            .ok_or("missing independent tokens")?
+            .len()
+    {
+        return Err("scalar reference input length differs".into());
+    }
+    let mut passed = true;
+    for attempt in child["attempts"]
+        .as_array()
+        .ok_or("missing numerical attempts")?
+    {
+        let raw = context.read_export(&attempt["private_numeric_proof"])?;
+        if raw["backend"] != attempt["backend"]
+            || raw["manifest_digest"] != SCIENTIFIC_BASELINE
+            || raw["input_digest"] != vega_readiness::hash(state.as_bytes())
+            || raw["prompt_token_ids"] != prompt["tokens"]
+            || raw["prompt_spans"] != prompt["spans"]
+        {
+            return Err("numeric export model/input/backend binding differs".into());
+        }
+        for (field, count) in [
+            ("pooled_feats", 6144),
+            ("pooled_opts", 2048),
+            ("pooled_chunks", 16384),
+            ("sampled_hidden", 8192),
+        ] {
+            if raw[field].as_array().map(Vec::len) != Some(count)
+                || expected[field].as_array().map(Vec::len) != Some(count)
+            {
+                return Err("numeric export scalar count differs".into());
+            }
+        }
+        passed &=
+            reference_backbone::compare(&expected, &raw)?["status"] == "passed_backbone_subset";
+        passed &= reference_engine::compare(configuration, weights, &raw)?["status"]
+            == "passed_engine_only";
+        passed &= reference_engine::compare_with_inputs(configuration, weights, &raw, &expected)?["status"]
+            == "passed_engine_only";
+    }
+    Ok(passed)
+}
+fn verify_scientific_collection(proof: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    use scientific_collection::{Collection, Phase, SHARDS};
+    let context = Collection::load(proof)?;
+    let numeric = context.read(Phase::Numeric)?;
+    let setup = vega_setup::run(&vega_setup::SetupOptions::default())?;
+    if setup.manifest_digest.as_deref() != Some(SCIENTIFIC_BASELINE) {
+        return Err("final scientific model pin differs".into());
+    }
+    let installation = setup
+        .model_directory
+        .ok_or("missing final verified installation")?;
+    let tokenizer_bytes = read_bounded(
+        &installation.join("backbone/tokenizer.json"),
+        16 * 1024 * 1024,
+    )?;
+    if vega_readiness::hash(&tokenizer_bytes)
+        != "sha256:5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42"
+    {
+        return Err("final independent tokenizer pin differs".into());
+    }
+    let reference =
+        reference_tokenizer::ReferenceTokenizer::new(&serde_json::from_slice(&tokenizer_bytes)?)?;
+    let configuration: serde_json::Value = serde_json::from_slice(&read_bounded(
+        &installation.join("vega_config.json"),
+        1024 * 1024,
+    )?)?;
+    let weights = read_bounded(&installation.join("engine.safetensors"), 128 * 1024 * 1024)?;
+    let mut numeric_passed = numeric.scientific_checks_passed;
+    for name in NUMERICAL_PHASES {
+        let child = context.read_reference(&numeric.report["outputs"][name])?;
+        numeric_passed &= numeric_child_passes(name, &child);
+        numeric_passed &=
+            recheck_numeric_exports(&context, name, &child, &reference, &configuration, &weights)?;
+    }
+    let inputs = proof.with_extension("evaluation-inputs.json");
+    prepare_evaluation(&inputs)?;
+    let receipt: serde_json::Value =
+        serde_json::from_slice(&read_bounded(&inputs, MAX_PROOF_BYTES as u64)?)?;
+    let bytes = read_bounded(&inputs.with_extension("corpus.json"), 8 * 1024 * 1024)?;
+    if receipt["corpus_sha256"] != SCIENTIFIC_CORPUS
+        || vega_readiness::hash(&bytes) != SCIENTIFIC_CORPUS
+    {
+        return Err("final frozen corpus identity differs".into());
+    }
+    let corpus: serde_json::Value = serde_json::from_slice(&bytes)?;
+    let mut backends = serde_json::Map::new();
+    for backend in ["auto", "cpu"] {
+        let mut shards = Vec::new();
+        for index in 0..SHARDS {
+            let phase = context.read(Phase::Shard(index))?;
+            if phase.report["shard"] != serde_json::json!({"index":index,"count":SHARDS})
+                || phase.report["reports"][backend]["collection_completed"] != true
+            {
+                return Err("incomplete or mismatched backend collection".into());
+            }
+            let report = context.read_reference(&phase.report["reports"][backend]["receipt"])?;
+            check_evaluation_binding(&report, &context.runtime_sha256, backend)?;
+            shards.push(report);
+        }
+        backends.insert(
+            backend.into(),
+            readiness_evaluation::aggregate(&corpus, "holdout", &shards)?,
+        );
+    }
+    let accepted = numeric_passed
+        && backends.values().all(|report| {
+            report["frozen_numeric_criterion_met"] == true
+                && report["production_calibration"] == "verified"
+        });
+    write_private_proof(
+        proof,
+        &serde_json::json!({
+            "schema":"decapod.vega-scientific-aggregate.v1","publication_ready":false,
+            "numeric_checks_passed":numeric_passed,"readiness_evaluation":backends,
+            "runtime_sha256":context.runtime_sha256,"manifest_digest":SCIENTIFIC_BASELINE,
+            "corpus_sha256":SCIENTIFIC_CORPUS,"all_required_scientific_conditions_passed":accepted,
+            "scope":"Strict current-run aggregate; diagnostic collection never waives numerical, coverage, risk or label-authority conditions. Kernel retains final validation authority."
+        }),
+    )?;
+    if !accepted {
+        return Err("required scientific acceptance unsatisfied; inspect numerical results and full frozen risk/coverage/label limits".into());
+    }
+    Ok(())
+}
+
 fn evaluate_readiness(
     split: &str,
     backend: &str,
     proof_path: &Path,
+) -> Result<(), Box<dyn std::error::Error>> {
+    evaluate_readiness_selected(split, backend, proof_path, None, None)
+}
+fn evaluate_readiness_selected(
+    split: &str,
+    backend: &str,
+    proof_path: &Path,
+    shard: Option<readiness_evaluation::Shard>,
+    deadline: Option<std::time::Instant>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use vega_readiness::{Backend, BackendPreference};
     if !matches!(split, "development" | "holdout") || !matches!(backend, "auto" | "cpu") {
@@ -376,8 +795,26 @@ fn evaluate_readiness(
     };
     let executable = std::env::current_exe()?;
     let runtime_sha256 = vega_readiness::hash(&read_bounded(&executable, 256 * 1024 * 1024)?);
+    // Unsupported inputs need no model load. This immutable, hash-verified
+    // tokenizer snapshot only rejects out-of-scope cases; every accepted input
+    // still executes infer's complete before/after model-integrity checks.
+    let pre_tokenizer = if shard.is_some() {
+        Some(load_pinned_tokenizer(&installation, &manifest)?)
+    } else {
+        None
+    };
     let mut ordinal = 0;
-    let mut report = readiness_evaluation::run(&corpus, split, |state, deadline| {
+    let assess = |state: &str,
+                  deadline: std::time::Instant|
+     -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        if let Some((tokenizer, bos)) = &pre_tokenizer {
+            if let Err(error) = tokenize(state, tokenizer, *bos) {
+                if error == "vega_prompt_tokens_exceeded_no_truncation" {
+                    return Err(readiness_evaluation::UnsupportedTokens(error).into());
+                }
+                return Err(io::Error::other(error).into());
+            }
+        }
         ordinal += 1;
         let request = Request {
             schema: vega_readiness::WORKER_SCHEMA.into(),
@@ -416,7 +853,18 @@ fn evaluate_readiness(
                 "manifest_digest":manifest_digest,"runtime_sha256":runtime_sha256,
                 "wall_clock_ms":diagnostic["wall_clock_ms"],"peak_resident_bytes":diagnostic["peak_resident_bytes"],
                 "memory_scope":diagnostic["memory_scope"]}}))
-    })?;
+    };
+    let mut report = if let Some(shard) = shard {
+        readiness_evaluation::run_shard_until(
+            &corpus,
+            split,
+            shard,
+            deadline.ok_or("missing absolute shard deadline")?,
+            assess,
+        )?
+    } else {
+        readiness_evaluation::run(&corpus, split, assess)?
+    };
     report["manifest"] = serde_json::to_value(manifest)?;
     report["manifest_digest"] = manifest_digest.into();
     report["runtime_sha256"] = runtime_sha256.into();
@@ -426,7 +874,11 @@ fn evaluate_readiness(
     report["selected_backend"] = serde_json::to_value(selected)?;
     report["evaluation_cpu_selection_reason"] = serde_json::to_value(fallback)?;
     report["cpu_fallback_scope"] = "This evaluation's selected backend; does not establish the separate production runtime-binding/fallback protocol".into();
+    report["collection_only"] = shard.is_some().into();
     write_private_proof(proof_path, &report)?;
+    if shard.is_some() {
+        return Ok(());
+    }
     if report["frozen_numeric_criterion_met"] != true
         || report["production_calibration"] != "verified"
     {
@@ -504,7 +956,7 @@ fn prepare_evaluation(proof_path: &Path) -> Result<(), Box<dyn std::error::Error
 /// prevents dispatch diagnostics. The caller still fails if execution failed.
 fn diagnose_native(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     // Fixed numerical diagnostic; not a labelled evaluation or passing proof.
-    diagnose_native_state(proof_path, r#"{"intent":"Document a CLI option","validation":"passed","obligations":[{"requirement":"Describe CPU fallback explicitly","evidence":"missing"}],"unknowns":[]}"#.into(), false)
+    diagnose_native_state(proof_path, SHORT_NUMERICAL_STATE.into(), false)
 }
 
 fn diagnose_native_state(
@@ -778,7 +1230,7 @@ fn verify_backbone_reference(
         "input_tokens":expected["input_tokens"],"max_reference_tokens":reference_backbone::MAX_REFERENCE_TOKENS,
         "wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
         "independent_human_review":false,"scope":expected["scope"],
-        "limitations":"Same-agent independent mathematical implementation, shared JSON/SafeTensors/hash infrastructure and pinned weights; not empirical HF execution or all-context/backbone equivalence. Long/chunked state and production fallback routing remain unverified."}),
+        "limitations":"Same-agent independent mathematical implementation, shared JSON/SafeTensors/hash infrastructure and pinned weights; not empirical HF execution, independent human review or all-input/backbone equivalence. Only recorded fixed fixtures have execution evidence; streamed-state, vision/adapters and full production fallback routing remain unverified."}),
     )
 }
 
@@ -822,8 +1274,27 @@ fn verify_tokenizer_reference(
     {
         return Err("oversized input was not rejected by both independent paths".into());
     }
+    let limit = independent_limit_state(&reference)?;
+    let expected = reference.prompt(&limit, vega_prompt::QUESTION, None)?;
+    let observed = tokenize(&limit, &actual, None).map_err(io::Error::other)?;
+    if expected["tokens"] != serde_json::to_value(observed.tokens)?
+        || expected["spans"] != serde_json::to_value(observed.spans)?
+        || expected["tokens"].as_array().map(Vec::len) != Some(4096)
+    {
+        return Err("independent4096token boundary differs".into());
+    }
+    let beyond = format!("{limit} x");
+    if reference.encode(&beyond)?.len() != reference.encode(&limit)?.len() + 1
+        || reference
+            .prompt(&beyond, vega_prompt::QUESTION, None)
+            .is_ok()
+        || tokenize(&beyond, &actual, None).err().as_deref()
+            != Some("vega_prompt_tokens_exceeded_no_truncation")
+    {
+        return Err("independent4097token boundary was not rejected without truncation".into());
+    }
     Ok(
-        serde_json::json!({"status":"passed","fixed_prompt_fixtures":fixtures.len(),"oversized_rejections":1,
+        serde_json::json!({"status":"passed","fixed_prompt_fixtures":fixtures.len(),"boundary_prompt_fixtures":1,"exact_boundary_tokens":4096,"oversized_rejections":2,
         "tolerance":"exact token IDs and spans","reference":"separate byte-level BPE; shared JSON, regex and Unicode infrastructure",
         "backbone_parity":"unverified","independent_human_review":false}),
     )
@@ -885,6 +1356,42 @@ fn tokenize(
             .map_err(|e| e.to_string())
     })
 }
+fn load_pinned_tokenizer(
+    installation: &Path,
+    manifest: &vega_setup::InstallManifest,
+) -> Result<(tokenizers::Tokenizer, Option<u32>), Box<dyn std::error::Error>> {
+    let read = |name: &str, limit: u64| -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+        let bytes = read_bounded(&installation.join(name), limit)?;
+        let pin = manifest
+            .files
+            .get(name)
+            .ok_or("missing tokenizer file pin")?;
+        if pin.bytes != bytes.len() as u64 || pin.sha256 != vega_readiness::hash(&bytes) {
+            return Err("tokenizer snapshot differs from verified model manifest".into());
+        }
+        Ok(bytes)
+    };
+    let bytes = read("backbone/tokenizer.json", 16 * 1024 * 1024)?;
+    let tokenizer = tokenizers::Tokenizer::from_bytes(&bytes)
+        .map_err(|error| io::Error::other(error.to_string()))?;
+    let config: serde_json::Value =
+        serde_json::from_slice(&read("backbone/tokenizer_config.json", 1024 * 1024)?)?;
+    let bos = match config.get("bos_token") {
+        None | Some(serde_json::Value::Null) => None,
+        Some(value) => {
+            let token = value
+                .as_str()
+                .or_else(|| value.get("content").and_then(serde_json::Value::as_str))
+                .ok_or("unsupported BOS token metadata")?;
+            Some(
+                tokenizer
+                    .token_to_id(token)
+                    .ok_or("BOS token missing from pinned tokenizer")?,
+            )
+        }
+    };
+    Ok((tokenizer, bos))
+}
 fn infer(
     request: &Request,
     proof_path: Option<&Path>,
@@ -907,27 +1414,7 @@ fn infer(
         &request.installation.join("vega_config.json"),
         1024 * 1024,
     )?)?;
-    let tokenizer_path = request.installation.join("backbone/tokenizer.json");
-    let tokenizer = tokenizers::Tokenizer::from_file(&tokenizer_path)
-        .map_err(|e| io::Error::other(e.to_string()))?;
-    let tokenizer_config: serde_json::Value = serde_json::from_slice(&read_bounded(
-        &request.installation.join("backbone/tokenizer_config.json"),
-        1024 * 1024,
-    )?)?;
-    let bos = match tokenizer_config.get("bos_token") {
-        None | Some(serde_json::Value::Null) => None,
-        Some(v) => {
-            let token = v
-                .as_str()
-                .or_else(|| v.get("content").and_then(serde_json::Value::as_str))
-                .ok_or("unsupported BOS token metadata")?;
-            Some(
-                tokenizer
-                    .token_to_id(token)
-                    .ok_or("BOS token missing from pinned tokenizer")?,
-            )
-        }
-    };
+    let (tokenizer, bos) = load_pinned_tokenizer(&request.installation, &manifest)?;
     let prompt = tokenize(&request.state, &tokenizer, bos).map_err(io::Error::other)?;
     let metadata_and_tokenization_ms = stage.elapsed().as_secs_f64() * 1000.0;
     let weights = manifest
@@ -1152,6 +1639,50 @@ fn infer(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tokenizer_snapshot_requires_exact_verified_bytes_before_parsing() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::create_dir(dir.path().join("backbone")).unwrap();
+        let tokenizer = tokenizers::Tokenizer::new(tokenizers::models::bpe::BPE::default());
+        let bytes = tokenizer.to_string(false).unwrap().into_bytes();
+        let config = br#"{"bos_token":null}"#;
+        fs::write(dir.path().join("backbone/tokenizer.json"), &bytes).unwrap();
+        fs::write(dir.path().join("backbone/tokenizer_config.json"), config).unwrap();
+        let file = |data: &[u8]| vega_setup::FilePin {
+            role: "synthetic unit fixture".into(),
+            repository: "unit/fixture".into(),
+            revision: "unit".into(),
+            upstream_path: "unit".into(),
+            bytes: data.len() as u64,
+            sha256: vega_readiness::hash(data),
+        };
+        let manifest = vega_setup::InstallManifest {
+            schema: "synthetic unit fixture".into(),
+            profile: "unit".into(),
+            model: "unit".into(),
+            revision: "unit".into(),
+            backbone: "unit".into(),
+            backbone_revision: "unit".into(),
+            source: "unit".into(),
+            source_revision: "unit".into(),
+            license: "unit".into(),
+            adapters: "off".into(),
+            calibration_sha256: vega_readiness::hash(b"fixture"),
+            files: std::collections::BTreeMap::from([
+                ("backbone/tokenizer.json".into(), file(&bytes)),
+                ("backbone/tokenizer_config.json".into(), file(config)),
+            ]),
+        };
+        assert!(load_pinned_tokenizer(dir.path(), &manifest).is_ok());
+        let mut changed = bytes.clone();
+        changed.push(b' '); // Valid JSON, different immutable artifact.
+        fs::write(dir.path().join("backbone/tokenizer.json"), changed).unwrap();
+        assert!(load_pinned_tokenizer(dir.path(), &manifest).is_err());
+        fs::write(dir.path().join("backbone/tokenizer.json"), bytes).unwrap();
+        fs::write(dir.path().join("backbone/tokenizer_config.json"), b"{}").unwrap();
+        assert!(load_pinned_tokenizer(dir.path(), &manifest).is_err());
+    }
 
     #[test]
     fn verification_failures_do_not_suppress_other_required_phases() {

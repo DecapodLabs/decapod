@@ -9,7 +9,7 @@ use std::collections::BTreeSet;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 const WIDTH: usize = 1024;
 const PREFIX: &str = "model.language_model";
-pub const MAX_REFERENCE_TOKENS: usize = 512;
+pub const MAX_REFERENCE_TOKENS: usize = 4096;
 const MODEL_HASH: &str = "sha256:04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696";
 const CONFIG_HASH: &str = "sha256:b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204";
 const ENGINE_CONFIG_HASH: &str =
@@ -529,7 +529,7 @@ pub fn compute(
         "feature_layers":[13,19],"option_layers":[19],"input_tokens":tokens.len(),
         "reference_spec_revision":SPEC_REVISION,"reference_spec_sha256":SPEC_SHA256,
         "reference_arithmetic":"Scalar F64; scoped token-row threads, no candidate model/tensor kernel calls",
-        "scope":"Single pure-text sequence <=512 tokens, no padding/cache/image/adapter/chunked-state equivalence claim; raw block outputs before final norm",
+        "scope":"Fresh single pure-text sequence <=4096 tokens; no padding/cache/image/adapter/streamed-state equivalence claim; raw block outputs before final norm. Supported bound is not measured all-input equivalence.",
         "independent_human_review":false}),
     )
 }
@@ -597,7 +597,7 @@ pub fn compare(expected: &Value, observed: &Value) -> Result<Value> {
         "reference_spec_revision":SPEC_REVISION,"reference_spec_sha256":SPEC_SHA256,
         "component_absolute_tolerance":0.005,"component_relative_tolerance":0.001,
         "normalized_rms_tolerance":0.002,"vectors":metrics,"independent_human_review":false,
-        "scope":"Scalar-F64 mathematical specification, selected raw rows and pooled features for this short pure-text prompt only; no empirical Python/HF execution or long/chunked/cache/image equivalence claim"}),
+        "scope":"Scalar-F64 mathematical specification, selected raw rows and pooled features for this measured fresh pure-text fixture only; no empirical Python/HF execution or all-input/streamed/cache/image equivalence claim"}),
     )
 }
 

@@ -37,7 +37,7 @@ pub fn run() -> Result<Value> {
         for lane in 0..WIDTH {
             v[t * WIDTH + lane] = ((t * 3 + lane) % 17) as f32 / 32.0 - 0.25;
         }
-        // delta=(v-S*k)*beta; S=decay*S+k*delta; y=S*q.
+        // D=decay*S; delta=(v-D*k)*beta; S=D+k*delta; y=S*q.
         // This sparse, dyadic fixture permits an independent indexed scalar
         // calculation rather than calling either candidate/reference model.
         for lane in 0..WIDTH {
