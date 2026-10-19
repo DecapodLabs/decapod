@@ -6281,6 +6281,11 @@ fn run_validate_command_local(
         None
     };
 
+    let fallback_guidance = core::validation_runtime::ValidationGuidance::for_outcome(false);
+    let guidance = readiness
+        .as_ref()
+        .map(|result| &result.agent_guidance)
+        .unwrap_or(&fallback_guidance);
     if validate_cli.format == "json" {
         println!(
             "{}",
@@ -6288,11 +6293,7 @@ fn run_validate_command_local(
                 "status": report.status,
                 "scope": scope.label(),
                 "publication_ready": readiness.as_ref().is_some_and(|r| r.ready),
-                "agent_guidance": scope.requires_publication_proof().then(||
-                    core::validation_runtime::ValidationGuidance::for_outcome(
-                        readiness.as_ref().is_some_and(|r| r.ready)
-                    )
-                ),
+                "agent_guidance": scope.requires_publication_proof().then_some(guidance),
                 "readiness": readiness,
                 "self_heal": heal_actions,
                 "report": report,
@@ -6309,9 +6310,6 @@ fn run_validate_command_local(
         }
         render_validation_text(&report, &heal_actions, validate_cli.verbose);
         if scope.requires_publication_proof() {
-            let guidance = core::validation_runtime::ValidationGuidance::for_outcome(
-                readiness.as_ref().is_some_and(|r| r.ready),
-            );
             println!("{}", guidance.execution);
             println!("{}", guidance.instruction);
             if !readiness.as_ref().is_some_and(|r| r.ready) {

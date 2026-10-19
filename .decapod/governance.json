@@ -672,6 +672,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T162027Z.json"
       ]
+    },
+    {
+      "id": "vega1191-agent-guidance-renderers",
+      "summary": "Carry final typed Vega guidance through local-route JSON and text output as well as Buildkite, instead of overwriting the report with generic advice; preserve the preceding verdict regression matrix, failed-proof repair and human authority",
+      "input_digest": "sha256:45f8b862adf338030560b835f9863bf0912cb92d517077fb062f7663ee897ab7",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T162027Z.json"
+      ]
     }
   ],
   "intents": {
@@ -716,21 +724,21 @@
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "User reaffirms intended post-validation flow: required local or Buildkite proof, then optional Vega readiness assessment and agent instructions. Production sequencing already correct; replace generic build/test repair advice after Vega with typed accept/reject/abstain guidance. Accepted instructs an already-authorized PR with freshness and human authority retained; rejection reviews unmet obligations without inventing model explanations; abstention resolves evidence/runtime gaps; failed proof always repairs. Regression matrix authored, fmt passed, tests await prescribed validation. Preserve c831 failed bootstrap2241 upstream installer publicAPI403 and334 source-pass/fullvalidation-denial history. Same19fd inventory and8runreciped6d9, unchanged model/calibration/corpus/risk/tolerances/budgets and acceptance checks. No manual test, task change, merge or release.",
-          "reviewed_code_fingerprint": "84dc12693fdb157826d7fdff297ae2ee56c6def31a09ab44e5ff01f9564cb3ec",
+          "reviewed_code_fingerprint": "6edf0c3f1eea11fdf73432d7ef9e2255657f25305a249a6a2008ca02c9887d61",
           "spec_material_hash": "4b0e937047d5e15bb3cedf5f176dc89245d89f65fce9457129b99b26b3a4a90b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "User reaffirms intended post-validation flow: required local or Buildkite proof, then optional Vega readiness assessment and agent instructions. Production sequencing already correct; replace generic build/test repair advice after Vega with typed accept/reject/abstain guidance. Accepted instructs an already-authorized PR with freshness and human authority retained; rejection reviews unmet obligations without inventing model explanations; abstention resolves evidence/runtime gaps; failed proof always repairs. Regression matrix authored, fmt passed, tests await prescribed validation. Preserve c831 failed bootstrap2241 upstream installer publicAPI403 and334 source-pass/fullvalidation-denial history. Same19fd inventory and8runreciped6d9, unchanged model/calibration/corpus/risk/tolerances/budgets and acceptance checks. No manual test, task change, merge or release.",
-          "reviewed_code_fingerprint": "84dc12693fdb157826d7fdff297ae2ee56c6def31a09ab44e5ff01f9564cb3ec",
-          "spec_material_hash": "806cecac77a2625ded8f0d4ca07e3f84d306e55d1854aabf08ca833e7397d53e"
+          "reviewed_code_fingerprint": "6edf0c3f1eea11fdf73432d7ef9e2255657f25305a249a6a2008ca02c9887d61",
+          "spec_material_hash": "ea5de304b111852a94aefb3648652f10fa640b6bf69c6931ec491df267d1d512"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "User reaffirms intended post-validation flow: required local or Buildkite proof, then optional Vega readiness assessment and agent instructions. Production sequencing already correct; replace generic build/test repair advice after Vega with typed accept/reject/abstain guidance. Accepted instructs an already-authorized PR with freshness and human authority retained; rejection reviews unmet obligations without inventing model explanations; abstention resolves evidence/runtime gaps; failed proof always repairs. Regression matrix authored, fmt passed, tests await prescribed validation. Preserve c831 failed bootstrap2241 upstream installer publicAPI403 and334 source-pass/fullvalidation-denial history. Same19fd inventory and8runreciped6d9, unchanged model/calibration/corpus/risk/tolerances/budgets and acceptance checks. No manual test, task change, merge or release.",
-          "reviewed_code_fingerprint": "84dc12693fdb157826d7fdff297ae2ee56c6def31a09ab44e5ff01f9564cb3ec",
+          "reviewed_code_fingerprint": "6edf0c3f1eea11fdf73432d7ef9e2255657f25305a249a6a2008ca02c9887d61",
           "spec_material_hash": "c055dbb247f9408bf9ab4edacc17ebf54e33ee22380e915cad26a5093e2bb3bf"
         }
       ],
@@ -744,7 +752,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792429301Z"
+      "updated_at": "1792429352Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -756,7 +764,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:ecae0dab00ee3a11c39768ab4cc96e0db29f8d4006eaa34baa9a587e58f435ad",
+      "artifact_hash": "sha256:dac021f1abfdc93b2069d9dfa993c7fcd716727a55916233d5d84466ccae1feb",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -1542,10 +1550,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 50
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:51",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 51
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 50,
+        "next_sequence": 51,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2567,6 +2582,31 @@
                   "root"
                 ],
                 "sequence": 50,
+                "validation_findings": [
+                  "User clarification concerns product flow and instructions, not a waiver of scientific acceptance. Preserve all checks and original ownership. After quota reset run plain validate on genuinely changed candidate; no empty retry commit, authentication substitution for denied public read, manual build or shadow preflight. OAuth timed out with no credentials; public diagnostics remain readable without login."
+                ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:51",
+                "observations": [
+                  "src/decapod/core/vega_readiness.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_runtime/tests.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "/private/tmp/vega-c831-buildkite-2241-bootstrap.log",
+                  "/private/tmp/vega-1191-validation-20261019T162027Z.json"
+                ],
+                "proof_refs": [
+                  "source_c831",
+                  "full_validate_334",
+                  "new_regressions",
+                  "fmt"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 51,
                 "validation_findings": [
                   "User clarification concerns product flow and instructions, not a waiver of scientific acceptance. Preserve all checks and original ownership. After quota reset run plain validate on genuinely changed candidate; no empty retry commit, authentication substitution for denied public read, manual build or shadow preflight. OAuth timed out with no credentials; public diagnostics remain readable without login."
                 ]

@@ -477,7 +477,10 @@ work and revalidate; abstention instructs it to inspect the receipt and resolve
 evidence or installation/runtime gaps. A boolean verdict supplies no invented
 defect explanation. Failed or stale proof always returns validation repair guidance,
 including when a model previously accepted. These instructions grant no merge or
-release authority and leave disabled-mode delivery guidance unchanged.
+release authority and leave disabled-mode delivery guidance unchanged. Both the
+local-route top-level JSON/text renderer in `src/decapod/lib.rs` and the Buildkite
+route expose the final report's guidance; local rendering must not replace a
+post-validation Vega instruction with generic build/test repair advice.
 Both `init --vega-decisions[=true|false]` and `init with --vega-decisions[=true|false]`
 select that policy. Interactive init offers the same choice; refresh preserves it
 unless explicitly changed. Init does not install models or execute inference.
@@ -574,7 +577,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `84dc12693fdb157826d7fdff297ae2ee56c6def31a09ab44e5ff01f9564cb3ec`
+- Repository signal fingerprint: `6edf0c3f1eea11fdf73432d7ef9e2255657f25305a249a6a2008ca02c9887d61`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
