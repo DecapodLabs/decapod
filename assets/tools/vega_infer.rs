@@ -936,6 +936,7 @@ fn evaluate_readiness_selected(
 }
 
 fn audit_public_review_sources(proof_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    use std::io::Write;
     // Public source fixtures are data, not imported controller proof. The
     // audit deliberately performs no model inference and grants no readiness.
     let source = Path::new(env!("CARGO_MANIFEST_DIR"))

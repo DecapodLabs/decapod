@@ -385,6 +385,9 @@ mod tests {
         let mut related = row.clone();
         related["repo"] = "example/related".into();
         related["record"]["nameWithOwner"] = related["repo"].clone();
+        let related_url = "https://github.com/example/related/pull/1#pullrequestreview-10";
+        related["review_url"] = related_url.into();
+        related["record"]["pullRequest"]["reviews"]["nodes"][0]["url"] = related_url.into();
         assert_eq!(
             audit(&row).unwrap()["prospective_split"],
             audit(&related).unwrap()["prospective_split"]
@@ -403,6 +406,11 @@ mod tests {
             assert!(utc(invalid).is_err());
         }
         assert!(utc("2024-02-29T23:59:59Z").is_ok());
+        let mut wrong_url = fixture();
+        let other_url = "https://github.com/example/other/pull/1#pullrequestreview-10";
+        wrong_url["review_url"] = other_url.into();
+        wrong_url["record"]["pullRequest"]["reviews"]["nodes"][0]["url"] = other_url.into();
+        assert!(audit(&wrong_url).is_err());
         let mut row = fixture();
         row["repo"] = "../outside/project".into();
         assert!(audit(&row).is_err());

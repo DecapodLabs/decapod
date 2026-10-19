@@ -26,6 +26,8 @@ Candidate `040d2f04` retained two distinct failures. [Buildkite 2266](https://bu
 
 Separately, full validation `vega-1191-validation-20261019T214541Z` stopped on the public GitHub commit-checks API's HTTP 403 rate limit, with reset at 2026-10-19 22:46:31 UTC. This is not a missing Buildkite login. The failed report is preserved, no automatic authentication substitution or artifact import occurred, and the corrected candidate requires a fresh normal validation after the reported reset. New obligation-preservation and source-audit regressions remain unexecuted until that prescribed flow reaches them; earlier `30015be0` measurements are not current-candidate readiness.
 
+Corrected `ef3d23bc` passed [Buildkite 2271, all 39 source steps](https://buildkite.com/decapodlabs/decapod/builds/2271), including 1,461 library tests with 3 ignored. Both new obligation-preservation tests therefore have executed evidence. The normal post-reset retry, `vega-1191-validation-20261019T224656Z`, cleared remote custody collection and prepared the complete native source snapshot, including the pinned public fixture. Native compilation then failed with E0599 because the new diagnostic export omitted its local `std::io::Write` import. The import is corrected using the same scoped pattern as the existing corpus exporter. Static review also corrected the related-repository test fixture's two review URLs to match its changed repository identity; a wrong-repository URL remains rejected rather than weakening that check. No native test or model inference executed in that attempt; the six source-audit regressions and exact-current scientific verification remain pending. These corrections change no model, corpus, calibration, tolerance, recipe or deadline.
+
 The agent owns the operational loop: establish intent and scope, work in a
 claimed workspace, record falsifiable claims, gather evidence, repair supported
 failures, and revalidate. Human decisions and unavailable proof remain explicit
@@ -669,7 +671,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `15f118cf1a731f4a3f033eb326fc9f1913637882eb8f950723265420dba8ab24`
+- Repository signal fingerprint: `b82cb237494365a16634510378be935b91bf1536b006ec9afec3059ec0deec27`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (39 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
