@@ -590,6 +590,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261018T232831Z.json"
       ]
+    },
+    {
+      "id": "vega1191-evidence-scope-reconciliation",
+      "summary": "Reconcile stale specs with measured CPU/reference and Metal probe subset; document frozen holdout label/independence audit, public source alternatives, executed deadline regression and actual source-proof bootstrap failures without changing acceptance",
+      "input_digest": "sha256:33ee5a7ad56a52b5c818d27db4ba93ba882ae64562e93baa5dc0f2722e497b8d",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T020535Z.json"
+      ]
     }
   ],
   "intents": {
@@ -633,23 +641,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Measured2f native25tests/probe/CPU short-reference passed, but Metal model hit upstream CUDA-only reset_all. GPU now consumes/discards owned one-shot model, synchronizes and rejects reuse instead of ignoring unsafe reset. Independent collector attempts original short plus frozen nonempty-chunk numerical case and automatic/CPU holdout before failing on any required condition. Strict public retry classifier also checks real unsupported alternate GPU API then fresh CPU model; does not simulate available Metal failure or kernel custody. Preserve model pins, scalar tolerances, holdout and deterministic authority; measured scope and unexecuted repairs explicit.",
+          "reason": "Reconcile current authored semantics with actual2f native25tests/CPU scalar-reference subset and realMetal arithmetic; retain unexecuted719 Metal model repair/fallback/chunk/holdout. Audit23original label/lineage/P2P limits and pinned public alternatives without changing dataset, calibration, tolerances, runtime, recipe or required gates. Public CI bootstrap logs diagnose a missing helper launch but do not mint proof or require login for inspection.",
           "reviewed_code_fingerprint": "5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2",
-          "spec_material_hash": "29fedcfc3a15bdb5d9f4f71958219d40f88ff40a6e53cafcbe015443248642cf"
+          "spec_material_hash": "1de84e11fd68b7b1906a7cb07de845a096810bad5cb9bf7a339931dccfdd1630"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Measured2f native25tests/probe/CPU short-reference passed, but Metal model hit upstream CUDA-only reset_all. GPU now consumes/discards owned one-shot model, synchronizes and rejects reuse instead of ignoring unsafe reset. Independent collector attempts original short plus frozen nonempty-chunk numerical case and automatic/CPU holdout before failing on any required condition. Strict public retry classifier also checks real unsupported alternate GPU API then fresh CPU model; does not simulate available Metal failure or kernel custody. Preserve model pins, scalar tolerances, holdout and deterministic authority; measured scope and unexecuted repairs explicit.",
+          "reason": "Reconcile current authored semantics with actual2f native25tests/CPU scalar-reference subset and realMetal arithmetic; retain unexecuted719 Metal model repair/fallback/chunk/holdout. Audit23original label/lineage/P2P limits and pinned public alternatives without changing dataset, calibration, tolerances, runtime, recipe or required gates. Public CI bootstrap logs diagnose a missing helper launch but do not mint proof or require login for inspection.",
           "reviewed_code_fingerprint": "5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2",
-          "spec_material_hash": "7ef765a408a75313c5b205eb3d27a461827581a5b946b297c0f7db70276a285e"
+          "spec_material_hash": "b6263e50e73d3b548d43fcd76126911b2947d02e310b9778450ac4d1b5d2e944"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Measured2f native25tests/probe/CPU short-reference passed, but Metal model hit upstream CUDA-only reset_all. GPU now consumes/discards owned one-shot model, synchronizes and rejects reuse instead of ignoring unsafe reset. Independent collector attempts original short plus frozen nonempty-chunk numerical case and automatic/CPU holdout before failing on any required condition. Strict public retry classifier also checks real unsupported alternate GPU API then fresh CPU model; does not simulate available Metal failure or kernel custody. Preserve model pins, scalar tolerances, holdout and deterministic authority; measured scope and unexecuted repairs explicit.",
+          "reason": "Reconcile current authored semantics with actual2f native25tests/CPU scalar-reference subset and realMetal arithmetic; retain unexecuted719 Metal model repair/fallback/chunk/holdout. Audit23original label/lineage/P2P limits and pinned public alternatives without changing dataset, calibration, tolerances, runtime, recipe or required gates. Public CI bootstrap logs diagnose a missing helper launch but do not mint proof or require login for inspection.",
           "reviewed_code_fingerprint": "5b7d7a4419052e66996e2382d8d672f35476b133a7ebf2a33175f5d709557ad2",
-          "spec_material_hash": "d2b4b0248f78e61ad0420cc56a7805635d590e6c773946307ed1165be651d914"
+          "spec_material_hash": "933aab32a6698accfccf0b857665d84d2a446227342a9eb84f8f0c0571e94632"
         }
       ],
       "state": "APPROVED",
@@ -662,7 +670,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792371855Z"
+      "updated_at": "1792378656Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -674,7 +682,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:23de14cd29dd60d5b4baae631982baff8ccfe2d77cac63fbf4a9b3bbd015f9dd",
+      "artifact_hash": "sha256:8487e4953dcf4780704989ae529aaf3443fc56631eeb1ab8222c3b375875aee6",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -702,6 +710,10 @@
         },
         {
           "name": "cpu_model_short_reference_2f",
+          "status": "passed"
+        },
+        {
+          "name": "deadline_regression_719",
           "status": "passed"
         },
         {
@@ -754,6 +766,10 @@
         },
         {
           "name": "full_validation_4de86774",
+          "status": "failed"
+        },
+        {
+          "name": "full_validation_719",
           "status": "failed"
         },
         {
@@ -978,6 +994,10 @@
         },
         {
           "name": "source_ci_4de86774",
+          "status": "passed"
+        },
+        {
+          "name": "source_ci_719",
           "status": "passed"
         },
         {
@@ -1277,10 +1297,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 41
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:42",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 42
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 41,
+        "next_sequence": 42,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2047,6 +2074,35 @@
                 "validation_findings": [
                   "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim."
                 ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:42",
+                "observations": [
+                  "assets/tools/vega-native/readiness_evaluation.rs",
+                  "assets/tools/vega-native/evaluation_corpus.rs",
+                  "docs/vega-reference-contract.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/39183631846",
+                  "/private/tmp/vega-1191-validation-20261019T020535Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2201"
+                ],
+                "proof_refs": [
+                  "source_ci_719",
+                  "deadline_regression_719",
+                  "full_validation_719",
+                  "readiness_holdout"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 42,
+                "validation_findings": [
+                  "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim."
+                ]
               }
             ]
           }
@@ -2073,6 +2129,7 @@
         "/private/tmp/vega-1191-validation-20261018T222725Z.json",
         "/private/tmp/vega-1191-validation-20261018T224908Z.json",
         "/private/tmp/vega-1191-validation-20261018T232831Z.json",
+        "/private/tmp/vega-1191-validation-20261019T020535Z.json",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
@@ -2104,6 +2161,7 @@
         "Snapshot prerequisite18a723f3 passed full released119 validation; publication replay is blocked by public-reader quota until2026-10-18T05:12:00Z. Repair task yielded with no active processes to serialize this original claim.",
         "docs/vega-reference-contract.md: predeclared tolerances, public source revisions/hashes, corpus grouping/labels and exact controller blocker",
         "https://buildkite.com/decapodlabs/decapod/builds/2186",
+        "https://buildkite.com/decapodlabs/decapod/builds/2201",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -2119,6 +2177,7 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39099541876/job/117593631622",
         "https://github.com/DecapodLabs/decapod/actions/runs/39172229105",
         "https://github.com/DecapodLabs/decapod/actions/runs/39173829817",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39183631846",
         "https://github.com/DecapodLabs/decapod/pull/1458",
         "https://github.com/DecapodLabs/decapod/releases/tag/v0.119.1",
         "https://github.com/EricLBuehler/candle-vllm/commit/b1055eca63de76b548d0d4b0daa96ff8cd1d0596",
@@ -2147,6 +2206,9 @@
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
         ".decapod/managed/specs/VALIDATION.md",
         "assets/tools/vega-native/Cargo.lock",
         "assets/tools/vega-native/Cargo.toml",
@@ -2211,6 +2273,7 @@
         "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
         "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained.",
         "Source fixtures are synthetic and generated at runtime; no real credential hidden or scanner exemption added. Existing scanner/redaction regressions must execute again. Native model/reference/holdout proof remains unexecuted.",
+        "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
         "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked."
       ]
     }
