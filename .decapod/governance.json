@@ -627,6 +627,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T045602Z.json"
       ]
+    },
+    {
+      "id": "vega1191-docs-projection-sync",
+      "summary": "Repair actual docs-sync2225 failure by prescribed source-built docs generation and review of the Vega config-schema mirror; document projection boundary, preserve failed report063311Z and leave scientific acceptance unproven pending official full validation",
+      "input_digest": "sha256:a862b4fac82985806df2b1ec7920178fd540d8f9d3cef4b50a7e917b0df598e9",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T063311Z.json"
+      ]
     }
   ],
   "intents": {
@@ -670,21 +678,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Measured aa66 official1191 validation passed required BK2216 all39,30native tests,32realMetal recurrence repetitions and138/314token CPU/Metal ownF64 comparisons; heldout proxy risk/coverage still failed. New verification-only eight-run collector preserves original1800command/7200global bounds, fixed modulo6 membership, exclusive current-directory/runtime/model/corpus receipts and strict final numeric/metrics reduction. One absolute1600 dispatch cutoff spans both backends and preparation. Independent tokenizer alone selects a frozen exact4096 fixture from306literal coverage sentences plus0..32x suffixes;4097 must reject,16memory slots required, no tolerance or asset/label/risk changes. New adversarial tests are authored, not executed. Official standard Apache text corrects copied appendix without shader changes. Reviewed inventory590180d9 and reciped6d9c7ff; no kernel authority, task custody, main/Bazel lock, production schema or failed-validation-skips-Vega change. Calibration and production fallback/unsupported-mode limits remain explicit.",
+          "reason": "Validation132fd505 stopped before native execution because source documentation proof2225 rejected a stale config-schema projection of repository-readiness. Followed its explicit source-built docs build repair, reviewed the generated Vega-only paragraph changes and recorded source-to-generated interface semantics. The candidate documentation tool only generated Markdown, not custody/proof/readiness authority; official1191 remains controller. Source inventory590180d9 and eight-run reciped6d9c7ff unchanged; all new scientific tests remain unexecuted, prioraa30tests/limitedMetalCPU parity and failed holdout remain separate preserved history. No model/calibration/corpus/criterion/policy waiver or branch change.",
           "reviewed_code_fingerprint": "db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047",
           "spec_material_hash": "ce23a10f37d0930c5f222759323b31b2dd181509e17ede6d0940d2e1e05e30c2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Measured aa66 official1191 validation passed required BK2216 all39,30native tests,32realMetal recurrence repetitions and138/314token CPU/Metal ownF64 comparisons; heldout proxy risk/coverage still failed. New verification-only eight-run collector preserves original1800command/7200global bounds, fixed modulo6 membership, exclusive current-directory/runtime/model/corpus receipts and strict final numeric/metrics reduction. One absolute1600 dispatch cutoff spans both backends and preparation. Independent tokenizer alone selects a frozen exact4096 fixture from306literal coverage sentences plus0..32x suffixes;4097 must reject,16memory slots required, no tolerance or asset/label/risk changes. New adversarial tests are authored, not executed. Official standard Apache text corrects copied appendix without shader changes. Reviewed inventory590180d9 and reciped6d9c7ff; no kernel authority, task custody, main/Bazel lock, production schema or failed-validation-skips-Vega change. Calibration and production fallback/unsupported-mode limits remain explicit.",
+          "reason": "Validation132fd505 stopped before native execution because source documentation proof2225 rejected a stale config-schema projection of repository-readiness. Followed its explicit source-built docs build repair, reviewed the generated Vega-only paragraph changes and recorded source-to-generated interface semantics. The candidate documentation tool only generated Markdown, not custody/proof/readiness authority; official1191 remains controller. Source inventory590180d9 and eight-run reciped6d9c7ff unchanged; all new scientific tests remain unexecuted, prioraa30tests/limitedMetalCPU parity and failed holdout remain separate preserved history. No model/calibration/corpus/criterion/policy waiver or branch change.",
           "reviewed_code_fingerprint": "db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047",
-          "spec_material_hash": "f00b6d61207b4ba2b51c36bef718673eaecc16d1d6e97528ff58a7435a88f147"
+          "spec_material_hash": "b9d15cbc54d51f177ebd08b22c62db9c1c574a0d3c97577234dbc04d9c7c15c0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Measured aa66 official1191 validation passed required BK2216 all39,30native tests,32realMetal recurrence repetitions and138/314token CPU/Metal ownF64 comparisons; heldout proxy risk/coverage still failed. New verification-only eight-run collector preserves original1800command/7200global bounds, fixed modulo6 membership, exclusive current-directory/runtime/model/corpus receipts and strict final numeric/metrics reduction. One absolute1600 dispatch cutoff spans both backends and preparation. Independent tokenizer alone selects a frozen exact4096 fixture from306literal coverage sentences plus0..32x suffixes;4097 must reject,16memory slots required, no tolerance or asset/label/risk changes. New adversarial tests are authored, not executed. Official standard Apache text corrects copied appendix without shader changes. Reviewed inventory590180d9 and reciped6d9c7ff; no kernel authority, task custody, main/Bazel lock, production schema or failed-validation-skips-Vega change. Calibration and production fallback/unsupported-mode limits remain explicit.",
+          "reason": "Validation132fd505 stopped before native execution because source documentation proof2225 rejected a stale config-schema projection of repository-readiness. Followed its explicit source-built docs build repair, reviewed the generated Vega-only paragraph changes and recorded source-to-generated interface semantics. The candidate documentation tool only generated Markdown, not custody/proof/readiness authority; official1191 remains controller. Source inventory590180d9 and eight-run reciped6d9c7ff unchanged; all new scientific tests remain unexecuted, prioraa30tests/limitedMetalCPU parity and failed holdout remain separate preserved history. No model/calibration/corpus/criterion/policy waiver or branch change.",
           "reviewed_code_fingerprint": "db1732adaf0a27cffd9cdc6e44cf0e0c963e671ff3876791cf6f3f7eb26f3047",
           "spec_material_hash": "c055dbb247f9408bf9ab4edacc17ebf54e33ee22380e915cad26a5093e2bb3bf"
         }
@@ -699,7 +707,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792391493Z"
+      "updated_at": "1792392660Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -711,7 +719,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:4c49edc1b493ac388b2d63b10856192ba91f2f69020226cb756700e74c27dc04",
+      "artifact_hash": "sha256:a8ac2493754696340ac7606513537d64bad1a87844e91afee012de0e145fe002",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -772,6 +780,14 @@
         {
           "name": "docs-source-correction",
           "status": "partial"
+        },
+        {
+          "name": "docs_regeneration",
+          "status": "passed"
+        },
+        {
+          "name": "docs_sync_132",
+          "status": "failed"
         },
         {
           "name": "evaluation_execution",
@@ -1102,7 +1118,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "recovery",
       "custody": {
         "events": [
           {
@@ -1410,10 +1426,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 45
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:46",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 46
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 45,
+        "next_sequence": 46,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2310,6 +2333,31 @@
                 "validation_findings": [
                   "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:46",
+                "observations": [
+                  ".github/workflows/docs_sync.yml",
+                  "src/decapod/core/docs_cli.rs",
+                  "docs/agent/config-schema.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "/private/tmp/vega-1191-validation-20261019T063311Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2225",
+                  "/private/tmp/vega-132f-docs-sync-public.log"
+                ],
+                "proof_refs": [
+                  "docs_sync_132",
+                  "docs_regeneration",
+                  "new_collection"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 46,
+                "validation_findings": [
+                  "Source-built generator is used solely for report-prescribed Markdown regeneration and grants no kernel authority. No native build or scientific test executed on132because source docs proof failed. All earlier failed reports retained. Return to official1191 plain validate on exact repaired candidate; no bootstrap exception or manual shadow preflight."
+                ]
               }
             ]
           }
@@ -2340,6 +2388,8 @@
         "/private/tmp/vega-1191-validation-20261019T031409Z.json",
         "/private/tmp/vega-1191-validation-20261019T035404Z.json",
         "/private/tmp/vega-1191-validation-20261019T045602Z.json",
+        "/private/tmp/vega-1191-validation-20261019T063311Z.json",
+        "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
@@ -2375,6 +2425,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2206",
         "https://buildkite.com/decapodlabs/decapod/builds/2211",
         "https://buildkite.com/decapodlabs/decapod/builds/2216",
+        "https://buildkite.com/decapodlabs/decapod/builds/2225",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -2400,6 +2451,7 @@
         "v0.119.0 published and installed; obsolete118 unsupported-adapter blocker resolved only. First released119 validate failed READINESS_BLOCKED on recorded trajectory gaps; report/private/tmp/vega-119-first-validation.json preserved and no builds ran. Domain proof requirements remain enforced; no failed check waived."
       ],
       "inspected_files": [
+        ".github/workflows/docs_sync.yml",
         "assets/tools/vega-native/Cargo.lock",
         "assets/tools/vega-native/Cargo.toml",
         "assets/tools/vega-native/evaluation_corpus.rs",
@@ -2408,6 +2460,7 @@
         "docs/agent/repository-readiness.md",
         "docs/vega-reference-contract.md",
         "src/decapod/core/bounded_process.rs",
+        "src/decapod/core/docs_cli.rs",
         "src/decapod/core/proof.rs",
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/rust_worker.rs",
@@ -2440,6 +2493,7 @@
         "assets/tools/vega-native/vendor/metal-kernels/LICENSE-APACHE",
         "assets/tools/vega-native/vendor/metal-kernels/src/gdn.metal",
         "assets/tools/vega_infer.rs",
+        "docs/agent/config-schema.md",
         "docs/agent/repository-readiness.md",
         "docs/vega-reference-contract.md",
         "src/decapod/cli.rs",
@@ -2497,6 +2551,7 @@
         "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
         "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained.",
         "Source fixtures are synthetic and generated at runtime; no real credential hidden or scanner exemption added. Existing scanner/redaction regressions must execute again. Native model/reference/holdout proof remains unexecuted.",
+        "Source-built generator is used solely for report-prescribed Markdown regeneration and grants no kernel authority. No native build or scientific test executed on132because source docs proof failed. All earlier failed reports retained. Return to official1191 plain validate on exact repaired candidate; no bootstrap exception or manual shadow preflight.",
         "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain.",
         "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
         "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked."

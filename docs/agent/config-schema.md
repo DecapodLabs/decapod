@@ -189,11 +189,7 @@ the human retains merge authority. This principle adds no unimplemented guarante
 
 ## Optional vega post-validation assessment
 
-Vega runs only after the complete deterministic proof profile passes. It cannot
-supply proof, waive checks, alter policy or publish. The agent creates the PR
-through the existing gate; the human merges. Active Jev integration is removed,
-including selectable providers, transport and credential lookup. Historical
-observations remain readable without governing current work.
+Vega runs only after the complete deterministic proof profile passes. Failed, missing or stale required validation returns before model inference and blocks PR readiness directly. Vega cannot supply proof, waive checks, alter policy or publish. The agent creates the PR through the existing gate; the human merges. Active Jev integration is removed; historical observations remain readable without governing work. Selecting Vega during init does not add this repository's scientific model-verification corpus or Metal development recipe to other projects.
 
 `init --vega-decisions[=true|false]` and `init with --vega-decisions[=true|false]`
 select required or disabled Vega assessment. Interactive init offers the same
@@ -307,13 +303,4 @@ path and fresh recurrent state for every request.
 
 ### Honest native evidence
 
-The private bounded `--proof-output` diagnostic contains exact tokens/spans,
-numeric pooled vectors, engine readouts, calibrated outcome, hashes and measured
-stage durations. It explicitly retains parity=unverified. Numeric diagnostics
-allow comparison; they are not independent reference evidence or readiness.
-Real Apple compilation/checkpoint loading/Metal dispatch, independently authenticated
-pinned-upstream numerical comparison, domain calibration and latency/peak-memory
-measurements remain required. Exercise repeated requests, error cleanup and the
-4,096/4,097-token boundary. No arbitrary latency threshold or synthetic native pass
-is supplied. An unavailable Apple executor or reference corpus is an explicit
-acceptance blocker, not a reason to weaken ordinary publication gates.
+The private bounded --proof-output diagnostic contains exact tokens/spans, pooled vectors, engine readouts, calibrated outcomes, hashes and synchronized stage durations. Ordinary responses retain parity=unverified. Candidate aa66c8e4 executed30native tests, real M1 Max recurrence and138/314-token Metal/CPU model comparisons against separately implemented pinned Rust calculations; this is bounded fixture evidence with shared infrastructure/authorship, not all-input or independently reviewed equivalence. CPU fallback was exercised through actual unsupported CUDA and fresh CPU inference; Linux loader-companion routing remains separate. Full acceptance failed proxy-label risk/coverage. See docs/vega-reference-contract.md for revisions, tolerances, sample counts, timings, cumulative memory and preserved failures. New exact4096/4097boundaries and the eight-phase collection recipe remain authored and unexecuted. Collection-only success never removes the required final scientific aggregate, risk/coverage/independent-label conditions or kernel validation gates.
