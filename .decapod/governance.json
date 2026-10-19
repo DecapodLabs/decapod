@@ -651,6 +651,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T072203Z.json"
       ]
+    },
+    {
+      "id": "vega1191-final-science-fail-fast",
+      "summary": "Fail the strict final scientific reducer before model setup when required numerical collection already failed; preserve every earlier independent collection and later diagnostic, add regression and retain334 source-pass/API-denial history without changing acceptance",
+      "input_digest": "sha256:beca0b44149bd48d9434fe1e206e777fba549ce2fad07a8fbb0d044ca2971248",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T162027Z.json"
+      ]
     }
   ],
   "intents": {
@@ -694,22 +702,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "d3ebad07 passed all39 Buildkite2231 checks and40 native tests with realMetal probe/32recurrence comparisons; model-download56/28 errors prevented numerical model results and most heldout collections. LastCPU shard22outcomes included4falseReady and11abstentions,1unsupported. Repair final reporting so an earlier strict error preserves all available bound phase diagnostics without authorizing acceptance; retain immutable pin and HTTP error identity and original denial kind. New reporting/replay/access-denial regressions unexecuted pending normal validate. Reviewed a3329f8d source inventory, unchanged8runreciped6d9c7ff and all models/calibration/corpus/criteria/budgets. Same originaltask/history, no production authority or transport bypass.",
-          "reviewed_code_fingerprint": "f4e9119844ff295c4e0a556504d6e25341ce066237a647a730ce4670a141bdc6",
+          "reason": "334 passed all39Buildkite2236 source checks but current native regressions remain unexecuted: fullvalidate stopped on publicAPI timeout then403/reset17:02:47UTC. Audit measured d3 final reducer10.69seconds after knownfailed numeric collection. Add early failed-numeric disposition guard before model setup and meaningful failed-numeric/later-diagnostic regression; preserve independent earlier numerical/shard execution and all strict acceptance checks. Inventory19fd705d and unchanged8runreciped6d9c7ff. No models/calibration/corpus/risk/tolerances/budgets changed; no denied-route retries, source-proof reuse for new source, manual tests, candidate-controller authority or task changes.",
+          "reviewed_code_fingerprint": "8e315a598ad5cf6de56ef55e91985959dec3bed97c9937c363cdac2ca39b2d34",
           "spec_material_hash": "4b0e937047d5e15bb3cedf5f176dc89245d89f65fce9457129b99b26b3a4a90b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "d3ebad07 passed all39 Buildkite2231 checks and40 native tests with realMetal probe/32recurrence comparisons; model-download56/28 errors prevented numerical model results and most heldout collections. LastCPU shard22outcomes included4falseReady and11abstentions,1unsupported. Repair final reporting so an earlier strict error preserves all available bound phase diagnostics without authorizing acceptance; retain immutable pin and HTTP error identity and original denial kind. New reporting/replay/access-denial regressions unexecuted pending normal validate. Reviewed a3329f8d source inventory, unchanged8runreciped6d9c7ff and all models/calibration/corpus/criteria/budgets. Same originaltask/history, no production authority or transport bypass.",
-          "reviewed_code_fingerprint": "f4e9119844ff295c4e0a556504d6e25341ce066237a647a730ce4670a141bdc6",
-          "spec_material_hash": "e47ec224870d5c505109962f404170e746d755a7d8ca211518d27dcefa2c2029"
+          "reason": "334 passed all39Buildkite2236 source checks but current native regressions remain unexecuted: fullvalidate stopped on publicAPI timeout then403/reset17:02:47UTC. Audit measured d3 final reducer10.69seconds after knownfailed numeric collection. Add early failed-numeric disposition guard before model setup and meaningful failed-numeric/later-diagnostic regression; preserve independent earlier numerical/shard execution and all strict acceptance checks. Inventory19fd705d and unchanged8runreciped6d9c7ff. No models/calibration/corpus/risk/tolerances/budgets changed; no denied-route retries, source-proof reuse for new source, manual tests, candidate-controller authority or task changes.",
+          "reviewed_code_fingerprint": "8e315a598ad5cf6de56ef55e91985959dec3bed97c9937c363cdac2ca39b2d34",
+          "spec_material_hash": "82745cf018bcfd534af6942395d40fd076c16a50b2ea773d6f5af7d7b4814c0e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "d3ebad07 passed all39 Buildkite2231 checks and40 native tests with realMetal probe/32recurrence comparisons; model-download56/28 errors prevented numerical model results and most heldout collections. LastCPU shard22outcomes included4falseReady and11abstentions,1unsupported. Repair final reporting so an earlier strict error preserves all available bound phase diagnostics without authorizing acceptance; retain immutable pin and HTTP error identity and original denial kind. New reporting/replay/access-denial regressions unexecuted pending normal validate. Reviewed a3329f8d source inventory, unchanged8runreciped6d9c7ff and all models/calibration/corpus/criteria/budgets. Same originaltask/history, no production authority or transport bypass.",
-          "reviewed_code_fingerprint": "f4e9119844ff295c4e0a556504d6e25341ce066237a647a730ce4670a141bdc6",
+          "reason": "334 passed all39Buildkite2236 source checks but current native regressions remain unexecuted: fullvalidate stopped on publicAPI timeout then403/reset17:02:47UTC. Audit measured d3 final reducer10.69seconds after knownfailed numeric collection. Add early failed-numeric disposition guard before model setup and meaningful failed-numeric/later-diagnostic regression; preserve independent earlier numerical/shard execution and all strict acceptance checks. Inventory19fd705d and unchanged8runreciped6d9c7ff. No models/calibration/corpus/risk/tolerances/budgets changed; no denied-route retries, source-proof reuse for new source, manual tests, candidate-controller authority or task changes.",
+          "reviewed_code_fingerprint": "8e315a598ad5cf6de56ef55e91985959dec3bed97c9937c363cdac2ca39b2d34",
           "spec_material_hash": "c055dbb247f9408bf9ab4edacc17ebf54e33ee22380e915cad26a5093e2bb3bf"
         }
       ],
@@ -723,7 +731,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792425679Z"
+      "updated_at": "1792428282Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -735,7 +743,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:6ed029aad5f5888bfb7c31351add9b113ccd2d5a640addf849d44c28e9a32339",
+      "artifact_hash": "sha256:0c63cb6596e018995cea9a72cf17124b57ba12220c723232748f51ccbb8474ab",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -835,6 +843,10 @@
         },
         {
           "name": "full119_validation",
+          "status": "failed"
+        },
+        {
+          "name": "full_validate_334",
           "status": "failed"
         },
         {
@@ -1123,6 +1135,10 @@
         },
         {
           "name": "source5d",
+          "status": "passed"
+        },
+        {
+          "name": "source_334",
           "status": "passed"
         },
         {
@@ -1495,10 +1511,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 48
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:49",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 49
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 48,
+        "next_sequence": 49,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2473,6 +2496,31 @@
                 "validation_findings": [
                   "Actual40 native tests and real Metal primitive checks pass, but download failures and incomplete CPU holdout with false-ready outcomes are not model parity or production calibration. Preserve later diagnostics on early strict aggregate error without making collection success readiness. Pin/error reporting preserves denial kinds and all setup safety. New source must run through official1191 validation; no manual builds or source-proof reuse as current scientific acceptance."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:49",
+                "observations": [
+                  "src/decapod/core/validation_runtime.rs",
+                  "assets/tools/vega_infer.rs",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "/private/tmp/vega-1191-validation-20261019T162027Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2236"
+                ],
+                "proof_refs": [
+                  "source_334",
+                  "full_validate_334",
+                  "new_regressions",
+                  "fmt"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 49,
+                "validation_findings": [
+                  "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership."
+                ]
               }
             ]
           }
@@ -2506,6 +2554,7 @@
         "/private/tmp/vega-1191-validation-20261019T063311Z.json",
         "/private/tmp/vega-1191-validation-20261019T065312Z.json",
         "/private/tmp/vega-1191-validation-20261019T072203Z.json",
+        "/private/tmp/vega-1191-validation-20261019T162027Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
@@ -2545,6 +2594,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2225",
         "https://buildkite.com/decapodlabs/decapod/builds/2226",
         "https://buildkite.com/decapodlabs/decapod/builds/2231",
+        "https://buildkite.com/decapodlabs/decapod/builds/2236",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -2675,7 +2725,8 @@
         "Source-built generator is used solely for report-prescribed Markdown regeneration and grants no kernel authority. No native build or scientific test executed on132because source docs proof failed. All earlier failed reports retained. Return to official1191 plain validate on exact repaired candidate; no bootstrap exception or manual shadow preflight.",
         "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain.",
         "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
-        "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked."
+        "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked.",
+        "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership."
       ]
     }
   },

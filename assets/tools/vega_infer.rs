@@ -684,6 +684,14 @@ fn verify_scientific_contents(
 ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     use scientific_collection::{Phase, SHARDS};
     let numeric = context.read(Phase::Numeric)?;
+    // Every independent collection has already run. A failed required numeric
+    // phase cannot be repaired by fetching/rehashing assets in this reducer.
+    // The caller still preserves all available bound diagnostics on failure.
+    if !numeric.scientific_checks_passed {
+        return Err(
+            "required numerical collection did not pass; no final model setup attempted".into(),
+        );
+    }
     let setup = vega_setup::run(&vega_setup::SetupOptions::default())?;
     if setup.manifest_digest.as_deref() != Some(SCIENTIFIC_BASELINE) {
         return Err("final scientific model pin differs".into());
@@ -1659,6 +1667,40 @@ fn infer(
 
 #[cfg(test)]
 mod tests {
+    #[cfg(unix)]
+    #[test]
+    fn failed_numeric_collection_stops_before_final_model_setup_and_keeps_diagnostics() {
+        let directory = tempfile::tempdir().unwrap();
+        let proof = directory.path().join("aggregate.json");
+        let context = scientific_collection::Collection::create(&proof).unwrap();
+        context.publish(scientific_collection::Phase::Numeric,
+            &directory.path().join("numeric.json"), false,
+            serde_json::json!({"required_steps":[{"passed":false,"error":"model download failed"}]})).unwrap();
+        context
+            .publish(
+                scientific_collection::Phase::Shard(5),
+                &directory.path().join("later.json"),
+                false,
+                serde_json::json!({"available_receipt":"later_cpu_diagnostic"}),
+            )
+            .unwrap();
+        let error = super::verify_scientific_collection(&proof).unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "required numerical collection did not pass; no final model setup attempted"
+        );
+        let report: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&proof).unwrap()).unwrap();
+        assert_eq!(report["all_required_scientific_conditions_passed"], false);
+        assert_eq!(
+            report["available_phase_diagnostics"]["phases"][0]["report"]["required_steps"][0]["error"],
+            "model download failed"
+        );
+        assert_eq!(
+            report["available_phase_diagnostics"]["phases"][6]["report"]["available_receipt"],
+            "later_cpu_diagnostic"
+        );
+    }
     #[cfg(unix)]
     #[test]
     fn strict_missing_numeric_phase_writes_failure_and_preserves_later_phase() {

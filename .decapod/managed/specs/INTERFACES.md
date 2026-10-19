@@ -564,7 +564,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f4e9119844ff295c4e0a556504d6e25341ce066237a647a730ce4670a141bdc6`
+- Repository signal fingerprint: `8e315a598ad5cf6de56ef55e91985959dec3bed97c9937c363cdac2ca39b2d34`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -677,6 +677,14 @@ last CPU shard produced model outcomes, and no complete numerical result was
 available. Installation errors now identify the immutable public component pin
 and HTTP status where available, preserving the original I/O error kind and
 access-denial behavior. These diagnostic fields add no retry or transport route.
+
+The final reducer checks the required numerical collection disposition before
+model setup. A known failed numerical collection immediately yields a non-ready
+failure report with all available current-context diagnostics; it cannot cause
+another download or full asset rehash. This does not skip independent work:
+the numerical collection and all six evaluation shards precede the reducer.
+Production failed-proof handling remains the separate earlier kernel gate,
+which never invokes Vega to assess a failed required validation result.
 
 `decapod-vega-infer --diagnose-native --proof-output <fresh-private-path>` is a diagnostic-only worker command for the reviewed native recipe. It records pinned installation identities, actual per-backend inference outputs/errors, synchronized stage timings and lifetime-process RSS high water (macOS bytes; other Unix ru_maxrss converted from KiB). It reports `publication_ready=false`, parity and readiness calibration unverified. Explicit CPU execution does not itself establish production fallback routing. No model paths, weights, credentials or private input are committed. The 1 MiB private-export cap remains unchanged. Preferred and CPU attempts share a process, so RSS includes earlier attempts and is not isolated GPU/model allocation. Production request/response, deterministic gates and abstention behavior are unchanged.
 
