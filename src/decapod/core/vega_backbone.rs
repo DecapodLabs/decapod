@@ -31,6 +31,9 @@ pub const MEMORY_CHUNKS: usize = 16;
 pub const VOCAB_SIZE: usize = 248_320;
 pub const NATIVE_SOURCE_REVISION: &str = "b1055eca63de76b548d0d4b0daa96ff8cd1d0596";
 pub const ATTENTION_SOURCE_REVISION: &str = "f22e42cf27dd31efd2d1b838bd9e4cbf85bd2305";
+/// The worker patches only this upstream subpackage's recurrence barriers.
+pub const METAL_GDN_SOURCE_SHA256: &str =
+    "sha256:3ba973f49a14c320b748c256a40ab08190ba9ae611319397d2279e4fdd4b9568";
 pub const CANDLE_SOURCE_REVISION: &str = "23a6f388a82a71c88067ad2b0d64ac9d00f24aac";
 const CHUNK_MIN_TOKENS: usize = 128;
 const CHUNK_TOKENS: usize = 128;
@@ -84,6 +87,7 @@ pub struct MetalProbe {
     pub timing_scope: &'static str,
     pub candle_source_revision: &'static str,
     pub attention_source_revision: &'static str,
+    pub attention_metal_gdn_source_sha256: Option<&'static str>,
     pub parity: &'static str,
 }
 
@@ -137,6 +141,7 @@ pub fn probe_cpu() -> Result<MetalProbe> {
         timing_scope: "CPU allocation, tensor arithmetic and numerical readback",
         candle_source_revision: CANDLE_SOURCE_REVISION,
         attention_source_revision: ATTENTION_SOURCE_REVISION,
+        attention_metal_gdn_source_sha256: None,
         parity: "unverified",
     })
 }
@@ -434,6 +439,8 @@ mod native {
             timing_scope: "allocation, dispatch, synchronization, host readback and exact comparison; excludes device creation",
             candle_source_revision: CANDLE_SOURCE_REVISION,
             attention_source_revision: ATTENTION_SOURCE_REVISION,
+            attention_metal_gdn_source_sha256: (backend == Backend::Metal)
+                .then_some(METAL_GDN_SOURCE_SHA256),
             parity: "unverified",
         })
     }

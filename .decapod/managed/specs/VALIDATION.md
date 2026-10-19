@@ -2,7 +2,9 @@
 
 ## Validation Overview
 
-Candidate76e87da2 full1191 validation passed source proof, native compilation and26worker tests, then failed required scientific acceptance. Actual short138-token Metal and CPU model/reference comparisons passed unchanged criteria;314-token active-memory comparison exposed the reference's all-zero memory omission. The new own-F64 floor-bucket pooling repair verifies engine-config SHA12f4f737 and adds analytic length/offset/invalid-input tests, unexecuted until the next exact-candidate validation. Partial heldout Metal32outcomes/15false-ready/26token errors/80deadline exclusions and CPU14outcomes/6false-ready/11token errors/113deadline exclusions remain nonready; labels are agent-proxy, not human adjudication, and long inputs exceed the512-token independent reference. Preserve report031409Z/readiness-uiU9Ek and use the existing full recipe. No tolerance, model, calibration, corpus, deadline or final gate is waived. docs/vega-reference-contract.md records timings, memory and narrower trust boundaries.
+Candidate19bdaaf3 full1191 validation passed source proof, compilation and28worker tests, including the independent memory-reference repair. CPU138/314-token comparisons passed, including two active chunks with maximum error5.560140508e-7. Actual Metal inference executed but combined independently computed engine errors0.001178328630/0.001727843707 failed the frozen bound. Partial heldout Metal27outcomes/15false-ready/21token-limit errors/90deadline exclusions and CPU12outcomes/4false-ready/0inference errors/126deadline exclusions remain nonready. Labels are agent proxies, not human adjudication, and measured long inputs exceed512-token independent reference coverage. Preserve report035404Z/readiness-Ff4Roh and all earlier failures. docs/vega-reference-contract.md records actual measurements and trust limits.
+
+The pending separate-worker Metal repair adds three end-token shared-memory barriers in pinned metal-kernels0.2.6 and binds exact source hashes. Before execution it declares32fresh-state real-Metal primitive repetitions,257tokens and128key/value dimensions, with independent indexed scalar F64 outputs and final state; absolute1e-6 plus relative1e-5 tolerance is fixed. Missing hardware on other targets is explicitly not_applicable, not a pass claim. The existing full native recipe must execute the repair and model comparisons; authored tests are unexecuted until then. No model, calibration, corpus, engine/backbone tolerance, timeout, risk/coverage criterion or publication gate changes. Failed deterministic validation returns before Vega; independent supplemental diagnostics during development do not imply that Vega assesses failed project proof.
 
 Decapod validates whether identified work satisfies the project's stated
 boundaries and required proof. Validation preserves the difference between what
@@ -655,8 +657,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (37 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -20,6 +20,8 @@ The verification-only scalar-F64 reference verifies complete immutable model/con
 
 ## Explicit local task-transfer trust
 
+The separate worker's vendored Metal subpackage is an explicitly reviewed runtime-source modification, not an update to external model weights. Its manifest pins base commit/subtree, original and modified shader hashes and redistribution terms. Probe and scalar-regression receipts bind the modified shader hash and verify included source bytes. No Cargo-cache mutation, floating dependency, candidate controller or tolerance relaxation is allowed. A numerical hazard repair remains unverified until actual execution: candidate19's two failed Metal combined-engine comparisons and partial heldout false-ready/error/deadline results remain authoritative failures. Thirty-two repeated primitive comparisons cannot establish long-context equivalence or semantic readiness. Agent-proxy labels, only23heldout lineages and failed risk/coverage keep publication blocked independently of source success.
+
 `src/decapod/core/task_transfer.rs` accepts source custody only with an independently
 supplied artifact digest and explicit operator acceptance. Git origin and agent
 names are local bindings, not authenticated remote principals. The operator must
@@ -368,8 +370,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (37 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

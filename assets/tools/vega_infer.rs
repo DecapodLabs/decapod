@@ -13,6 +13,8 @@ extern crate candle_vllm_cuda as candle_vllm;
 mod decoder;
 #[path = "vega-native/evaluation_corpus.rs"]
 mod evaluation_corpus;
+#[path = "vega-native/metal_recurrence_reference.rs"]
+mod metal_recurrence_reference;
 #[path = "vega-native/readiness_evaluation.rs"]
 mod readiness_evaluation;
 #[path = "vega-native/reference_backbone.rs"]
@@ -523,6 +525,10 @@ fn diagnose_native_state(
         },
         "scope":"Pinned model execution diagnostics only. CPU/accelerator agreement is not independent model parity. No fitted or held-out readiness coverage is established."
     });
+    report["metal_recurrence_reference"] = match metal_recurrence_reference::run() {
+        Ok(value) => value,
+        Err(error) => serde_json::json!({"status":"failed","error":error.to_string()}),
+    };
     let evaluation_path = proof_path.with_extension("evaluation.json");
     report["evaluation_input_collection"] = match prepare_evaluation(&evaluation_path) {
         Ok(()) => serde_json::from_slice(&read_bounded(&evaluation_path, MAX_PROOF_BYTES as u64)?)?,
@@ -697,6 +703,7 @@ fn diagnose_native_state(
         || missing_chunk_evidence
         || inference_failed
         || reference_failed
+        || report["metal_recurrence_reference"]["status"] == "failed"
         || report["separate_tokenizer_reference"]["status"] == "failed"
     {
         return Err("one or more native diagnostics failed; inspect private proof".into());

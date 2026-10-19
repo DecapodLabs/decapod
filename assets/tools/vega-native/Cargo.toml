@@ -43,6 +43,11 @@ candle-vllm = { git = "https://github.com/EricLBuehler/candle-vllm", rev = "b105
 candle-core = { git = "https://github.com/guoqingbao/candle.git", rev = "23a6f38", default-features = false, features = ["metal"] }
 candle-nn = { git = "https://github.com/guoqingbao/candle.git", rev = "23a6f38", default-features = false, features = ["metal"] }
 parking_lot = "0.12"
+attention-rs = { git = "https://github.com/guoqingbao/attention.rs.git", rev = "f22e42c", default-features = false, features = ["metal"] }
+
+# Preserve the upstream public API; only synchronize recurrence shared memory.
+[patch."https://github.com/guoqingbao/attention.rs.git"]
+metal-kernels = { path = "vendor/metal-kernels" }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
 candle-vllm-cuda = { package = "candle-vllm", git = "https://github.com/EricLBuehler/candle-vllm", rev = "b1055eca63de76b548d0d4b0daa96ff8cd1d0596", optional = true, default-features = false, features = ["cuda"] }

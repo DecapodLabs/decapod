@@ -18,6 +18,8 @@ The separate Vega worker additionally exposes a private bounded frozen-case eval
 
 ## Human and agent entrypoints
 
+Native probe JSON additionally reports optional `attention_metal_gdn_source_sha256`: the exact patched shader identity on Metal and null on CPU. The upstream attention revision remains separately reported. This additive private diagnostic field changes no production request/decision schema. `metal_recurrence_reference::run` reports all32real synchronized Metal comparisons against scalar F64 outputs/state or failure; non-Metal builds return explicitly not_applicable, never fabricated execution. The native collector attempts other independent phases after primitive failure and retains that failure in its required final verdict. Every required deterministic validation stage returns before optional Vega assessment on failure; a failed build/test/proof does not invoke Vega or authorize a PR. Passing source CI or a numerical subset is insufficient when the required scientific collector fails.
+
 ### CI-attested execution declaration
 
 `proof.ci_attested.workflows` maps each supported workflow's native step keys to
@@ -558,8 +560,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (37 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

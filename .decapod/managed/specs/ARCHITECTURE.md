@@ -11,7 +11,9 @@ Vega's separate native worker keeps evidence collection and final acceptance dis
 
 ## Direction
 
-Verification-only `assets/tools/vega-native/reference_backbone.rs` adds an independently authored scalar-F64 short-text calculation from pinned Transformers equations inside the separate worker. It verifies the full config/checkpoint identities, computes raw blocks 13/19 and pooling without candidate model/tensor calls, then supplies independent inputs to the separate engine/calibration calculation. This does not replace the production Candle/candle-vllm or CPU path. Private proof mode alone samples bounded raw rows; normal requests transfer only pooled features. Native attempts precede reference calculation. Same-agent authorship, shared parsing/hash infrastructure, 512-token pure-text scope and absent execution/review remain explicit limits, not a full-backbone acceptance claim.
+The native worker's pinned Metal recurrence implementation is isolated in `assets/tools/vega-native/vendor/metal-kernels`, retaining upstream f22e42c API and all other kernels. Three end-token threadgroup barriers protect shared keys between SIMD groups; a direct attention-rs call is checked against independently indexed scalar F64 equations for32fresh-state repetitions. This repair is outside the main crate and has not yet executed. Candidate19bdaaf3 passed28native tests and both short/active-chunk CPU reference comparisons, but actual Metal combined-engine comparisons failed frozen tolerances. No earlier passing Metal subset supersedes those failures. Device probe provenance now records the patched shader hash separately from its upstream revision. Runtime source changes never swap external model/calibration assets, and independent diagnostic success never satisfies the heldout gate.
+
+Verification-only `assets/tools/vega-native/reference_backbone.rs` adds an independently authored scalar-F64 short-text calculation from pinned Transformers equations inside the separate worker. It verifies the full config/checkpoint identities, computes raw blocks 13/19 and pooling without candidate model/tensor calls, then supplies independent inputs to the separate engine/calibration calculation. This does not replace the production Candle/candle-vllm or CPU path. Private proof mode alone samples bounded raw rows; normal requests transfer only pooled features. Native attempts precede reference calculation. Same-agent authorship, shared parsing/hash infrastructure,512-token pure-text scope and absent independent human review limit the measured comparisons; CPU subset execution is not full-backbone acceptance.
 
 The product is a local-first command-line runtime with a structured process RPC
 surface. Agents invoke it at decision and state-transition boundaries. Durable
@@ -513,8 +515,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (32 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
+- Repository signal fingerprint: `d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (37 files), `docs/` (1 files), `src/` (210 files), `tests/` (193 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

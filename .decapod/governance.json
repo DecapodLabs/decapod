@@ -606,6 +606,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T031409Z.json"
       ]
+    },
+    {
+      "id": "vega1191-metal-recurrence-barrier",
+      "summary": "Repair pinned Metal shared-key synchronization hazard with isolated three token-loop barriers and exact source hashes; add32real-Metal repetitions against independent indexed scalarF64 equations, preserve28passed tests and failed combined-model/heldout evidence without weakening acceptance",
+      "input_digest": "sha256:bf650f900d3034d8094cb556a81ef8c2ec98f5457890f77abbdf299f4b82bc71",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T035404Z.json"
+      ]
     }
   ],
   "intents": {
@@ -649,23 +657,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Completed76 full validation passed source proof and26native tests, short actualMetal/CPU model and independent Rust comparison; required scientific acceptance failed. Reference nonempty memory was hardcoded zero: repair independently computes ownF64 block19 bucket means from pinned vegaml21a17 and engineconfig12f4f737, adding analytic boundary/offset/nonfinite tests. Reviewed source inventory4bd420b0 changes only reference and caller; recipe/model/calibration/holdout/tolerances unchanged. Partial heldout false-ready/input-limit/deadline/23lineage/label-authority failures remain required; no publication claim.",
-          "reviewed_code_fingerprint": "4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b",
-          "spec_material_hash": "7275482c6a015f967e17e749325695b063db1637e25314e2da2ccbf232f6ae2a"
+          "reason": "Completed19 full validation passed required Buildkite2211,28native tests and both CPU numerical fixtures, but actual Metal combined engine errors0.001178/0.001728 failed frozen criteria. Review exact upstream metal-kernels0.2.6 subtree and isolated three end-token barriers to repair cross-SIMD shared-key hazard; source/license/original and patched hashes preserved, no candidate controller or cache edits. New real-Metal32repetition primitive test uses own indexed scalarF64 oracle, fixed dyadic inputs and predeclared tolerances; unexecuted until nextvalidate. Reviewed inventory03537c0a and unchanged recipe; all model/calibration/corpus/risk/timeout criteria retained. Partial heldout failures,512-token reference and label-authority gaps still block publication. Failed deterministic validation returns before optional Vega.",
+          "reviewed_code_fingerprint": "d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326",
+          "spec_material_hash": "93d5f3fdc90b30497b0c1d5e9dba52740c0855ec2862b610ecd209666b5960bb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Completed76 full validation passed source proof and26native tests, short actualMetal/CPU model and independent Rust comparison; required scientific acceptance failed. Reference nonempty memory was hardcoded zero: repair independently computes ownF64 block19 bucket means from pinned vegaml21a17 and engineconfig12f4f737, adding analytic boundary/offset/nonfinite tests. Reviewed source inventory4bd420b0 changes only reference and caller; recipe/model/calibration/holdout/tolerances unchanged. Partial heldout false-ready/input-limit/deadline/23lineage/label-authority failures remain required; no publication claim.",
-          "reviewed_code_fingerprint": "4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b",
-          "spec_material_hash": "42eb2ec15182d3402ca86d2ed88d2c6f2d0a3ecb6ef12e5cf0b53e208c01ed75"
+          "reason": "Completed19 full validation passed required Buildkite2211,28native tests and both CPU numerical fixtures, but actual Metal combined engine errors0.001178/0.001728 failed frozen criteria. Review exact upstream metal-kernels0.2.6 subtree and isolated three end-token barriers to repair cross-SIMD shared-key hazard; source/license/original and patched hashes preserved, no candidate controller or cache edits. New real-Metal32repetition primitive test uses own indexed scalarF64 oracle, fixed dyadic inputs and predeclared tolerances; unexecuted until nextvalidate. Reviewed inventory03537c0a and unchanged recipe; all model/calibration/corpus/risk/timeout criteria retained. Partial heldout failures,512-token reference and label-authority gaps still block publication. Failed deterministic validation returns before optional Vega.",
+          "reviewed_code_fingerprint": "d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326",
+          "spec_material_hash": "21eb8b7e4b2e17ac0eec233ceb85a3fbb19ba9b9ed3009d53aa284cf1ba7c67e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Completed76 full validation passed source proof and26native tests, short actualMetal/CPU model and independent Rust comparison; required scientific acceptance failed. Reference nonempty memory was hardcoded zero: repair independently computes ownF64 block19 bucket means from pinned vegaml21a17 and engineconfig12f4f737, adding analytic boundary/offset/nonfinite tests. Reviewed source inventory4bd420b0 changes only reference and caller; recipe/model/calibration/holdout/tolerances unchanged. Partial heldout false-ready/input-limit/deadline/23lineage/label-authority failures remain required; no publication claim.",
-          "reviewed_code_fingerprint": "4c1cb10378ffddd9efba6a4c39110e57943d7f2820c3bbbbd9762b92fc81b02b",
-          "spec_material_hash": "c1d65cbfd28cd890de96b440908ba82701b61a4ec79dd31aa48c739a03f15145"
+          "reason": "Completed19 full validation passed required Buildkite2211,28native tests and both CPU numerical fixtures, but actual Metal combined engine errors0.001178/0.001728 failed frozen criteria. Review exact upstream metal-kernels0.2.6 subtree and isolated three end-token barriers to repair cross-SIMD shared-key hazard; source/license/original and patched hashes preserved, no candidate controller or cache edits. New real-Metal32repetition primitive test uses own indexed scalarF64 oracle, fixed dyadic inputs and predeclared tolerances; unexecuted until nextvalidate. Reviewed inventory03537c0a and unchanged recipe; all model/calibration/corpus/risk/timeout criteria retained. Partial heldout failures,512-token reference and label-authority gaps still block publication. Failed deterministic validation returns before optional Vega.",
+          "reviewed_code_fingerprint": "d4345ac35eb4d72c4e2432c7e2d1acedee26fe4dec4e8d8be74ce4cbd8a5d326",
+          "spec_material_hash": "c1ac8b7fba988e01719180ba55b5bbcc064883f4b4c146d134010da298f5a426"
         }
       ],
       "state": "APPROVED",
@@ -678,7 +686,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792382010Z"
+      "updated_at": "1792385748Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -690,7 +698,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:5bccfb5b97bd8e0570ec19a355844194201a49e1c0617a13d739e2f0334d581c",
+      "artifact_hash": "sha256:53c24a181909f30f0ece0d03d331f1b3692e128e564e06122f4aa2c4e3fb9921",
       "checks": [
         {
           "name": "branch_reconciliation",
@@ -722,6 +730,10 @@
         },
         {
           "name": "cpu_model_short_reference_2f",
+          "status": "passed"
+        },
+        {
+          "name": "cpu_reference_19",
           "status": "passed"
         },
         {
@@ -793,6 +805,10 @@
           "status": "passed"
         },
         {
+          "name": "heldout_19",
+          "status": "failed"
+        },
+        {
           "name": "heldout_76",
           "status": "failed"
         },
@@ -837,6 +853,10 @@
           "status": "partial"
         },
         {
+          "name": "metal_combined_reference_19",
+          "status": "failed"
+        },
+        {
           "name": "metal_model_2f",
           "status": "failed"
         },
@@ -879,6 +899,10 @@
         {
           "name": "native_snapshot5d",
           "status": "failed"
+        },
+        {
+          "name": "native_tests_19",
+          "status": "passed"
         },
         {
           "name": "native_tests_76",
@@ -1335,10 +1359,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 43
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:44",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 44
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 43,
+        "next_sequence": 44,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2164,6 +2195,40 @@
                 "validation_findings": [
                   "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication."
                 ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:44",
+                "observations": [
+                  "assets/tools/vega-native/readiness_evaluation.rs",
+                  "assets/tools/vega-native/vendor/metal-kernels/src/gdn.metal",
+                  "assets/tools/vega-native/metal_recurrence_reference.rs",
+                  "assets/tools/vega-native/Cargo.toml",
+                  "assets/tools/vega-native/Cargo.lock",
+                  "assets/tools/vega_infer.rs",
+                  "src/decapod/core/vega_backbone.rs",
+                  "docs/vega-reference-contract.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/vega-1191-validation-20261019T035404Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2211",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/39196818895"
+                ],
+                "proof_refs": [
+                  "native_tests_19",
+                  "cpu_reference_19",
+                  "metal_combined_reference_19",
+                  "heldout_19"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 44,
+                "validation_findings": [
+                  "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain."
+                ]
               }
             ]
           }
@@ -2192,6 +2257,7 @@
         "/private/tmp/vega-1191-validation-20261018T232831Z.json",
         "/private/tmp/vega-1191-validation-20261019T020535Z.json",
         "/private/tmp/vega-1191-validation-20261019T031409Z.json",
+        "/private/tmp/vega-1191-validation-20261019T035404Z.json",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
@@ -2225,6 +2291,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2186",
         "https://buildkite.com/decapodlabs/decapod/builds/2201",
         "https://buildkite.com/decapodlabs/decapod/builds/2206",
+        "https://buildkite.com/decapodlabs/decapod/builds/2211",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -2241,6 +2308,7 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39172229105",
         "https://github.com/DecapodLabs/decapod/actions/runs/39173829817",
         "https://github.com/DecapodLabs/decapod/actions/runs/39183631846",
+        "https://github.com/DecapodLabs/decapod/actions/runs/39196818895",
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6259258948",
         "https://github.com/DecapodLabs/decapod/pull/1458",
         "https://github.com/DecapodLabs/decapod/releases/tag/v0.119.1",
@@ -2278,10 +2346,12 @@
         "assets/tools/vega-native/Cargo.toml",
         "assets/tools/vega-native/cpu_backbone.rs",
         "assets/tools/vega-native/evaluation_corpus.rs",
+        "assets/tools/vega-native/metal_recurrence_reference.rs",
         "assets/tools/vega-native/readiness_evaluation.rs",
         "assets/tools/vega-native/reference_backbone.rs",
         "assets/tools/vega-native/reference_engine.rs",
         "assets/tools/vega-native/reference_tokenizer.rs",
+        "assets/tools/vega-native/vendor/metal-kernels/src/gdn.metal",
         "assets/tools/vega_infer.rs",
         "docs/vega-reference-contract.md",
         "src/decapod/cli.rs",
@@ -2338,6 +2408,7 @@
         "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
         "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained.",
         "Source fixtures are synthetic and generated at runtime; no real credential hidden or scanner exemption added. Existing scanner/redaction regressions must execute again. Native model/reference/holdout proof remains unexecuted.",
+        "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain.",
         "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
         "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked."
       ]
