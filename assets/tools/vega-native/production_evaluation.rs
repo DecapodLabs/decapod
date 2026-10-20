@@ -230,6 +230,22 @@ pub fn functional_snapshot(
         expected.push(check);
         results.push(result);
     }
+    // Full source evidence requires a real candidate-build witness as well as
+    // source checks. This process is the separately compiled native candidate;
+    // bind its actual executable instead of inventing an artifact or weakening
+    // the verifier's IncompletePlan condition. The kernel owns build execution.
+    let mut build = value["expected_plan"]["checks"][1].clone();
+    build["key"]["workflow"] = "bounded-rust-verification".into();
+    build["key"]["job"] = "candidate-native-worker-built-and-executing".into();
+    let mut built = observation;
+    built["key"] = build["key"].clone();
+    built["observation"]["execution_id"] =
+        format!("native-candidate-{}", std::process::id()).into();
+    built["observation"]["output_digest"] = execution_digest.into();
+    built["observation"]["artifact_digest"] =
+        super::scientific_collection::runtime_digest()?.into();
+    expected.push(build);
+    results.push(built);
     value["expected_plan"]["checks"] = expected.into();
     value["evidence"]["results"] = results.into();
     let variant = case["variant"]
@@ -590,6 +606,45 @@ mod tests {
             }
         }
         assert!(functional_snapshot(&cases["cases"][0], &[], "sha256:empty").is_err());
+    }
+    #[test]
+    fn functional_source_checks_never_replace_the_actual_candidate_build() {
+        let cases = functional_cases().unwrap();
+        let checks = vec!["Executed bounded contract".into()];
+        let digest = readiness::hash(&serde_json::to_vec(&checks).unwrap());
+        let mut snapshot = functional_snapshot(&cases["cases"][0], &checks, &digest).unwrap();
+        let build = snapshot
+            .expected_plan
+            .checks
+            .iter()
+            .position(|check| check.kind == evidence::CheckKind::CandidateBuild)
+            .unwrap();
+        if let evidence::Observation::Executed {
+            artifact_digest, ..
+        } = &snapshot.evidence.results[build].observation
+        {
+            assert_eq!(
+                artifact_digest.as_deref(),
+                Some(
+                    super::super::scientific_collection::runtime_digest()
+                        .unwrap()
+                        .as_str()
+                )
+            );
+        } else {
+            panic!("actual candidate executable must be an executed build witness");
+        }
+        snapshot.expected_plan.checks.remove(build);
+        snapshot.evidence.results.remove(build);
+        snapshot.evidence.expected_plan_digest = snapshot.expected_plan.digest().unwrap();
+        snapshot.binding.proof_plan_digest = snapshot.expected_plan.digest().unwrap();
+        snapshot.binding.evidence_digest = evidence::digest(&snapshot.evidence).unwrap();
+        let result = evaluate(&snapshot, |_| {
+            panic!("incomplete source/build proof must not reach model")
+        })
+        .unwrap();
+        assert_eq!(result["execution"], "blocked_before_model");
+        assert!(result["error"].as_str().unwrap().contains("IncompletePlan"));
     }
     #[test]
     fn failed_or_stale_deterministic_proof_never_calls_vega() {

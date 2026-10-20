@@ -36,6 +36,17 @@ Metal/CPU numerical comparisons. Its terminal report042518Z, SHA256
 failed the now-superseded research admission check. That failure stays failed.
 New functional tests are authored, not passing until prescribed validation runs.
 
+The first revised candidate `c5853c47` passed all39source steps and 1,463 library
+tests, compiled the worker and passed55of56native tests. Its functional projection
+regression exposed `IncompletePlan`: source checks cannot replace the required
+candidate-build witness. The replay builder now records the actual running native
+executable's digest as that separate build artifact, with an adversarial regression
+removing it. The evidence verifier is unchanged. No new model case ran before
+this repair; fixed functional case bytes, labels, model/calibration and numerical
+tolerances remain unchanged. Report074535Z/SHA256
+caa3eed0f5010668bbe687a8cd9c5596bfa6afaadf307eb33742f9dd57c7764b
+remains failed history; the repair requires a new exact-candidate full validation.
+
 ### Historical validation and superseded research acceptance
 
 The following records retain prior observations and the contract at their time;
@@ -723,7 +734,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `16ba47ed87ae6c4f26efe540c20a139f9d0317cda85d454ff12be8444c71971b`
+- Repository signal fingerprint: `3339a6783a51db731cfb32caa5fdf80717ceb885a8a4292fba03fd28acff4582`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

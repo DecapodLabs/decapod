@@ -808,6 +808,14 @@
         "/private/tmp/vega-1191-validation-20261020T042518Z.json",
         "https://github.com/DecapodLabs/decapod/issues/1445"
       ]
+    },
+    {
+      "id": "vega1445-functional-build-witness",
+      "summary": "Bind functional replay to the actual native candidate executable and preserve required source/build proof after observed IncompletePlan failure",
+      "input_digest": "sha256:2780f1aeaff044fa2f53bf6c60aa72311436f8aeadd3ac4e3cd280487fbfc8c5",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261020T074535Z.json"
+      ]
     }
   ],
   "intents": {
@@ -847,24 +855,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Explicit user acceptance revision2026-10-20 retires only implementation-added59acceptance/5%risk/95%confidence/50%coverage research prerequisite. Required active functional model conditions and all deterministic source/native/numerical gates remain. Sharedproductionprojection/wire/finalpredicate used by12fixed cases frozenSHA97b4667e before firstinference. ActualcandidateRustcontractchecks supply observations, expectedlabels outsideinput. No model/threshold/calibration/tolerance/recipeargs/deadline/ownership change. Historicfailedstudies/limits preserved; domainaccuracyunestablished. Reviewedsource0e9afdd8, configbackedup, eight-runreciped6d9 unchanged. Fullvalidate mustexecute allnewtests/modelcases; authorednotpassed.",
-          "reviewed_code_fingerprint": "16ba47ed87ae6c4f26efe540c20a139f9d0317cda85d454ff12be8444c71971b",
+          "reason": "Officialc585fullvalidate passed39source/1463library tests then nativecompilepassed55of56tests. Functionalbuilder omitted mandatoryCandidateBuild evidence; add actualexecutingnativebinarydigest viaexistingboundedruntime_digest and regressionremovingbuildmustblock. Existing evidenceverifierIncompletePlan remainsunchanged. Fixedcases97b4667e unchanged,no model inference ranbeforefailure. No thresholds/model/calibration/tolerances/recipeargs/deadlines/authority changes; VALIDATIONrecordsfailed074535Z andsmallrepair. Reviewedhelperd8d0b4c6 configbackedup; rerunfullsamebranchvalidation.",
+          "reviewed_code_fingerprint": "3339a6783a51db731cfb32caa5fdf80717ceb885a8a4292fba03fd28acff4582",
           "spec_material_hash": "1cf74139deb8f287a5f109ac8364952aff366ac576682a3ea0c6986b835b2974"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Explicit user acceptance revision2026-10-20 retires only implementation-added59acceptance/5%risk/95%confidence/50%coverage research prerequisite. Required active functional model conditions and all deterministic source/native/numerical gates remain. Sharedproductionprojection/wire/finalpredicate used by12fixed cases frozenSHA97b4667e before firstinference. ActualcandidateRustcontractchecks supply observations, expectedlabels outsideinput. No model/threshold/calibration/tolerance/recipeargs/deadline/ownership change. Historicfailedstudies/limits preserved; domainaccuracyunestablished. Reviewedsource0e9afdd8, configbackedup, eight-runreciped6d9 unchanged. Fullvalidate mustexecute allnewtests/modelcases; authorednotpassed.",
-          "reviewed_code_fingerprint": "16ba47ed87ae6c4f26efe540c20a139f9d0317cda85d454ff12be8444c71971b",
+          "reason": "Officialc585fullvalidate passed39source/1463library tests then nativecompilepassed55of56tests. Functionalbuilder omitted mandatoryCandidateBuild evidence; add actualexecutingnativebinarydigest viaexistingboundedruntime_digest and regressionremovingbuildmustblock. Existing evidenceverifierIncompletePlan remainsunchanged. Fixedcases97b4667e unchanged,no model inference ranbeforefailure. No thresholds/model/calibration/tolerances/recipeargs/deadlines/authority changes; VALIDATIONrecordsfailed074535Z andsmallrepair. Reviewedhelperd8d0b4c6 configbackedup; rerunfullsamebranchvalidation.",
+          "reviewed_code_fingerprint": "3339a6783a51db731cfb32caa5fdf80717ceb885a8a4292fba03fd28acff4582",
           "spec_material_hash": "d5b0fa449fbf205c7d703d75e290811e639a2d3c8a764f543cad951ad6c272bd"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Functional acceptance revision changes no privilege, authentication, storage, IPC, backend retry, artifact pin or publication authority. Failed/stale mandatoryproof blocks beforemodel; untrustedcontradiction/injection cases cannotpermit readiness. Models remain external and verified, same runtime/nodeadlineextension, noPython/paidcompute/externalsharing. Broadersecurityscopeunchanged; historicalresearch isnot waived into accuracy.",
-          "reviewed_code_fingerprint": "16ba47ed87ae6c4f26efe540c20a139f9d0317cda85d454ff12be8444c71971b",
+          "reason": "Officialc585fullvalidate passed39source/1463library tests then nativecompilepassed55of56tests. Functionalbuilder omitted mandatoryCandidateBuild evidence; add actualexecutingnativebinarydigest viaexistingboundedruntime_digest and regressionremovingbuildmustblock. Existing evidenceverifierIncompletePlan remainsunchanged. Fixedcases97b4667e unchanged,no model inference ranbeforefailure. No thresholds/model/calibration/tolerances/recipeargs/deadlines/authority changes; VALIDATIONrecordsfailed074535Z andsmallrepair. Reviewedhelperd8d0b4c6 configbackedup; rerunfullsamebranchvalidation.",
+          "reviewed_code_fingerprint": "3339a6783a51db731cfb32caa5fdf80717ceb885a8a4292fba03fd28acff4582",
           "spec_material_hash": "d22b96974fa42a386a9bffb7a0e118243b3ef7ad15d07f65e252b1ee1339d2e4"
         }
       ],
@@ -876,7 +884,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792482314Z"
+      "updated_at": "1792484015Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -888,7 +896,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:a5ea28faa559aaf6cd9740f7bba199528dc53ccb8da34d9863c2f73977182e03",
+      "artifact_hash": "sha256:ab189e43ac0044a94b2475edb876c33aab22d17dc988ebd5f381d1952ccfd183",
       "checks": [
         {
           "name": "bazel_metadata_regeneration",
@@ -1047,6 +1055,10 @@
           "status": "failed"
         },
         {
+          "name": "functional_model_results",
+          "status": "unavailable"
+        },
+        {
           "name": "governance_ci",
           "status": "failed"
         },
@@ -1104,6 +1116,10 @@
         },
         {
           "name": "library1463_304",
+          "status": "passed"
+        },
+        {
+          "name": "library_c5851463",
           "status": "passed"
         },
         {
@@ -1171,6 +1187,10 @@
           "status": "failed"
         },
         {
+          "name": "native_compile_c585",
+          "status": "passed"
+        },
+        {
           "name": "native_ef3",
           "status": "unavailable"
         },
@@ -1221,6 +1241,10 @@
         {
           "name": "native_tests_aa",
           "status": "passed"
+        },
+        {
+          "name": "native_tests_c585",
+          "status": "failed"
         },
         {
           "name": "native_tests_d3",
@@ -1499,6 +1523,10 @@
           "status": "passed"
         },
         {
+          "name": "source_c58539",
+          "status": "passed"
+        },
+        {
           "name": "source_c831",
           "status": "failed"
         },
@@ -1543,7 +1571,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "recovery",
       "custody": {
         "events": [
           {
@@ -2005,10 +2033,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 67
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:68",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 68
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 67,
+        "next_sequence": 68,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -3468,6 +3503,31 @@
                 "validation_findings": [
                   "User explicitly authorizes functional acceptance replacingresearchqualification, not fabricatedsuccess/accuracy. Fixedcasebytes97b4667e frozen before firstmodelrun, nofitting/threshold/model/calibration/tolerancechange. Actualcontractchecksrun beforeobservationconstruction; three meaningful positives, negative/uncertain/manipulated/declared-proof and failed/stale controls. Sharedproduction code andstrictfinalreducer rederiveoutcomes; oldstudiesfailures preserved. Issue1445andbroader1052/1069/1070/1398/1024updated; closeonlyfullyresolved1445. Sourceconfigreview0e9afdd8 unchanged8runargs; no newprereq/task/branch. Preserve originaltask/branch andfullfinalvalidationgates."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:68",
+                "observations": [
+                  "assets/tools/vega-native/production_evaluation.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/vega-1191-validation-20261020T074535Z.json",
+                  "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-ddWKUn/rust-workers/check-0.stdout",
+                  "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6286535673"
+                ],
+                "proof_refs": [
+                  "source_c58539",
+                  "library_c5851463",
+                  "native_compile_c585",
+                  "native_tests_c585",
+                  "functional_model_results"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 68,
+                "validation_findings": [
+                  "ConcretefixtureIncompletePlan failurepreserved. Sourceandcandidate-build requiredkinds unchanged; actualnativeexecutable suppliesbuildartifact hash, notafakeartifact orverifierwaiver. Newregressionmustreject removal. Functionalcasebytes/labels frozenbeforefirstinference unchanged; nofit/tuning ormodel/calibration/tolerance change. Newtestsauthorednotpassed; normalvalidateownsallverification. Originaltask/branch/custody unchanged."
+                ]
               }
             ]
           }
@@ -3513,6 +3573,7 @@
         "/private/tmp/vega-1191-validation-20261020T031718Z.json",
         "/private/tmp/vega-1191-validation-20261020T041040Z.json",
         "/private/tmp/vega-1191-validation-20261020T042518Z.json",
+        "/private/tmp/vega-1191-validation-20261020T074535Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-1445-5635-clippy.log",
         "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
@@ -3523,6 +3584,7 @@
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-ZYCAMo/rust-workers/check-0.stderr",
+        "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-ddWKUn/rust-workers/check-0.stdout",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-eEdDJD/rust-workers/check-0.stderr",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
         "Actual CI error STALE_SPEC_REVIEW SECURITY.md or code changed after review; Architecture/Interfaces were current, Security needed supported current-code review after660974b4. Re-reviewed Security unchanged-with-reason and refreshed projections, retaining all failures and native-release blocker.",
@@ -3590,6 +3652,7 @@
         "https://github.com/DecapodLabs/decapod/issues/1445",
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6259258948",
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6281028106",
+        "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6286535673",
         "https://github.com/DecapodLabs/decapod/pull/1458",
         "https://github.com/DecapodLabs/decapod/releases/tag/v0.119.1",
         "https://github.com/EricLBuehler/candle-vllm/commit/b1055eca63de76b548d0d4b0daa96ff8cd1d0596",
@@ -3705,6 +3768,7 @@
         "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
         "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
+        "ConcretefixtureIncompletePlan failurepreserved. Sourceandcandidate-build requiredkinds unchanged; actualnativeexecutable suppliesbuildartifact hash, notafakeartifact orverifierwaiver. Newregressionmustreject removal. Functionalcasebytes/labels frozenbeforefirstinference unchanged; nofit/tuning ormodel/calibration/tolerance change. Newtestsauthorednotpassed; normalvalidateownsallverification. Originaltask/branch/custody unchanged.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
         "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority.",
         "Explicit latest user decision replaces only research qualification prerequisite, retains all deterministic and functional required active-model gates. Original task/custody/branch preserved; current remoteHEADfef84896/master7371ad25, clean. Prior12modelrequests all actual singletonreject; constructed baseline discloses nonexecution and unassessed trajectory so not a meaningful ready positive. Need faithful production-shaped known-outcome cases, shared code, unchanged model/calibration/tolerances, preserve failures and no cherry-picking.",
