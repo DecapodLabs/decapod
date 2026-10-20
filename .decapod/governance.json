@@ -696,6 +696,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "native-security-lock",
+      "summary": "Normal Cargo resolution removes thrift and its unused dependencies, patches TLS and aligns local Decapod package version; nine Git source identities unchanged.",
+      "input_digest": "sha256:af378d1a22013923a5d84cbfbfba72bf23dcf0c97f46d0db1597b0671d067971",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
