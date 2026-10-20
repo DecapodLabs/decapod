@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.120.0](https://github.com/DecapodLabs/decapod/compare/v0.119.1...v0.120.0) - 2026-10-20
+
+### Added
+
+- verify active Vega readiness under functional acceptance
+- *(vega)* collect bounded frozen readiness evaluation
+- prepare pinned Rust Vega verification inputs
+- collect native Vega diagnostics before parity acceptance
+- *(vega)* integrate accepted native verification support
+- add portable vega backend selection and safe cpu fallback
+- bind Vega runtimes locally for shared project policy
+- select Vega post-validation decisions during init
+- *(readiness)* prepare accepted-base Rust vega assessment
+
+### Fixed
+
+- qualify useful Vega decisions with safe abstention
+- retain candidate build proof in Vega functional cases
+- propagate Vega diagnostic export errors
+- share the final Vega readiness decision rule
+- reconcile Vega projection docs and Clippy checks
+- evaluate Vega through the production readiness projection
+- compile public review source diagnostics
+- refresh Bazel input lock for research fixtures
+- preserve readiness obligations and audit public inputs
+- revoke readiness after late validation errors
+- preserve Vega guidance in local validation output
+- guide agents after Vega readiness assessment
+- stop failed scientific reduction before model setup
+- retain scientific diagnostics when strict aggregation fails
+- keep scientific nonce validation inside the native worker
+- synchronize Vega Metal recurrence shared memory
+- calculate independent Vega memory pooling reference
+- isolate one-shot Metal state and collect independent proof
+- pin compatible native Metal runtime dependencies
+- *(governance)* refresh Vega code-bound spec reviews
+- *(vega)* retain kernel ownership during evaluation
+- reject malformed Vega reference comparisons
+- *(vega)* pin a CPU companion for GPU loader failures
+- scope vega synchronization dependency to gpu builds
+- finish Vega item ordering and specify native proof obligations
+- refresh Vega release-bound validation projections
+- preserve Vega cache safety and retired init settings
+- reconcile vega reference docs and clippy types
+- resolve vega setup compilation and dependency lint
+
+### Other
+
+- verify calibration metadata order and preserve Vega outcomes
+- diagnose Vega readiness task mismatch
+- synchronize generated Vega configuration reference
+- collect bounded Vega numerical and heldout evidence
+- reconcile Vega verification evidence and label scope
+- construct synthetic credential fixtures at runtime
+- reconcile Vega with accepted v0.119.1
+- *(vega)* add independent scalar backbone reference
+- *(vega)* freeze contradictory evidence and abstention cases
+- *(vega)* reconcile accepted controller v0.119.0
+- balance required CLI recovery coverage within finite budgets
+- integrate accepted master after Vega task transfer
+- cover signed vega half conversion boundaries
+- reconcile reviewed vega source inventory
+- keep vega checkpoint decoding in native worker
+- keep vega tokenizer adapter in native worker
+- *(readiness)* adopt released validation controller 0.117
+
 ## [0.119.1](https://github.com/DecapodLabs/decapod/compare/v0.119.0...v0.119.1) - 2026-10-18
 
 ### Other
