@@ -566,6 +566,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "material-notes-interface",
+      "summary": "Describe explicit existing-report JSON notes for passed authored/strict-release proof versus local skips, preserving required context failure and non-ready project-check semantics.",
+      "input_digest": "sha256:6b8990a5b393ede6f9a50b33795caa63f66a385c059c3585b381fab4dddc0061",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
