@@ -512,6 +512,45 @@ mod tests {
     }
 
     #[test]
+    fn calibration_metadata_requires_exact_feature_order_not_only_names_or_length() {
+        let mut metadata = serde_json::to_value(calibration()).unwrap();
+        metadata["features"] = json!([
+            "log1p(kinetic)",
+            "log1p(nearest)",
+            "steps_used/n_steps",
+            "log(k)"
+        ]);
+        let canonical = metadata["features"].as_array().unwrap().clone();
+        let mut checked = 0;
+        for a in 0..4 {
+            for b in 0..4 {
+                for c in 0..4 {
+                    for d in 0..4 {
+                        let order = [a, b, c, d];
+                        if order
+                            .iter()
+                            .copied()
+                            .collect::<std::collections::BTreeSet<_>>()
+                            .len()
+                            != 4
+                        {
+                            continue;
+                        }
+                        metadata["features"] = json!(order.map(|index| canonical[index].clone()));
+                        assert_eq!(
+                            Calibration::from_json(&metadata).is_ok(),
+                            order == [0, 1, 2, 3],
+                            "unsupported thermal-feature permutation {order:?}"
+                        );
+                        checked += 1;
+                    }
+                }
+            }
+        }
+        assert_eq!(checked, 24);
+    }
+
+    #[test]
     fn boolean_probability_conformal_abstention_and_unbound_are_independent() {
         let cal = calibration();
         let mut r = row(vec![0.0, 1.0, -1e4]);

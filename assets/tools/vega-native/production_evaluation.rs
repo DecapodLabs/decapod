@@ -140,7 +140,13 @@ pub fn execute_contract_checks(
             ])
         }
         "calibration" => {
-            let metadata = json!({"theta":[[0.,0.,0.,0.,0.],[0.,0.,0.,0.,0.],[0.,0.,0.,0.,0.]],"conformal":{"boolean":{"0.1":0.4}},"abstain_threshold":{"0.1":0.75},"default_risk":"0.1","unbound_threshold":2.0});
+            let mut metadata = json!({"theta":[[0.,0.,0.,0.,0.],[0.,0.,0.,0.,0.],[0.,0.,0.,0.,0.]],"conformal":{"boolean":{"0.1":0.4}},"abstain_threshold":{"0.1":0.75},"default_risk":"0.1","unbound_threshold":2.0});
+            metadata["features"] = json!([
+                "log1p(kinetic)",
+                "log1p(nearest)",
+                "steps_used/n_steps",
+                "log(k)"
+            ]);
             let cal = Calibration::from_json(&metadata)?;
             let mut row = EngineReadout {
                 logits: vec![0., 1.],
@@ -177,6 +183,38 @@ pub fn execute_contract_checks(
                     .is_err(),
                 "nonfinite logits accepted",
             )?;
+            let canonical = metadata["features"]
+                .as_array()
+                .ok_or("missing feature metadata")?
+                .clone();
+            let mut permutations = 0;
+            for a in 0..4 {
+                for b in 0..4 {
+                    for c in 0..4 {
+                        for d in 0..4 {
+                            let order = [a, b, c, d];
+                            if order
+                                .iter()
+                                .copied()
+                                .collect::<std::collections::BTreeSet<_>>()
+                                .len()
+                                != 4
+                            {
+                                continue;
+                            }
+                            metadata["features"] =
+                                json!(order.map(|index| canonical[index].clone()));
+                            ensure(
+                                Calibration::from_json(&metadata).is_ok()
+                                    == (order == [0, 1, 2, 3]),
+                                "feature-order permutation guard failed",
+                            )?;
+                            permutations += 1;
+                        }
+                    }
+                }
+            }
+            ensure(permutations == 24, "incomplete feature-order coverage")?;
             let mut wrong = metadata;
             wrong["features"] = json!(["unsupported"]);
             ensure(
@@ -186,7 +224,7 @@ pub fn execute_contract_checks(
             Ok(vec![
                 "Executed temperature-one logits [0,1] versus independent analytic logistic probability and normalized no/yes order".into(),
                 "Executed equal-logit probabilities [0.5,0.5] with required abstention".into(),
-                "Executed nonfinite-logit rejection and unsupported thermal-feature-order rejection".into(),
+                "Executed nonfinite-logit rejection; accepted canonical four-feature metadata and rejected all 23 reordered feature permutations plus malformed metadata".into(),
             ])
         }
         _ => Err("unknown functional contract family".into()),

@@ -816,6 +816,15 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261020T074535Z.json"
       ]
+    },
+    {
+      "id": "vega1445-complete-calibration-metadata-proof",
+      "summary": "Preserve actual functional results and complete calibration metadata ordering verification with canonical and permutation checks",
+      "input_digest": "sha256:cb59d8202e26f354298edf772eb90eb097b93054a6a1cf8f2217da2207d3c743",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261020T081406Z.json",
+        "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6287526054"
+      ]
     }
   ],
   "intents": {
@@ -857,22 +866,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Officialc585fullvalidate passed39source/1463library tests then nativecompilepassed55of56tests. Functionalbuilder omitted mandatoryCandidateBuild evidence; add actualexecutingnativebinarydigest viaexistingboundedruntime_digest and regressionremovingbuildmustblock. Existing evidenceverifierIncompletePlan remainsunchanged. Fixedcases97b4667e unchanged,no model inference ranbeforefailure. No thresholds/model/calibration/tolerances/recipeargs/deadlines/authority changes; VALIDATIONrecordsfailed074535Z andsmallrepair. Reviewedhelperd8d0b4c6 configbackedup; rerunfullsamebranchvalidation.",
-          "reviewed_code_fingerprint": "3339a6783a51db731cfb32caa5fdf80717ceb885a8a4292fba03fd28acff4582",
+          "reason": "59eafullrunpassed39source/57native/3MetalCPUnumerics; modelacceptedgateandpromptpositives,rejectedallunmet,handleduncertainty/manipulation,blockedfailedstaleproof. Onlycalibrationpositivevalidlyabstained;22of24expectedlabels matched and fullreportfailed. Independentinspectionfoundmetadata-orderfixturetestedonlyinvalidone-elementlist,notcanonicalfour-features/permutations. Addactualcanonicalacceptance/all23permutationrejectionchecks androotregression; describeactualexpandedcoverageacrossallcalibrationfamilycases. No reasonforabstentionclaimed, nolabel/model/calibration/threshold/tolerance/promptquestion/recipe/deadline/authoritychange. Fixedscenario97b4667e preserved. Strictall-positive criterionretainedwhileclarificationpending; newcandidateproofrequiresfullvalidation. Sourceea4e1b71reviewedconfigbackedup.",
+          "reviewed_code_fingerprint": "0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491",
           "spec_material_hash": "1cf74139deb8f287a5f109ac8364952aff366ac576682a3ea0c6986b835b2974"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Officialc585fullvalidate passed39source/1463library tests then nativecompilepassed55of56tests. Functionalbuilder omitted mandatoryCandidateBuild evidence; add actualexecutingnativebinarydigest viaexistingboundedruntime_digest and regressionremovingbuildmustblock. Existing evidenceverifierIncompletePlan remainsunchanged. Fixedcases97b4667e unchanged,no model inference ranbeforefailure. No thresholds/model/calibration/tolerances/recipeargs/deadlines/authority changes; VALIDATIONrecordsfailed074535Z andsmallrepair. Reviewedhelperd8d0b4c6 configbackedup; rerunfullsamebranchvalidation.",
-          "reviewed_code_fingerprint": "3339a6783a51db731cfb32caa5fdf80717ceb885a8a4292fba03fd28acff4582",
+          "reason": "59eafullrunpassed39source/57native/3MetalCPUnumerics; modelacceptedgateandpromptpositives,rejectedallunmet,handleduncertainty/manipulation,blockedfailedstaleproof. Onlycalibrationpositivevalidlyabstained;22of24expectedlabels matched and fullreportfailed. Independentinspectionfoundmetadata-orderfixturetestedonlyinvalidone-elementlist,notcanonicalfour-features/permutations. Addactualcanonicalacceptance/all23permutationrejectionchecks androotregression; describeactualexpandedcoverageacrossallcalibrationfamilycases. No reasonforabstentionclaimed, nolabel/model/calibration/threshold/tolerance/promptquestion/recipe/deadline/authoritychange. Fixedscenario97b4667e preserved. Strictall-positive criterionretainedwhileclarificationpending; newcandidateproofrequiresfullvalidation. Sourceea4e1b71reviewedconfigbackedup.",
+          "reviewed_code_fingerprint": "0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491",
           "spec_material_hash": "d5b0fa449fbf205c7d703d75e290811e639a2d3c8a764f543cad951ad6c272bd"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Officialc585fullvalidate passed39source/1463library tests then nativecompilepassed55of56tests. Functionalbuilder omitted mandatoryCandidateBuild evidence; add actualexecutingnativebinarydigest viaexistingboundedruntime_digest and regressionremovingbuildmustblock. Existing evidenceverifierIncompletePlan remainsunchanged. Fixedcases97b4667e unchanged,no model inference ranbeforefailure. No thresholds/model/calibration/tolerances/recipeargs/deadlines/authority changes; VALIDATIONrecordsfailed074535Z andsmallrepair. Reviewedhelperd8d0b4c6 configbackedup; rerunfullsamebranchvalidation.",
-          "reviewed_code_fingerprint": "3339a6783a51db731cfb32caa5fdf80717ceb885a8a4292fba03fd28acff4582",
+          "reason": "59eafullrunpassed39source/57native/3MetalCPUnumerics; modelacceptedgateandpromptpositives,rejectedallunmet,handleduncertainty/manipulation,blockedfailedstaleproof. Onlycalibrationpositivevalidlyabstained;22of24expectedlabels matched and fullreportfailed. Independentinspectionfoundmetadata-orderfixturetestedonlyinvalidone-elementlist,notcanonicalfour-features/permutations. Addactualcanonicalacceptance/all23permutationrejectionchecks androotregression; describeactualexpandedcoverageacrossallcalibrationfamilycases. No reasonforabstentionclaimed, nolabel/model/calibration/threshold/tolerance/promptquestion/recipe/deadline/authoritychange. Fixedscenario97b4667e preserved. Strictall-positive criterionretainedwhileclarificationpending; newcandidateproofrequiresfullvalidation. Sourceea4e1b71reviewedconfigbackedup.",
+          "reviewed_code_fingerprint": "0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491",
           "spec_material_hash": "d22b96974fa42a386a9bffb7a0e118243b3ef7ad15d07f65e252b1ee1339d2e4"
         }
       ],
@@ -884,7 +893,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792484015Z"
+      "updated_at": "1792487701Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -896,7 +905,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:ab189e43ac0044a94b2475edb876c33aab22d17dc988ebd5f381d1952ccfd183",
+      "artifact_hash": "sha256:61bbfc85f4b05b2a7e7cef13acb2eccd5da9929867f12883a7ae0536bfa51737",
       "checks": [
         {
           "name": "bazel_metadata_regeneration",
@@ -1055,6 +1064,10 @@
           "status": "failed"
         },
         {
+          "name": "functional_59ea",
+          "status": "failed"
+        },
+        {
           "name": "functional_model_results",
           "status": "unavailable"
         },
@@ -1175,6 +1188,10 @@
           "status": "passed"
         },
         {
+          "name": "native_59ea57",
+          "status": "passed"
+        },
+        {
           "name": "native_compile_304",
           "status": "failed"
         },
@@ -1267,6 +1284,10 @@
           "status": "unavailable"
         },
         {
+          "name": "new_feature_order_checks",
+          "status": "unavailable"
+        },
+        {
           "name": "new_full_validation",
           "status": "unavailable"
         },
@@ -1317,6 +1338,10 @@
         {
           "name": "numerical_execution",
           "status": "unavailable"
+        },
+        {
+          "name": "numerics_59ea3",
+          "status": "passed"
         },
         {
           "name": "official-controller117-checksum",
@@ -1508,6 +1533,10 @@
         },
         {
           "name": "source_4c",
+          "status": "passed"
+        },
+        {
+          "name": "source_59ea39",
           "status": "passed"
         },
         {
@@ -2040,10 +2069,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 68
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:69",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 69
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 68,
+        "next_sequence": 69,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -3528,6 +3564,33 @@
                 "validation_findings": [
                   "ConcretefixtureIncompletePlan failurepreserved. Sourceandcandidate-build requiredkinds unchanged; actualnativeexecutable suppliesbuildartifact hash, notafakeartifact orverifierwaiver. Newregressionmustreject removal. Functionalcasebytes/labels frozenbeforefirstinference unchanged; nofit/tuning ormodel/calibration/tolerance change. Newtestsauthorednotpassed; normalvalidateownsallverification. Originaltask/branch/custody unchanged."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:69",
+                "observations": [
+                  "src/decapod/core/vega_calibration.rs",
+                  "assets/tools/vega-native/production_evaluation.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "docs/vega-reference-contract.md",
+                  "docs/vega-completion-checklist.md",
+                  "/private/tmp/vega-1191-validation-20261020T081406Z.json",
+                  "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6287526054"
+                ],
+                "proof_refs": [
+                  "source_59ea39",
+                  "native_59ea57",
+                  "numerics_59ea3",
+                  "functional_59ea",
+                  "new_feature_order_checks"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 69,
+                "validation_findings": [
+                  "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release."
+                ]
               }
             ]
           }
@@ -3574,6 +3637,7 @@
         "/private/tmp/vega-1191-validation-20261020T041040Z.json",
         "/private/tmp/vega-1191-validation-20261020T042518Z.json",
         "/private/tmp/vega-1191-validation-20261020T074535Z.json",
+        "/private/tmp/vega-1191-validation-20261020T081406Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-1445-5635-clippy.log",
         "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
@@ -3653,6 +3717,7 @@
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6259258948",
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6281028106",
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6286535673",
+        "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6287526054",
         "https://github.com/DecapodLabs/decapod/pull/1458",
         "https://github.com/DecapodLabs/decapod/releases/tag/v0.119.1",
         "https://github.com/EricLBuehler/candle-vllm/commit/b1055eca63de76b548d0d4b0daa96ff8cd1d0596",
@@ -3721,6 +3786,7 @@
         "src/decapod/core/validation_runtime/rust_worker.rs",
         "src/decapod/core/validation_runtime/tests.rs",
         "src/decapod/core/vega_backbone.rs",
+        "src/decapod/core/vega_calibration.rs",
         "src/decapod/core/vega_readiness.rs",
         "src/decapod/core/vega_runtime.rs",
         "src/decapod/core/vega_setup.rs",
@@ -3800,7 +3866,8 @@
         "User explicitly authorizes functional acceptance replacingresearchqualification, not fabricatedsuccess/accuracy. Fixedcasebytes97b4667e frozen before firstmodelrun, nofitting/threshold/model/calibration/tolerancechange. Actualcontractchecksrun beforeobservationconstruction; three meaningful positives, negative/uncertain/manipulated/declared-proof and failed/stale controls. Sharedproduction code andstrictfinalreducer rederiveoutcomes; oldstudiesfailures preserved. Issue1445andbroader1052/1069/1070/1398/1024updated; closeonlyfullyresolved1445. Sourceconfigreview0e9afdd8 unchanged8runargs; no newprereq/task/branch. Preserve originaltask/branch andfullfinalvalidationgates.",
         "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked.",
         "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership.",
-        "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes."
+        "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
+        "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release."
       ]
     }
   },

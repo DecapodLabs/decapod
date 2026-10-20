@@ -46,8 +46,8 @@ Accepted master `7371ad25` is integrated and the controller is official v0.119.1
 | Metal, explicit CPU and safe fallback | Separate `vega_infer.rs`, `decoder.rs`, production runtime binding and retry classifiers | fef actual M1 Max model inference and CPU executed. Unsupported-CUDA → CPU component path exercised. NVIDIA hardware/full Linux companion-loader path not measured |
 | Tokenizer/blocks/pooling/engine/calibrated output parity | Separate Rust byte-BPE/scalar-F64 references; native recurrence checks | fef fixed 138/314/4096-token Metal+CPU comparisons passed;4097 rejected. Same-agent authorship/shared generic infrastructure and untested modes remain limits; tolerances unchanged |
 | Original validation deadline throughout native discovery | `rust_worker::execute` passes absolute deadline; `supplemental_discovery_stops_slow_rust_probe_at_original_deadline` | Already on the feature branch and exercised by source validation; no new prerequisite |
-| Active useful production-path model decisions | `production_evaluation::{execute_contract_checks,functional_snapshot,evaluate,expected_matches}`, `vega_infer::{production_inference,collect_readiness_shard,verify_scientific_contents}` | Twelve functional cases frozen before inference; three meaningful ready controls must accept on both backends; unmet obligations reject and uncertainty/contradiction/manipulation stay non-ready. **New model outcomes not yet measured.** Fixed agent-authored checks are not independent accuracy labels |
-| Calibration implementation and compatible pinned artifacts | `vega_calibration`, independent engine/calibration references, setup compatibility checks | fef numerical checks passed. Same upstream base/adapter-off route, metadata/hash/order checks and unchanged thresholds. Readiness-domain reliability remains unestablished; old failed research is preserved, not current delivery qualification |
+| Active useful production-path model decisions | `production_evaluation::{execute_contract_checks,functional_snapshot,evaluate,expected_matches}`, `vega_infer::{production_inference,collect_readiness_shard,verify_scientific_contents}` | 59ea collected all24 records: gate/prompt positives accept, unmet obligations reject, uncertainty/manipulation abstain, contradictions reject, failed/stale proof blocks before inference. Calibration-positive abstains on both backends, missing its expected-accept label;22/24 match and strict aggregate fails. No relabelling or threshold change. Fixed cases are not independent accuracy labels |
+| Calibration implementation and compatible pinned artifacts | `vega_calibration`, independent engine/calibration references, setup compatibility checks | 59ea numerical checks passed; valid model abstention preserves required non-readiness. New exact-feature-order/permutation regression authored. Same upstream base/adapter-off route, hashes and thresholds. Domain reliability remains unestablished; failed research is preserved, not current delivery qualification |
 | Agent repair guidance and one PR (#1064 consumer boundary) | `ValidationGuidance::for_vega_outcome`, existing publisher and full `decapod validate` | Exact final source/Buildkite/native/numerical/functional aggregate must pass. Source or collection success alone cannot publish. No feature PR yet; close only #1445 if fully completed |
 
 ## Evidence custody
@@ -59,6 +59,14 @@ on both actual Metal and CPU. Full report
 `vega-1191-validation-20261020T042518Z`, SHA256
 `06be1331c630bce469e9250e111baf4f2bc8e6902716924d183037e56e51d2af`,
 failed the old research admission gate. Those failures and older runs remain intact.
+
+The following revised run on `59eaf087` passed [Buildkite2311](https://buildkite.com/decapodlabs/decapod/builds/2311),57native tests and all three numerical fixtures,
+but failed the strict expected-outcome comparison for the valid abstaining
+calibration-positive control. Full report081406Z SHA256
+`d7fc06ddf9187b1e1ed6536bf4572ea38d6f5446846aadab9c6d16cce7305c76`.
+The model did approve two substantive positive controls on both backends and all
+non-ready controls remained non-ready. No feature PR or full passing claim follows
+from this partial result. Labels, raw outcomes and the failed report are retained.
 
 The current collector never repeats exposed v2 as an untouched holdout. It
 preserves all old inputs/results and retains independent numerical/native checks.

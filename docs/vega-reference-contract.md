@@ -37,6 +37,40 @@ reference correctness. Actual unsupported-CUDA-to-CPU component fallback passed;
 NVIDIA hardware and full Linux loader-companion routing remain separate limits.
 New functional outcomes require the next prescribed exact-candidate validation.
 
+### Actual functional run on 59eaf087
+
+Official v0.119.1 passed Buildkite2311 all39source steps,57native tests and all
+three numerical Metal/CPU cases. Report081406Z, SHA256
+`d7fc06ddf9187b1e1ed6536bf4572ea38d6f5446846aadab9c6d16cce7305c76`,
+failed its strict functional aggregate:22of24 expected case/backend outcomes match.
+These are12fixed scenarios on two backends, not24independent sampling units.
+
+| Case | Metal / CPU decision | Frozen expectation |
+|---|---|---|
+| gate-ready | accept / accept | accept |
+| prompt-ready | accept / accept | accept |
+| calibration-ready | abstain / abstain | accept; mismatch preserved |
+| gate-unmet, prompt-unmet, calibration-unmet | reject / reject | reject |
+| unresolved | abstain / abstain | non-ready |
+| contradictory | reject / reject | non-ready |
+| input-manipulation | abstain / abstain | non-ready |
+| declaration-not-proof | reject / reject | reject |
+| failed-proof, stale-proof | blocked before model / blocked before model | zero model calls |
+
+The calibration-positive response is valid: yes0.57303135/0.57303569, prediction
+set[false,true], abstain=true, unbound=false, no worker or validation error. The
+shared required-mode predicate denies readiness, preserving the product contract.
+No threshold, label, profile or output was changed to force agreement. This
+demonstrates useful active approval and conservative blocking but does not pass
+the frozen all-positive expectation or establish calibrated domain accuracy.
+
+Current synchronized compute Metal/CPU for138/314/4096tokens was
+0.168/1.369s,0.303/3.033s,4.294/39.078s; whole verified requests
+11.224/12.439s,11.472/14.090s,15.369/50.203s. Peak process-lifetime RSS
+5028216832B includes prior/reference allocations, not isolated GPU/model memory.
+The 4096-token reference matched calibrated abstention/unbound on both backends.
+Original sampling, same-author/reference and unsupported-mode limits still apply.
+
 ## Preserved earlier criteria and results
 
 Research qualification and old recipe descriptions below are historical; numerical

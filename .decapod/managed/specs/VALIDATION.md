@@ -47,6 +47,32 @@ tolerances remain unchanged. Report074535Z/SHA256
 caa3eed0f5010668bbe687a8cd9c5596bfa6afaadf307eb33742f9dd57c7764b
 remains failed history; the repair requires a new exact-candidate full validation.
 
+Candidate `59eaf087` completed that full run: Buildkite2311 all39source steps,
+57native tests and three numerical Metal/CPU comparisons passed. All24 fixed
+case/backend observations were collected:20real model decisions and four
+failed/stale-proof blocks before inference. Gate-ready and prompt-ready accepted
+on both backends; all three unmet-obligation cases and the declared-but-absent
+evaluation rejected. Unresolved requirements and input manipulation abstained;
+contradictory requirements rejected. The calibration-ready control abstained on
+both backends with yes probability0.57303135/0.57303569, two-label prediction sets,
+no error and unbound=false. This is a valid calibrated uncertainty response, and
+the shared required-mode predicate correctly denied readiness. It does not match
+that case's frozen expected-accept label:22of24 records matched, and the strict
+functional aggregate failed. No expectation, model, threshold or output is
+relabelled. Report081406Z/SHA256
+d7fc06ddf9187b1e1ed6536bf4572ea38d6f5446846aadab9c6d16cce7305c76
+and all raw outcomes remain preserved. A new metadata-ordering regression covers
+the canonical four features and every nonidentity permutation; it changes no
+model setting and requires execution on the next candidate. Review found that
+the native contract checker previously tested only an invalid one-element
+feature list while claiming feature-order coverage. It now actually accepts the
+canonical four-feature metadata and rejects all23nonidentity permutations plus
+malformed metadata. The production observation describes that expanded execution
+precisely for every calibration-family case. This is additional genuine proof,
+not a threshold, label or prompt-question change, and does not establish why the
+previous model abstained. Fixed scenario bytes/expectations remain unchanged;
+the evaluated candidate and its actual check inventory change with this repair.
+
 ### Historical validation and superseded research acceptance
 
 The following records retain prior observations and the contract at their time;
@@ -734,7 +760,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3339a6783a51db731cfb32caa5fdf80717ceb885a8a4292fba03fd28acff4582`
+- Repository signal fingerprint: `0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
