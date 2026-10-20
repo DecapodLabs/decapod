@@ -729,6 +729,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "worker-private-fixtures",
+      "summary": "Explicit0700 test directory creation preserves real private collection contract without loosening filesystem safety.",
+      "input_digest": "sha256:f1f736085385823701d0277fb249cefe6107238de97765f90f306260388ef311",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {

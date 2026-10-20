@@ -1847,7 +1847,11 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn failed_numeric_collection_stops_before_final_model_setup_and_keeps_diagnostics() {
-        let directory = tempfile::tempdir().unwrap();
+        use std::os::unix::fs::PermissionsExt;
+        let directory = tempfile::Builder::new()
+            .permissions(std::fs::Permissions::from_mode(0o700))
+            .tempdir()
+            .unwrap();
         let proof = directory.path().join("aggregate.json");
         let context = scientific_collection::Collection::create(&proof).unwrap();
         context.publish(scientific_collection::Phase::Numeric,
@@ -1881,7 +1885,11 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn strict_missing_numeric_phase_writes_failure_and_preserves_later_phase() {
-        let directory = tempfile::tempdir().unwrap();
+        use std::os::unix::fs::PermissionsExt;
+        let directory = tempfile::Builder::new()
+            .permissions(std::fs::Permissions::from_mode(0o700))
+            .tempdir()
+            .unwrap();
         let proof = directory.path().join("aggregate.json");
         let context = scientific_collection::Collection::create(&proof).unwrap();
         context
