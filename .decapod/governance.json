@@ -850,6 +850,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-manifest-projection",
+      "summary": "Supported refreshed manifest binds completed candidate; every companion file remains separately committed.",
+      "input_digest": "sha256:9563927e55fd9021f4beacc230cf0e70a9e0beb3b94647ea870001e24dadc357",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
