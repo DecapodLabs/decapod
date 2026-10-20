@@ -795,6 +795,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-interface-projection",
+      "summary": "Supported fingerprint with immutable source and publication interface unchanged.",
+      "input_digest": "sha256:584ee7c86fac85e8d341061ef7238f114e3662e6fa3df5a2a0be313c906c54e8",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
