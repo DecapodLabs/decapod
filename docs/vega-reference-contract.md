@@ -16,7 +16,11 @@ Actual candidate Rust gate/tokenizer/calibration contract checks supply observat
 to the shared production projection/request/response/final predicate. Cases and
 expected outcomes are frozen before model execution in
 `tests/fixtures/vega-functional-regressions.json`; labels stay outside the prompt.
-All ready controls must accept, unmet obligations must reject and uncertainty,
+Following the maintainer's delegated decision, each actual backend must approve
+meaningful ready work; a different ready control may validly abstain while its
+expected-accept mismatch remains reported. All-ready oracle agreement is a
+separate reported result, not silently relabelled qualification. Always-abstaining
+or rejecting models fail. Unmet obligations must reject and uncertainty,
 contradiction/manipulation and failed/stale-proof controls must remain non-ready.
 The reducer rechecks complete case/backend coverage, bindings, actual raw verdicts
 and unchanged numerical exports. A reported match or successful collection cannot
@@ -70,6 +74,24 @@ Current synchronized compute Metal/CPU for138/314/4096tokens was
 5028216832B includes prior/reference allocations, not isolated GPU/model memory.
 The 4096-token reference matched calibrated abstention/unbound on both backends.
 Original sampling, same-author/reference and unsupported-mode limits still apply.
+
+### Functional interpretation and current source evidence
+
+After reviewing these actual results, the maintainer delegated the safe-abstention
+decision. Functional delivery permits conservative uncertainty on a ready control
+but never permits its publication. All original expected labels and mismatches
+remain visible. Genuine positive approval is required on both actual backends;
+every adverse/control case, raw response check and numerical comparison remains
+mandatory. This is a transparent qualification revision, not a passing claim for
+the earlier all-positive assertion, old risk criterion or domain accuracy. There
+is no fitting or model/calibration/threshold/input/tolerance change.
+
+`08b967b2` passed Buildkite2321 all 39 source steps and 1,464 library tests with
+three ignored. The controller's first attempt stopped at public API HTTP403;
+its retry rejected duplicate exact-workflow Buildkite builds after signed-push
+redelivery. Both terminal reports remain failed and no new native result follows
+from them. The qualification and documentation checkpoint requires fresh full
+validation on this same branch, preserving the provider uniqueness boundary.
 
 ## Preserved earlier criteria and results
 

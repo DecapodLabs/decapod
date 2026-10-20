@@ -17,15 +17,23 @@ instruction to block this approved scope solely on sample admission.
 `production_evaluation` freezes twelve scenarios (SHA256
 97b4667e3cb3a74b41cfcc0e1ab713dcd046895aa0c8d813f6856b0c9ff68094)
 before first inference. Actual bounded gate/tokenizer/calibration checks execute
-before their observations enter shared `validation-results.v3`. All three ready
-controls must accept on both backends; unmet obligations must reject; uncertainty,
+before their observations enter shared `validation-results.v3`. Following the
+maintainer's delegated decision, functional qualification permits valid safe
+abstention on a ready control while retaining its expected-accept mismatch.
+Each actual backend must approve at least one meaningful ready control; an
+always-abstaining/rejecting model cannot qualify. Every ready control must either
+accept or validly abstain, and unmet obligations must still reject; uncertainty,
 contradictory requirements and input manipulation must remain non-ready. Failed
 and stale mandatory proof must block before inference. Expected labels are kept
 outside the request; results cannot be selected, relabelled, threshold-tuned or
 replaced by a fake verdict. No fitting or calibration/model change is performed.
 The strict final reducer rechecks complete per-case/backend coverage, fixed input,
 request/response binding, raw decisions and the shared readiness predicate, plus
-the numerical exports. A failed functional result fails exact-candidate validation.
+the numerical exports. `all_frozen_expectations_matched` reports the original
+oracle agreement independently of `functional_checks_passed`; qualification does
+not relabel a mismatch as agreement. Safe abstention never authorizes readiness
+for the assessed work. Failed controls, malformed inference or absent positive
+coverage fail exact-candidate validation.
 Unit/adversarial receipt and runtime tests separately cover malformed results,
 abstention, relevant state/model changes and deterministic proof authority.
 
@@ -72,6 +80,27 @@ precisely for every calibration-family case. This is additional genuine proof,
 not a threshold, label or prompt-question change, and does not establish why the
 previous model abstained. Fixed scenario bytes/expectations remain unchanged;
 the evaluated candidate and its actual check inventory change with this repair.
+
+Candidate `08b967b2` executed Buildkite2321 all 39 source steps and the library
+suite passed 1,464 tests with three ignored. Its 091542Z validation stopped on
+public GitHub HTTP403 before native execution. Buildkite2316 separately failed
+the hosted mise/buildkite-gha bootstrap. Redelivery of the original signed push
+recovered source execution but also created duplicate auxiliary workflow builds;
+the released controller correctly refused them in report095248Z, SHA256
+fc50e3af9eecb0b2c4445643f95ebd0b5d5dd6c6390b305b7193ef5b432d22aa.
+Neither failed report supplies current native evidence. The final evidence and
+qualification documentation checkpoint stays on the same original branch and
+must receive fresh complete proof; no provider uniqueness guard is weakened.
+
+The maintainer explicitly delegated the safe-abstention interpretation after
+reviewing the observed two substantive approvals and calibration-control
+abstention. `delivery_case_matches`/`delivery_passes` preserve frozen labels and
+strict oracle results while requiring genuine approval on both backends and all
+adverse/control outcomes. New regressions reject missing inference, false grants,
+confident rejection of a ready control, absent approval on either backend and
+failed controls despite approvals. Main production inference, model input,
+thresholds, weights and numerical tolerances are unchanged. These two additional
+native tests are authored, not passed until the next prescribed full validation.
 
 ### Historical validation and superseded research acceptance
 
@@ -760,7 +789,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491`
+- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

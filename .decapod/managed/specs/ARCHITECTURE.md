@@ -7,6 +7,15 @@ structured RPC. It connects human intent, project authority, coordinated
 execution, and evidence in repository-owned state. Each invocation is finite;
 the repository carries the work between invocations.
 
+Functional qualification and product permission remain distinct. Following the
+maintainer's delegated decision, the native reducer allows valid conservative
+abstention on a ready control while retaining the original expected-accept
+mismatch. Both actual backends must demonstrate genuine ready-work approval and
+every adverse/protocol control must pass. Raw response and numerical verification
+remain mandatory. The shared live predicate continues denying abstaining work;
+qualification cannot convert uncertainty into publication permission or claim
+all oracle labels matched.
+
 Vega's separate native worker keeps evidence collection and final acceptance distinct. Under the maintainer-approved 2026-10-20 functional contract, the eight-run recipe collects unchanged numerical comparisons, six pairs of fixed functional cases on Metal/CPU, and a required aggregate through the existing kernel-owned mechanism. `production_evaluation::execute_contract_checks` actually exercises bounded candidate gate, tokenizer or calibration code before constructing their observations; labels and fixture provenance remain outside the model input. `functional_snapshot` calls the shared production projection, then the collector uses the standard request/inference/response/final predicate. The reducer binds every case/backend, private context, runtime, model, projected input, raw typed response and expected outcome, and rechecks numerical exports. Missing/failed/altered functional cases cannot become collection success. The old exposed full-patch study and failed statistical criterion remain historical, not a current admission prerequisite or passing accuracy evidence. Fresh recurrent state, artifact verification, byte/token rejection and original 1,800-second command/7,200-second overall bounds remain. Unsigned replay never replaces live authentication, custody or final material recheck. No new control plane, Python, orchestrator, inactive/advisory substitute or model/threshold change is introduced.
 
 The production assessment retains declared plan obligations as well as intent:
@@ -534,7 +543,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491`
+- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

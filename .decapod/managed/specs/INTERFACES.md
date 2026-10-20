@@ -28,8 +28,12 @@ authenticate unsigned inputs or authorize live publication. New shared-path and
 wire-response regressions passed on `fef84896` (53 worker tests and 1,463 library
 tests overall). Current functional acceptance uses twelve fixed cases from
 `tests/fixtures/vega-functional-regressions.json`, frozen before first model
-execution. Three meaningful positive controls must accept; unmet obligations must
-reject, uncertainty/manipulation cannot accept, and failed/stale proof must make
+execution. Following the maintainer's delegated decision, qualification requires
+meaningful positive acceptance on each actual backend and permits valid safe
+abstention on another ready control without changing its frozen expected label.
+Every original match/mismatch remains reported independently; an always-abstaining
+model cannot qualify. Unmet obligations must reject, uncertainty/manipulation
+cannot accept, and failed/stale proof must make
 zero model calls. Contract checks actually execute before observations are built;
 expected outcomes and agent-authored label provenance stay outside the production
 input. Per-case requests/responses and synchronized timings remain private proof.
@@ -38,6 +42,13 @@ reported matching label. These are functional checks, not readiness-calibrated
 accuracy. The explicit 2026-10-20 acceptance revision retires only the historical
 research sample/risk/coverage prerequisite, preserving its failures and every
 deterministic/publication gate.
+
+The aggregate distinguishes `all_frozen_expectations_matched` from functional
+qualification and reports actual ready-acceptance counts in explicit backend
+order. No missing/malformed response becomes safe abstention. The reducer still
+checks raw response binding/validity before these functional decisions. Safe
+abstention keeps `model_gate_allows_with_fixture_proof=false` and never grants
+live readiness; this changes verification qualification, not the product gate.
 
 `vega_readiness::permits_decision` is the shared final boolean predicate used by
 live receipts/publication and native replay diagnostics. Failed proof dominates
@@ -617,7 +628,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491`
+- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

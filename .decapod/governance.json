@@ -337,9 +337,12 @@
       "status": "open"
     },
     "vega-current-run-scientific-collection": {
-      "statement": "Scientific collection is separate from acceptance: eight reviewed Rust runs collect three fixed numerical fixtures and six disjoint heldout shards, while a mandatory current-run final aggregate rechecks identity, numeric exports and full frozen risk/coverage/label conditions; no collection-only success authorizes publication.",
-      "falsifier": "A missing, replayed, mixed, unsafe or malformed phase, changed frozen label/input, inconsistent decision, numerical disagreement, incomplete required coverage or unsatisfied risk/independent-label criterion permits the final required scientific command to succeed.",
-      "status": "open"
+      "statement": "Eight reviewed Rust runs preserve three fixed numerical fixtures and six pairs of fixed production-path functional cases. The mandatory current-run aggregate rechecks identity, exports, raw response interpretation, every adverse/control result and genuine positive approval on each backend. Original oracle agreement is reported separately from delegated safe-abstention qualification; collection alone never authorizes publication.",
+      "falsifier": "Missing/replayed/mixed/unsafe/malformed phases, altered frozen inputs/labels, inconsistent decisions, numerical disagreement, failed adverse controls, absent positive coverage, hidden oracle mismatches or an abstaining verdict permit publication readiness.",
+      "status": "open",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261020T081406Z.json"
+      ]
     },
     "vega-late-report-failure": {
       "statement": "Every validation execution error revokes publication readiness and PR guidance, including final verdict write or sync failure after completed proof and accepted Vega; completed proof and earlier evidence remain diagnostic only.",
@@ -347,11 +350,11 @@
       "status": "open"
     },
     "vega-native-acceptance": {
-      "statement": "Feature publication requires actual native model execution, independent numerical parity and defensible held-out readiness evaluation; current diagnostic collection does not satisfy these conditions.",
-      "falsifier": "Publication occurs with absent or failed model/parity/calibration evidence, or diagnostics/agent-authored labels are presented as independent acceptance.",
-      "status": "blocked",
+      "statement": "Current functional delivery requires actual native Metal/CPU inference, unchanged separate Rust numerical comparisons, installation/fallback checks, meaningful model approvals and safe negative/uncertain controls. Maintainer-authorized qualification supersedes the prior research prerequisite without passing it; all old failures and domain-accuracy limits remain preserved.",
+      "falsifier": "Publication occurs without complete current source/native/numerical/functional proof, without positive approval on both backends, with unsafe adverse outcomes, or by presenting agent-authored functional labels as independently calibrated domain accuracy.",
+      "status": "open",
       "proof_refs": [
-        "/private/tmp/vega-119-current-validation.json"
+        "https://github.com/DecapodLabs/decapod/issues/1445"
       ]
     },
     "vega-package-input-lock": {
@@ -377,14 +380,20 @@
       ]
     },
     "vega-production-projection-evaluation": {
-      "statement": "Live assessment and production replay use shared validation-results.v3 projection and worker response interpretation. Complete deterministic proof is checked before replay inference. Development fixtures retain obligations and mark observations constructed; they are never independent labels. Exposed v2 history is retained and cannot be final evidence. Required scientific qualification stays non-ready when reviewed source admission has zero final units.",
-      "falsifier": "Replay builds a different prompt projection, drops adverse obligations, dispatches on failed/stale/missing proof, accepts malformed wire output, treats fixture declarations as measured proof, or marks exposed/unsupported final evidence passing.",
-      "status": "open"
+      "statement": "Live assessment and replay share validation-results.v3 projection, request/response checks and the final readiness predicate. Complete deterministic proof precedes inference. Fixed functional observations come from executed bounded candidate checks but unsigned replay never grants custody or publication. Exposed v2 and zero-unit research admission stay historical, not passing accuracy or current research prerequisites.",
+      "falsifier": "Replay uses another prompt builder, drops adverse obligations, dispatches on failed/stale/missing proof, accepts malformed responses, invents executed checks, hides oracle disagreements or authorizes publication from unsigned fixture evidence.",
+      "status": "open",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1445"
+      ]
     },
     "vega-public-review-source-audit": {
-      "statement": "Prospective public review records are pinned and structurally audited in Rust before model use. Source review labels/rationale and future CI do not enter input; post-decision edits, conflicting verdicts, wrong identities, incomplete history and prior-corpus owner families are excluded or explicitly malformed. Collection alone grants no calibration or publication readiness.",
-      "falsifier": "The audit includes a selected verdict/rationale or later check in pre-decision input; counts a wrong-commit or edited requirement as eligible; presents source membership or grouping as independent ground truth; suppresses independent native checks; or waives the existing strict acceptance criterion.",
-      "status": "open"
+      "statement": "Historical public review records remain pinned/audited Rust diagnostic inputs, not a qualified readiness study. Review verdicts/rationale, future CI, conflicting identities and incomplete source histories cannot become independent readiness truth. Maintainer-authorized functional qualification does not claim that the old study or risk criterion passed.",
+      "falsifier": "Audit leaks selected verdict/rationale or future checks into input, labels wrong-commit/edited requirements as eligible, equates variants with independent ground truth, suppresses native checks, or claims historical statistical qualification passed.",
+      "status": "open",
+      "proof_refs": [
+        "tests/fixtures/vega-public-review-sources/final-admission-review.json"
+      ]
     },
     "vega1445-exposed-contract-audit": {
       "statement": "All29accepted9fdiagnosticinputs exactlymatch recordedstatehashes, CPUuses same29IDs/inputhashes; exposedv2fullpatchharness bypassesproductionv3. Sourcecontractreviewfound no option/type/Boolean mapping orbasecalibration-route defect.19visibleconstructed-condition/uncertaintymisses+4wrongstagefailures+6benchmarkmatchesdoNOTestablishproductionreadinesslabels. Currentreadinessrole unsupported; no runtime/math/pin/gatechangeorpassingPR inferred.",
@@ -397,8 +406,8 @@
       ]
     },
     "vega1445-readiness-role-qualification": {
-      "statement": "Maintainer explicitly replaced implementation-added statistical readiness qualification with functional integration acceptance2026-10-20. Required Vega remains active after mandatory proof; fixed real-model production-path positives/negatives must pass Metal+CPU, compatible calibration math/assets and unchanged numerical checks remain mandatory. Historical failed research is not passed and domain accuracy remains unestablished.",
-      "falsifier": "A failed/stale/malformed mandatory proof or verdict permits readiness, meaningful positive controls cannot accept, unmet obligations/manipulation accept, fixed cases or thresholds are tuned to manufacture a pass, numerical tolerance changes, or old research/domain accuracy is falsely claimed.",
+      "statement": "The maintainer replaced the statistical qualification with functional integration and delegated safe-abstention interpretation. Both actual backends must approve meaningful ready work; every adverse/control case and numerical comparison must pass. A ready control may validly abstain, preserving its frozen expected-accept mismatch and blocking that assessed work. Domain accuracy and old research success remain unestablished.",
+      "falsifier": "Qualification passes an always-abstaining/rejecting model, lacks approval on either backend, accepts unmet obligations/manipulation, accepts malformed inference, hides an oracle mismatch, changes model/input/threshold/tolerances, or grants readiness to failed/stale/abstaining work.",
       "status": "open",
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/issues/1445"
@@ -825,6 +834,15 @@
         "/private/tmp/vega-1191-validation-20261020T081406Z.json",
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6287526054"
       ]
+    },
+    {
+      "id": "vega1445-delegated-functional-qualification",
+      "summary": "Require useful model approvals and safe controls while preserving conservative abstention mismatches and all failed evidence",
+      "input_digest": "sha256:4a1257d9b926c97c5c912ca76ad3a35dd76b046d71c8e942ebe7604beeddbfa5",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261020T095248Z.json",
+        "https://github.com/DecapodLabs/decapod/issues/1445"
+      ]
     }
   ],
   "intents": {
@@ -858,30 +876,30 @@
       "intent": "Deliver one active Rust-native optional team-configured required Vega post-validation readiness integration for #1445. Production validation-results.v3 preserves intent, obligations and uncertainty; mandatory failed/missing/stale proof blocks before inference. Only bound valid affirmative model output satisfies configured readiness; rejection/abstention/invalid/failure block. User-approved acceptance revision2026-10-20 replaces implementation-added59acceptance/5%risk/95%confidence/50%coverage qualification with functional production-path model behavior and regression evidence, actual Metal/CPU/fallback, pinned artifacts and unchanged numerical comparisons. Preserve old studies/failures without claiming production-calibrated accuracy; no inactive/advisory substitute, forced verdict, Python, paid compute, external sharing, unrelated infrastructure, merge or release.",
       "phases": [],
       "proof_hooks": [
-        "Exact final candidate passes full official decapod validate with the complete configured Buildkite source proof, separately locked native tests, actual Metal/CPU model execution and unchanged separate Rust numerical comparisons; failures remain recorded.",
-        "All fixed production-path functional ready controls accept, unmet obligations reject, uncertainty/contradiction/manipulation remain non-ready; failed/stale/missing mandatory proof blocks before model and malformed/stale verdicts cannot authorize readiness. Preserve failed historical research without claiming domain accuracy or old statistical success."
+        "Exact final candidate passes full official decapod validate with complete configured Buildkite source proof, separately locked native tests, actual Metal/CPU model execution and unchanged separate Rust numerical comparisons; preserve all failures.",
+        "Maintainer-delegated functional interpretation: both actual backends must approve meaningful ready work and every adverse/protocol control must pass. A ready control may validly abstain while its frozen expected-accept mismatch remains reported separately. Always-abstaining/rejecting models, confident rejection of ready work, malformed inference and missing/failed/stale mandatory proof cannot qualify. Abstention still blocks the assessed work through the unchanged production gate. No fitting, model/input/threshold/tolerance change or claim of old research/domain accuracy."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "59eafullrunpassed39source/57native/3MetalCPUnumerics; modelacceptedgateandpromptpositives,rejectedallunmet,handleduncertainty/manipulation,blockedfailedstaleproof. Onlycalibrationpositivevalidlyabstained;22of24expectedlabels matched and fullreportfailed. Independentinspectionfoundmetadata-orderfixturetestedonlyinvalidone-elementlist,notcanonicalfour-features/permutations. Addactualcanonicalacceptance/all23permutationrejectionchecks androotregression; describeactualexpandedcoverageacrossallcalibrationfamilycases. No reasonforabstentionclaimed, nolabel/model/calibration/threshold/tolerance/promptquestion/recipe/deadline/authoritychange. Fixedscenario97b4667e preserved. Strictall-positive criterionretainedwhileclarificationpending; newcandidateproofrequiresfullvalidation. Sourceea4e1b71reviewedconfigbackedup.",
-          "reviewed_code_fingerprint": "0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491",
-          "spec_material_hash": "1cf74139deb8f287a5f109ac8364952aff366ac576682a3ea0c6986b835b2974"
+          "reason": "Maintainer delegated safe-abstention interpretation after actual useful approvals and a conservative expected-accept mismatch. Qualification now requires genuine approval on both actual backends and every adverse/control result, while reporting frozen oracle disagreement separately. Abstention still denies readiness through unchanged production code. Source templates/generated docs and evidence distinguish old failures, current source success and unexecuted new qualification tests. Model inputs, labels, pins, thresholds, numerical tolerances, recipes, provider uniqueness and authority unchanged.",
+          "reviewed_code_fingerprint": "872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b",
+          "spec_material_hash": "f4ad23211562ab286902ad7090b9778dddd2ccdfa56d1de90eaf880b5880e70b"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "59eafullrunpassed39source/57native/3MetalCPUnumerics; modelacceptedgateandpromptpositives,rejectedallunmet,handleduncertainty/manipulation,blockedfailedstaleproof. Onlycalibrationpositivevalidlyabstained;22of24expectedlabels matched and fullreportfailed. Independentinspectionfoundmetadata-orderfixturetestedonlyinvalidone-elementlist,notcanonicalfour-features/permutations. Addactualcanonicalacceptance/all23permutationrejectionchecks androotregression; describeactualexpandedcoverageacrossallcalibrationfamilycases. No reasonforabstentionclaimed, nolabel/model/calibration/threshold/tolerance/promptquestion/recipe/deadline/authoritychange. Fixedscenario97b4667e preserved. Strictall-positive criterionretainedwhileclarificationpending; newcandidateproofrequiresfullvalidation. Sourceea4e1b71reviewedconfigbackedup.",
-          "reviewed_code_fingerprint": "0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491",
-          "spec_material_hash": "d5b0fa449fbf205c7d703d75e290811e639a2d3c8a764f543cad951ad6c272bd"
+          "reason": "Maintainer delegated safe-abstention interpretation after actual useful approvals and a conservative expected-accept mismatch. Qualification now requires genuine approval on both actual backends and every adverse/control result, while reporting frozen oracle disagreement separately. Abstention still denies readiness through unchanged production code. Source templates/generated docs and evidence distinguish old failures, current source success and unexecuted new qualification tests. Model inputs, labels, pins, thresholds, numerical tolerances, recipes, provider uniqueness and authority unchanged.",
+          "reviewed_code_fingerprint": "872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b",
+          "spec_material_hash": "5c03becfff1e4ad1d52ddc1930001281bddda9bc68cfd0e411296cb6d93e0f09"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "59eafullrunpassed39source/57native/3MetalCPUnumerics; modelacceptedgateandpromptpositives,rejectedallunmet,handleduncertainty/manipulation,blockedfailedstaleproof. Onlycalibrationpositivevalidlyabstained;22of24expectedlabels matched and fullreportfailed. Independentinspectionfoundmetadata-orderfixturetestedonlyinvalidone-elementlist,notcanonicalfour-features/permutations. Addactualcanonicalacceptance/all23permutationrejectionchecks androotregression; describeactualexpandedcoverageacrossallcalibrationfamilycases. No reasonforabstentionclaimed, nolabel/model/calibration/threshold/tolerance/promptquestion/recipe/deadline/authoritychange. Fixedscenario97b4667e preserved. Strictall-positive criterionretainedwhileclarificationpending; newcandidateproofrequiresfullvalidation. Sourceea4e1b71reviewedconfigbackedup.",
-          "reviewed_code_fingerprint": "0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491",
+          "reason": "Only functional verification qualification and honest evidence reporting change under delegated maintainer authority. No runtime publication predicate, raw response validation, storage/link guard, model pin, fallback classifier, source-provider uniqueness, custody or deterministic proof boundary changes. Safe abstention never grants assessed-work readiness.",
+          "reviewed_code_fingerprint": "872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b",
           "spec_material_hash": "d22b96974fa42a386a9bffb7a0e118243b3ef7ad15d07f65e252b1ee1339d2e4"
         }
       ],
@@ -893,7 +911,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792487701Z"
+      "updated_at": "1792510795Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -905,7 +923,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:61bbfc85f4b05b2a7e7cef13acb2eccd5da9929867f12883a7ae0536bfa51737",
+      "artifact_hash": "sha256:e61eb811406f4e6deeb5313cf0fb5dc271cc55aeb635a4bb960929cee8ab6f3e",
       "checks": [
         {
           "name": "bazel_metadata_regeneration",
@@ -1036,6 +1054,14 @@
           "status": "failed"
         },
         {
+          "name": "full_08b_duplicate_runs",
+          "status": "failed"
+        },
+        {
+          "name": "full_08b_public_quota",
+          "status": "failed"
+        },
+        {
           "name": "full_validate_040d",
           "status": "failed"
         },
@@ -1129,6 +1155,10 @@
         },
         {
           "name": "library1463_304",
+          "status": "passed"
+        },
+        {
+          "name": "library_08b1464",
           "status": "passed"
         },
         {
@@ -1309,6 +1339,10 @@
         },
         {
           "name": "new_native_tests",
+          "status": "unavailable"
+        },
+        {
+          "name": "new_qualification_tests",
           "status": "unavailable"
         },
         {
@@ -1514,6 +1548,10 @@
         {
           "name": "source_040d",
           "status": "failed"
+        },
+        {
+          "name": "source_08b39",
+          "status": "passed"
         },
         {
           "name": "source_2458",
@@ -2076,10 +2114,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 69
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:70",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 70
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 69,
+        "next_sequence": 70,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -3591,6 +3636,44 @@
                 "validation_findings": [
                   "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:70",
+                "observations": [
+                  "assets/tools/vega-native/production_evaluation.rs",
+                  "assets/tools/vega_infer.rs",
+                  "docs/agent/repository-readiness.md",
+                  "docs/agent/config-schema.md",
+                  "docs/vega-completion-checklist.md",
+                  "docs/vega-readiness-decision.md",
+                  "docs/vega-reference-contract.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/vega-1191-validation-20261020T081406Z.json",
+                  "/private/tmp/vega-1191-validation-20261020T091542Z.json",
+                  "/private/tmp/vega-1191-validation-20261020T095248Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2321",
+                  "https://github.com/DecapodLabs/decapod/issues/1445"
+                ],
+                "proof_refs": [
+                  "source_08b39",
+                  "library_08b1464",
+                  "native_59ea57",
+                  "numerics_59ea3",
+                  "full_08b_public_quota",
+                  "full_08b_duplicate_runs",
+                  "new_qualification_tests"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 70,
+                "validation_findings": [
+                  "New user response do what you know is best delegated safe-abstention interpretation; prompt gateALLOW69e5f7124ee6af1940ffdf80b881644b9126467b4b0aa77ec95b368fa3ce4542. Preserve all12frozen labels/97b4667e and original59ea22of24 mismatch; do not claim all-positive or old research passed. Verification qualification requires actual approval on each backend and every adverse/protocol case; safe abstention only on ready controls, with mismatch and non-ready verdict retained. Main model input, model/calibration/threshold/math/tolerance and runtime predicate unchanged. Two additional native tests authored, require full exact-candidate official validation. Public signed-push replay recovered39source steps but produced duplicate auxiliary builds; released controller rejected them, no deletion or guard waiver. This genuine qualification/documentation checkpoint uses original branch/task/custody and fresh required CI; no new infrastructure/prerequisite/branch/merge/release."
+                ]
               }
             ]
           }
@@ -3638,6 +3721,8 @@
         "/private/tmp/vega-1191-validation-20261020T042518Z.json",
         "/private/tmp/vega-1191-validation-20261020T074535Z.json",
         "/private/tmp/vega-1191-validation-20261020T081406Z.json",
+        "/private/tmp/vega-1191-validation-20261020T091542Z.json",
+        "/private/tmp/vega-1191-validation-20261020T095248Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-1445-5635-clippy.log",
         "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
@@ -3695,6 +3780,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2290",
         "https://buildkite.com/decapodlabs/decapod/builds/2291",
         "https://buildkite.com/decapodlabs/decapod/builds/2296",
+        "https://buildkite.com/decapodlabs/decapod/builds/2321",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -3847,6 +3933,7 @@
         "New companion binding/probe/classifier/receipt changes and regressions authored, no Rust tests executed for this candidate. Actual worker build/Metal/model/parity/calibration unavailable under current released native-proof contract; no manual build, shadow preflight, Python or artifact workaround used. Preserved native/reference/holdout blockers. Prerequisite5cee green but publication awaits public API rate reset; its candidate controller is not adopted.",
         "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback.",
         "New tests/MetalCPUproductiondiagnostics authored and require prescribed validate; no new pass claims. User rejects inactive stage; fitting source only inspected, no Python executed. Current official upstream has old base+two generic adapters and incompatible universal port/stats engine, none demonstrated readiness-qualified. Reviewed24source candidates still zero admissible complete final units. Preserve old study/failures and every required original criterion. Final admission stays missing rather than repeating exposed final data. No branch/custody/controller changes.",
+        "New user response do what you know is best delegated safe-abstention interpretation; prompt gateALLOW69e5f7124ee6af1940ffdf80b881644b9126467b4b0aa77ec95b368fa3ce4542. Preserve all12frozen labels/97b4667e and original59ea22of24 mismatch; do not claim all-positive or old research passed. Verification qualification requires actual approval on each backend and every adverse/protocol case; safe abstention only on ready controls, with mismatch and non-ready verdict retained. Main model input, model/calibration/threshold/math/tolerance and runtime predicate unchanged. Two additional native tests authored, require full exact-candidate official validation. Public signed-push replay recovered39source steps but produced duplicate auxiliary builds; released controller rejected them, no deletion or guard waiver. This genuine qualification/documentation checkpoint uses original branch/task/custody and fresh required CI; no new infrastructure/prerequisite/branch/merge/release.",
         "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change.",
         "No productioncodefixjustified bycontractaudit. Correctevidenceattribution/documentationonly; no newmodelinference/fitting/threshold/rubricchange. MetadataJSON/digestconsistencyreviewandgitdiffcheckare notunit/modelacceptance tests. Perlatestexplicituserinstruction stopidenticalfullvalidationandpreparepreciseproductdecisionwhenreadinesscapability/admissiblelabels insufficient. Newdoccommitnotpublicationvalidated; allgates remainrequired, noPR. Proposedscopechangeonlyafterexplicitmaintainerdecision.",
         "Normalpostresetvalidateef3clearedremoteproof/custodyandnativefullsnapshotpreparation, thennativecompilationfailedE0599atnewexportwrite_all becauseWrite trait wasnotinscope. Addsamefunctionlocaltraitimportusedbyexistingexporter, no manualbuild/test. Staticreviewalsofoundrelated-repository syntheticfixture stillusedoriginalreviewURLafterrepochange; correctbothfixtureURLs toretainstrictidentitycheckandaddwrong-URLassertion. Allsixnewnative testsremainunexecuted, notpassingclaims; main1461/source39passed. No model/calibration/corpus/math/tolerance/8runrecipe/deadline/authoritychange. Preserveef3failureandallolderhistory; exactnewcandidate mustrerunofficialvalidate.",

@@ -28,6 +28,16 @@ required on Metal and CPU, with positive acceptance as well as negative behavior
 This is bounded functional regression coverage, not independent population labels.
 No fitting or tuning on these cases is authorized or performed.
 
+The maintainer subsequently delegated the safe-abstention interpretation after
+reviewing two meaningful approvals and the calibration-positive abstention.
+Functional qualification requires real approval on each actual backend and every
+adverse/control result. A ready control may validly abstain while its original
+expected-accept mismatch remains reported separately. An always-abstaining model,
+confident rejection of a ready control, malformed inference or a failed adverse
+control cannot qualify. This does not pass the earlier all-positive assertion.
+Abstention continues blocking the assessed work through the unchanged production
+predicate. No model, calibration, threshold, request input or tolerance is tuned.
+
 The prior twelve production protocol requests all produced actual singleton
 false, abstain=false/unbound=false; neither response validation nor the final
 predicate inverted an affirmative answer. Their baseline disclosed constructed

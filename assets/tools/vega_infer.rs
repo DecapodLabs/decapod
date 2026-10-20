@@ -801,6 +801,8 @@ fn verify_scientific_contents(
     let cases = production_evaluation::functional_cases()?;
     let contract_digest = vega_readiness::hash(&serde_json::to_vec(&cases)?);
     let mut functional_passed = true;
+    let mut all_expectations_matched = true;
+    let mut ready_acceptances = [0usize; 2];
     let mut outcomes = Vec::new();
     for index in 0..SHARDS {
         let phase = context.read(Phase::Shard(index))?;
@@ -880,20 +882,31 @@ fn verify_scientific_contents(
                 }
             }
             let matched = production_evaluation::expected_matches(case, diagnostic);
-            functional_passed &= matched;
-            outcomes.push(serde_json::json!({"id":case["id"],"backend":backend,"expected":case["expected"],"execution":diagnostic["execution"],"decision":diagnostic["result"]["decision"],"matched":matched}));
+            all_expectations_matched &= matched;
+            let delivery_matched = production_evaluation::delivery_case_matches(case, diagnostic);
+            functional_passed &= delivery_matched;
+            if case["expected"] == "accept" && matched {
+                ready_acceptances[offset % 2] += 1;
+            }
+            outcomes.push(serde_json::json!({"id":case["id"],"backend":backend,"expected":case["expected"],"execution":diagnostic["execution"],"decision":diagnostic["result"]["decision"],"matched":matched,"delivery_case_passed":delivery_matched}));
         }
     }
+    functional_passed =
+        production_evaluation::delivery_passes(functional_passed, ready_acceptances);
     let accepted = numeric_passed && functional_passed;
     Ok(serde_json::json!({
         "schema":"decapod.vega-scientific-aggregate.v1","publication_ready":false,
         "numeric_checks_passed":numeric_passed,"functional_checks_passed":functional_passed,
+        "all_frozen_expectations_matched":all_expectations_matched,
+        "ready_acceptances_by_backend_order":ready_acceptances,
+        "ready_acceptance_backend_order":[vega_readiness::BackendPreference::Auto.resolve(),vega_readiness::Backend::Cpu],
+        "functional_qualification":"maintainer-delegated-safe-abstention-v1",
         "functional_outcomes":outcomes,"functional_contract_sha256":contract_digest,
         "acceptance_contract":"maintainer-approved-functional-integration-2026-10-20",
         "domain_readiness_accuracy":"unestablished","old_research_criterion_passed":false,
         "runtime_sha256":context.runtime_sha256,"manifest_digest":SCIENTIFIC_BASELINE,
         "all_required_scientific_conditions_passed":accepted,
-        "scope":"Strict current-run numerical and fixed production-path functional acceptance under the explicit scope revision. This does not pass the historical statistical criterion or establish calibrated readiness accuracy. Kernel retains deterministic and publication authority."
+        "scope":"Current-run numerical and fixed production-path functional qualification: every adverse/control case must pass and both actual backends must approve meaningful ready work; valid abstention on another ready control remains a visible expected-label mismatch and blocks that assessed work. Oracle agreement is reported separately; qualification does not establish the historical statistical criterion or calibrated readiness accuracy. Kernel retains deterministic and publication authority."
     }))
 }
 

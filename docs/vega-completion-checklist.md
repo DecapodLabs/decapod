@@ -14,6 +14,14 @@ model/calibration pins and numerical tolerances remain unchanged. Current-candid
 functional cases must actually pass; no inactive/advisory substitute or forced
 model verdict is accepted.
 
+After the measured two positive approvals and valid calibration-control abstention,
+the maintainer delegated the functional interpretation. Qualification permits safe
+abstention on a ready control without changing its original expected-accept label
+or claiming that oracle match. It requires genuine ready approval on each actual
+backend and every adverse/protocol control; an always-abstaining model fails.
+Abstention still prevents readiness for that work. All raw validity, proof,
+numerical and installation gates remain unchanged; no fitting or threshold change.
+
 ## Issue boundaries
 
 GitHub's #1445 child-issue list is empty. Its cross-reference timeline identifies
@@ -75,3 +83,11 @@ model, response checks and final predicate under the explicit revised contract.
 These outcomes cannot establish a passing statistical study or calibrated domain
 accuracy. New measurements belong to their exact new SHA. Issue updates record
 only the completed Vega portions of broader issues, never their unrelated closure.
+
+On `08b967b2`, [Buildkite2321](https://buildkite.com/decapodlabs/decapod/builds/2321)
+executed all 39 source steps successfully; the actual library suite passed 1,464
+tests with three ignored. Full reports091542Z and095248Z remain failed before
+native execution: public API quota, then duplicate workflow builds after the
+original signed-push redelivery. Their successful jobs do not replace an accepted
+full controller result. The documentation/qualification checkpoint requires a
+new exact-candidate run on the existing branch, without changing run uniqueness.

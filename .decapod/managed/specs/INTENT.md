@@ -7,6 +7,14 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
+The maintainer delegated the functional safe-abstention decision after seeing two
+meaningful ready controls approved and the third validly abstaining. Functional
+delivery requires genuine approval on each tested backend and every adverse or
+protocol control; a ready control may safely abstain, with its frozen expected-
+accept mismatch preserved explicitly. This is no claim of perfect oracle agreement
+or domain accuracy. Abstention still blocks readiness for that work. No production
+threshold, model, prompt, numerical tolerance or deterministic gate changes.
+
 Vega is an optional team choice during init and in shared project configuration. Each maintainer resolves a verified private local runtime/model installation; selecting the option does not add this repository's research corpus or Mac-specific verification recipe to other projects. Failed, incomplete or stale deterministic proof exits before Vega; only successful proof can reach bounded readiness assessment. Explicit plan obligations accompany intent and check outcomes, so successful tests cannot hide a declared unmet requirement. Vega cannot waive proof or create a PR, and the human retains merge authority. Candidate `30015be0` executed real M1 Max Metal and CPU inference, 43 native tests and three fixed numerical comparisons through 4,096 tokens successfully, but the complete heldout evaluation failed its risk and coverage criteria. Prospective public review inputs require source and semantic audits before any new evaluation or fitting; an external review proxy is not automatically ground truth. Labels remain outside model input, and errors, unsupported cases or missing independent adjudication cannot be converted into acceptance.
 
 The maintainer's explicit 2026-10-20 decision replaces the implementation-added 59-acceptance/5%-risk/95%-confidence/50%-coverage publication prerequisite with **functional active integration** acceptance. The old criterion is not passed; prior studies/failures are preserved and domain-level reliability remains unestablished. `vega_readiness::project`, `Response::validated_outcome` and `permits_decision` remain shared by live decisions and functional replay. Failed/missing/stale mandatory proof blocks before inference; relevant state/model changes invalidate a result. A valid current affirmative verdict can satisfy the configured required model condition; rejection, abstention, malformed or unavailable inference cannot. The human retains merge authority. Twelve fixed agent-authored functional scenarios require actual candidate Rust contract executions, real Metal/CPU model decisions for ready work and unmet/uncertain obligations, and policy/manipulation controls. Expected labels stay outside model input. These are bounded regression evidence, not independent population labels or an accuracy guarantee. No forced verdict, threshold/model/calibration change or inactive/advisory substitute is authorized. The issue-to-code-to-test mapping lives in `docs/vega-completion-checklist.md`; historical checkpoint interpretations below are superseded where they require the research criterion for delivery.
@@ -204,7 +212,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0def1ae491c29c0ee0937ff7f27990398cd6547d209fe9feb9b6a03ec0fac491`
+- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -325,16 +325,23 @@ not a passing original criterion. Fixed functional cases use shared production
 projection, request, response and final predicate on actual Metal and CPU. They
 require meaningful positive acceptance as well as rejection/uncertainty and
 failed/stale/malformed proof controls; collection alone cannot pass the aggregate.
+Following the maintainer's delegated functional interpretation, qualification
+requires genuine approval on each actual backend and every adverse/control case.
+A ready control may validly abstain, but its expected-accept mismatch remains
+reported separately and that assessed work remains blocked. An always-abstaining
+model cannot qualify. This changes no production threshold or publication rule.
 The [completion checklist](../vega-completion-checklist.md) separates these checks
 from unestablished domain accuracy. No inactive/advisory substitute is used.
 
 The private bounded `--proof-output` diagnostic contains exact tokens/spans,
 pooled vectors, engine/calibrated outputs and synchronized timing. Candidate
-`fef84896` passed 53 native tests and three fixed 138/314/4,096-token Metal/CPU
+`59eaf087` passed 57 native tests and three fixed 138/314/4,096-token Metal/CPU
 comparisons against separate Rust calculations; 4,097 tokens reject. This is
 fixed fresh pure-text evidence with shared authorship/infrastructure, not all-mode
 or independently human-reviewed equivalence. Actual unsupported CUDA followed by
 fresh CPU inference exercised component fallback; NVIDIA hardware and full Linux
-loader-companion routing remain unmeasured. See
+loader-companion routing remain unmeasured. Both backends approved two meaningful
+ready controls; a third validly abstained and missed its expected-accept label.
+The original strict aggregate failed, and domain-level accuracy remains unestablished. See
 [the reference contract](../vega-reference-contract.md) for pins, unchanged
 tolerances, timings/memory scope, historical failures and current-candidate results.

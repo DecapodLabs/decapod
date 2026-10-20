@@ -381,6 +381,24 @@ pub fn expected_matches(case: &Value, diagnostic: &Value) -> bool {
     }
 }
 
+/// Maintainer-delegated functional qualification permits conservative model
+/// uncertainty, without changing the frozen expected label or runtime gate.
+/// The caller must independently validate the raw request/response first.
+pub fn delivery_case_matches(case: &Value, diagnostic: &Value) -> bool {
+    expected_matches(case, diagnostic)
+        || (case["expected"] == "accept"
+            && diagnostic["execution"] == "executed"
+            && diagnostic["model_calls"] == 1
+            && diagnostic["result"]["decision"] == "abstain"
+            && diagnostic["result"]["model_gate_allows_with_fixture_proof"] == false)
+}
+
+/// Both actual backends need meaningful affirmative behavior. An always
+/// rejecting/abstaining model or any failed adverse/control case cannot qualify.
+pub fn delivery_passes(case_checks: bool, ready_acceptances: [usize; 2]) -> bool {
+    case_checks && ready_acceptances.iter().all(|count| *count > 0)
+}
+
 pub fn evaluate(
     snapshot: &readiness::EvaluationSnapshot,
     mut infer: impl FnMut(&str) -> Result<Value>,
@@ -621,8 +639,43 @@ mod tests {
                 json!({"execution":"executed","model_calls":0,"result":{"decision":"accept","model_gate_allows_with_fixture_proof":true}}),
             ] {
                 assert!(!expected_matches(case, &diagnostic));
+                assert!(!delivery_case_matches(case, &diagnostic));
             }
         }
+    }
+    #[test]
+    fn safe_abstention_preserves_oracle_mismatch_and_blocks_assessed_work() {
+        let case = json!({"expected":"accept"});
+        let diagnostic = json!({"execution":"executed","model_calls":1,
+            "result":{"decision":"abstain","model_gate_allows_with_fixture_proof":false}});
+        assert!(!expected_matches(&case, &diagnostic));
+        assert!(delivery_case_matches(&case, &diagnostic));
+        assert!(!readiness::permits_decision(
+            true,
+            readiness::Mode::Required,
+            readiness::Decision::Abstain
+        ));
+        for invalid in [
+            json!({"execution":"executed","model_calls":1,"result":{"decision":"reject","model_gate_allows_with_fixture_proof":false}}),
+            json!({"execution":"executed","model_calls":0,"result":{"decision":"abstain","model_gate_allows_with_fixture_proof":false}}),
+            json!({"execution":"failed","model_calls":1,"result":{"decision":"abstain","model_gate_allows_with_fixture_proof":false}}),
+            json!({"execution":"executed","model_calls":1,"result":{"decision":"abstain","model_gate_allows_with_fixture_proof":true}}),
+        ] {
+            assert!(!delivery_case_matches(&case, &invalid));
+        }
+        // Unmet obligations still require the original rejection expectation.
+        assert!(!delivery_case_matches(
+            &json!({"expected":"reject"}),
+            &diagnostic
+        ));
+    }
+    #[test]
+    fn functional_delivery_requires_approval_on_both_backends_and_every_control() {
+        assert!(!delivery_passes(true, [0, 0]));
+        assert!(!delivery_passes(true, [2, 0]));
+        assert!(!delivery_passes(true, [0, 2]));
+        assert!(!delivery_passes(false, [2, 2]));
+        assert!(delivery_passes(true, [1, 1]));
     }
     #[test]
     fn functional_cases_share_live_projection_without_expected_labels_or_fabricated_checks() {
