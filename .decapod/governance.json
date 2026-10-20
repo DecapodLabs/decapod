@@ -776,6 +776,14 @@
       "proof_refs": [
         "docs/vega-completion-checklist.md"
       ]
+    },
+    {
+      "id": "vega1445-production-generated-docs-repair",
+      "summary": "Repair prescribed generated configuration docs drift, Clippy extra borrow and precise diagnostic stage timing label; preserve5635failedvalidation and rerunoriginal governed branch",
+      "input_digest": "sha256:4b28b102ee95a98868eca2c360d4a5bdf64ea9b0b901aab30767cf83cec2251e",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261020T030933Z.json"
+      ]
     }
   ],
   "intents": {
@@ -817,22 +825,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Shared production project/context/snapshot and validated worker outcome replace evaluation approximation. New source tests fail before inference on deterministic failure/staleness/missing evidence and preserve obligations/declarations/overflow. Native collector exercises actual pinned Metal/CPU production-shaped protocol fixtures but assigns zero independent labels. Exposed v2 remains diagnostic and is not repeated as final; mandatory aggregate still fails missing admitted production study. Original thresholds/model/calibration/authority unchanged, no inactive/advisory delivery. Review helper inventory f626 and unchanged eight-run recipe d6d9; tests and native collection await exact-source validate. Issue checklist distinguishes accepted prerequisites from broader consumed release/proof boundaries.",
-          "reviewed_code_fingerprint": "bbd7f745eff75ef6e5b01b06b1ccc5edae2a43c5d9e65ead511980fd969d4c6a",
+          "reason": "Preserve shared production replay design and missing independent final-study boundary. Repair5635actual docs-drift by source-built docs build as prescribed, and Clippy needless_borrow by passing the existing borrowed plan directly. Correct diagnostic timing field name to stage_wall_clock_ms because value is stage-duration object, not scalar. No source/math/model/calibration/threshold/recipe/gate change beyond these focused repairs. New tests/native protocol diagnostics remain unverified until exact-candidate validate.",
+          "reviewed_code_fingerprint": "099e4399b6981278942c0d90e39df996ae08f77f8f9655a9e1aaaee3e2bf4295",
           "spec_material_hash": "d86e1629b984c43eb0e5fb2382649179c45a9eb9a10cf46fdc34d992999de71e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Shared production project/context/snapshot and validated worker outcome replace evaluation approximation. New source tests fail before inference on deterministic failure/staleness/missing evidence and preserve obligations/declarations/overflow. Native collector exercises actual pinned Metal/CPU production-shaped protocol fixtures but assigns zero independent labels. Exposed v2 remains diagnostic and is not repeated as final; mandatory aggregate still fails missing admitted production study. Original thresholds/model/calibration/authority unchanged, no inactive/advisory delivery. Review helper inventory f626 and unchanged eight-run recipe d6d9; tests and native collection await exact-source validate. Issue checklist distinguishes accepted prerequisites from broader consumed release/proof boundaries.",
-          "reviewed_code_fingerprint": "bbd7f745eff75ef6e5b01b06b1ccc5edae2a43c5d9e65ead511980fd969d4c6a",
+          "reason": "Preserve shared production replay design and missing independent final-study boundary. Repair5635actual docs-drift by source-built docs build as prescribed, and Clippy needless_borrow by passing the existing borrowed plan directly. Correct diagnostic timing field name to stage_wall_clock_ms because value is stage-duration object, not scalar. No source/math/model/calibration/threshold/recipe/gate change beyond these focused repairs. New tests/native protocol diagnostics remain unverified until exact-candidate validate.",
+          "reviewed_code_fingerprint": "099e4399b6981278942c0d90e39df996ae08f77f8f9655a9e1aaaee3e2bf4295",
           "spec_material_hash": "35d8ee7aa20f93fee490ca2b234bbbbc0fee704a49d49b918ae6661dda712a52"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Unsigned private EvaluationSnapshot records are explicitly replay inputs, never execution authentication, task ownership or publication proof. New deserialization stays in replay/numerical verification; production host trust and material/installation rechecks remain. Model weights/config/runtime pins, integrity checks, storage nlink policy, token limits, native resource/deadline enforcement and original deterministic authority unchanged. No external data sharing, Python, paid compute, downloaded executable code or independent control plane.",
-          "reviewed_code_fingerprint": "bbd7f745eff75ef6e5b01b06b1ccc5edae2a43c5d9e65ead511980fd969d4c6a",
+          "reason": "Focused docs generation, needless-borrow and diagnostic field-name repairs retain unsigned replay boundaries, source authentication, private artifacts, original deadlines/pins and deterministic authority. Candidate binary used only for prescribed docs generation, never task custody, validation or publication.",
+          "reviewed_code_fingerprint": "099e4399b6981278942c0d90e39df996ae08f77f8f9655a9e1aaaee3e2bf4295",
           "spec_material_hash": "d22b96974fa42a386a9bffb7a0e118243b3ef7ad15d07f65e252b1ee1339d2e4"
         }
       ],
@@ -846,7 +854,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792465761Z"
+      "updated_at": "1792466204Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -858,7 +866,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:8f95600c4aa8be96baa5ab4120d477eb915c5a2ab760818385dd745fe710f127",
+      "artifact_hash": "sha256:66ecd59f780c96d3715a8eeeac0bc51c8e98167cb98bb2332621ae5a33cee57e",
       "checks": [
         {
           "name": "bazel_metadata_regeneration",
@@ -875,6 +883,10 @@
         {
           "name": "clippy-source-repair",
           "status": "passed"
+        },
+        {
+          "name": "clippy_5635",
+          "status": "failed"
         },
         {
           "name": "corrected-source-ci",
@@ -931,6 +943,14 @@
         {
           "name": "docs-source-correction",
           "status": "partial"
+        },
+        {
+          "name": "docs_build_recovery",
+          "status": "passed"
+        },
+        {
+          "name": "docs_drift_5635",
+          "status": "failed"
         },
         {
           "name": "docs_regeneration",
@@ -1429,11 +1449,15 @@
           "status": "passed"
         },
         {
+          "name": "validation_5635",
+          "status": "failed"
+        },
+        {
           "name": "worker-decoder-tests",
           "status": "unavailable"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "recovery",
       "custody": {
         "events": [
           {
@@ -1860,10 +1884,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 62
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:63",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 63
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 62,
+        "next_sequence": 63,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -3200,6 +3231,31 @@
                 "validation_findings": [
                   "New tests/MetalCPUproductiondiagnostics authored and require prescribed validate; no new pass claims. User rejects inactive stage; fitting source only inspected, no Python executed. Current official upstream has old base+two generic adapters and incompatible universal port/stats engine, none demonstrated readiness-qualified. Reviewed24source candidates still zero admissible complete final units. Preserve old study/failures and every required original criterion. Final admission stays missing rather than repeating exposed final data. No branch/custody/controller changes."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:63",
+                "observations": [
+                  "src/decapod/core/vega_readiness.rs",
+                  "assets/tools/vega_infer.rs",
+                  "docs/agent/config-schema.md",
+                  "/private/tmp/vega-1191-validation-20261020T030933Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2290",
+                  "/private/tmp/vega-1445-5635-clippy.log"
+                ],
+                "proof_refs": [
+                  "validation_5635",
+                  "docs_drift_5635",
+                  "clippy_5635",
+                  "docs_build_recovery"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 63,
+                "validation_findings": [
+                  "Fullvalidate5635stoppedbefore native because public docs workflow2290failed generatedconfigschema. Followed actualreport source-built docs build via reviewed existing docs-repairscript; no candidatecontrollergovernance. GitHubClippydiagnostic found single needlessborrow newly extracted sharedfunction. Fixwithoutlint suppression, preservefailedreport, rerunexactcandidate. No previousnativepassisclaimedforthisnewcode."
+                ]
               }
             ]
           }
@@ -3241,7 +3297,9 @@
         "/private/tmp/vega-1191-validation-20261019T214541Z.json",
         "/private/tmp/vega-1191-validation-20261019T224656Z.json",
         "/private/tmp/vega-1191-validation-20261019T232350Z.json",
+        "/private/tmp/vega-1191-validation-20261020T030933Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
+        "/private/tmp/vega-1445-5635-clippy.log",
         "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
         "/private/tmp/vega-1445-current-issue.json",
         "/private/tmp/vega-1445-current-request.txt",
@@ -3292,6 +3350,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2261",
         "https://buildkite.com/decapodlabs/decapod/builds/2266",
         "https://buildkite.com/decapodlabs/decapod/builds/2271",
+        "https://buildkite.com/decapodlabs/decapod/builds/2290",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -3425,6 +3484,7 @@
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
         "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority.",
+        "Fullvalidate5635stoppedbefore native because public docs workflow2290failed generatedconfigschema. Followed actualreport source-built docs build via reviewed existing docs-repairscript; no candidatecontrollergovernance. GitHubClippydiagnostic found single needlessborrow newly extracted sharedfunction. Fixwithoutlint suppression, preservefailedreport, rerunexactcandidate. No previousnativepassisclaimedforthisnewcode.",
         "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
         "Metadata-onlycommandcompletedexit0; identicaldependencygraph andlocksize, one generatedinputhash repaired. Currentlibrary/native scientifictests mustexecute through freshdecapodvalidate, previous30015measurements remain scoped. PublicGithubreader403reset22:46:31UTCmustbehonored without automaticauthswitch/artifactimport. Pushcorrectedsamebranch so realCI canexecute; rerunnormalvalidateafterreset. Frozenv2calibrationfailure remains mandatoryunresolvedacceptance, no PRuntilgenuinelygreen.",
         "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",

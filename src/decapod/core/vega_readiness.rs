@@ -589,7 +589,7 @@ pub fn project(
         "projection":"validation-results.v3",
         "publication_actor":"agent through existing validation gates",
         "intent":plan.intent,"validation":results,
-        "plan_obligations":plan_obligations(&plan),
+        "plan_obligations":plan_obligations(plan),
         "unresolved_assumptions":trajectory.unresolved_assumptions,
         "shortcut_risk_signals":trajectory.shortcut_risk_signals,
         "trajectory_blockers":trajectory.blockers,

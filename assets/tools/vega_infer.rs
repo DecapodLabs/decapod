@@ -593,7 +593,7 @@ fn collect_production_protocol(proof: &Path) -> Result<(), Box<dyn std::error::E
                 Ok(serde_json::json!({
                     "response":response,"decision":outcome.decision()?,
                     "wall_clock_ms":attempt.elapsed().as_secs_f64()*1000.0,
-                    "synchronized_compute_ms":raw["wall_clock_ms"],
+                    "stage_wall_clock_ms":raw["wall_clock_ms"],
                     "peak_resident_bytes":raw["peak_resident_bytes"],"memory_scope":raw["memory_scope"],
                     "proof_sha256":vega_readiness::hash(&read_bounded(&raw_path,MAX_PROOF_BYTES as u64)?)
                 }))

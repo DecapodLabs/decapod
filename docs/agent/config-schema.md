@@ -230,9 +230,9 @@ it needs independent acceptance of the policy change. A disabled accepted target
 retains ordinary behavior and may add an explicit required assessment. Setup
 refresh changes the cache only and never silently rewrites publication policy.
 
-`validation-results.v2` contains actual check outcomes, stage dispositions,
+`validation-results.v3` contains actual check outcomes, stage dispositions,
 exclusions, simulated stages, blockers and unresolved trajectory facts, plus
-minimal declared intent and changed paths. Identical semantic observations and
+declared intent, explicit plan obligations and changed paths. Identical semantic observations and
 stage definitions are indexed once. Every check keeps its identity and outcome;
 missing checks remain explicit. Full custody identities bind the complete report
 outside the model prompt. No whole plan, source diff or raw log enters the prompt;
@@ -308,5 +308,17 @@ on CPU; calibration uses F64 probabilities. This profile has adapters off, no im
 path and fresh recurrent state for every request.
 
 ### Honest native evidence
+
+The current pinned base profile is not qualified for code-readiness judgment.
+The [contract diagnosis](../vega-readiness-decision.md) separates the completed
+native/numerical verification from the exposed benchmark's different input path,
+wrong-stage cases and visible semantic misses. Its 23 proxy-label conflicts are
+not a production false-ready rate. The original acceptance remains unsatisfied;
+no activation guard or advisory downgrade has been applied. The maintainer
+rejected an inactive delivery. Production replay now uses the exact shared
+projection and response checks, with deterministic failure before inference;
+fixed constructed protocol fixtures remain development diagnostics, not labels.
+The source-admission gap keeps final readiness blocked. See the
+[completion checklist](../vega-completion-checklist.md) for current scope.
 
 The private bounded `--proof-output` diagnostic contains exact tokens/spans, pooled vectors, engine readouts, calibrated outcomes, hashes and synchronized stage durations. Ordinary responses retain `parity=unverified`. Candidate `30015be0` executed 43 native tests, real M1 Max recurrence and three fixed 138/314/4,096-token Metal/CPU model comparisons against separately implemented pinned Rust calculations. Exact token-limit rejection and all 16 memory slots were exercised. This is bounded fixture evidence with shared infrastructure/authorship, not all-input or independently reviewed equivalence. CPU fallback was exercised through actual unsupported CUDA and fresh CPU inference; Linux loader-companion routing remains separate. All six frozen holdout groups completed, but the final acceptance check failed risk/coverage with 23 false-ready proxy outcomes per backend. See `docs/vega-reference-contract.md` for revisions, tolerances, sample counts, timings, lifetime memory and preserved failures. Collection-only success never removes the required final scientific aggregate, risk/coverage/independent-label conditions or kernel validation gates.
