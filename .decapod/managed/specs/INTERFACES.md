@@ -27,6 +27,12 @@ deterministic evidence before calling the same production builder. It does not
 authenticate unsigned inputs or authorize live publication. New shared-path and
 wire-response regressions await the next prescribed validation.
 
+`vega_readiness::permits_decision` is the shared final boolean predicate used by
+live receipts/publication and native replay diagnostics. Failed proof dominates
+every model result. In required mode only a positive, nonabstaining decision may
+pass this predicate; current authenticated proof, custody, installation and
+human authority are still established by the live caller, never replay metadata.
+
 Private Vega numerical exports record raw block samples only when `--proof-output` is requested; normal requests return pooled features. Each actual and independent reference export retains its 1 MiB bound. `reference_backbone` accepts at most 4,096 fresh unpadded pure-text tokens. Candidate `30015be0` executed all three fixed 138/314/4,096-token Metal and CPU comparisons, including the exact boundary and 4,097-token rejection. These fixtures use the independent tokenizer, fixed repeated sentences and bounded literal suffixes; token/span/mask/layer comparisons and frozen numerical tolerances remain exact or unchanged. This is fixed-fixture evidence, not all-input equivalence. Full production loader-companion fallback remains separate from the exercised unavailable-CUDA-to-CPU component path.
 
 The private evaluation corpus and input receipt use v2 for the pre-execution addition of contradictory semantic-evidence cases. `benchmark_units` counts original benchmark tasks, without asserting statistical independence. Model output records distinguish correct required abstentions, incorrectly decisive answers and unobserved cases. Existing project split, underlying artifact hash and model/calibration pins remain unchanged; v1 construction remains in Git and no model result informed the revision.
@@ -599,7 +605,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `099e4399b6981278942c0d90e39df996ae08f77f8f9655a9e1aaaee3e2bf4295`
+- Repository signal fingerprint: `2bdd681d64f0037b96df12be8e5e44d054a8e2cccfb3ebb14c8a1196fcd84fdd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

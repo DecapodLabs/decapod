@@ -592,6 +592,8 @@ fn collect_production_protocol(proof: &Path) -> Result<(), Box<dyn std::error::E
                 }
                 Ok(serde_json::json!({
                     "response":response,"decision":outcome.decision()?,
+                    "model_gate_allows_with_fixture_proof":vega_readiness::permits_decision(true,vega_readiness::Mode::Required,outcome.decision()?),
+                    "model_cannot_override_failed_proof":!vega_readiness::permits_decision(false,vega_readiness::Mode::Required,outcome.decision()?),
                     "wall_clock_ms":attempt.elapsed().as_secs_f64()*1000.0,
                     "stage_wall_clock_ms":raw["wall_clock_ms"],
                     "peak_resident_bytes":raw["peak_resident_bytes"],"memory_scope":raw["memory_scope"],

@@ -21,10 +21,16 @@ approval and agent-authored rationale do not supply independent complete labels.
 The nine earlier unexecuted source-fact pilot scenarios also differ from the
 production projection and cannot substitute for a final study.
 
-Neither ledger is consumed by the native recipe or changes its acceptance
-conditions. The crate's existing exclusion covers these research artifacts.
+The native recipe now binds the admission ledger and keeps required final
+qualification non-ready while it admits zero complete production units. The
+exposed-outcome ledger remains forensic history. New native protocol diagnostics
+use the exact shared production projection, response interpretation and final
+decision predicate; their constructed observations do not supply independent
+labels or authorize publication. Risk/coverage conditions remain unchanged.
+The crate's existing exclusion covers these research artifacts.
 See [the product decision](../../../docs/vega-readiness-decision.md) for contract
-findings and the unapplied scope proposal. No calibration or model was changed.
+findings and the original working-integration scope; the maintainer rejected the
+inactive-stage proposal. No calibration or model was changed.
 
 ## Original capture
 

@@ -784,6 +784,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261020T030933Z.json"
       ]
+    },
+    {
+      "id": "vega1445-shared-final-decision-rule",
+      "summary": "Exercise the exact final live readiness predicate in native replay, reconcile fixture documentation, preserve9a5sourcepass and public API quota failure for supported retry",
+      "input_digest": "sha256:02d76e5d4e682328b4b6c407ec97ac06fc0517d2c5b2dbd949014a8b7cf176eb",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261020T031718Z.json"
+      ]
     }
   ],
   "intents": {
@@ -823,24 +831,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve shared production replay design and missing independent final-study boundary. Repair5635actual docs-drift by source-built docs build as prescribed, and Clippy needless_borrow by passing the existing borrowed plan directly. Correct diagnostic timing field name to stage_wall_clock_ms because value is stage-duration object, not scalar. No source/math/model/calibration/threshold/recipe/gate change beyond these focused repairs. New tests/native protocol diagnostics remain unverified until exact-candidate validate.",
-          "reviewed_code_fingerprint": "099e4399b6981278942c0d90e39df996ae08f77f8f9655a9e1aaaee3e2bf4295",
+          "reason": "Pure final decision predicate extracted without changing truth table or authority. Live receipts/publication and native replay now consume the same function; replay booleans authenticate no proof. Existing fail-closed publication regression protects failed proof/abstention/stale output. Fixtures remain constructed, no independent labels, model/calibration changes, inactive mode, new controller or extra control plane. Correct fixture README to current admission use and rejected inactive proposal. Source9a5passedBuildkite2291all39/GHAall, but officialvalidate failedpublicGitHub403rate-limit during commit recheck before native; preserve report and wait04:10:27UTCreset with no alternate auth.",
+          "reviewed_code_fingerprint": "2bdd681d64f0037b96df12be8e5e44d054a8e2cccfb3ebb14c8a1196fcd84fdd",
           "spec_material_hash": "d86e1629b984c43eb0e5fb2382649179c45a9eb9a10cf46fdc34d992999de71e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve shared production replay design and missing independent final-study boundary. Repair5635actual docs-drift by source-built docs build as prescribed, and Clippy needless_borrow by passing the existing borrowed plan directly. Correct diagnostic timing field name to stage_wall_clock_ms because value is stage-duration object, not scalar. No source/math/model/calibration/threshold/recipe/gate change beyond these focused repairs. New tests/native protocol diagnostics remain unverified until exact-candidate validate.",
-          "reviewed_code_fingerprint": "099e4399b6981278942c0d90e39df996ae08f77f8f9655a9e1aaaee3e2bf4295",
-          "spec_material_hash": "35d8ee7aa20f93fee490ca2b234bbbbc0fee704a49d49b918ae6661dda712a52"
+          "reason": "Document shared permits_decision predicate consumed by live receipts/publication and actual native model diagnostic outputs. Failed proof still dominates any model decision; public pure replay function grants no task/CI/publication authority. Same original thresholds, modes, model pins, source graph and8runrecipe. Reconcile fixture README stale nonconsumption/inactive-proposal claims. Source9a5green but failedfinal metadata recheck quota403 before native, no modelpassclaim. New candidate requires full prescribed validate after public quota reset; no Buildkite login/new credential or unsafe reroute.",
+          "reviewed_code_fingerprint": "2bdd681d64f0037b96df12be8e5e44d054a8e2cccfb3ebb14c8a1196fcd84fdd",
+          "spec_material_hash": "5c65fc97931e5d91d77dc5bfaf0b4247c3095e17344804eadcc44d6560a8ae8d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Focused docs generation, needless-borrow and diagnostic field-name repairs retain unsigned replay boundaries, source authentication, private artifacts, original deadlines/pins and deterministic authority. Candidate binary used only for prescribed docs generation, never task custody, validation or publication.",
-          "reviewed_code_fingerprint": "099e4399b6981278942c0d90e39df996ae08f77f8f9655a9e1aaaee3e2bf4295",
+          "reason": "Pure final decision predicate extracted without changing truth table or authority. Live receipts/publication and native replay now consume the same function; replay booleans authenticate no proof. Existing fail-closed publication regression protects failed proof/abstention/stale output. Fixtures remain constructed, no independent labels, model/calibration changes, inactive mode, new controller or extra control plane. Correct fixture README to current admission use and rejected inactive proposal. Source9a5passedBuildkite2291all39/GHAall, but officialvalidate failedpublicGitHub403rate-limit during commit recheck before native; preserve report and wait04:10:27UTCreset with no alternate auth.",
+          "reviewed_code_fingerprint": "2bdd681d64f0037b96df12be8e5e44d054a8e2cccfb3ebb14c8a1196fcd84fdd",
           "spec_material_hash": "d22b96974fa42a386a9bffb7a0e118243b3ef7ad15d07f65e252b1ee1339d2e4"
         }
       ],
@@ -854,7 +862,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792466204Z"
+      "updated_at": "1792468542Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -866,7 +874,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:66ecd59f780c96d3715a8eeeac0bc51c8e98167cb98bb2332621ae5a33cee57e",
+      "artifact_hash": "sha256:74bac856f92ca412b71238cd92262f9361aa5e9314926778d20101ac8ea0bc71",
       "checks": [
         {
           "name": "bazel_metadata_regeneration",
@@ -1217,6 +1225,10 @@
           "status": "unavailable"
         },
         {
+          "name": "new_native",
+          "status": "unavailable"
+        },
+        {
           "name": "new_native_tests",
           "status": "unavailable"
         },
@@ -1409,6 +1421,10 @@
           "status": "passed"
         },
         {
+          "name": "source_9a5",
+          "status": "passed"
+        },
+        {
           "name": "source_aa",
           "status": "passed"
         },
@@ -1450,6 +1466,10 @@
         },
         {
           "name": "validation_5635",
+          "status": "failed"
+        },
+        {
+          "name": "validation_9a5",
           "status": "failed"
         },
         {
@@ -1891,10 +1911,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 63
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:64",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 64
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 63,
+        "next_sequence": 64,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -3256,6 +3283,30 @@
                 "validation_findings": [
                   "Fullvalidate5635stoppedbefore native because public docs workflow2290failed generatedconfigschema. Followed actualreport source-built docs build via reviewed existing docs-repairscript; no candidatecontrollergovernance. GitHubClippydiagnostic found single needlessborrow newly extracted sharedfunction. Fixwithoutlint suppression, preservefailedreport, rerunexactcandidate. No previousnativepassisclaimedforthisnewcode."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:64",
+                "observations": [
+                  "src/decapod/core/vega_readiness.rs",
+                  "assets/tools/vega_infer.rs",
+                  "tests/fixtures/vega-public-review-sources/README.md",
+                  "/private/tmp/vega-1191-validation-20261020T031718Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2291"
+                ],
+                "proof_refs": [
+                  "source_9a5",
+                  "validation_9a5",
+                  "new_native",
+                  "fmt"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 64,
+                "validation_findings": [
+                  "Actual9a5source39passedandGitHubCIgreen, thenpublicGithubObjectscommitrecheck403quotareset1792469427before native. Preserve report, do not auth-fallback/newprerequisite. Usewaitforreversible27-line shared final-gate/refREADMEcorrection; current noindependentreadinesslabels, no modelclaims. Reviewedd6cb helperinventory with unchangedd6d98runrecipe. Existingpublicationregression exercisesextractedfunction; no modelgateweakening. Retryplainvalidateafter04:10:27UTCresetexactnewsource/target, no identicalexposedv2run."
+                ]
               }
             ]
           }
@@ -3298,6 +3349,7 @@
         "/private/tmp/vega-1191-validation-20261019T224656Z.json",
         "/private/tmp/vega-1191-validation-20261019T232350Z.json",
         "/private/tmp/vega-1191-validation-20261020T030933Z.json",
+        "/private/tmp/vega-1191-validation-20261020T031718Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-1445-5635-clippy.log",
         "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
@@ -3351,6 +3403,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2266",
         "https://buildkite.com/decapodlabs/decapod/builds/2271",
         "https://buildkite.com/decapodlabs/decapod/builds/2290",
+        "https://buildkite.com/decapodlabs/decapod/builds/2291",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -3445,6 +3498,7 @@
         "src/decapod/lib.rs",
         "tests/cli_contract_enforcement.rs",
         "tests/cli_contracts.rs",
+        "tests/fixtures/vega-public-review-sources/README.md",
         "tests/fixtures/vega-public-review-sources/exposed-v2-acceptance-audit.json",
         "tests/fixtures/vega-public-review-sources/final-admission-review.json",
         "tests/fixtures/vega-public-review-sources/source-records.json",
@@ -3477,6 +3531,7 @@
         "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
         "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
         "Actual40 native tests and real Metal primitive checks pass, but download failures and incomplete CPU holdout with false-ready outcomes are not model parity or production calibration. Preserve later diagnostics on early strict aggregate error without making collection success readiness. Pin/error reporting preserves denial kinds and all setup safety. New source must run through official1191 validation; no manual builds or source-proof reuse as current scientific acceptance.",
+        "Actual9a5source39passedandGitHubCIgreen, thenpublicGithubObjectscommitrecheck403quotareset1792469427before native. Preserve report, do not auth-fallback/newprerequisite. Usewaitforreversible27-line shared final-gate/refREADMEcorrection; current noindependentreadinesslabels, no modelclaims. Reviewedd6cb helperinventory with unchangedd6d98runrecipe. Existingpublicationregression exercisesextractedfunction; no modelgateweakening. Retryplainvalidateafter04:10:27UTCresetexactnewsource/target, no identicalexposedv2run.",
         "All failure history and scientific criteria remain. New4.5MiBpublic fixture initiallyplaced underexecutable-discoveryroot triggeredDISCOVERY_BLOCKED; movedunchanged into existingtests/fixtures data boundary, hash50ce9421unchanged; executableauditor remains discovered. Reviewed allchanged authored sources/coverage and explicit user-configbf95 pin withoutchanging workflow/executor/requiredness/recipe/model/calibration. No newprerequisite/manualtest or candidatecontrollerauthority. Newcorpus sourceaudit is provisional, not independentlyadjudicated labels or risk proof; no newinference/fitting/holdoutselection basedon model results.",
         "All six frozen v2 holdout shards completed: each backend executed102 cases with36 unsupported lengths,52 abstentions,29 acceptances and23 false-ready proxy outcomes. Preserve this failure and original corpus/criteria. Actual source1459 tests, native43 tests and138/314/4096-token fixed numerical comparisons passed. Public review corpus remains prospective and unverified; no fitting or heldout inference has used it. Inspection confirmed projection includes plan.intent only, omitting proof_hooks/deferred questions/stop conditions and phase gates. Add bounded obligation facts without whole-plan metadata, model changes, relaxed gates or fabricated rationale. Final source/material/governance identity checks remain authoritative.",
         "Author shared projection seam and regression coverage; preserve all scientific failures and production authority. User requires complete functional integration, rejects prior inactive-stage proposal. Public related execution/release issues are consumed boundaries, not automatically closure scope.",

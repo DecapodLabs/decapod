@@ -355,8 +355,7 @@ pub struct Receipt {
 }
 impl Receipt {
     pub fn permits_readiness(&self) -> bool {
-        self.decision == Decision::Accept
-            || (self.mode == Mode::Disabled && self.decision == Decision::Disabled)
+        permits_decision(true, self.mode, self.decision)
     }
     pub fn stale(&mut self) {
         self.decision = Decision::Abstain;
@@ -365,7 +364,15 @@ impl Receipt {
 }
 
 pub(crate) fn permits_publication(proof_ready: bool, receipt: &Receipt) -> bool {
-    proof_ready && receipt.permits_readiness()
+    permits_decision(proof_ready, receipt.mode, receipt.decision)
+}
+
+/// Shared final consumption rule. Only the live validator can establish that
+/// proof is current and authenticated; a replay's boolean grants no authority.
+pub fn permits_decision(proof_ready: bool, mode: Mode, decision: Decision) -> bool {
+    proof_ready
+        && (decision == Decision::Accept
+            || (mode == Mode::Disabled && decision == Decision::Disabled))
 }
 
 use super::bounded_process::{BoundedCommand, Cancellation, ProcessLimits, Termination};
