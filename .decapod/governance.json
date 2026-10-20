@@ -611,6 +611,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "semantics-projection",
+      "summary": "Commit only the supported CLI-generated semantics fingerprint refresh, preserving its authored behavioral contract.",
+      "input_digest": "sha256:deae765b6079c1a79cfdb816ec04ec8eac6dd03473c2ebda035fa41da985df7a",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
