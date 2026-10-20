@@ -806,6 +806,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-validation-projection",
+      "summary": "Preserve exact candidate full validation and all configured source/native checks.",
+      "input_digest": "sha256:46c385c168ec7975b4d82e659b8be635c1f8216afb2e314adaa94db004fbfd90",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
