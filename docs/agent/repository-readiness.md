@@ -264,16 +264,32 @@ path and fresh recurrent state for every request.
 
 ### Honest native evidence
 
-The current pinned base profile is not qualified for code-readiness judgment.
-The [contract diagnosis](../vega-readiness-decision.md) separates the completed
-native/numerical verification from the exposed benchmark's different input path,
-wrong-stage cases and visible semantic misses. Its 23 proxy-label conflicts are
-not a production false-ready rate. The original acceptance remains unsatisfied;
-no activation guard or advisory downgrade has been applied. The maintainer
-rejected an inactive delivery. Production replay now uses the exact shared
-projection and response checks, with deterministic failure before inference;
-fixed constructed protocol fixtures remain development diagnostics, not labels.
-The source-admission gap keeps final readiness blocked. See the
-[completion checklist](../vega-completion-checklist.md) for current scope.
+Vega supplies a bounded model judgment about validated work, intent and explicit
+obligations. Required mode is active: a current valid affirmative answer satisfies
+the model condition; rejection, abstention, invalid output and execution failure
+prevent readiness. It cannot certify facts omitted from its input or waive proof.
+Domain-level readiness reliability and production-calibrated accuracy remain
+**unestablished**. Upstream confidence/conformal settings are not repository risk
+guarantees. Teams choosing this additional gate must retain the human review and
+deterministic validation authority described above.
 
-The private bounded `--proof-output` diagnostic contains exact tokens/spans, pooled vectors, engine readouts, calibrated outcomes, hashes and synchronized stage durations. Ordinary responses retain `parity=unverified`. Candidate `30015be0` executed 43 native tests, real M1 Max recurrence and three fixed 138/314/4,096-token Metal/CPU model comparisons against separately implemented pinned Rust calculations. Exact token-limit rejection and all 16 memory slots were exercised. This is bounded fixture evidence with shared infrastructure/authorship, not all-input or independently reviewed equivalence. CPU fallback was exercised through actual unsupported CUDA and fresh CPU inference; Linux loader-companion routing remains separate. All six frozen holdout groups completed, but the final acceptance check failed risk/coverage with 23 false-ready proxy outcomes per backend. See `docs/vega-reference-contract.md` for revisions, tolerances, sample counts, timings, lifetime memory and preserved failures. Collection-only success never removes the required final scientific aggregate, risk/coverage/independent-label conditions or kernel validation gates.
+On 2026-10-20 the maintainer explicitly replaced this implementation's statistical
+59-acceptance/5%-risk/95%-confidence/50%-coverage prerequisite with functional
+integration acceptance. The old studies and failures remain diagnostic history,
+not a passing original criterion. Fixed functional cases use shared production
+projection, request, response and final predicate on actual Metal and CPU. They
+require meaningful positive acceptance as well as rejection/uncertainty and
+failed/stale/malformed proof controls; collection alone cannot pass the aggregate.
+The [completion checklist](../vega-completion-checklist.md) separates these checks
+from unestablished domain accuracy. No inactive/advisory substitute is used.
+
+The private bounded `--proof-output` diagnostic contains exact tokens/spans,
+pooled vectors, engine/calibrated outputs and synchronized timing. Candidate
+`fef84896` passed 53 native tests and three fixed 138/314/4,096-token Metal/CPU
+comparisons against separate Rust calculations; 4,097 tokens reject. This is
+fixed fresh pure-text evidence with shared authorship/infrastructure, not all-mode
+or independently human-reviewed equivalence. Actual unsupported CUDA followed by
+fresh CPU inference exercised component fallback; NVIDIA hardware and full Linux
+loader-companion routing remain unmeasured. See
+[the reference contract](../vega-reference-contract.md) for pins, unchanged
+tolerances, timings/memory scope, historical failures and current-candidate results.

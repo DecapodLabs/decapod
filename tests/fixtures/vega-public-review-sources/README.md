@@ -1,5 +1,21 @@
 # Public review-source capture
 
+## Current role after the 2026-10-20 acceptance revision
+
+These captures, semantic/admission ledgers and failed studies are preserved
+research history. The maintainer replaced the implementation-added statistical
+publication prerequisite with functional integration acceptance. Zero admitted
+research units no longer blocks that approved delivery by itself. It still means
+domain-level readiness reliability is unestablished; the old criterion is not
+passed and agent-authored labels are not independent human judgments.
+
+The current native recipe uses fixed production-path functional cases from
+`../vega-functional-regressions.json`, actual candidate contract checks, real
+Metal/CPU model decisions and a required aggregate with unchanged numerical
+comparisons. Positive acceptance, obligation rejection and non-ready uncertainty
+are required; collection alone never grants publication. Historical descriptions
+of admission as a required gate below record the earlier contract only.
+
 ## Exposed-study and admission ledgers
 
 `exposed-v2-acceptance-audit.json` preserves all 29 accepted IDs from the

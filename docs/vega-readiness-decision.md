@@ -1,4 +1,46 @@
-# Vega readiness: contract diagnosis and scope decision
+# Vega readiness: functional delivery and historical contract diagnosis
+
+## Accepted scope revision, 2026-10-20
+
+The maintainer explicitly replaces the implementation-added 59-acceptance /
+5%-risk / 95%-confidence / 50%-coverage research publication prerequisite with
+functional integration acceptance. Required Vega is active after complete
+mandatory validation: a current valid affirmative verdict can satisfy the extra
+condition; rejection, abstention, malformed/unavailable inference and stale state
+block readiness. Deterministic authority and human merge authority are unchanged.
+There is no inactive/advisory substitute, forced verdict or model replacement.
+
+The old statistical criterion remains **not passed**, with its original studies,
+failures and limits preserved below. Domain-level readiness reliability and
+production-calibrated accuracy remain unestablished, not a current delivery
+qualification claim. No adapter, threshold, calibration or numerical tolerance
+changes are made by this revision.
+
+The twelve fixed cases in `tests/fixtures/vega-functional-regressions.json` were
+frozen before their first model execution (SHA256
+`97b4667e3cb3a74b41cfcc0e1ab713dcd046895aa0c8d813f6856b0c9ff68094`).
+They cover three substantive existing Rust gate/tokenizer/calibration contracts,
+matching unmet requirements, uncertainty, contradictions, untrusted instructions,
+declared-but-unexecuted proof and failed/stale deterministic proof. Contract
+checks actually execute before their observations enter the shared production
+projection. Expected outcomes are outside model input. Real-model outcomes are
+required on Metal and CPU, with positive acceptance as well as negative behavior.
+This is bounded functional regression coverage, not independent population labels.
+No fitting or tuning on these cases is authorized or performed.
+
+The prior twelve production protocol requests all produced actual singleton
+false, abstain=false/unbound=false; neither response validation nor the final
+predicate inverted an affirmative answer. Their baseline disclosed constructed
+nonexecution and an unassessed trajectory; it was not a meaningful verified-ready
+positive. New cases test actual executed bounded obligations without hiding their
+fixture provenance in public reports. No original result is relabelled.
+
+The [completion checklist](vega-completion-checklist.md) records the implementation
+and required exact-candidate evidence. The diagnosis below records the previous
+contract and results; its original research-blocking instructions are superseded
+by this explicit decision, while all observations and accuracy limitations remain.
+
+## Preserved pre-revision diagnosis
 
 The Rust integration executes the pinned Vega Boolean contract, but the current
 profile has not demonstrated the readiness judgment required by issue #1445.

@@ -25,7 +25,19 @@ identity recheck still rejects an assessment made stale by a changed plan.
 suite, binding and dispositions for private replay. Its `project` method checks
 deterministic evidence before calling the same production builder. It does not
 authenticate unsigned inputs or authorize live publication. New shared-path and
-wire-response regressions await the next prescribed validation.
+wire-response regressions passed on `fef84896` (53 worker tests and 1,463 library
+tests overall). Current functional acceptance uses twelve fixed cases from
+`tests/fixtures/vega-functional-regressions.json`, frozen before first model
+execution. Three meaningful positive controls must accept; unmet obligations must
+reject, uncertainty/manipulation cannot accept, and failed/stale proof must make
+zero model calls. Contract checks actually execute before observations are built;
+expected outcomes and agent-authored label provenance stay outside the production
+input. Per-case requests/responses and synchronized timings remain private proof.
+The aggregate rechecks the shared wire interpretation rather than trusting a
+reported matching label. These are functional checks, not readiness-calibrated
+accuracy. The explicit 2026-10-20 acceptance revision retires only the historical
+research sample/risk/coverage prerequisite, preserving its failures and every
+deterministic/publication gate.
 
 `vega_readiness::permits_decision` is the shared final boolean predicate used by
 live receipts/publication and native replay diagnostics. Failed proof dominates
@@ -605,7 +617,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b11806b389f96f3e5cd6e2092e8c121c7b10b0730caddb976d42999dcff5acd8`
+- Repository signal fingerprint: `16ba47ed87ae6c4f26efe540c20a139f9d0317cda85d454ff12be8444c71971b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

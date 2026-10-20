@@ -2,6 +2,46 @@
 
 ## Validation Overview
 
+### Current acceptance: active functional integration, 2026-10-20
+
+The maintainer explicitly replaces the implementation-added statistical
+59-acceptance/5%-risk/95%-confidence/50%-coverage research prerequisite. Current
+acceptance requires functional production-path outcomes from the pinned model
+on Metal and CPU, unchanged numerical comparisons/tolerances, actual native
+execution, installation/configuration/fallback tests and all deterministic
+governance/source/native proof. It does not establish domain-calibrated accuracy
+or pass the old criterion. Historical study and failed validation reports below
+remain preserved; their old required-research wording is historical, not an
+instruction to block this approved scope solely on sample admission.
+
+`production_evaluation` freezes twelve scenarios (SHA256
+97b4667e3cb3a74b41cfcc0e1ab713dcd046895aa0c8d813f6856b0c9ff68094)
+before first inference. Actual bounded gate/tokenizer/calibration checks execute
+before their observations enter shared `validation-results.v3`. All three ready
+controls must accept on both backends; unmet obligations must reject; uncertainty,
+contradictory requirements and input manipulation must remain non-ready. Failed
+and stale mandatory proof must block before inference. Expected labels are kept
+outside the request; results cannot be selected, relabelled, threshold-tuned or
+replaced by a fake verdict. No fitting or calibration/model change is performed.
+The strict final reducer rechecks complete per-case/backend coverage, fixed input,
+request/response binding, raw decisions and the shared readiness predicate, plus
+the numerical exports. A failed functional result fails exact-candidate validation.
+Unit/adversarial receipt and runtime tests separately cover malformed results,
+abstention, relevant state/model changes and deterministic proof authority.
+
+Pre-revision `fef84896` passed Buildkite2301 all39source steps, 1,463 library
+tests (three ignored), 53 native tests and three fixed 138/314/4,096-token
+Metal/CPU numerical comparisons. Its terminal report042518Z, SHA256
+06be1331c630bce469e9250e111baf4f2bc8e6902716924d183037e56e51d2af,
+failed the now-superseded research admission check. That failure stays failed.
+New functional tests are authored, not passing until prescribed validation runs.
+
+### Historical validation and superseded research acceptance
+
+The following records retain prior observations and the contract at their time;
+references to "current" source or required research criteria do not supersede
+the explicit current functional acceptance above.
+
 The separate native worker is compiled and tested from its own locked Cargo
 workspace after the complete source verdict. Main-crate CI cannot type-check
 all worker-only code and is not evidence that native compilation succeeded.
@@ -683,7 +723,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b11806b389f96f3e5cd6e2092e8c121c7b10b0730caddb976d42999dcff5acd8`
+- Repository signal fingerprint: `16ba47ed87ae6c4f26efe540c20a139f9d0317cda85d454ff12be8444c71971b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

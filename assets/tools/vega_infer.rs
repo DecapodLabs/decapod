@@ -487,21 +487,8 @@ fn collect_scientific_numerics(proof: &Path) -> Result<(), Box<dyn std::error::E
         Err(error) => serde_json::json!({"collected":false,"publication_ready":false,
             "error":error.to_string()}),
     };
-    // Production-shaped protocol diagnostics are independent of both the old
-    // full-patch experiment and final label admission. They use the exact live
-    // projection/worker/response path. Their synthetic observations establish
-    // neither real repository execution nor model readiness calibration.
-    let production_path = proof.with_extension("production-protocol.json");
-    let production = match collect_production_protocol(&production_path)
-        .and_then(|()| context.reference(&production_path))
-    {
-        Ok(reference) => {
-            serde_json::json!({"collected":true,"publication_ready":false,"receipt":reference})
-        }
-        Err(error) => {
-            serde_json::json!({"collected":false,"publication_ready":false,"error":error.to_string()})
-        }
-    };
+    // Functional model cases run independently in the six subsequent slots.
+    // Preserve old protocol/study failures without rerunning exposed examples.
     for name in NUMERICAL_PHASES {
         let path = proof.with_extension(format!("{name}.json"));
         let result = match name {
@@ -534,110 +521,105 @@ fn collect_scientific_numerics(proof: &Path) -> Result<(), Box<dyn std::error::E
     context.publish(Phase::Numeric,proof,passed,serde_json::json!({
         "status":"collected_acceptance_pending","publication_ready":false,
         "public_review_source_audit":source_audit,
-        "production_protocol_diagnostics":production,
         "required_steps":steps,"outputs":outputs,"wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
         "scope":"Numerical collection only; failures preserved for required final aggregate, not passing scientific acceptance."
     }))
 }
 
-fn collect_production_protocol(proof: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    use vega_readiness::{Backend, BackendPreference};
-    let started = std::time::Instant::now();
-    let setup = vega_setup::run(&vega_setup::SetupOptions::default())?;
-    let installation = setup
-        .model_directory
-        .ok_or("production diagnostic installation missing")?;
-    let manifest_digest = setup
-        .manifest_digest
-        .ok_or("production diagnostic manifest missing")?;
-    if manifest_digest != SCIENTIFIC_BASELINE {
-        return Err("production diagnostic cannot silently change the model".into());
+fn production_inference(
+    installation: &Path,
+    backend: vega_readiness::Backend,
+    case_id: &str,
+    state: &str,
+) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    let request = Request {
+        schema: vega_readiness::WORKER_SCHEMA.into(),
+        request_id: format!("functional-{}-{case_id}", backend.device()),
+        input_digest: vega_readiness::hash(state.as_bytes()),
+        installation: installation.into(),
+        manifest_digest: SCIENTIFIC_BASELINE.into(),
+        state: state.into(),
+        alpha: "0.1".into(),
+        risk: "0.1".into(),
+        backend,
+    };
+    let temporary = tempfile::tempdir()?;
+    let raw_path = temporary.path().join("proof.json");
+    let attempt = std::time::Instant::now();
+    let response = inference_response(&request, Some(&raw_path));
+    let outcome = response.validated_outcome(&request)?;
+    let raw: serde_json::Value =
+        serde_json::from_slice(&read_bounded(&raw_path, MAX_PROOF_BYTES as u64)?)?;
+    if raw["input_digest"] != request.input_digest
+        || raw["outcome"] != serde_json::to_value(outcome)?
+    {
+        return Err("production diagnostic raw output binding differs".into());
     }
-    let mut records = Vec::new();
-    for backend in [BackendPreference::Auto.resolve(), Backend::Cpu] {
-        for variant in [
-            "failed-proof",
-            "stale-proof",
-            "baseline",
-            "missing-proof-hook",
-            "unresolved-question",
-            "contradiction",
-            "phase-gate",
-            "declaration-is-not-proof",
-        ] {
-            let snapshot = production_evaluation::fixture(variant)?;
-            let result = production_evaluation::evaluate(&snapshot, |state| {
-                let request = Request {
-                    schema: vega_readiness::WORKER_SCHEMA.into(),
-                    request_id: format!("production-protocol-{}-{variant}", backend.device()),
-                    input_digest: vega_readiness::hash(state.as_bytes()),
-                    installation: installation.clone(),
-                    manifest_digest: manifest_digest.clone(),
-                    state: state.into(),
-                    alpha: "0.1".into(),
-                    risk: "0.1".into(),
-                    backend,
-                };
-                let temporary = tempfile::tempdir()?;
-                let raw_path = temporary.path().join("proof.json");
-                let attempt = std::time::Instant::now();
-                let response = inference_response(&request, Some(&raw_path));
-                let outcome = response.validated_outcome(&request)?;
-                let raw: serde_json::Value =
-                    serde_json::from_slice(&read_bounded(&raw_path, MAX_PROOF_BYTES as u64)?)?;
-                if raw["input_digest"] != request.input_digest
-                    || raw["outcome"] != serde_json::to_value(outcome)?
-                {
-                    return Err("production diagnostic raw output binding differs".into());
-                }
-                Ok(serde_json::json!({
-                    "response":response,"decision":outcome.decision()?,
-                    "model_gate_allows_with_fixture_proof":vega_readiness::permits_decision(true,vega_readiness::Mode::Required,outcome.decision()?),
-                    "model_cannot_override_failed_proof":!vega_readiness::permits_decision(false,vega_readiness::Mode::Required,outcome.decision()?),
-                    "wall_clock_ms":attempt.elapsed().as_secs_f64()*1000.0,
-                    "stage_wall_clock_ms":raw["wall_clock_ms"],
-                    "peak_resident_bytes":raw["peak_resident_bytes"],"memory_scope":raw["memory_scope"],
-                    "proof_sha256":vega_readiness::hash(&read_bounded(&raw_path,MAX_PROOF_BYTES as u64)?)
-                }))
-            });
-            records.push(serde_json::json!({"variant":variant,"backend":backend,
-                "snapshot_sha256":vega_readiness::hash(&serde_json::to_vec(&snapshot)?),
-                "diagnostic":match result {
-                    Ok(value)=>value,
-                    Err(error)=>serde_json::json!({"execution":"failed","error":error.to_string(),"publication_ready":false})
-                }
-            }));
-        }
-    }
-    write_private_proof(
-        proof,
-        &serde_json::json!({
-            "schema":"decapod.vega-production-protocol-diagnostics.v1",
-            "publication_ready":false,"independent_labelled_units":0,
-            "manifest_digest":manifest_digest,"records":records,
-            "wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
-            "scope":"Fixed development-only constructed protocol observations. Actual model execution through shared production projection and response checks, not repository proof or readiness-domain qualification. No fitting or final holdout use."
-        }),
-    )?;
-    Ok(())
+    Ok(serde_json::json!({
+        "request":request,"response":response,"decision":outcome.decision()?,
+        "model_gate_allows_with_fixture_proof":vega_readiness::permits_decision(true,vega_readiness::Mode::Required,outcome.decision()?),
+        "model_cannot_override_failed_proof":!vega_readiness::permits_decision(false,vega_readiness::Mode::Required,outcome.decision()?),
+        "wall_clock_ms":attempt.elapsed().as_secs_f64()*1000.0,
+        "stage_wall_clock_ms":raw["wall_clock_ms"],
+        "peak_resident_bytes":raw["peak_resident_bytes"],"memory_scope":raw["memory_scope"],
+        "proof_sha256":vega_readiness::hash(&read_bounded(&raw_path,MAX_PROOF_BYTES as u64)?)
+    }))
 }
 fn collect_readiness_shard(index: usize, proof: &Path) -> Result<(), Box<dyn std::error::Error>> {
     use scientific_collection::{Collection, Phase, SHARDS};
     if index >= SHARDS {
-        return Err("invalid frozen shard index".into());
+        return Err("invalid functional shard index".into());
     }
     let context = Collection::load(proof)?;
     let started = std::time::Instant::now();
-    // The v2 benchmark is exposed diagnostic data and bypasses production v3.
-    // Repeating it cannot qualify the live task. Preserve the required final
-    // condition as missing, rather than relabeling that experiment a holdout.
-    // Independent Metal/CPU/numerical/protocol collection has already run.
-    let admission = production_evaluation::final_admission()?;
-    context.publish(Phase::Shard(index),proof,false,serde_json::json!({
-        "status":"required_production_evaluation_missing","publication_ready":false,
-        "shard":{"index":index,"count":SHARDS},"admission":admission,
+    let cases = production_evaluation::functional_cases()?;
+    let setup = vega_setup::run(&vega_setup::SetupOptions::default())?;
+    if setup.manifest_digest.as_deref() != Some(SCIENTIFIC_BASELINE) {
+        return Err("functional regression model pin changed".into());
+    }
+    let installation = setup
+        .model_directory
+        .ok_or("missing functional model installation")?;
+    let mut records = Vec::new();
+    for case in &cases["cases"]
+        .as_array()
+        .ok_or("missing functional cases")?[index * 2..index * 2 + 2]
+    {
+        let id = case["id"].as_str().ok_or("functional case id missing")?;
+        let family = case["family"].as_str().ok_or("functional family missing")?;
+        let checks = production_evaluation::execute_contract_checks(family, &installation)?;
+        let execution_digest = vega_readiness::hash(&serde_json::to_vec(&checks)?);
+        let snapshot =
+            production_evaluation::functional_snapshot(case, &checks, &execution_digest)?;
+        for backend in [
+            vega_readiness::BackendPreference::Auto.resolve(),
+            vega_readiness::Backend::Cpu,
+        ] {
+            let diagnostic = match production_evaluation::evaluate(&snapshot, |state| {
+                production_inference(&installation, backend, id, state)
+            }) {
+                Ok(value) => value,
+                Err(error) => {
+                    serde_json::json!({"execution":"failed","error":error.to_string(),"publication_ready":false})
+                }
+            };
+            records.push(
+                serde_json::json!({"id":id,"backend":backend,"executed_checks":checks,
+                "execution_digest":execution_digest,"snapshot":snapshot,"diagnostic":diagnostic,
+                "expected_matched":production_evaluation::expected_matches(case,&diagnostic)}),
+            );
+        }
+    }
+    let matched = records
+        .iter()
+        .all(|record| record["expected_matched"] == true);
+    context.publish(Phase::Shard(index),proof,matched,serde_json::json!({
+        "status":"functional_collection_completed","publication_ready":false,
+        "shard":{"index":index,"count":SHARDS},"records":records,
+        "functional_contract_sha256":vega_readiness::hash(&serde_json::to_vec(&cases)?),
+        "domain_accuracy":"unestablished","fitting_performed":false,
         "wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
-        "scope":"No final model dispatch without admitted untouched production units. Required readiness qualification remains unsatisfied; historical benchmark and failures remain available for diagnostic use."
+        "scope":"Fixed bounded functional checks through actual production projection/model/wire/final predicate; not independently labelled or representative readiness calibration. Collection success alone grants no publication authority."
     }))
 }
 fn check_evaluation_binding(
@@ -753,7 +735,7 @@ fn verify_scientific_collection(proof: &Path) -> Result<(), Box<dyn std::error::
     let (mut report, failure) = match verified {
         Ok(report) => {
             let failure = (report["all_required_scientific_conditions_passed"] != true)
-                .then(|| "required scientific acceptance unsatisfied; inspect numerical results and frozen risk/coverage/label limits".to_owned());
+                .then(|| "required functional or numerical acceptance unsatisfied; inspect fixed production-path outcomes and numerical results".to_owned());
             (report, failure)
         }
         Err(error) => (
@@ -774,7 +756,7 @@ fn verify_scientific_collection(proof: &Path) -> Result<(), Box<dyn std::error::
 }
 fn verify_scientific_contents(
     context: &scientific_collection::Collection,
-    proof: &Path,
+    _proof: &Path,
 ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
     use scientific_collection::{Phase, SHARDS};
     let numeric = context.read(Phase::Numeric)?;
@@ -816,66 +798,102 @@ fn verify_scientific_contents(
         numeric_passed &=
             recheck_numeric_exports(context, name, &child, &reference, &configuration, &weights)?;
     }
-    let admission = production_evaluation::final_admission()?;
-    if admission["final_evaluation_eligible"] != true {
-        for index in 0..SHARDS {
-            let phase = context.read(Phase::Shard(index))?;
-            if phase.report["admission"] != admission
-                || phase.report["shard"] != serde_json::json!({"index":index,"count":SHARDS})
-            {
-                return Err("mismatched final admission records".into());
-            }
+    let cases = production_evaluation::functional_cases()?;
+    let contract_digest = vega_readiness::hash(&serde_json::to_vec(&cases)?);
+    let mut functional_passed = true;
+    let mut outcomes = Vec::new();
+    for index in 0..SHARDS {
+        let phase = context.read(Phase::Shard(index))?;
+        if phase.report["shard"] != serde_json::json!({"index":index,"count":SHARDS})
+            || phase.report["functional_contract_sha256"] != contract_digest
+            || phase.report["domain_accuracy"] != "unestablished"
+            || phase.report["fitting_performed"] != false
+        {
+            return Err("functional phase binding or acceptance contract differs".into());
         }
-        return Ok(serde_json::json!({
-            "schema":"decapod.vega-scientific-aggregate.v1","publication_ready":false,
-            "numeric_checks_passed":numeric_passed,"readiness_evaluation":admission,
-            "production_protocol_diagnostics":numeric.report["production_protocol_diagnostics"],
-            "runtime_sha256":context.runtime_sha256,"manifest_digest":SCIENTIFIC_BASELINE,
-            "all_required_scientific_conditions_passed":false,
-            "scope":"Independent numerical collection completed; exposed full-patch v2 cannot qualify production. Required production-shaped independently supported evaluation remains missing. No criterion, model, calibration or deterministic gate was relaxed."
-        }));
-    }
-    let inputs = proof.with_extension("evaluation-inputs.json");
-    prepare_evaluation(&inputs)?;
-    let receipt: serde_json::Value =
-        serde_json::from_slice(&read_bounded(&inputs, MAX_PROOF_BYTES as u64)?)?;
-    let bytes = read_bounded(&inputs.with_extension("corpus.json"), 8 * 1024 * 1024)?;
-    if receipt["corpus_sha256"] != SCIENTIFIC_CORPUS
-        || vega_readiness::hash(&bytes) != SCIENTIFIC_CORPUS
-    {
-        return Err("final frozen corpus identity differs".into());
-    }
-    let corpus: serde_json::Value = serde_json::from_slice(&bytes)?;
-    let mut backends = serde_json::Map::new();
-    for backend in ["auto", "cpu"] {
-        let mut shards = Vec::new();
-        for index in 0..SHARDS {
-            let phase = context.read(Phase::Shard(index))?;
-            if phase.report["shard"] != serde_json::json!({"index":index,"count":SHARDS})
-                || phase.report["reports"][backend]["collection_completed"] != true
-            {
-                return Err("incomplete or mismatched backend collection".into());
-            }
-            let report = context.read_reference(&phase.report["reports"][backend]["receipt"])?;
-            check_evaluation_binding(&report, &context.runtime_sha256, backend)?;
-            shards.push(report);
+        let records = phase.report["records"]
+            .as_array()
+            .ok_or("missing functional records")?;
+        if records.len() != 4 {
+            return Err("incomplete functional case/backend coverage".into());
         }
-        backends.insert(
-            backend.into(),
-            readiness_evaluation::aggregate(&corpus, "holdout", &shards)?,
-        );
+        for (offset, record) in records.iter().enumerate() {
+            let case = &cases["cases"][index * 2 + offset / 2];
+            let backend = if offset % 2 == 0 {
+                vega_readiness::BackendPreference::Auto.resolve()
+            } else {
+                vega_readiness::Backend::Cpu
+            };
+            if record["id"] != case["id"] || record["backend"] != serde_json::to_value(backend)? {
+                return Err("duplicate, reordered or foreign functional case/backend".into());
+            }
+            let checks = production_evaluation::execute_contract_checks(
+                case["family"].as_str().ok_or("missing family")?,
+                &installation,
+            )?;
+            if serde_json::to_value(&checks)? != record["executed_checks"] {
+                return Err("functional executed checks differ from candidate contract".into());
+            }
+            let execution_digest = vega_readiness::hash(&serde_json::to_vec(&checks)?);
+            if record["execution_digest"] != execution_digest {
+                return Err("functional execution record changed".into());
+            }
+            let expected_snapshot =
+                production_evaluation::functional_snapshot(case, &checks, &execution_digest)?;
+            let snapshot: vega_readiness::EvaluationSnapshot =
+                serde_json::from_value(record["snapshot"].clone())?;
+            if snapshot.project().ok() != expected_snapshot.project().ok() {
+                return Err("functional projection differs from fixed case".into());
+            }
+            let diagnostic = &record["diagnostic"];
+            if diagnostic["execution"] == "executed" {
+                let state = snapshot.project()?;
+                let request: Request =
+                    serde_json::from_value(diagnostic["result"]["request"].clone())?;
+                let response: Response =
+                    serde_json::from_value(diagnostic["result"]["response"].clone())?;
+                if request.backend != backend
+                    || request.manifest_digest != SCIENTIFIC_BASELINE
+                    || request.state != state
+                    || request.input_digest != vega_readiness::hash(state.as_bytes())
+                    || diagnostic["state_sha256"] != request.input_digest
+                {
+                    return Err("functional request/material binding differs".into());
+                }
+                let outcome = response.validated_outcome(&request)?;
+                let decision = outcome.decision()?;
+                if diagnostic["result"]["decision"] != serde_json::to_value(decision)?
+                    || diagnostic["result"]["model_gate_allows_with_fixture_proof"]
+                        != vega_readiness::permits_decision(
+                            true,
+                            vega_readiness::Mode::Required,
+                            decision,
+                        )
+                    || vega_readiness::permits_decision(
+                        false,
+                        vega_readiness::Mode::Required,
+                        decision,
+                    )
+                    || diagnostic["result"]["model_cannot_override_failed_proof"] != true
+                {
+                    return Err("functional decision interpretation differs".into());
+                }
+            }
+            let matched = production_evaluation::expected_matches(case, diagnostic);
+            functional_passed &= matched;
+            outcomes.push(serde_json::json!({"id":case["id"],"backend":backend,"expected":case["expected"],"execution":diagnostic["execution"],"decision":diagnostic["result"]["decision"],"matched":matched}));
+        }
     }
-    let accepted = numeric_passed
-        && backends.values().all(|report| {
-            report["frozen_numeric_criterion_met"] == true
-                && report["production_calibration"] == "verified"
-        });
+    let accepted = numeric_passed && functional_passed;
     Ok(serde_json::json!({
         "schema":"decapod.vega-scientific-aggregate.v1","publication_ready":false,
-        "numeric_checks_passed":numeric_passed,"readiness_evaluation":backends,
+        "numeric_checks_passed":numeric_passed,"functional_checks_passed":functional_passed,
+        "functional_outcomes":outcomes,"functional_contract_sha256":contract_digest,
+        "acceptance_contract":"maintainer-approved-functional-integration-2026-10-20",
+        "domain_readiness_accuracy":"unestablished","old_research_criterion_passed":false,
         "runtime_sha256":context.runtime_sha256,"manifest_digest":SCIENTIFIC_BASELINE,
-        "corpus_sha256":SCIENTIFIC_CORPUS,"all_required_scientific_conditions_passed":accepted,
-        "scope":"Strict current-run aggregate; diagnostic collection never waives numerical, coverage, risk or label-authority conditions. Kernel retains final validation authority."
+        "all_required_scientific_conditions_passed":accepted,
+        "scope":"Strict current-run numerical and fixed production-path functional acceptance under the explicit scope revision. This does not pass the historical statistical criterion or establish calibrated readiness accuracy. Kernel retains deterministic and publication authority."
     }))
 }
 

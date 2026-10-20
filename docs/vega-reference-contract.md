@@ -1,4 +1,46 @@
-# Frozen reference criteria and measured verification
+# Numerical reference contract and measured verification
+
+## Current functional acceptance revision, 2026-10-20
+
+The maintainer replaced the implementation-added 59-acceptance/5%-risk/
+95%-confidence/50%-coverage research prerequisite with functional active Vega
+integration acceptance. The old criterion is **not passed**. Its study, failures,
+source-audit/admission ledgers and limitations remain preserved below as historical
+research, not current instructions to block solely on missing research units.
+No upstream calibration, model identity or numerical tolerance is changed.
+Domain-level readiness reliability remains unestablished.
+
+The reviewed eight-run mechanism now retains the three numerical phases, six
+pairs of fixed functional cases on both backends, and a required strict aggregate.
+Actual candidate Rust gate/tokenizer/calibration contract checks supply observations
+to the shared production projection/request/response/final predicate. Cases and
+expected outcomes are frozen before model execution in
+`tests/fixtures/vega-functional-regressions.json`; labels stay outside the prompt.
+All ready controls must accept, unmet obligations must reject and uncertainty,
+contradiction/manipulation and failed/stale-proof controls must remain non-ready.
+The reducer rechecks complete case/backend coverage, bindings, actual raw verdicts
+and unchanged numerical exports. A reported match or successful collection cannot
+authorize publication. No fitting or threshold tuning is performed.
+
+Pre-revision `fef84896` passed all39 source steps,1463 library tests/3ignored,
+53 native tests and the three fixed numerical Metal/CPU fixtures. Full report
+042518Z (SHA25606be1331c630bce469e9250e111baf4f2bc8e6902716924d183037e56e51d2af)
+failed the old admission condition. Synchronized Metal/CPU compute for138/314/4096
+tokens was0.181/1.637s,0.381/3.604s,5.278/46.282s; whole verified requests were
+13.470/14.910s,13.673/16.885s,18.595/59.487s. Peak process-lifetime RSS reached
+5090705408B including prior/reference allocations, not isolated GPU/model memory.
+Long Metal sampled hidden maxabs5.151912539247405e-5, pooled chunks3.1408493256002146e-5,
+and combined-engine maxabs1.9880187955262363e-4Metal/3.723481778798027e-5CPU met the
+unchanged criteria. Three fresh pure-text cases, shared generic infrastructure and
+same-agent reference authorship do not establish all-mode or independent human
+reference correctness. Actual unsupported-CUDA-to-CPU component fallback passed;
+NVIDIA hardware and full Linux loader-companion routing remain separate limits.
+New functional outcomes require the next prescribed exact-candidate validation.
+
+## Preserved earlier criteria and results
+
+Research qualification and old recipe descriptions below are historical; numerical
+equations, artifact pins and comparison tolerances remain current and unchanged.
 
 **Current product decision:** [the contract diagnosis](vega-readiness-decision.md)
 audits all 29 accepts from the completed 9f017d31 run. Its v2 benchmark payload

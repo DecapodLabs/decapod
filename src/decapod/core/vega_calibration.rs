@@ -5,8 +5,10 @@
 //! Algorithm ported from Apache-2.0 vegaml `_common.py` and `_api.py` at
 //! 21a17c90624aa85cec60b1092fa72cb8b720f71a. This preserves upstream uncertainty
 //! signals; no confidence constant is substituted for checkpoint calibration.
-//! Numerical parity with a real checkpoint and readiness-domain calibration are
-//! separate, unproven acceptance obligations. Adapter calibration metadata can
+//! Fixed-checkpoint numerical parity and domain-level readiness reliability are
+//! separate claims. The latter remains unestablished; functional integration
+//! acceptance never turns upstream calibration into a domain accuracy guarantee.
+//! Adapter calibration metadata can
 //! be represented/routed here, but the base engine rejects adapter execution.
 
 use super::vega_engine::{EngineReadout, QuestionType, Result, VegaError};

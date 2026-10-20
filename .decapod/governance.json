@@ -397,12 +397,11 @@
       ]
     },
     "vega1445-readiness-role-qualification": {
-      "statement": "Original working required Vega readiness remains delivery scope; inactive/advisory proposal was explicitly rejected. No existing compatible published profile establishes readiness-domain qualification; supported adapter/head/calibration source inspected. Zero complete production final units are admitted by the reviewed source ledger. Preserve risk/coverage, old failures and live product semantics; no fitting or silent model changes are justified yet.",
-      "falsifier": "A production-shaped independently supported disjoint development/calibration/final study meets unchanged criteria with compatible pinned profile; public generic intent metrics alone are insufficient.",
-      "status": "blocked",
+      "statement": "Maintainer explicitly replaced implementation-added statistical readiness qualification with functional integration acceptance2026-10-20. Required Vega remains active after mandatory proof; fixed real-model production-path positives/negatives must pass Metal+CPU, compatible calibration math/assets and unchanged numerical checks remain mandatory. Historical failed research is not passed and domain accuracy remains unestablished.",
+      "falsifier": "A failed/stale/malformed mandatory proof or verdict permits readiness, meaningful positive controls cannot accept, unmet obligations/manipulation accept, fixed cases or thresholds are tuned to manufacture a pass, numerical tolerance changes, or old research/domain accuracy is falsely claimed.",
+      "status": "open",
       "proof_refs": [
-        "docs/vega-readiness-decision.md",
-        "tests/fixtures/vega-public-review-sources/final-admission-review.json"
+        "https://github.com/DecapodLabs/decapod/issues/1445"
       ]
     }
   },
@@ -800,6 +799,15 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261020T041040Z.json"
       ]
+    },
+    {
+      "id": "vega1445-approved-functional-acceptance",
+      "summary": "Implement explicit functional Vega acceptance revision with fixed actual-production Metal/CPU cases, preserve failed research and unchanged deterministic/numerical authority",
+      "input_digest": "sha256:ded374d42d036bbac68305af582ea2d4ccc31911cb692dd1002bc84123aa92c1",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261020T042518Z.json",
+        "https://github.com/DecapodLabs/decapod/issues/1445"
+      ]
     }
   ],
   "intents": {
@@ -830,47 +838,45 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Complete the existing issue1445 Rust-only Vega post-validation integration on its preserved branch and original task. Vega is an optional team configuration selectable during init; shared policy/model/calibration identities must work across maintainers without committed machine paths. Automatic execution prefers Apple Metal on macOS and supported GPU on other systems (initial pinned CUDA/NVIDIA path, other GPU availability explicitly bounded), with safe CPU fallback using the same pinned model and a fresh bounded attempt; record actual backend, precision, runtime identity and fallback failures. Preserve the chosen Candle/candle-vllm hidden-state path and separate SafeTensors worker, external immutable assets/cache/integrity/atomic activation, active Jev removal, minimal bounded validation input, deterministic authority and fail-closed stale/missing/malformed/abstaining decisions. Preserve all source history, original task provenance, existing failed validation and native/parity/readiness-calibration proof obligations. Agent publishes only after exact-source accepted-controller validation and required genuine native/reference/holdout evidence; human retains merge/release authority.",
+      "intent": "Deliver one active Rust-native optional team-configured required Vega post-validation readiness integration for #1445. Production validation-results.v3 preserves intent, obligations and uncertainty; mandatory failed/missing/stale proof blocks before inference. Only bound valid affirmative model output satisfies configured readiness; rejection/abstention/invalid/failure block. User-approved acceptance revision2026-10-20 replaces implementation-added59acceptance/5%risk/95%confidence/50%coverage qualification with functional production-path model behavior and regression evidence, actual Metal/CPU/fallback, pinned artifacts and unchanged numerical comparisons. Preserve old studies/failures without claiming production-calibrated accuracy; no inactive/advisory substitute, forced verdict, Python, paid compute, external sharing, unrelated infrastructure, merge or release.",
       "phases": [],
       "proof_hooks": [
-        "Collect model-free dispatch and pinned-model Metal/explicit-CPU diagnostics independently of numerical-reference and readiness-evaluation acceptance; diagnostic success never satisfies those acceptance conditions.",
-        "Produce reviewable public pinned Rust reference calculations and agent-curated public-snapshot requirements cases; freeze grouped holdout before tuning and report independence and adjudication limits explicitly."
+        "Exact final candidate passes full official decapod validate with the complete configured Buildkite source proof, separately locked native tests, actual Metal/CPU model execution and unchanged separate Rust numerical comparisons; failures remain recorded.",
+        "All fixed production-path functional ready controls accept, unmet obligations reject, uncertainty/contradiction/manipulation remain non-ready; failed/stale/missing mandatory proof blocks before model and malformed/stale verdicts cannot authorize readiness. Preserve failed historical research without claiming domain accuracy or old statistical success."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Actual304sourceBuildkite2296all39and1463librarytests passed after quota reset; native worker check0 then failed E0308 before tests/model. Repair final collector write with question-mark conversion plus Ok unit result. No protocol, model, math, pins, scope, calibration, policy, final gate, recipe or custody changes. VALIDATION authored prose distinguishes actual separately locked native compilation from main source success and requires export IO failures to propagate. Reviewed helper9e58; same d6d98runrecipe. Preserve041040Z failure; rerun full exact-source validate without manual worker build or false native success.",
-          "reviewed_code_fingerprint": "b11806b389f96f3e5cd6e2092e8c121c7b10b0730caddb976d42999dcff5acd8",
-          "spec_material_hash": "d86e1629b984c43eb0e5fb2382649179c45a9eb9a10cf46fdc34d992999de71e"
+          "reason": "Explicit user acceptance revision2026-10-20 retires only implementation-added59acceptance/5%risk/95%confidence/50%coverage research prerequisite. Required active functional model conditions and all deterministic source/native/numerical gates remain. Sharedproductionprojection/wire/finalpredicate used by12fixed cases frozenSHA97b4667e before firstinference. ActualcandidateRustcontractchecks supply observations, expectedlabels outsideinput. No model/threshold/calibration/tolerance/recipeargs/deadline/ownership change. Historicfailedstudies/limits preserved; domainaccuracyunestablished. Reviewedsource0e9afdd8, configbackedup, eight-runreciped6d9 unchanged. Fullvalidate mustexecute allnewtests/modelcases; authorednotpassed.",
+          "reviewed_code_fingerprint": "16ba47ed87ae6c4f26efe540c20a139f9d0317cda85d454ff12be8444c71971b",
+          "spec_material_hash": "1cf74139deb8f287a5f109ac8364952aff366ac576682a3ea0c6986b835b2974"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Actual304sourceBuildkite2296all39and1463librarytests passed after quota reset; native worker check0 then failed E0308 before tests/model. Repair final collector write with question-mark conversion plus Ok unit result. No protocol, model, math, pins, scope, calibration, policy, final gate, recipe or custody changes. VALIDATION authored prose distinguishes actual separately locked native compilation from main source success and requires export IO failures to propagate. Reviewed helper9e58; same d6d98runrecipe. Preserve041040Z failure; rerun full exact-source validate without manual worker build or false native success.",
-          "reviewed_code_fingerprint": "b11806b389f96f3e5cd6e2092e8c121c7b10b0730caddb976d42999dcff5acd8",
-          "spec_material_hash": "5c65fc97931e5d91d77dc5bfaf0b4247c3095e17344804eadcc44d6560a8ae8d"
+          "reason": "Explicit user acceptance revision2026-10-20 retires only implementation-added59acceptance/5%risk/95%confidence/50%coverage research prerequisite. Required active functional model conditions and all deterministic source/native/numerical gates remain. Sharedproductionprojection/wire/finalpredicate used by12fixed cases frozenSHA97b4667e before firstinference. ActualcandidateRustcontractchecks supply observations, expectedlabels outsideinput. No model/threshold/calibration/tolerance/recipeargs/deadline/ownership change. Historicfailedstudies/limits preserved; domainaccuracyunestablished. Reviewedsource0e9afdd8, configbackedup, eight-runreciped6d9 unchanged. Fullvalidate mustexecute allnewtests/modelcases; authorednotpassed.",
+          "reviewed_code_fingerprint": "16ba47ed87ae6c4f26efe540c20a139f9d0317cda85d454ff12be8444c71971b",
+          "spec_material_hash": "d5b0fa449fbf205c7d703d75e290811e639a2d3c8a764f543cad951ad6c272bd"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Actual304sourceBuildkite2296all39and1463librarytests passed after quota reset; native worker check0 then failed E0308 before tests/model. Repair final collector write with question-mark conversion plus Ok unit result. No protocol, model, math, pins, scope, calibration, policy, final gate, recipe or custody changes. VALIDATION authored prose distinguishes actual separately locked native compilation from main source success and requires export IO failures to propagate. Reviewed helper9e58; same d6d98runrecipe. Preserve041040Z failure; rerun full exact-source validate without manual worker build or false native success.",
-          "reviewed_code_fingerprint": "b11806b389f96f3e5cd6e2092e8c121c7b10b0730caddb976d42999dcff5acd8",
+          "reason": "Functional acceptance revision changes no privilege, authentication, storage, IPC, backend retry, artifact pin or publication authority. Failed/stale mandatoryproof blocks beforemodel; untrustedcontradiction/injection cases cannotpermit readiness. Models remain external and verified, same runtime/nodeadlineextension, noPython/paidcompute/externalsharing. Broadersecurityscopeunchanged; historicalresearch isnot waived into accuracy.",
+          "reviewed_code_fingerprint": "16ba47ed87ae6c4f26efe540c20a139f9d0317cda85d454ff12be8444c71971b",
           "spec_material_hash": "d22b96974fa42a386a9bffb7a0e118243b3ef7ad15d07f65e252b1ee1339d2e4"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Do not publish the Vega feature on diagnostic/source success alone: independent numerical parity and defensible readiness-domain held-out evidence remain mandatory; agent-curated labels are not human-reviewed production calibration."
-      ],
+      "stop_conditions": [],
       "title": "Validate accepted-base Rust vega readiness",
       "todo_ids": [
         "feat_01m52fnwybfvhfdj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792470274Z"
+      "updated_at": "1792482314Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -882,7 +888,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:24435ea9c4386c2892cb2f9d8aeeebdc511b35183a6b8ea509ff8cd132a70267",
+      "artifact_hash": "sha256:a5ea28faa559aaf6cd9740f7bba199528dc53ccb8da34d9863c2f73977182e03",
       "checks": [
         {
           "name": "bazel_metadata_regeneration",
@@ -1241,6 +1247,10 @@
           "status": "unavailable"
         },
         {
+          "name": "new_functional_tests",
+          "status": "unavailable"
+        },
+        {
           "name": "new_model_execution",
           "status": "unavailable"
         },
@@ -1254,6 +1264,10 @@
         },
         {
           "name": "new_native_tests",
+          "status": "unavailable"
+        },
+        {
+          "name": "new_real_model_results",
           "status": "unavailable"
         },
         {
@@ -1302,6 +1316,30 @@
         },
         {
           "name": "portable_library_tests_24c706f5",
+          "status": "passed"
+        },
+        {
+          "name": "prior_fef_full",
+          "status": "failed"
+        },
+        {
+          "name": "prior_fef_full_validation",
+          "status": "failed"
+        },
+        {
+          "name": "prior_fef_library1463",
+          "status": "passed"
+        },
+        {
+          "name": "prior_fef_native53",
+          "status": "passed"
+        },
+        {
+          "name": "prior_fef_numerical3",
+          "status": "passed"
+        },
+        {
+          "name": "prior_fef_source39",
           "status": "passed"
         },
         {
@@ -1505,7 +1543,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "recovery",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -1953,10 +1991,24 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 65
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:66",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 66
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:67",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 67
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 65,
+        "next_sequence": 67,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -3367,6 +3419,55 @@
                 "validation_findings": [
                   "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR."
                 ]
+              },
+              {
+                "action": "intent_revision",
+                "custody_event_id": "event:66",
+                "observations": [
+                  "/private/tmp/vega-1191-validation-20261020T042518Z.json"
+                ],
+                "proof_refs": [
+                  "prior_fef_native53",
+                  "prior_fef_numerical3",
+                  "prior_fef_full_validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 66,
+                "validation_findings": [
+                  "Explicit latest user decision replaces only research qualification prerequisite, retains all deterministic and functional required active-model gates. Original task/custody/branch preserved; current remoteHEADfef84896/master7371ad25, clean. Prior12modelrequests all actual singletonreject; constructed baseline discloses nonexecution and unassessed trajectory so not a meaningful ready positive. Need faithful production-shaped known-outcome cases, shared code, unchanged model/calibration/tolerances, preserve failures and no cherry-picking."
+                ]
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:67",
+                "observations": [
+                  "assets/tools/vega-native/production_evaluation.rs",
+                  "assets/tools/vega_infer.rs",
+                  "tests/fixtures/vega-functional-regressions.json",
+                  "docs/agent/repository-readiness.md",
+                  "docs/agent/config-schema.md",
+                  "docs/vega-completion-checklist.md",
+                  "/private/tmp/vega-1191-validation-20261020T042518Z.json",
+                  "https://github.com/DecapodLabs/decapod/issues/1445"
+                ],
+                "proof_refs": [
+                  "new_functional_tests",
+                  "new_real_model_results",
+                  "prior_fef_source39",
+                  "prior_fef_library1463",
+                  "prior_fef_native53",
+                  "prior_fef_numerical3",
+                  "prior_fef_full"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 67,
+                "validation_findings": [
+                  "User explicitly authorizes functional acceptance replacingresearchqualification, not fabricatedsuccess/accuracy. Fixedcasebytes97b4667e frozen before firstmodelrun, nofitting/threshold/model/calibration/tolerancechange. Actualcontractchecksrun beforeobservationconstruction; three meaningful positives, negative/uncertain/manipulated/declared-proof and failed/stale controls. Sharedproduction code andstrictfinalreducer rederiveoutcomes; oldstudiesfailures preserved. Issue1445andbroader1052/1069/1070/1398/1024updated; closeonlyfullyresolved1445. Sourceconfigreview0e9afdd8 unchanged8runargs; no newprereq/task/branch. Preserve originaltask/branch andfullfinalvalidationgates."
+                ]
               }
             ]
           }
@@ -3411,6 +3512,7 @@
         "/private/tmp/vega-1191-validation-20261020T030933Z.json",
         "/private/tmp/vega-1191-validation-20261020T031718Z.json",
         "/private/tmp/vega-1191-validation-20261020T041040Z.json",
+        "/private/tmp/vega-1191-validation-20261020T042518Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-1445-5635-clippy.log",
         "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
@@ -3485,6 +3587,7 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39183631846",
         "https://github.com/DecapodLabs/decapod/actions/runs/39196818895",
         "https://github.com/DecapodLabs/decapod/actions/runs/39201940594",
+        "https://github.com/DecapodLabs/decapod/issues/1445",
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6259258948",
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6281028106",
         "https://github.com/DecapodLabs/decapod/pull/1458",
@@ -3561,6 +3664,7 @@
         "src/decapod/lib.rs",
         "tests/cli_contract_enforcement.rs",
         "tests/cli_contracts.rs",
+        "tests/fixtures/vega-functional-regressions.json",
         "tests/fixtures/vega-public-review-sources/README.md",
         "tests/fixtures/vega-public-review-sources/exposed-v2-acceptance-audit.json",
         "tests/fixtures/vega-public-review-sources/final-admission-review.json",
@@ -3603,6 +3707,7 @@
         "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
         "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority.",
+        "Explicit latest user decision replaces only research qualification prerequisite, retains all deterministic and functional required active-model gates. Original task/custody/branch preserved; current remoteHEADfef84896/master7371ad25, clean. Prior12modelrequests all actual singletonreject; constructed baseline discloses nonexecution and unassessed trajectory so not a meaningful ready positive. Need faithful production-shaped known-outcome cases, shared code, unchanged model/calibration/tolerances, preserve failures and no cherry-picking.",
         "Fullvalidate5635stoppedbefore native because public docs workflow2290failed generatedconfigschema. Followed actualreport source-built docs build via reviewed existing docs-repairscript; no candidatecontrollergovernance. GitHubClippydiagnostic found single needlessborrow newly extracted sharedfunction. Fixwithoutlint suppression, preservefailedreport, rerunexactcandidate. No previousnativepassisclaimedforthisnewcode.",
         "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
         "Metadata-onlycommandcompletedexit0; identicaldependencygraph andlocksize, one generatedinputhash repaired. Currentlibrary/native scientifictests mustexecute through freshdecapodvalidate, previous30015measurements remain scoped. PublicGithubreader403reset22:46:31UTCmustbehonored without automaticauthswitch/artifactimport. Pushcorrectedsamebranch so realCI canexecute; rerunnormalvalidateafterreset. Frozenv2calibrationfailure remains mandatoryunresolvedacceptance, no PRuntilgenuinelygreen.",
@@ -3628,6 +3733,7 @@
         "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain.",
         "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
         "User clarification concerns product flow and instructions, not a waiver of scientific acceptance. Preserve all checks and original ownership. After quota reset run plain validate on genuinely changed candidate; no empty retry commit, authentication substitution for denied public read, manual build or shadow preflight. OAuth timed out with no credentials; public diagnostics remain readable without login.",
+        "User explicitly authorizes functional acceptance replacingresearchqualification, not fabricatedsuccess/accuracy. Fixedcasebytes97b4667e frozen before firstmodelrun, nofitting/threshold/model/calibration/tolerancechange. Actualcontractchecksrun beforeobservationconstruction; three meaningful positives, negative/uncertain/manipulated/declared-proof and failed/stale controls. Sharedproduction code andstrictfinalreducer rederiveoutcomes; oldstudiesfailures preserved. Issue1445andbroader1052/1069/1070/1398/1024updated; closeonlyfullyresolved1445. Sourceconfigreview0e9afdd8 unchanged8runargs; no newprereq/task/branch. Preserve originaltask/branch andfullfinalvalidationgates.",
         "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked.",
         "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership.",
         "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes."
