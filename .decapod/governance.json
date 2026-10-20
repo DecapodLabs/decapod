@@ -512,6 +512,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "native-umask-fixture",
+      "summary": "Repair macOS test compilation by parsing libc::mode_t instead of u32. Real isolated permissive-umask child tests pass and retain private creation assertions; no filesystem safety contract changes.",
+      "input_digest": "sha256:17ccb3e1dc7f519c71bd95a95c1e30efe4064fa54a3f471b9085264a6e574190",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
