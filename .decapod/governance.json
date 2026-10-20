@@ -548,6 +548,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "immutable-ci-intent",
+      "summary": "Preserve whole-product intent while documenting immutable change range, exact release-only exception, Rust product scope and explicit limits of this focused delivery.",
+      "input_digest": "sha256:e1a1bb46f31c70d8e813676c70a13331bee9ab125bf02541fc90f3c68baf940f",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
