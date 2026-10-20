@@ -1,0 +1,593 @@
+{
+  "schema": "decapod.vega.final-evaluation-admission-review.v1",
+  "source_capture_sha256": "sha256:50ce9421f775db9145c8bef8540a32e0b2f8581222627dd426de460d25cf33c2",
+  "source_audit_sha256": "sha256:5c4c22f470bbdd5e8b325502076d1980152a810632e70d9d47dfc9a2eff349f3",
+  "role": "bounded review of previously collected sources, not a new calibration study",
+  "admitted_final_units": 0,
+  "final_holdout_frozen": false,
+  "fitting_performed": false,
+  "independent_human_adjudication": false,
+  "limitations": [
+    "Current source approval/change request is not complete readiness truth.",
+    "Static source witnesses cover narrow properties; rationale is agent-authored.",
+    "No case has a frozen production validation-results.v3 assessment and independently supported complete disposition.",
+    "The nine unexecuted pilot scenarios add source_facts absent from production; do not run or count them as a production holdout.",
+    "Related source families/revisions must remain grouped across development, calibration and final evaluation."
+  ],
+  "cases": [
+    {
+      "repository": "Automattic/harper",
+      "pull_request": 3407,
+      "commit": "b86151c3c39158b8f36712810d97e5c48b009e15",
+      "owner_group": "automattic",
+      "candidate_static_witness": "supported_within_narrow_declared_scope",
+      "source_binding": {
+        "review_id": 4305587203,
+        "review_url": "https://github.com/Automattic/harper/pull/3407#pullrequestreview-4305587203",
+        "review_at": "2026-05-17T14:39:07Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "automattic",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": "pending_complete_source_audit_and_explicit_scope_freeze",
+      "existing_limits": [
+        "Both raw job-log endpoints return HTTP410. Provider success, exact head_sha and pinned workflow/recipe are available, but line-by-line historical execution cannot be recovered from those expired logs.",
+        "The feature alias relationship and constructor replacement are statically auditable; the source does not establish every possible target or concurrency behavior.",
+        "The label is agent-authored from independent public facts, not a new blind human review. Source-owner grouping does not prove statistical independence."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "Byron/dua-cli",
+      "pull_request": 402,
+      "commit": "e159c45d365d6e18aedfed113ce7f1edb92d1ef2",
+      "owner_group": "byron",
+      "candidate_static_witness": "excluded_selected_cutoff_has_no_completed_checks",
+      "source_binding": {
+        "review_id": 5176798924,
+        "review_url": "https://github.com/Byron/dua-cli/pull/402#pullrequestreview-5176798924",
+        "review_at": "2026-09-11T09:00:29Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": false,
+        "source_exclusions": [
+          "no_observed_required_checks_before_decision"
+        ],
+        "prospective_owner_group": "byron",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": "excluded_without_a_separately_bound_later_predeclared_decision_snapshot",
+      "existing_limits": [],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "FuelLabs/fuel-core",
+      "pull_request": 3333,
+      "commit": "f5790818d84beab1cf198aa1b51811fd96487e7f",
+      "owner_group": "fuellabs",
+      "candidate_static_witness": "selected_review_predates_required_policy_completion",
+      "source_binding": {
+        "review_id": 5056711541,
+        "review_url": "https://github.com/FuelLabs/fuel-core/pull/3333#pullrequestreview-5056711541",
+        "review_at": "2026-08-29T03:35:36Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": false,
+        "source_exclusions": [
+          "required_check_not_complete_before_decision"
+        ],
+        "prospective_owner_group": "fuellabs",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": "excluded_at_selected_review_cutoff_later_distinct_assessment_not_frozen",
+      "existing_limits": [],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "FalkorDB/FalkorDB",
+      "pull_request": 3026,
+      "commit": "06bb1dde3d209bec48a764e970dd4f947810bd2b",
+      "owner_group": "falkordb",
+      "candidate_static_witness": "complete_checks_recovered_selected_review_predates_required_completion",
+      "source_binding": {
+        "review_id": 5571527409,
+        "review_url": "https://github.com/FalkorDB/FalkorDB/pull/3026#pullrequestreview-5571527409",
+        "review_at": "2026-10-19T12:28:33Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": false,
+        "source_exclusions": [
+          "incomplete_check_history",
+          "no_observed_required_checks_before_decision"
+        ],
+        "prospective_owner_group": "falkordb",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": "excluded_at_selected_review_cutoff_complete_later_source_snapshot_available_for_separate_adjudication",
+      "existing_limits": [],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "PyO3/pyo3",
+      "pull_request": 6531,
+      "commit": "3ed822dfb0ed422cec5b4557d306d82ab540c1eb",
+      "owner_group": "pyo3",
+      "candidate_static_witness": "supported_within_narrow_declared_scope",
+      "source_binding": {
+        "review_id": 5564193620,
+        "review_url": "https://github.com/PyO3/pyo3/pull/6531#pullrequestreview-5564193620",
+        "review_at": "2026-10-18T18:03:50Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "pyo3",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "No Python or external repository test was executed here. Remote CI observations are external provider records, not current Decapod proof.",
+        "A source-review approval alone is not the label; the explicit documentation edit is directly visible at the pinned commit."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "actix/actix-web",
+      "pull_request": 4341,
+      "commit": "f60c4652d70712da19299af11d6debd7d494202a",
+      "owner_group": "actix",
+      "candidate_static_witness": "supported_within_narrow_declared_scope",
+      "source_binding": {
+        "review_id": 5559970551,
+        "review_url": "https://github.com/actix/actix-web/pull/4341#pullrequestreview-5559970551",
+        "review_at": "2026-10-17T20:38:30Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "actix",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "The unchecked new-tests box is explicitly qualified docs-only; it is not automatically an unmet functional testing obligation.",
+        "A Team labeling checkbox is a source PR administration item, not a newly invented code requirement.",
+        "The static callback capture argument covers the stated documentation behavior, not every server/backend behavior."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "google/comprehensive-rust",
+      "pull_request": 3283,
+      "commit": "d21a4a8c6a537e15eb3f35791bd1a7aa06c4ad92",
+      "owner_group": "google",
+      "candidate_static_witness": "source_support_found_final_blob_binding_pending",
+      "source_binding": {
+        "review_id": 5435651512,
+        "review_url": "https://github.com/google/comprehensive-rust/pull/3283#pullrequestreview-5435651512",
+        "review_at": "2026-10-06T23:32:07Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "google",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "Live PR-file blob hashes must be checked against the pinned commit before freezing. Do not infer whole-PR coverage from only its last commit.",
+        "The repository-level Apache licence metadata is not sufficient for all prose: SUMMARY.md states CC-BY-4.0, while code snippets have Apache-2.0 headers. Preserve per-file attribution if excerpts are redistributed.",
+        "No pedagogy effectiveness or all-course correctness claim follows from these structural source facts."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "rust-lang/rustfmt",
+      "pull_request": 7170,
+      "commit": "ded31f4664a5ce8eab0f59129edd0bcff1031fe4",
+      "owner_group": "rust-lang",
+      "candidate_static_witness": "source_support_found_test_execution_binding_pending",
+      "source_binding": {
+        "review_id": 5501846382,
+        "review_url": "https://github.com/rust-lang/rustfmt/pull/7170#pullrequestreview-5501846382",
+        "review_at": "2026-10-13T09:59:52Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "rust-lang",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "Source test existence is not an executed local test result.",
+        "All rust-lang repositories share one prospective owner/risk unit; this cannot increase the independent sample count for each repository."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "o2sh/onefetch",
+      "pull_request": 1893,
+      "commit": "839f5c9973a766b7cc38afdb868c10ec7650a08d",
+      "owner_group": "o2sh",
+      "candidate_static_witness": "incomplete_cumulative_source_inspection_no_label",
+      "source_binding": {
+        "review_id": 5558208885,
+        "review_url": "https://github.com/o2sh/onefetch/pull/1893#pullrequestreview-5558208885",
+        "review_at": "2026-10-17T14:22:58Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "o2sh",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "Large quoted dependency release notes are upstream context, not automatically additional obligations for the onefetch change."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "serde-rs/serde",
+      "pull_request": 3038,
+      "commit": "ea04847eef1683aea818f2b6382b29b07cc1344b",
+      "owner_group": "serde-rs",
+      "candidate_static_witness": "quantitative_requirement_not_established_by_generic_ci",
+      "source_binding": {
+        "review_id": 3805163431,
+        "review_url": "https://github.com/serde-rs/serde/pull/3038#pullrequestreview-3805163431",
+        "review_at": "2026-02-15T16:20:59Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "serde-rs",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "An unverified performance magnitude is not proof that the implementation is wrong. A bounded assessment lacking that evidence may require abstention; source approval is not a complete independent readiness label."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "microsoft/edit",
+      "pull_request": 981,
+      "commit": "7af7db53ffaf0b93d4f665a747bd6aa6c3df112a",
+      "owner_group": "microsoft",
+      "candidate_static_witness": "pre_existing_reproduction_claim_contradicts_pinned_source",
+      "source_binding": {
+        "review_id": 5448922150,
+        "review_url": "https://github.com/microsoft/edit/pull/981#pullrequestreview-5448922150",
+        "review_at": "2026-10-07T22:03:06Z",
+        "source_verdict": "changes_requested",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "microsoft",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "No Python interpreter was run. Exact regex/lexer semantics still need a separately scoped Rust/static witness before a final label is frozen.",
+        "The later approved commit a58a9bc6c746390bd2a603aaa7abf7d8df3e5971 is a different revision. Preserve both; no later resolution may enter this earlier input.",
+        "Repository/PR-only metadata cache names can collide across revisions. The private captures now retain both full commit identities; downstream binding must compare the captured sha, not infer identity from a filename."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "rust-ml/linfa",
+      "pull_request": 443,
+      "commit": "5407c0bae9658eac05ad2a7298f4e7ec9cbe0c3d",
+      "owner_group": "rust-ml",
+      "candidate_static_witness": "source_review_not_a_functional_rejection_label",
+      "source_binding": {
+        "review_id": 4394980342,
+        "review_url": "https://github.com/rust-ml/linfa/pull/443#pullrequestreview-4394980342",
+        "review_at": "2026-05-30T08:09:48Z",
+        "source_verdict": "changes_requested",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "rust-ml",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "A correct numerical fix and acceptable contribution provenance are separate claims. Selected review text stays outside candidate input."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "alacritty/alacritty",
+      "pull_request": 9056,
+      "commit": "78708c7b1f1459160af799e45e339e4e448fce2c",
+      "owner_group": "alacritty",
+      "candidate_static_witness": "source_review_nit_not_failed_named_requirement",
+      "source_binding": {
+        "review_id": 5411672320,
+        "review_url": "https://github.com/alacritty/alacritty/pull/9056#pullrequestreview-5411672320",
+        "review_at": "2026-10-05T08:13:42Z",
+        "source_verdict": "changes_requested",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "alacritty",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "The source author's curl observation does not establish a fresh OS prompt. The declared key-addition scope and broader end-to-end permission behavior must remain distinct."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "TabbyML/tabby",
+      "pull_request": 4448,
+      "commit": "f0a1a4905fded5a2cbaceb8ccf3daf770a43b899",
+      "owner_group": "tabbyml",
+      "candidate_static_witness": "new_review_preference_not_prior_unmet_requirement",
+      "source_binding": {
+        "review_id": 3870613761,
+        "review_url": "https://github.com/TabbyML/tabby/pull/4448#pullrequestreview-3870613761",
+        "review_at": "2026-02-28T17:26:11Z",
+        "source_verdict": "changes_requested",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "tabbyml",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "No credentials or external provider invocation are needed for this source audit. Functional live compatibility remains unverified in the source evidence."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "tonarino/innernet",
+      "pull_request": 409,
+      "commit": "7eb182b36cd56cd45e40c770acd17bdae41bc19e",
+      "owner_group": "tonarino",
+      "candidate_static_witness": "source_test_oracle_strength_concern_not_automatic_label",
+      "source_binding": {
+        "review_id": 4742515480,
+        "review_url": "https://github.com/tonarino/innernet/pull/409#pullrequestreview-4742515480",
+        "review_at": "2026-07-21T08:13:02Z",
+        "source_verdict": "changes_requested",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "tonarino",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "No Docker or external source test was executed here. A claimed test plan does not prove those commands ran."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "agentgateway/agentgateway",
+      "pull_request": 4025,
+      "commit": "5c0a402bfa3d1641156ec8ec870dc9c23197340e",
+      "owner_group": "agentgateway",
+      "candidate_static_witness": "architecture_requirement_needs_pre_existing_source_contract",
+      "source_binding": {
+        "review_id": 5550018190,
+        "review_url": "https://github.com/agentgateway/agentgateway/pull/4025#pullrequestreview-5550018190",
+        "review_at": "2026-10-16T15:32:45Z",
+        "source_verdict": "changes_requested",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "agentgateway",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "The last commit only extends certificate-reload tests and watch behavior; it is not a complete cumulative TLS implementation diff."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "seanmonstar/warp",
+      "pull_request": 1164,
+      "commit": "09c8c7af8db7ada86b8a118a41f50efb5810d501",
+      "owner_group": "seanmonstar",
+      "candidate_static_witness": "green_source_profile_does_not_validate_changed_disabled_path",
+      "source_binding": {
+        "review_id": 4798965782,
+        "review_url": "https://github.com/seanmonstar/warp/pull/1164#pullrequestreview-4798965782",
+        "review_at": "2026-07-28T15:25:00Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "seanmonstar",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "The selected review URL is bound to ID4798965782 in the frozen capture; an earlier private draft contained an unverified incorrect URL and was corrected before any inference or corpus freeze.",
+        "No external source build/test, Rust compiler probe or model inference was run by this audit.",
+        "A separate declared benchmark contract can require compile coverage for the named changed path; do not invent that source project's historical branch policy.",
+        "This is a concrete missing-coverage challenge, not independent human groundtruth about every readiness obligation."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "grpc/grpc-rust",
+      "pull_request": 2928,
+      "commit": "265a41bcbdb09070b765ada6904ed31fe83649ca",
+      "owner_group": "grpc",
+      "candidate_static_witness": "supported_within_narrow_declared_scope",
+      "source_binding": {
+        "review_id": 5539123957,
+        "review_url": "https://github.com/grpc/grpc-rust/pull/2928#pullrequestreview-5539123957",
+        "review_at": "2026-10-15T19:58:56Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "grpc",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "Static duplicate removal and retained private definition are direct source properties. No broad load-balancing or performance claim is derived.",
+        "A live PR-files response alone is not immutable provenance; compare blobs to the pinned commit."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "tock/tock",
+      "pull_request": 5294,
+      "commit": "6319c528189469fe2f3ddc7e29ed4d75ac8adb47",
+      "owner_group": "tock",
+      "candidate_static_witness": "supported_for_exact_linker_source_property",
+      "source_binding": {
+        "review_id": 5575784442,
+        "review_url": "https://github.com/tock/tock/pull/5294#pullrequestreview-5575784442",
+        "review_at": "2026-10-19T18:14:38Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "tock",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "The positive witness is a narrow canonical-entry source property. Universal linker behavior is not the same claim.",
+        "No external embedded or QEMU program was executed locally."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "slint-ui/slint",
+      "pull_request": 14239,
+      "commit": "1c369715cd79dfc52f18825afc85a079aa4e6279",
+      "owner_group": "slint-ui",
+      "candidate_static_witness": "source_support_found_cmake_execution_scope_pending",
+      "source_binding": {
+        "review_id": 5575715960,
+        "review_url": "https://github.com/slint-ui/slint/pull/14239#pullrequestreview-5575715960",
+        "review_at": "2026-10-19T18:08:21Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "slint-ui",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "Do not silently extend the static runtime-build scope to installed-package or all CMake modes.",
+        "No CMake execution or upstream external test was performed here."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "alacritty/alacritty",
+      "pull_request": 9073,
+      "commit": "f485c80c225020befe378c76ecef00d56035b93b",
+      "owner_group": "alacritty",
+      "candidate_static_witness": "source_support_found_bounded_stack_invariant",
+      "source_binding": {
+        "review_id": 5541854252,
+        "review_url": "https://github.com/alacritty/alacritty/pull/9073#pullrequestreview-5541854252",
+        "review_at": "2026-10-16T01:17:53Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "alacritty",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "The source issue's escape-sequence shell example was read only, never executed.",
+        "This is a source-level stack invariant and a public bug witness, not a locally measured terminal/PTY result or a final all-obligations label.",
+        "The separate Alacritty9056 permission-message case shares the same owner/source family; it cannot add an independent risk unit."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "alexpasmantier/television",
+      "pull_request": 1144,
+      "commit": "e40bc48239170e03b9502866780244a8ec3ff7d3",
+      "owner_group": "alexpasmantier",
+      "candidate_static_witness": "scope_description_and_final_changes_need_reconciliation",
+      "source_binding": {
+        "review_id": 5345130452,
+        "review_url": "https://github.com/alexpasmantier/television/pull/1144#pullrequestreview-5345130452",
+        "review_at": "2026-09-28T22:00:25Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "alexpasmantier",
+        "prospective_split": "holdout"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "No source tests or upstream CLI were executed here.",
+        "Changing the benchmark requirement to match the final patch without retaining this discrepancy would hide real contradictory scope evidence."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "hickory-dns/hickory-dns",
+      "pull_request": 4081,
+      "commit": "7a39953204d25975573004622ecd5245fee4cc55",
+      "owner_group": "hickory-dns",
+      "candidate_static_witness": "source_support_found_backport_execution_scope_pending",
+      "source_binding": {
+        "review_id": 5539011836,
+        "review_url": "https://github.com/hickory-dns/hickory-dns/pull/4081#pullrequestreview-5539011836",
+        "review_at": "2026-10-15T19:48:53Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "hickory-dns",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "The original main-branch fix and its backport are one related source lineage, not two independent outcomes.",
+        "No external source code, buffer test or Rust compile was executed locally by this audit."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    },
+    {
+      "repository": "linebender/vello",
+      "pull_request": 2000,
+      "commit": "9c9cea85a3d19034ae4a504ddf3da029833008dc",
+      "owner_group": "linebender",
+      "candidate_static_witness": "source_support_found_render_execution_scope_pending",
+      "source_binding": {
+        "review_id": 5544577024,
+        "review_url": "https://github.com/linebender/vello/pull/2000#pullrequestreview-5544577024",
+        "review_at": "2026-10-16T07:50:03Z",
+        "source_verdict": "approved",
+        "source_binding_eligible": true,
+        "source_exclusions": [],
+        "prospective_owner_group": "linebender",
+        "prospective_split": "development"
+      },
+      "existing_cutoff_status": null,
+      "existing_limits": [
+        "No upstream renderer or source test was executed here, and no Git-LFS binary was imported as validation proof.",
+        "All linebender repositories belong to the same prospective source family; other Vello/Xilem/Druid examples cannot inflate independent sample counts."
+      ],
+      "admitted_final_readiness": false,
+      "reason": "Source-grounded candidate only; no independently supported complete-readiness label bound to the production projection. Preserve specific source/cutoff limitations instead of promoting approval or authored rationale into a final label."
+    }
+  ]
+}

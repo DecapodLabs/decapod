@@ -1,5 +1,13 @@
 # Frozen reference criteria and measured verification
 
+**Current product decision:** [the contract diagnosis](vega-readiness-decision.md)
+audits all 29 accepts from the completed 9f017d31 run. Its v2 benchmark payload
+bypasses production projection and is now exposed diagnostic data, never an
+untouched final holdout again. The numerical passes and original failed results
+below remain evidence within their stated scope. No readiness qualification,
+threshold change or passing publication claim follows; an inactive integration
+stage is only an unapplied scope proposal requiring a maintainer decision.
+
 The criteria below were frozen before candidate outputs. The executed-results section identifies the later measured subset; historical failures are retained separately. A passing subset never establishes unsupported context lengths, modes, backend execution or readiness-domain calibration.
 
 Source: NandhaKishorM/vegaml@21a17c90624aa85cec60b1092fa72cb8b720f71a, vegaml/_common.py (Apache-2.0), SHA256 34f6fa580d30828bc4a4663fd0a6a870eee783d250a70a64cfdd1d683bb92cfc.

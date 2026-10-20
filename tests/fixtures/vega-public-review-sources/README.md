@@ -1,5 +1,33 @@
 # Public review-source capture
 
+## Exposed-study and admission ledgers
+
+`exposed-v2-acceptance-audit.json` preserves all 29 accepted IDs from the
+completed 9f017d31 experiment, both backends' unmodified typed outcomes, token
+counts and exact serialized-input commitments. Reconstruction used the Rust
+`readiness_evaluation::state` field order and unchanged frozen corpus; every
+SHA256 matched the recorded state digest. Sorting JSON keys changes those bytes
+and is not an equivalent hash reconstruction. Input-hash verification and
+classification are forensic analysis, not new model execution, an independent
+label or a controller acceptance receipt. It contains no private input text or
+task-transfer material. The full-precision outcomes remain failed diagnostic
+evidence; **all exposed v2 units are ineligible as an untouched final holdout**.
+
+`final-admission-review.json` reuses the 24 already inspected public semantic
+cases and their original immutable source bindings/limitations. Narrow static
+witnesses, changed requirements, future-check cutoffs and unresolved semantics
+remain distinct. No final readiness case is admitted or frozen by this review;
+approval and agent-authored rationale do not supply independent complete labels.
+The nine earlier unexecuted source-fact pilot scenarios also differ from the
+production projection and cannot substitute for a final study.
+
+Neither ledger is consumed by the native recipe or changes its acceptance
+conditions. The crate's existing exclusion covers these research artifacts.
+See [the product decision](../../../docs/vega-readiness-decision.md) for contract
+findings and the unapplied scope proposal. No calibration or model was changed.
+
+## Original capture
+
 `source-records.json` is a frozen public input dataset, not a validation log,
 controller receipt, calibration result or published model asset. Its SHA256 is
 `50ce9421f775db9145c8bef8540a32e0b2f8581222627dd426de460d25cf33c2`.

@@ -380,6 +380,25 @@
       "statement": "Prospective public review records are pinned and structurally audited in Rust before model use. Source review labels/rationale and future CI do not enter input; post-decision edits, conflicting verdicts, wrong identities, incomplete history and prior-corpus owner families are excluded or explicitly malformed. Collection alone grants no calibration or publication readiness.",
       "falsifier": "The audit includes a selected verdict/rationale or later check in pre-decision input; counts a wrong-commit or edited requirement as eligible; presents source membership or grouping as independent ground truth; suppresses independent native checks; or waives the existing strict acceptance criterion.",
       "status": "open"
+    },
+    "vega1445-exposed-contract-audit": {
+      "statement": "All29accepted9fdiagnosticinputs exactlymatch recordedstatehashes, CPUuses same29IDs/inputhashes; exposedv2fullpatchharness bypassesproductionv3. Sourcecontractreviewfound no option/type/Boolean mapping orbasecalibration-route defect.19visibleconstructed-condition/uncertaintymisses+4wrongstagefailures+6benchmarkmatchesdoNOTestablishproductionreadinesslabels. Currentreadinessrole unsupported; no runtime/math/pin/gatechangeorpassingPR inferred.",
+      "falsifier": "Anyreconstructed29statehashdiffers, anyCPUinputID/hashdiffers, theharnessactuallycallsproductionprojection, or pinned option/type/basecalibrationroutecontradictsthescoped audit. Semanticclassificationand modelrolelimitsremainreviewableinterpretations, not independentgroundtruth.",
+      "status": "supported",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T232350Z.json",
+        "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
+        "tests/fixtures/vega-public-review-sources/exposed-v2-acceptance-audit.json"
+      ]
+    },
+    "vega1445-readiness-role-qualification": {
+      "statement": "ThecurrentpinnedVega base profileandavailableindependent production-shapedlabels donotestablishoriginalreadinessrisk/coverageacceptance. Oldexposedstudyremainsdiagnosticandfailed; no newfinalunitsadmitted. Inactiveintegrationdeliveryis anunapplied maintainer scope proposal, not anadvisorydowngradeorwaiver.",
+      "falsifier": "A genuinelyadmissible untouchedproduction-projection evaluation with sufficientindependentacceptedunits, unchangedrisk/coveragecriteriaandcompatible pinnedcalibration supports the readiness role; or an explicitaccepted scope decision changes the delivery contract.",
+      "status": "blocked",
+      "proof_refs": [
+        "docs/vega-readiness-decision.md",
+        "tests/fixtures/vega-public-review-sources/final-admission-review.json"
+      ]
     }
   },
   "checkpoints": [
@@ -735,6 +754,15 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261019T224656Z.json"
       ]
+    },
+    {
+      "id": "vega1445-contract-diagnosis",
+      "summary": "Diagnose all29 exposed accepts, distinguish production projection and base engine contract, preserve raw outcomes and source exclusions, and prepare unapplied inactive-integration scope decision",
+      "input_digest": "sha256:c63447c5f298bbf3427334205e0448d43bd9a5ca38c0f431226c077b84052819",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261019T232350Z.json",
+        "tests/fixtures/vega-public-review-sources/exposed-v2-acceptance-audit.json"
+      ]
     }
   ],
   "intents": {
@@ -764,7 +792,7 @@
         "forbidden_paths": []
       },
       "deferred_questions": [
-        "Readiness-domain calibration remains unsatisfied: complete frozenv2 collection on30015 produced23false-ready proxy outcomes/backend,36unsupported lengths and inadequate coverage across23issue originals. Preserve the original corpus and zero-false-ready/one-sided95percent5percent-risk/50percentcoverage/correct-abstention criterion. Audit prospective public review inputs for exact source identity, temporal/semantic scope, independent external judgment and grouped holdout separation before any fitting/inference; no source approval or structural filter alone is ground truth. Actual30015 native43tests and fixed138/314/4096-token Metal/CPU independent Rust comparisons passed unchanged tolerances, but shared infrastructure/same-agent authorship and untested modes remain explicit limits. New plan-obligation preservation and source-audit regressions are authored, awaiting exact-candidate validation. No claim of universal parity, NVIDIA hardware or Linux loader-companion execution."
+        "The complete9f017d31 run passed49native tests and all3fixed Metal/CPU numerical comparisons but failed readiness acceptance. All29accepted diagnostic payloads have now been reconstructed and exactly hash-bound; the old v2 harness bypasses production validation-results.v3, includes4known pre-validation failures and has19other visible constructed-obligation/ambiguity conflicts. Its6gold accepts only establish benchmark-oracle agreement. Treat all exposed v2 cases as diagnostic forever, preserving originalbytes/results; no finalholdout claim or threshold tuning. Base engine/adapters-off and base Boolean calibration match the pinned contract; no production sign/option/type/calibration-route defect established. Public generic typed-decision results do not qualify the code-readiness task. Reuse the existing24semantic source audits and82structurally eligible snapshots only for bounded admission review, not more scraping. Prepare a precise documented product decision and unapplied inactive-integration scope proposal if no admissible production-shaped final study is available; no gate weakening, replacement model or training without explicit scope approval. Do not repeat the full known-failing study without a concrete justified product correction."
       ],
       "human_questions": [],
       "intent": "Complete the existing issue1445 Rust-only Vega post-validation integration on its preserved branch and original task. Vega is an optional team configuration selectable during init; shared policy/model/calibration identities must work across maintainers without committed machine paths. Automatic execution prefers Apple Metal on macOS and supported GPU on other systems (initial pinned CUDA/NVIDIA path, other GPU availability explicitly bounded), with safe CPU fallback using the same pinned model and a fresh bounded attempt; record actual backend, precision, runtime identity and fallback failures. Preserve the chosen Candle/candle-vllm hidden-state path and separate SafeTensors worker, external immutable assets/cache/integrity/atomic activation, active Jev removal, minimal bounded validation input, deterministic authority and fail-closed stale/missing/malformed/abstaining decisions. Preserve all source history, original task provenance, existing failed validation and native/parity/readiness-calibration proof obligations. Agent publishes only after exact-source accepted-controller validation and required genuine native/reference/holdout evidence; human retains merge/release authority.",
@@ -778,26 +806,26 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserveactualef3source39steps/main1461tests passes and full224656Zfailure: remoteproof/custodyandnativefullsnapshot succeeded, then compilerE0599 caughtmissingWrite trait innewNamedTempFile exportbeforeanynative test/model run. Addfunctionlocalstd::io::Write import likeexistingexporter. Related-repository syntheticfixture nowupdatesboth canonicalreviewURLs alongwithrepo; wrongURLassertionpreserves strictidentitycheck. Sixnewnative testsstillunexecuted; no scientificcalibration/nativeacceptance inferred. Reviewed changednative helper bytes/newa88inventory; same8runreciped6d9, models/calibration/corpus/math/limits/deadlines andkernel authority. Canonicalspecsemantics unchanged beyond authoredVALIDATIONrecoveryevidence; no newprerequisite/candidatecontrollerauthority/manualtests orwaiver.",
-          "reviewed_code_fingerprint": "b82cb237494365a16634510378be935b91bf1536b006ec9afec3059ec0deec27",
+          "reason": "Documentation/data-only forensicdiagnosisof9f017d31: exact29inputbindings/58typedoutcomes/24sourceadmissionreview; productionv3differsfromexposedfullpatchv2harness. No runtime mappingdefectestablished andno sourcecode/calibration/model/recipe/gate/tolerancechange. InactiveintegrationguardexplicitlyPROPOSEDnotimplemented; originalreadinessconditionsstillfailed. Currentnative49and3fixturepasses belongto9f, notthisdoccommit. Userdirectsdecisionreportinsteadofanotherunchangedfullrun. AuthoredINTENT/VALIDATIONanddocsreflecttheseproduct/evidencelimits; existing componentauthority/storage/runtimeinterfacesunchanged.",
+          "reviewed_code_fingerprint": "722673e63cd9a0a27dae523241835fdb7e96c76be7d694342c56a9c4441dfce1",
           "spec_material_hash": "f909fb997cc6b40fd7a8805caa79c001a012a6de06268749491225b2d54aeb6f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserveactualef3source39steps/main1461tests passes and full224656Zfailure: remoteproof/custodyandnativefullsnapshot succeeded, then compilerE0599 caughtmissingWrite trait innewNamedTempFile exportbeforeanynative test/model run. Addfunctionlocalstd::io::Write import likeexistingexporter. Related-repository syntheticfixture nowupdatesboth canonicalreviewURLs alongwithrepo; wrongURLassertionpreserves strictidentitycheck. Sixnewnative testsstillunexecuted; no scientificcalibration/nativeacceptance inferred. Reviewed changednative helper bytes/newa88inventory; same8runreciped6d9, models/calibration/corpus/math/limits/deadlines andkernel authority. Canonicalspecsemantics unchanged beyond authoredVALIDATIONrecoveryevidence; no newprerequisite/candidatecontrollerauthority/manualtests orwaiver.",
-          "reviewed_code_fingerprint": "b82cb237494365a16634510378be935b91bf1536b006ec9afec3059ec0deec27",
+          "reason": "Documentation/data-only forensicdiagnosisof9f017d31: exact29inputbindings/58typedoutcomes/24sourceadmissionreview; productionv3differsfromexposedfullpatchv2harness. No runtime mappingdefectestablished andno sourcecode/calibration/model/recipe/gate/tolerancechange. InactiveintegrationguardexplicitlyPROPOSEDnotimplemented; originalreadinessconditionsstillfailed. Currentnative49and3fixturepasses belongto9f, notthisdoccommit. Userdirectsdecisionreportinsteadofanotherunchangedfullrun. AuthoredINTENT/VALIDATIONanddocsreflecttheseproduct/evidencelimits; existing componentauthority/storage/runtimeinterfacesunchanged.",
+          "reviewed_code_fingerprint": "722673e63cd9a0a27dae523241835fdb7e96c76be7d694342c56a9c4441dfce1",
           "spec_material_hash": "33b8e295dcce7990c8bf70686b7bb1f7732b3c7467305ed45e79b7d3d7301ff0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserveactualef3source39steps/main1461tests passes and full224656Zfailure: remoteproof/custodyandnativefullsnapshot succeeded, then compilerE0599 caughtmissingWrite trait innewNamedTempFile exportbeforeanynative test/model run. Addfunctionlocalstd::io::Write import likeexistingexporter. Related-repository syntheticfixture nowupdatesboth canonicalreviewURLs alongwithrepo; wrongURLassertionpreserves strictidentitycheck. Sixnewnative testsstillunexecuted; no scientificcalibration/nativeacceptance inferred. Reviewed changednative helper bytes/newa88inventory; same8runreciped6d9, models/calibration/corpus/math/limits/deadlines andkernel authority. Canonicalspecsemantics unchanged beyond authoredVALIDATIONrecoveryevidence; no newprerequisite/candidatecontrollerauthority/manualtests orwaiver.",
-          "reviewed_code_fingerprint": "b82cb237494365a16634510378be935b91bf1536b006ec9afec3059ec0deec27",
+          "reason": "Documentation/data-only forensicdiagnosisof9f017d31: exact29inputbindings/58typedoutcomes/24sourceadmissionreview; productionv3differsfromexposedfullpatchv2harness. No runtime mappingdefectestablished andno sourcecode/calibration/model/recipe/gate/tolerancechange. InactiveintegrationguardexplicitlyPROPOSEDnotimplemented; originalreadinessconditionsstillfailed. Currentnative49and3fixturepasses belongto9f, notthisdoccommit. Userdirectsdecisionreportinsteadofanotherunchangedfullrun. AuthoredINTENT/VALIDATIONanddocsreflecttheseproduct/evidencelimits; existing componentauthority/storage/runtimeinterfacesunchanged.",
+          "reviewed_code_fingerprint": "722673e63cd9a0a27dae523241835fdb7e96c76be7d694342c56a9c4441dfce1",
           "spec_material_hash": "d22b96974fa42a386a9bffb7a0e118243b3ef7ad15d07f65e252b1ee1339d2e4"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [
         "Do not publish the Vega feature on diagnostic/source success alone: independent numerical parity and defensible readiness-domain held-out evidence remain mandatory; agent-curated labels are not human-reviewed production calibration."
       ],
@@ -807,7 +835,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792451051Z"
+      "updated_at": "1792462421Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -819,7 +847,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:3b48039b3cbec3476540ded5b2f6a82bb78d9717947f892a6ae8a8243e4f8f74",
+      "artifact_hash": "sha256:4196b4f8cc07e600c9f80ed7bcf69951fb9b888e173e4386d315781963957040",
       "checks": [
         {
           "name": "bazel_metadata_regeneration",
@@ -878,7 +906,15 @@
           "status": "failed"
         },
         {
+          "name": "diagnostic58outcomeconsistency",
+          "status": "passed"
+        },
+        {
           "name": "diff-whitespace",
+          "status": "passed"
+        },
+        {
+          "name": "diff_check",
           "status": "passed"
         },
         {
@@ -903,6 +939,10 @@
         },
         {
           "name": "exact-feature-source-reapplication",
+          "status": "passed"
+        },
+        {
+          "name": "exact29inputbindings",
           "status": "passed"
         },
         {
@@ -947,6 +987,10 @@
         },
         {
           "name": "full_validation_719",
+          "status": "failed"
+        },
+        {
+          "name": "full_validation_9f",
           "status": "failed"
         },
         {
@@ -1042,6 +1086,10 @@
           "status": "unavailable"
         },
         {
+          "name": "native49",
+          "status": "passed"
+        },
+        {
           "name": "native_040d",
           "status": "unavailable"
         },
@@ -1126,6 +1174,10 @@
           "status": "unavailable"
         },
         {
+          "name": "new_full_validation",
+          "status": "unavailable"
+        },
+        {
           "name": "new_model_inference",
           "status": "unavailable"
         },
@@ -1144,6 +1196,10 @@
         {
           "name": "new_tests",
           "status": "unavailable"
+        },
+        {
+          "name": "numeric3fixtures",
+          "status": "passed"
         },
         {
           "name": "numerical_30015",
@@ -1184,6 +1240,10 @@
         {
           "name": "readiness-holdout",
           "status": "unavailable"
+        },
+        {
+          "name": "readiness9f",
+          "status": "failed"
         },
         {
           "name": "readiness_aa",
@@ -1274,7 +1334,15 @@
           "status": "passed"
         },
         {
+          "name": "source24admissionledger",
+          "status": "passed"
+        },
+        {
           "name": "source5d",
+          "status": "passed"
+        },
+        {
+          "name": "source9f",
           "status": "passed"
         },
         {
@@ -1342,7 +1410,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "recovery",
       "custody": {
         "events": [
           {
@@ -1741,10 +1809,24 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 58
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:59",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 59
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:60",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 60
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 58,
+        "next_sequence": 60,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -2975,6 +3057,67 @@
                 "validation_findings": [
                   "Onlyimportandidentityconsistentfixturecorrected; retainfullfailurehistory, publicsource50ce data, baselineweights/upstreamcalibration andstrictv2criterion. Mainplanobligation testsactualpass1461, sixnewnativetestsnotyetexecuted. No sourceorcontrolstatechangeswhileactivevalidation. Pushsamebranch, allowactualsourceCIterminalcollection andnormalfullvalidate; publicCIreadingisnotshadowbuild/proofimport, allrequiredchecksremain."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:59",
+                "observations": [
+                  "assets/tools/vega-native/readiness_evaluation.rs",
+                  "assets/tools/vega-native/evaluation_corpus.rs",
+                  "assets/tools/vega_infer.rs",
+                  "src/decapod/core/vega_readiness.rs",
+                  "src/decapod/core/vega_prompt.rs",
+                  "src/decapod/core/vega_calibration.rs",
+                  "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
+                  "/private/tmp/vega-1191-validation-20261019T232350Z.json",
+                  "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6281028106"
+                ],
+                "proof_refs": [
+                  "exact29inputbindings",
+                  "source9f",
+                  "native49",
+                  "numeric3fixtures",
+                  "readiness9f"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 59,
+                "validation_findings": [
+                  "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes."
+                ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:60",
+                "observations": [
+                  "docs/vega-readiness-decision.md",
+                  "docs/vega-reference-contract.md",
+                  "docs/agent/repository-readiness.md",
+                  "tests/fixtures/vega-public-review-sources/exposed-v2-acceptance-audit.json",
+                  "tests/fixtures/vega-public-review-sources/final-admission-review.json",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
+                  "tests/fixtures/vega-public-review-sources/exposed-v2-acceptance-audit.json",
+                  "tests/fixtures/vega-public-review-sources/final-admission-review.json",
+                  "/private/tmp/vega-1191-validation-20261019T232350Z.json"
+                ],
+                "proof_refs": [
+                  "exact29inputbindings",
+                  "diagnostic58outcomeconsistency",
+                  "source24admissionledger",
+                  "diff_check",
+                  "full_validation_9f",
+                  "new_full_validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 60,
+                "validation_findings": [
+                  "No productioncodefixjustified bycontractaudit. Correctevidenceattribution/documentationonly; no newmodelinference/fitting/threshold/rubricchange. MetadataJSON/digestconsistencyreviewandgitdiffcheckare notunit/modelacceptance tests. Perlatestexplicituserinstruction stopidenticalfullvalidationandpreparepreciseproductdecisionwhenreadinesscapability/admissiblelabels insufficient. Newdoccommitnotpublicationvalidated; allgates remainrequired, noPR. Proposedscopechangeonlyafterexplicitmaintainerdecision."
+                ]
               }
             ]
           }
@@ -3015,7 +3158,9 @@
         "/private/tmp/vega-1191-validation-20261019T182235Z.json",
         "/private/tmp/vega-1191-validation-20261019T214541Z.json",
         "/private/tmp/vega-1191-validation-20261019T224656Z.json",
+        "/private/tmp/vega-1191-validation-20261019T232350Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
+        "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
         "/private/tmp/vega-c831-buildkite-2241-bootstrap.log",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
@@ -3080,9 +3225,12 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/39196818895",
         "https://github.com/DecapodLabs/decapod/actions/runs/39201940594",
         "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6259258948",
+        "https://github.com/DecapodLabs/decapod/issues/1445#issuecomment-6281028106",
         "https://github.com/DecapodLabs/decapod/pull/1458",
         "https://github.com/DecapodLabs/decapod/releases/tag/v0.119.1",
         "https://github.com/EricLBuehler/candle-vllm/commit/b1055eca63de76b548d0d4b0daa96ff8cd1d0596",
+        "tests/fixtures/vega-public-review-sources/exposed-v2-acceptance-audit.json",
+        "tests/fixtures/vega-public-review-sources/final-admission-review.json",
         "v0.119.0 published and installed; obsolete118 unsupported-adapter blocker resolved only. First released119 validate failed READINESS_BLOCKED on recorded trajectory gaps; report/private/tmp/vega-119-first-validation.json preserved and no builds ran. Domain proof requirements remain enforced; no failed check waived."
       ],
       "inspected_files": [
@@ -3102,6 +3250,8 @@
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/rust_worker.rs",
         "src/decapod/core/vega_backbone.rs",
+        "src/decapod/core/vega_calibration.rs",
+        "src/decapod/core/vega_prompt.rs",
         "src/decapod/core/vega_readiness.rs",
         "src/decapod/core/vega_runtime.rs",
         "src/decapod/core/vega_setup.rs",
@@ -3135,6 +3285,7 @@
         "assets/tools/vega_infer.rs",
         "docs/agent/config-schema.md",
         "docs/agent/repository-readiness.md",
+        "docs/vega-readiness-decision.md",
         "docs/vega-reference-contract.md",
         "src/decapod/cli.rs",
         "src/decapod/core/validation_runtime.rs",
@@ -3147,6 +3298,8 @@
         "src/decapod/lib.rs",
         "tests/cli_contract_enforcement.rs",
         "tests/cli_contracts.rs",
+        "tests/fixtures/vega-public-review-sources/exposed-v2-acceptance-audit.json",
+        "tests/fixtures/vega-public-review-sources/final-admission-review.json",
         "tests/fixtures/vega-public-review-sources/source-records.json",
         "tests/init_config_behavior.rs",
         "tests/support/cli_workunit_recovery.rs",
@@ -3191,6 +3344,7 @@
         "New companion binding/probe/classifier/receipt changes and regressions authored, no Rust tests executed for this candidate. Actual worker build/Metal/model/parity/calibration unavailable under current released native-proof contract; no manual build, shadow preflight, Python or artifact workaround used. Preserved native/reference/holdout blockers. Prerequisite5cee green but publication awaits public API rate reset; its candidate controller is not adopted.",
         "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback.",
         "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change.",
+        "No productioncodefixjustified bycontractaudit. Correctevidenceattribution/documentationonly; no newmodelinference/fitting/threshold/rubricchange. MetadataJSON/digestconsistencyreviewandgitdiffcheckare notunit/modelacceptance tests. Perlatestexplicituserinstruction stopidenticalfullvalidationandpreparepreciseproductdecisionwhenreadinesscapability/admissiblelabels insufficient. Newdoccommitnotpublicationvalidated; allgates remainrequired, noPR. Proposedscopechangeonlyafterexplicitmaintainerdecision.",
         "Normalpostresetvalidateef3clearedremoteproof/custodyandnativefullsnapshotpreparation, thennativecompilationfailedE0599atnewexportwrite_all becauseWrite trait wasnotinscope. Addsamefunctionlocaltraitimportusedbyexistingexporter, no manualbuild/test. Staticreviewalsofoundrelated-repository syntheticfixture stillusedoriginalreviewURLafterrepochange; correctbothfixtureURLs toretainstrictidentitycheckandaddwrong-URLassertion. Allsixnewnative testsremainunexecuted, notpassingclaims; main1461/source39passed. No model/calibration/corpus/math/tolerance/8runrecipe/deadline/authoritychange. Preserveef3failureandallolderhistory; exactnewcandidate mustrerunofficialvalidate.",
         "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain.",
         "Only released119 snapshot blocker retired: merged fix is officially published1191. Native/parity/calibration acceptance remains unverified and required recipe remains nonaccepting until actual evidence; authored inputs and frozen criteria unchanged.",
@@ -3206,7 +3360,8 @@
         "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
         "User clarification concerns product flow and instructions, not a waiver of scientific acceptance. Preserve all checks and original ownership. After quota reset run plain validate on genuinely changed candidate; no empty retry commit, authentication substitution for denied public read, manual build or shadow preflight. OAuth timed out with no credentials; public diagnostics remain readable without login.",
         "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked.",
-        "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership."
+        "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership.",
+        "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes."
       ]
     }
   },

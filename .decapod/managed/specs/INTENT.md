@@ -9,6 +9,8 @@ explicit governance gates.
 
 Vega is an optional team choice during init and in shared project configuration. Each maintainer resolves a verified private local runtime/model installation; selecting the option does not add this repository's research corpus or Mac-specific verification recipe to other projects. Failed, incomplete or stale deterministic proof exits before Vega; only successful proof can reach bounded readiness assessment. Explicit plan obligations accompany intent and check outcomes, so successful tests cannot hide a declared unmet requirement. Vega cannot waive proof or create a PR, and the human retains merge authority. Candidate `30015be0` executed real M1 Max Metal and CPU inference, 43 native tests and three fixed numerical comparisons through 4,096 tokens successfully, but the complete heldout evaluation failed its risk and coverage criteria. Prospective public review inputs require source and semantic audits before any new evaluation or fitting; an external review proxy is not automatically ground truth. Labels remain outside model input, and errors, unsupported cases or missing independent adjudication cannot be converted into acceptance.
 
+The production projection preserves declared obligations; preservation does not prove that Vega understands or enforces them. The 9f017d31 contract audit found 29 accepted experimental inputs using a different full-patch benchmark representation, so their 23 proxy-label conflicts cannot be reported as production false-ready rate or a test of the projection correction. The generic base Boolean profile has no established code-readiness qualification. Exposed v2 data is diagnostic only; no final evaluation, calibration adjustment, advisory downgrade or publication is authorized by these results. The proposed inactive integration stage in `docs/vega-readiness-decision.md` requires an explicit maintainer scope decision and would keep required mode blocking, not silently disable it. The original feature acceptance remains open and unsatisfied.
+
 The record must preserve what was asked, how the agent understood it, what
 scope was accepted, what changed, and what remains unproven. That record stays
 with the project when a conversation, process, model, or agent harness changes.
@@ -202,7 +204,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b82cb237494365a16634510378be935b91bf1536b006ec9afec3059ec0deec27`
+- Repository signal fingerprint: `722673e63cd9a0a27dae523241835fdb7e96c76be7d694342c56a9c4441dfce1`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (39 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
