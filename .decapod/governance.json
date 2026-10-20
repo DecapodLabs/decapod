@@ -685,6 +685,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "native-parquet-manifest",
+      "summary": "Dependabot4: pinned Parquet59.3.1 removes affected thrift0.17; model runtime pins and numeric tolerances preserved.",
+      "input_digest": "sha256:f80b93b35e4323604301a44e43e4d473ff047a02da86b105e3c4e4288689d72e",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
