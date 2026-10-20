@@ -789,7 +789,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
+- Repository signal fingerprint: `f085e6e0c9de1e16a2d069721a1e5e7947c66bd1ff6817102f67dbda83315562`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1025,3 +1025,35 @@ The independent collector also freezes an additional numerical-only fixture befo
 The frozen held-out set has138 judgment variants from23 originals in four repositories. Distinct lineage IDs are not proof of independence: axum682 and1119 concern related trailing-slash behavior. Four benchmark positives have no pass-to-pass tests, limiting their reported oracle to fail-to-pass coverage. Static byte-size inspection does not establish tokenizer acceptance. No corpus membership, labels, fitting, calibration pins or frozen risk/coverage thresholds changed. A hypothetical zero-error23-unit interval already fails the5% bound; clustering and agent-authored benchmark proxies add limitations that sample multiplication cannot remove. Additional public ReviewBench/SWE-PRBench/SWE-Review sources are documented with their actual label scopes in `docs/vega-reference-contract.md`; bug findings and operational test resolution are not complete human readiness labels.
 
 On719d901e ordinary GitHub source CI passed, but required BuildkiteCI2201 failed in the runner's mise/buildkite-gha bootstrap before parsing its workflow or running source tests. A same-commit sibling launched the helper successfully. Public log inspection determines that launch failure without authentication, but does not create a passed CI observation or establish its underlying installation/PATH cause. Full1191 validation retained the public-provider403 failures and could not reach the native phase. Keep source and native gates, fix/recover their actual dependencies and revalidate the exact next checkpoint. Earlier2f measurements remain historical subset evidence, not proof of the unexecuted719 repairs or a later candidate.
+
+## Immutable CI and version-only release command proof (#1397)
+
+`ci_event_context_policy` preserves its existing accepted-carrier tests, including
+regular committed configuration custody. Its original local run exposed the
+legacy carrier's unavailable `tomllib` on the host interpreter (52 passed, one
+failed). That failure is preserved, not marked passed by the experimental Rust
+parser's diagnostic run. The carrier migration is not part of this candidate;
+complete hosted checks must execute under the existing declared CI environment.
+`ci_checkout_policy` retains real private-checkout/containment and rustup-dispatch
+coverage; owned macOS fixture paths use canonical filesystem identities rather
+than weakening containment assertions.
+
+`substrate_integrity::actual_release_command_*` invokes the actual candidate CLI
+on an isolated version-only repository with detached HEAD and a remote-only base.
+It checks required immutable context before skips, both PR and postmerge push
+semantics, mixed-source rejection and the actual generated-projection verifier.
+These are project-check regression executions, never a claim of full publication
+readiness. Dockerfile refresh regression coverage separately preserves LF/CRLF,
+EOF/newline state, project-authored commands and repeated-refresh stability.
+Focused test results and any failures are preserved in the task trajectory.
+Full exact-candidate `decapod validate`, the configured Buildkite source graph and
+existing required native/Vega proof remain necessary before this PR is created.
+The broader delivery checklist is `docs/readiness-delivery-checklist.md`; already
+shipped historical-generator and source-evidence mechanisms remain in use.
+
+Material-spec report notes distinguish `outcome=passed` with
+`proof=authored_change` or `proof=version_only_exact_projections` from explicit
+local `outcome=skipped` reasons. These notes report the executed gate branch;
+they do not promote a project-check result into publication readiness. The
+whole-command regression inspects this JSON record and the non-ready scope rather
+than guessing proof execution from an aggregate green count or absent failure text.

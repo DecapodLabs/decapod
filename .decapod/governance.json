@@ -575,6 +575,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "immutable-ci-validation",
+      "summary": "Record exact Rust regression scope, preserved local legacy carrier dependency failure, real release command and byte preservation coverage. Full final Buildkite/native validation remains required; historical Vega evidence unchanged.",
+      "input_digest": "sha256:7f5c1f57b2c791ba5a8f335cb08d729f2c9ac7d64e5d0148c7a55ff7b09b677e",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
