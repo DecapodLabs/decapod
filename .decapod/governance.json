@@ -449,6 +449,25 @@
     "base_commit": "0c5bfc97375e664f920e1e4c419635097abcfb14",
     "target_base": "origin/master"
   },
+  "claims": {
+    "exact-release-command": {
+      "statement": "Actual candidate project-check admits strictly verified version-only release projections under immutable PR and postmerge context, explicitly records passed versus skipped material proof, and rejects missing/malformed/mixed source evidence before early exits.",
+      "falsifier": "The actual-command positive replay fails or records a skip; invalid context with accepted tip equal to HEAD or mixed source can pass.",
+      "status": "supported",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
+    },
+    "immutable-config-rust": {
+      "statement": "This candidate preserves the accepted controller-pinned CI carrier and adds no Python implementation or runtime. The prepared Rust carrier migration is not active and is not counted as production evidence.",
+      "falsifier": "This candidate changes the pinned carrier or counts the experimental parser results as proof of the unchanged production action.",
+      "status": "supported",
+      "proof_refs": [
+        "/private/tmp/decapod-120-final-source-trajectory.json"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "ci-owned-scratch-canonical",
@@ -465,6 +484,15 @@
       "input_digest": "sha256:8a9635636f2582f9739ee1b3f8050d99841fdc43e606afc432c76670d77922d0",
       "proof_refs": [
         "/private/tmp/decapod-120-focused-ci-context-after.log"
+      ]
+    },
+    {
+      "id": "release-header-preservation",
+      "summary": "Correct actual release projection mismatch by updating only managed ARG values; preserve authored body, LF/CRLF and final newline state. Preservation and actual-command Rust regressions pass. Pending companion files remain in a retained owned stash; full candidate validation required.",
+      "input_digest": "sha256:e37ae0607ea7704aa095ebb90e530dc4c1c0f0a6951aef43bc1d74db2074c485",
+      "proof_refs": [
+        "/private/tmp/decapod-120-docker-header-test-after.log",
+        "/private/tmp/decapod-120-material-command-final.log"
       ]
     }
   ],
@@ -491,10 +519,8 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 24,
-        "forbidden_paths": [
-          "assets/tools/vega-native"
-        ]
+        "file_touch_budget": 32,
+        "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
@@ -506,6 +532,29 @@
         "Official v0.120.0 full decapod validate on exact final branch and accepted master; complete configured Buildkite plus existing native Vega checks; publish after pass and collect PR CI to terminal."
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Final Rust source: exact release header preservation, actual command replay, independent historical generator and unchanged accepted carrier; inventory delta reviewed as test-only canonicalization.",
+          "reviewed_code_fingerprint": "f085e6e0c9de1e16a2d069721a1e5e7947c66bd1ff6817102f67dbda83315562",
+          "spec_material_hash": "82ea8e180aba1e38a433c85f4b6c0e5c915968dcda9170b7fdda72df79165beb"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Final material-spec pass/skip JSON notes and non-ready project-check semantics match executed actual-command regressions; full required profile and source contract preserved.",
+          "reviewed_code_fingerprint": "f085e6e0c9de1e16a2d069721a1e5e7947c66bd1ff6817102f67dbda83315562",
+          "spec_material_hash": "06be61e76fc6c132b2b445e3a21e13aa6298c7764087ddebc92eb67d4be72e49"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Final source preserves filesystem containment, private creation and unsafe-link rejection; only owned fixtures canonicalized, real CLI credentials private, accepted carrier unchanged.",
+          "reviewed_code_fingerprint": "f085e6e0c9de1e16a2d069721a1e5e7947c66bd1ff6817102f67dbda83315562",
+          "spec_material_hash": "2508eea2bb1dcee9ab2ec62a74f594489ec38c7d235c07f0de33a703249278cf"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "No merge/release/publication side effects except authorized passing PR; no force-push, temporary transport refs, gate weakening or fake evidence; no replacement of accepted foundations."
@@ -516,14 +565,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792524104Z"
+      "updated_at": "1792527431Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c312f62c18f5d549165c0dfab4c8f1071c7d5439592a2649d267ae1129d8349a",
+      "artifact_hash": "sha256:4bddf014621816026391732dbf0cfdaf795c7c49db423264af1b0bd3510cf53f",
       "checks": [
+        {
+          "name": "accepted-carrier-local-fixture",
+          "status": "failed"
+        },
+        {
+          "name": "actual-release-command",
+          "status": "passed"
+        },
         {
           "name": "baseline-ci-checkout",
           "status": "failed"
@@ -537,7 +594,19 @@
           "status": "failed"
         },
         {
+          "name": "final-actual-release-command",
+          "status": "passed"
+        },
+        {
+          "name": "final-material-gate-unit",
+          "status": "passed"
+        },
+        {
           "name": "focused-governance-recipe",
+          "status": "passed"
+        },
+        {
+          "name": "historical-generator",
           "status": "passed"
         },
         {
@@ -545,7 +614,27 @@
           "status": "partial"
         },
         {
+          "name": "material-gate-unit",
+          "status": "passed"
+        },
+        {
+          "name": "native-library-test-compile",
+          "status": "failed"
+        },
+        {
           "name": "official-controller-install",
+          "status": "passed"
+        },
+        {
+          "name": "permissive-umask",
+          "status": "passed"
+        },
+        {
+          "name": "release-projection",
+          "status": "passed"
+        },
+        {
+          "name": "rust-ci-context",
           "status": "passed"
         }
       ],
@@ -584,10 +673,38 @@
             "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M5DBY7Y918N445QYA574NGPD": {
@@ -647,6 +764,86 @@
                 "sequence": 6,
                 "tool": "cargo test-main --locked --no-default-features --test ci_checkout_policy --test ci_event_context_policy: 33 checkout passed; 52 context passed,1 failed due to legacy Python tomllib dependency; /private/tmp/decapod-120-focused-ci-context-after.log",
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".github/actions/ci-context/action.yml",
+                  "assets/tools/ci_event_context.rs",
+                  "tests/ci_event_context_policy.rs"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Keep full TOML decoding with existing pinned Rust dependencies; reject malformed/duplicate keys and verify immutable regular source blob before parsing. Remove the observed Python dependency, not its rejection rules."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "assets/tools/ci_config.rs",
+                  "src/decapod/plugins/container.rs",
+                  "tests/substrate_integrity.rs",
+                  "src/decapod/core/validation_runtime/tests.rs"
+                ],
+                "proof_refs": [
+                  "rust-ci-context",
+                  "actual-release-command",
+                  "native-library-test-compile"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "tool": "Rust CI context: 53 passed; substrate integration: 8 passed,1 failed; exact diagnostic identifies extra Dockerfile newline in release refresh; /private/tmp/decapod-120-rust-context-material.log and /private/tmp/decapod-120-material-command-diagnostic.log",
+                "validation_findings": [
+                  "Expanded file budget to 32 to include observed Rust-native bootstrap, actual CLI release replay, portable Mac fixtures and required generated/spec documentation. No Vega changes or new control plane. Latest additional boundary fixtures and header correction await execution."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [],
+                "proof_refs": [
+                  "actual-release-command",
+                  "material-gate-unit",
+                  "historical-generator",
+                  "release-projection",
+                  "permissive-umask",
+                  "accepted-carrier-local-fixture"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "tool": "Actual candidate CLI: two Rust release-command regressions passed in /private/tmp/decapod-120-material-command-recorded.log. Additional postmerge-invalid-context assertion awaits final targeted run.",
+                "validation_findings": [
+                  "An experimental Rust CI parser was prepared but not committed. Rewriting compiled carrier bytes would require independently published controller support. Prepared source and diagnostic results retained privately; original accepted action, Cargo manifest, Bazel catalog and CI context test restored exactly from HEAD. The original local legacy tomllib dependency failure remains failed; required hosted checks remain mandatory. No Python implementation/runtime added."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "/private/tmp/decapod-120-material-gate-unit-final.log",
+                  "/private/tmp/decapod-120-material-command-final.log"
+                ],
+                "proof_refs": [
+                  "final-material-gate-unit",
+                  "final-actual-release-command"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": [
+                  "Explicit inventory review: the only source-contract inventory delta from accepted 0c5bfc97 is assets/tools/source_ci_toolchain.rs, solely cfg(test) fixture canonicalization. Workflow, carrier bytes, production source commands, matrices, provider and required checks are unchanged. Reviewed complete inventory digest from agent.init; updated only that user-editable config pin after private backup. Full validation remains required."
+                ]
               }
             ]
           }
@@ -654,13 +851,23 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ],
       "inspected_files": [
+        ".github/actions/ci-context/action.yml",
+        "assets/tools/ci_config.rs",
+        "assets/tools/ci_event_context.rs",
         "assets/tools/source_ci_toolchain.rs",
         "src/decapod/core/entrypoint_integrity/history.rs",
         "src/decapod/core/governance_document.rs",
         "src/decapod/core/validate.rs",
-        "tests/ci_checkout_policy.rs"
+        "src/decapod/core/validation_runtime/tests.rs",
+        "src/decapod/plugins/container.rs",
+        "tests/ci_checkout_policy.rs",
+        "tests/ci_event_context_policy.rs",
+        "tests/substrate_integrity.rs"
       ],
       "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
       "modified_files": [],
@@ -675,11 +882,20 @@
       "shortcut_risk_signals": [],
       "task_id": "cicd_01m5dbhq2k5bj5wm",
       "tool_calls": [
+        "11 material-spec,16 historical-generator,16 release-projection,1 Dockerfile preservation and1 permissive-umask regressions passed; separate private logs retained.",
+        "Actual candidate CLI: two Rust release-command regressions passed in /private/tmp/decapod-120-material-command-recorded.log. Additional postmerge-invalid-context assertion awaits final targeted run.",
+        "First library compile failed because permissive-umask fixture passed u32 to macOS mode_t; parse native libc::mode_t, retain mode assertions; /private/tmp/decapod-120-docker-header-test.log",
+        "Rust CI context: 53 passed; substrate integration: 8 passed,1 failed; exact diagnostic identifies extra Dockerfile newline in release refresh; /private/tmp/decapod-120-rust-context-material.log and /private/tmp/decapod-120-material-command-diagnostic.log",
         "cargo test-main --locked --no-default-features --test ci_checkout_policy --test ci_event_context_policy: 33 checkout passed; 52 context passed,1 failed due to legacy Python tomllib dependency; /private/tmp/decapod-120-focused-ci-context-after.log",
         "cargo test-main --locked --no-default-features --test ci_checkout_policy governance_recipe_: 3 passed,0 failed; /private/tmp/decapod-120-focused-governance-recipe-after.log",
         "cargo test-main --locked --no-default-features --test ci_checkout_policy: 30 passed,3 failed; /private/tmp/decapod-120-focused-ci-context.log"
       ],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "An experimental Rust CI parser was prepared but not committed. Rewriting compiled carrier bytes would require independently published controller support. Prepared source and diagnostic results retained privately; original accepted action, Cargo manifest, Bazel catalog and CI context test restored exactly from HEAD. The original local legacy tomllib dependency failure remains failed; required hosted checks remain mandatory. No Python implementation/runtime added.",
+        "Expanded file budget to 32 to include observed Rust-native bootstrap, actual CLI release replay, portable Mac fixtures and required generated/spec documentation. No Vega changes or new control plane. Latest additional boundary fixtures and header correction await execution.",
+        "Explicit inventory review: the only source-contract inventory delta from accepted 0c5bfc97 is assets/tools/source_ci_toolchain.rs, solely cfg(test) fixture canonicalization. Workflow, carrier bytes, production source commands, matrices, provider and required checks are unchanged. Reviewed complete inventory digest from agent.init; updated only that user-editable config pin after private backup. Full validation remains required.",
+        "Keep full TOML decoding with existing pinned Rust dependencies; reject malformed/duplicate keys and verify immutable regular source blob before parsing. Remove the observed Python dependency, not its rejection rules."
+      ]
     }
   },
   "legacy_digests": {
