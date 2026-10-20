@@ -792,6 +792,14 @@
       "proof_refs": [
         "/private/tmp/vega-1191-validation-20261020T031718Z.json"
       ]
+    },
+    {
+      "id": "vega1445-native-export-result-repair",
+      "summary": "Repair native-only diagnostic exporter Result conversion identified by official validation and retain exact compilation failure history",
+      "input_digest": "sha256:73884ad9a0eec9520ff623d4306b5fa66c3f08de127ee040a93fcd44c5cbb679",
+      "proof_refs": [
+        "/private/tmp/vega-1191-validation-20261020T041040Z.json"
+      ]
     }
   ],
   "intents": {
@@ -833,22 +841,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Pure final decision predicate extracted without changing truth table or authority. Live receipts/publication and native replay now consume the same function; replay booleans authenticate no proof. Existing fail-closed publication regression protects failed proof/abstention/stale output. Fixtures remain constructed, no independent labels, model/calibration changes, inactive mode, new controller or extra control plane. Correct fixture README to current admission use and rejected inactive proposal. Source9a5passedBuildkite2291all39/GHAall, but officialvalidate failedpublicGitHub403rate-limit during commit recheck before native; preserve report and wait04:10:27UTCreset with no alternate auth.",
-          "reviewed_code_fingerprint": "2bdd681d64f0037b96df12be8e5e44d054a8e2cccfb3ebb14c8a1196fcd84fdd",
+          "reason": "Actual304sourceBuildkite2296all39and1463librarytests passed after quota reset; native worker check0 then failed E0308 before tests/model. Repair final collector write with question-mark conversion plus Ok unit result. No protocol, model, math, pins, scope, calibration, policy, final gate, recipe or custody changes. VALIDATION authored prose distinguishes actual separately locked native compilation from main source success and requires export IO failures to propagate. Reviewed helper9e58; same d6d98runrecipe. Preserve041040Z failure; rerun full exact-source validate without manual worker build or false native success.",
+          "reviewed_code_fingerprint": "b11806b389f96f3e5cd6e2092e8c121c7b10b0730caddb976d42999dcff5acd8",
           "spec_material_hash": "d86e1629b984c43eb0e5fb2382649179c45a9eb9a10cf46fdc34d992999de71e"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document shared permits_decision predicate consumed by live receipts/publication and actual native model diagnostic outputs. Failed proof still dominates any model decision; public pure replay function grants no task/CI/publication authority. Same original thresholds, modes, model pins, source graph and8runrecipe. Reconcile fixture README stale nonconsumption/inactive-proposal claims. Source9a5green but failedfinal metadata recheck quota403 before native, no modelpassclaim. New candidate requires full prescribed validate after public quota reset; no Buildkite login/new credential or unsafe reroute.",
-          "reviewed_code_fingerprint": "2bdd681d64f0037b96df12be8e5e44d054a8e2cccfb3ebb14c8a1196fcd84fdd",
+          "reason": "Actual304sourceBuildkite2296all39and1463librarytests passed after quota reset; native worker check0 then failed E0308 before tests/model. Repair final collector write with question-mark conversion plus Ok unit result. No protocol, model, math, pins, scope, calibration, policy, final gate, recipe or custody changes. VALIDATION authored prose distinguishes actual separately locked native compilation from main source success and requires export IO failures to propagate. Reviewed helper9e58; same d6d98runrecipe. Preserve041040Z failure; rerun full exact-source validate without manual worker build or false native success.",
+          "reviewed_code_fingerprint": "b11806b389f96f3e5cd6e2092e8c121c7b10b0730caddb976d42999dcff5acd8",
           "spec_material_hash": "5c65fc97931e5d91d77dc5bfaf0b4247c3095e17344804eadcc44d6560a8ae8d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Pure final decision predicate extracted without changing truth table or authority. Live receipts/publication and native replay now consume the same function; replay booleans authenticate no proof. Existing fail-closed publication regression protects failed proof/abstention/stale output. Fixtures remain constructed, no independent labels, model/calibration changes, inactive mode, new controller or extra control plane. Correct fixture README to current admission use and rejected inactive proposal. Source9a5passedBuildkite2291all39/GHAall, but officialvalidate failedpublicGitHub403rate-limit during commit recheck before native; preserve report and wait04:10:27UTCreset with no alternate auth.",
-          "reviewed_code_fingerprint": "2bdd681d64f0037b96df12be8e5e44d054a8e2cccfb3ebb14c8a1196fcd84fdd",
+          "reason": "Actual304sourceBuildkite2296all39and1463librarytests passed after quota reset; native worker check0 then failed E0308 before tests/model. Repair final collector write with question-mark conversion plus Ok unit result. No protocol, model, math, pins, scope, calibration, policy, final gate, recipe or custody changes. VALIDATION authored prose distinguishes actual separately locked native compilation from main source success and requires export IO failures to propagate. Reviewed helper9e58; same d6d98runrecipe. Preserve041040Z failure; rerun full exact-source validate without manual worker build or false native success.",
+          "reviewed_code_fingerprint": "b11806b389f96f3e5cd6e2092e8c121c7b10b0730caddb976d42999dcff5acd8",
           "spec_material_hash": "d22b96974fa42a386a9bffb7a0e118243b3ef7ad15d07f65e252b1ee1339d2e4"
         }
       ],
@@ -862,7 +870,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792468542Z"
+      "updated_at": "1792470274Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -874,7 +882,7 @@
         "Public benchmark labels remain scoped agent-authored proxies; no model outputs inform holdout split or calibration fitting.",
         "Reference model equations are independently authored scalar F64 Rust from pinned Apache-2.0 Transformers spec; no candidate backbone/CPU/engine calls for reference values. Shared SafeTensors/JSON/hash infrastructure and same-agent authorship explicitly limit independence."
       ],
-      "artifact_hash": "sha256:74bac856f92ca412b71238cd92262f9361aa5e9314926778d20101ac8ea0bc71",
+      "artifact_hash": "sha256:24435ea9c4386c2892cb2f9d8aeeebdc511b35183a6b8ea509ff8cd132a70267",
       "checks": [
         {
           "name": "bazel_metadata_regeneration",
@@ -1089,6 +1097,10 @@
           "status": "passed"
         },
         {
+          "name": "library1463_304",
+          "status": "passed"
+        },
+        {
           "name": "local-runtime-regressions",
           "status": "unavailable"
         },
@@ -1141,6 +1153,10 @@
           "status": "passed"
         },
         {
+          "name": "native_compile_304",
+          "status": "failed"
+        },
+        {
           "name": "native_compile_4c",
           "status": "failed"
         },
@@ -1189,6 +1205,10 @@
           "status": "passed"
         },
         {
+          "name": "native_tests_304",
+          "status": "unavailable"
+        },
+        {
           "name": "native_tests_76",
           "status": "passed"
         },
@@ -1218,6 +1238,10 @@
         },
         {
           "name": "new_full_validation",
+          "status": "unavailable"
+        },
+        {
+          "name": "new_model_execution",
           "status": "unavailable"
         },
         {
@@ -1410,6 +1434,10 @@
         },
         {
           "name": "source_30015",
+          "status": "passed"
+        },
+        {
+          "name": "source_304",
           "status": "passed"
         },
         {
@@ -1918,10 +1946,17 @@
             "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
             "kind": "trajectory_step_recorded",
             "sequence": 64
+          },
+          {
+            "detail": "trajectory:branch_01M52FPFE20Z7DZVE569ZZYJ77",
+            "event_id": "event:65",
+            "intent_id": "intent:change_01M52FPFDFCY7ZXGYNDYN51JBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 65
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 64,
+        "next_sequence": 65,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M52FPFE20Z7DZVE569ZZYJ77": {
@@ -3307,6 +3342,31 @@
                 "validation_findings": [
                   "Actual9a5source39passedandGitHubCIgreen, thenpublicGithubObjectscommitrecheck403quotareset1792469427before native. Preserve report, do not auth-fallback/newprerequisite. Usewaitforreversible27-line shared final-gate/refREADMEcorrection; current noindependentreadinesslabels, no modelclaims. Reviewedd6cb helperinventory with unchangedd6d98runrecipe. Existingpublicationregression exercisesextractedfunction; no modelgateweakening. Retryplainvalidateafter04:10:27UTCresetexactnewsource/target, no identicalexposedv2run."
                 ]
+              },
+              {
+                "action": "recovery",
+                "custody_event_id": "event:65",
+                "observations": [
+                  "assets/tools/vega_infer.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/vega-1191-validation-20261020T041040Z.json",
+                  "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-ZYCAMo/rust-workers/check-0.stderr",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2296"
+                ],
+                "proof_refs": [
+                  "source_304",
+                  "library1463_304",
+                  "native_compile_304",
+                  "native_tests_304",
+                  "new_model_execution"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 65,
+                "validation_findings": [
+                  "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR."
+                ]
               }
             ]
           }
@@ -3350,6 +3410,7 @@
         "/private/tmp/vega-1191-validation-20261019T232350Z.json",
         "/private/tmp/vega-1191-validation-20261020T030933Z.json",
         "/private/tmp/vega-1191-validation-20261020T031718Z.json",
+        "/private/tmp/vega-1191-validation-20261020T041040Z.json",
         "/private/tmp/vega-132f-docs-sync-public.log",
         "/private/tmp/vega-1445-5635-clippy.log",
         "/private/tmp/vega-1445-accepted-input-bindings.jsonl",
@@ -3359,6 +3420,7 @@
         "/private/tmp/vega-c831-buildkite-2241-bootstrap.log",
         "/private/tmp/vega-native-diagnostic-validation-3.json",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-HUH8Fy/rust-workers/worker-0-run-1.json",
+        "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-ZYCAMo/rust-workers/check-0.stderr",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-readiness-eEdDJD/rust-workers/check-0.stderr",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-OVpZ4q",
         "Actual CI error STALE_SPEC_REVIEW SECURITY.md or code changed after review; Architecture/Interfaces were current, Security needed supported current-code review after660974b4. Re-reviewed Security unchanged-with-reason and refreshed projections, retaining all failures and native-release blocker.",
@@ -3404,6 +3466,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/2271",
         "https://buildkite.com/decapodlabs/decapod/builds/2290",
         "https://buildkite.com/decapodlabs/decapod/builds/2291",
+        "https://buildkite.com/decapodlabs/decapod/builds/2296",
         "https://github.com/DecapodLabs/decapod/actions/runs/39046342568",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128171",
         "https://github.com/DecapodLabs/decapod/actions/runs/39048857754/job/117443128233",
@@ -3537,6 +3600,7 @@
         "Author shared projection seam and regression coverage; preserve all scientific failures and production authority. User requires complete functional integration, rejects prior inactive-stage proposal. Public related execution/release issues are consumed boundaries, not automatically closure scope.",
         "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
         "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
+        "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
         "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
         "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority.",
         "Fullvalidate5635stoppedbefore native because public docs workflow2290failed generatedconfigschema. Followed actualreport source-built docs build via reviewed existing docs-repairscript; no candidatecontrollergovernance. GitHubClippydiagnostic found single needlessborrow newly extracted sharedfunction. Fixwithoutlint suppression, preservefailedreport, rerunexactcandidate. No previousnativepassisclaimedforthisnewcode.",

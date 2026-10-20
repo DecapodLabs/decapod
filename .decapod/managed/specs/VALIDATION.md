@@ -2,6 +2,14 @@
 
 ## Validation Overview
 
+The separate native worker is compiled and tested from its own locked Cargo
+workspace after the complete source verdict. Main-crate CI cannot type-check
+all worker-only code and is not evidence that native compilation succeeded.
+Diagnostic export errors must propagate through the worker's error result;
+an I/O failure, empty proof or partial JSON cannot become successful collection.
+The native check-0 failure on `304060a3` occurred during compilation, before
+any worker tests or model inference; its report and compiler output are retained.
+
 Decapod validates governed work against declared intent, accepted policy and a finite required proof profile. The agent repairs failures and publishes only after the exact candidate passes; the human retains merge authority. Vega remains an optional post-validation assessment. Failed deterministic proof stops before model inference, while numerical/model verification of this integration is a separate development acceptance obligation.
 
 The latest executed source, `9f017d31`, passed all 39 source steps and 49 native tests, plus the three fixed Metal/CPU numerical comparisons. Full report `vega-1191-validation-20261019T232350Z` still failed the required scientific aggregate. Subsequent contract diagnosis reconstructed and hash-verified every one of its 29 accepted model inputs; the 23 label conflicts divide into 19 visible constructed-condition/uncertainty misses and four known failing-base cases outside the post-validation stage. The six matching gold accepts are benchmark-oracle agreement, not independently established complete-readiness labels.
@@ -675,7 +683,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2bdd681d64f0037b96df12be8e5e44d054a8e2cccfb3ebb14c8a1196fcd84fdd`
+- Repository signal fingerprint: `b11806b389f96f3e5cd6e2092e8c121c7b10b0730caddb976d42999dcff5acd8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -618,7 +618,8 @@ fn collect_production_protocol(proof: &Path) -> Result<(), Box<dyn std::error::E
             "wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
             "scope":"Fixed development-only constructed protocol observations. Actual model execution through shared production projection and response checks, not repository proof or readiness-domain qualification. No fitting or final holdout use."
         }),
-    )
+    )?;
+    Ok(())
 }
 fn collect_readiness_shard(index: usize, proof: &Path) -> Result<(), Box<dyn std::error::Error>> {
     use scientific_collection::{Collection, Phase, SHARDS};
