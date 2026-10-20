@@ -620,6 +620,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "managed-release-pin",
+      "summary": "Record the official installed-controller workspace release projection while preserving project workspace instructions. Production header preservation fix is separately committed and tested.",
+      "input_digest": "sha256:cb172140f89b65004778debd967e4ff01596e8e484d7c71f10041618ec36d883",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
