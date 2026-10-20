@@ -557,6 +557,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "immutable-ci-architecture",
+      "summary": "Document actual header preservation, Rust command regressions, historical-generator identity and unchanged accepted carrier boundary. Experimental carrier migration is not active or counted as proof.",
+      "input_digest": "sha256:42257197fe9bf204d64c324c542eea938b3e08a6005e6b79c07dfb9839b519cf",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {

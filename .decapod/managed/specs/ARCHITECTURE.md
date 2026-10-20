@@ -543,7 +543,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
+- Repository signal fingerprint: `f085e6e0c9de1e16a2d069721a1e5e7947c66bd1ff6817102f67dbda83315562`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -700,3 +700,21 @@ The separate Rust worker explicitly pins candle-vllm b1055eca63de76b548d0d4b0daa
 Candidate76e87da2 subsequently executed actual Metal and CPU model inference and the138-token independent numerical subset under official1191, including GPU one-shot reuse rejection. The314-token fixture exposed a reference-only omission: memory vectors were hardcoded zero. The independent scalar reference now computes floor-assigned chunk means from its own block19 rows using pinned vegaml21a17/config12f4f737; no candidate pooling helper or expected values are reused. Analytic boundary/offset/finite guards are authored and require the next validation. Max512 reference tokens, all model/calibration pins and frozen tolerances remain. Both partial heldout backend phases executed and failed proxy-label risk/coverage; broader context parity, production fallback routing and calibration remain unsatisfied. Measured details and preserved failure references are in docs/vega-reference-contract.md.
 
 Measured Metal model load failed because upstream reset_all uses CUDA-only zero_, despite successful real Metal arithmetic. The worker now consumes an owned fresh GPU model for one pooling attempt and discards its complete recurrent state on success, failure or unwind. It synchronizes completion and resource release and refuses a second attempt on that instance; production already uses a fresh worker per request. This changes no persistent installation/task/storage responsibilities and does not ignore a reset failure. The existing Rust recipe collects diagnostics and automatic/CPU holdout evidence independently before a required aggregate verdict, so missing parity or a negative calibration result cannot suppress unrelated collection. The kernel retains the hard deadline and publication authority. Exact prior CPU/model/reference measurements and their single138-token scope are recorded in `docs/vega-reference-contract.md`; new GPU/fallback/collector behavior remains unverified until executed.
+
+## Immutable target configuration in source CI
+
+The accepted CI context action continues to bind workbranch pushes to the
+regular committed configuration blob, exact checkout and accepted ancestry.
+Its carrier bytes remain unchanged because the installed controller independently
+pins them. A prepared Rust-only bootstrap migration is retained privately and is
+not an active feature or proof of this PR. No Python implementation or runtime is
+added. Actual candidate-command regressions remain Rust and invoke the existing
+validator/projection interfaces. Neither context diagnostics nor CI-local checks
+claim provider freshness or publication readiness.
+
+The managed Dockerfile release refresh in `plugins/container.rs` changes only
+the two release-bound ARG values. Its preservation of line endings, trailing
+newline state, authored commands and blank lines keeps the projection verifier's
+expected bytes consistent with actual command-level release validation. Existing
+historical generator verification continues to bind earlier entrypoints to their
+own immutable generator source rather than retroactively applying this template.
