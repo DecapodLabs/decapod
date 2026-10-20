@@ -773,6 +773,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-intent-projection",
+      "summary": "Supported specs.refresh projection for reviewed final code; existing product intent preserved.",
+      "input_digest": "sha256:4bac72068d185ceceb48fdb708d6f6b42174a7d3afebfe95b87d40401f8102c3",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
