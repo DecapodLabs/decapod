@@ -126,6 +126,33 @@ fn merge_init_config_values(
     }
 }
 
+// Retire only the known provider selector. Other authored decision settings
+// remain user data; an unknown selector needs review rather than silent loss.
+fn retire_decision_provider(config: &mut toml::Value) -> Result<(), error::DecapodError> {
+    let Some(decision) = config.get_mut("decision") else {
+        return Ok(());
+    };
+    let unsupported = || {
+        error::DecapodError::ValidationError(
+        "RETIRED_DECISION_CONFIG: review the unsupported [decision] configuration; init preserves the file instead of guessing its meaning".into(),
+    )
+    };
+    let decision = decision.as_table_mut().ok_or_else(unsupported)?;
+    if let Some(provider) = decision.get("provider") {
+        if !matches!(provider.as_str(), Some("none" | "jev")) {
+            return Err(unsupported());
+        }
+        decision.remove("provider");
+        if decision.is_empty() {
+            config
+                .as_table_mut()
+                .expect("project config table")
+                .remove("decision");
+        }
+    }
+    Ok(())
+}
+
 fn write_project_config(
     target_dir: &Path,
     config: &DecapodProjectConfig,
@@ -147,6 +174,7 @@ fn write_project_config(
             error::DecapodError::ValidationError(format!("CONFIG_SERIALIZE_FAILED: {error}"))
         })?;
         merged = authored.clone();
+        retire_decision_provider(&mut merged)?;
         // Normalize supported legacy aliases without leaving duplicate fields.
         if let Some(repo) = merged.get_mut("repo").and_then(toml::Value::as_table_mut) {
             repo.remove("architecture_intent");
@@ -850,11 +878,6 @@ const DIAGRAM_NOTATION_OPTIONS: &[&str] = &["ascii", "mermaid"];
 const DIAGRAM_NOTATION_DESCRIPTIONS: &[&str] = &[
     "ASCII/text blocks readable in terminals and plain Markdown",
     "Mermaid diagrams rendered by GitHub Markdown from readable text source",
-];
-const DECISION_PROVIDER_OPTIONS: &[&str] = &["none", "jev"];
-const DECISION_PROVIDER_DESCRIPTIONS: &[&str] = &[
-    "Local-only operation; do not request external observations",
-    "Optional advisory trajectory observation through Jev",
 ];
 const SELECTOR_VISIBLE_OPTIONS: usize = 10;
 
@@ -1562,45 +1585,6 @@ fn prompt_diagram_style(
     parse_diagram_style_choice(&choice, default_style)
 }
 
-fn decision_provider_choice(
-    provider: crate::core::decision_provider::DecisionProviderKind,
-) -> Result<crate::core::decision_provider::DecisionProviderKind, error::DecapodError> {
-    print_init_block(
-        "Decision Provider",
-        "Choose whether Decapod may request optional advisory observations.",
-    );
-    println!(
-        "    current selection/default: {}",
-        match provider {
-            crate::core::decision_provider::DecisionProviderKind::None => "none",
-            crate::core::decision_provider::DecisionProviderKind::Jev => "jev",
-        }
-        .bright_white()
-    );
-    println!("    options: up/down, type name or number");
-    let default = vec![
-        match provider {
-            crate::core::decision_provider::DecisionProviderKind::None => "none",
-            crate::core::decision_provider::DecisionProviderKind::Jev => "jev",
-        }
-        .to_string(),
-    ];
-    let choice = prompt_terminal_selector(
-        DECISION_PROVIDER_OPTIONS,
-        Some(DECISION_PROVIDER_DESCRIPTIONS),
-        &default,
-        "    choice: ",
-    )?
-    .unwrap_or_else(|| default[0].clone());
-    match choice.to_ascii_lowercase().as_str() {
-        "none" => Ok(crate::core::decision_provider::DecisionProviderKind::None),
-        "jev" => Ok(crate::core::decision_provider::DecisionProviderKind::Jev),
-        _ => Err(error::DecapodError::ValidationError(
-            "Invalid decision provider; expected none or jev".to_string(),
-        )),
-    }
-}
-
 fn init_with_from_config(
     config: &DecapodProjectConfig,
     target_dir: PathBuf,
@@ -1653,13 +1637,13 @@ fn init_with_from_config(
         existing_repository_contract: config.proof.repository_contract.clone(),
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
+        vega_decisions: Some(config.vega.mode == core::vega_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
         backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
         } else {
             crate::cli::BackendType::Local
         },
-        decision_provider: Some(config.decision.provider),
         git: false,
         no_git: false,
     }
@@ -1743,11 +1727,11 @@ fn preserve_unspecified_init_options(
     if !explicit("validation_buildkite_preflights") {
         init.validation_buildkite_preflights = existing.validation_buildkite_preflights;
     }
+    if !explicit("vega_decisions") {
+        init.vega_decisions = existing.vega_decisions;
+    }
     if !explicit("backend") {
         init.backend = existing.backend;
-    }
-    if !explicit("decision_provider") {
-        init.decision_provider = existing.decision_provider;
     }
     // Entrypoint flags add requested projections without silently removing the
     // project's existing selection; --all explicitly adds every projection.
@@ -1874,11 +1858,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-        decision: DecisionConfig {
-            provider: init
-                .decision_provider
-                .unwrap_or(crate::core::decision_provider::DecisionProviderKind::None),
-        },
+        vega: core::vega_readiness::Configuration::default(),
     }
 }
 
@@ -2017,6 +1997,10 @@ fn enrich_repo_context_interactive(
         &proof_default,
     )?;
     apply_init_proof_command_input(init, &proof_input);
+    init.vega_decisions = Some(prompt_yes_no(
+        "Require Vega readiness decisions after validation? (Each maintainer installs the runtime and pinned model data separately.)",
+        init.vega_decisions.unwrap_or(false),
+    )?);
     init.validation_buildkite_preflights = Some(prompt_yes_no(
         "Use Buildkite on the current workspace branch for the full required proof suite? (No runs the full suite natively in Decapod.)",
         init.validation_buildkite_preflights.unwrap_or(false),
@@ -2082,11 +2066,6 @@ fn enrich_repo_context_interactive(
 
     let enable_ci = prompt_yes_no("Scaffold GitHub Action for decapod validate?", init.ci)?;
     init.ci = enable_ci;
-
-    init.decision_provider = Some(decision_provider_choice(
-        init.decision_provider
-            .unwrap_or(crate::core::decision_provider::DecisionProviderKind::None),
-    )?);
 
     Ok(())
 }
@@ -2518,10 +2497,10 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_repository_contract: None,
                             existing_rust_workers: None,
                             existing_ci_attested: None,
+                            vega_decisions: init_group.vega_decisions,
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
                             backend: init_group.backend,
-                            decision_provider: init_group.decision_provider,
                             git: init_group.git,
                             no_git: init_group.no_git,
                         }
@@ -2618,14 +2597,24 @@ pub fn run() -> Result<(), error::DecapodError> {
                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
             }
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
-            let config = config_from_init_with(&init_with, repo_ctx);
-            write_project_config(&target_dir, &config, init_with.dry_run)?;
-            if !init_with.dry_run
-                && config.decision.provider
-                    == crate::core::decision_provider::DecisionProviderKind::Jev
-            {
-                auth::persist_typesafe_api_key_from_environment()?;
+            let mut config = config_from_init_with(&init_with, repo_ctx);
+            if let Some(existing) = existing_config.as_ref() {
+                config.vega = existing.vega.clone();
             }
+            if let Some(enabled) = init_with.vega_decisions {
+                config.vega.mode = if enabled {
+                    core::vega_readiness::Mode::Required
+                } else {
+                    core::vega_readiness::Mode::Disabled
+                };
+                if enabled
+                    && config.vega.model_manifest_digest.is_empty()
+                    && config.vega.installation.is_none()
+                {
+                    config.vega.model_manifest_digest = core::vega_setup::baseline_digest()?;
+                }
+            }
+            write_project_config(&target_dir, &config, init_with.dry_run)?;
             // The scaffold writes project specs before the final config is
             // persisted. Refresh the manifest after that write so its
             // config/spec input hashes describe the actual initialized
@@ -2719,6 +2708,31 @@ pub fn run() -> Result<(), error::DecapodError> {
             run_release_command(release_cli, &project_root)?;
         }
         Command::Setup(setup_cli) => match setup_cli.command {
+            SetupCommand::Vega {
+                cache_directory,
+                runtime,
+                cpu_runtime,
+                check_updates,
+                refresh,
+                offline,
+                rollback,
+            } => {
+                let report = core::vega_setup::run(&core::vega_setup::SetupOptions {
+                    cache_directory,
+                    runtime,
+                    cpu_runtime,
+                    check_updates,
+                    refresh,
+                    offline,
+                    rollback,
+                })?;
+                let report_json = serde_json::to_string_pretty(&report).map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "vega setup report serialization failed: {e}"
+                    ))
+                })?;
+                println!("{report_json}");
+            }
             SetupCommand::Hook {
                 commit_msg,
                 pre_commit,
@@ -6267,6 +6281,11 @@ fn run_validate_command_local(
         None
     };
 
+    let fallback_guidance = core::validation_runtime::ValidationGuidance::for_outcome(false);
+    let guidance = readiness
+        .as_ref()
+        .map(|result| &result.agent_guidance)
+        .unwrap_or(&fallback_guidance);
     if validate_cli.format == "json" {
         println!(
             "{}",
@@ -6274,11 +6293,7 @@ fn run_validate_command_local(
                 "status": report.status,
                 "scope": scope.label(),
                 "publication_ready": readiness.as_ref().is_some_and(|r| r.ready),
-                "agent_guidance": scope.requires_publication_proof().then(||
-                    core::validation_runtime::ValidationGuidance::for_outcome(
-                        readiness.as_ref().is_some_and(|r| r.ready)
-                    )
-                ),
+                "agent_guidance": scope.requires_publication_proof().then_some(guidance),
                 "readiness": readiness,
                 "self_heal": heal_actions,
                 "report": report,
@@ -6295,9 +6310,6 @@ fn run_validate_command_local(
         }
         render_validation_text(&report, &heal_actions, validate_cli.verbose);
         if scope.requires_publication_proof() {
-            let guidance = core::validation_runtime::ValidationGuidance::for_outcome(
-                readiness.as_ref().is_some_and(|r| r.ready),
-            );
             println!("{}", guidance.execution);
             println!("{}", guidance.instruction);
             if !readiness.as_ref().is_some_and(|r| r.ready) {
@@ -6639,6 +6651,8 @@ fn run_current_workbranch_readiness_with(
                 signal_guard.restore()?;
                 return Ok(runtime::ValidationReport {
                     ready: false,
+                    proof_ready: false,
+                    vega_readiness: None,
                     scope: runtime::READINESS_SCOPE,
                     agent_guidance: runtime::ValidationGuidance::for_outcome(false),
                     stage_dispositions: Vec::new(),
@@ -6738,6 +6752,8 @@ fn run_current_workbranch_readiness_with(
     })();
     result.unwrap_or_else(|error| runtime::ValidationReport {
         ready: false,
+        proof_ready: false,
+        vega_readiness: None,
         scope: report_scope,
         agent_guidance: runtime::ValidationGuidance::for_outcome(false),
         stage_dispositions: Vec::new(),

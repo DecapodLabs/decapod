@@ -3,16 +3,18 @@ use super::*;
 
 #[test]
 fn test_redact_aws_key() {
-    let input = "my key is AKIAIOSFODNN7EXAMPLE ok";
-    let result = redact_string(input);
+    // Preserve full runtime redaction coverage without credential-shaped source.
+    let key = format!("{}{}", "AKIA", "X".repeat(16));
+    let input = format!("my key is {key} ok");
+    let result = redact_string(&input);
     assert!(result.contains("[AWS_KEY_REDACTED]"));
-    assert!(!result.contains("AKIAIOSFODNN7EXAMPLE"));
+    assert!(!result.contains(&key));
 }
 
 #[test]
 fn test_redact_github_token() {
-    let input = "token=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-    let result = redact_string(input);
+    let input = format!("token={}{}", "ghp_", "X".repeat(36));
+    let result = redact_string(&input);
     assert!(result.contains("[GITHUB_TOKEN_REDACTED]"));
     assert!(!result.contains("ghp_"));
 }
@@ -50,7 +52,7 @@ fn test_redact_password_assignment() {
 #[test]
 fn test_redact_json_value() {
     let val = serde_json::json!({
-        "command": "export AWS_KEY=AKIAIOSFODNN7EXAMPLE",
+        "command": format!("export AWS_KEY={}{}", "AKIA", "X".repeat(16)),
         "my_token": "should_be_fully_redacted",
         "safe_field": "no secrets here"
     });

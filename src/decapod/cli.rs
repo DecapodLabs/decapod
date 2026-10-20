@@ -260,6 +260,10 @@ pub(crate) struct InitGroupCli {
     /// Proof command in `name=command` form (repeatable/comma-separated).
     #[clap(long = "proof-command", value_delimiter = ',')]
     pub proof_commands: Vec<String>,
+    /// Require Vega readiness decisions after deterministic validation passes.
+    /// Omission preserves the existing setting; runtime/model setup is separate.
+    #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
+    pub vega_decisions: Option<bool>,
     /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
@@ -270,9 +274,6 @@ pub(crate) struct InitGroupCli {
     /// It does not perform login, provisioning, or sync during init.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
-    /// Configure the optional decision provider. Jev remains advisory and credentials stay machine-local.
-    #[clap(long = "decision-provider", value_enum)]
-    pub decision_provider: Option<crate::core::decision_provider::DecisionProviderKind>,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -412,6 +413,10 @@ pub(crate) struct InitWithCli {
     pub existing_rust_workers: Option<crate::core::validation_runtime::rust_worker::Configuration>,
     #[clap(skip)]
     pub existing_ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
+    /// Require Vega readiness decisions after deterministic validation passes.
+    /// Omission preserves the existing setting; runtime/model setup is separate.
+    #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
+    pub vega_decisions: Option<bool>,
     /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
@@ -422,9 +427,6 @@ pub(crate) struct InitWithCli {
     /// It does not perform login, provisioning, or sync during init.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
-    /// Configure the optional decision provider. Jev remains advisory and credentials stay machine-local.
-    #[clap(long = "decision-provider", value_enum)]
-    pub decision_provider: Option<crate::core::decision_provider::DecisionProviderKind>,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -455,8 +457,11 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
-    #[serde(default)]
-    pub decision: DecisionConfig,
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::vega_readiness::Configuration::is_default"
+    )]
+    pub vega: crate::core::vega_readiness::Configuration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -540,13 +545,6 @@ impl Default for TrackerConfig {
 pub struct DeclaredContextConfig {
     #[serde(default)]
     pub declared_sources: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(deny_unknown_fields)]
-pub struct DecisionConfig {
-    #[serde(default)]
-    pub provider: crate::core::decision_provider::DecisionProviderKind,
 }
 
 /// Canonicalize a repository-relative path used by governance configuration.
@@ -789,7 +787,7 @@ impl Default for DecapodProjectConfig {
             custody: CustodyConfig::default(),
             tracker: TrackerConfig::default(),
             context: DeclaredContextConfig::default(),
-            decision: DecisionConfig::default(),
+            vega: crate::core::vega_readiness::Configuration::default(),
         }
     }
 }
@@ -849,6 +847,25 @@ pub(crate) struct SetupCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum SetupCommand {
+    /// Explicitly install, verify or refresh the external vega model cache.
+    Vega {
+        #[clap(long)]
+        cache_directory: Option<PathBuf>,
+        /// Register this maintainer's installed worker without committing its path.
+        #[clap(long, conflicts_with = "check_updates")]
+        runtime: Option<PathBuf>,
+        /// Register a separate CPU-only worker for machines missing GPU libraries.
+        #[clap(long, requires = "runtime", conflicts_with = "check_updates")]
+        cpu_runtime: Option<PathBuf>,
+        #[clap(long, conflicts_with_all = ["refresh", "offline", "rollback"])]
+        check_updates: bool,
+        #[clap(long, conflicts_with_all = ["check_updates", "offline", "rollback"])]
+        refresh: bool,
+        #[clap(long, conflicts_with_all = ["check_updates", "refresh"])]
+        offline: bool,
+        #[clap(long, conflicts_with_all = ["check_updates", "refresh"])]
+        rollback: Option<String>,
+    },
     /// Install or uninstall repository git hooks
     Hook {
         /// Install conventional commit message validation hook

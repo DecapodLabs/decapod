@@ -72,7 +72,7 @@ pub struct Options {
     pub max_output_bytes: usize,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Blocker {
     pub code: String,
     pub detail: String,
@@ -127,6 +127,40 @@ impl ValidationGuidance {
         }
     }
 
+    fn for_vega_outcome(
+        proof_ready: bool,
+        mode: super::vega_readiness::Mode,
+        decision: super::vega_readiness::Decision,
+    ) -> Self {
+        use super::vega_readiness::{Decision, Mode};
+        if !proof_ready {
+            return Self::for_outcome(false);
+        }
+        if mode == Mode::Disabled && decision == Decision::Disabled {
+            return Self::for_outcome(true);
+        }
+        let (next_action, instruction) = match (mode, decision) {
+            (Mode::Required, Decision::Accept) => (
+                "create_authorized_pr",
+                "Required validation passed and Vega accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Vega evidence. This result does not authorize merge or release; preserve human review and existing delivery authority.",
+            ),
+            (Mode::Required, Decision::Reject) => (
+                "address_readiness_gaps_and_revalidate",
+                "Required validation passed, but Vega did not find the validated change ready. Agent: review the declared intent, remaining requirements and bound evidence, complete any unmet work, checkpoint the correction and rerun decapod validate. The boolean verdict does not identify a specific defect by itself; do not invent a model explanation or retry unchanged inputs to seek acceptance. Do not create the PR.",
+            ),
+            _ => (
+                "resolve_readiness_abstention_and_revalidate",
+                "Required validation passed, but Vega supplied no usable readiness approval. Agent: inspect the Vega receipt reason and backend attempts, resolve missing, stale, contradictory or unsupported evidence and any reported installation/runtime error, then rerun decapod validate. Abstention is not approval or a diagnosed code defect. Do not create the PR, weaken required proof or retry unchanged inputs to seek acceptance.",
+            ),
+        };
+        Self {
+            phase: "post_validation_readiness",
+            next_action,
+            instruction,
+            ..Self::for_outcome(false)
+        }
+    }
+
     fn for_controller_contract_unsupported() -> Self {
         Self {
             next_action: "obtain_supported_controller",
@@ -140,6 +174,8 @@ impl ValidationGuidance {
 #[derive(Debug, Serialize)]
 pub struct ValidationReport {
     pub ready: bool,
+    pub proof_ready: bool,
+    pub vega_readiness: Option<super::vega_readiness::Receipt>,
     pub scope: &'static str,
     pub agent_guidance: ValidationGuidance,
     /// Governs execution intent; mocked dispositions claim no successful run.
@@ -150,6 +186,28 @@ pub struct ValidationReport {
 impl ValidationReport {
     pub fn exit_code(&self) -> i32 {
         if self.ready { 0 } else { 1 }
+    }
+    fn finish(mut self, result: io::Result<()>) -> Self {
+        if let Err(error) = result {
+            // A late evidence write/sync failure must revoke an earlier verdict
+            // and its delivery instructions, even after proof and Vega passed.
+            self.ready = false;
+            self.agent_guidance = ValidationGuidance::for_outcome(false);
+            let unsupported_controller = matches!(
+                error
+                    .get_ref()
+                    .and_then(|cause| cause.downcast_ref::<profile::PlanningFailure>()),
+                Some(profile::PlanningFailure::ControllerContractUnsupported(_))
+            );
+            let code = if unsupported_controller {
+                self.agent_guidance = ValidationGuidance::for_controller_contract_unsupported();
+                "CONTROLLER_CONTRACT_UNSUPPORTED"
+            } else {
+                "READINESS_BLOCKED"
+            };
+            self.blockers.push(Blocker::new(code, error.to_string()));
+        }
+        self
     }
 }
 
@@ -469,7 +527,8 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
             "canonical config/governance must be tracked, and complete input inventory must fit limits",
         ));
     }
-    let configuration = proof_configuration(&budget.read(&file(&options.root, CONFIG)?)?)?;
+    let configuration_bytes = budget.read(&file(&options.root, CONFIG)?)?;
+    let configuration = proof_configuration(&configuration_bytes)?;
     match configuration.required_profile.as_ref() {
         None => {
             return Err(invalid(
@@ -509,6 +568,14 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     .map_err(|_| {
         invalid("ACCEPTED_BASE_NOT_ANCESTOR: incorporate the current accepted base before proof")
     })?;
+    let accepted_entries = git(options, budget, &["ls-tree", "-z", &base, "--", CONFIG])?;
+    if !accepted_entries.is_empty() {
+        let accepted_bytes = git(options, budget, &["show", &format!("{base}:{CONFIG}")])?;
+        super::vega_readiness::verify_policy_acceptance(
+            &super::vega_readiness::configuration_from_bytes(&configuration_bytes)?,
+            &super::vega_readiness::configuration_from_bytes(&accepted_bytes)?,
+        )?;
+    }
     let facts = ApplicabilityFacts {
         event: "pull_request".into(),
         target_branch: options.base_branch.clone(),
@@ -834,6 +901,8 @@ fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
 pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -> ValidationReport {
     let mut report = ValidationReport {
         ready: false,
+        proof_ready: false,
+        vega_readiness: None,
         scope: READINESS_SCOPE,
         agent_guidance: ValidationGuidance::for_outcome(false),
         stage_dispositions: Vec::new(),
@@ -841,22 +910,7 @@ pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -
         evidence_path: None,
     };
     let result = run(options, host, cancel, &mut report);
-    if let Err(error) = result {
-        let unsupported_controller = matches!(
-            error
-                .get_ref()
-                .and_then(|cause| cause.downcast_ref::<profile::PlanningFailure>()),
-            Some(profile::PlanningFailure::ControllerContractUnsupported(_))
-        );
-        let code = if unsupported_controller {
-            report.agent_guidance = ValidationGuidance::for_controller_contract_unsupported();
-            "CONTROLLER_CONTRACT_UNSUPPORTED"
-        } else {
-            "READINESS_BLOCKED"
-        };
-        report.blockers.push(Blocker::new(code, error.to_string()));
-    }
-    report
+    report.finish(result)
 }
 fn run(
     options: &Options,
@@ -885,6 +939,10 @@ fn run(
         return Err(invalid("PROJECT_PREREQUISITES_FAILED"));
     }
     let project = load_project(options, &mut budget)?;
+    let vega_config = super::vega_readiness::configuration(&options.root)?;
+    // Freeze local custody before deterministic proof without running inference.
+    // Missing local setup remains a post-proof abstention, not proof authority.
+    let vega_installation = super::vega_readiness::capture_installation(&vega_config);
     if prerequisites == ProjectPrerequisites::ProviderRequired
         && !project.configuration.validation_buildkite_preflights
     {
@@ -1021,7 +1079,7 @@ fn run(
     )
     .map_err(|e| invalid(e.to_string()))?;
     let mut current_target = TargetObservation {
-        invocation_id: invocation,
+        invocation_id: invocation.clone(),
         repository: options.repository.clone(),
         branch: options.base_branch.clone(),
         revision: host.accepted_target(&options.repository, &options.base_branch, &budget)?,
@@ -1078,8 +1136,123 @@ fn run(
         )
         .map_err(|e| invalid(format!("NOT_READY_AFTER_RUST_WORKER: {e:?}")))?;
     }
-    report.ready = verdict == Verdict::Ready;
-    report.agent_guidance = ValidationGuidance::for_outcome(report.ready);
+    report.proof_ready = verdict == Verdict::Ready;
+    // The only vega invocation: deterministic proof and custody already passed.
+    // The assessment cannot create proof readiness or waive any required check.
+    let config = &vega_config;
+    if super::vega_readiness::configuration(&options.root)? != *config {
+        return Err(invalid("VEGA_POLICY_CHANGED_DURING_VALIDATION"));
+    }
+    let trajectory_run_id = if config.mode == super::vega_readiness::Mode::Disabled {
+        String::new()
+    } else {
+        super::trajectory::load_trajectory_cookie(&options.root)
+            .map_err(io::Error::other)?
+            .map(|trajectory| trajectory.run_id)
+            .unwrap_or_default()
+    };
+    let mut decision = super::vega_readiness::assess(
+        &options.root,
+        &directory,
+        super::vega_readiness::AssessmentConfig {
+            policy: config,
+            captured_installation: &vega_installation,
+        },
+        &super::vega_readiness::ValidationSummary {
+            scope: report.scope,
+            evidence: &result.evidence,
+            dispositions: &report.stage_dispositions,
+            blockers: &report.blockers,
+        },
+        super::vega_readiness::Binding {
+            material: current.identity.clone(),
+            governance_digest: current.governance_commit_digest.clone(),
+            proof_plan_digest: current_profile.plan().digest().map_err(io::Error::other)?,
+            evidence_digest: evidence::digest(&result.evidence).map_err(io::Error::other)?,
+            configuration_digest: String::new(),
+            trajectory_run_id,
+        },
+        budget.remaining()?,
+        budget.cancel,
+    )?;
+    // Disabled mode must retain existing behavior, including no additional
+    // provider calls. Required inference gets a fresh independent proof check.
+    let final_proof = if config.mode == super::vega_readiness::Mode::Disabled {
+        Ok(verdict)
+    } else {
+        (|| -> io::Result<Verdict> {
+            if super::vega_readiness::configuration(&options.root)? != *config {
+                return Err(invalid("VEGA_POLICY_CHANGED_DURING_INFERENCE"));
+            }
+            let target = TargetObservation {
+                invocation_id: invocation,
+                repository: options.repository.clone(),
+                branch: options.base_branch.clone(),
+                revision: host.accepted_target(
+                    &options.repository,
+                    &options.base_branch,
+                    &budget,
+                )?,
+            };
+            let project = load_project(options, &mut budget)?;
+            let state = publication_state(options, &project, &selection, &mut budget)?;
+            let plan = profile::compile_plan(
+                project.catalog,
+                &selection.policy,
+                &selection.bindings,
+                &state.identity,
+                &state.governance_policy_digest,
+            )
+            .map_err(|e| invalid(e.to_string()))?;
+            profile::finish(
+                &frozen,
+                &plan,
+                &state,
+                &target,
+                profile::ProviderOutcome::Complete(&result.evidence),
+            )
+            .map_err(|e| invalid(format!("{e:?}")))
+        })()
+    };
+    if final_proof.is_err() {
+        decision.stale();
+        report.proof_ready = false;
+    }
+    if decision.decision == super::vega_readiness::Decision::Accept
+        && super::vega_readiness::verify_installation_snapshot(
+            config,
+            &vega_installation,
+            budget.deadline,
+            budget.cancel,
+        )
+        .is_err()
+    {
+        // Runtime/model drift invalidates the assessment while keeping the
+        // independently completed deterministic proof disposition distinct.
+        decision.stale();
+    }
+    write_new(
+        &directory.join("vega-readiness.json"),
+        &serde_json::to_vec_pretty(&decision).map_err(io::Error::other)?,
+    )?;
+    report.ready = super::vega_readiness::permits_publication(
+        matches!(final_proof, Ok(Verdict::Ready)),
+        &decision,
+    );
+    if !decision.permits_readiness() {
+        report.blockers.push(Blocker::new(
+            "VEGA_READINESS_BLOCKED",
+            decision.reason.clone(),
+        ));
+    }
+    report.agent_guidance =
+        ValidationGuidance::for_vega_outcome(report.proof_ready, decision.mode, decision.decision);
+    report.vega_readiness = Some(decision);
+    if let Err(error) = final_proof {
+        return Err(invalid(format!(
+            "STALE_POST_VALIDATION_DECISION: {error:?}"
+        )));
+    }
     write_new(
         &directory.join("verdict.json"),
         &serde_json::to_vec_pretty(report).map_err(io::Error::other)?,
@@ -1876,6 +2049,24 @@ pub fn discover_rust_tools(
     cancel: &Cancellation,
     authorize: &mut dyn FnMut(NativeAction<'_>) -> io::Result<()>,
 ) -> io::Result<PreparedNativeTools> {
+    discover_rust_tools_until(
+        options,
+        required_version,
+        Instant::now() + options.timeout.min(Duration::from_secs(120)),
+        cancel,
+        authorize,
+    )
+}
+
+/// Supplemental discovery shares the invocation's absolute deadline. Its local
+/// discovery cap may shorten that deadline, but must never restart the budget.
+fn discover_rust_tools_until(
+    options: &Options,
+    required_version: &str,
+    deadline: Instant,
+    cancel: &Cancellation,
+    authorize: &mut dyn FnMut(NativeAction<'_>) -> io::Result<()>,
+) -> io::Result<PreparedNativeTools> {
     if required_version.is_empty()
         || !required_version
             .bytes()
@@ -1884,7 +2075,7 @@ pub fn discover_rust_tools(
         return Err(invalid("invalid required Rust version"));
     }
     let mut budget = RuntimeBudget {
-        deadline: Instant::now() + options.timeout.min(Duration::from_secs(120)),
+        deadline: deadline.min(Instant::now() + options.timeout.min(Duration::from_secs(120))),
         cancel,
         max_output_bytes: options.max_output_bytes.min(4 * 1024 * 1024),
         bytes_left: options.max_input_bytes,

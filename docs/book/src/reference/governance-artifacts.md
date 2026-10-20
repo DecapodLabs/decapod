@@ -10,7 +10,6 @@ unresolved obligations, and normalized logical sections:
 | Claims | `decapod govern artifacts claim` | Current-PR falsifiable claims; support requires proof |
 | Trajectory | `decapod govern trajectory` | Intent custody, scope, actions, assumptions, checks, and evidence |
 | Validation | `decapod validate` | Receipt bound to current repository inputs and trajectory |
-| Jev (optional) | `assurance.evaluate` with Jev enabled | Advisory observations for the active trajectory |
 
 Health Engine claims remain in `.decapod/data/decapod.db`, and runtime workunit
 manifests in `.decapod/data/workunits/`. Neither is a second tracked research ledger.
@@ -41,8 +40,8 @@ Checkpoints are cumulative within the current PR. Publication and CI verify
 exact immutable material at every authored commit, including merges, and reject
 erased or rewritten checkpoints. A valid file only at the PR tip is insufficient.
 Pre-adoption legacy history is not retroactively represented as verified proof.
-A new trajectory resets only its current Jev observations; committed prior
-observations remain recoverable through Git.
+Historical observation sections remain readable and are preserved when a new
+trajectory starts. They do not supply current readiness or require credentials.
 
 ## Population order and write boundaries
 

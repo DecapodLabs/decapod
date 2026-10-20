@@ -392,6 +392,8 @@ fn validate_domain(section: &str, value: &Value) -> Result<(), DecapodError> {
                 }
             }
         }
+        // Read-only compatibility for retired provider evidence. Validate the
+        // stored shape without binding it to current readiness or credentials.
         "jev" => {
             if version != Some("1.0.0") {
                 return Err(invalid("Unsupported Jev schema"));

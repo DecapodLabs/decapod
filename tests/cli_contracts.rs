@@ -191,3 +191,8 @@ fn contract_fixture_is_private_at_creation() {
 mod consumer_readiness;
 mod init_ci_scaffolding;
 mod init_config_behavior;
+
+// Keep every recovery case in the required selective CLI matrix while balancing
+// the two real-process suites within their unchanged 300-second budgets.
+#[path = "support/cli_workunit_recovery.rs"]
+mod workunit_recovery;

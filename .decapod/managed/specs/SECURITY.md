@@ -1,6 +1,37 @@
 # Security
 
+Vega's tracked team policy pins model identity separately from each maintainer's
+private runtime binding. Explicit setup registers native executable bytes without
+running them or proving their source. Unix runtime checks reject foreign ownership,
+writable-by-others files, scripts, incompatible architecture and multiple links;
+private registration records reject malformed or mismatched identities. Operator
+selection of a trusted reviewed runtime remains a trust boundary. Validation
+freezes the binding before proof and rechecks binding/model/runtime identity before
+consuming an acceptance. Local registration cannot bless source proof, fabricate
+Metal/CPU execution or establish numerical parity. CPU fallback is restricted to a
+typed hardware-unavailable response without a model answer, then a fresh process
+under the original deadline with reverified identical pins. Malformed output,
+arithmetic failure, timeout, crash, negative verdict and abstention do not trigger
+fallback. Runtime labels must match the explicit physical-backend request. New
+CPU and CUDA paths still require actual execution and numerical verification;
+neither a CPU answer nor a capability declaration proves Metal execution.
+
+The verification-only scalar F64 reference verifies immutable model/config hashes and calculates expected values without candidate tensor/model math, while sharing generic infrastructure, weights and authorship. Candidate `30015be0` executed three fixed 138/314/4,096-token Metal/CPU comparisons, the exact token boundary and all 16 memory slots; this does not establish all-input equivalence or independent human review. Raw tensors stay in bounded private exports. The final required scientific command rechecks referenced bytes and comparisons without importing earlier-run artifacts. The complete v2 collection nevertheless produced 23 false-ready proxy outcomes per backend. Proxy labels, incomplete supported coverage and 23 source lineages retain the unsatisfied readiness-calibration gate.
+
+The new bounded plan projection preserves explicit obligations without treating
+plan gate flags as proof. Its overflow path abstains; final governance identity
+checks reject changed intent or obligations. The verification-only public review
+capture contains source facts, not private sessions or controller evidence, and
+is excluded from the published crate. Its Rust audit pins bytes and checks exact
+review/commit binding, timestamps, edits and complete pagination. Selected review
+verdicts and rationale are excluded from prospective model input; future CI is
+not backfilled. Public `User`/maintainer identity is not proof of unaided human
+authorship, and owner grouping is not a guarantee of statistical independence.
+Structural eligibility alone never grants a calibration or publication pass.
+
 ## Explicit local task-transfer trust
+
+The separate worker's vendored Metal subpackage preserves its exact upstream base/tree and explicit three-barrier source modification. Patched shader identity is separate from the upstream revision; the standard Apache text corrects a prior project-specific appendix without inventing an upstream holder. aa66c8e4 actually passed its repeated primitive and two model fixtures after earlier measured Metal failures. The new scientific collection context is ephemeral evidence bookkeeping, not a task control plane or authentication against a malicious worker/same-user forgery. Exclusive files, current-directory/runtime/model/corpus binding, no-follow single-link reads and strict final aggregation reject accidental replay/mixing, altered labels, inconsistent decisions and missing coverage. A collection-only successful exit cannot waive the last required command or any kernel gate.
 
 `src/decapod/core/task_transfer.rs` accepts source custody only with an independently
 supplied artifact digest and explicit operator acceptance. Git origin and agent
@@ -110,6 +141,14 @@ principal with unrestricted filesystem/Git access from rewriting history.
 
 ## Authentication
 
+Vega's required publication configuration is inherited from the accepted target.
+`vega_readiness::verify_policy_acceptance` rejects candidate-side disablement,
+runtime/model repinning, installation-path changes or calibration-setting changes
+when accepted policy is required. Such a policy transition needs independent
+acceptance; setup cache refresh cannot authorize it. A disabled accepted policy
+keeps normal behavior and may add a required assessment. The same check runs in
+initial and post-inference project discovery.
+
 Most mutations require an active local session. Session credentials establish
 repository-local custody and correlation. They do not authenticate an agent's
 model provider, harness, organization or human identity. Local handshake hashes
@@ -118,11 +157,19 @@ self-declared and unverified without a configured trust root. The current binary
 exposes CLI and structured process RPC, not a native MCP server.
 
 Local session credentials prefer private machine-local storage, with a secure
-workspace-local fallback. Cloud authentication and optional Jev credentials use
-separate machine-local records. The TypeSafe key resolves from the environment
-before the machine secret file and never belongs in project state. Session-health
-proof records active or inactive status only. Credentials must not enter source,
+workspace-local fallback. Cloud authentication uses separate machine-local
+records. Active Jev credential persistence and lookup are removed; historical
+secret files are left untouched and are never read by vega. Session-health proof
+records active or inactive status only. Credentials must not enter source,
 trajectory records, validation artifacts or diagnostics.
+
+Vega setup accepts only bounded public official-source artifacts with explicit
+revision, size and SHA-256 pins. It does not accept credentials, agreements or
+gated-model access. Runtime performs no network operation and invokes only the
+canonical pinned native executable. Private create-new bounded request/proof
+files may contain repository context and numeric features; they are local
+diagnostics, never uploaded or treated as trusted policy. Repository text is
+untrusted evidence, and a model verdict cannot overrule deterministic proof.
 
 ## Data Classification
 
@@ -334,8 +381,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
+- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -388,6 +435,20 @@ permissions in a present policy and malformed policy fail closed. No policy
 file is rewritten as a repair, and generic callers cannot request the sealed
 capability without the reviewed contract and measured invocation.
 
+## CPU companion and pre-inference startup custody
+
+Both local executable pins are frozen and verified with native-format, owner,
+mode, single-link, bounded-size and SHA-256 checks. Setup verifies the optional
+CPU companion before replacing its private binding; no shared policy path or
+implicit executable discovery selects it. An absent ELF interpreter or empty
+exit 127 can select only an explicitly pinned CPU companion, before a model
+request is supplied. Typed hardware-only startup failures may select the same
+worker's CPU path. Malformed capability reports, other exits/signals, timeout,
+compute failure and negative/abstaining/malformed inference remain non-ready.
+Attempt phase/runtime hashes distinguish startup from inference. A registered
+native executable remains operator-trusted code; headers and self-reports are
+not independent build provenance, dispatch, numerical or calibration evidence.
+
 ## Supplemental Rust worker verification
 
 Supplemental Rust-worker proof preserves source-CI authority. It cannot execute
@@ -411,3 +472,13 @@ calibration, physical dispatch or publication authority.
 ### Fixture alias custody (#1457)
 
 The reviewed fixture exception permits only a fixed source path and literal `target.txt` link payload with a separately measured regular file under the same fixture directory. It does not follow a caller-selected path, permit chains, accept a symlink target, skip sensitivity scanning or bypass denied paths. Committed, staged and working material must each satisfy its relevant alias/target checks, preventing a valid working link from laundering a malicious staged or committed link. Existing independent identity remeasurement, source immutability, private scratch, process and byte budgets remain required. This follows the existing reviewed toolchain-alias trust model; it is not an OS sandbox against concurrent malicious filesystem mutation or candidate code.
+
+GPU one-shot ownership consumes the entire model before inference and discards it after synchronized completion, including failures, avoiding unsupported CUDA-only global reset and any uncleared-state reuse. The worker does not expose a reusable cross-request cache. The independent collector preserves every phase error and returns nonzero unless all required phases pass; malformed or missing private receipts fail closed. Sharing the strict typed CPU retry classifier with diagnostics adds no gate authority: inference errors, ordinary abstention, malformed IPC, stale assets or disabled fallback still cannot authorize another attempt. Real alternate-API unavailability in a diagnostic is not evidence that a working preferred GPU failed or that the full kernel publication/custody protocol ran.
+
+### Public diagnostics and semantic evidence limits
+
+The completed76 validation exposed false-ready outcomes against proxy labels and unexecuted/token-overflow cases on both backends. These remain required acceptance failures; no labels, sample denominator, calibration or thresholds are adjusted to make them pass. The reference's zero-memory omission is repaired from independently pinned specification/config and own scalar block outputs, with analytic anchors rather than candidate-derived expected values. Shared authorship/parser/weights and512-token scope still limit independence. Actual CUDA-unavailable-to-CPU component execution does not establish preferred-Metal failure or full production custody/fallback routing. All raw numeric inputs and receipts remain private outside Git.
+
+Public provider metadata and logs may diagnose a failed bootstrap without credentials. They remain untrusted diagnostic content: reading a sibling success or downloading a failure log cannot import a passed observation, alter the required graph or grant publication. A pre-parser helper launch failure establishes no source-test or native execution. Provider recovery must preserve failed history and bind the next real execution to the exact ordinary branch candidate. No authentication state, raw machine logs or model inputs belong in Git.
+
+Numerical and semantic references have separate trust limits. The scalar Rust reference shares parsing/hash infrastructure and pinned weights with the candidate, and its author is the same agent; measured agreement does not imply separate human review or unsupported-mode correctness. Public bug findings, test-oracle resolution and same-agent counterfactual labels do not establish comprehensive readiness. Related lineage IDs must not inflate independent risk counts, nor may an absent review finding be silently converted into a ready label. These limits retain the unsatisfied readiness-calibration gate rather than changing policy or thresholds to fit the available evidence.

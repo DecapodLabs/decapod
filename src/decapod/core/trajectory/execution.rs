@@ -261,7 +261,7 @@ fn capture_once(
     trajectory.execution_checkpoints.clear();
     let trajectory_digest = digest(&trajectory.canonicalized())?;
     let mut governance = BTreeMap::new();
-    for section in ["claims", "validation", "jev"] {
+    for section in ["claims", "validation"] {
         governance.insert(section, governance_document::read_section(root, section)?);
     }
     let (policy_digest, required_approvals) = capture_policy(root, task_id, approvals, &mut io)?;

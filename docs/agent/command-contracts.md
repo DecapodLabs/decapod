@@ -243,7 +243,7 @@ governed publisher retain their existing independent proof requirements.
 # Governance Artifact Ownership
 
 `.decapod/governance.json` is the sole tracked governance document. Its logical
-plan, trajectory, validation, claims, and optional Jev sections share normalized
+plan, trajectory, validation, and claims sections share normalized
 intent and epoch records. Health Engine operational claims remain separate in
 `.decapod/data/decapod.db`; workunit runtime manifests live in `.decapod/data/workunits/`.
 Do not hand-edit either control-plane authority.

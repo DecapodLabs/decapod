@@ -623,6 +623,26 @@ fn failed_partial_prerequisites_never_reach_execution() {
     );
 }
 #[test]
+fn failed_validation_precedes_required_vega_and_retains_repair_guidance() {
+    let f = Fixture::new("[proof]\n[vega]\nmode='required'\nalpha='0.1'\nrisk='0.1'\n");
+    let mut h = host();
+    h.prerequisites = ProjectPrerequisites::Failed;
+    let report = validate(&f.options, &mut h, &Cancellation::default());
+    assert_eq!(report.exit_code(), 1);
+    assert!(!report.proof_ready);
+    assert!(report.vega_readiness.is_none());
+    assert!(report.evidence_path.is_none());
+    assert_eq!(report.agent_guidance.next_action, "repair_and_revalidate");
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|b| b.detail.contains("PROJECT_PREREQUISITES_FAILED"))
+    );
+    assert_eq!(h.called, 1);
+    assert_eq!(h.target_calls, 0);
+}
+#[test]
 fn preparation_changes_require_commit_and_rerun() {
     let f = Fixture::new("[proof]\n");
     let mut h = host();
@@ -912,6 +932,103 @@ fn installed_tool_discovery_measures_real_pinned_rust_without_credentials() {
             .unwrap()
             .next()
             .is_none()
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn supplemental_discovery_stops_slow_rust_probe_at_original_deadline() {
+    const CHILD: &str = "DECAPOD_SLOW_RUST_DISCOVERY_CHILD";
+    if let Some(compiler) = std::env::var_os(CHILD) {
+        let mut fixture = Fixture::new("[proof]\n");
+        // Earlier validation consumed almost all of the original two minutes.
+        // Discovery must not restart that original duration.
+        fixture.options.timeout = Duration::from_secs(120);
+        let started = Instant::now();
+        let deadline = started + Duration::from_millis(500);
+        let mut probes = 0;
+        let result = discover_rust_tools_until(
+            &fixture.options,
+            "1.96.1",
+            deadline,
+            &Cancellation::default(),
+            &mut |action| {
+                assert!(matches!(action, NativeAction::ToolProbe { .. }));
+                probes += 1;
+                Ok(())
+            },
+        );
+        assert!(result.is_err());
+        assert_eq!(probes, 1);
+        assert!(
+            PathBuf::from(compiler).with_extension("started").is_file(),
+            "the real slow Rust probe must have started"
+        );
+        assert!(
+            started.elapsed() < Duration::from_secs(3),
+            "discovery exceeded the remaining half-second budget"
+        );
+        let mut expired_probes = 0;
+        assert!(
+            discover_rust_tools_until(
+                &fixture.options,
+                "1.96.1",
+                deadline,
+                &Cancellation::default(),
+                &mut |_| {
+                    expired_probes += 1;
+                    Ok(())
+                },
+            )
+            .is_err()
+        );
+        assert_eq!(expired_probes, 0);
+        return;
+    }
+
+    let temp = tempfile::tempdir().unwrap();
+    let bin = temp.path().join("bin");
+    fs::create_dir(&bin).unwrap();
+    let source = temp.path().join("slow_probe.rs");
+    let compiler = bin.join("rustc");
+    // The probe is a real Rust process, not a shell or a fake successful tool
+    // receipt. A marker proves dispatch; its sleep must be interrupted.
+    fs::write(
+        &source,
+        r#"fn main() {
+    let marker = std::env::current_exe().unwrap().with_extension("started");
+    std::fs::write(marker, b"started").unwrap();
+    std::thread::sleep(std::time::Duration::from_secs(5));
+}"#,
+    )
+    .unwrap();
+    let build = Command::new(std::env::var_os("RUSTC").unwrap_or_else(|| "rustc".into()))
+        .arg("--edition=2024")
+        .arg(&source)
+        .arg("-o")
+        .arg(&compiler)
+        .bounded_output(Duration::from_secs(45))
+        .unwrap();
+    assert!(
+        build.status.success(),
+        "{}",
+        String::from_utf8_lossy(&build.stderr)
+    );
+    let child = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "core::validation_runtime::tests::supplemental_discovery_stops_slow_rust_probe_at_original_deadline",
+            "--nocapture",
+        ])
+        .env(CHILD, &compiler)
+        .env("PATH", &bin)
+        .env("RUSTUP_HOME", temp.path().join("no-rustup"))
+        .bounded_output(Duration::from_secs(15))
+        .unwrap();
+    assert!(
+        child.status.success(),
+        "{}",
+        String::from_utf8_lossy(&child.stderr)
     );
 }
 
@@ -1398,6 +1515,99 @@ fn successful_validation_preserves_readiness_scope_and_existing_delivery_authori
     assert!(guidance.instruction.contains("human intent"));
     assert!(guidance.instruction.contains("reported readiness scope"));
     assert!(guidance.instruction.contains("existing authorization"));
+}
+
+#[test]
+fn vega_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
+    use crate::core::vega_readiness::{Decision, Mode};
+    for (mode, decision, expected) in [
+        (Mode::Required, Decision::Accept, "create_authorized_pr"),
+        (
+            Mode::Required,
+            Decision::Reject,
+            "address_readiness_gaps_and_revalidate",
+        ),
+        (
+            Mode::Required,
+            Decision::Abstain,
+            "resolve_readiness_abstention_and_revalidate",
+        ),
+        (
+            Mode::Required,
+            Decision::Disabled,
+            "resolve_readiness_abstention_and_revalidate",
+        ),
+        (
+            Mode::Disabled,
+            Decision::Disabled,
+            "review_delivery_readiness",
+        ),
+    ] {
+        let guidance = ValidationGuidance::for_vega_outcome(true, mode, decision);
+        assert_eq!(guidance.next_action, expected);
+        assert_eq!(guidance.owner, "agent");
+        assert_eq!(guidance.entry_command, "decapod validate");
+        if mode == Mode::Required {
+            assert_eq!(guidance.phase, "post_validation_readiness");
+            assert!(guidance.instruction.contains("Required validation passed"));
+            if decision == Decision::Accept {
+                assert!(guidance.instruction.contains("already authorized"));
+                assert!(
+                    guidance
+                        .instruction
+                        .contains("does not authorize merge or release")
+                );
+            } else {
+                assert!(guidance.instruction.contains("not create the PR"));
+            }
+        }
+        // Even an accepting model cannot turn failed or stale proof into PR guidance.
+        let failed = ValidationGuidance::for_vega_outcome(false, mode, decision);
+        assert_eq!(failed.phase, "validation");
+        assert_eq!(failed.next_action, "repair_and_revalidate");
+    }
+}
+
+#[test]
+fn late_verdict_write_failure_revokes_readiness_and_pr_instructions() {
+    use crate::core::vega_readiness::{Decision, Mode};
+    let directory = tempfile::tempdir().unwrap();
+    let verdict = directory.path().join("verdict.json");
+    write_new(&verdict, b"preserve existing evidence").unwrap();
+    let report = ValidationReport {
+        ready: true,
+        proof_ready: true,
+        vega_readiness: None,
+        scope: READINESS_SCOPE,
+        agent_guidance: ValidationGuidance::for_vega_outcome(
+            true,
+            Mode::Required,
+            Decision::Accept,
+        ),
+        stage_dispositions: Vec::new(),
+        blockers: Vec::new(),
+        evidence_path: Some(directory.path().to_owned()),
+    };
+    let report = report.finish(Ok(()));
+    assert!(report.ready);
+    assert_eq!(report.exit_code(), 0);
+    assert_eq!(report.agent_guidance.next_action, "create_authorized_pr");
+    // The final create_new write can fail after successful checks and assessment.
+    // Its failure must dominate the earlier in-memory readiness decision.
+    let error = write_new(&verdict, b"new final report").unwrap_err();
+    assert_eq!(error.kind(), io::ErrorKind::AlreadyExists);
+    let failed = report.finish(Err(error));
+    assert!(!failed.ready);
+    assert_eq!(failed.exit_code(), 1);
+    assert_eq!(failed.agent_guidance.next_action, "repair_and_revalidate");
+    assert_eq!(failed.blockers.last().unwrap().code, "READINESS_BLOCKED");
+    // Completed proof remains diagnostic information, never publication authority.
+    assert!(failed.proof_ready);
+    assert_eq!(failed.evidence_path.as_deref(), Some(directory.path()));
+    assert_eq!(fs::read(&verdict).unwrap(), b"preserve existing evidence");
+    let value = serde_json::to_value(failed).unwrap();
+    assert_eq!(value["ready"], false);
+    assert_eq!(value["agent_guidance"]["phase"], "validation");
 }
 
 #[cfg(unix)]

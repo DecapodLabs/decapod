@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://decapod.dev/schemas/jev-observations-1.0.0.schema.json",
-  "title": "Decapod Jev Observation Ledger",
-  "description": "Advisory Jev results recorded for one active Decapod trajectory run.",
+  "title": "Decapod Historical Jev Observation Ledger",
+  "description": "Retired observation evidence retained for read-only compatibility; never current readiness authority.",
   "type": "object",
   "additionalProperties": false,
   "required": ["$schema", "schema_version", "kind", "trajectory_run_id", "runs"],

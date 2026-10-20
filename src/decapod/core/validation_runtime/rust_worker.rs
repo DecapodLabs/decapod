@@ -324,8 +324,13 @@ pub(super) fn execute(
             "RUST_WORKER_TOOLCHAIN_CONFLICT: one explicit Rust toolchain per recipe set",
         ));
     }
-    let mut tools =
-        discover_rust_tools(options, versions.first().unwrap(), budget.cancel, authorize)?;
+    let mut tools = discover_rust_tools_until(
+        options,
+        versions.first().unwrap(),
+        budget.deadline,
+        budget.cancel,
+        authorize,
+    )?;
     if configuration
         .workers
         .iter()

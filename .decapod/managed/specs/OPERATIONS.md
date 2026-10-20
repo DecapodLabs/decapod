@@ -246,13 +246,20 @@ semantics remain outside the coordination guarantee. Details are in
 
 ## Optional services
 
-Jev is an optional advisory decision provider. The default `none` makes no
-provider request. Selected Jev calls use bounded HTTP and machine-local
-credentials; missing credentials, timeout, unavailability or malformed output
-produce `no_observation`. Deterministic interlocks and proof gates still apply.
-Attempted observations are retained in the trajectory-bound `jev` section of the
-governance document, without the API key. That section is created only for an
-attempt and reset with a new trajectory. There is no background provider process.
+Vega is disabled by default. Explicit setup caches verified external model data;
+normal builds and inference never download models. Check updates using
+`decapod setup vega --check-updates`, refresh an explicitly selected compatible
+revision using `--refresh`, or restore a verified cached manifest with
+`--rollback`. Unchanged backbone files are reused by content hash. The native
+Rust worker must be built from a reviewed source release on Apple-arm64, checked
+with `--probe`, and explicitly pinned before required mode can run. This is not
+permission to bypass repository validation for development builds.
+
+Required inference is bounded and one-shot, with fresh recurrent state and no
+background process. Unsupported hardware, missing/changed artifacts, timeout,
+overflow or ambiguous output abstains. Current calibration is general upstream
+decision calibration, not an established code-readiness risk guarantee. Historical
+Jev evidence is readable but never appended, reset or used for new readiness.
 
 Cloud storage is explicitly configured and uses separate cloud authentication.
 Availability of a client library or registry package does not prove a hosted
@@ -345,8 +352,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c70ffd6e8a73a07da4df08a3a542a8673226565070c979a6ef4cba106346e8b5`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (204 files), `tests/` (194 files)
+- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

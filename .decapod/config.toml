@@ -61,9 +61,29 @@ approval_categories = ["destructive_operations"]
 validation_buildkite_preflights = true
 commands = []
 
+[proof.rust_workers]
+reviewed_recipes_digest = "sha256:d6d9c7ff0ea68ac067f2c25e5c3544407d9ed00a63d021330061e47244cfe1c1"
+
+[[proof.rust_workers.workers]]
+name = "vega-native"
+manifest = "assets/tools/vega-native/Cargo.toml"
+features = []
+metal_toolchain = true
+timeout_seconds = 1800
+runs = [
+    { arguments = ["--collect-scientific-numerics"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "0"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "1"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "2"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "3"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "4"], proof_output = true },
+    { arguments = ["--collect-readiness-shard", "--index", "5"], proof_output = true },
+    { arguments = ["--verify-scientific-collection"], proof_output = true },
+]
+
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:abae1645217214432e083dab801c186d9259c3113a32fbc39a397d15ca06c60a"
+reviewed_sources_digest = "sha256:a4f8c1f11930506f8de4683a4a9c2b8cbd4cf859a981d8667da5a81ee3833ce5"
 
 [custody]
 isolation = "container"
@@ -73,9 +93,6 @@ provider = "decapod"
 
 [context]
 declared_sources = []
-
-[decision]
-provider = "none"
 
 # Provider-attested acceptance trusts this configured Buildkite executor.
 # It does not independently prove the keyless importer's plugin implementation

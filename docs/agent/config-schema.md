@@ -15,8 +15,11 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
-    #[serde(default)]
-    pub decision: DecisionConfig,
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::vega_readiness::Configuration::is_default"
+    )]
+    pub vega: crate::core::vega_readiness::Configuration,
 }
 ```
 
@@ -183,3 +186,162 @@ declared intent and satisfies the conditions for integration. Its assurance is
 bounded by the declared requirements and checks. A subsequent readiness decision
 can evaluate that result; the agent publishes through the applicable gate and
 the human retains merge authority. This principle adds no unimplemented guarantee.
+
+## Optional vega post-validation assessment
+
+Vega runs only after the complete deterministic proof profile passes. Failed, missing or stale required validation returns before model inference and blocks PR readiness directly. Vega cannot supply proof, waive checks, alter policy or publish. The agent creates the PR through the existing gate; the human merges. Active Jev integration is removed; historical observations remain readable without governing work. Selecting Vega during init does not add this repository's scientific model-verification corpus or Metal development recipe to other projects.
+
+`init --vega-decisions[=true|false]` and `init with --vega-decisions[=true|false]`
+select required or disabled Vega assessment. Interactive init offers the same
+choice. Refresh preserves the existing choice and installation pins unless
+explicitly changed. Selection installs no model and executes no inference.
+
+Init refresh retires only a recognized `[decision].provider = "none" | "jev"`
+selector, removes an empty retired section, and preserves unrelated authored
+settings, including extension keys in that section. Unknown or malformed provider
+selectors stop refresh without rewriting the configuration. Dry-run remains read-only.
+
+By default `[vega]` is disabled. Required mode additionally needs a positive
+singleton yes, no abstention or unbound/OOD signal, and unchanged exact validated
+material, intent, proof, configuration and model/runtime pins. Negative singleton
+rejects; ambiguous/missing sets, invalid numerical output and unavailable runtime
+abstain. Upstream confidence and conformal settings are not established
+code-readiness risk guarantees.
+The bounded `validation-results.v3` input retains declared proof hooks,
+unresolved and deferred questions, contradictions, stop conditions and phase
+gates alongside intent and actual check observations. Gate satisfaction flags
+remain plan declarations, not independent execution proof. Oversized inputs
+are refused without truncating obligations; administrative metadata and raw
+logs are not supplied. The final custody check rejects changed governance.
+Supported `alpha` values are `"0.1"` and `"0.05"`; `risk` values are `"0.05"`,
+`"0.1"` and `"0.2"`. These select pinned upstream calibration entries, not
+readiness-domain guarantees. `[vega].model_manifest_digest` is the shared immutable
+compound model pin. `setup vega --runtime <installed-worker>` explicitly registers
+each maintainer's canonical runtime path and executable hash in private local cache
+metadata. Registration does not build or execute the worker or certify its source.
+The team configuration contains no maintainer-specific path. Legacy explicit
+`[vega.installation]` directory/runtime/manifest/hash bindings remain supported;
+if both forms are present their model identities must agree.
+
+An already-required accepted-target vega policy cannot be disabled, repinned or
+have its calibration settings changed by the candidate it governs. Validation
+rejects that transition before proof execution with `VEGA_ACCEPTED_POLICY_CHANGED`;
+it needs independent acceptance of the policy change. A disabled accepted target
+retains ordinary behavior and may add an explicit required assessment. Setup
+refresh changes the cache only and never silently rewrites publication policy.
+
+`validation-results.v3` contains actual check outcomes, stage dispositions,
+exclusions, simulated stages, blockers and unresolved trajectory facts, plus
+declared intent, explicit plan obligations and changed paths. Identical semantic observations and
+stage definitions are indexed once. Every check keeps its identity and outcome;
+missing checks remain explicit. Full custody identities bind the complete report
+outside the model prompt. No whole plan, source diff or raw log enters the prompt;
+unrepresented warnings and untested intent remain unknown. The 32 KiB projection
+and 4,096 total-token limits fail closed rather than clipping evidence.
+
+### Explicit installation
+
+`decapod setup vega` installs verified external model data in a private cache.
+`--check-updates` checks bounded official metadata, `--refresh` explicitly selects
+a compatible new revision, `--offline` verifies cached files without networking,
+and `--rollback <manifest-digest>` atomically activates a verified prior install.
+Use `--cache-directory` to select another private cache. Engine/config/calibration,
+backbone, tokenizer and source/license identities have independent immutable pins.
+Unchanged backbone components are reused by content hash without another download.
+Each immutable installation receives a separately verified private copy, requiring
+additional disk space while retaining the single-link storage safety contract.
+Incomplete or cancelled copies never activate an installation. Unsupported architecture,
+quantization, tokenizer or adapter changes fail compatibility checks. A changed
+upstream source revision is surfaced for review, never substituted as runtime code.
+
+Setup prints disabled portable TOML with the verified compound model digest.
+It does not pretend to install a native executable. The Rust worker is built from
+`assets/tools/vega-native/Cargo.toml`. A source-install command from
+a reviewed release is `cargo install --path assets/tools/vega-native --locked`.
+Repository development builds/tests remain owned by ordinary governed validation.
+Run the worker's `--probe` to require a genuine finite Metal numerical result.
+Register the installed worker with `decapod setup vega --offline --runtime <canonical-worker-path>`.
+Apply the shared `model_manifest_digest` from setup and explicitly choose
+`[vega] mode = "required"`, or select `--vega-decisions` during init. Each maintainer
+performs local setup; validation freezes that binding before proof and rechecks it
+before inference and publication. Missing, replaced or malformed local metadata
+cannot authorize readiness. Runtime bytes and model files are reverified locally.
+Runtime digests use `sha256:<64 lowercase hex>`.
+
+Runtime never follows a floating active pointer, downloads artifacts or selects a
+different model during fallback. `[vega] backend = "auto"` (the default) prefers
+Metal on macOS and CUDA elsewhere; `metal`, `cuda` and `cpu` explicitly select a
+backend. `cpu_fallback` defaults true. A CUDA-enabled non-Apple worker requires
+its `cuda` Cargo feature and NVIDIA toolchain; ordinary CPU builds need no CUDA
+toolkit. AMD/Intel GPU acceleration is not implemented. These source paths still
+require execution evidence before portability can be claimed.
+
+A CUDA-linked executable may fail in the OS loader before it can select CPU.
+`setup vega --runtime <gpu-worker> --cpu-runtime <cpu-only-worker>` verifies and
+atomically registers both executable pins in private local metadata. The CPU
+companion uses the same reviewed Rust source with CUDA disabled. Neither path
+belongs in shared project policy; no runtime is built or executed during setup.
+
+After deterministic proof passes, a bounded `--backend-check <metal|cuda>` process
+checks GPU startup and real model-free arithmetic without receiving model paths,
+validation state or an inference request. A typed hardware-unavailable result may
+select CPU. A verified executable reporting an absent ELF interpreter or empty
+loader exit 127 may use only an explicitly pinned CPU companion. Every executable
+pin and the model binding are rechecked before fallback; the overall deadline
+and model/calibration identities stay fixed. Missing companions fail closed.
+
+Malformed or contradictory capability reports, crashes, timeouts and numerical
+errors fail closed. Once inference starts, only typed hardware unavailability
+without any tokens or outcome permits a fresh CPU attempt. Negative decisions,
+abstention and malformed model results never trigger a retry to seek acceptance.
+Set `cpu_fallback = false` to require the selected accelerator. Receipts distinguish
+capability checks from inference and disclose each runtime digest and actual final
+backend. CPU success never proves Metal ran. These paths need actual native
+execution evidence; authored tests and source inspection do not establish it.
+
+The pinned Candle GPU path captures raw blocks 13/19 and pools
+F32 state/question/option/chunk features. The separate Rust CPU path uses the same
+checkpoint and pooling with CPU attention/recurrence, without a generation API.
+It is not an independently reviewed parity reference. The verified BF16 backbone is
+upcast to F32, increasing weight memory accordingly. Base dynamics run in Rust F32
+on CPU; calibration uses F64 probabilities. This profile has adapters off, no image
+path and fresh recurrent state for every request.
+
+### Honest native evidence
+
+Vega supplies a bounded model judgment about validated work, intent and explicit
+obligations. Required mode is active: a current valid affirmative answer satisfies
+the model condition; rejection, abstention, invalid output and execution failure
+prevent readiness. It cannot certify facts omitted from its input or waive proof.
+Domain-level readiness reliability and production-calibrated accuracy remain
+**unestablished**. Upstream confidence/conformal settings are not repository risk
+guarantees. Teams choosing this additional gate must retain the human review and
+deterministic validation authority described above.
+
+On 2026-10-20 the maintainer explicitly replaced this implementation's statistical
+59-acceptance/5%-risk/95%-confidence/50%-coverage prerequisite with functional
+integration acceptance. The old studies and failures remain diagnostic history,
+not a passing original criterion. Fixed functional cases use shared production
+projection, request, response and final predicate on actual Metal and CPU. They
+require meaningful positive acceptance as well as rejection/uncertainty and
+failed/stale/malformed proof controls; collection alone cannot pass the aggregate.
+Following the maintainer's delegated functional interpretation, qualification
+requires genuine approval on each actual backend and every adverse/control case.
+A ready control may validly abstain, but its expected-accept mismatch remains
+reported separately and that assessed work remains blocked. An always-abstaining
+model cannot qualify. This changes no production threshold or publication rule.
+The [completion checklist](../vega-completion-checklist.md) separates these checks
+from unestablished domain accuracy. No inactive/advisory substitute is used.
+
+The private bounded `--proof-output` diagnostic contains exact tokens/spans,
+pooled vectors, engine/calibrated outputs and synchronized timing. Candidate
+`59eaf087` passed 57 native tests and three fixed 138/314/4,096-token Metal/CPU
+comparisons against separate Rust calculations; 4,097 tokens reject. This is
+fixed fresh pure-text evidence with shared authorship/infrastructure, not all-mode
+or independently human-reviewed equivalence. Actual unsupported CUDA followed by
+fresh CPU inference exercised component fallback; NVIDIA hardware and full Linux
+loader-companion routing remain unmeasured. Both backends approved two meaningful
+ready controls; a third validly abstained and missed its expected-accept label.
+The original strict aggregate failed, and domain-level accuracy remains unestablished. See
+[the reference contract](../vega-reference-contract.md) for pins, unchanged
+tolerances, timings/memory scope, historical failures and current-candidate results.

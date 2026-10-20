@@ -158,8 +158,8 @@ fn init_with_backend_local_is_default() {
     let config = fs::read_to_string(config_path).expect("read config.toml");
     assert!(config.contains("backend = \"local\""));
     assert!(
-        config.contains("[decision]\nprovider = \"none\""),
-        "decision provider must default to the local disabled path: {config}"
+        !config.contains("[decision]"),
+        "retired provider configuration must not be generated: {config}"
     );
     assert!(!config.contains("mode = \"local\""));
     assert!(
@@ -169,7 +169,7 @@ fn init_with_backend_local_is_default() {
 }
 
 #[test]
-fn init_jev_persists_machine_key_without_repository_leakage() {
+fn init_rejects_retired_provider_flag_without_persisting_credentials() {
     let project = tempdir().expect("project tempdir");
     let data_home = tempdir().expect("data tempdir");
     let output = Command::new(resolve_decapod_bin())
@@ -180,44 +180,40 @@ fn init_jev_persists_machine_key_without_repository_leakage() {
         .output()
         .expect("run decapod");
     assert!(
-        output.status.success(),
-        "jev init failed: {}",
+        !output.status.success(),
+        "retired provider flag must be rejected: {}",
         String::from_utf8_lossy(&output.stderr)
     );
 
-    let config = fs::read_to_string(project.path().join(".decapod/config.toml"))
-        .expect("read project config");
-    assert!(config.contains("[decision]\nprovider = \"jev\""));
-    assert!(!config.contains("jev-test-key"));
-
-    let secret_path = data_home.path().join("decapod/secrets.json");
-    let secret = fs::read_to_string(&secret_path).expect("read machine secret file");
-    let secret: serde_json::Value = serde_json::from_str(&secret).expect("parse secret file");
-    assert_eq!(secret["typesafe_api_key"], "jev-test-key");
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        assert_eq!(
-            fs::metadata(secret_path).unwrap().permissions().mode() & 0o777,
-            0o600
-        );
-    }
+    assert!(!data_home.path().join("decapod/secrets.json").exists());
 }
 
 #[test]
-fn init_refresh_preserves_decision_provider_without_explicit_override() {
+fn init_refresh_ignores_retired_provider_configuration_and_leaves_secrets_untouched() {
     let project = tempdir().expect("project tempdir");
-    let first = run_decapod(
-        project.path(),
-        &["init", "with", "--force", "--decision-provider", "jev"],
-    );
+    let data_home = tempdir().expect("data tempdir");
+    let first = run_decapod(project.path(), &["init", "with", "--force"]);
     assert!(
         first.status.success(),
-        "initial jev init failed: {}",
+        "initial init failed: {}",
         String::from_utf8_lossy(&first.stderr)
     );
 
-    let refresh = run_decapod(project.path(), &["init", "--refresh"]);
+    let config_path = project.path().join(".decapod/config.toml");
+    let mut config = fs::read_to_string(&config_path).unwrap();
+    config.push_str("\n[decision]\nprovider = \"jev\"\n");
+    fs::write(&config_path, config).unwrap();
+    let secret_path = data_home.path().join("decapod/secrets.json");
+    fs::create_dir_all(secret_path.parent().unwrap()).unwrap();
+    // Deliberately malformed retired credentials cannot block initialization.
+    fs::write(&secret_path, "retired-secret-sentinel").unwrap();
+    let refresh = Command::new(resolve_decapod_bin())
+        .args(["init", "--refresh"])
+        .current_dir(project.path())
+        .env("XDG_DATA_HOME", data_home.path())
+        .env("TYPESAFE_API_KEY", "ignored-retired-key")
+        .output()
+        .expect("refresh");
     assert!(
         refresh.status.success(),
         "refresh init failed: {}",
@@ -225,7 +221,174 @@ fn init_refresh_preserves_decision_provider_without_explicit_override() {
     );
     let config = fs::read_to_string(project.path().join(".decapod/config.toml"))
         .expect("read refreshed project config");
-    assert!(config.contains("[decision]\nprovider = \"jev\""));
+    assert!(!config.contains("[decision]"));
+    assert!(!config.contains("ignored-retired-key"));
+    assert_eq!(
+        fs::read_to_string(secret_path).unwrap(),
+        "retired-secret-sentinel"
+    );
+}
+
+#[test]
+fn init_migrates_only_known_retired_selectors_and_preserves_authored_extensions() {
+    for surface in [vec!["init", "--refresh"], vec!["init", "with", "--force"]] {
+        for provider in ["none", "jev"] {
+            for extension in [false, true] {
+                let project = tempdir().unwrap();
+                assert!(
+                    run_decapod(project.path(), &["init", "with", "--force"])
+                        .status
+                        .success()
+                );
+                let path = project.path().join(".decapod/config.toml");
+                let mut original = fs::read_to_string(&path).unwrap();
+                original.push_str(&format!(
+                    "\n[custom]\nnote = 'preserve me'\n[decision]\nprovider = '{provider}'\n"
+                ));
+                if extension {
+                    original.push_str("reviewer_note = 'authored extension'\n");
+                }
+                fs::write(&path, &original).unwrap();
+                let mut dry = surface.clone();
+                dry.push("--dry-run");
+                assert!(run_decapod(project.path(), &dry).status.success());
+                assert_eq!(fs::read_to_string(&path).unwrap(), original);
+                let output = run_decapod(project.path(), &surface);
+                assert!(
+                    output.status.success(),
+                    "{}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+                let migrated = fs::read_to_string(&path).unwrap();
+                let value: toml::Value = toml::from_str(&migrated).unwrap();
+                assert_eq!(value["custom"]["note"].as_str(), Some("preserve me"));
+                if extension {
+                    assert_eq!(
+                        value["decision"]["reviewer_note"].as_str(),
+                        Some("authored extension")
+                    );
+                    assert!(value["decision"].get("provider").is_none());
+                } else {
+                    assert!(value.get("decision").is_none());
+                }
+                assert!(run_decapod(project.path(), &surface).status.success());
+                assert_eq!(fs::read_to_string(path).unwrap(), migrated);
+            }
+        }
+    }
+}
+
+#[test]
+fn init_refuses_ambiguous_retired_selectors_without_rewriting_user_configuration() {
+    for surface in [vec!["init", "--refresh"], vec!["init", "with", "--force"]] {
+        for provider in ["'custom-provider'", "42", "['jev']"] {
+            let project = tempdir().unwrap();
+            assert!(
+                run_decapod(project.path(), &["init", "with", "--force"])
+                    .status
+                    .success()
+            );
+            let path = project.path().join(".decapod/config.toml");
+            let mut original = fs::read_to_string(&path).unwrap();
+            original.push_str(&format!("\n[decision]\nprovider = {provider}\n"));
+            fs::write(&path, &original).unwrap();
+            let output = run_decapod(project.path(), &surface);
+            assert!(!output.status.success());
+            assert!(String::from_utf8_lossy(&output.stderr).contains("RETIRED_DECISION_CONFIG"));
+            assert_eq!(fs::read_to_string(path).unwrap(), original);
+        }
+    }
+}
+
+#[test]
+fn init_can_select_vega_and_refresh_preserves_policy_and_local_pins() {
+    for mut surface in [vec!["init"], vec!["init", "with"]] {
+        let project = tempdir().unwrap();
+        surface.push("--force");
+        let mut enable = surface.clone();
+        enable.push("--vega-decisions");
+        assert!(run_decapod(project.path(), &enable).status.success());
+        let path = project.path().join(".decapod/config.toml");
+        let mut configured = fs::read_to_string(&path).unwrap();
+        let selected: toml::Value = toml::from_str(&configured).unwrap();
+        assert_eq!(selected["vega"]["mode"].as_str(), Some("required"));
+        assert!(
+            selected["vega"]["model_manifest_digest"]
+                .as_str()
+                .unwrap()
+                .starts_with("sha256:")
+        );
+        assert!(selected["vega"].get("installation").is_none());
+        configured = configured.replacen(
+            "[vega]\n",
+            "[vega]\nbackend = 'cpu'\ncpu_fallback = false\n",
+            1,
+        );
+        configured.push_str(&format!(
+            "\n[custom]\nnote = 'keep team settings'\n\
+             [vega.installation]\ndirectory = '/unavailable-model'\n\
+             manifest_digest = 'sha256:{}'\nruntime = '/unavailable-worker'\n\
+             runtime_sha256 = 'sha256:{}'\n",
+            "a".repeat(64),
+            "b".repeat(64)
+        ));
+        fs::write(&path, configured).unwrap();
+        assert!(run_decapod(project.path(), &surface).status.success());
+        let preserved = fs::read_to_string(&path).unwrap();
+        let before: toml::Value = toml::from_str(&preserved).unwrap();
+        assert_eq!(before["vega"]["mode"].as_str(), Some("required"));
+        assert_eq!(before["vega"]["backend"].as_str(), Some("cpu"));
+        assert_eq!(before["vega"]["cpu_fallback"].as_bool(), Some(false));
+        let mut disable = surface.clone();
+        disable.push("--vega-decisions=false");
+        let mut dry = disable.clone();
+        dry.push("--dry-run");
+        assert!(run_decapod(project.path(), &dry).status.success());
+        assert_eq!(fs::read_to_string(&path).unwrap(), preserved);
+        assert!(run_decapod(project.path(), &disable).status.success());
+        let after: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(after["vega"]["mode"].as_str(), Some("disabled"));
+        assert_eq!(after["vega"]["backend"], before["vega"]["backend"]);
+        assert_eq!(
+            after["vega"]["cpu_fallback"],
+            before["vega"]["cpu_fallback"]
+        );
+        assert_eq!(
+            after["vega"]["installation"],
+            before["vega"]["installation"]
+        );
+        assert_eq!(after["custom"], before["custom"]);
+        assert!(run_decapod(project.path(), &enable).status.success());
+        let restored: toml::Value = toml::from_str(&fs::read_to_string(path).unwrap()).unwrap();
+        assert_eq!(restored["vega"], before["vega"]);
+    }
+}
+
+#[test]
+fn init_refresh_preserves_explicit_vega_installation_without_executing_it() {
+    let project = tempdir().expect("project tempdir");
+    let first = run_decapod(project.path(), &["init", "with", "--force"]);
+    assert!(first.status.success());
+    let config_path = project.path().join(".decapod/config.toml");
+    let mut config = fs::read_to_string(&config_path).unwrap();
+    config.push_str(&format!(
+        "\n[vega]\nmode = \"required\"\nalpha = \"0.05\"\nrisk = \"0.1\"\n\
+         [vega.installation]\ndirectory = \"/unavailable-model\"\n\
+         manifest_digest = \"sha256:{}\"\nruntime = \"/unavailable-worker\"\n\
+         runtime_sha256 = \"sha256:{}\"\n",
+        "a".repeat(64),
+        "b".repeat(64)
+    ));
+    let before: toml::Value = toml::from_str(&config).unwrap();
+    fs::write(&config_path, config).unwrap();
+    let refresh = run_decapod(project.path(), &["init", "--refresh"]);
+    assert!(
+        refresh.status.success(),
+        "{}",
+        String::from_utf8_lossy(&refresh.stderr)
+    );
+    let after: toml::Value = toml::from_str(&fs::read_to_string(config_path).unwrap()).unwrap();
+    assert_eq!(before["vega"], after["vega"]);
 }
 
 #[test]

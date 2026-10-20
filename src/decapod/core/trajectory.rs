@@ -501,8 +501,8 @@ pub fn init_trajectory(
                     input.run_id
                 )));
             }
-            // A fresh run replaces trajectory, intent custody and optional Jev
-            // evidence together. Prove the complete predecessor is recoverable
+            // A fresh run replaces trajectory and intent custody. Historical
+            // observation sections remain intact. Prove the predecessor is recoverable
             // before preparing any replacement, just as at the PR boundary.
             let document =
                 crate::core::governance_document::load(project_root)?.ok_or_else(|| {
@@ -513,24 +513,19 @@ pub fn init_trajectory(
             crate::core::governance_document::recoverable_in_git(project_root, &document)
                 .map_err(|err| {
                     error::DecapodError::ValidationError(format!(
-                        "TRAJECTORY_UNARCHIVED_WORK: preserve and commit the complete current governance journal before starting a new run. Continue the existing run with `decapod govern trajectory record --run-id {}` or checkpoint and commit its evidence, then retry initialization. No trajectory or Jev evidence was replaced. {err}",
+                        "TRAJECTORY_UNARCHIVED_WORK: preserve and commit the complete current governance journal before starting a new run. Continue the existing run with `decapod govern trajectory record --run-id {}` or checkpoint and commit its evidence, then retry initialization. No trajectory or historical evidence was replaced. {err}",
                         existing.run_id
                     ))
                 })?;
         }
         let written = fresh_trajectory(project_root, input)?;
-        let mut updates = vec![(
+        let updates = vec![(
             "trajectory",
             Some(
                 serde_json::to_value(&written)
                     .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
             ),
         )];
-        if crate::core::jev_history::load_and_validate(project_root)?
-            .is_some_and(|ledger| ledger.trajectory_run_id != written.run_id)
-        {
-            updates.push(("jev", None));
-        }
         crate::core::governance_document::write_sections(project_root, &updates)?;
         Ok(written)
     })

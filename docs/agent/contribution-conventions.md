@@ -34,7 +34,7 @@ When asked to add a maintenance or release-ops tool:
 
 `.decapod/governance.json` is the sole tracked governance authority. It contains
 one compact baseline, current-PR claims and checkpoints, explicit unresolved
-obligations, and logical plan, trajectory, validation, and optional Jev sections.
+obligations, and logical plan, trajectory, and validation sections.
 Runtime workunit manifests remain ignored under `.decapod/data/workunits/`.
 
 Update logical sections through their existing CLI surfaces: `govern plan`,
