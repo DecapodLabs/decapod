@@ -638,6 +638,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "claude-release-projection",
+      "summary": "Record the supported CLI-generated release-bound CLAUDE projection separately.",
+      "input_digest": "sha256:9530aad67730d4b0d4424fa2e01c444950bcdb6d0aba01c6750d32feb2c829a3",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
