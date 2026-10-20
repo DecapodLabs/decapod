@@ -315,9 +315,25 @@ mod tests {
         }
     }
     fn fixture() -> (tempfile::TempDir, Collection) {
-        let directory = tempfile::tempdir().unwrap();
+        let mut builder = tempfile::Builder::new();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            builder.permissions(fs::Permissions::from_mode(0o700));
+        }
+        let directory = builder.tempdir().unwrap();
         let collection = Collection::create(&directory.path().join("numeric.json")).unwrap();
         (directory, collection)
+    }
+    #[cfg(unix)]
+    #[test]
+    fn public_directory_cannot_supply_collection_evidence() {
+        use std::os::unix::fs::PermissionsExt;
+        let (directory, _) = fixture();
+        fs::set_permissions(directory.path(), fs::Permissions::from_mode(0o755)).unwrap();
+        let proof = directory.path().join("numeric.json");
+        assert!(Collection::load(&proof).is_err());
+        assert!(Collection::create(&proof).is_err());
     }
     #[test]
     fn missing_early_phase_keeps_later_diagnostics_without_authorizing_readiness() {

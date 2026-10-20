@@ -718,6 +718,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "native-private-fixture",
+      "summary": "Remove shell-umask dependence in test fixtures; add public-directory creation/load rejection regression, keep production checks unchanged.",
+      "input_digest": "sha256:f31b9f6aed3efd07e533a332340fccfae7af5ae923c20c5c03d561ba716bc492",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
