@@ -254,6 +254,44 @@ pub struct Response {
     pub error_kind: Option<WorkerErrorKind>,
 }
 impl Response {
+    /// Interpret the worker through the same binding, backend and numerical
+    /// checks in production and offline evaluation. This does not verify the
+    /// caller's deterministic proof, installation or current Git material.
+    pub fn validated_outcome(&self, request: &Request) -> io::Result<&Outcome> {
+        self.validate_binding(request)?;
+        if let Some(error) = &self.error {
+            return Err(invalid(format!(
+                "vega_native_abstained:{}",
+                error.chars().take(512).collect::<String>()
+            )));
+        }
+        if self.error_kind.is_some() {
+            return Err(invalid("vega_worker_error_without_message"));
+        }
+        if self.input_tokens == 0 || self.input_tokens > super::vega_prompt::MAX_TOKENS {
+            return Err(invalid("vega_response_token_count_invalid"));
+        }
+        let outcome = self
+            .outcome
+            .as_ref()
+            .ok_or_else(|| invalid("vega_outcome_missing"))?;
+        outcome.decision().map_err(invalid)?;
+        Ok(outcome)
+    }
+    fn validate_binding(&self, request: &Request) -> io::Result<()> {
+        if self.schema != WORKER_SCHEMA
+            || self.request_id != request.request_id
+            || self.input_digest != request.input_digest
+            || self.manifest_digest != request.manifest_digest
+            || self.backend != request.backend.runtime()
+            || self.device != request.backend.device()
+            || self.engine_device != "cpu"
+            || self.precision != Precision::supported()
+        {
+            return Err(invalid("vega_response_binding_or_backend_invalid"));
+        }
+        Ok(())
+    }
     /// A typed hardware failure is the only replayable result. It must contain
     /// no partial model answer or tokenization evidence. A normal abstention,
     /// malformed IPC, crash, timeout, negative verdict or arithmetic failure
@@ -417,11 +455,66 @@ fn private_write(path: &Path, bytes: &[u8]) -> io::Result<()> {
     file.sync_all()
 }
 /// Actual validated observations, never a model-authored summary or a green flag.
-pub(crate) struct ValidationSummary<'a> {
+pub struct ValidationSummary<'a> {
     pub scope: &'a str,
     pub evidence: &'a evidence::SuiteEvidence,
     pub dispositions: &'a [super::readiness_profile::StageDisposition],
     pub blockers: &'a [super::validation_runtime::Blocker],
+}
+
+/// Exact governed input types shared by live assessment and replay evaluation.
+/// Deserializing these records is not authentication of their origin or proof
+/// of execution. Evaluators must establish that custody independently.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ProjectionContext {
+    plan: crate::plan_governance::GovernedPlan,
+    trajectory: super::trajectory::TrajectoryArtifact,
+}
+
+/// Private replay input for evaluating the actual production representation.
+/// The expected plan must be derived independently of returned observations.
+/// These unsigned records do not establish authentic execution, independently
+/// adjudicated labels, current task ownership or permission to publish.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EvaluationSnapshot {
+    pub binding: Binding,
+    pub context: ProjectionContext,
+    pub expected_plan: evidence::ExpectedPlan,
+    pub evidence: evidence::SuiteEvidence,
+    pub scope: String,
+    pub dispositions: Vec<super::readiness_profile::StageDisposition>,
+    pub blockers: Vec<super::validation_runtime::Blocker>,
+}
+impl EvaluationSnapshot {
+    /// Match the production call order: complete deterministic evidence first,
+    /// then exactly the shared bounded projection. Callers must not dispatch
+    /// Vega when this fails. This is a replay check, never live readiness.
+    pub fn project(&self) -> io::Result<String> {
+        let checked = evidence::verify(
+            &self.expected_plan,
+            &self.binding.material,
+            &self.evidence.facts,
+            &self.evidence,
+        );
+        if checked.verdict != evidence::Verdict::Ready || !self.blockers.is_empty() {
+            return Err(invalid(format!(
+                "deterministic_validation_not_ready: {:?}",
+                checked.failures
+            )));
+        }
+        project(
+            &self.binding,
+            &ValidationSummary {
+                scope: &self.scope,
+                evidence: &self.evidence,
+                dispositions: &self.dispositions,
+                blockers: &self.blockers,
+            },
+            &self.context,
+        )
+    }
 }
 fn bounded_projection(value: &serde_json::Value) -> io::Result<String> {
     let state = serde_json::to_string(value).map_err(io::Error::other)?;
@@ -466,16 +559,29 @@ fn projection(
     binding: &Binding,
     validation: &ValidationSummary<'_>,
 ) -> io::Result<String> {
-    let results = validation_projection(binding, validation)?;
     let plan = crate::plan_governance::load_plan(root)
         .map_err(io::Error::other)?
         .ok_or_else(|| invalid("missing_intent"))?;
-    if plan.intent.trim().is_empty() {
-        return Err(invalid("missing_intent"));
-    }
     let trajectory = super::trajectory::load_trajectory_cookie(root)
         .map_err(io::Error::other)?
         .ok_or_else(|| invalid("missing_trajectory"))?;
+    project(binding, validation, &ProjectionContext { plan, trajectory })
+}
+
+/// Build the production validation-results.v3 representation, without an
+/// evaluation-specific approximation. The validation caller must first verify
+/// its complete proof plan and must recheck custody after inference. A replay
+/// cannot authorize publication, even when this projection and Vega accept.
+pub fn project(
+    binding: &Binding,
+    validation: &ValidationSummary<'_>,
+    context: &ProjectionContext,
+) -> io::Result<String> {
+    let results = validation_projection(binding, validation)?;
+    let ProjectionContext { plan, trajectory } = context;
+    if plan.intent.trim().is_empty() {
+        return Err(invalid("missing_intent"));
+    }
     if trajectory.run_id != binding.trajectory_run_id {
         return Err(invalid("stale_trajectory"));
     }
@@ -941,17 +1047,7 @@ pub(crate) fn assess(
             }
             let current: Response =
                 serde_json::from_slice(&capture.output.stdout).map_err(io::Error::other)?;
-            if current.schema != WORKER_SCHEMA
-                || current.request_id != request.request_id
-                || current.input_digest != receipt.input_digest
-                || current.manifest_digest != install.manifest_digest
-                || current.backend != request.backend.runtime()
-                || current.device != request.backend.device()
-                || current.engine_device != "cpu"
-                || current.precision != Precision::supported()
-            {
-                return Err(invalid("vega_response_binding_or_backend_invalid"));
-            }
+            current.validate_binding(&request)?;
             receipt.backend_attempts.push(BackendAttempt {
                 backend: request.backend,
                 phase: AttemptPhase::Inference,
@@ -982,21 +1078,7 @@ pub(crate) fn assess(
             break;
         }
         let response = response.ok_or_else(|| invalid("vega_worker_response_missing"))?;
-        if let Some(error) = response.error {
-            return Err(invalid(format!(
-                "vega_native_abstained:{}",
-                error.chars().take(512).collect::<String>()
-            )));
-        }
-        if response.error_kind.is_some() {
-            return Err(invalid("vega_worker_error_without_message"));
-        }
-        if response.input_tokens == 0 || response.input_tokens > super::vega_prompt::MAX_TOKENS {
-            return Err(invalid("vega_response_token_count_invalid"));
-        }
-        let outcome = response
-            .outcome
-            .ok_or_else(|| invalid("vega_outcome_missing"))?;
+        let outcome = response.validated_outcome(&request)?.clone();
         let decision = outcome.decision().map_err(invalid)?;
         // Recheck both immutable installation and executable after inference.
         super::vega_setup::verify_installation_bounded(
@@ -1612,6 +1694,88 @@ mod tests {
         o = outcome();
         o.unbound = true;
         assert_eq!(o.decision().unwrap(), Decision::Abstain);
+    }
+    #[test]
+    fn shared_response_checks_reject_wrong_custody_lengths_errors_and_missing_answers() {
+        let request = Request {
+            schema: WORKER_SCHEMA.into(),
+            request_id: "request".into(),
+            input_digest: hash(b"state"),
+            installation: "/unused".into(),
+            manifest_digest: hash(b"model"),
+            state: "state".into(),
+            alpha: "0.1".into(),
+            risk: "0.1".into(),
+            backend: Backend::Cpu,
+        };
+        let response = || Response {
+            schema: WORKER_SCHEMA.into(),
+            request_id: request.request_id.clone(),
+            input_digest: request.input_digest.clone(),
+            manifest_digest: request.manifest_digest.clone(),
+            backend: "candle-cpu".into(),
+            device: "cpu".into(),
+            engine_device: "cpu".into(),
+            precision: Precision::supported(),
+            input_tokens: 120,
+            outcome: Some(outcome()),
+            error: None,
+            error_kind: None,
+        };
+        assert_eq!(
+            response()
+                .validated_outcome(&request)
+                .unwrap()
+                .decision()
+                .unwrap(),
+            Decision::Accept
+        );
+        for field in [
+            "schema",
+            "request",
+            "input",
+            "manifest",
+            "backend",
+            "device",
+            "engine",
+            "precision",
+            "zero-tokens",
+            "overflow",
+            "error",
+            "error-kind",
+            "missing",
+            "malformed",
+        ] {
+            let mut current = response();
+            match field {
+                "schema" => current.schema = "old".into(),
+                "request" => current.request_id = "other".into(),
+                "input" => current.input_digest = hash(b"other"),
+                "manifest" => current.manifest_digest = hash(b"other"),
+                "backend" => current.backend = "candle-metal".into(),
+                "device" => current.device = "metal".into(),
+                "engine" => current.engine_device = "metal".into(),
+                "precision" => current.precision.backbone = "f16".into(),
+                "zero-tokens" => current.input_tokens = 0,
+                "overflow" => current.input_tokens = super::super::vega_prompt::MAX_TOKENS + 1,
+                "error" => current.error = Some("unavailable".into()),
+                "error-kind" => current.error_kind = Some(WorkerErrorKind::InferenceFailed),
+                "missing" => current.outcome = None,
+                "malformed" => current.outcome.as_mut().unwrap().probabilities = [0.9, 0.9],
+                _ => unreachable!(),
+            }
+            assert!(current.validated_outcome(&request).is_err(), "{field}");
+        }
+        let mut abstention = response();
+        abstention.outcome.as_mut().unwrap().abstain = true;
+        assert_eq!(
+            abstention
+                .validated_outcome(&request)
+                .unwrap()
+                .decision()
+                .unwrap(),
+            Decision::Abstain
+        );
     }
     #[test]
     fn negative_singleton_rejects_not_approves() {

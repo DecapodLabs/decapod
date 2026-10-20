@@ -623,6 +623,26 @@ fn failed_partial_prerequisites_never_reach_execution() {
     );
 }
 #[test]
+fn failed_validation_precedes_required_vega_and_retains_repair_guidance() {
+    let f = Fixture::new("[proof]\n[vega]\nmode='required'\nalpha='0.1'\nrisk='0.1'\n");
+    let mut h = host();
+    h.prerequisites = ProjectPrerequisites::Failed;
+    let report = validate(&f.options, &mut h, &Cancellation::default());
+    assert_eq!(report.exit_code(), 1);
+    assert!(!report.proof_ready);
+    assert!(report.vega_readiness.is_none());
+    assert!(report.evidence_path.is_none());
+    assert_eq!(report.agent_guidance.next_action, "repair_and_revalidate");
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|b| b.detail.contains("PROJECT_PREREQUISITES_FAILED"))
+    );
+    assert_eq!(h.called, 1);
+    assert_eq!(h.target_calls, 0);
+}
+#[test]
 fn preparation_changes_require_commit_and_rerun() {
     let f = Fixture::new("[proof]\n");
     let mut h = host();

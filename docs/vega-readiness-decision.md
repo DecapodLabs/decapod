@@ -6,15 +6,13 @@ No option inversion or wrong calibration route was found. The failed experiment
 also does **not** measure the production input path. Repeating it, increasing its
 sample count or raising a confidence cutoff is not a justified product repair.
 
-Recommendation: do not activate this profile as a qualified readiness judge.
-The smallest proposed delivery change is an **inactive integration stage**:
-retain the Rust runtime, installation, init/configuration and numerical work;
-make required Vega readiness explicitly unavailable until an accepted profile
-qualifies for that role. Required mode must block, not fall through to ordinary
-publication. This is a proposal requiring a maintainer scope decision; it has
-**not** been applied. The current required checks remain unchanged and failing.
-No advisory downgrade, training, replacement model or passing PR is proposed
-under the original acceptance contract.
+The maintainer requires the complete working integration in one PR and rejected
+the earlier inactive-stage proposal. No inactive/advisory replacement is being
+implemented. The current repair connects verification to the shared production
+path, separates exposed diagnostics from final admission, and inspects supported
+Vega adaptation before proposing training. Model/calibration pins, numerical
+tolerances, deterministic authority and readiness risk/coverage criteria remain
+unchanged. A passing original-scope PR is still conditional on actual evidence.
 
 ## What the recorded results actually test
 
@@ -148,24 +146,81 @@ representative labels remain separate requirements. Owner grouping limits
 leakage but does not itself prove independence. No compatible recalibration is
 justified by the available admissible evidence, and none was performed.
 
-## Proposed scope change, awaiting decision
+## Authorized continuation: repair production evaluation
 
-1. Keep the completed Rust foundation and its bounded native evidence. Continue
-   using the original task/branch and preserve all failed acceptance history.
-2. In a maintainer-approved inactive-stage scope, required mode would return an
-   explicit blocking `VEGA_READINESS_PROFILE_UNQUALIFIED` disposition before
-   model approval is possible. Disabled mode retains ordinary deterministic
-   governance. This is refusal of unsupported activation, not an advisory yes
-   and not bypass of a required gate.
-3. Such a stage could claim Rust runtime/install/configuration readiness only.
-   It would leave #1445's model-readiness acceptance open. A revised proof plan
-   and claims require explicit scope acceptance before implementation or PR
-   publication; the old failed study cannot become green by changing its name.
-4. If that narrower delivery is not accepted, retain the original blocking scope
-   and stop publication until a Vega profile demonstrates the required role.
-   Do not start training, change models or weaken risk criteria within this task.
+The maintainer rejected the earlier inactive-stage proposal. It was never
+implemented and is no longer the proposed delivery. The requirement remains a
+working required Vega decision after deterministic validation, in one feature PR.
 
-No production-code correction was justified by this audit. The correction here
-is to evidence attribution and the product acceptance claim. No new native test
-or full validation run is claimed for these documentation/data changes; rerunning
-the unchanged failing study would not answer the unresolved product decision.
+`vega_readiness::project` now supplies the same bounded typed projection to live
+assessment and `EvaluationSnapshot::project`. Replay first invokes the existing
+complete-suite evidence verifier; failed/missing/stale proof cannot dispatch the
+model. This is verification of replay records, not authentication of their origin.
+`Response::validated_outcome` shares live request/backend/token/numerical checks
+with the native collector. No second full-patch approximation is used by the new
+production-protocol diagnostics. New regressions are authored; results must be
+recorded after prescribed exact-candidate validation.
+
+The fixed development fixtures explicitly identify their observations as
+constructed. They exercise retained obligations, contradictions, questions,
+phase flags and declarations without a matching measurement. Actual model
+responses to them are diagnostic capability probes, not independent labels,
+calibration data or a final holdout. The unchanged numerical checks still run
+independently. Required final evaluation now reports the source-admission gap
+instead of rerunning exposed v2 and calling it untouched final evidence. Old
+benchmark construction, hashes, measurements and failures remain preserved.
+
+## Compatible upstream capability and adaptation audit
+
+The selected base engine remains `09c4c5fe…`, adapters off, with its own calibration.
+The published `public_intents` and `typed_decisions` adapters bind this base, but
+their documented training tasks do not qualify code-readiness judgment. There is
+no sign, option-order, calibration-route or hidden-layer correction established
+by this audit. No adapter was silently enabled.
+
+The pinned Apache-2.0 upstream already documents a supported adaptation route:
+[rank-32 gated engine adapters](https://github.com/NandhaKishorM/vegaml/blob/21a17c90624aa85cec60b1092fa72cb8b720f71a/notebooks/vega_finetune.py).
+Its approximately 0.84M fitted parameters affect seven engine projections plus
+the routing gate; frozen-backbone features can be cached. Routing needs task
+negatives, and temperature/conformal/abstention calibration must use a distinct
+validation split. The inspected script SHA256 is
+`7c2db72f4f2f5bdeab398304b4e64e3413e500b494eaecedf817f3017a51a352`.
+This was source inspection only; no Python was executed. A Rust implementation
+would need exact routing/base-hash binding and numerical qualification before
+activation, not a different agent framework.
+
+Current upstream `0eb2c28e4b08cfa8663897406430985501627d44` also supports a
+[PCA/logistic task head](https://github.com/NandhaKishorM/vegaml/blob/0eb2c28e4b08cfa8663897406430985501627d44/vegaml/ttt.py)
+over frozen features. It changes the readout rather than fixing Boolean mapping.
+Its source requires task labels and cross-validation; a head is not automatically
+servable merely because fitting returned coefficients. Source SHA256:
+`1a6a3ae3a5c5eb7272823be34133a0fb008cb8d8e10108997eb836799049ecd8`.
+The [calibration contract](https://github.com/NandhaKishorM/vegaml/blob/0eb2c28e4b08cfa8663897406430985501627d44/docs/calibration.md)
+fits temperature and conformal threshold; temperature preserves argmax and
+cannot repair systematically wrong answers. Source SHA256:
+`fc880534c02abb1d67fd9704bc39cf03dad26ae39a35a401dd52565a6e4f6d95`.
+
+The other public official model is
+[vega-U at 4d205028…](https://huggingface.co/nandakishorm/vega-U/tree/4d2050287982ca7a7bb0c22fd19a389f5f94474e).
+It has a different engine (`78f96be7c6a06abb873e573fcf9e43ef467010a30c72cd6cac32538cd7078db8`),
+a learned port (`398ae79d5e3956a3ed809d500fbdf57982d303c719e464bb81ba12a5ee7d23bd`),
+extraction statistics and reader-specific calibration. Its config SHA256 is
+`000461315c798b6eca62323476360c14cf31b4e1adcba21ab8266fca41d3fcf8`.
+It is not a compatible manifest-only upgrade of this pinned runtime and publishes
+no readiness-domain qualification. Different generic benchmark scores do not
+justify that port/engine/calibration expansion or remove the label dependency.
+
+No fitting is scientifically justified yet: the audited 24 public source cases
+still admit zero independently supported complete production readiness units.
+Training on the exposed benchmark or on model-generated decisions would neither
+repair label provenance nor create a new final evaluation. The smallest supported
+adaptation, **if production-shaped development errors and admissible labels
+justify it**, is a pinned gated engine adapter with separately fitted route
+calibration; not a backbone training project. It still needs disjoint development,
+calibration and untouched final units, including at least 59 independent accepted
+zero-error units for the existing numerical risk bound plus coverage and sampling
+justification. No paid compute, external data sharing, model replacement, fitting,
+threshold change or inactive product gate has been introduced.
+
+See [the completion checklist](vega-completion-checklist.md) for issue boundaries,
+implemented behavior, regressions, exact prior evidence and remaining conditions.

@@ -15,6 +15,8 @@ mod decoder;
 mod evaluation_corpus;
 #[path = "vega-native/metal_recurrence_reference.rs"]
 mod metal_recurrence_reference;
+#[path = "vega-native/production_evaluation.rs"]
+mod production_evaluation;
 #[path = "vega-native/public_review_sources.rs"]
 mod public_review_sources;
 #[path = "vega-native/readiness_evaluation.rs"]
@@ -485,6 +487,21 @@ fn collect_scientific_numerics(proof: &Path) -> Result<(), Box<dyn std::error::E
         Err(error) => serde_json::json!({"collected":false,"publication_ready":false,
             "error":error.to_string()}),
     };
+    // Production-shaped protocol diagnostics are independent of both the old
+    // full-patch experiment and final label admission. They use the exact live
+    // projection/worker/response path. Their synthetic observations establish
+    // neither real repository execution nor model readiness calibration.
+    let production_path = proof.with_extension("production-protocol.json");
+    let production = match collect_production_protocol(&production_path)
+        .and_then(|()| context.reference(&production_path))
+    {
+        Ok(reference) => {
+            serde_json::json!({"collected":true,"publication_ready":false,"receipt":reference})
+        }
+        Err(error) => {
+            serde_json::json!({"collected":false,"publication_ready":false,"error":error.to_string()})
+        }
+    };
     for name in NUMERICAL_PHASES {
         let path = proof.with_extension(format!("{name}.json"));
         let result = match name {
@@ -517,9 +534,89 @@ fn collect_scientific_numerics(proof: &Path) -> Result<(), Box<dyn std::error::E
     context.publish(Phase::Numeric,proof,passed,serde_json::json!({
         "status":"collected_acceptance_pending","publication_ready":false,
         "public_review_source_audit":source_audit,
+        "production_protocol_diagnostics":production,
         "required_steps":steps,"outputs":outputs,"wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
         "scope":"Numerical collection only; failures preserved for required final aggregate, not passing scientific acceptance."
     }))
+}
+
+fn collect_production_protocol(proof: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    use vega_readiness::{Backend, BackendPreference};
+    let started = std::time::Instant::now();
+    let setup = vega_setup::run(&vega_setup::SetupOptions::default())?;
+    let installation = setup
+        .model_directory
+        .ok_or("production diagnostic installation missing")?;
+    let manifest_digest = setup
+        .manifest_digest
+        .ok_or("production diagnostic manifest missing")?;
+    if manifest_digest != SCIENTIFIC_BASELINE {
+        return Err("production diagnostic cannot silently change the model".into());
+    }
+    let mut records = Vec::new();
+    for backend in [BackendPreference::Auto.resolve(), Backend::Cpu] {
+        for variant in [
+            "failed-proof",
+            "stale-proof",
+            "baseline",
+            "missing-proof-hook",
+            "unresolved-question",
+            "contradiction",
+            "phase-gate",
+            "declaration-is-not-proof",
+        ] {
+            let snapshot = production_evaluation::fixture(variant)?;
+            let result = production_evaluation::evaluate(&snapshot, |state| {
+                let request = Request {
+                    schema: vega_readiness::WORKER_SCHEMA.into(),
+                    request_id: format!("production-protocol-{}-{variant}", backend.device()),
+                    input_digest: vega_readiness::hash(state.as_bytes()),
+                    installation: installation.clone(),
+                    manifest_digest: manifest_digest.clone(),
+                    state: state.into(),
+                    alpha: "0.1".into(),
+                    risk: "0.1".into(),
+                    backend,
+                };
+                let temporary = tempfile::tempdir()?;
+                let raw_path = temporary.path().join("proof.json");
+                let attempt = std::time::Instant::now();
+                let response = inference_response(&request, Some(&raw_path));
+                let outcome = response.validated_outcome(&request)?;
+                let raw: serde_json::Value =
+                    serde_json::from_slice(&read_bounded(&raw_path, MAX_PROOF_BYTES as u64)?)?;
+                if raw["input_digest"] != request.input_digest
+                    || raw["outcome"] != serde_json::to_value(outcome)?
+                {
+                    return Err("production diagnostic raw output binding differs".into());
+                }
+                Ok(serde_json::json!({
+                    "response":response,"decision":outcome.decision()?,
+                    "wall_clock_ms":attempt.elapsed().as_secs_f64()*1000.0,
+                    "synchronized_compute_ms":raw["wall_clock_ms"],
+                    "peak_resident_bytes":raw["peak_resident_bytes"],"memory_scope":raw["memory_scope"],
+                    "proof_sha256":vega_readiness::hash(&read_bounded(&raw_path,MAX_PROOF_BYTES as u64)?)
+                }))
+            });
+            records.push(serde_json::json!({"variant":variant,"backend":backend,
+                "snapshot_sha256":vega_readiness::hash(&serde_json::to_vec(&snapshot)?),
+                "diagnostic":match result {
+                    Ok(value)=>value,
+                    Err(error)=>serde_json::json!({"execution":"failed","error":error.to_string(),"publication_ready":false})
+                }
+            }));
+        }
+    }
+    write_private_proof(
+        proof,
+        &serde_json::json!({
+            "schema":"decapod.vega-production-protocol-diagnostics.v1",
+            "publication_ready":false,"independent_labelled_units":0,
+            "manifest_digest":manifest_digest,"records":records,
+            "wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
+            "scope":"Fixed development-only constructed protocol observations. Actual model execution through shared production projection and response checks, not repository proof or readiness-domain qualification. No fitting or final holdout use."
+        }),
+    )
 }
 fn collect_readiness_shard(index: usize, proof: &Path) -> Result<(), Box<dyn std::error::Error>> {
     use scientific_collection::{Collection, Phase, SHARDS};
@@ -528,41 +625,16 @@ fn collect_readiness_shard(index: usize, proof: &Path) -> Result<(), Box<dyn std
     }
     let context = Collection::load(proof)?;
     let started = std::time::Instant::now();
-    // One absolute cutoff covers preparation and both backend phases. The
-    // kernel retains1800s/command and7200s/whole validation, with no resets.
-    let deadline = started + std::time::Duration::from_secs(1600);
-    let mut reports = serde_json::Map::new();
-    for backend in ["auto", "cpu"] {
-        let path = proof.with_extension(format!("{backend}.json"));
-        let result = evaluate_readiness_selected(
-            "holdout",
-            backend,
-            &path,
-            Some(readiness_evaluation::Shard {
-                index,
-                count: SHARDS,
-            }),
-            Some(deadline),
-        );
-        let reference = context.reference(&path);
-        let receipt = reference
-            .as_ref()
-            .ok()
-            .and_then(|r| context.read_reference(r).ok());
-        reports.insert(
-            backend.into(),
-            serde_json::json!({
-                "collection_completed":result.is_ok() && receipt.is_some(),
-                "error":result.err().map(|e|e.to_string()),
-                "receipt":reference.ok()
-            }),
-        );
-    }
+    // The v2 benchmark is exposed diagnostic data and bypasses production v3.
+    // Repeating it cannot qualify the live task. Preserve the required final
+    // condition as missing, rather than relabeling that experiment a holdout.
+    // Independent Metal/CPU/numerical/protocol collection has already run.
+    let admission = production_evaluation::final_admission()?;
     context.publish(Phase::Shard(index),proof,false,serde_json::json!({
-        "status":"collected_acceptance_pending","publication_ready":false,
-        "shard":{"index":index,"count":SHARDS},"reports":reports,
-        "absolute_soft_dispatch_seconds":1600,"wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
-        "scope":"Both backend collections attempted; no per-shard readiness assertion or acceptance waiver."
+        "status":"required_production_evaluation_missing","publication_ready":false,
+        "shard":{"index":index,"count":SHARDS},"admission":admission,
+        "wall_clock_ms":started.elapsed().as_secs_f64()*1000.0,
+        "scope":"No final model dispatch without admitted untouched production units. Required readiness qualification remains unsatisfied; historical benchmark and failures remain available for diagnostic use."
     }))
 }
 fn check_evaluation_binding(
@@ -740,6 +812,25 @@ fn verify_scientific_contents(
         numeric_passed &= numeric_child_passes(name, &child);
         numeric_passed &=
             recheck_numeric_exports(context, name, &child, &reference, &configuration, &weights)?;
+    }
+    let admission = production_evaluation::final_admission()?;
+    if admission["final_evaluation_eligible"] != true {
+        for index in 0..SHARDS {
+            let phase = context.read(Phase::Shard(index))?;
+            if phase.report["admission"] != admission
+                || phase.report["shard"] != serde_json::json!({"index":index,"count":SHARDS})
+            {
+                return Err("mismatched final admission records".into());
+            }
+        }
+        return Ok(serde_json::json!({
+            "schema":"decapod.vega-scientific-aggregate.v1","publication_ready":false,
+            "numeric_checks_passed":numeric_passed,"readiness_evaluation":admission,
+            "production_protocol_diagnostics":numeric.report["production_protocol_diagnostics"],
+            "runtime_sha256":context.runtime_sha256,"manifest_digest":SCIENTIFIC_BASELINE,
+            "all_required_scientific_conditions_passed":false,
+            "scope":"Independent numerical collection completed; exposed full-patch v2 cannot qualify production. Required production-shaped independently supported evaluation remains missing. No criterion, model, calibration or deterministic gate was relaxed."
+        }));
     }
     let inputs = proof.with_extension("evaluation-inputs.json");
     prepare_evaluation(&inputs)?;

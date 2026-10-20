@@ -5,8 +5,13 @@ audits all 29 accepts from the completed 9f017d31 run. Its v2 benchmark payload
 bypasses production projection and is now exposed diagnostic data, never an
 untouched final holdout again. The numerical passes and original failed results
 below remain evidence within their stated scope. No readiness qualification,
-threshold change or passing publication claim follows; an inactive integration
-stage is only an unapplied scope proposal requiring a maintainer decision.
+threshold change or passing publication claim follows. The maintainer rejected
+inactive/advisory delivery. Shared-production projection and response-check
+diagnostics now replace the second input builder for new protocol verification;
+their constructed observations supply zero independent labels. The original
+risk/coverage requirement remains blocked pending admissible final units, rather
+than rerunning exposed v2 as a new holdout. See the
+[completion checklist](vega-completion-checklist.md).
 
 The criteria below were frozen before candidate outputs. The executed-results section identifies the later measured subset; historical failures are retained separately. A passing subset never establishes unsupported context lengths, modes, backend execution or readiness-domain calibration.
 

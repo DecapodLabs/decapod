@@ -7,7 +7,7 @@ structured RPC. It connects human intent, project authority, coordinated
 execution, and evidence in repository-owned state. Each invocation is finite;
 the repository carries the work between invocations.
 
-Vega's separate native worker keeps evidence collection and final acceptance distinct. The reviewed recipe has one numerical collection, six disjoint frozen holdout shards and a required final aggregate, inside the existing kernel-owned Rust execution mechanism. Scientific receipts bind the current private directory/context, executable, model and corpus and cannot authorize publication. Every selected supported case uses fresh recurrent state and complete artifact verification; an owned pinned tokenizer rejects out-of-scope inputs early. Each shard carries one absolute 1,600-second soft dispatch deadline across preparation and both backends; kernel 1,800-second command and 7,200-second overall limits remain authoritative. The final reducer rechecks file custody and independent numerical exports and recomputes grouped metrics from frozen labels/outcomes. On `30015be0`, all 43 worker tests and the three fixed Metal/CPU numerical fixtures passed, but the complete heldout evaluation failed its declared risk and coverage conditions. No nested process groups, Python runtime, orchestrator or second persistence authority is introduced.
+Vega's separate native worker keeps evidence collection and final acceptance distinct. The eight-run recipe retains numerical collection, six final-admission slots and a required aggregate inside the existing kernel-owned Rust execution mechanism. Numerical collection now also exercises the shared production projection and worker response checks using explicitly constructed development fixtures; these are not independent readiness labels. The exposed full-patch v2 experiment stays diagnostic history and is not rerun as a final holdout. Final slots bind the reviewed source-admission ledger, which currently admits zero complete production units, so the aggregate remains failed after collecting independent native/numerical evidence. Receipts bind the private context, runtime, model and immutable inputs; none authorizes publication. Fresh recurrent state, full artifact verification, byte/token rejection and original 1,800-second command/7,200-second overall deadlines remain required. Replay evidence is unsigned and does not replace the live caller's source authentication or final material recheck. No nested process groups, Python runtime, orchestrator, new control plane or inactive/advisory product substitute is introduced.
 
 The production assessment retains declared plan obligations as well as intent:
 proof hooks, unresolved/deferred questions, contradictions, stop conditions and
@@ -534,8 +534,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `722673e63cd9a0a27dae523241835fdb7e96c76be7d694342c56a9c4441dfce1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (39 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `bbd7f745eff75ef6e5b01b06b1ccc5edae2a43c5d9e65ead511980fd969d4c6a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

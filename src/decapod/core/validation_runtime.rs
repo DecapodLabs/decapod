@@ -72,7 +72,7 @@ pub struct Options {
     pub max_output_bytes: usize,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Blocker {
     pub code: String,
     pub detail: String,

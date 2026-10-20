@@ -295,14 +295,14 @@ pub struct ProvenExclusion {
 
 /// Governed execution intent, never an execution receipt. This finite source
 /// profile cannot turn a real build/test into a simulation by caller choice.
-#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum StageDispositionKind {
     Real,
     Mocked,
     NonApplicable,
 }
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct StageDisposition {
     pub stage: String,
     pub key: Option<CheckKey>,
