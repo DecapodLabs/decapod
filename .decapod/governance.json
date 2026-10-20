@@ -494,6 +494,15 @@
         "/private/tmp/decapod-120-docker-header-test-after.log",
         "/private/tmp/decapod-120-material-command-final.log"
       ]
+    },
+    {
+      "id": "release-header-regression",
+      "summary": "Exercise all LF/CRLF and final-newline combinations, preserve project commands and whitespace, and require idempotent refresh. The dedicated Rust regression passes. This commit carries one material test path; full completed-candidate validation remains required.",
+      "input_digest": "sha256:29bf36ab99960210f8ceeaa20a2dc13ce38e8d6da5f19fe89e174f8e52046002",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
