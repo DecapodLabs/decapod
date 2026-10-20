@@ -629,6 +629,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "agents-release-projection",
+      "summary": "Record the supported CLI-generated release-bound AGENTS projection separately; governance and validation authority remain intact.",
+      "input_digest": "sha256:2b826c4a5dc020d247ab51aa484ebe2be85e4d5482e893203c8fc38563bc63a8",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
