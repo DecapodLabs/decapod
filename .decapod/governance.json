@@ -539,6 +539,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "reviewed-source-inventory",
+      "summary": "After explicit full-inventory review, update only its source review pin for test-only canonicalization in source_ci_toolchain.rs. Carrier/workflows/commands/matrices/provider/requiredness unchanged; backup retained privately; this review is not proof execution.",
+      "input_digest": "sha256:d3dd9aaf19f72c0b373e5faed5c6856586bd63e3ee96649573207cf411dccef5",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
