@@ -530,6 +530,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "readiness-delivery-map",
+      "summary": "Map all requested umbrella issues, necessary portions and accepted prerequisites to existing implementation, regression anchors and actual remaining evidence. Do not claim broader closure; preserve Vega qualification and original failure limits.",
+      "input_digest": "sha256:849f51a387e501d18370a127a0fc0577c5ce77154af7d23681ed7051ba29a8c6",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
