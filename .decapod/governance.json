@@ -839,6 +839,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-semantics-projection",
+      "summary": "Supported generated fingerprint; deterministic authority and required Vega fail-closed behavior unchanged.",
+      "input_digest": "sha256:b7367ae6dbe0c7914d6d4ba9994bf2f29f5c2efa980de4c10e92d9e7b0845a52",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
