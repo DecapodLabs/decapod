@@ -602,6 +602,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "specs-index-projection",
+      "summary": "Commit only the supported CLI-generated specs index fingerprint refresh for current source.",
+      "input_digest": "sha256:fdeeeb9508875fb08d50f1105260d321217b85b30f5b3e4962099d3203566995",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
