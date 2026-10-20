@@ -828,6 +828,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-readme-projection",
+      "summary": "Supported generated fingerprint preserves existing source grounded index.",
+      "input_digest": "sha256:065459d944c4b7893e45fae7db3889f92b1d64a934287cffc1763155a1b12b09",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
