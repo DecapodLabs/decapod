@@ -784,6 +784,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-architecture-projection",
+      "summary": "Supported fingerprint and reviewed separate native-worker boundary; no model or architecture change.",
+      "input_digest": "sha256:15a05567b22035010344437f92782b79b5db7dac6ce1975def33c1ac49562754",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
