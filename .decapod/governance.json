@@ -647,6 +647,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "codex-release-projection",
+      "summary": "Record the supported CLI-generated release-bound CODEX projection separately.",
+      "input_digest": "sha256:d19f28c1e7ec9b314c7800c2534c11a1ead93759a761886f6dbe87efd4a7576b",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
