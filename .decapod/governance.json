@@ -751,6 +751,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-inventory-review",
+      "summary": "Explicit review of dependency locks, native manifest and fixture-only changes; carrier, workflows, required graph and eight-run recipe unchanged.",
+      "input_digest": "sha256:133108adb6a412fda21866a1926f4760e89b4b4cbc6529918edeb56513ecac09",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
