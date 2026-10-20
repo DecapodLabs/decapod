@@ -593,6 +593,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "operations-projection",
+      "summary": "Commit only the supported CLI-generated operations fingerprint refresh for current source; this projection is not authored runtime proof.",
+      "input_digest": "sha256:5894e268a310900642ccf5fb4dc62fc1fbd26bd6e56f61af2e22ded7deae2d16",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
