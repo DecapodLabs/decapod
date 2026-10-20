@@ -707,6 +707,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "tls-bazel-lock",
+      "summary": "Normal batch-mode module resolution from Cargo lock; strict lockfile error mode succeeds, no unrelated toolchain changes.",
+      "input_digest": "sha256:738c2cd4cff162963cb730137dabcc53a759956000002077bbb5847098dadf6f",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
