@@ -665,6 +665,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "complete-specs-manifest",
+      "summary": "Record the supported CLI-generated final specs manifest after source, config, authored prose and entrypoint reviews. All material files have separate commits; full final-candidate Buildkite and native verification is still required.",
+      "input_digest": "sha256:58a347f61bae58aa5bda51d7bac57fd885631e87a110066ab226ce4149cde2b4",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
