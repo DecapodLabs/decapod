@@ -817,6 +817,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-operations-projection",
+      "summary": "Supported generated fingerprint; no credentials or machine logs committed.",
+      "input_digest": "sha256:17277f00b899a8afb6c46cc9fa04a53c305d8f6ffa9ef799b3d1cc7aa1be5909",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
