@@ -458,6 +458,14 @@
         "/private/tmp/decapod-120-focused-ci-context.log",
         "/private/tmp/decapod-120-focused-governance-recipe-after.log"
       ]
+    },
+    {
+      "id": "rustup-fixture-canonical",
+      "summary": "Normalize the owned rustup fixture root to the same canonical namespace used by tool resolution on macOS. All 33 CI checkout tests pass. CI context retains a separate legacy Python parser failure (52 passed,1 failed), now under Rust-native correction. Full candidate validation remains required.",
+      "input_digest": "sha256:8a9635636f2582f9739ee1b3f8050d99841fdc43e606afc432c76670d77922d0",
+      "proof_refs": [
+        "/private/tmp/decapod-120-focused-ci-context-after.log"
+      ]
     }
   ],
   "intents": {
@@ -514,10 +522,18 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e89ed7326f696d78289690b3976e5c3a60ca218e601675e742e5e5874b8f946f",
+      "artifact_hash": "sha256:c312f62c18f5d549165c0dfab4c8f1071c7d5439592a2649d267ae1129d8349a",
       "checks": [
         {
           "name": "baseline-ci-checkout",
+          "status": "failed"
+        },
+        {
+          "name": "ci-checkout",
+          "status": "passed"
+        },
+        {
+          "name": "ci-event-context",
           "status": "failed"
         },
         {
@@ -561,10 +577,17 @@
             "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M5DBY7Y918N445QYA574NGPD": {
@@ -607,6 +630,23 @@
                 "sequence": 5,
                 "tool": "cargo test-main --locked --no-default-features --test ci_checkout_policy: 30 passed,3 failed; /private/tmp/decapod-120-focused-ci-context.log",
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "assets/tools/source_ci_toolchain.rs"
+                ],
+                "proof_refs": [
+                  "ci-checkout",
+                  "ci-event-context"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "tool": "cargo test-main --locked --no-default-features --test ci_checkout_policy --test ci_event_context_policy: 33 checkout passed; 52 context passed,1 failed due to legacy Python tomllib dependency; /private/tmp/decapod-120-focused-ci-context-after.log",
+                "validation_findings": []
               }
             ]
           }
@@ -616,6 +656,7 @@
       "destination": "pull request",
       "evidence": [],
       "inspected_files": [
+        "assets/tools/source_ci_toolchain.rs",
         "src/decapod/core/entrypoint_integrity/history.rs",
         "src/decapod/core/governance_document.rs",
         "src/decapod/core/validate.rs",
@@ -634,6 +675,7 @@
       "shortcut_risk_signals": [],
       "task_id": "cicd_01m5dbhq2k5bj5wm",
       "tool_calls": [
+        "cargo test-main --locked --no-default-features --test ci_checkout_policy --test ci_event_context_policy: 33 checkout passed; 52 context passed,1 failed due to legacy Python tomllib dependency; /private/tmp/decapod-120-focused-ci-context-after.log",
         "cargo test-main --locked --no-default-features --test ci_checkout_policy governance_recipe_: 3 passed,0 failed; /private/tmp/decapod-120-focused-governance-recipe-after.log",
         "cargo test-main --locked --no-default-features --test ci_checkout_policy: 30 passed,3 failed; /private/tmp/decapod-120-focused-ci-context.log"
       ],
