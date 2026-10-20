@@ -656,6 +656,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "gemini-release-projection",
+      "summary": "Record the supported CLI-generated release-bound GEMINI projection separately.",
+      "input_digest": "sha256:1a4580e9f14d2f582327f0d2c42ba545e4d47bfd1fe9848aa1d6cc3b0e1af3dd",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
