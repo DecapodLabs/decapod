@@ -740,6 +740,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-coverage-checklist",
+      "summary": "Track alert4 alongside existing issue-to-code/test evidence; broader umbrella scopes remain open, no unexecuted success claim.",
+      "input_digest": "sha256:620a8b69f63f47afeaebfb48e13eaac71aff78c9d459f4be57d86a7223bc9059",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
