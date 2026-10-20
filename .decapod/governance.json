@@ -521,6 +521,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "actual-release-command-proof",
+      "summary": "Use bounded actual candidate commands, prior attested release provenance and retained capability declarations. Prove detached remote-only base and postmerge version-only acceptance, JSON pass rather than skip, and malformed/missing/mixed rejection including HEAD equal to accepted tip. Both final command tests pass; no full publication proof is claimed.",
+      "input_digest": "sha256:52c030597e15e07d496f17090f6196438f2a46efd9d7d8b88ac012420f326e09",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {

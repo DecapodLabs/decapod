@@ -1,3 +1,4 @@
+use decapod::core::bounded_process::BoundedCommand;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -415,5 +416,338 @@ This intent from OVERRIDE must win.
     assert!(
         final_config.contains("RegressionTest"),
         "config.toml should preserve product name"
+    );
+}
+
+/// Replay the version-only release failure through the actual candidate CLI,
+/// not a recorder executable or a second implementation of the material gate.
+struct MaterialReleaseCommand {
+    _scratch: TempDir,
+    repo: PathBuf,
+    auth: PathBuf,
+    password: String,
+    base: String,
+    head: String,
+}
+
+impl MaterialReleaseCommand {
+    fn version(repo: &Path, value: &str) {
+        fs::write(
+            repo.join("Cargo.toml"),
+            format!("[package]\nname = \"decapod\"\nversion = \"{value}\"\nedition = \"2024\"\n"),
+        )
+        .unwrap();
+        fs::write(
+            repo.join("Cargo.lock"),
+            format!("version = 4\n\n[[package]]\nname = \"decapod\"\nversion = \"{value}\"\n"),
+        )
+        .unwrap();
+    }
+
+    fn revision(repo: &Path) -> String {
+        let out = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(repo)
+            .bounded_output(std::time::Duration::from_secs(90))
+            .unwrap();
+        assert!(out.status.success());
+        String::from_utf8(out.stdout).unwrap().trim().to_owned()
+    }
+
+    fn new() -> Self {
+        use decapod::core::{entrypoint_integrity as entrypoints, project_specs as specs};
+        const OLD: &str = "0.0.1";
+        let scratch = TempDir::new().unwrap();
+        let repo = scratch.path().join("release source");
+        let auth = scratch.path().join("private auth");
+        fs::create_dir(&repo).unwrap();
+        fs::create_dir(&auth).unwrap();
+        git_command(&repo, &["init", "-q", "-b", "master"]);
+        git_command(&repo, &["config", "user.name", "Material command fixture"]);
+        git_command(&repo, &["config", "user.email", "material@example.invalid"]);
+        Self::version(&repo, OLD);
+        fs::create_dir(repo.join("src")).unwrap();
+        fs::write(repo.join("src/lib.rs"), "pub fn unchanged() {}\n").unwrap();
+        let init = decapod_command(
+            &repo,
+            &[
+                "init",
+                "--force",
+                "--no-container-workspaces",
+                "--backend",
+                "local",
+                "--product-name",
+                "Release fixture",
+                "--product-summary",
+                "A fixed Rust fixture for immutable release validation.",
+            ],
+            &[
+                ("XDG_CONFIG_HOME", auth.to_str().unwrap()),
+                ("DECAPOD_AGENT_ID", "material-init"),
+            ],
+        )
+        .env_remove("DECAPOD_SESSION_PASSWORD")
+        .bounded_output(std::time::Duration::from_secs(90))
+        .unwrap();
+        assert!(
+            init.status.success(),
+            "{}",
+            String::from_utf8_lossy(&init.stderr)
+        );
+        let acquired = decapod_command(
+            &repo,
+            &["session", "acquire"],
+            &[
+                ("XDG_CONFIG_HOME", auth.to_str().unwrap()),
+                ("DECAPOD_AGENT_ID", "material-command"),
+            ],
+        )
+        .env_remove("DECAPOD_SESSION_PASSWORD")
+        .bounded_output(std::time::Duration::from_secs(90))
+        .unwrap();
+        assert!(
+            acquired.status.success(),
+            "{}",
+            String::from_utf8_lossy(&acquired.stderr)
+        );
+        let password = String::from_utf8_lossy(&acquired.stdout)
+            .lines()
+            .find_map(|line| line.strip_prefix("Password: "))
+            .unwrap()
+            .to_owned();
+
+        // A version-only exception starts from an already-attested release,
+        // rather than asking the exception to invent missing baseline proof.
+        let refreshed = decapod_command(
+            &repo,
+            &["rpc", "--op", "specs.refresh"],
+            &[
+                ("XDG_CONFIG_HOME", auth.to_str().unwrap()),
+                ("DECAPOD_AGENT_ID", "material-command"),
+                ("DECAPOD_SESSION_PASSWORD", &password),
+                ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+            ],
+        )
+        .bounded_output(std::time::Duration::from_secs(90))
+        .unwrap();
+        assert!(
+            refreshed.status.success(),
+            "baseline attestation: {}",
+            String::from_utf8_lossy(&refreshed.stderr)
+        );
+
+        // Controlled prior-release fixtures use the production renderers and
+        // exact manifest schema; no authored prose is changed by the release.
+        for name in entrypoints::ENTRYPOINT_FILES {
+            fs::write(
+                repo.join(name),
+                entrypoints::render_entrypoint_for_release(name, OLD).unwrap(),
+            )
+            .unwrap();
+        }
+        let docker = repo.join(".decapod/managed/Dockerfile.decapod");
+        fs::write(
+            &docker,
+            fs::read_to_string(&docker)
+                .unwrap()
+                .replace(entrypoints::RELEASE_VERSION, OLD),
+        )
+        .unwrap();
+        let path = repo.join(specs::LOCAL_PROJECT_SPECS_MANIFEST);
+        let attested: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        let capabilities: Vec<String> = attested["declared_capabilities"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|value| value.as_str().unwrap().to_owned())
+            .collect();
+        specs::refresh_specs_manifest(&repo, &capabilities).unwrap();
+        let mut manifest: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        manifest["decapod_release"] = OLD.into();
+        manifest["entrypoints"] = serde_json::json!(entrypoints::ENTRYPOINT_FILES.map(|name| {
+            let body = fs::read_to_string(repo.join(name)).unwrap();
+            let fingerprint = body
+                .lines()
+                .nth(1)
+                .unwrap()
+                .strip_prefix("<!-- decapod-fingerprint: ")
+                .unwrap()
+                .strip_suffix(" -->")
+                .unwrap();
+            serde_json::json!({"path": name, "template_hash": specs::hash_text(&body),
+                "content_hash": specs::hash_text(&body), "fingerprint": fingerprint})
+        }));
+        fs::write(path, serde_json::to_string_pretty(&manifest).unwrap()).unwrap();
+        git_command(&repo, &["add", "."]);
+        git_command(&repo, &["commit", "-qm", "prior release source"]);
+        let base = Self::revision(&repo);
+        Self::version(&repo, entrypoints::RELEASE_VERSION);
+        git_command(&repo, &["add", "Cargo.toml", "Cargo.lock"]);
+        git_command(&repo, &["commit", "-qm", "version-only release"]);
+        let head = Self::revision(&repo);
+        git_command(&repo, &["update-ref", "refs/remotes/origin/master", &base]);
+        git_command(&repo, &["checkout", "-q", "--detach", &head]);
+        git_command(&repo, &["branch", "-D", "master"]);
+        Self {
+            _scratch: scratch,
+            repo,
+            auth,
+            password,
+            base,
+            head,
+        }
+    }
+
+    fn check(&self, event: &str, base: Option<&str>, head: Option<&str>) -> std::process::Output {
+        let mut command = decapod_command(
+            &self.repo,
+            &[
+                "govern",
+                "project-check",
+                "--refresh-specs",
+                "--format",
+                "json",
+            ],
+            &[
+                ("XDG_CONFIG_HOME", self.auth.to_str().unwrap()),
+                ("DECAPOD_AGENT_ID", "material-command"),
+                ("DECAPOD_SESSION_PASSWORD", &self.password),
+                // These are the same project-check scope/context controls as the
+                // reviewed CI recipes. This test does not claim full readiness.
+                ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+                ("DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT", "1"),
+                ("GITHUB_ACTIONS", "true"),
+                ("GITHUB_EVENT_NAME", event),
+                ("GITHUB_WORKSPACE", self.repo.to_str().unwrap()),
+                ("CHANGE_EVENT", event),
+            ],
+        );
+        for (key, value) in [("CHANGE_BASE", base), ("CHANGE_HEAD", head)] {
+            match value {
+                Some(value) => {
+                    command.env(key, value);
+                }
+                None => {
+                    command.env_remove(key);
+                }
+            }
+        }
+        command
+            .bounded_output(std::time::Duration::from_secs(90))
+            .unwrap()
+    }
+}
+
+fn git_command(repo: &Path, args: &[&str]) {
+    let out = Command::new("git")
+        .args(args)
+        .current_dir(repo)
+        .bounded_output(std::time::Duration::from_secs(90))
+        .unwrap();
+    assert!(
+        out.status.success(),
+        "git {args:?}: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+}
+
+#[test]
+fn actual_release_command_accepts_detached_remote_base_and_postmerge_context() {
+    let fixture = MaterialReleaseCommand::new();
+    for event in ["pull_request", "push"] {
+        if event == "push" {
+            // A postmerge accepted ref equal to HEAD must not skip the original
+            // immutable push range's actual material/projection validation.
+            git_command(
+                &fixture.repo,
+                &["update-ref", "refs/remotes/origin/master", &fixture.head],
+            );
+        }
+        let out = fixture.check(event, Some(&fixture.base), Some(&fixture.head));
+        let text = format!(
+            "{}\n{}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let projection = decapod::core::release_projection_drift::verify(
+            &fixture.repo,
+            event,
+            &fixture.base,
+            &fixture.head,
+        );
+        assert!(
+            out.status.success(),
+            "actual release project-check: {text}\nExact projection diagnostic: {projection:?}"
+        );
+        let result: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(result["publication_ready"], false);
+        assert!(
+            result["report"]["notes"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|note| note.as_str()
+                    == Some("material_specs: outcome=passed proof=version_only_exact_projections")),
+            "material gate did not record actual release proof: {text}"
+        );
+        assert!(projection.is_ok(), "{projection:?}");
+    }
+}
+
+#[test]
+fn actual_release_command_rejects_missing_malformed_and_mixed_evidence() {
+    let mut fixture = MaterialReleaseCommand::new();
+    // A postmerge accepted tip equal to HEAD still requires complete context.
+    git_command(
+        &fixture.repo,
+        &["update-ref", "refs/remotes/origin/master", &fixture.head],
+    );
+    for (base, head) in [
+        (None, Some(fixture.head.as_str())),
+        (Some(fixture.base.as_str()), None),
+        (Some("HEAD"), Some(fixture.head.as_str())),
+        (
+            Some(fixture.base.as_str()),
+            Some("0000000000000000000000000000000000000000"),
+        ),
+    ] {
+        let out = fixture.check("pull_request", base, head);
+        let text = format!(
+            "{}\n{}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert!(!out.status.success(), "malformed context was accepted");
+        assert!(
+            text.contains("CI_CHANGE_CONTEXT_INVALID"),
+            "wrong failure: {text}"
+        );
+    }
+    fs::write(
+        fixture.repo.join("src/lib.rs"),
+        "pub fn mixed_source_change() {}\n",
+    )
+    .unwrap();
+    git_command(&fixture.repo, &["add", "src/lib.rs"]);
+    git_command(
+        &fixture.repo,
+        &["commit", "-qm", "source without authored specification"],
+    );
+    fixture.head = MaterialReleaseCommand::revision(&fixture.repo);
+    let out = fixture.check("pull_request", Some(&fixture.base), Some(&fixture.head));
+    let text = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        !out.status.success(),
+        "mixed source was accepted as release-only"
+    );
+    assert!(
+        text.contains("FINGERPRINT_ONLY_SPECS"),
+        "wrong mixed-source failure: {text}"
     );
 }
