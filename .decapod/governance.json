@@ -762,6 +762,17 @@
         "/private/tmp/decapod-120-material-gate-unit-final.log",
         "/private/tmp/decapod-120-native-security-tests-metal.log"
       ]
+    },
+    {
+      "id": "security-advisory-spec",
+      "summary": "Document vulnerable dependency removal, preserved failed evidence, fixture safety and published functional Vega qualification without reviving superseded research gate.",
+      "input_digest": "sha256:054842bed63f6cb43b705c8dba78161ab7ba617f5ac37d82211bf2827fc45c5d",
+      "proof_refs": [
+        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log",
+        "/private/tmp/decapod-120-native-security-tests-metal.log"
+      ]
     }
   ],
   "intents": {
