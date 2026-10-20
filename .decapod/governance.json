@@ -503,6 +503,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "material-gate-disposition",
+      "summary": "Record actual authored/strict-release proof versus local skip reasons in existing report notes without changing gate decisions. Eleven material-gate tests and two actual candidate command tests pass; publication still requires complete validation.",
+      "input_digest": "sha256:819fa5e355a53e58800a3726f47af06bc24cd0b1bad88c82de94ea8a2dbe5ca4",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {
