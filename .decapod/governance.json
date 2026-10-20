@@ -584,6 +584,15 @@
         "/private/tmp/decapod-120-material-command-final.log",
         "/private/tmp/decapod-120-material-gate-unit-final.log"
       ]
+    },
+    {
+      "id": "immutable-ci-security",
+      "summary": "Document unchanged pinned carrier authority, private bounded candidate command fixtures and nonpublication scope. Preserve filesystem/link safety and existing deterministic governance.",
+      "input_digest": "sha256:01c5bd910d6701ebb66911ee29a29caadf1f245e29691733d9ed0165e0108edf",
+      "proof_refs": [
+        "/private/tmp/decapod-120-material-command-final.log",
+        "/private/tmp/decapod-120-material-gate-unit-final.log"
+      ]
     }
   ],
   "intents": {

@@ -381,7 +381,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
+- Repository signal fingerprint: `f085e6e0c9de1e16a2d069721a1e5e7947c66bd1ff6817102f67dbda83315562`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -482,3 +482,14 @@ The completed76 validation exposed false-ready outcomes against proxy labels and
 Public provider metadata and logs may diagnose a failed bootstrap without credentials. They remain untrusted diagnostic content: reading a sibling success or downloading a failure log cannot import a passed observation, alter the required graph or grant publication. A pre-parser helper launch failure establishes no source-test or native execution. Provider recovery must preserve failed history and bind the next real execution to the exact ordinary branch candidate. No authentication state, raw machine logs or model inputs belong in Git.
 
 Numerical and semantic references have separate trust limits. The scalar Rust reference shares parsing/hash infrastructure and pinned weights with the candidate, and its author is the same agent; measured agreement does not imply separate human review or unsupported-mode correctness. Public bug findings, test-oracle resolution and same-agent counterfactual labels do not establish comprehensive readiness. Related lineage IDs must not inflate independent risk counts, nor may an absent review finding be silently converted into a ready label. These limits retain the unsatisfied readiness-calibration gate rather than changing policy or thresholds to fit the available evidence.
+
+## Immutable configuration bootstrap trust boundary
+
+The installed controller independently pins accepted CI carrier bytes. This PR
+does not change those actions or replace their execution with an unmerged
+controller. A diagnostic Rust parser migration was prepared privately but is
+not activated or counted as current production proof. Existing immutable source
+context and accepted executor checks remain authoritative. New actual-command
+release tests execute the Rust candidate in owned temporary repositories, keep
+session credentials outside Git, and distinguish bounded project prerequisites
+from full publication readiness.
