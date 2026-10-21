@@ -83,7 +83,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/release.yml",
-            "sha256:5db0e38c1c013138048e4c0dea5f968511265033eb3a1561485c3ea1eeb350a4",
+            "sha256:7c0f8ab66eeb053a6227c516f6d885133fc67b5c49f5e8b6ddddb08e7213508c",
         ),
         (
             ".github/workflows/security-audit.yml",
