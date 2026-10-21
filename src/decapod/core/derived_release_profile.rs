@@ -651,9 +651,13 @@ pub fn verify_delta(
         .iter()
         .filter_map(|(p, b)| (after.get(p) != Some(b)).then_some(p.as_str()))
         .collect();
+    let mut expected = BTreeSet::from(["Cargo.toml", "Cargo.lock", "CHANGELOG.md"]);
+    if before.contains_key(release_metadata::NATIVE_WORKER_LOCK) {
+        expected.insert(release_metadata::NATIVE_WORKER_LOCK);
+    }
     require(
-        changed == BTreeSet::from(["Cargo.toml", "Cargo.lock", "CHANGELOG.md"]),
-        "generator did not produce the exact proven root Cargo/lock/changelog delta; no-release is not inferred",
+        changed == expected,
+        "generator did not produce the exact proven Cargo/lock/changelog and applicable worker-lock delta; no-release is not inferred",
     )?;
     let (old, new) = release_metadata::version_only_manifest(
         file_text(before, "Cargo.toml")?,
@@ -673,6 +677,17 @@ pub fn verify_delta(
         ),
         "generated Cargo.lock changes dependency resolution or fails production root-version rules",
     )?;
+    if before.contains_key(release_metadata::NATIVE_WORKER_LOCK) {
+        require(
+            release_metadata::version_only_lock(
+                file_text(before, release_metadata::NATIVE_WORKER_LOCK)?,
+                file_text(after, release_metadata::NATIVE_WORKER_LOCK)?,
+                &old,
+                &new,
+            ),
+            "generated worker lock changes runtime pins or fails the exact local path-version projection",
+        )?;
+    }
     let old_log = file_text(before, "CHANGELOG.md")?;
     let new_log = file_text(after, "CHANGELOG.md")?;
     let marker = "## [Unreleased]\n\n";
