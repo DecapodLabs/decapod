@@ -22,6 +22,10 @@ fn main() {
             fs::write(&args[2], args[3].as_bytes()).unwrap();
             println!("built actual artifact");
         }
+        "read-artifact" => {
+            assert_eq!(fs::read(&args[2]).unwrap(), args[3].as_bytes());
+            println!("verified actual artifact");
+        }
         "sleep" => {
             if let Some(path) = args.get(3) {
                 fs::write(path, std::process::id().to_string()).unwrap();
