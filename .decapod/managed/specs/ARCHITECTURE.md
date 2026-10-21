@@ -28,7 +28,27 @@ prospective public review inputs without fitting or inference. Its independently
 collected report cannot satisfy numerical or readiness-calibration acceptance;
 missing source research cannot suppress independent Metal/CPU diagnostics.
 
-## Direction
+## Release preparation and source custody
+
+`core::derived_release_driver::reconcile_worker_lock` projects the manifest's
+actual version into the separate native worker's local Decapod dependency record.
+`release_metadata::align_path_dependency_lock` preserves every other lock byte;
+duplicates, registry substitutions, noncanonical versions and downgrades reject.
+The existing atomic writer preserves unsafe-link rejection and complete-file
+installation. The driver and production maintenance binary share this operation.
+Generated-tree verification, transport and cargo-dist execution bind the applicable
+worker lock alongside the root lock; a changed worker runtime pin is not version-only.
+
+Production retains release-PR then release ordering with separate roots. The
+release-PR clone runs real pinned release-plz update and native lock projection;
+the official action consumes that prepared source. The publishing action receives
+the original accepted checkout. Both actions use the reviewed immutable revision
+and explicit version. Validation does not invoke publication. The repository
+selects the shipped strict Buildkite collector, including actual preparation,
+execution, artifact and dual-root custody checks. The complete derived-release
+execution graph and four-archive proof remain separately required unfinished work.
+
+## Historical execution snapshots
 
 The d3ebad07 eight-run recipe actually compiled and passed40native tests and
 real Metal probe/32recurrence comparisons. Pinned download failures56/28
@@ -558,8 +578,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `cbf2117766d2962ebe1f5ea14a281f0a00edb50dc8207d3dc8888a059ea99a10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `docs/` (1 files), `src/` (210 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
