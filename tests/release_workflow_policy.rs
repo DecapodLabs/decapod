@@ -239,15 +239,9 @@ fn release_workflow_lets_release_plz_update_the_manifest() {
         workflow.contains("config: .github/release.toml"),
         "release workflow should pass the repository release-plz config"
     );
-    let release_pr = workflow
-        .find("command: release-pr\n")
-        .expect("release PR generation");
-    let release = workflow
-        .find("command: release\n")
-        .expect("accepted source publication");
     assert!(
-        release_pr < release,
-        "release PR generation must precede publishing"
+        !workflow.contains("command: release"),
+        "release-plz must not be forced into release-only mode; default mode creates the release PR that updates Cargo.toml before publishing"
     );
 }
 
@@ -499,32 +493,15 @@ fn release_pr_only_recovery_preserves_default_release_ordering() {
     assert!(dispatch.contains("        type: boolean\n"));
     assert!(dispatch.contains("        default: false\n"));
     let publish = release_job(workflow, "release-publish");
-    assert_eq!(publish.matches("uses: release-plz/action@").count(), 2);
-    let release_pr = publish.find("command: release-pr\n").unwrap();
-    let release = publish.find("command: release\n").unwrap();
-    assert!(release_pr < release);
-    assert!(
-        publish.contains("if: github.event_name != 'workflow_dispatch' || !inputs.release_pr_only")
-    );
-    assert!(
-        publish.contains("manifest_path: ${{ steps.release-pr-source.outputs.manifest_path }}")
-    );
-    assert!(publish.contains("manifest_path: ${{ github.workspace }}/Cargo.toml"));
-    let prepared = publish
-        .find("release-plz update --config .github/release.toml")
-        .unwrap();
-    let projected = publish
-        .find("\"$GITHUB_WORKSPACE/target/debug/decapod-release-native-lock\"")
-        .unwrap();
-    assert!(prepared < projected && projected < release_pr);
-    assert!(publish.contains("git clone --no-local --no-hardlinks --"));
+    assert_eq!(publish.matches("uses: release-plz/action@").count(), 1);
+    assert!(publish.contains("command: ${{ github.event_name == 'workflow_dispatch' && inputs.release_pr_only && 'release-pr' || '' }}"));
     assert!(publish.contains("GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}"));
     assert!(publish.contains("CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}"));
     assert!(publish.contains("config: .github/release.toml"));
     assert!(!publish.contains("continue-on-error:"));
-    // Keep upstream release-pr then release ordering, but use separate roots:
-    // generation can include the exact worker-lock projection, while publishing
-    // still consumes the original accepted checkout. Recovery skips publishing.
+    // Empty command is the native action's ordered release-pr then release
+    // mode, with normal failure propagation. PR-only dispatch selects the
+    // upstream release-pr command, never --dry-run (which still opens a PR).
     // https://github.com/release-plz/action/blob/f393a7b38aca9d9b4c58447b291dbac963901df6/action.yml
     assert!(!publish.contains("dry_run:"));
 }
