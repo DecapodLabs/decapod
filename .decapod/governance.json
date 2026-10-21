@@ -733,6 +733,17 @@
         "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
         "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
       ]
+    },
+    {
+      "id": "spec-manifest",
+      "summary": "chore(specs): refresh native execution manifest; independently staged material with mandatory governance. Focused assembled-source evidence: 38 native tests, 82 runtime tests, real Cargo candidate build and formatting passed; complete publication validation remains required.",
+      "input_digest": "sha256:09241f93d92ca6e0dc5d4e2f7b2ee7234c5dcf593cfdda2d46c0c1edbc26b8ff",
+      "proof_refs": [
+        "/private/tmp/decapod-1201-native-graph-final-candidate-test.log",
+        "/private/tmp/decapod-1201-native-graph-final-fmt.log",
+        "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+        "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
+      ]
     }
   ],
   "intents": {
