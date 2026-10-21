@@ -99,6 +99,24 @@ fn derived() -> Snapshot {
     });
     s
 }
+
+#[test]
+fn generated_worker_lock_must_match_the_exact_root_release_delta() {
+    let mut before = source();
+    let mut after = derived();
+    let path = release_metadata::NATIVE_WORKER_LOCK;
+    before.insert(path.into(), before["Cargo.lock"].clone());
+    after.insert(path.into(), after["Cargo.lock"].clone());
+    let profile = get_profile();
+    verify_delta(&profile, &before, &after, "2026-10-11").unwrap();
+    let projected = after[path].clone();
+    after.insert(path.into(), before[path].clone());
+    assert!(verify_delta(&profile, &before, &after, "2026-10-11").is_err());
+    after.insert(path.into(), projected);
+    change(&mut after, path, |s| s + "\n# unrelated lock rewrite\n");
+    assert!(verify_delta(&profile, &before, &after, "2026-10-11").is_err());
+}
+
 fn binding(before: &Snapshot, after: &Snapshot) -> GenerationBinding {
     GenerationBinding {
         source_commit: "1".repeat(40),
