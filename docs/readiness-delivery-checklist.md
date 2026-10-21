@@ -22,14 +22,16 @@ remain accepted. #1460 is merged and #1445 is closed. The active Vega integratio
 Metal/CPU behavior, original numerical tolerances, evidence binding, safe-abstention
 qualification and unestablished domain accuracy remain preserved.
 
-The controller was installed through the official supported cargo-binstall route
-and reports 0.120.0 via `decapod system version`. Every new commit has one material
+The active controller was installed from the published official v0.121.0 release
+through the supported cargo-binstall route and verified to report 0.121.0 via
+`decapod system version`. Executable location and machine observations remain in
+private evidence outside Git. Every new commit has one material
 path plus the kernel-required governance checkpoint, following the maintainer's
 delegated resolution of the literal one-path/kernel-checkpoint conflict. Companion
 source, tests, documentation and generated projections receive separate commits;
 the completed candidate, not each intermediate assembly commit, needs full proof.
 
-The governed follow-up extends the existing native runner with finite reviewed
+Merged [PR #1464](https://github.com/DecapodLabs/decapod/pull/1464) extends the existing native runner with finite reviewed
 command sequences, shared scratch, complete step observations and original
 deadline/cancellation propagation. Native invocation identity binds the declared
 limit rather than remaining wall-clock time, and Cargo's candidate binary name
@@ -38,5 +40,18 @@ boundaries; they do not establish missing platform or release execution.
 The v0.120.1 path-dependency lock repair follows Cargo's normal offline resolver;
 compatible references also normalize, so it is not version-only evidence reuse.
 Actual four-archive derived-release execution and production lock-refresh parity
-remain #1399 obligations. Final exact-candidate evidence belongs in the follow-up
-PR and issue updates; no remaining umbrella is closed by these component checks.
+remain #1399 obligations. #1464 passed full exact-candidate validation at
+`c77df1f0`; Buildkite 2400–2404 passed, ordinary PR CI finished with 167 passes
+and 17 skips, and the maintainer merged it as `b6c74f32`. Official v0.121.0
+includes it. Its 60 native tests and all eight actual scientific runs passed
+under the existing functional safe-abstention qualification; original mismatches
+and unestablished accuracy remain visible.
+
+Current release preparation shares exact native lock projection between the
+isolated driver and production maintenance binary, pins production setup to the
+reviewed toolchain, and separates release-PR preparation from original accepted
+publication source. Focused Rust regressions cover exact/stale/tampered lock
+deltas, unsafe links, atomic failure preservation and cargo-dist mutation. The
+repository selects the existing strict source step/artifact collector. These
+changes require their own terminal exact-candidate validation and actual derived
+execution evidence; no remaining umbrella is closed by authored code or fixtures.
