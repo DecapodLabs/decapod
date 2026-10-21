@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.120.1](https://github.com/DecapodLabs/decapod/compare/v0.120.0...v0.120.1) - 2026-10-21
+
+### Fixed
+
+- remove vulnerable Thrift through pinned Parquet
+- resolve patched TLS trust dependencies
+- report material spec gate pass and skip dispositions
+- preserve Dockerfile bytes during release header refresh
+
+### Other
+
+- bind reviewed security changes to the specs manifest
+- refresh semantics fingerprint for security repairs
+- refresh specs index fingerprint for security repairs
+- refresh operations fingerprint for security repairs
+- refresh validation fingerprint for security repairs
+- refresh interface fingerprint for security repairs
+- refresh architecture fingerprint for security repairs
+- refresh intent fingerprint for security repairs
+- specify advisory remediation and retained Vega limits
+- record the reviewed security repair source inventory
+- map Dependabot repair to native verification
+- isolate worker evidence fixtures from shell umask
+- create private scientific collection fixtures explicitly
+- regenerate Bazel metadata for patched TLS dependencies
+- lock the native reader and TLS security updates
+- bind the complete reviewed source and specs manifest
+- align Gemini entrypoint with the installed controller
+- align Codex entrypoint with the installed controller
+- align Claude entrypoint with the installed controller
+- align agent instructions with the installed controller
+- align the managed workspace image with Decapod 0.120.0
+- refresh the semantics codebase attestation
+- refresh the specs index codebase attestation
+- refresh the operations codebase attestation
+- preserve controller and private evidence boundaries
+- distinguish command proof from diagnostics and publication
+- specify material spec gate execution records
+- explain byte-preserving release projection validation
+- specify immutable CI and release projection outcomes
+- review the unchanged CI graph with the corrected fixture
+- map remaining readiness issues to code and proof
+- replay immutable release validation through the real CLI
+- parse permissive umask using the native platform type
+- cover byte-preserving release header refresh
+- canonicalize owned rustup dispatch fixtures on macOS
+- resolve owned CI scratch paths before containment checks
+
 ## [0.120.0](https://github.com/DecapodLabs/decapod/compare/v0.119.1...v0.120.0) - 2026-10-20
 
 ### Added
