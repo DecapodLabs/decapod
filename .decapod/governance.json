@@ -689,6 +689,17 @@
         "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
         "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
       ]
+    },
+    {
+      "id": "entrypoint-claude",
+      "summary": "chore(governance): refresh CLAUDE for released controller; independently staged material with mandatory governance. Focused assembled-source evidence: 38 native tests, 82 runtime tests, real Cargo candidate build and formatting passed; complete publication validation remains required.",
+      "input_digest": "sha256:4bbaa3bf8f83d6a2ee00152c6dbc37a96f9339d3444fa90b9dd3c21c7f50f44d",
+      "proof_refs": [
+        "/private/tmp/decapod-1201-native-graph-final-candidate-test.log",
+        "/private/tmp/decapod-1201-native-graph-final-fmt.log",
+        "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+        "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
+      ]
     }
   ],
   "intents": {
