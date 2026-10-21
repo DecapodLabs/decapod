@@ -666,6 +666,17 @@
         "/private/tmp/decapod-01210-release-helper-execution.log",
         "/private/tmp/decapod-01210-release-policy-focused-1.log"
       ]
+    },
+    {
+      "id": "release-parity-19",
+      "summary": "Current release-parity component: commit only assets/tools/vega-native/Cargo.lock plus mandatory governance; companion changes are preserved separately; focused evidence does not establish four-platform packaging or final readiness.",
+      "input_digest": "sha256:6e4eb639030649274063620b61ac46e4d2fb9f7bc82a9cf2e4c15e1cf470ad61",
+      "proof_refs": [
+        "/private/tmp/decapod-01210-release-final-driver.log",
+        "/private/tmp/decapod-01210-release-final-fmt.log",
+        "/private/tmp/decapod-01210-release-helper-execution.log",
+        "/private/tmp/decapod-01210-release-policy-focused-1.log"
+      ]
     }
   ],
   "intents": {
