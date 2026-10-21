@@ -6597,12 +6597,18 @@ fn run_current_workbranch_readiness_with(
                     "readiness.accepted-target",
                     &program.to_string_lossy(),
                 ),
-                runtime::NativeAction::SourceCheck { invocation } => external_action::authorize(
-                    &store_root,
-                    ExternalCapability::ProofExec,
-                    "readiness.source-check",
-                    &invocation.program.to_string_lossy(),
-                ),
+                runtime::NativeAction::SourceCheck { invocation } => {
+                    std::iter::once(&invocation.program)
+                        .chain(invocation.following.iter().map(|step| &step.program))
+                        .try_for_each(|program| {
+                            external_action::authorize(
+                                &store_root,
+                                ExternalCapability::ProofExec,
+                                "readiness.source-check",
+                                &program.to_string_lossy(),
+                            )
+                        })
+                }
                 runtime::NativeAction::RepositoryCheck { invocation, seal } => {
                     external_action::authorize_repository_proof(&store_root, invocation, seal)
                 }
@@ -6738,6 +6744,7 @@ fn run_current_workbranch_readiness_with(
                     "READINESS_TOOLCHAIN_CONTRACT: exact project Rust version is required".into(),
                 )
             })?;
+        let native_started = std::time::Instant::now();
         let mut host = runtime::NativeHost::discover(
             options.clone(),
             version,
@@ -6746,7 +6753,11 @@ fn run_current_workbranch_readiness_with(
             authorize,
             &cancellation,
         )?;
-        let report = runtime::validate(&options, &mut host, &cancellation);
+        let mut remaining_options = options;
+        remaining_options.timeout = remaining_options.timeout.checked_sub(native_started.elapsed())
+            .filter(|remaining| !remaining.is_zero())
+            .ok_or_else(|| error::DecapodError::ValidationError("READINESS_DEADLINE_EXCEEDED: native tool discovery exhausted the original budget".into()))?;
+        let report = runtime::validate(&remaining_options, &mut host, &cancellation);
         signal_guard.restore()?;
         Ok(report)
     })();
