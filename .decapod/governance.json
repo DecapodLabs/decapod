@@ -445,426 +445,45 @@
     }
   },
   "change": {
-    "id": "change_01M5DBY7V11960TX995MZ2RMXS",
+    "id": "change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
     "base_commit": "0c5bfc97375e664f920e1e4c419635097abcfb14",
     "target_base": "origin/master"
   },
   "claims": {
-    "exact-release-command": {
-      "statement": "Actual candidate project-check admits strictly verified version-only release projections under immutable PR and postmerge context, explicitly records passed versus skipped material proof, and rejects missing/malformed/mixed source evidence before early exits.",
-      "falsifier": "The actual-command positive replay fails or records a skip; invalid context with accepted tip equal to HEAD or mixed source can pass.",
+    "native-command-sequences": {
+      "statement": "The existing native runner executes every explicitly reviewed direct command in a finite sequence under one original check deadline/output allowance and shared owned scratch, binds all selected executables/arguments, preserves actual step evidence and prevents readiness after later failure.",
+      "falsifier": "A successor obtains a fresh budget, runs unbound or recursive input, drops required earlier evidence, or permits readiness after failure.",
       "status": "supported",
       "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
+        "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+        "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
       ]
     },
-    "immutable-config-rust": {
-      "statement": "This candidate preserves the accepted controller-pinned CI carrier and adds no Python implementation or runtime. The prepared Rust carrier migration is not active and is not counted as production evidence.",
-      "falsifier": "This candidate changes the pinned carrier or counts the experimental parser results as proof of the unchanged production action.",
+    "stable-native-budget-binding": {
+      "statement": "Native final re-selection binds the declared policy timeout rather than remaining wall-clock time, while actual tool measurements and repository authorization retain the original deadline and cancellation.",
+      "falsifier": "Unchanged native inputs change invocation identity as time passes, or expired/cancelled measurement authority grants another independent budget.",
       "status": "supported",
       "proof_refs": [
-        "/private/tmp/decapod-120-final-source-trajectory.json"
+        "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+        "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "ci-owned-scratch-canonical",
-      "summary": "Normalize newly owned CI fixture scratch root before exact containment checks on macOS. Three governance recipe regressions pass; original 30-pass/3-fail baseline retained. Full current-candidate validation remains required.",
-      "input_digest": "sha256:8edc84dd2aea10c43d3fc87bd76225537feef09ee080e29736da070b62a988eb",
+      "id": "native-sequences",
+      "summary": "Run complete finite native recipes in shared scratch with measured successor tools, cumulative output bounds and per-step diagnostics; focused 38 native and 82 runtime tests passed on assembled source.",
+      "input_digest": "sha256:c58523a496f05138d395767885f757e937316e44230d42e5b87efab69d17baab",
       "proof_refs": [
-        "/private/tmp/decapod-120-focused-ci-context.log",
-        "/private/tmp/decapod-120-focused-governance-recipe-after.log"
-      ]
-    },
-    {
-      "id": "rustup-fixture-canonical",
-      "summary": "Normalize the owned rustup fixture root to the same canonical namespace used by tool resolution on macOS. All 33 CI checkout tests pass. CI context retains a separate legacy Python parser failure (52 passed,1 failed), now under Rust-native correction. Full candidate validation remains required.",
-      "input_digest": "sha256:8a9635636f2582f9739ee1b3f8050d99841fdc43e606afc432c76670d77922d0",
-      "proof_refs": [
-        "/private/tmp/decapod-120-focused-ci-context-after.log"
-      ]
-    },
-    {
-      "id": "release-header-preservation",
-      "summary": "Correct actual release projection mismatch by updating only managed ARG values; preserve authored body, LF/CRLF and final newline state. Preservation and actual-command Rust regressions pass. Pending companion files remain in a retained owned stash; full candidate validation required.",
-      "input_digest": "sha256:e37ae0607ea7704aa095ebb90e530dc4c1c0f0a6951aef43bc1d74db2074c485",
-      "proof_refs": [
-        "/private/tmp/decapod-120-docker-header-test-after.log",
-        "/private/tmp/decapod-120-material-command-final.log"
-      ]
-    },
-    {
-      "id": "release-header-regression",
-      "summary": "Exercise all LF/CRLF and final-newline combinations, preserve project commands and whitespace, and require idempotent refresh. The dedicated Rust regression passes. This commit carries one material test path; full completed-candidate validation remains required.",
-      "input_digest": "sha256:29bf36ab99960210f8ceeaa20a2dc13ce38e8d6da5f19fe89e174f8e52046002",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "material-gate-disposition",
-      "summary": "Record actual authored/strict-release proof versus local skip reasons in existing report notes without changing gate decisions. Eleven material-gate tests and two actual candidate command tests pass; publication still requires complete validation.",
-      "input_digest": "sha256:819fa5e355a53e58800a3726f47af06bc24cd0b1bad88c82de94ea8a2dbe5ca4",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "native-umask-fixture",
-      "summary": "Repair macOS test compilation by parsing libc::mode_t instead of u32. Real isolated permissive-umask child tests pass and retain private creation assertions; no filesystem safety contract changes.",
-      "input_digest": "sha256:17ccb3e1dc7f519c71bd95a95c1e30efe4064fa54a3f471b9085264a6e574190",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "actual-release-command-proof",
-      "summary": "Use bounded actual candidate commands, prior attested release provenance and retained capability declarations. Prove detached remote-only base and postmerge version-only acceptance, JSON pass rather than skip, and malformed/missing/mixed rejection including HEAD equal to accepted tip. Both final command tests pass; no full publication proof is claimed.",
-      "input_digest": "sha256:52c030597e15e07d496f17090f6196438f2a46efd9d7d8b88ac012420f326e09",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "readiness-delivery-map",
-      "summary": "Map all requested umbrella issues, necessary portions and accepted prerequisites to existing implementation, regression anchors and actual remaining evidence. Do not claim broader closure; preserve Vega qualification and original failure limits.",
-      "input_digest": "sha256:849f51a387e501d18370a127a0fc0577c5ce77154af7d23681ed7051ba29a8c6",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "reviewed-source-inventory",
-      "summary": "After explicit full-inventory review, update only its source review pin for test-only canonicalization in source_ci_toolchain.rs. Carrier/workflows/commands/matrices/provider/requiredness unchanged; backup retained privately; this review is not proof execution.",
-      "input_digest": "sha256:d3dd9aaf19f72c0b373e5faed5c6856586bd63e3ee96649573207cf411dccef5",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "immutable-ci-intent",
-      "summary": "Preserve whole-product intent while documenting immutable change range, exact release-only exception, Rust product scope and explicit limits of this focused delivery.",
-      "input_digest": "sha256:e1a1bb46f31c70d8e813676c70a13331bee9ab125bf02541fc90f3c68baf940f",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "immutable-ci-architecture",
-      "summary": "Document actual header preservation, Rust command regressions, historical-generator identity and unchanged accepted carrier boundary. Experimental carrier migration is not active or counted as proof.",
-      "input_digest": "sha256:42257197fe9bf204d64c324c542eea938b3e08a6005e6b79c07dfb9839b519cf",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "material-notes-interface",
-      "summary": "Describe explicit existing-report JSON notes for passed authored/strict-release proof versus local skips, preserving required context failure and non-ready project-check semantics.",
-      "input_digest": "sha256:6b8990a5b393ede6f9a50b33795caa63f66a385c059c3585b381fab4dddc0061",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "immutable-ci-validation",
-      "summary": "Record exact Rust regression scope, preserved local legacy carrier dependency failure, real release command and byte preservation coverage. Full final Buildkite/native validation remains required; historical Vega evidence unchanged.",
-      "input_digest": "sha256:7f5c1f57b2c791ba5a8f335cb08d729f2c9ac7d64e5d0148c7a55ff7b09b677e",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "immutable-ci-security",
-      "summary": "Document unchanged pinned carrier authority, private bounded candidate command fixtures and nonpublication scope. Preserve filesystem/link safety and existing deterministic governance.",
-      "input_digest": "sha256:01c5bd910d6701ebb66911ee29a29caadf1f245e29691733d9ed0165e0108edf",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "operations-projection",
-      "summary": "Commit only the supported CLI-generated operations fingerprint refresh for current source; this projection is not authored runtime proof.",
-      "input_digest": "sha256:5894e268a310900642ccf5fb4dc62fc1fbd26bd6e56f61af2e22ded7deae2d16",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "specs-index-projection",
-      "summary": "Commit only the supported CLI-generated specs index fingerprint refresh for current source.",
-      "input_digest": "sha256:fdeeeb9508875fb08d50f1105260d321217b85b30f5b3e4962099d3203566995",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "semantics-projection",
-      "summary": "Commit only the supported CLI-generated semantics fingerprint refresh, preserving its authored behavioral contract.",
-      "input_digest": "sha256:deae765b6079c1a79cfdb816ec04ec8eac6dd03473c2ebda035fa41da985df7a",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "managed-release-pin",
-      "summary": "Record the official installed-controller workspace release projection while preserving project workspace instructions. Production header preservation fix is separately committed and tested.",
-      "input_digest": "sha256:cb172140f89b65004778debd967e4ff01596e8e484d7c71f10041618ec36d883",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "agents-release-projection",
-      "summary": "Record the supported CLI-generated release-bound AGENTS projection separately; governance and validation authority remain intact.",
-      "input_digest": "sha256:2b826c4a5dc020d247ab51aa484ebe2be85e4d5482e893203c8fc38563bc63a8",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "claude-release-projection",
-      "summary": "Record the supported CLI-generated release-bound CLAUDE projection separately.",
-      "input_digest": "sha256:9530aad67730d4b0d4424fa2e01c444950bcdb6d0aba01c6750d32feb2c829a3",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "codex-release-projection",
-      "summary": "Record the supported CLI-generated release-bound CODEX projection separately.",
-      "input_digest": "sha256:d19f28c1e7ec9b314c7800c2534c11a1ead93759a761886f6dbe87efd4a7576b",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "gemini-release-projection",
-      "summary": "Record the supported CLI-generated release-bound GEMINI projection separately.",
-      "input_digest": "sha256:1a4580e9f14d2f582327f0d2c42ba545e4d47bfd1fe9848aa1d6cc3b0e1af3dd",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "complete-specs-manifest",
-      "summary": "Record the supported CLI-generated final specs manifest after source, config, authored prose and entrypoint reviews. All material files have separate commits; full final-candidate Buildkite and native verification is still required.",
-      "input_digest": "sha256:58a347f61bae58aa5bda51d7bac57fd885631e87a110066ab226ce4149cde2b4",
-      "proof_refs": [
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log"
-      ]
-    },
-    {
-      "id": "tls-root-lock",
-      "summary": "Compatible rustls-webpki and webpki-roots advisory fixes; normal resolver output, no security suppression.",
-      "input_digest": "sha256:54b53e3b676846a0b63a1e4fd1685e505dcc690321b41a757bf0e740d56a6619",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "native-parquet-manifest",
-      "summary": "Dependabot4: pinned Parquet59.3.1 removes affected thrift0.17; model runtime pins and numeric tolerances preserved.",
-      "input_digest": "sha256:f80b93b35e4323604301a44e43e4d473ff047a02da86b105e3c4e4288689d72e",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "native-security-lock",
-      "summary": "Normal Cargo resolution removes thrift and its unused dependencies, patches TLS and aligns local Decapod package version; nine Git source identities unchanged.",
-      "input_digest": "sha256:af378d1a22013923a5d84cbfbfba72bf23dcf0c97f46d0db1597b0671d067971",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "tls-bazel-lock",
-      "summary": "Normal batch-mode module resolution from Cargo lock; strict lockfile error mode succeeds, no unrelated toolchain changes.",
-      "input_digest": "sha256:738c2cd4cff162963cb730137dabcc53a759956000002077bbb5847098dadf6f",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "native-private-fixture",
-      "summary": "Remove shell-umask dependence in test fixtures; add public-directory creation/load rejection regression, keep production checks unchanged.",
-      "input_digest": "sha256:f31b9f6aed3efd07e533a332340fccfae7af5ae923c20c5c03d561ba716bc492",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "worker-private-fixtures",
-      "summary": "Explicit0700 test directory creation preserves real private collection contract without loosening filesystem safety.",
-      "input_digest": "sha256:f1f736085385823701d0277fb249cefe6107238de97765f90f306260388ef311",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-coverage-checklist",
-      "summary": "Track alert4 alongside existing issue-to-code/test evidence; broader umbrella scopes remain open, no unexecuted success claim.",
-      "input_digest": "sha256:620a8b69f63f47afeaebfb48e13eaac71aff78c9d459f4be57d86a7223bc9059",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-inventory-review",
-      "summary": "Explicit review of dependency locks, native manifest and fixture-only changes; carrier, workflows, required graph and eight-run recipe unchanged.",
-      "input_digest": "sha256:133108adb6a412fda21866a1926f4760e89b4b4cbc6529918edeb56513ecac09",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-advisory-spec",
-      "summary": "Document vulnerable dependency removal, preserved failed evidence, fixture safety and published functional Vega qualification without reviving superseded research gate.",
-      "input_digest": "sha256:054842bed63f6cb43b705c8dba78161ab7ba617f5ac37d82211bf2827fc45c5d",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-intent-projection",
-      "summary": "Supported specs.refresh projection for reviewed final code; existing product intent preserved.",
-      "input_digest": "sha256:4bac72068d185ceceb48fdb708d6f6b42174a7d3afebfe95b87d40401f8102c3",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-architecture-projection",
-      "summary": "Supported fingerprint and reviewed separate native-worker boundary; no model or architecture change.",
-      "input_digest": "sha256:15a05567b22035010344437f92782b79b5db7dac6ce1975def33c1ac49562754",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-interface-projection",
-      "summary": "Supported fingerprint with immutable source and publication interface unchanged.",
-      "input_digest": "sha256:584ee7c86fac85e8d341061ef7238f114e3662e6fa3df5a2a0be313c906c54e8",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-validation-projection",
-      "summary": "Preserve exact candidate full validation and all configured source/native checks.",
-      "input_digest": "sha256:46c385c168ec7975b4d82e659b8be635c1f8216afb2e314adaa94db004fbfd90",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-operations-projection",
-      "summary": "Supported generated fingerprint; no credentials or machine logs committed.",
-      "input_digest": "sha256:17277f00b899a8afb6c46cc9fa04a53c305d8f6ffa9ef799b3d1cc7aa1be5909",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-readme-projection",
-      "summary": "Supported generated fingerprint preserves existing source grounded index.",
-      "input_digest": "sha256:065459d944c4b7893e45fae7db3889f92b1d64a934287cffc1763155a1b12b09",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-semantics-projection",
-      "summary": "Supported generated fingerprint; deterministic authority and required Vega fail-closed behavior unchanged.",
-      "input_digest": "sha256:b7367ae6dbe0c7914d6d4ba9994bf2f29f5c2efa980de4c10e92d9e7b0845a52",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
-      ]
-    },
-    {
-      "id": "security-manifest-projection",
-      "summary": "Supported refreshed manifest binds completed candidate; every companion file remains separately committed.",
-      "input_digest": "sha256:9563927e55fd9021f4beacc230cf0e70a9e0beb3b94647ea870001e24dadc357",
-      "proof_refs": [
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log"
+        "/private/tmp/decapod-1201-native-graph-final-candidate-test.log",
+        "/private/tmp/decapod-1201-native-graph-final-fmt.log",
+        "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+        "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M5DBY7V11960TX995MZ2RMXS": {
+    "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -874,11 +493,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+      "id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Finish immutable CI context and historical generator proof (#1397)\n\nFirst dependency-ordered delivery under the user-authorized post-1460 umbrella: #1397 immutable event/base context, actual material-spec validation, strict release parity and own-generator historical entrypoints. Preserve shipped #1396 and source/native prerequisites. Every authored commit changes exactly one path. Follow-on #1398/#1070/#779, #1024, #1399 and #1069/#1052 remain required separate accepted-base deliveries; do not claim unrelated scope complete.",
-      "refined_intent": "Finish immutable CI context and historical generator proof (#1397)\n\nFirst dependency-ordered delivery under the user-authorized post-1460 umbrella: #1397 immutable event/base context, actual material-spec validation, strict release parity and own-generator historical entrypoints. Preserve shipped #1396 and source/native prerequisites. Every authored commit changes exactly one path. Follow-on #1398/#1070/#779, #1024, #1399 and #1069/#1052 remain required separate accepted-base deliveries; do not claim unrelated scope complete.",
+      "raw_intent": "Complete native and Buildkite full-graph proof (#1398/#1070)\n\nContinue the authorized post-1460 readiness delivery. Reuse existing planner/runtime/evidence/custody/source profile and implement remaining complete native graph execution and Buildkite equivalent assurance for #1398/#1070 plus necessary #779 orchestration; consume relevant #1064/#1084 only. Preserve the independently owned #1397/security task and PR1462, all history/failures and current Rust Vega qualification. Start only from accepted master; no stacked unmerged base or duplicate controller foundations. Prepare independent code while #1397 awaits maintainer acceptance; integrate its accepted changes normally before any dependent publication. Establish typed sequence/project/full-validator/derived adapters from existing code where supported, real platform/hosted R/H evidence, bounds/cancellation and exact identity checks. Keep all required obligations, no fake proof or lower-assurance provider switch. Dependency-ordered follow-through includes init/lifecycle and genuine nonpublishing release-plz/cargo-dist archives. Each authored commit changes one material path plus mandatory governance checkpoint under existing delegated conflict resolution; no squash, force push, merge or release. Missing hardware/access/authority must remain an explicit blocker while independent work continues.",
+      "refined_intent": "Complete native and Buildkite full-graph proof (#1398/#1070)\n\nContinue the authorized post-1460 readiness delivery. Reuse existing planner/runtime/evidence/custody/source profile and implement remaining complete native graph execution and Buildkite equivalent assurance for #1398/#1070 plus necessary #779 orchestration; consume relevant #1064/#1084 only. Preserve the independently owned #1397/security task and PR1462, all history/failures and current Rust Vega qualification. Start only from accepted master; no stacked unmerged base or duplicate controller foundations. Prepare independent code while #1397 awaits maintainer acceptance; integrate its accepted changes normally before any dependent publication. Establish typed sequence/project/full-validator/derived adapters from existing code where supported, real platform/hosted R/H evidence, bounds/cancellation and exact identity checks. Keep all required obligations, no fake proof or lower-assurance provider switch. Dependency-ordered follow-through includes init/lifecycle and genuine nonpublishing release-plz/cargo-dist archives. Each authored commit changes one material path plus mandatory governance checkpoint under existing delegated conflict resolution; no squash, force push, merge or release. Missing hardware/access/authority must remain an explicit blocker while independent work continues.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -887,504 +506,262 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": [
-          "assets/tools/vega-native/vendor",
-          "assets/tools/vega-native/decoder.rs"
-        ]
+        "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Complete the current #1397 delivery and actual CI repairs, including user-requested Dependabot alert #4 in this same PR. Upgrade only the external native worker Parquet reader to a pinned supported release without vulnerable thrift, regenerate its normal Cargo lock and test its existing pinned corpus reader. Preserve all native model/runtime Git pins, decoder/vendor code, tolerances, failed studies, deterministic authority and unchanged accepted CI carrier. Repair compatible root/native TLS advisories and normal Bazel lock metadata. Keep broader umbrella completion tracked accurately. Each commit changes one material path plus mandatory governance checkpoint under the delegated conflict resolution; no merge, release, force push, gate waiver or new backend.",
+      "intent": "Deliver the next dependency-ordered PR correcting the existing native proof runtime: execute complete supported finite Cargo recipes in shared owned scratch; preserve per-step evidence and fail-closed aggregation; carry original deadlines/cancellation through discovery, measurement and repository seals; keep invocation identity stable during final re-selection; permit a Cargo candidate artifact name without permitting controller execution. Reuse all existing planner, source catalog, snapshot, custody and Buildkite mechanisms. The parent task still requires remaining full native platform/workflow adapters, actual hosted R/H artifact qualification, lifecycle/init work and real derived-release archives; this component PR does not close those umbrella scopes. Keep deterministic proof authoritative, the existing Vega Metal/CPU paths, all model/engine/calibration identities, numerical tolerances and published accuracy limits. Validate the exact assembled candidate through official released Decapod and its configured Buildkite/native phases. Preserve every prior failure and original task/trajectory; one material path plus mandatory governance record per commit under the resolved kernel conflict; no merge, release, history rewrite or unaccepted stacked base.",
       "phases": [],
       "proof_hooks": [
-        "Focused actual material-spec, CI checkout/context, release parity and historical-generator regressions, recording passes separately from skips.",
-        "Whole-command replay of immutable release context against the actual candidate binary, including malformed, protected/postmerge, synthetic-merge and mixed-source rejection.",
-        "Official v0.120.0 full decapod validate on exact final branch and accepted master; complete configured Buildkite plus existing native Vega checks; publish after pass and collect PR CI to terminal."
+        "Focused Rust native execution tests cover command sequencing, shared scratch, later-step failure, cancellation, cumulative output/deadline limits and tool/argument substitution",
+        "Exact-candidate decapod validate with all required Buildkite/native obligations after accepted dependencies are integrated"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Existing exact-release projection and historical generator behavior retained; dependency repairs preserve separate native worker and all model/runtime pins.",
-          "reviewed_code_fingerprint": "6a2c7916aa413e169ccb9bd652a0b43cb3a5db256a487f2e3dfe5250f546ada8",
-          "spec_material_hash": "82ea8e180aba1e38a433c85f4b6c0e5c915968dcda9170b7fdda72df79165beb"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Required source graph, immutable carrier, native recipe and fail-closed publication unchanged; Parquet reader API preserved.",
-          "reviewed_code_fingerprint": "6a2c7916aa413e169ccb9bd652a0b43cb3a5db256a487f2e3dfe5250f546ada8",
-          "spec_material_hash": "06be61e76fc6c132b2b445e3a21e13aa6298c7764087ddebc92eb67d4be72e49"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Remove vulnerable thrift through supported pinned Parquet, patch TLS advisories without suppression, explicitly private test fixtures retain production filesystem rejection. Preserve historical failures and approved functional Vega qualification, not obsolete statistical prerequisite.",
-          "reviewed_code_fingerprint": "6a2c7916aa413e169ccb9bd652a0b43cb3a5db256a487f2e3dfe5250f546ada8",
-          "spec_material_hash": "e2a6cf917db9f3e30d269ce21a44fd934b66fc9083826cdf37107bca00aa8403"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [
-        "No merge/release/publication side effects except authorized passing PR; no force-push, temporary transport refs, gate weakening or fake evidence; no replacement of accepted foundations."
+        "Required foreign-platform execution or derived artifact evidence remains incomplete until genuinely executed; never treat partial native evidence as complete readiness"
       ],
-      "title": "Finish immutable CI change-context and generator proof (#1397)",
+      "title": "Complete native and Buildkite full-graph proof (#1398/#1070)",
       "todo_ids": [
-        "cicd_01m5dbhq2k5bj5wm"
+        "cicd_01m5dwhmh5093bvr"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792536964Z"
+      "updated_at": "1792565358Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Accepted-base work; PR1462 remains separately governed and no unmerged commits are copied",
+        "Current claimed task and isolated work branch",
+        "Fast-forwarded to human-accepted 8396a6e4; exact original CLI journal preserved through Git custody; immutable stash retained",
+        "Focused evidence covers assembled source; constituent one-material commits need not individually compile; full exact-candidate publication proof has not run",
+        "Official v0.120.1 installed; accepted 9eb2ef48 integrated by fast-forward; no new task or transfer; expired lease restored on same task through supported claim"
       ],
-      "artifact_hash": "sha256:ea513acbd5a0f5390912d570e84740fc379d356bef56dbbe92acce1348f2fa64",
+      "artifact_hash": "sha256:fcd2bf52c79aabda2f23004bcac55719d74ed9c8fdb4679d7cf97c1345e2470b",
       "checks": [
         {
-          "name": "accepted-carrier-local-fixture",
+          "name": "Accepted PR1462 integration",
+          "status": "passed"
+        },
+        {
+          "name": "Actual current Cargo candidate build",
+          "status": "passed"
+        },
+        {
+          "name": "All-platform offline metadata",
           "status": "failed"
         },
         {
-          "name": "actual-release-command",
+          "name": "Final Rust formatting",
           "status": "passed"
         },
         {
-          "name": "baseline-ci-checkout",
-          "status": "failed"
-        },
-        {
-          "name": "bazel-lock-regeneration",
+          "name": "Final native process and sequence suite",
           "status": "passed"
         },
         {
-          "name": "bazel-lock-strict-consistency",
+          "name": "Final runtime and seal suite",
           "status": "passed"
         },
         {
-          "name": "ci-checkout",
+          "name": "Initial post-release native sequence suite",
           "status": "passed"
         },
         {
-          "name": "ci-event-context",
-          "status": "failed"
-        },
-        {
-          "name": "current-source-inventory-review",
+          "name": "Mac locked offline dependency resolution",
           "status": "passed"
         },
         {
-          "name": "dependabot-4",
-          "status": "failed"
-        },
-        {
-          "name": "final-actual-release-command",
+          "name": "Native sequence focused suite",
           "status": "passed"
         },
         {
-          "name": "final-material-gate-unit",
+          "name": "PR1462 full validation",
           "status": "passed"
         },
         {
-          "name": "focused-governance-recipe",
+          "name": "PR1462 terminal CI",
           "status": "passed"
         },
         {
-          "name": "full-validation-204903",
-          "status": "failed"
-        },
-        {
-          "name": "full-validation-205503",
-          "status": "failed"
-        },
-        {
-          "name": "historical-generator",
+          "name": "Reviewed release/native lock source inventory",
           "status": "passed"
         },
         {
-          "name": "hosted-auxiliary-bootstrap",
-          "status": "failed"
-        },
-        {
-          "name": "hosted-dependency-deny",
-          "status": "failed"
-        },
-        {
-          "name": "issue-contract-audit",
+          "name": "Shared diagnostic sequence path",
           "status": "partial"
-        },
-        {
-          "name": "material-gate-unit",
-          "status": "passed"
-        },
-        {
-          "name": "native-dependency-regressions-initial",
-          "status": "failed"
-        },
-        {
-          "name": "native-library-test-compile",
-          "status": "failed"
-        },
-        {
-          "name": "native-pin-audit",
-          "status": "passed"
-        },
-        {
-          "name": "native-sandbox-metal",
-          "status": "failed"
-        },
-        {
-          "name": "native-security-fmt",
-          "status": "passed"
-        },
-        {
-          "name": "native-security-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "official-controller-install",
-          "status": "passed"
-        },
-        {
-          "name": "permissive-umask",
-          "status": "passed"
-        },
-        {
-          "name": "release-projection",
-          "status": "passed"
-        },
-        {
-          "name": "rust-ci-context",
-          "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "checkpoint",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
+            "detail": "trajectory:branch_01M5DWKGTJS88CPH8V0ABMX5KZ",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
+            "detail": "trajectory:branch_01M5DWKGTJS88CPH8V0ABMX5KZ",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
+            "detail": "trajectory:branch_01M5DWKGTJS88CPH8V0ABMX5KZ",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
+            "detail": "trajectory:branch_01M5DWKGTJS88CPH8V0ABMX5KZ",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
+            "detail": "trajectory:branch_01M5DWKGTJS88CPH8V0ABMX5KZ",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
             "kind": "trajectory_step_recorded",
             "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
-          },
-          {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
-            "event_id": "event:13",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 13
-          },
-          {
-            "detail": "trajectory:branch_01M5DBY7Y918N445QYA574NGPD",
-            "event_id": "event:14",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
-            "kind": "trajectory_step_recorded",
-            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M5DBY7Y918N445QYA574NGPD": {
+          "branch_01M5DWKGTJS88CPH8V0ABMX5KZ": {
             "evidence_only": true,
-            "id": "branch_01M5DBY7Y918N445QYA574NGPD",
-            "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+            "id": "branch_01M5DWKGTJS88CPH8V0ABMX5KZ",
+            "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/governance_document.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/entrypoint_integrity/history.rs",
-                  "tests/ci_checkout_policy.rs"
+                  "src/decapod/core/native_proof.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_policy.rs",
+                  "src/decapod/lib.rs",
+                  "/private/tmp/decapod-120-validation-20261020T230219Z.json",
+                  "https://github.com/DecapodLabs/decapod/pull/1462#issuecomment-6304997287"
                 ],
                 "proof_refs": [
-                  "issue-contract-audit",
-                  "official-controller-install"
+                  "PR1462 full validation",
+                  "PR1462 terminal CI"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Native full graph still requires actual platform capabilities; current Mac does not by itself establish Linux or four-archive release execution"
+                ]
               },
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "tests/ci_checkout_policy.rs"
+                  "src/decapod/core/native_proof.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "tests/native_proof_execution.rs",
+                  "/private/tmp/decapod-120-native-graph-sequences-final-test.log",
+                  "/private/tmp/decapod-120-native-graph-before-accepted-stash.txt",
+                  "/private/tmp/decapod-120-native-graph-after-accepted-governance.json"
                 ],
                 "proof_refs": [
-                  "baseline-ci-checkout",
-                  "focused-governance-recipe"
+                  "Native sequence focused suite",
+                  "Accepted PR1462 integration"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
-                "tool": "cargo test-main --locked --no-default-features --test ci_checkout_policy: 30 passed,3 failed; /private/tmp/decapod-120-focused-ci-context.log",
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "assets/tools/source_ci_toolchain.rs"
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/validation_runtime/rust_worker.rs",
+                  "src/decapod/core/validation_runtime/tests.rs",
+                  "/private/tmp/decapod-120-native-graph-sequences-final-test.log"
                 ],
                 "proof_refs": [
-                  "ci-checkout",
-                  "ci-event-context"
+                  "Shared diagnostic sequence path"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 6,
-                "tool": "cargo test-main --locked --no-default-features --test ci_checkout_policy --test ci_event_context_policy: 33 checkout passed; 52 context passed,1 failed due to legacy Python tomllib dependency; /private/tmp/decapod-120-focused-ci-context-after.log",
-                "validation_findings": []
+                "validation_findings": [
+                  "The accepted source executor closure changed in merged PR1462; final publication requires an official controller independently supporting that accepted closure, not this candidate authorizing itself"
+                ]
               },
               {
-                "action": "trajectory.record",
+                "action": "verification",
                 "custody_event_id": "event:7",
                 "observations": [
-                  ".github/actions/ci-context/action.yml",
-                  "assets/tools/ci_event_context.rs",
-                  "tests/ci_event_context_policy.rs"
+                  ".decapod/config.toml",
+                  "assets/tools/vega-native/Cargo.lock",
+                  "docs/readiness-delivery-checklist.md",
+                  "/private/tmp/decapod-1201-native-graph-source-review.json",
+                  "/private/tmp/decapod-1201-native-resolved-mac-after.json",
+                  "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+                  "/private/tmp/decapod-1201-native-resolved-after.log"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "Reviewed release/native lock source inventory",
+                  "Mac locked offline dependency resolution",
+                  "Initial post-release native sequence suite",
+                  "All-platform offline metadata"
+                ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 7,
                 "validation_findings": [
-                  "Keep full TOML decoding with existing pinned Rust dependencies; reject malformed/duplicate keys and verify immutable regular source blob before parsing. Remove the observed Python dependency, not its rejection rules."
+                  "Mac-only offline metadata does not prove cached dependency resolution on every platform; normalized lock references are not version-only proof reuse"
                 ]
               },
               {
-                "action": "trajectory.record",
+                "action": "checkpoint",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "assets/tools/ci_config.rs",
-                  "src/decapod/plugins/container.rs",
-                  "tests/substrate_integrity.rs",
-                  "src/decapod/core/validation_runtime/tests.rs"
+                  "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+                  "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log",
+                  "/private/tmp/decapod-1201-native-graph-final-candidate-test.log",
+                  "/private/tmp/decapod-1201-native-graph-final-fmt.log"
                 ],
                 "proof_refs": [
-                  "rust-ci-context",
-                  "actual-release-command",
-                  "native-library-test-compile"
+                  "Final native process and sequence suite",
+                  "Final runtime and seal suite",
+                  "Actual current Cargo candidate build",
+                  "Final Rust formatting"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 8,
-                "tool": "Rust CI context: 53 passed; substrate integration: 8 passed,1 failed; exact diagnostic identifies extra Dockerfile newline in release refresh; /private/tmp/decapod-120-rust-context-material.log and /private/tmp/decapod-120-material-command-diagnostic.log",
-                "validation_findings": [
-                  "Expanded file budget to 32 to include observed Rust-native bootstrap, actual CLI release replay, portable Mac fixtures and required generated/spec documentation. No Vega changes or new control plane. Latest additional boundary fixtures and header correction await execution."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [],
-                "proof_refs": [
-                  "actual-release-command",
-                  "material-gate-unit",
-                  "historical-generator",
-                  "release-projection",
-                  "permissive-umask",
-                  "accepted-carrier-local-fixture"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
-                "tool": "Actual candidate CLI: two Rust release-command regressions passed in /private/tmp/decapod-120-material-command-recorded.log. Additional postmerge-invalid-context assertion awaits final targeted run.",
-                "validation_findings": [
-                  "An experimental Rust CI parser was prepared but not committed. Rewriting compiled carrier bytes would require independently published controller support. Prepared source and diagnostic results retained privately; original accepted action, Cargo manifest, Bazel catalog and CI context test restored exactly from HEAD. The original local legacy tomllib dependency failure remains failed; required hosted checks remain mandatory. No Python implementation/runtime added."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "/private/tmp/decapod-120-material-gate-unit-final.log",
-                  "/private/tmp/decapod-120-material-command-final.log"
-                ],
-                "proof_refs": [
-                  "final-material-gate-unit",
-                  "final-actual-release-command"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 10,
-                "validation_findings": [
-                  "Explicit inventory review: the only source-contract inventory delta from accepted 0c5bfc97 is assets/tools/source_ci_toolchain.rs, solely cfg(test) fixture canonicalization. Workflow, carrier bytes, production source commands, matrices, provider and required checks are unchanged. Reviewed complete inventory digest from agent.init; updated only that user-editable config pin after private backup. Full validation remains required."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "/private/tmp/decapod-120-validation-20261020T204903Z.json",
-                  "/private/tmp/decapod-120-validation-20261020T205503Z.json",
-                  "https://buildkite.com/decapodlabs/decapod/builds/2358",
-                  "https://buildkite.com/decapodlabs/decapod/builds/2359"
-                ],
-                "proof_refs": [
-                  "full-validation-204903",
-                  "full-validation-205503",
-                  "hosted-dependency-deny",
-                  "hosted-auxiliary-bootstrap"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 11,
-                "tool": "Public Buildkite logs independently identify RUSTSEC-2026-0382 (rustls-webpki >=0.103.16) and RUSTSEC-2026-0381 (webpki-roots >=1.0.10). Public RustSec pages fetched and retained. Auxiliary bootstrap fails mise artifact attestation GitHub 403 rate limit; no attestation bypass or login requested.",
-                "validation_findings": [
-                  "Patch only affected compatible TLS dependency versions and normal generated locks; model identities, calibration, numerical tolerances, source-required graph and attestation remain unchanged. Retry supported validation only after provider availability recovers; no repeated run during the reported quota interval."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:12",
-                "observations": [
-                  "assets/tools/vega-native/Cargo.toml",
-                  "assets/tools/vega-native/evaluation_corpus.rs",
-                  "https://github.com/advisories/GHSA-2f9f-gq7v-9h6m"
-                ],
-                "proof_refs": [
-                  "dependabot-4"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 12,
-                "tool": "Authenticated alert 4 identifies thrift 0.17.0 via parquet 57.0.0 in the native worker lock. Official Parquet manifests and Cargo registry metadata show maintained 57/58 releases still require thrift 0.17; Parquet 59 removes that dependency. Select pinned 59.3.1, preserve reader API and all model pins, then execute corpus regression and prescribed validation.",
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:13",
-                "observations": [
-                  "Cargo.lock",
-                  "MODULE.bazel.lock",
-                  "assets/tools/vega-native/Cargo.toml",
-                  "assets/tools/vega-native/Cargo.lock",
-                  "assets/tools/vega-native/scientific_collection.rs",
-                  "assets/tools/vega_infer.rs",
-                  "/private/tmp/decapod-120-dependabot4-native-tests-after.log",
-                  "/private/tmp/decapod-120-bazel-lock-consistency.log"
-                ],
-                "proof_refs": [
-                  "native-dependency-regressions-initial",
-                  "bazel-lock-regeneration",
-                  "bazel-lock-strict-consistency",
-                  "current-source-inventory-review"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 13,
-                "tool": "Native dependency suite compiled Parquet59.3.1 and produced52 passes/7 failures: existing scientific fixtures relied on inherited restrictive umask. Fix test-only directory creation with explicit0700 and add public-directory rejection regression. Production collection permission/link checks unchanged. Retry running; no passing claim yet. Initial sandbox cache denial retained separately.",
-                "validation_findings": [
-                  "Explicit full inventory review includes only compatible TLS root/native lock updates, normal Bazel lock metadata, pinned Parquet59.3.1 removing vulnerable thrift, native fixture-only changes and prior source_ci_toolchain test canonicalization. Carrier/workflow/build declarations, required source graph, eight-run native recipe digest, nine runtime Git pins, model assets and numerical tolerances unchanged. Owned native target directory moved outside scanned source after completed test; no discovery-limit relaxation."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:14",
-                "observations": [
-                  "/private/tmp/decapod-120-native-security-tests-metal.log",
-                  "/private/tmp/decapod-120-native-security-fmt.log",
-                  "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-                  "/private/tmp/decapod-120-dependabot4-native-tests-private-fixtures.log"
-                ],
-                "proof_refs": [
-                  "native-security-regressions",
-                  "native-security-fmt",
-                  "native-sandbox-metal",
-                  "native-pin-audit"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 14,
-                "tool": "Focused supervised Rust suite on actual Mac with GPU access:60 passed,0 failed,0 ignored, including real Metal recurrence comparisons and new public-directory rejection. Earlier run52/7 exposed fixture permissions; sandboxed retry59/1 could not enumerate GPU; both retained. No numeric tolerance changed, no complete model/native recipe or full validation success inferred from focused tests.",
                 "validation_findings": []
               }
             ]
@@ -1394,75 +771,55 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/decapod-120-bazel-lock-consistency.log",
-        "/private/tmp/decapod-120-dependabot4-native-tests-after.log",
-        "/private/tmp/decapod-120-dependabot4-native-tests-private-fixtures.log",
-        "/private/tmp/decapod-120-dependabot4-pin-audit.json",
-        "/private/tmp/decapod-120-material-command-final.log",
-        "/private/tmp/decapod-120-material-gate-unit-final.log",
-        "/private/tmp/decapod-120-native-security-fmt.log",
-        "/private/tmp/decapod-120-native-security-tests-metal.log",
-        "/private/tmp/decapod-120-validation-20261020T204903Z.json",
-        "/private/tmp/decapod-120-validation-20261020T205503Z.json",
-        "https://buildkite.com/decapodlabs/decapod/builds/2358",
-        "https://buildkite.com/decapodlabs/decapod/builds/2359",
-        "https://github.com/advisories/GHSA-2f9f-gq7v-9h6m"
+        "/private/tmp/decapod-120-native-graph-after-accepted-governance.json",
+        "/private/tmp/decapod-120-native-graph-before-accepted-stash.txt",
+        "/private/tmp/decapod-120-native-graph-sequences-final-test.log",
+        "/private/tmp/decapod-120-validation-20261020T230219Z.json",
+        "/private/tmp/decapod-1201-native-graph-final-candidate-test.log",
+        "/private/tmp/decapod-1201-native-graph-final-fmt.log",
+        "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+        "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log",
+        "/private/tmp/decapod-1201-native-graph-source-review.json",
+        "/private/tmp/decapod-1201-native-resolved-after.log",
+        "/private/tmp/decapod-1201-native-resolved-mac-after.json",
+        "https://github.com/DecapodLabs/decapod/pull/1462#issuecomment-6304997287"
       ],
       "inspected_files": [
-        ".github/actions/ci-context/action.yml",
-        "assets/tools/ci_config.rs",
-        "assets/tools/ci_event_context.rs",
-        "assets/tools/source_ci_toolchain.rs",
-        "assets/tools/vega-native/Cargo.toml",
-        "assets/tools/vega-native/evaluation_corpus.rs",
-        "src/decapod/core/entrypoint_integrity/history.rs",
-        "src/decapod/core/governance_document.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/core/validation_runtime/tests.rs",
-        "src/decapod/plugins/container.rs",
-        "tests/ci_checkout_policy.rs",
-        "tests/ci_event_context_policy.rs",
-        "tests/substrate_integrity.rs"
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_policy.rs",
+        "src/decapod/lib.rs"
       ],
-      "intent_id": "intent:change_01M5DBY7V11960TX995MZ2RMXS",
+      "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
       "modified_files": [
-        "Cargo.lock",
-        "MODULE.bazel.lock",
+        ".decapod/config.toml",
         "assets/tools/vega-native/Cargo.lock",
-        "assets/tools/vega-native/Cargo.toml",
-        "assets/tools/vega-native/scientific_collection.rs",
-        "assets/tools/vega_infer.rs"
+        "docs/readiness-delivery-checklist.md",
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/rust_worker.rs",
+        "src/decapod/core/validation_runtime/tests.rs",
+        "src/decapod/lib.rs",
+        "tests/native_proof_execution.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Checkpoint separate material paths, audit history, push the permanent work branch and run plain decapod validate",
+        "Refine plan and declare falsifiable checks",
+        "Run focused runtime and actual candidate-build smoke tests on accepted master; preserve all prior failed attempts"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M5DBY7Y918N445QYA574NGPD",
+      "run_id": "branch_01M5DWKGTJS88CPH8V0ABMX5KZ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m5dbhq2k5bj5wm",
-      "tool_calls": [
-        "11 material-spec,16 historical-generator,16 release-projection,1 Dockerfile preservation and1 permissive-umask regressions passed; separate private logs retained.",
-        "Actual candidate CLI: two Rust release-command regressions passed in /private/tmp/decapod-120-material-command-recorded.log. Additional postmerge-invalid-context assertion awaits final targeted run.",
-        "Authenticated alert 4 identifies thrift 0.17.0 via parquet 57.0.0 in the native worker lock. Official Parquet manifests and Cargo registry metadata show maintained 57/58 releases still require thrift 0.17; Parquet 59 removes that dependency. Select pinned 59.3.1, preserve reader API and all model pins, then execute corpus regression and prescribed validation.",
-        "First library compile failed because permissive-umask fixture passed u32 to macOS mode_t; parse native libc::mode_t, retain mode assertions; /private/tmp/decapod-120-docker-header-test.log",
-        "Focused supervised Rust suite on actual Mac with GPU access:60 passed,0 failed,0 ignored, including real Metal recurrence comparisons and new public-directory rejection. Earlier run52/7 exposed fixture permissions; sandboxed retry59/1 could not enumerate GPU; both retained. No numeric tolerance changed, no complete model/native recipe or full validation success inferred from focused tests.",
-        "Native dependency suite compiled Parquet59.3.1 and produced52 passes/7 failures: existing scientific fixtures relied on inherited restrictive umask. Fix test-only directory creation with explicit0700 and add public-directory rejection regression. Production collection permission/link checks unchanged. Retry running; no passing claim yet. Initial sandbox cache denial retained separately.",
-        "Public Buildkite logs independently identify RUSTSEC-2026-0382 (rustls-webpki >=0.103.16) and RUSTSEC-2026-0381 (webpki-roots >=1.0.10). Public RustSec pages fetched and retained. Auxiliary bootstrap fails mise artifact attestation GitHub 403 rate limit; no attestation bypass or login requested.",
-        "Rust CI context: 53 passed; substrate integration: 8 passed,1 failed; exact diagnostic identifies extra Dockerfile newline in release refresh; /private/tmp/decapod-120-rust-context-material.log and /private/tmp/decapod-120-material-command-diagnostic.log",
-        "cargo test-main --locked --no-default-features --test ci_checkout_policy --test ci_event_context_policy: 33 checkout passed; 52 context passed,1 failed due to legacy Python tomllib dependency; /private/tmp/decapod-120-focused-ci-context-after.log",
-        "cargo test-main --locked --no-default-features --test ci_checkout_policy governance_recipe_: 3 passed,0 failed; /private/tmp/decapod-120-focused-governance-recipe-after.log",
-        "cargo test-main --locked --no-default-features --test ci_checkout_policy: 30 passed,3 failed; /private/tmp/decapod-120-focused-ci-context.log"
-      ],
+      "task_id": "cicd_01m5dwhmh5093bvr",
+      "tool_calls": [],
       "unresolved_assumptions": [
-        "An experimental Rust CI parser was prepared but not committed. Rewriting compiled carrier bytes would require independently published controller support. Prepared source and diagnostic results retained privately; original accepted action, Cargo manifest, Bazel catalog and CI context test restored exactly from HEAD. The original local legacy tomllib dependency failure remains failed; required hosted checks remain mandatory. No Python implementation/runtime added.",
-        "Expanded file budget to 32 to include observed Rust-native bootstrap, actual CLI release replay, portable Mac fixtures and required generated/spec documentation. No Vega changes or new control plane. Latest additional boundary fixtures and header correction await execution.",
-        "Explicit full inventory review includes only compatible TLS root/native lock updates, normal Bazel lock metadata, pinned Parquet59.3.1 removing vulnerable thrift, native fixture-only changes and prior source_ci_toolchain test canonicalization. Carrier/workflow/build declarations, required source graph, eight-run native recipe digest, nine runtime Git pins, model assets and numerical tolerances unchanged. Owned native target directory moved outside scanned source after completed test; no discovery-limit relaxation.",
-        "Explicit inventory review: the only source-contract inventory delta from accepted 0c5bfc97 is assets/tools/source_ci_toolchain.rs, solely cfg(test) fixture canonicalization. Workflow, carrier bytes, production source commands, matrices, provider and required checks are unchanged. Reviewed complete inventory digest from agent.init; updated only that user-editable config pin after private backup. Full validation remains required.",
-        "Keep full TOML decoding with existing pinned Rust dependencies; reject malformed/duplicate keys and verify immutable regular source blob before parsing. Remove the observed Python dependency, not its rejection rules.",
-        "Patch only affected compatible TLS dependency versions and normal generated locks; model identities, calibration, numerical tolerances, source-required graph and attestation remain unchanged. Retry supported validation only after provider availability recovers; no repeated run during the reported quota interval."
+        "Mac-only offline metadata does not prove cached dependency resolution on every platform; normalized lock references are not version-only proof reuse",
+        "Native full graph still requires actual platform capabilities; current Mac does not by itself establish Linux or four-archive release execution",
+        "The accepted source executor closure changed in merged PR1462; final publication requires an official controller independently supporting that accepted closure, not this candidate authorizing itself"
       ]
     }
   },
