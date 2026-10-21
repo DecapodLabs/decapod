@@ -47,11 +47,24 @@ includes it. Its 60 native tests and all eight actual scientific runs passed
 under the existing functional safe-abstention qualification; original mismatches
 and unestablished accuracy remain visible.
 
-Current release preparation shares exact native lock projection between the
-isolated driver and production maintenance binary, pins production setup to the
-reviewed toolchain, and separates release-PR preparation from original accepted
-publication source. Focused Rust regressions cover exact/stale/tampered lock
+The current controller dependency shares exact native lock projection between
+the isolated driver and production maintenance binary. It reviews one exact
+pinned production-preparation variant, preserving its bytes in a non-active
+fixture and retaining the accepted production workflow until independent
+controller acceptance/release. Official v0.121.0 rejected initial candidate
+`16b8a32e` with `CONTROLLER_CONTRACT_UNSUPPORTED`; its report and branch history
+are preserved. No unmerged controller authorizes its own changed workflow. Focused Rust regressions cover exact/stale/tampered lock
 deltas, unsafe links, atomic failure preservation and cargo-dist mutation. The
 repository selects the existing strict source step/artifact collector. These
 changes require their own terminal exact-candidate validation and actual derived
 execution evidence; no remaining umbrella is closed by authored code or fixtures.
+
+The opt-in Rust execution diagnostic ran pinned release-plz 0.3.171 against a
+private clone of committed source `16b8a32e`. It computed 0.121.0 to 0.121.1,
+executed API compatibility checks successfully, changed only the expected
+manifest/changelog/root-lock/worker-lock paths, and verified idempotent worker
+projection in 72.3 seconds. This is real nonpublishing preparation evidence for
+that source, not an authenticated production resolution or four-platform archive
+receipt. No tag, release, registry upload or deployment was performed. The
+ignored diagnostic requires explicitly supplied reviewed tool paths and a fresh
+private output directory; ordinary tests do not silently access the registry.
