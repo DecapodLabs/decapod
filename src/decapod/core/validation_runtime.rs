@@ -1312,6 +1312,10 @@ pub fn execute_native(
             &evidence_directory.join(format!("native-{number}.stderr")),
             &diagnostic.stderr,
         )?;
+        write_new(
+            &evidence_directory.join(format!("native-{number}.steps.json")),
+            &serde_json::to_vec_pretty(&diagnostic.steps).map_err(io::Error::other)?,
+        )?;
     }
     Ok(ExecutedSuite {
         evidence: run.evidence,
@@ -1344,8 +1348,8 @@ pub struct ReviewedNativeTools {
     pub environment: BTreeMap<String, native_proof::Value>,
 }
 
-/// Select a real finite single-command source adapter. Multi-command, Docker,
-/// foreign-platform and workflow-owned obligations remain explicit errors.
+/// Select a real finite direct-command source adapter. Docker, foreign-platform
+/// and workflow-owned obligations without reviewed adapters remain explicit errors.
 pub fn source_invocation(
     check_id: &str,
     facts: &ApplicabilityFacts,
@@ -1354,6 +1358,7 @@ pub fn source_invocation(
     output_limit: usize,
 ) -> io::Result<Invocation> {
     let paths: Vec<_> = facts.changed_paths.iter().cloned().collect();
+    let mut following_commands = Vec::new();
     let (program, arguments, directory, command_env, platform, purpose, artifacts) = if check_id
         == "candidate-build"
     {
@@ -1387,7 +1392,12 @@ pub fn source_invocation(
             )));
         }
         let commands = source::commands(check, &paths)?;
-        if commands.len() != 1 || !matches!(commands[0].program, "cargo" | "mdbook") {
+        if commands.is_empty()
+            || commands.len() > 64
+            || commands
+                .iter()
+                .any(|command| !matches!(command.program, "cargo" | "mdbook"))
+        {
             return Err(invalid(format!(
                 "MISSING_NATIVE_SEQUENCE_ADAPTER: {check_id}"
             )));
@@ -1423,6 +1433,7 @@ pub fn source_invocation(
             }
         }
         let command = &commands[0];
+        following_commands.extend_from_slice(&commands[1..]);
         (
             command.program,
             command
@@ -1469,6 +1480,34 @@ pub fn source_invocation(
         "RUSTC".into(),
         native_proof::Value::Literal(tools.programs["rustc"].to_string_lossy().into_owned()),
     );
+    let mut following = Vec::new();
+    for command in following_commands {
+        let mut step_environment = tools.environment.clone();
+        for (key, value) in command.env {
+            if let Some(value) = value {
+                step_environment.insert(key.into(), native_proof::Value::Literal(value.into()));
+            } else {
+                step_environment.remove(key);
+            }
+        }
+        for key in ["CARGO_TARGET_DIR", "RUSTC"] {
+            step_environment.insert(key.into(), environment[key].clone());
+        }
+        following.push(native_proof::InvocationStep {
+            program: tools
+                .programs
+                .get(command.program)
+                .ok_or_else(|| invalid(format!("MISSING_NATIVE_TOOL: {}", command.program)))?
+                .clone(),
+            arguments: command
+                .args
+                .into_iter()
+                .map(|argument| native_proof::Value::Literal(argument.into()))
+                .collect(),
+            directory: command.cwd.into(),
+            environment: step_environment,
+        });
+    }
     Ok(Invocation {
         platform,
         program: executable,
@@ -1484,6 +1523,7 @@ pub fn source_invocation(
             .map_err(|_| invalid("native timeout overflow"))?,
         output_limit,
         artifacts,
+        following,
     })
 }
 
@@ -1496,6 +1536,7 @@ pub struct NativeSliceCheck {
     pub measured_toolchain_digest: String,
     pub output_digest: String,
     pub artifact_digest: Option<String>,
+    pub execution_error: Option<String>,
 }
 #[derive(Debug, Serialize)]
 pub struct NativeSliceReport {
@@ -1564,56 +1605,21 @@ pub fn run_native_source_slice(
                 }
             };
         authorize(&invocation)?;
-        // Resolve only absolute reviewed native executables. Shells, runtime
-        // interpreters and user-written scripts never enter this finite route.
-        if !invocation.program.is_absolute()
-            || invocation.program.canonicalize()? != invocation.program
-            || invocation.program.starts_with(&inputs.root)
-        {
-            return Err(invalid("invalid native executable"));
-        }
-        let mut magic = [0u8; 4];
-        fs::File::open(&invocation.program)?.read_exact(&mut magic)?;
-        #[cfg(target_os = "linux")]
-        if !magic.starts_with(b"\x7fELF") {
-            return Err(invalid("native executable must be ELF"));
-        }
-        let measured = native_proof::toolchain_digest(&invocation)?;
         let scratch = private_tempdir(external_directory, "native-slice-")?;
-        let expand = |value: &native_proof::Value| match value {
-            native_proof::Value::Literal(value) => value.clone(),
-            native_proof::Value::ScratchPath(relative) => {
-                scratch.path().join(relative).to_string_lossy().into_owned()
-            }
-        };
-        let mut command = Command::new(&invocation.program);
-        command
-            .current_dir(snapshot.root().join(&invocation.directory))
-            .env_clear();
-        for arg in &invocation.arguments {
-            command.arg(expand(arg));
-        }
-        for (key, value) in &invocation.environment {
-            if key.is_empty()
-                || key.contains(['=', '\0'])
-                || ["TOKEN", "PASSWORD", "SECRET", "CREDENTIAL"]
-                    .iter()
-                    .any(|s| key.to_ascii_uppercase().contains(s))
-            {
-                return Err(invalid("unsafe native environment"));
-            }
-            command.env(key, expand(value));
-        }
-        command
-            .env("TMPDIR", scratch.path())
-            .env("DECAPOD_NATIVE_PROOF_ACTIVE", "1");
-        let capture = command.bounded_capture(
-            ProcessLimits {
+        // Diagnostic slices share the full runner's command execution and
+        // validation. They cannot silently execute only a sequence's first step.
+        let diagnostic = native_proof::capture_diagnostic(
+            &invocation,
+            inputs,
+            &snapshot,
+            &scratch,
+            SuiteLimits {
                 timeout: remaining()?,
-                max_output_bytes: limits.max_output_bytes,
+                ..limits
             },
             cancel,
         )?;
+        let capture = diagnostic.capture;
         write_new(
             &external_directory.join(format!("slice-{index}.stdout")),
             &capture.output.stdout,
@@ -1621,6 +1627,10 @@ pub fn run_native_source_slice(
         write_new(
             &external_directory.join(format!("slice-{index}.stderr")),
             &capture.output.stderr,
+        )?;
+        write_new(
+            &external_directory.join(format!("slice-{index}.steps.json")),
+            &serde_json::to_vec_pretty(&diagnostic.steps).map_err(io::Error::other)?,
         )?;
         let mut artifact_hashes = BTreeMap::new();
         if capture.output.status.success() && capture.termination == Termination::Exited {
@@ -1635,10 +1645,10 @@ pub fn run_native_source_slice(
                 artifact_hashes.insert(artifact, native_proof::executable_digest(&path)?);
             }
         }
-        if measured != native_proof::toolchain_digest(&invocation)? {
-            return Err(invalid("native toolchain changed during execution"));
-        }
-        if !capture.output.status.success() || capture.termination != Termination::Exited {
+        if !capture.output.status.success()
+            || capture.termination != Termination::Exited
+            || diagnostic.error.is_some()
+        {
             report
                 .blockers
                 .push(Blocker::new("NATIVE_SLICE_FAILED", id.clone()));
@@ -1648,14 +1658,19 @@ pub fn run_native_source_slice(
             exit_code: capture.output.status.code(),
             termination: format!("{:?}", capture.termination),
             invocation_digest: invocation.digest()?,
-            measured_toolchain_digest: measured,
-            output_digest: evidence::digest(&(&capture.output.stdout, &capture.output.stderr))
-                .map_err(io::Error::other)?,
+            measured_toolchain_digest: diagnostic.toolchain_digest,
+            output_digest: evidence::digest(&(
+                &capture.output.stdout,
+                &capture.output.stderr,
+                &diagnostic.steps,
+            ))
+            .map_err(io::Error::other)?,
             artifact_digest: if artifact_hashes.is_empty() {
                 None
             } else {
                 Some(evidence::digest(&artifact_hashes).map_err(io::Error::other)?)
             },
+            execution_error: diagnostic.error,
         });
     }
     let after = native_proof::capture_current_identity(
@@ -1785,6 +1800,24 @@ impl<'a> NativeHost<'a> {
     pub fn partial_evidence(&self) -> Option<&Path> {
         self.partial_evidence.as_deref()
     }
+    fn source_check_invocation(
+        &self,
+        id: &str,
+        facts: &ApplicabilityFacts,
+        budget: &RuntimeBudget<'_>,
+    ) -> io::Result<Invocation> {
+        budget.remaining()?;
+        // Bind the declared policy limit, not wall-clock time remaining at
+        // selection. Actual execution is still capped by the original budget.
+        // Otherwise a fresh final selection changes its own invocation digest.
+        source_invocation(
+            id,
+            facts,
+            &self.tools,
+            self.options.timeout,
+            budget.max_output_bytes,
+        )
+    }
 }
 impl Host for NativeHost<'_> {
     fn authorize_rust_worker(&mut self, action: NativeAction<'_>) -> io::Result<()> {
@@ -1913,13 +1946,7 @@ impl Host for NativeHost<'_> {
                     "reviewed typed derivative/project-check adapter is required",
                 ))
             } else {
-                source_invocation(
-                    id,
-                    &project.facts,
-                    &self.tools,
-                    budget.remaining().unwrap_or_default(),
-                    budget.max_output_bytes,
-                )
+                self.source_check_invocation(id, &project.facts, budget)
             };
             let invocation = match selected {
                 Ok(invocation) => invocation,
@@ -1932,13 +1959,25 @@ impl Host for NativeHost<'_> {
                 blockers.push(Blocker::new("NATIVE_SELECTION_DEADLINE", error.to_string()));
                 break;
             }
-            let closure_key = evidence::digest(&(&invocation.program, &invocation.toolchain_files))
-                .map_err(io::Error::other);
+            let closure_key = evidence::digest(&(
+                &invocation.program,
+                &invocation.toolchain_files,
+                invocation
+                    .following
+                    .iter()
+                    .map(|step| &step.program)
+                    .collect::<Vec<_>>(),
+            ))
+            .map_err(io::Error::other);
             let toolchain = closure_key.and_then(|key| {
                 if let Some(measured) = measured_closures.get(&key) {
                     return Ok(measured.clone());
                 }
-                let measured = native_proof::toolchain_digest(&invocation)?;
+                let measured = native_proof::toolchain_digest_bounded(
+                    &invocation,
+                    budget.remaining()?,
+                    budget.cancel,
+                )?;
                 measured_closures.insert(key, measured.clone());
                 Ok(measured)
             });

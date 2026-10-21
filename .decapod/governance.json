@@ -480,6 +480,17 @@
         "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
         "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
       ]
+    },
+    {
+      "id": "native-runtime",
+      "summary": "fix(validation): retain complete native recipe evidence; independently staged material with mandatory governance. Focused assembled-source evidence: 38 native tests, 82 runtime tests, real Cargo candidate build and formatting passed; complete publication validation remains required.",
+      "input_digest": "sha256:66dc27f1eb2ed0aa1799f16c6ca795000f482212db11b60e71c49ea1507bf4b2",
+      "proof_refs": [
+        "/private/tmp/decapod-1201-native-graph-final-candidate-test.log",
+        "/private/tmp/decapod-1201-native-graph-final-fmt.log",
+        "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+        "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
+      ]
     }
   ],
   "intents": {
