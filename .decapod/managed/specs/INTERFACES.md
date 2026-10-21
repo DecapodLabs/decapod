@@ -10,6 +10,23 @@ coordination, validation, and publication boundaries. Decapod exposes the state,
 constraints, evidence, and blockers that govern those transitions. Each CLI or
 RPC invocation is ephemeral; repository state preserves continuity between calls.
 
+`decapod-release-native-lock` is a maintenance binary behind `build-tools`. It
+accepts no arguments, reads the actual manifest and separate worker lock from its
+owned checkout, and shares `derived_release_driver::reconcile_worker_lock` with
+isolated generation. It performs no dependency resolution, Git writes or network
+operations. A missing required lock, malformed or nonlocal package record, unsafe
+link, newer lock version or failed atomic write returns nonzero. Exact version
+projection preserves external runtime and model pins. The release classifier
+requires this exact matching worker delta whenever that lock exists at the base;
+missing or unrelated changes use full ordinary checks, never slim evidence reuse.
+
+The repository's Buildkite setting continues selecting the same governed branch
+and required graph. Omitting the optional CI-attested policy selects the existing
+reviewed strict importer: actual preparation/execution records, produced binary
+and artifact bytes, and accepted-executor/candidate identities must verify. A
+green wrapper or an unsigned record cannot replace those checks. The ordinary
+GitHub PR checks remain a separate terminal observation.
+
 The optional post-validation Vega request uses `validation-results.v3` in
 `core::vega_readiness::project`. It retains the plan's declared proof hooks,
 unknowns, human and deferred questions, stop conditions, contradictions and
@@ -59,6 +76,8 @@ human authority are still established by the live caller, never replay metadata.
 Private Vega numerical exports record raw block samples only when `--proof-output` is requested; normal requests return pooled features. Each actual and independent reference export retains its 1 MiB bound. `reference_backbone` accepts at most 4,096 fresh unpadded pure-text tokens. Candidate `30015be0` executed all three fixed 138/314/4,096-token Metal and CPU comparisons, including the exact boundary and 4,097-token rejection. These fixtures use the independent tokenizer, fixed repeated sentences and bounded literal suffixes; token/span/mask/layer comparisons and frozen numerical tolerances remain exact or unchanged. This is fixed-fixture evidence, not all-input equivalence. Full production loader-companion fallback remains separate from the exercised unavailable-CUDA-to-CPU component path.
 
 The private evaluation corpus and input receipt use v2 for the pre-execution addition of contradictory semantic-evidence cases. `benchmark_units` counts original benchmark tasks, without asserting statistical independence. Model output records distinguish correct required abstentions, incorrectly decisive answers and unobserved cases. Existing project split, underlying artifact hash and model/calibration pins remain unchanged; v1 construction remains in Git and no model result informed the revision.
+
+**Historical pre-functional stage:** the following paragraph records the superseded research-admission implementation, not the current gate. The approved functional contract above replaces its missing-study publication prerequisite while preserving the failed study and accuracy limits.
 
 The standalone `--evaluate-readiness --split holdout --backend auto --proof-output` command is now historical v2 diagnostic evaluation, not an untouched final holdout. The configured eight-run recipe retains numerical collection, six final-admission collection slots and a mandatory aggregate, all with fresh kernel proof paths. Numerical collection additionally calls the real native worker on fixed production-protocol development fixtures through shared projection and `Response::validated_outcome`. Constructed observations are explicit and supply no independent labels. The final slots bind the reviewed source-admission ledger and report zero admitted production units, without rerunning exposed v2. The aggregate independently rechecks numerical exports and remains non-ready while the required production study is missing. Old v2 code, hashes and failed results remain intact; risk/coverage, token limits, model/calibration and kernel deadlines are unchanged. See `docs/vega-reference-contract.md` for exact prior numerical measurements and `docs/vega-completion-checklist.md` for current proof gaps.
 
@@ -651,8 +670,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `cbf2117766d2962ebe1f5ea14a281f0a00edb50dc8207d3dc8888a059ea99a10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `docs/` (1 files), `src/` (210 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
