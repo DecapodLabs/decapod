@@ -744,6 +744,15 @@
         "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
         "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
       ]
+    },
+    {
+      "id": "explicit-spec-review",
+      "summary": "Record current-content INTERFACES, ARCHITECTURE and SECURITY reviews required by failed Buildkite2395; preserve failure and unchanged source; full exact-candidate validation must rerun.",
+      "input_digest": "sha256:5821422e958f91e9f3a99ca21a4e221171d9b1853cc8201db10231c339cd91fe",
+      "proof_refs": [
+        "/private/tmp/decapod-1201-graph-2395-governance.log",
+        "/private/tmp/decapod-1201-graph-validation-20261021T071734Z.json"
+      ]
     }
   ],
   "intents": {
@@ -781,6 +790,29 @@
         "Exact-candidate decapod validate with all required Buildkite/native obligations after accepted dependencies are integrated"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed the shared native runner and source adapter against implemented call paths and focused evidence; documented unsupported workflow/platform/derived-release adapters as remaining obligations, preserving whole-product identity and deterministic authority.",
+          "reviewed_code_fingerprint": "3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c",
+          "spec_material_hash": "5de898f7c67be0eed72ff45f2960231a3ee94c19e363e90f05a6b525f73d93bf"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed native_proof::Invocation following commands, measured successor executable closure, original budget and cancellation, stable selection identity, complete per-step diagnostics, and nonrecursive partial-proof boundary against the current source and executed 38 native/82 runtime regressions.",
+          "reviewed_code_fingerprint": "3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c",
+          "spec_material_hash": "03067c9a60c0f9e9a74f1a7f167c7d3f4b5eee40ebbb58104693e5cbec41a062"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed current native process boundary: no shell or deserialized invocation authority; every successor executable authorized, hashed and rechecked; output/time/cancellation bounds and descendant cleanup retain fail-closed evidence. No model authority or artifact safety relaxation. Existing security specification still describes these boundaries correctly.",
+          "reviewed_code_fingerprint": "3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c",
+          "spec_material_hash": "e2a6cf917db9f3e30d269ce21a44fd934b66fc9083826cdf37107bca00aa8403"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "Required foreign-platform execution or derived artifact evidence remains incomplete until genuinely executed; never treat partial native evidence as complete readiness"
@@ -791,7 +823,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792565358Z"
+      "updated_at": "1792569068Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -799,9 +831,10 @@
         "Current claimed task and isolated work branch",
         "Fast-forwarded to human-accepted 8396a6e4; exact original CLI journal preserved through Git custody; immutable stash retained",
         "Focused evidence covers assembled source; constituent one-material commits need not individually compile; full exact-candidate publication proof has not run",
-        "Official v0.120.1 installed; accepted 9eb2ef48 integrated by fast-forward; no new task or transfer; expired lease restored on same task through supported claim"
+        "Official v0.120.1 installed; accepted 9eb2ef48 integrated by fast-forward; no new task or transfer; expired lease restored on same task through supported claim",
+        "SPEC_REVIEW_REQUIRED: preserved failed Buildkite run and recorded canonical current-content spec reviews; full exact-candidate proof still required"
       ],
-      "artifact_hash": "sha256:fcd2bf52c79aabda2f23004bcac55719d74ed9c8fdb4679d7cf97c1345e2470b",
+      "artifact_hash": "sha256:ca6e081cddea58cd1d0b9b029133223bdd7b520221a9cb80045026a2914b7fef",
       "checks": [
         {
           "name": "Accepted PR1462 integration",
@@ -826,6 +859,10 @@
         {
           "name": "Final runtime and seal suite",
           "status": "passed"
+        },
+        {
+          "name": "Full validation",
+          "status": "failed"
         },
         {
           "name": "Initial post-release native sequence suite",
@@ -856,7 +893,7 @@
           "status": "partial"
         }
       ],
-      "current_phase": "checkpoint",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -905,10 +942,17 @@
             "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M5DWKGTJS88CPH8V0ABMX5KZ",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M5DWKGQ5KJ5QW0NT6MN33R9M",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M5DWKGTJS88CPH8V0ABMX5KZ": {
@@ -1027,6 +1071,22 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "/private/tmp/decapod-1201-graph-validation-20261021T071734Z.json",
+                  "https://buildkite.com/decapodlabs/decapod/builds/2395"
+                ],
+                "proof_refs": [
+                  "Full validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -1039,6 +1099,7 @@
         "/private/tmp/decapod-120-native-graph-before-accepted-stash.txt",
         "/private/tmp/decapod-120-native-graph-sequences-final-test.log",
         "/private/tmp/decapod-120-validation-20261020T230219Z.json",
+        "/private/tmp/decapod-1201-graph-validation-20261021T071734Z.json",
         "/private/tmp/decapod-1201-native-graph-final-candidate-test.log",
         "/private/tmp/decapod-1201-native-graph-final-fmt.log",
         "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
@@ -1046,6 +1107,7 @@
         "/private/tmp/decapod-1201-native-graph-source-review.json",
         "/private/tmp/decapod-1201-native-resolved-after.log",
         "/private/tmp/decapod-1201-native-resolved-mac-after.json",
+        "https://buildkite.com/decapodlabs/decapod/builds/2395",
         "https://github.com/DecapodLabs/decapod/pull/1462#issuecomment-6304997287"
       ],
       "inspected_files": [
@@ -1068,6 +1130,7 @@
         "tests/native_proof_execution.rs"
       ],
       "next_transitions": [
+        "Checkpoint canonical spec reviews and rerun validation",
         "Checkpoint separate material paths, audit history, push the permanent work branch and run plain decapod validate",
         "Refine plan and declare falsifiable checks",
         "Run focused runtime and actual candidate-build smoke tests on accepted master; preserve all prior failed attempts"
