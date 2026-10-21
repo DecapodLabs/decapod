@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.121.0](https://github.com/DecapodLabs/decapod/compare/v0.120.1...v0.121.0) - 2026-10-21
+
+### Fixed
+
+- *(native-worker)* reconcile released path dependency lock
+- *(cli)* authorize all steps within the original deadline
+- *(native-worker)* bound toolchain measurement
+- *(repository-proof)* preserve seal deadline and cancellation
+- *(validation)* retain complete native recipe evidence
+- *(native-proof)* execute bounded command sequences
+
+### Other
+
+- *(governance)* attest reviewed native execution specifications
+- *(specs)* refresh native execution manifest
+- *(governance)* pin managed container to v0.120.1
+- *(governance)* refresh GEMINI for released controller
+- *(governance)* refresh CODEX for released controller
+- *(governance)* refresh CLAUDE for released controller
+- *(governance)* refresh AGENTS for released controller
+- *(specs)* reconcile semantics for bounded native execution
+- *(specs)* reconcile security for bounded native execution
+- *(specs)* reconcile readme for bounded native execution
+- *(specs)* reconcile operations for bounded native execution
+- *(specs)* reconcile validation for bounded native execution
+- *(specs)* reconcile interfaces for bounded native execution
+- *(specs)* reconcile architecture for bounded native execution
+- *(specs)* reconcile intent for bounded native execution
+- *(readiness)* record accepted proof and remaining scope
+- *(validation)* review released native source inventory
+- *(validation)* cover stable selection and complete Cargo recipes
+- *(native-proof)* cover sequence safety and failure evidence
+- *(native-proof)* add shared artifact fixture
+
 ## [0.120.1](https://github.com/DecapodLabs/decapod/compare/v0.120.0...v0.120.1) - 2026-10-21
 
 ### Fixed
