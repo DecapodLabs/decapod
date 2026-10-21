@@ -39,11 +39,18 @@ installation. The driver and production maintenance binary share this operation.
 Generated-tree verification, transport and cargo-dist execution bind the applicable
 worker lock alongside the root lock; a changed worker runtime pin is not version-only.
 
-Production retains release-PR then release ordering with separate roots. The
-release-PR clone runs real pinned release-plz update and native lock projection;
-the official action consumes that prepared source. The publishing action receives
-the original accepted checkout. Both actions use the reviewed immutable revision
-and explicit version. Validation does not invoke publication. The repository
+The pinned preparation variant retains release-PR then release ordering with
+separate roots. Its release-PR clone runs real pinned release-plz update and native
+lock projection; the official action consumes that prepared source. Its publishing
+action receives the original accepted checkout. Both actions use the reviewed
+immutable revision and explicit version. The active production workflow remains
+accepted and unchanged until independently published controller support exists.
+`readiness_profile::reviewed_workflow_matches` admits the accepted workflow and
+this one exact variant; `tests/fixtures/release_pinned_preparation.yml` preserves
+the reviewed bytes. All downstream cargo-dist jobs/matrices are byte-identical,
+and both variants retain the same finite source-PR graph. Unknown bytes still
+fail even with an updated inventory declaration. Init shares the same decision.
+Validation does not invoke publication. The repository
 selects the shipped strict Buildkite collector, including actual preparation,
 execution, artifact and dual-root custody checks. The complete derived-release
 execution graph and four-archive proof remain separately required unfinished work.
@@ -578,7 +585,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cbf2117766d2962ebe1f5ea14a281f0a00edb50dc8207d3dc8888a059ea99a10`
+- Repository signal fingerprint: `27b60880e597034f38ea4ee505e562e469d8607835913b3f3c1786e1b3ccaea3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `docs/` (1 files), `src/` (210 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
