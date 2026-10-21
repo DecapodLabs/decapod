@@ -721,6 +721,17 @@
         "/private/tmp/decapod-01210-release-helper-execution.log",
         "/private/tmp/decapod-01210-release-policy-focused-1.log"
       ]
+    },
+    {
+      "id": "release-parity-24",
+      "summary": "Current release-parity component: commit only src/decapod/core/derived_release_driver_tests.rs plus mandatory governance; companion changes are preserved separately; focused evidence does not establish four-platform packaging or final readiness.",
+      "input_digest": "sha256:25993829d4e3270b69dc2250c58bbdc4bfdf7ce82d12a452e3d1bccd4030f66b",
+      "proof_refs": [
+        "/private/tmp/decapod-01210-release-final-driver.log",
+        "/private/tmp/decapod-01210-release-final-fmt.log",
+        "/private/tmp/decapod-01210-release-helper-execution.log",
+        "/private/tmp/decapod-01210-release-policy-focused-1.log"
+      ]
     }
   ],
   "intents": {

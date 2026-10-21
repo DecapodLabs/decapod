@@ -171,6 +171,158 @@ fn source_and_scratch_must_be_disjoint_before_any_external_command() {
     assert!(scratch.read_dir().unwrap().next().is_none());
 }
 #[test]
+fn shared_artifact_build_rejects_worker_lock_mutation() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    fs::write(root.join("Cargo.toml"), "[package]\nversion=\"0.107.6\"\n").unwrap();
+    fs::write(root.join("Cargo.lock"), "fixed root lock").unwrap();
+    let native = root.join(super::super::release_metadata::NATIVE_WORKER_LOCK);
+    fs::create_dir_all(native.parent().unwrap()).unwrap();
+    fs::write(&native, "fixed worker lock").unwrap();
+    let error = build_artifacts(root, &profile(), &Stage::Global, Some("v0.107.6"), |_| {
+        fs::write(&native, "substituted worker lock")?;
+        Ok(Vec::new())
+    })
+    .unwrap_err();
+    assert!(error.to_string().contains("native worker lock"));
+}
+
+#[test]
+fn worker_release_projection_is_atomic_idempotent_and_preserves_failure_state() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().canonicalize().unwrap();
+    let worker = root.join("assets/tools/vega-native");
+    fs::create_dir_all(&worker).unwrap();
+    fs::write(worker.join("Cargo.toml"), "[package]\nname = \"worker\"\n").unwrap();
+    fs::write(
+        root.join("Cargo.toml"),
+        "[package]\nname = \"decapod\"\nversion = \"0.121.0\"\n",
+    )
+    .unwrap();
+    let lock = worker.join("Cargo.lock");
+    let before = "version = 4\n\n[[package]]\nname = \"decapod\"\nversion = \"0.120.1\"\n";
+    fs::write(&lock, before).unwrap();
+    assert!(reconcile_worker_lock(&root, 4096).unwrap());
+    let installed = fs::read(&lock).unwrap();
+    assert_eq!(installed, before.replace("0.120.1", "0.121.0").as_bytes());
+    assert!(!reconcile_worker_lock(&root, 4096).unwrap());
+    assert_eq!(fs::read(&lock).unwrap(), installed);
+    assert!(reconcile_worker_lock(&root, 4).is_err());
+    assert_eq!(fs::read(&lock).unwrap(), installed);
+    assert_eq!(fs::read_dir(&worker).unwrap().count(), 2);
+    fs::remove_file(&lock).unwrap();
+    assert!(reconcile_worker_lock(&root, 4096).is_err());
+    assert!(!lock.exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn worker_release_projection_rejects_hardlinks_and_symlinked_source() {
+    use std::os::unix::fs::symlink;
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().canonicalize().unwrap();
+    let worker = root.join("assets/tools/vega-native");
+    fs::create_dir_all(&worker).unwrap();
+    fs::write(worker.join("Cargo.toml"), "[package]\nname = \"worker\"\n").unwrap();
+    fs::write(
+        root.join("Cargo.toml"),
+        "[package]\nname = \"decapod\"\nversion = \"0.121.0\"\n",
+    )
+    .unwrap();
+    let before = "version = 4\n\n[[package]]\nname = \"decapod\"\nversion = \"0.120.1\"\n";
+    let outside = root.join("unrelated.lock");
+    fs::write(&outside, before).unwrap();
+    let lock = worker.join("Cargo.lock");
+    fs::hard_link(&outside, &lock).unwrap();
+    assert!(reconcile_worker_lock(&root, 4096).is_err());
+    assert_eq!(fs::read_to_string(&lock).unwrap(), before);
+    assert_eq!(fs::read_to_string(&outside).unwrap(), before);
+    fs::remove_file(&lock).unwrap();
+    symlink(&outside, &lock).unwrap();
+    assert!(reconcile_worker_lock(&root, 4096).is_err());
+    assert_eq!(fs::read_to_string(&outside).unwrap(), before);
+}
+
+#[test]
+fn worker_lock_projection_preserves_dependencies_and_rejects_unsafe_identities() {
+    use super::super::release_metadata::align_path_dependency_lock;
+    let manifest = "[package]\nname = \"decapod\"\nversion = \"0.121.0\"\n";
+    let lock = "version = 4\n\n[[package]]\nname = \"decapod\"\nversion = \"0.120.1\"\ndependencies = [\n \"pinned\",\n]\n\n[[package]]\nname = \"pinned\"\nversion = \"1.2.3\"\nsource = \"git+https://example.invalid/runtime#fixed\"\n";
+    let updated = align_path_dependency_lock(manifest, lock).unwrap();
+    assert_eq!(updated, lock.replacen("0.120.1", "0.121.0", 1));
+    assert_eq!(
+        align_path_dependency_lock(manifest, &updated).unwrap(),
+        updated
+    );
+    assert!(align_path_dependency_lock(manifest, &lock.replace("0.120.1", "0.122.0")).is_err());
+    assert!(
+        align_path_dependency_lock(
+            manifest,
+            &format!("{lock}\n[[package]]\nname = \"decapod\"\nversion = \"0.120.1\"\n")
+        )
+        .is_err()
+    );
+    assert!(
+        align_path_dependency_lock(
+            manifest,
+            &lock.replacen(
+                "dependencies =",
+                "source = \"registry+https://example.invalid\"\ndependencies =",
+                1
+            )
+        )
+        .is_err()
+    );
+    assert!(align_path_dependency_lock(manifest, &lock.replace('\n', "\r\n")).is_err());
+    assert!(align_path_dependency_lock(manifest, "version = 4\n").is_err());
+    assert!(align_path_dependency_lock(&manifest.replace("0.121.0", "next"), lock).is_err());
+}
+
+#[test]
+fn production_release_setup_matches_shared_tool_pins() {
+    let pins =
+        ReleaseToolchain::parse(include_str!("../../../.github/release-tools.toml")).unwrap();
+    let workflow = include_str!("../../../.github/workflows/release.yml");
+    let rust_references: Vec<_> = workflow
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix("uses: dtolnay/rust-toolchain@"))
+        .collect();
+    assert_eq!(rust_references, [pins.rust.as_str()]);
+    let release_references: Vec<_> = workflow
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix("uses: release-plz/action@"))
+        .collect();
+    assert_eq!(
+        release_references,
+        [pins.release_plz_action
+            .strip_prefix("release-plz/action@")
+            .unwrap(); 2]
+    );
+    // Check the actual action's inputs, rather than a matching version string
+    // elsewhere in the workflow. The supported release step has one `with`
+    // block; any changed layout needs an explicit contract review.
+    let action = format!("        uses: {}\n", pins.release_plz_action);
+    for step in workflow.split(&action).skip(1) {
+        let inputs: Vec<_> = step
+            .lines()
+            .take_while(|line| line.is_empty() || line.starts_with("        "))
+            .collect();
+        assert_eq!(
+            inputs
+                .iter()
+                .filter(|line| **line == "        with:")
+                .count(),
+            1
+        );
+        let versions: Vec<_> = inputs
+            .iter()
+            .filter_map(|line| line.strip_prefix("          version: "))
+            .collect();
+        assert_eq!(versions, [format!("\"{}\"", pins.release_plz)]);
+    }
+}
+
+#[test]
 fn semver_constraint_is_not_an_exact_observation() {
     let pins =
         ReleaseToolchain::parse(include_str!("../../../.github/release-tools.toml")).unwrap();
