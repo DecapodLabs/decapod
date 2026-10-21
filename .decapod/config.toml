@@ -83,7 +83,7 @@ runs = [
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:bf1b9ff188532ced8d9b44336f6987b69218f50866001ea9eec7cd31602b4967"
+reviewed_sources_digest = "sha256:a0b828293603761d08e35a7c024e64bb6f2ae735e956012751bbdb14028c98f3"
 
 [custody]
 isolation = "container"
