@@ -88,6 +88,21 @@ state and actionable reports, evaluates supported transitions, and persists
 their state. Validation is one phase in that lifecycle. The runtime does not
 own a model loop or keep a background service running for a task.
 
+## Native command sequences
+
+`core::native_proof::Invocation` retains the existing reviewed direct command
+and may carry up to 63 ordered `InvocationStep` successors. This extends the
+same bounded runner rather than introducing a workflow interpreter. All commands
+share one owned scratch directory, the original check deadline and cumulative
+output allowance. Each executable joins the measured toolchain closure; the
+invocation digest binds the complete ordered argument, directory and environment
+declarations. Failed or unexecuted successors cannot satisfy the parent check.
+The source adapter uses this for finite Cargo recipes when their existing
+platform and toolchain prerequisites are met. mdbook still needs its independent
+version-resolution adapter. Shell, Docker, generated executable,
+foreign-platform and derivative adapters remain explicit obligations; sequence
+support alone does not establish complete native/Buildkite equivalence.
+
 ## Execution Path
 
 An invocation parses a command or RPC request and resolves its project context.
@@ -543,7 +558,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6a2c7916aa413e169ccb9bd652a0b43cb3a5db256a487f2e3dfe5250f546ada8`
+- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
