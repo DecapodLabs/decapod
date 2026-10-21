@@ -14,7 +14,14 @@ Accepted #1460, #1462 and #1464 are preserved through official v0.121.0. The
 current release changes require byte-exact native worker lock projection from
 the real generated manifest, unsafe-link and failure-state regressions, matching
 immutable production tool setup, and isolation of prepared next-version source
-from the checkout used for publishing. Full ordinary source checks remain
+from the checkout used for publishing. Official v0.121.0 rejected initial candidate
+`16b8a32e` with `CONTROLLER_CONTRACT_UNSUPPORTED` at `release.yml`; that failure is
+preserved. The current controller dependency keeps the accepted active workflow
+and qualifies the exact proposed variant as a review fixture. Tests bind its
+bytes, shared pins, unchanged downstream matrix and identical finite source graph,
+reject mutations/wrong-workflow substitution, and preserve init's non-ready state.
+Actual activation awaits an independently accepted and published controller.
+Full ordinary source checks remain
 required; only an exact root-version and applicable worker-version delta can
 qualify as version-only, with the existing candidate-build and reuse rules.
 The repository now selects the existing strict Buildkite artifact collector;
@@ -22,6 +29,16 @@ current execution evidence must verify before this stronger selection is called
 passing. Actual release-plz transformation and all four cargo-dist archives remain
 distinct execution obligations. Source CI, fixtures and the new declarations do
 not establish that missing derived-release proof.
+
+`tests/release_native_lock.rs` exercises the actual maintenance binary. Its
+separately opted-in, bounded Rust diagnostic clears credentials/ambient command
+environment, clones committed source without shared hardlinks, runs the real
+pinned release-plz update against the public registry, then executes the same
+maintenance binary twice. Source `16b8a32e` actually transformed 0.121.0 to 0.121.1
+with API compatibility success in 72.3 seconds. Private logs retain source/tool
+identity, changed paths and timing. That diagnostic explicitly reports
+`packaging_proven=false` and `publication_ready=false`; it neither supplies
+authenticated production-tool observations nor replaces final candidate proof.
 
 ### Current acceptance: active functional integration, 2026-10-20
 
@@ -824,7 +841,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cbf2117766d2962ebe1f5ea14a281f0a00edb50dc8207d3dc8888a059ea99a10`
+- Repository signal fingerprint: `27b60880e597034f38ea4ee505e562e469d8607835913b3f3c1786e1b3ccaea3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `docs/` (1 files), `src/` (210 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
