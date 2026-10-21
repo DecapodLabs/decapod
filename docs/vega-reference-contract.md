@@ -1,5 +1,13 @@
 # Numerical reference contract and measured verification
 
+The functional integration was delivered in merged [PR #1460](https://github.com/DecapodLabs/decapod/pull/1460),
+candidate `04ed11ec`, and remains active through official v0.121.0. Subsequent
+#1464 reran the required native qualification at `c77df1f0`: 60 native tests and
+all eight scientific runs passed. The original safe-abstention mismatches and
+unestablished domain accuracy remain explicit. Statements below that no feature
+PR was ready describe their named historical failed checkpoints, not current
+publication state. They are retained to preserve failure and research provenance.
+
 ## Current functional acceptance revision, 2026-10-20
 
 The maintainer replaced the implementation-added 59-acceptance/5%-risk/
