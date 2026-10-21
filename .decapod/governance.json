@@ -568,6 +568,17 @@
         "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
         "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
       ]
+    },
+    {
+      "id": "native-source-review",
+      "summary": "chore(validation): review released native source inventory; independently staged material with mandatory governance. Focused assembled-source evidence: 38 native tests, 82 runtime tests, real Cargo candidate build and formatting passed; complete publication validation remains required.",
+      "input_digest": "sha256:30a596ed9e0b87246a0f381583f5041a99d2f4f87fc262023d93dcf70ee4d568",
+      "proof_refs": [
+        "/private/tmp/decapod-1201-native-graph-final-candidate-test.log",
+        "/private/tmp/decapod-1201-native-graph-final-fmt.log",
+        "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+        "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
+      ]
     }
   ],
   "intents": {
