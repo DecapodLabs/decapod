@@ -667,6 +667,17 @@
         "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
         "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
       ]
+    },
+    {
+      "id": "spec-semantics",
+      "summary": "docs(specs): reconcile semantics for bounded native execution; independently staged material with mandatory governance. Focused assembled-source evidence: 38 native tests, 82 runtime tests, real Cargo candidate build and formatting passed; complete publication validation remains required.",
+      "input_digest": "sha256:7ac42d4d499a0e42c12de83befbb2df83e8b8e7a24c629200010309f82090f62",
+      "proof_refs": [
+        "/private/tmp/decapod-1201-native-graph-final-candidate-test.log",
+        "/private/tmp/decapod-1201-native-graph-final-fmt.log",
+        "/private/tmp/decapod-1201-native-graph-final-native-tests.log",
+        "/private/tmp/decapod-1201-native-graph-final-runtime-tests.log"
+      ]
     }
   ],
   "intents": {
