@@ -167,6 +167,23 @@ fn matching_digest_does_not_bless_modified_known_workflow() {
 }
 
 #[test]
+fn independently_reviewed_release_variant_reconciles_but_does_not_claim_proof() {
+    let root = tempdir().unwrap();
+    let proposed = include_str!("../../../../tests/fixtures/release_pinned_preparation.yml");
+    let path = ".github/workflows/release.yml";
+    write(root.path(), path, proposed);
+    let report = inspect(root.path(), &declare(root.path()), None);
+    assert!(!has(&report, "MISMATCHED_CI_CONTRACT"));
+    assert!(has(&report, "REQUIRED_PROOF_NOT_RUN"));
+    assert!(!report.merge_ready);
+    assert_eq!(report.proof_status, "not_run");
+    write(root.path(), path, &format!("{proposed}\n"));
+    let report = inspect(root.path(), &declare(root.path()), None);
+    assert!(has(&report, "MISMATCHED_CI_CONTRACT"));
+    assert!(!report.merge_ready);
+}
+
+#[test]
 fn unknown_profile_retains_intent_and_emits_an_actionable_adapter_task() {
     let root = tempdir().unwrap();
     let mut proof = declare(root.path());
