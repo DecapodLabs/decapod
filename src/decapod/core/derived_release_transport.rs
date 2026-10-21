@@ -214,9 +214,23 @@ impl PreparedRelease<'_> {
         )?;
         let delta = destination.join("delta");
         fs::create_dir(&delta)?;
-        for name in ["Cargo.toml", "Cargo.lock", "CHANGELOG.md"] {
+        let mut paths = vec!["Cargo.toml", "Cargo.lock", "CHANGELOG.md"];
+        if self
+            .root
+            .join(crate::core::release_metadata::NATIVE_WORKER_LOCK)
+            .try_exists()?
+        {
+            paths.push(crate::core::release_metadata::NATIVE_WORKER_LOCK);
+        }
+        for name in paths {
+            let output = delta.join(name);
+            fs::create_dir_all(
+                output
+                    .parent()
+                    .ok_or_else(|| invalid("delta parent missing"))?,
+            )?;
             fs::write(
-                delta.join(name),
+                output,
                 read_bounded(
                     &self.root.join(name),
                     self.context.limits.max_material_bytes,
