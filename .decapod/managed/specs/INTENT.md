@@ -12,9 +12,12 @@ CI context and #1464's bounded native command sequences, released through v0.121
 The current follow-up repairs release preparation and strengthens actual source
 evidence collection. Production planning must use the reviewed tool versions;
 the separate native worker lock must follow the actual generated manifest version
-without changing dependency resolution or model/runtime pins. Release-PR preparation
-uses an owned clone, while publication continues using the original accepted
-checkout. The existing strict Buildkite collector must verify measured steps,
+without changing dependency resolution or model/runtime pins. The reviewed future
+release-PR preparation uses an owned clone, while publication uses the original
+accepted checkout. This controller dependency retains the accepted active workflow;
+the pinned preparation variant is preserved as a review fixture and admitted only
+by its exact bytes, for activation after an independent supporting release.
+The existing strict Buildkite collector must verify measured steps,
 binary/artifact bytes and executor/candidate custody, rather than relying only
 on provider-attested job metadata. Actual derived-release transformation and all
 four configured archives remain proof obligations, not consequences of source CI
@@ -227,7 +230,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cbf2117766d2962ebe1f5ea14a281f0a00edb50dc8207d3dc8888a059ea99a10`
+- Repository signal fingerprint: `27b60880e597034f38ea4ee505e562e469d8607835913b3f3c1786e1b3ccaea3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `docs/` (1 files), `src/` (210 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
