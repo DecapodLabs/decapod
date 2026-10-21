@@ -83,13 +83,30 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/release.yml",
-            "sha256:7c0f8ab66eeb053a6227c516f6d885133fc67b5c49f5e8b6ddddb08e7213508c",
+            "sha256:5db0e38c1c013138048e4c0dea5f968511265033eb3a1561485c3ea1eeb350a4",
         ),
         (
             ".github/workflows/security-audit.yml",
             "sha256:125928d5fe733bc080ac9a395a0c36275265a518bbeb8b9cb65d19b44a35fee0",
         ),
     ]
+}
+
+/// Reviewed preparation variant, preserved in
+/// tests/fixtures/release_pinned_preparation.yml. It retains the same finite
+/// jobs, matrices, native-publication ownership and source-PR exclusions, while
+/// pinning setup and separating prepared release-PR source from publication.
+/// Support ships before activation: an unmerged controller must never authorize
+/// its own changed workflow. Unknown bytes, even with a refreshed inventory pin,
+/// still require a new independent controller review.
+pub const PINNED_RELEASE_PREPARATION_DIGEST: &str =
+    "sha256:7c0f8ab66eeb053a6227c516f6d885133fc67b5c49f5e8b6ddddb08e7213508c";
+
+pub fn reviewed_workflow_matches(path: &str, digest: &str) -> bool {
+    reviewed_workflow_digests()
+        .iter()
+        .any(|(known, expected)| path == *known && digest == *expected)
+        || (path == ".github/workflows/release.yml" && digest == PINNED_RELEASE_PREPARATION_DIGEST)
 }
 
 /// Exact helper bytes compiled into the reviewed finite execution adapter.
@@ -599,8 +616,12 @@ pub fn required_source_catalog_with_executor(
             return Err(PlanningFailure::UnsupportedSource(path.clone()));
         }
     }
-    for (path, expected) in reviewed_workflow_digests() {
-        if discovered.files.get(*path).map(String::as_str) != Some(*expected) {
+    for (path, _) in reviewed_workflow_digests() {
+        if !discovered
+            .files
+            .get(*path)
+            .is_some_and(|actual| reviewed_workflow_matches(path, actual))
+        {
             return Err(PlanningFailure::ControllerContractUnsupported(
                 (*path).into(),
             ));
