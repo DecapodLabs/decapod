@@ -1,10 +1,14 @@
 # Issue #1445 delivery checklist
 
-The deliverable is one working optional Vega post-validation integration, on
+The delivered feature is one working optional Vega post-validation integration, on
 `agent/vega-followup/feat_01m52fnwybfvhfdj`, original transferred task
 `feat_01m52fnwybfvhfdj`. An inactive or advisory-only delivery is not accepted.
 The agent publishes after complete exact-candidate validation; the maintainer
-retains merge and release authority. No issue is closed by this checklist.
+retains merge and release authority. [PR #1460](https://github.com/DecapodLabs/decapod/pull/1460)
+delivered candidate `04ed11ec88d5638e194e6b497c55db8083f6281e` after two passing
+full validations, and the maintainer merged it as `76f60254`. Issue #1445 is closed.
+Its functional qualification and accuracy limits remain unchanged. Broader issues
+below remain open for their own complete scopes.
 
 The maintainer's explicit 2026-10-20 acceptance revision replaces the
 implementation-added 59-acceptance/5%-risk/95%-confidence/50%-coverage research
@@ -29,34 +33,46 @@ accepted prerequisites, not an additional unimplemented Vega issue tree:
 
 | Issue / PR | Contribution | Disposition in this delivery |
 |---|---|---|
-| #1445 | Rust Vega post-validation decisions, portable configuration, qualified native execution and readiness evidence | Sole outstanding feature issue; remains open until all acceptance conditions pass |
+| #1445 | Rust Vega post-validation decisions, portable configuration, qualified native execution and readiness evidence | Completed by merged PR #1460 under the approved functional contract; closed |
 | #1448, #1450 | Independently accepted source-bound CI API attestation and activation | Merged prerequisites; use their released enforcement, do not duplicate |
 | #1452 / #1453 | Task-scoped custody transfer and bounded durable-export recovery | Issue closed, PR merged, released v0.118.0; original transfer already completed |
 | #1455 | Required separately locked native Rust worker validation | Merged, released v0.119.0; current recipe uses this support |
 | #1457 / #1458 | Exact reviewed golden-fixture link in immutable native snapshots | Issue closed, PR merged, released v0.119.1; native snapshots have executed |
 | #1052, #1069, #1070, #1398 | Broader deterministic governance, complete evidence and execution parity | Consumed authority boundaries; this feature does not claim their complete remaining scope |
-| #1024 | Init/re-init preserves authored project configuration | Implement the Vega selection/retired-provider portion; no broader lifecycle closure |
+| #1024 | Init/re-init preserves authored project configuration | Vega selection/retired-provider portion completed by #1460; broader lifecycle scope remains open |
 | #779, #1064, #1084 | Existing provider transport, publication and obligation surfaces | Consume existing behavior; no unrelated infrastructure or automatic closure |
 | #1399 | Derived-release prediction and full packaging expansion | Distinct release work, not Vega implementation or a closing reference for this PR |
 
 The older native-proof branch is superseded by accepted prerequisite production
 changes. No new transfer, controller prerequisite, ownership or branch is needed.
-Accepted master `7371ad25` is integrated and the controller is official v0.119.1.
+The original feature integrated accepted master `7371ad25` using official
+v0.119.1. Later accepted #1462 and #1464 are released through v0.121.0. The
+completed transfer and feature history are preserved; future work uses new
+governed branches, not the merged feature branch.
+
+The delivered `04ed11ec` passed full source/Buildkite/native qualification:
+Buildkite 2326 passed 39 source steps, 1,464 library tests passed with three
+ignored, and 59 native tests passed. Both actual backends accepted two substantive
+ready controls and safely abstained on the third; 22 of 24 original expectations
+matched, with the two expected-accept mismatches preserved. Later #1464 at
+`c77df1f0` passed full validation, Buildkite 2400–2404, 60 native tests and all
+eight scientific runs. These executions qualify the fixed functional scope;
+they establish neither production-calibrated accuracy nor the old research bound.
 
 ## Completion map
 
 | Requirement | Implementation / regression coverage | Executed evidence and outstanding condition |
 |---|---|---|
-| Optional team/init selection; independent local installations (#1024 portion) | `lib.rs::retire_decision_provider`, `tests/init_config_behavior.rs`, `core/vega_readiness.rs`, `vega_runtime.rs` | fef source suite passed; final exact-candidate run required. Preserve unknown/custom configuration; known retired Jev settings removed |
+| Optional team/init selection; independent local installations (#1024 portion) | `lib.rs::retire_decision_provider`, `tests/init_config_behavior.rs`, `core/vega_readiness.rs`, `vega_runtime.rs` | Delivered full run passed; unknown/custom configuration preserved and known retired Jev settings removed |
 | Single-link immutable artifacts, offline reuse, integrity and atomic activation | `vega_setup.rs::copy_component`, tests `unsafe_hardlinked_components_remain_rejected`, `cancelled_copy_never_publishes_partial_artifact_and_cache_can_retry`, `failed_install_preserves_prior_activation_and_reusable_cache` | fef source suite passed; no relaxation of `nlink`, no weights in crate, no decision-time update |
 | Bounded production intent/obligations/observations (#1084 boundary) | `vega_readiness::project`, `ProjectionContext`, `EvaluationSnapshot::project`; `production_evaluation` regressions | fef shared-code tests and actual Metal/CPU protocol execution passed. Proof hooks/questions/contradictions/phase gates retained; declarations are not execution; overflow rejects |
-| Deterministic failure before model; stale/malformed/abstaining fail closed (#1052/#1069/#1070 portions) | `readiness_profile::finish`, `validation_runtime`, `Response::validated_outcome`, publication/receipt invalidation and replay tests | fef 1463 library and53worker tests passed; failed/stale protocol proof made zero model calls. Final current candidate must pass again |
+| Deterministic failure before model; stale/malformed/abstaining fail closed (#1052/#1069/#1070 portions) | `readiness_profile::finish`, `validation_runtime`, `Response::validated_outcome`, publication/receipt invalidation and replay tests | Delivered run passed; failed/stale protocol proof made zero model calls. Any relevant new candidate requires fresh matching evidence |
 | Metal, explicit CPU and safe fallback | Separate `vega_infer.rs`, `decoder.rs`, production runtime binding and retry classifiers | fef actual M1 Max model inference and CPU executed. Unsupported-CUDA → CPU component path exercised. NVIDIA hardware/full Linux companion-loader path not measured |
 | Tokenizer/blocks/pooling/engine/calibrated output parity | Separate Rust byte-BPE/scalar-F64 references; native recurrence checks | fef fixed 138/314/4096-token Metal+CPU comparisons passed;4097 rejected. Same-agent authorship/shared generic infrastructure and untested modes remain limits; tolerances unchanged |
 | Original validation deadline throughout native discovery | `rust_worker::execute` passes absolute deadline; `supplemental_discovery_stops_slow_rust_probe_at_original_deadline` | Already on the feature branch and exercised by source validation; no new prerequisite |
 | Active useful production-path model decisions | `production_evaluation::{execute_contract_checks,functional_snapshot,evaluate,expected_matches}`, `vega_infer::{production_inference,collect_readiness_shard,verify_scientific_contents}` | 59ea collected all24 records: gate/prompt positives accept, unmet obligations reject, uncertainty/manipulation abstain, contradictions reject, failed/stale proof blocks before inference. Calibration-positive abstains on both backends, missing its expected-accept label;22/24 match and strict aggregate fails. No relabelling or threshold change. Fixed cases are not independent accuracy labels |
-| Calibration implementation and compatible pinned artifacts | `vega_calibration`, independent engine/calibration references, setup compatibility checks | 59ea numerical checks passed; valid model abstention preserves required non-readiness. New exact-feature-order/permutation regression authored. Same upstream base/adapter-off route, hashes and thresholds. Domain reliability remains unestablished; failed research is preserved, not current delivery qualification |
-| Agent repair guidance and one PR (#1064 consumer boundary) | `ValidationGuidance::for_vega_outcome`, existing publisher and full `decapod validate` | Exact final source/Buildkite/native/numerical/functional aggregate must pass. Source or collection success alone cannot publish. No feature PR yet; close only #1445 if fully completed |
+| Calibration implementation and compatible pinned artifacts | `vega_calibration`, independent engine/calibration references, setup compatibility checks | Delivered numerical and feature-order/permutation regressions passed; valid abstention preserves non-readiness. Upstream pins/thresholds unchanged. Domain reliability remains unestablished; failed research is preserved |
+| Agent repair guidance and one PR (#1064 consumer boundary) | `ValidationGuidance::for_vega_outcome`, existing publisher and full `decapod validate` | Completed in PR #1460 after exact final source/Buildkite/native/numerical/functional qualification. Source or collection success alone cannot publish; broader publication modes remain separately scoped |
 
 ## Evidence custody
 
