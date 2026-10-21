@@ -406,6 +406,7 @@ pub(super) fn execute(
                 timeout_ms: worker.timeout_seconds * 1000,
                 output_limit: budget.output_limit(),
                 artifacts: BTreeSet::new(),
+                following: Vec::new(),
             };
             authorize(NativeAction::SourceCheck {
                 invocation: &invocation,
@@ -415,7 +416,11 @@ pub(super) fn execute(
                 kind: evidence::CheckKind::RepositoryLocal,
                 definition_digest: evidence::digest(&(worker, number)).map_err(io::Error::other)?,
                 invocation_digest: invocation.digest()?,
-                toolchain_digest: native_proof::toolchain_digest(&invocation)?,
+                toolchain_digest: native_proof::toolchain_digest_bounded(
+                    &invocation,
+                    budget.remaining()?,
+                    budget.cancel,
+                )?,
                 executor: evidence::Provider::Native,
                 dependencies: previous
                     .into_iter()
@@ -514,6 +519,7 @@ pub(super) fn execute(
         write_new(&directory.join(format!("check-{i}.json")),&serde_json::to_vec_pretty(&serde_json::json!({
             "key":diagnostic.key,"wall_clock_ms":diagnostic.duration.as_secs_f64()*1000.0,
             "termination":format!("{:?}",diagnostic.termination),"error":diagnostic.error,
+            "steps":diagnostic.steps,
             "scope":"supplemental Rust command execution; process success does not establish model parity or calibration",
             "publication_ready":false
         })).map_err(io::Error::other)?)?;
