@@ -940,6 +940,17 @@
         "/private/tmp/decapod-01210-release-final-profile.log",
         "/private/tmp/decapod-01210-release-final-runtime.log"
       ]
+    },
+    {
+      "id": "release-support-recovery-9",
+      "summary": "Preserve unsupported-controller failure and ship independently validated exact variant support before workflow activation; dedicate this commit to .decapod/managed/specs/SECURITY.md plus mandatory governance.",
+      "input_digest": "sha256:04812d869c2ef47aa3cdf0112685e76bb46631744d0b15da8d9c49a64d0bd48a",
+      "proof_refs": [
+        "/private/tmp/decapod-01210-real-preparation-1/diagnostic.json",
+        "/private/tmp/decapod-01210-release-final-policy.log",
+        "/private/tmp/decapod-01210-release-final-profile.log",
+        "/private/tmp/decapod-01210-release-final-runtime.log"
+      ]
     }
   ],
   "intents": {
