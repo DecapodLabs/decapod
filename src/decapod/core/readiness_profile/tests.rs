@@ -81,6 +81,53 @@ fn catalog_shape(catalog: &RequiredCatalog) -> Vec<(CheckKey, CheckKind, Invocat
 }
 
 #[test]
+fn reviewed_release_preparation_preserves_the_source_graph_and_rejects_unknown_bytes() {
+    let proposed = include_bytes!("../../../../tests/fixtures/release_pinned_preparation.yml");
+    assert_eq!(bytes_digest(proposed), PINNED_RELEASE_PREPARATION_DIGEST);
+    let original = include_str!("../../../../.github/workflows/release.yml");
+    let proposed_text = std::str::from_utf8(proposed).unwrap();
+    // Every cargo-dist job, matrix, publication-owner condition and source-PR
+    // applicability after release preparation is byte-identical to the current
+    // accepted workflow, not inferred from a matching count of green labels.
+    let matrix_start = "\n  # Run 'cargo dist plan'";
+    assert_eq!(
+        original.split_once(matrix_start).unwrap().1,
+        proposed_text.split_once(matrix_start).unwrap().1
+    );
+    let (mut declaration, mut files, facts, _) = inputs();
+    let before = required_source_catalog(Some(&declaration), &files, &facts).unwrap();
+    let path = ".github/workflows/release.yml";
+    files.files.insert(path.into(), bytes_digest(proposed));
+    declaration.reviewed_sources_digest = files.digest().unwrap();
+    let after = required_source_catalog(Some(&declaration), &files, &facts).unwrap();
+    assert_eq!(catalog_shape(&before), catalog_shape(&after));
+    assert!(
+        before
+            .obligations()
+            .iter()
+            .zip(after.obligations())
+            .all(|(a, b)| a.definition_digest != b.definition_digest)
+    );
+    let accepted = accepted_executor();
+    let remote =
+        required_source_catalog_with_executor(Some(&declaration), &files, &facts, Some(&accepted))
+            .unwrap();
+    assert_eq!(catalog_shape(&before), catalog_shape(&remote));
+    for (changed_path, digest) in [
+        (path, bytes_digest(&[proposed.as_slice(), b"\n"].concat())),
+        (".github/workflows/ci.yml", bytes_digest(proposed)),
+    ] {
+        let mut changed = files.clone();
+        changed.files.insert(changed_path.into(), digest);
+        declaration.reviewed_sources_digest = changed.digest().unwrap();
+        assert!(matches!(
+            required_source_catalog(Some(&declaration), &changed, &facts),
+            Err(PlanningFailure::ControllerContractUnsupported(_))
+        ));
+    }
+}
+
+#[test]
 fn accepted_executor_requires_complete_exact_compiled_closure_and_git_identities() {
     let expected = accepted_executor();
     assert_eq!(expected.revision(), "b".repeat(40));
