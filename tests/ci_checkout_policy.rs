@@ -22,7 +22,10 @@ impl Fixture {
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));
         fs::create_dir(&path).unwrap();
-        Self(path)
+        // macOS may expose TMPDIR through /var while the recipe deliberately
+        // resolves its owned scratch root through /private/var. Compare the
+        // same filesystem identity without weakening the containment check.
+        Self(path.canonicalize().unwrap())
     }
 }
 impl Drop for Fixture {

@@ -212,7 +212,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
+- Repository signal fingerprint: `6a2c7916aa413e169ccb9bd652a0b43cb3a5db256a487f2e3dfe5250f546ada8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -262,3 +262,15 @@ and release before the Vega feature can use its controller support.
 ### Diagnostic collection and unresolved acceptance (#1445)
 
 Native diagnostics must be executable before independent parity and readiness evaluation are available. Missing reference/holdout inputs are publication acceptance gaps, not dependencies of a device tensor probe or model forward pass. The agent must produce public, reproducible Rust verification inputs and auditable agent-curated repository cases; these labels are not human-reviewed ground truth. Source/native diagnostic success alone must not trigger feature publication or a completion claim.
+
+## Immutable CI context and release projection continuity
+
+Readiness must use the candidate's committed target configuration and immutable
+provider change range. A genuine version-only release may refresh exact generated
+projections without inventing an authored requirement change; every other source
+change retains the authored-spec obligation. Product implementation and new regression coverage remain Rust-native;
+the accepted CI carrier is unchanged. Repeated header refresh must preserve project-authored
+Dockerfile bytes and must not introduce whitespace that makes the independent
+projection check disagree with the actual validator. This focused #1397 delivery
+contributes to #1052/#1069/#1070; it does not by itself prove their full lifecycle,
+platform, hosted-custody or derived-release acceptance scope.

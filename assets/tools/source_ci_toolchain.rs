@@ -719,7 +719,9 @@ mod live_runner_regressions {
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));
         fs::create_dir(&root).unwrap();
-        root
+        // Tool resolution records canonical paths. Keep this newly owned
+        // fixture in the same namespace when TMPDIR is a symlink on macOS.
+        root.canonicalize().unwrap()
     }
     #[cfg(unix)]
     fn executable(path: &Path, source: &str) {

@@ -2794,6 +2794,10 @@ fn validate_material_specs_mutation_with_release_evidence(
                 "Not inside a git work tree; skipping material living-spec mutation gate",
                 ctx,
             );
+            note(
+                "material_specs: outcome=skipped reason=not_git_worktree",
+                ctx,
+            );
         }
         return Ok(());
     }
@@ -2806,12 +2810,20 @@ fn validate_material_specs_mutation_with_release_evidence(
                     "Workspace status unavailable; skipping material living-spec mutation gate",
                     ctx,
                 );
+                note(
+                    "material_specs: outcome=skipped reason=workspace_unavailable",
+                    ctx,
+                );
                 return Ok(());
             }
         };
         if status.git.is_protected {
             skip(
                 "On protected base branch; material living-spec mutation is enforced on feature PRs",
+                ctx,
+            );
+            note(
+                "material_specs: outcome=skipped reason=protected_local_base",
                 ctx,
             );
             return Ok(());
@@ -2832,6 +2844,10 @@ fn validate_material_specs_mutation_with_release_evidence(
                 &format!(
                     "Base branch '{base_branch}' unavailable; skipping material living-spec mutation gate"
                 ),
+                ctx,
+            );
+            note(
+                "material_specs: outcome=skipped reason=local_base_unavailable",
                 ctx,
             );
         }
@@ -2855,11 +2871,16 @@ fn validate_material_specs_mutation_with_release_evidence(
                 "HEAD matches base ref; no PR delta for material living-spec mutation",
                 ctx,
             );
+            note(
+                "material_specs: outcome=skipped reason=local_head_equals_base",
+                ctx,
+            );
             return Ok(());
         }
         material_specs_change_vs_base(repo_root, &base_ref)?
     };
     if report.has_material_change {
+        note("material_specs: outcome=passed proof=authored_change", ctx);
         pass(
             &format!(
                 "Living specs include material authored changes versus {}: {}",
@@ -2873,6 +2894,10 @@ fn validate_material_specs_mutation_with_release_evidence(
     )
     .is_ok()
     {
+        note(
+            "material_specs: outcome=passed proof=version_only_exact_projections",
+            ctx,
+        );
         pass(
             "Version-only release metadata and exact generated projections verified; no authored spec rewrite required",
             ctx,

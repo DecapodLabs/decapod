@@ -830,7 +830,12 @@ pub fn refresh_managed_dockerfile_release(repo: &Path) -> Result<bool, error::De
     let expected_version = expected_managed_decapod_version();
     let mut updated = String::with_capacity(current.len());
     let mut changed = false;
-    for line in current.lines() {
+    for original in current.split_inclusive('\n') {
+        let (line, ending) = original
+            .strip_suffix("\r\n")
+            .map(|line| (line, "\r\n"))
+            .or_else(|| original.strip_suffix('\n').map(|line| (line, "\n")))
+            .unwrap_or((original, ""));
         if line.trim_start().starts_with("ARG DECAPOD_IMAGE=") {
             let replacement = format!("ARG DECAPOD_IMAGE={expected_image}");
             changed |= line != replacement;
@@ -839,15 +844,10 @@ pub fn refresh_managed_dockerfile_release(repo: &Path) -> Result<bool, error::De
             let replacement = format!("ARG DECAPOD_VERSION={expected_version}");
             changed |= line != replacement;
             updated.push_str(&replacement);
-        } else if line.trim_start().starts_with(
-            "# Workspace creation and validation refresh this pin only when the evaluating Decapod release changes.",
-        ) {
-            updated.push_str(line);
-            updated.push('\n');
         } else {
             updated.push_str(line);
         }
-        updated.push('\n');
+        updated.push_str(ending);
     }
     if changed {
         crate::core::fs_permissions::write_private(&dockerfile, updated)

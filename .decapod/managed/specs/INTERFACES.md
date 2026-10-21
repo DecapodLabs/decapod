@@ -628,7 +628,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
+- Repository signal fingerprint: `6a2c7916aa413e169ccb9bd652a0b43cb3a5db256a487f2e3dfe5250f546ada8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -763,3 +763,11 @@ The existing supplemental Rust-worker recipe and private evidence contracts are 
 Native device-probe receipts now include the exact attention source revision alongside Candle provenance. Source compatibility is explicitly advanced to candle-vllm b1055eca/Candle23a6f38/attentionf22e42c; external model/tokenizer/engine/calibration identities and selected raw blocks13/19 remain fixed. Unsupported model modes and malformed/abstaining/stale proof still cannot authorize readiness.
 
 The worker's `--collect-native-verification --proof-output <new-private-path>` runs native diagnostics and heldout automatic/explicit-CPU evaluation independently. It records bounded private child receipts with digest references, then fails if any required phase failed or a receipt is missing/malformed. Each phase retains its scientific acceptance checks; collection is not readiness. The existing controller timeout still bounds the whole command, and evaluation retains its600-second soft dispatch window. `Response::permits_cpu_retry` is a public pure classifier shared by production and native diagnostics, never proof/publication authority. Diagnostic fallback uses a real unsupported alternate GPU API; it does not claim available Metal failed or that kernel custody/loader companion routing executed. Private GPU model proofs also require consumed-model reuse rejection.
+
+## Material-spec gate execution records
+
+The validation JSON report's existing `notes` array records material-spec
+pass/skip disposition. A valid immutable release emits
+`material_specs: outcome=passed proof=version_only_exact_projections`;
+a local early exit instead identifies its explicit skipped reason. Required
+CI context errors remain failures, never these local skip dispositions.

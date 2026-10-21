@@ -381,7 +381,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `872fce157f6635cce6a59cb4cb548a5682768a2aed524e9ee5b103fce3e0e79b`
+- Repository signal fingerprint: `6a2c7916aa413e169ccb9bd652a0b43cb3a5db256a487f2e3dfe5250f546ada8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -477,8 +477,42 @@ GPU one-shot ownership consumes the entire model before inference and discards i
 
 ### Public diagnostics and semantic evidence limits
 
-The completed76 validation exposed false-ready outcomes against proxy labels and unexecuted/token-overflow cases on both backends. These remain required acceptance failures; no labels, sample denominator, calibration or thresholds are adjusted to make them pass. The reference's zero-memory omission is repaired from independently pinned specification/config and own scalar block outputs, with analytic anchors rather than candidate-derived expected values. Shared authorship/parser/weights and512-token scope still limit independence. Actual CUDA-unavailable-to-CPU component execution does not establish preferred-Metal failure or full production custody/fallback routing. All raw numeric inputs and receipts remain private outside Git.
+The historical completed76 validation exposed false-ready outcomes against proxy labels and unexecuted/token-overflow cases on both backends. Those failed results remain preserved under their original criterion, which was superseded by the explicitly approved functional delivery scope in #1445/#1460; they are not passing accuracy evidence or a revived statistical publication prerequisite. The reference's zero-memory omission is repaired from independently pinned specification/config and own scalar block outputs, with analytic anchors rather than candidate-derived expected values. Shared authorship/parser/weights and512-token scope still limit independence. Actual CUDA-unavailable-to-CPU component execution does not establish preferred-Metal failure or full production custody/fallback routing. All raw numeric inputs and receipts remain private outside Git.
 
 Public provider metadata and logs may diagnose a failed bootstrap without credentials. They remain untrusted diagnostic content: reading a sibling success or downloading a failure log cannot import a passed observation, alter the required graph or grant publication. A pre-parser helper launch failure establishes no source-test or native execution. Provider recovery must preserve failed history and bind the next real execution to the exact ordinary branch candidate. No authentication state, raw machine logs or model inputs belong in Git.
 
-Numerical and semantic references have separate trust limits. The scalar Rust reference shares parsing/hash infrastructure and pinned weights with the candidate, and its author is the same agent; measured agreement does not imply separate human review or unsupported-mode correctness. Public bug findings, test-oracle resolution and same-agent counterfactual labels do not establish comprehensive readiness. Related lineage IDs must not inflate independent risk counts, nor may an absent review finding be silently converted into a ready label. These limits retain the unsatisfied readiness-calibration gate rather than changing policy or thresholds to fit the available evidence.
+Numerical and semantic references have separate trust limits. The scalar Rust reference shares parsing/hash infrastructure and pinned weights with the candidate, and its author is the same agent; measured agreement does not imply separate human review or unsupported-mode correctness. Public bug findings, test-oracle resolution and same-agent counterfactual labels do not establish comprehensive readiness. Related lineage IDs must not inflate independent risk counts, nor may an absent review finding be silently converted into a ready label. Domain-level readiness reliability remains unestablished. The published functional qualification and safe abstention remain authoritative: configured Vega must actually run, and rejection, abstention, malformed output or execution failure prevents readiness without overriding deterministic proof.
+
+## Immutable configuration bootstrap trust boundary
+
+The installed controller independently pins accepted CI carrier bytes. This PR
+does not change those actions or replace their execution with an unmerged
+controller. A diagnostic Rust parser migration was prepared privately but is
+not activated or counted as current production proof. Existing immutable source
+context and accepted executor checks remain authoritative. New actual-command
+release tests execute the Rust candidate in owned temporary repositories, keep
+session credentials outside Git, and distinguish bounded project prerequisites
+from full publication readiness.
+
+## Dependency advisory remediation
+
+The separate native worker pins Parquet 59.3.1, whose reader no longer depends
+on Thrift. This removes the Thrift 0.17.0 dependency reported by Dependabot #4
+(GHSA-2f9f-gq7v-9h6m), rather than suppressing or dismissing the advisory.
+Maintained Parquet 57/58 releases still require the affected dependency. The
+existing pinned corpus size/hash checks and reader remain the execution boundary;
+dependency resolution alone does not prove successful corpus decoding or model
+execution. The model, tokenizer, engine, calibration and Git runtime pins and
+numerical tolerances are preserved.
+
+Scientific collection test fixtures explicitly request owner-only directory
+permissions at creation instead of depending on the invoking shell's umask.
+Production collection ownership/permission and unsafe-link checks are unchanged;
+a public-directory regression verifies both creation and loading fail closed.
+
+Compatible rustls-webpki 0.103.16 and webpki-roots 1.0.10 updates in the root and
+worker locks address RUSTSEC-2026-0382 and RUSTSEC-2026-0381. Bazel metadata is
+regenerated from the normal root Cargo lock and checked in strict lockfile mode.
+Required hosted dependency checks and full validation still govern publication;
+neither a lock update nor a public CI log is a passing receipt. Prior failed
+validation and provider bootstrap/metadata rate-limit errors remain recorded.
