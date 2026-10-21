@@ -64,6 +64,44 @@ fn read_bounded(path: &Path, limit: u64) -> io::Result<Vec<u8>> {
     Ok(bytes)
 }
 
+/// Synchronize only the local Decapod path-package version after the actual
+/// release-plz transformation. Shared by production preparation and this driver;
+/// dependency resolution and every external runtime pin remain unchanged.
+pub fn reconcile_worker_lock(root: &Path, limit: u64) -> io::Result<bool> {
+    if root.canonicalize()?.as_path() != root {
+        return Err(invalid("release source root must be canonical"));
+    }
+    let manifest = text(read_bounded(&root.join("Cargo.toml"), limit)?)?;
+    let worker = root.join("assets/tools/vega-native");
+    match fs::symlink_metadata(&worker) {
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(false),
+        Err(error) => return Err(error),
+        Ok(metadata) if metadata.is_dir() && !metadata.file_type().is_symlink() => {}
+        Ok(_) => {
+            return Err(invalid(
+                "native worker directory must be a regular source directory",
+            ));
+        }
+    }
+    if worker.canonicalize()? != worker {
+        return Err(invalid(
+            "native worker directory must not be a source alias",
+        ));
+    }
+    read_bounded(&worker.join("Cargo.toml"), limit)?;
+    let path = root.join(super::release_metadata::NATIVE_WORKER_LOCK);
+    let before = read_bounded(&path, limit)?;
+    let after = checked(super::release_metadata::align_path_dependency_lock(
+        &manifest,
+        std::str::from_utf8(&before).map_err(|_| invalid("non-UTF-8 worker lock"))?,
+    ))?;
+    if before == after.as_bytes() {
+        return Ok(false);
+    }
+    super::atomic::write_atomic(&path, after.as_bytes())?;
+    Ok(true)
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct DriverTools {
@@ -957,6 +995,9 @@ fn prepare_inner<'a>(
     update.extend(["--repo-url".into(), repository.into()]);
     let generator = inputs.tools.release_plz.clone();
     context.run(&generator, &update, &root)?;
+    context.remaining()?;
+    reconcile_worker_lock(&root, limits.max_material_bytes.min(16 * 1024 * 1024))?;
+    context.remaining()?;
     if registry(&mut context, &root)? != baseline {
         return Err(invalid(
             "published registry baseline moved during generation",
@@ -972,10 +1013,11 @@ fn prepare_inner<'a>(
         &inputs.release_date,
     ))?;
     // Git index and commit mutation stay entirely inside the second owned clone.
-    context.git(
-        &root,
-        &["add", "--", "Cargo.toml", "Cargo.lock", "CHANGELOG.md"],
-    )?;
+    let mut generated_paths = vec!["add", "--", "Cargo.toml", "Cargo.lock", "CHANGELOG.md"];
+    if after.contains_key(super::release_metadata::NATIVE_WORKER_LOCK) {
+        generated_paths.push(super::release_metadata::NATIVE_WORKER_LOCK);
+    }
+    context.git(&root, &generated_paths)?;
     let derived_git_tree = context.git(&root, &["write-tree"])?.trim().to_owned();
     let epoch = context
         .git(&root, &["show", "-s", "--format=%ct", &inputs.source_head])?
@@ -1514,6 +1556,15 @@ pub fn build_artifacts(
     mut execute: impl FnMut(&[String]) -> io::Result<Vec<u8>>,
 ) -> io::Result<Vec<u8>> {
     let lock = read_bounded(&root.join("Cargo.lock"), 64 * 1024 * 1024)?;
+    let read_worker_lock = || match read_bounded(
+        &root.join(super::release_metadata::NATIVE_WORKER_LOCK),
+        64 * 1024 * 1024,
+    ) {
+        Ok(bytes) => Ok(Some(bytes)),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error),
+    };
+    let worker_lock = read_worker_lock()?;
     let args = artifact_build_arguments(profile, stage, tag)?;
     if let Some(tag) = tag {
         let cargo: toml::Value =
@@ -1531,6 +1582,9 @@ pub fn build_artifacts(
     let result = execute(&args);
     if read_bounded(&root.join("Cargo.lock"), 64 * 1024 * 1024)? != lock {
         return Err(invalid("cargo-dist changed Cargo.lock"));
+    }
+    if read_worker_lock()? != worker_lock {
+        return Err(invalid("cargo-dist changed the native worker lock"));
     }
     result
 }
