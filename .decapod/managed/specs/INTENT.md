@@ -7,16 +7,20 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
-The current follow-up preserves the accepted #1462 delivery and v0.120.1 release.
-Its native execution changes extend the existing runner with reviewed finite
-command sequences, complete step evidence and original deadline/cancellation
-propagation. A successful first command cannot stand in for a later required
-command. Final native selection binds the declared policy timeout rather than
-remaining wall-clock time, so rechecking unchanged work does not invalidate its
-own invocation identity. Missing platform, workflow or release adapters still
-block full readiness. This contributes to #1398/#1070 and #1069; it does not
-declare those entire umbrella scopes complete or change Vega's authority,
-calibration, numerical tolerances or accuracy qualification.
+The accepted deliveries include #1460's active Vega integration, #1462's immutable
+CI context and #1464's bounded native command sequences, released through v0.121.0.
+The current follow-up repairs release preparation and strengthens actual source
+evidence collection. Production planning must use the reviewed tool versions;
+the separate native worker lock must follow the actual generated manifest version
+without changing dependency resolution or model/runtime pins. Release-PR preparation
+uses an owned clone, while publication continues using the original accepted
+checkout. The existing strict Buildkite collector must verify measured steps,
+binary/artifact bytes and executor/candidate custody, rather than relying only
+on provider-attested job metadata. Actual derived-release transformation and all
+four configured archives remain proof obligations, not consequences of source CI
+or authored fixtures. The full #1024/#1052/#1069/#1070/#1398/#779/#1399 scopes
+remain open until their requirements are executed. Vega's authority, calibration,
+numerical tolerances and accuracy qualification remain unchanged.
 
 The maintainer delegated the functional safe-abstention decision after seeing two
 meaningful ready controls approved and the third validly abstaining. Functional
@@ -223,8 +227,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `cbf2117766d2962ebe1f5ea14a281f0a00edb50dc8207d3dc8888a059ea99a10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `docs/` (1 files), `src/` (210 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
