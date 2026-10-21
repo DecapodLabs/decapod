@@ -756,7 +756,11 @@ fn source_selector_retains_foreign_platform_and_sequence_failures() {
         source_invocation("contracts", &facts, &tools, Duration::from_secs(1), 1024)
             .unwrap_err()
             .to_string()
-            .contains("SEQUENCE")
+            .contains(if cfg!(target_os = "linux") {
+                "SEQUENCE"
+            } else {
+                "PLATFORM"
+            })
     );
     #[cfg(target_os = "linux")]
     assert!(
@@ -781,6 +785,96 @@ fn source_selector_retains_foreign_platform_and_sequence_failures() {
         )
         .is_err()
     );
+}
+
+#[test]
+fn native_invocation_identity_is_stable_as_the_execution_budget_shrinks() {
+    let f = Fixture::new("[proof]\n");
+    // This is selection only. These explicit fixture paths are never executed.
+    let tools = ReviewedNativeTools {
+        programs: BTreeMap::from([
+            ("cargo".into(), "/reviewed/cargo".into()),
+            ("rustc".into(), "/reviewed/rustc".into()),
+        ]),
+        closure: BTreeMap::from([("runtime".into(), "/reviewed/runtime".into())]),
+        environment: BTreeMap::new(),
+    };
+    let host = NativeHost::new(
+        f.options.clone(),
+        tools,
+        "https://github.com/fixture/decapod.git".into(),
+        |_| Ok(ProjectPrerequisites::Passed),
+        |_| Ok(()),
+    )
+    .unwrap();
+    let facts = ApplicabilityFacts {
+        event: "pull_request".into(),
+        target_branch: "master".into(),
+        changed_paths: BTreeSet::new(),
+    };
+    let cancel = Cancellation::default();
+    let mut budget = RuntimeBudget {
+        deadline: Instant::now() + Duration::from_secs(10),
+        cancel: &cancel,
+        max_output_bytes: 4096,
+        bytes_left: 4096,
+    };
+    let first = host
+        .source_check_invocation("candidate-build", &facts, &budget)
+        .unwrap();
+    budget.deadline = Instant::now() + Duration::from_secs(1);
+    let last = host
+        .source_check_invocation("candidate-build", &facts, &budget)
+        .unwrap();
+    assert_eq!(first.digest().unwrap(), last.digest().unwrap());
+    assert_eq!(last.timeout_ms, f.options.timeout.as_millis() as u64);
+    cancel.cancel();
+    assert_eq!(
+        host.source_check_invocation("candidate-build", &facts, &budget)
+            .unwrap_err()
+            .kind(),
+        io::ErrorKind::Interrupted
+    );
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn source_selector_preserves_every_reviewed_cargo_command() {
+    let storage = tempfile::tempdir().unwrap();
+    let resolution = storage.path().join("rust-version");
+    fs::write(&resolution, "rustc 1.96.1 (fixture only)\n").unwrap();
+    let tools = ReviewedNativeTools {
+        programs: BTreeMap::from([
+            ("cargo".into(), "/reviewed/cargo".into()),
+            ("rustc".into(), "/reviewed/rustc".into()),
+        ]),
+        closure: BTreeMap::from([("resolution:rustc-version".into(), resolution)]),
+        environment: BTreeMap::new(),
+    };
+    let facts = ApplicabilityFacts {
+        event: "pull_request".into(),
+        target_branch: "master".into(),
+        changed_paths: BTreeSet::from(["src/decapod/core/a.rs".into()]),
+    };
+    let selected = source_invocation(
+        "supabase-consumer",
+        &facts,
+        &tools,
+        Duration::from_secs(30),
+        4096,
+    )
+    .unwrap();
+    assert_eq!(selected.following.len(), 1);
+    assert!(selected.arguments.contains(&native_proof::Value::Literal("core::fs_permissions::tests::recovery_fixture_selection_rejects_incompatible_candidates".into())));
+    let next = &selected.following[0];
+    assert!(next.arguments.contains(&native_proof::Value::Literal(
+        "cloud_supabase_boundary".into()
+    )));
+    assert_eq!(
+        next.environment["CARGO_TARGET_DIR"],
+        selected.environment["CARGO_TARGET_DIR"]
+    );
+    assert_eq!(next.environment["RUSTC"], selected.environment["RUSTC"]);
 }
 
 // Actual compiler/candidate smoke test. No fake green command is substituted.

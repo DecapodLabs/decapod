@@ -156,6 +156,20 @@ Publication spec reviews bind current code as well as authored prose (`workspace
 
 The public readiness challenge construction is explicitly versioned. Before any model evaluation or fitting, v2 adds the requested contradictory semantic-evidence abstention case to each of the same 43 originals, without removing v1 cases or changing repository split membership, calibration or numeric thresholds. The result is 258 judgment cases and 129 separately excluded policy cases. Expected abstentions have correct, incorrectly decisive and unobserved counts; zero false-ready alone does not make a confident rejection of ambiguity a successful abstention. Existing v1 source is retained through `4a96c804`; no model result informed this addition. These are still scoped agent-authored benchmark proxies, not production ground truth, and the 23-issue holdout remains insufficient for the declared risk criterion.
 
+## Native sequence verification
+
+`tests/native_proof_execution.rs` exercises real compiled Rust commands sharing
+scratch artifacts, later-step nonzero exit, cumulative output limits, one original
+deadline, cancellation and tool substitution between steps. It also checks that
+unbound successors, shell executables and more than 64 commands fail before
+execution. Earlier subprocess output remains available when a later preparation
+fails. These tests are focused adapter checks, not proof that every required
+platform, workflow or release archive executed. Full publication still requires
+the prescribed exact-candidate `decapod validate` result and all required evidence.
+On macOS, canonical `TMPDIR=/private/tmp` keeps fixture paths within the strict
+owned-snapshot contract. The short process-group cleanup fixture warms first-use
+Mach-O loading separately; its original 100 ms descendant deadline is unchanged.
+
 ## Runtime recovery proof obligations
 
 The durability slice requires adversarial proof at real domain boundaries:
@@ -789,7 +803,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6a2c7916aa413e169ccb9bd652a0b43cb3a5db256a487f2e3dfe5250f546ada8`
+- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

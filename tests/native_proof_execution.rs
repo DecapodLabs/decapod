@@ -195,6 +195,7 @@ mod supported {
                     timeout_ms: 2000,
                     output_limit: 65536,
                     artifacts,
+                    following: Vec::new(),
                 };
                 checks.push(ExpectedCheck {
                     key: key.clone(),
@@ -286,6 +287,168 @@ mod supported {
             );
             assert_eq!(fs::read_dir(self.scratch.path()).unwrap().count(), 0);
         }
+    }
+
+    #[test]
+    fn sequence_uses_shared_scratch_and_records_each_executed_command() {
+        let mut f = Fixture::new();
+        f.set(0, |invocation| {
+            invocation.arguments = vec![
+                Value::Literal("artifact".into()),
+                Value::ScratchPath("shared".into()),
+                Value::Literal("produced bytes".into()),
+            ];
+            invocation.artifacts.insert("shared".into());
+            invocation.following.push(InvocationStep {
+                program: invocation.program.clone(),
+                arguments: vec![
+                    Value::Literal("read-artifact".into()),
+                    Value::ScratchPath("shared".into()),
+                    Value::Literal("produced bytes".into()),
+                ],
+                directory: ".".into(),
+                environment: BTreeMap::new(),
+            });
+        });
+        let run = f.run().unwrap();
+        assert!(run.failure.is_none(), "{:?}", run.failure);
+        assert_eq!(f.verdict(&run), Verdict::Ready);
+        assert_eq!(run.diagnostics[0].steps.len(), 2);
+        assert_eq!(run.diagnostics[0].steps[1].exit_code, Some(0));
+        assert!(
+            String::from_utf8_lossy(&run.diagnostics[0].stdout)
+                .contains("verified actual artifact")
+        );
+        f.clean();
+    }
+
+    fn step(invocation: &Invocation, args: &[&str]) -> InvocationStep {
+        InvocationStep {
+            program: invocation.program.clone(),
+            arguments: args
+                .iter()
+                .map(|arg| Value::Literal((*arg).into()))
+                .collect(),
+            directory: ".".into(),
+            environment: BTreeMap::new(),
+        }
+    }
+
+    #[test]
+    fn sequence_later_failure_stops_before_remaining_commands_or_checks() {
+        let mut f = Fixture::new();
+        f.set(0, |i| {
+            i.following = vec![step(i, &["exit", "9"]), step(i, &["ok"])]
+        });
+        let run = f.run().unwrap();
+        assert!(run.failure.is_some());
+        assert_eq!(f.verdict(&run), Verdict::NotReady);
+        assert_eq!(run.diagnostics.len(), 1);
+        assert_eq!(run.diagnostics[0].steps.len(), 2);
+        assert_eq!(run.diagnostics[0].steps[1].exit_code, Some(9));
+        f.clean();
+    }
+
+    #[test]
+    fn sequence_commands_share_the_original_deadline() {
+        let mut f = Fixture::new();
+        f.set(0, |i| {
+            // Include first-use Mach-O loading, but the second slow command
+            // must still consume the remaining original allowance.
+            i.timeout_ms = 1500;
+            i.arguments = vec![Value::Literal("sleep".into()), Value::Literal("700".into())];
+            i.following = vec![step(i, &["sleep", "1100"]), step(i, &["ok"])];
+        });
+        let run = f.run().unwrap();
+        assert!(run.failure.is_some());
+        assert_eq!(f.verdict(&run), Verdict::NotReady);
+        assert_eq!(run.diagnostics[0].termination, Termination::TimedOut);
+        assert_eq!(run.diagnostics[0].steps.len(), 2);
+        assert!(run.diagnostics[0].duration < Duration::from_secs(3));
+        f.clean();
+    }
+
+    #[test]
+    fn sequence_cannot_reset_its_output_allowance() {
+        let mut f = Fixture::new();
+        f.set(0, |i| {
+            i.output_limit = 12;
+            i.following = vec![step(i, &["ok"]), step(i, &["ok"])];
+        });
+        let run = f.run().unwrap();
+        assert!(run.failure.is_some());
+        assert_eq!(f.verdict(&run), Verdict::NotReady);
+        assert_eq!(run.diagnostics[0].termination, Termination::OutputLimit);
+        assert!(run.diagnostics[0].steps.len() < 3);
+        f.clean();
+    }
+
+    #[test]
+    fn sequence_rejects_unbound_steps_shells_and_oversized_command_lists() {
+        let mut f = Fixture::new();
+        let key = f.plan.checks[0].key.clone();
+        let invocation = f.invocations.get_mut(&key).unwrap();
+        invocation.following.push(step(invocation, &["ok"]));
+        assert!(f.run().is_err());
+        let mut f = Fixture::new();
+        f.set(0, |i| {
+            let mut shell = step(i, &["-c", "true"]);
+            shell.program = PathBuf::from("/bin/sh").canonicalize().unwrap();
+            i.following = vec![shell];
+        });
+        assert!(f.run().is_err());
+        let mut f = Fixture::new();
+        f.set(0, |i| i.following = vec![step(i, &["ok"]); 64]);
+        assert!(f.run().is_err());
+    }
+
+    #[test]
+    fn sequence_retains_prior_execution_when_a_later_tool_changes() {
+        let mut f = Fixture::new();
+        let later = f.scratch.path().join("later-tool");
+        fs::copy(&f._compiled.path, &later).unwrap();
+        f.set(0, |i| {
+            i.arguments = vec![
+                Value::Literal("mutate".into()),
+                Value::Literal(later.to_string_lossy().into_owned()),
+            ];
+            let mut next = step(i, &["ok"]);
+            next.program = later.clone();
+            i.following = vec![next];
+        });
+        let run = f.run().unwrap();
+        assert!(run.failure.is_some());
+        assert_eq!(run.diagnostics.len(), 1);
+        assert_eq!(run.diagnostics[0].steps.len(), 2);
+        assert_eq!(run.diagnostics[0].steps[0].exit_code, Some(0));
+        assert!(
+            run.diagnostics[0].steps[1]
+                .error
+                .as_ref()
+                .unwrap()
+                .contains("tool changed")
+        );
+        assert_eq!(f.verdict(&run), Verdict::NotReady);
+    }
+
+    #[test]
+    fn toolchain_measurement_respects_the_original_budget_and_cancellation() {
+        let f = Fixture::new();
+        let invocation = &f.invocations[&f.plan.checks[0].key];
+        assert_eq!(
+            toolchain_digest_bounded(invocation, Duration::ZERO, &Cancellation::default())
+                .unwrap_err()
+                .kind(),
+            std::io::ErrorKind::TimedOut
+        );
+        let cancel = Cancellation::default();
+        cancel.cancel();
+        assert_eq!(
+            toolchain_digest_bounded(invocation, Duration::from_secs(15), &cancel)
+                .unwrap_err()
+                .kind(),
+            std::io::ErrorKind::Interrupted
+        );
     }
 
     #[test]
@@ -431,11 +594,9 @@ mod supported {
         let marker = f.scratch.path().join("started");
         let marker_text = marker.to_string_lossy().into_owned();
         f.set(0, |i| {
-            i.arguments = vec![
-                Value::Literal("sleep".into()),
-                Value::Literal("30000".into()),
-                Value::Literal(marker_text),
-            ]
+            let mut waiting = step(i, &["sleep", "30000"]);
+            waiting.arguments.push(Value::Literal(marker_text));
+            i.following = vec![waiting, step(i, &["ok"])];
         });
         let cancel = Cancellation::default();
         let other = cancel.clone();
@@ -453,6 +614,7 @@ mod supported {
         let run = f.run_with(Fixture::limits(), &cancel).unwrap();
         waiter.join().unwrap();
         assert_eq!(fixture_result(&run, 0).0, Conclusion::Cancelled);
+        assert_eq!(run.diagnostics[0].steps.len(), 2);
         assert_eq!(f.verdict(&run), Verdict::NotReady);
         fs::remove_file(f.scratch.path().join("started")).unwrap();
         f.clean();
@@ -569,6 +731,14 @@ mod supported {
     #[test]
     fn owned_process_group_is_stopped_on_exit_and_timeout() {
         let compiled = compiled_fixture();
+        // First-use Mach-O loading can exceed the deliberately short child
+        // cleanup deadline. Exercise that loading separately; the 100 ms
+        // descendant deadline below remains unchanged.
+        let warmup = Command::new(&compiled.path)
+            .arg("ok")
+            .bounded_output(Duration::from_secs(5))
+            .unwrap();
+        assert!(warmup.status.success());
         #[cfg(target_os = "linux")]
         assert_eq!(unsafe { libc::prctl(libc::PR_SET_CHILD_SUBREAPER, 1) }, 0);
         for wait in [false, true] {
@@ -598,6 +768,31 @@ mod supported {
                 }
             );
             let pid = fs::read_to_string(&recorded).unwrap();
+            #[cfg(target_os = "macos")]
+            {
+                // macOS adopts orphaned grandchildren rather than providing
+                // Linux's subreaper API. Verify the recorded owned descendant
+                // is gone or a non-running zombie, not merely the parent exit.
+                let start = Instant::now();
+                loop {
+                    let status = Command::new("/bin/ps")
+                        .args(["-o", "stat=", "-p", pid.trim()])
+                        .bounded_output(Duration::from_secs(1))
+                        .unwrap();
+                    let state = String::from_utf8(status.stdout).unwrap();
+                    if (status.status.code() == Some(1) && state.trim().is_empty())
+                        || (status.status.success() && state.trim_start().starts_with('Z'))
+                    {
+                        break;
+                    }
+                    assert!(status.status.success(), "cannot inspect owned descendant");
+                    assert!(
+                        start.elapsed() < Duration::from_secs(2),
+                        "descendant still running"
+                    );
+                    std::thread::sleep(Duration::from_millis(5));
+                }
+            }
             #[cfg(target_os = "linux")]
             {
                 let start = Instant::now();

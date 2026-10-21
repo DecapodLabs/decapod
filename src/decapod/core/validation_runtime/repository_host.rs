@@ -27,14 +27,27 @@ pub struct AuthorizedRepositoryProof {
     source_inventory_digest: String,
     source_root: PathBuf,
     repository: String,
+    deadline: Instant,
+    cancel: Cancellation,
 }
 
 impl AuthorizedRepositoryProof {
     pub(crate) fn verify(&self, invocation: &Invocation) -> io::Result<()> {
+        let remaining = self
+            .deadline
+            .checked_duration_since(Instant::now())
+            .filter(|remaining| !remaining.is_zero())
+            .ok_or_else(|| {
+                io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "REPOSITORY_PROOF_SEAL_EXPIRED: original validation deadline elapsed",
+                )
+            })?;
         if invocation.capabilities
             != native_proof::ReviewedCapabilities::RepositoryDeclaredLocalCheck
             || invocation.digest()? != self.invocation_digest
-            || native_proof::toolchain_digest(invocation)? != self.toolchain_digest
+            || native_proof::toolchain_digest_bounded(invocation, remaining, &self.cancel)?
+                != self.toolchain_digest
         {
             return Err(invalid(
                 "REPOSITORY_PROOF_SEAL_MISMATCH: invocation or measured tools changed",
@@ -195,6 +208,8 @@ impl Host for RepositoryHost<'_> {
                     source_inventory_digest: sources.clone(),
                     source_root: project.identity_inputs.root.clone(),
                     repository: project.identity_inputs.repository.clone(),
+                    deadline: budget.deadline,
+                    cancel: budget.cancel.clone(),
                 },
             );
         }
@@ -397,6 +412,7 @@ fn command_invocation(
         timeout_ms: execution.timeout_seconds.saturating_mul(1000),
         output_limit: budget.output_limit().min(64 * 1024 * 1024),
         artifacts: BTreeSet::new(),
+        following: Vec::new(),
     })
 }
 
@@ -465,7 +481,11 @@ pub fn select_commands(
             let invocation =
                 command_invocation(command, execution, &project.identity_inputs.root, budget)?;
             let invocation_digest = invocation.digest()?;
-            let toolchain_digest = native_proof::toolchain_digest(&invocation)?;
+            let toolchain_digest = native_proof::toolchain_digest_bounded(
+                &invocation,
+                budget.remaining()?,
+                budget.cancel,
+            )?;
             budget.remaining()?;
             Ok((invocation, invocation_digest, toolchain_digest))
         })();
@@ -809,6 +829,18 @@ mod tests {
             .args
             .push("new argument".into());
         assert!(seal.verify_context(&project).is_err());
+        cancel.cancel();
+        assert_eq!(
+            seal.verify(invocation).unwrap_err().kind(),
+            io::ErrorKind::Interrupted
+        );
+        let seal = host.authorized_commands.get_mut(key).unwrap();
+        seal.cancel = Cancellation::default();
+        seal.deadline = Instant::now() - Duration::from_secs(1);
+        assert_eq!(
+            seal.verify(invocation).unwrap_err().kind(),
+            io::ErrorKind::TimedOut
+        );
         let contract = project.configuration.repository_contract.as_mut().unwrap();
         contract.reviewed_commands_digest =
             repository_profile::command_contract_digest(&project.configuration.commands, contract)

@@ -7,7 +7,9 @@
 //! Process groups cover ordinary children, not malicious setsid/double-fork
 //! escapes. Daemonizing, external writes/network, credentials and publication
 //! must be excluded by review or an upstream sandbox; they are unsupported here.
-use super::bounded_process::{BoundedCommand, Cancellation, ProcessLimits, Termination};
+use super::bounded_process::{
+    BoundedCommand, Cancellation, ProcessCapture, ProcessLimits, Termination,
+};
 use super::readiness_evidence::{
     self as evidence, ApplicabilityFacts, CheckKey, CheckKind, CheckResult, Conclusion, Dependency,
     ExpectedPlan, Failure, MaterialIdentity, Observation, Provider, Requirement, SuiteEvidence,
@@ -71,6 +73,17 @@ pub enum Value {
     ScratchPath(String),
 }
 
+/// Another direct command in the same reviewed check. It shares only the owned
+/// scratch directory and the check's original time/output budgets. Environment
+/// and working directory remain explicit for every command; no shell is used.
+#[derive(Debug, Clone, Serialize)]
+pub struct InvocationStep {
+    pub program: PathBuf,
+    pub arguments: Vec<Value>,
+    pub directory: PathBuf,
+    pub environment: BTreeMap<String, Value>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct Invocation {
     pub platform: NativePlatform,
@@ -92,6 +105,10 @@ pub struct Invocation {
     pub output_limit: usize,
     /// Files that MUST be produced in this check's fresh owned scratch directory.
     pub artifacts: BTreeSet<String>,
+    /// Ordered substantive commands after the first. Empty retains the existing
+    /// single-command digest. Artifacts are checked after the complete sequence.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub following: Vec<InvocationStep>,
 }
 impl Invocation {
     pub fn digest(&self) -> io::Result<String> {
@@ -163,6 +180,18 @@ pub struct CheckDiagnostic {
     pub termination: Termination,
     pub stdout: Vec<u8>,
     pub stderr: Vec<u8>,
+    pub error: Option<String>,
+    pub steps: Vec<StepDiagnostic>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct StepDiagnostic {
+    pub index: usize,
+    pub duration_ms: u128,
+    pub termination: String,
+    pub exit_code: Option<i32>,
+    pub stdout_digest: String,
+    pub stderr_digest: String,
     pub error: Option<String>,
 }
 
@@ -483,7 +512,17 @@ fn measured_toolchain(invocation: &Invocation, budget: &mut Budget<'_>) -> io::R
         }
         files.insert(name.clone(), budget.hash_file(path)?);
     }
-    json_digest(&files)
+    if invocation.following.is_empty() {
+        // Preserve existing single-command toolchain identities and labels.
+        json_digest(&files)
+    } else {
+        let programs: Vec<_> = invocation
+            .following
+            .iter()
+            .map(|step| budget.hash_file(&step.program))
+            .collect::<io::Result<_>>()?;
+        json_digest(&(files, programs))
+    }
 }
 
 /// Measure the planner-selected toolchain closure. Completeness of that closure
@@ -491,9 +530,22 @@ fn measured_toolchain(invocation: &Invocation, budget: &mut Budget<'_>) -> io::R
 /// there rather than be silently omitted here.
 pub fn toolchain_digest(invocation: &Invocation) -> io::Result<String> {
     let cancel = Cancellation::default();
+    toolchain_digest_bounded(invocation, Duration::from_secs(15), &cancel)
+}
+
+/// Production callers carry their original remaining budget and cancellation
+/// through tool measurement instead of granting every command a fresh 15 s.
+pub fn toolchain_digest_bounded(
+    invocation: &Invocation,
+    timeout: Duration,
+    cancel: &Cancellation,
+) -> io::Result<String> {
+    let timeout = timeout.min(Duration::from_secs(15));
     let mut budget = Budget {
-        deadline: Instant::now() + Duration::from_secs(15),
-        cancel: &cancel,
+        deadline: Instant::now()
+            .checked_add(timeout)
+            .ok_or_else(|| invalid("toolchain measurement deadline overflow"))?,
+        cancel,
         remaining_bytes: 1024 * 1024 * 1024,
         git_program: PathBuf::new(),
         git_output_limit: 1,
@@ -548,6 +600,26 @@ fn validate_invocation(
     budget: &mut Budget<'_>,
     self_digest: &str,
 ) -> io::Result<()> {
+    if invocation.following.len() > 63 {
+        return Err(invalid("native check exceeds 64 direct commands"));
+    }
+    for step in &invocation.following {
+        let direct = Invocation {
+            platform: invocation.platform,
+            program: step.program.clone(),
+            toolchain_files: BTreeMap::new(),
+            arguments: step.arguments.clone(),
+            directory: step.directory.clone(),
+            environment: step.environment.clone(),
+            purpose: ExecutionPurpose::SourceCheck,
+            capabilities: invocation.capabilities,
+            timeout_ms: invocation.timeout_ms,
+            output_limit: invocation.output_limit,
+            artifacts: BTreeSet::new(),
+            following: Vec::new(),
+        };
+        validate_invocation(&direct, inputs, budget, self_digest)?;
+    }
     if invocation.platform != NativePlatform::current()? {
         return Err(io::Error::new(
             io::ErrorKind::Unsupported,
@@ -627,24 +699,29 @@ fn validate_invocation(
     if invocation.purpose == ExecutionPurpose::CandidateBuild && invocation.artifacts.is_empty() {
         return Err(invalid("candidate build must produce an artifact"));
     }
-    for value in invocation
+    for (argument_index, value) in invocation
         .arguments
         .iter()
-        .chain(invocation.environment.values())
+        .enumerate()
+        .map(|(index, value)| (Some(index), value))
+        .chain(invocation.environment.values().map(|value| (None, value)))
     {
+        // Naming the candidate artifact is not executing the controller. Keep
+        // every actual self invocation forbidden, including renamed binaries.
+        let candidate_binary_name = argument_index.is_some_and(|index| {
+            name == "cargo"
+                && index > 0
+                && invocation.arguments.first() == Some(&Value::Literal("build".into()))
+                && invocation.arguments[index - 1] == Value::Literal("--bin".into())
+        });
         match value {
             Value::Literal(value)
                 if value.contains('\0')
                     || matches!(
                         value.as_str(),
-                        "validate"
-                            | "validate.run"
-                            | "decapod"
-                            | "publish"
-                            | "deploy"
-                            | "push"
-                            | "upload"
-                    ) =>
+                        "validate" | "validate.run" | "publish" | "deploy" | "push" | "upload"
+                    )
+                    || (value == "decapod" && !candidate_binary_name) =>
             {
                 return Err(invalid(
                     "recursive validation/publication or malformed argument",
@@ -681,6 +758,217 @@ fn expand(value: &Value, scratch: &Path) -> std::ffi::OsString {
         Value::Literal(v) => v.into(),
         Value::ScratchPath(v) => scratch.join(v).into_os_string(),
     }
+}
+
+fn execute_commands(
+    invocation: &Invocation,
+    snapshot: &OwnedExecutionSnapshot,
+    scratch: &Path,
+    budget: &mut Budget<'_>,
+    remaining_output: usize,
+    expected_toolchain: &str,
+) -> io::Result<(ProcessCapture, Vec<StepDiagnostic>, Option<String>)> {
+    let started = Instant::now();
+    let deadline = started
+        .checked_add(
+            budget
+                .remaining()?
+                .min(Duration::from_millis(invocation.timeout_ms)),
+        )
+        .ok_or_else(|| invalid("native check deadline overflow"))?;
+    let mut captured: Option<ProcessCapture> = None;
+    let mut steps = Vec::new();
+    let mut execution_error = None;
+    let first = InvocationStep {
+        program: invocation.program.clone(),
+        arguments: invocation.arguments.clone(),
+        directory: invocation.directory.clone(),
+        environment: invocation.environment.clone(),
+    };
+    // One allowance for the whole check, rather than one fresh allowance per
+    // command. BoundedCommand's ceiling is per stream, so retain that distinction.
+    let stream_limit = invocation.output_limit.min(remaining_output / 2);
+    for (index, step) in std::iter::once(&first)
+        .chain(&invocation.following)
+        .enumerate()
+    {
+        if let Some(previous) = &mut captured {
+            if budget.cancel.is_cancelled() {
+                previous.termination = Termination::Cancelled;
+                break;
+            }
+            if Instant::now() >= deadline {
+                previous.termination = Termination::TimedOut;
+                break;
+            }
+        }
+        let used = captured.as_ref().map_or(0, |previous| {
+            previous
+                .output
+                .stdout
+                .len()
+                .max(previous.output.stderr.len())
+        });
+        let Some(allowance) = stream_limit.checked_sub(used).filter(|n| *n > 0) else {
+            if let Some(previous) = &mut captured {
+                previous.termination = Termination::OutputLimit;
+                break;
+            }
+            return Err(invalid("native check output budget exhausted"));
+        };
+        let step_started = Instant::now();
+        let next = (|| -> io::Result<ProcessCapture> {
+            // Both callers measure immediately before entry. Recheck between
+            // commands without adding another closure pass to existing single
+            // commands and consuming their historical hashing allowance.
+            if index > 0 && measured_toolchain(invocation, budget)? != expected_toolchain {
+                return Err(invalid("sequence tool changed after preflight"));
+            }
+            // Hashing and preparation consume the original deadline too.
+            let timeout = budget
+                .remaining()?
+                .min(deadline.saturating_duration_since(Instant::now()));
+            if timeout.is_zero() {
+                return Err(io::Error::new(
+                    io::ErrorKind::TimedOut,
+                    "native check deadline exceeded",
+                ));
+            }
+            let mut command = Command::new(&step.program);
+            command
+                .current_dir(contained(&snapshot.root, &step.directory, true)?)
+                .env_clear();
+            for argument in &step.arguments {
+                command.arg(expand(argument, scratch));
+            }
+            for (key, value) in &step.environment {
+                command.env(key, expand(value, scratch));
+            }
+            command
+                .env("TMPDIR", scratch)
+                .env("TMP", scratch)
+                .env("TEMP", scratch)
+                .env("DECAPOD_NATIVE_PROOF_ACTIVE", "1");
+            command.bounded_capture(
+                ProcessLimits {
+                    timeout,
+                    max_output_bytes: allowance,
+                },
+                budget.cancel,
+            )
+        })();
+        let next = match next {
+            Ok(next) => next,
+            Err(cause) => {
+                if captured.is_none() {
+                    return Err(cause);
+                }
+                let message = cause.to_string();
+                steps.push(StepDiagnostic {
+                    index,
+                    duration_ms: step_started.elapsed().as_millis(),
+                    termination: "PreparationOrSpawnFailed".into(),
+                    exit_code: None,
+                    stdout_digest: format!("sha256:{:x}", Sha256::digest([])),
+                    stderr_digest: format!("sha256:{:x}", Sha256::digest([])),
+                    error: Some(message.clone()),
+                });
+                execution_error = Some(message);
+                break;
+            }
+        };
+        steps.push(StepDiagnostic {
+            index,
+            duration_ms: next.duration.as_millis(),
+            termination: format!("{:?}", next.termination),
+            exit_code: next.output.status.code(),
+            stdout_digest: format!("sha256:{:x}", Sha256::digest(&next.output.stdout)),
+            stderr_digest: format!("sha256:{:x}", Sha256::digest(&next.output.stderr)),
+            error: None,
+        });
+        let succeeded = next.termination == Termination::Exited && next.output.status.success();
+        if let Some(previous) = &mut captured {
+            previous.output.status = next.output.status;
+            previous.output.stdout.extend(next.output.stdout);
+            previous.output.stderr.extend(next.output.stderr);
+            previous.termination = next.termination;
+        } else {
+            captured = Some(next);
+        }
+        if !succeeded {
+            break;
+        }
+    }
+    let mut captured = captured.ok_or_else(|| invalid("native check executed no commands"))?;
+    captured.duration = started.elapsed();
+    Ok((captured, steps, execution_error))
+}
+
+/// Internal diagnostic seam for an incomplete source slice. It executes the
+/// same reviewed commands as the full runner but cannot produce SuiteEvidence
+/// or a readiness verdict. The caller owns the TempDir and source recaptures.
+pub(crate) struct InvocationCapture {
+    pub capture: ProcessCapture,
+    pub steps: Vec<StepDiagnostic>,
+    pub error: Option<String>,
+    pub toolchain_digest: String,
+}
+
+pub(crate) fn capture_diagnostic(
+    invocation: &Invocation,
+    inputs: &IdentityInputs,
+    snapshot: &OwnedExecutionSnapshot,
+    scratch: &tempfile::TempDir,
+    limits: SuiteLimits,
+    cancel: &Cancellation,
+) -> io::Result<InvocationCapture> {
+    if std::env::var_os("DECAPOD_NATIVE_PROOF_ACTIVE").is_some() {
+        return Err(invalid(
+            "recursive native diagnostic execution is forbidden",
+        ));
+    }
+    if limits.timeout.is_zero() || limits.max_output_bytes < 2 {
+        return Err(invalid("invalid native diagnostic budget"));
+    }
+    let mut budget = Budget {
+        deadline: Instant::now()
+            .checked_add(limits.timeout)
+            .ok_or_else(|| invalid("native diagnostic deadline overflow"))?,
+        cancel,
+        remaining_bytes: limits.max_hashed_bytes,
+        git_program: inputs.git_program.clone(),
+        git_output_limit: limits.git_output_limit,
+    };
+    let self_digest = budget.hash_file(&std::env::current_exe()?.canonicalize()?)?;
+    validate_invocation(invocation, inputs, &mut budget, &self_digest)?;
+    let toolchain_digest = measured_toolchain(invocation, &mut budget)?;
+    let (capture, steps, mut error) = execute_commands(
+        invocation,
+        snapshot,
+        scratch.path(),
+        &mut budget,
+        limits.max_output_bytes,
+        &toolchain_digest,
+    )?;
+    match measured_toolchain(invocation, &mut budget) {
+        Ok(current) if current == toolchain_digest => {}
+        Ok(_) => {
+            error.get_or_insert_with(|| {
+                "native diagnostic toolchain changed during execution".into()
+            });
+        }
+        Err(cause) => {
+            error.get_or_insert_with(|| {
+                format!("native diagnostic toolchain recapture failed: {cause}")
+            });
+        }
+    }
+    Ok(InvocationCapture {
+        capture,
+        steps,
+        error,
+        toolchain_digest,
+    })
 }
 fn purpose(kind: CheckKind) -> Option<ExecutionPurpose> {
     match kind {
@@ -856,37 +1144,20 @@ pub fn run_native(
             std::process::id(),
             scratch.path().file_name().unwrap().to_string_lossy()
         );
-        let mut command = Command::new(&invocation.program);
-        command
-            .current_dir(contained(&snapshot.root, &invocation.directory, true)?)
-            .env_clear();
-        for argument in &invocation.arguments {
-            command.arg(expand(argument, scratch.path()));
-        }
-        for (key, value) in &invocation.environment {
-            command.env(key, expand(value, scratch.path()));
-        }
-        command
-            .env("TMPDIR", scratch.path())
-            .env("TMP", scratch.path())
-            .env("TEMP", scratch.path())
-            .env("DECAPOD_NATIVE_PROOF_ACTIVE", "1");
-        let timeout = budget
-            .remaining()?
-            .min(Duration::from_millis(invocation.timeout_ms));
         if remaining_output < 2 {
             let _ = scratch.close();
             failure = Some("suite output budget exhausted".into());
             break;
         }
-        let captured = command.bounded_capture(
-            ProcessLimits {
-                timeout,
-                max_output_bytes: invocation.output_limit.min(remaining_output / 2),
-            },
-            cancel,
+        let captured = execute_commands(
+            invocation,
+            snapshot,
+            scratch.path(),
+            &mut budget,
+            remaining_output,
+            &actual_tool_digest,
         );
-        let captured = match captured {
+        let (captured, steps, execution_error) = match captured {
             Ok(capture) => capture,
             Err(error) => {
                 let cleanup = scratch.close();
@@ -903,7 +1174,10 @@ pub fn run_native(
             Termination::Cancelled => Conclusion::Cancelled,
             Termination::TimedOut => Conclusion::TimedOut,
         };
-        let mut error = None;
+        let mut error = execution_error;
+        if error.is_some() {
+            conclusion = Conclusion::Failure;
+        }
         let mut artifact_digest = None;
         if conclusion == Conclusion::Success && !invocation.artifacts.is_empty() {
             let mut artifacts = BTreeMap::new();
@@ -943,6 +1217,10 @@ pub fn run_native(
             output_hash.update((stream.len() as u64).to_be_bytes());
             output_hash.update(stream);
         }
+        if !invocation.following.is_empty() {
+            output_hash.update(b"native-sequence-v1\0");
+            output_hash.update(serde_json::to_vec(&steps).map_err(io::Error::other)?);
+        }
         let output_digest = format!("sha256:{:x}", output_hash.finalize());
         results.push(CheckResult {
             key: check.key.clone(),
@@ -966,6 +1244,7 @@ pub fn run_native(
             stdout: captured.output.stdout,
             stderr: captured.output.stderr,
             error,
+            steps,
         });
         done.insert(check.key.clone());
         if conclusion != Conclusion::Success {
