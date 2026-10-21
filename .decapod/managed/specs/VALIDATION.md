@@ -2,6 +2,27 @@
 
 ## Validation Overview
 
+Validation binds the actual candidate, accepted target, required check graph,
+toolchains, executed results and artifacts before publication. Agents repair
+nonzero results and retain their history; the human retains merge authority.
+An enabled required Vega condition follows successful deterministic proof and
+cannot override missing, stale or failed checks.
+
+### Current release-parity work
+
+Accepted #1460, #1462 and #1464 are preserved through official v0.121.0. The
+current release changes require byte-exact native worker lock projection from
+the real generated manifest, unsafe-link and failure-state regressions, matching
+immutable production tool setup, and isolation of prepared next-version source
+from the checkout used for publishing. Full ordinary source checks remain
+required; only an exact root-version and applicable worker-version delta can
+qualify as version-only, with the existing candidate-build and reuse rules.
+The repository now selects the existing strict Buildkite artifact collector;
+current execution evidence must verify before this stronger selection is called
+passing. Actual release-plz transformation and all four cargo-dist archives remain
+distinct execution obligations. Source CI, fixtures and the new declarations do
+not establish that missing derived-release proof.
+
 ### Current acceptance: active functional integration, 2026-10-20
 
 The maintainer explicitly replaces the implementation-added statistical
@@ -803,8 +824,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `cbf2117766d2962ebe1f5ea14a281f0a00edb50dc8207d3dc8888a059ea99a10`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `docs/` (1 files), `src/` (210 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
