@@ -62,6 +62,29 @@ The private evaluation corpus and input receipt use v2 for the pre-execution add
 
 The standalone `--evaluate-readiness --split holdout --backend auto --proof-output` command is now historical v2 diagnostic evaluation, not an untouched final holdout. The configured eight-run recipe retains numerical collection, six final-admission collection slots and a mandatory aggregate, all with fresh kernel proof paths. Numerical collection additionally calls the real native worker on fixed production-protocol development fixtures through shared projection and `Response::validated_outcome`. Constructed observations are explicit and supply no independent labels. The final slots bind the reviewed source-admission ledger and report zero admitted production units, without rerunning exposed v2. The aggregate independently rechecks numerical exports and remains non-ready while the required production study is missing. Old v2 code, hashes and failed results remain intact; risk/coverage, token limits, model/calibration and kernel deadlines are unchanged. See `docs/vega-reference-contract.md` for exact prior numerical measurements and `docs/vega-completion-checklist.md` for current proof gaps.
 
+## Reviewed native sequence interface
+
+`native_proof::Invocation.following` is an ordered vector of explicit native
+programs, arguments, working directories and environments, not a deserializable
+command authority. It is omitted from serialization when empty, preserving
+existing single-command invocation digests. The complete check is bounded to
+64 commands. Every successor undergoes the same executable, argument, environment,
+platform and recursion checks as the first command. Artifacts are verified only
+after all commands succeed in their shared owned scratch directory.
+`CheckDiagnostic.steps` retains each attempted step's exit/termination, duration,
+output hashes and preparation/spawn failure. A changed later tool preserves
+earlier execution diagnostics while making the check fail. These observations
+remain execution evidence; they neither select the required graph nor override
+missing platform or policy obligations.
+
+`toolchain_digest_bounded` accepts the caller's remaining time and cancellation
+while retaining the original 15-second/1-GiB measurement ceiling. Repository
+proof seals retain the originating deadline and cancellation token; expired or
+cancelled seals cannot authorize another measurement. The CLI subtracts native
+discovery time before entering the readiness runtime. Declared invocation limits
+remain stable across final re-selection; execution still uses the lesser of
+that limit and the original remaining budget.
+
 ## Human and agent entrypoints
 
 The separate scientific worker validates its own ephemeral nonce format locally (sha256: plus64lowercase hexadecimal digits). It does not call or expose the main crate's private model-installation digest helper. Candidate4cdcd25d native compilation rejected that cross-crate call with E0603 before any new test or model execution; repair preserves the abstraction boundary and leaves all receipt/acceptance checks intact. A canonical nonce detects malformed bookkeeping, not authenticated global ownership.
@@ -628,7 +651,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6a2c7916aa413e169ccb9bd652a0b43cb3a5db256a487f2e3dfe5250f546ada8`
+- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
