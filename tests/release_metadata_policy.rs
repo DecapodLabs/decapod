@@ -91,6 +91,35 @@ fn version_only_squash_push_and_pr_are_slim() {
 }
 
 #[test]
+fn worker_lock_projection_is_required_and_cannot_hide_runtime_changes() {
+    for variant in ["exact", "stale", "runtime-change"] {
+        let repo = Repo::new();
+        let path = "assets/tools/vega-native/Cargo.lock";
+        fs::create_dir_all(repo.0.join("assets/tools/vega-native")).unwrap();
+        fs::copy(repo.0.join("Cargo.lock"), repo.0.join(path)).unwrap();
+        let base = repo.commit("worker lock baseline");
+        repo.version("0.107.3");
+        if variant != "stale" {
+            fs::copy(repo.0.join("Cargo.lock"), repo.0.join(path)).unwrap();
+        }
+        if variant == "runtime-change" {
+            repo.replace(path, "checksum = \"unchanged\"", "checksum = \"changed\"");
+        }
+        let head = repo.commit("actual release projection");
+        assert_eq!(
+            repo.classified("push", &base, &head),
+            variant == "exact",
+            "{variant}"
+        );
+        assert_eq!(
+            repo.classified("pull_request", &base, &head),
+            variant == "exact",
+            "{variant}"
+        );
+    }
+}
+
+#[test]
 fn normal_merge_uses_pre_push_base_not_final_parent() {
     let repo = Repo::new();
     let base = repo.git(&["rev-parse", "HEAD"]);
