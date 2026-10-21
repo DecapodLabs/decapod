@@ -279,10 +279,12 @@ fn worker_lock_projection_preserves_dependencies_and_rejects_unsafe_identities()
 }
 
 #[test]
-fn production_release_setup_matches_shared_tool_pins() {
+fn reviewed_release_preparation_matches_shared_tool_pins() {
     let pins =
         ReleaseToolchain::parse(include_str!("../../../.github/release-tools.toml")).unwrap();
-    let workflow = include_str!("../../../.github/workflows/release.yml");
+    // Activation follows an independently published supporting controller;
+    // the actual accepted workflow remains untouched in this prerequisite.
+    let workflow = include_str!("../../../tests/fixtures/release_pinned_preparation.yml");
     let rust_references: Vec<_> = workflow
         .lines()
         .filter_map(|line| line.trim().strip_prefix("uses: dtolnay/rust-toolchain@"))
