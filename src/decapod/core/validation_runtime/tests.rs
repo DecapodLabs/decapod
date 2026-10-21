@@ -229,13 +229,8 @@ fn accepted_executor_fixture() -> Fixture {
             include_bytes!("../../../../.github/workflows/security-audit.yml").as_slice(),
         ),
     ] {
-        assert_eq!(
-            profile::reviewed_workflow_digests()
-                .iter()
-                .find(|(known, _)| *known == path)
-                .unwrap()
-                .1,
-            hash(bytes),
+        assert!(
+            profile::reviewed_workflow_matches(path, &hash(bytes)),
             "fixture must use the reviewed workflow: {path}",
         );
         write_source(&fixture, path, bytes);
