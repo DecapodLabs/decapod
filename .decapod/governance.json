@@ -973,6 +973,17 @@
         "/private/tmp/decapod-01210-release-final-profile.log",
         "/private/tmp/decapod-01210-release-final-runtime.log"
       ]
+    },
+    {
+      "id": "release-support-recovery-12",
+      "summary": "Preserve unsupported-controller failure and ship independently validated exact variant support before workflow activation; dedicate this commit to .github/workflows/release.yml plus mandatory governance.",
+      "input_digest": "sha256:9047fc2742dec17c5873c20f542306f5315bfebd39dde108bb2c6b7aef4dda06",
+      "proof_refs": [
+        "/private/tmp/decapod-01210-real-preparation-1/diagnostic.json",
+        "/private/tmp/decapod-01210-release-final-policy.log",
+        "/private/tmp/decapod-01210-release-final-profile.log",
+        "/private/tmp/decapod-01210-release-final-runtime.log"
+      ]
     }
   ],
   "intents": {
