@@ -103,15 +103,58 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.96.1
 
-      - name: Run release-plz (GitHub Actions)
-        uses: release-plz/action@v0.5
+      - name: Install pinned release preparation tools
+        uses: cargo-bins/cargo-binstall@c06f6a0003f7c6165a00c89d1697731c9e8a5c72
+        env:
+          BINSTALL_VERSION: 1.25.2
+
+      - name: Install pinned semver checks
+        uses: taiki-e/install-action@ab6895351a88b908e96a4697860d4ffea5e57dbe
         with:
+          tool: cargo-semver-checks@0.51
+
+      - name: Prepare isolated release PR source
+        id: release-pr-source
+        env:
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+        run: |
+          set -euo pipefail
+          cargo binstall release-plz@0.3.171 --strategies=crate-meta-data,compile --no-confirm
+          cargo build --locked --no-default-features --features build-tools --bin decapod-release-native-lock
+          candidate_parent=$(mktemp -d "$RUNNER_TEMP/decapod-release-pr.XXXXXX")
+          candidate="$candidate_parent/source"
+          git clone --no-local --no-hardlinks -- "$GITHUB_WORKSPACE" "$candidate"
+          test "$(git -C "$candidate" rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C "$candidate" symbolic-ref --short HEAD)" = master
+          git -C "$candidate" remote set-url origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          cd "$candidate"
+          release-plz update --config .github/release.toml --manifest-path Cargo.toml --release-date "$(date -u +%F)" --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          "$GITHUB_WORKSPACE/target/debug/decapod-release-native-lock"
+          printf 'manifest_path=%s\n' "$candidate/Cargo.toml" >> "$GITHUB_OUTPUT"
+
+      - name: Create release PR from isolated prepared source
+        uses: release-plz/action@f393a7b38aca9d9b4c58447b291dbac963901df6
+        with:
+          version: "0.3.171"
           config: .github/release.toml
-          # An empty command preserves the action's release-pr, then release
-          # sequence on pushes. Recovery dispatches can request only the PR.
-          command: ${{ github.event_name == 'workflow_dispatch' && inputs.release_pr_only && 'release-pr' || '' }}
+          command: release-pr
+          manifest_path: ${{ steps.release-pr-source.outputs.manifest_path }}
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+
+      # Preserve release-pr then release ordering, while the publishing command
+      # sees only the original accepted checkout, never the prepared next version.
+      - name: Publish original accepted release source
+        if: github.event_name != 'workflow_dispatch' || !inputs.release_pr_only
+        uses: release-plz/action@f393a7b38aca9d9b4c58447b291dbac963901df6
+        with:
+          version: "0.3.171"
+          config: .github/release.toml
+          command: release
+          manifest_path: ${{ github.workspace }}/Cargo.toml
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
