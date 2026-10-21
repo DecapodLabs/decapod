@@ -622,6 +622,17 @@
         "/private/tmp/decapod-01210-release-helper-execution.log",
         "/private/tmp/decapod-01210-release-policy-focused-1.log"
       ]
+    },
+    {
+      "id": "release-parity-15",
+      "summary": "Current release-parity component: commit only CODEX.md plus mandatory governance; companion changes are preserved separately; focused evidence does not establish four-platform packaging or final readiness.",
+      "input_digest": "sha256:112141e2b0a5a3ff21ab616f733c52eb2e47fe38a7716510b927337ee7d783ea",
+      "proof_refs": [
+        "/private/tmp/decapod-01210-release-final-driver.log",
+        "/private/tmp/decapod-01210-release-final-fmt.log",
+        "/private/tmp/decapod-01210-release-helper-execution.log",
+        "/private/tmp/decapod-01210-release-policy-focused-1.log"
+      ]
     }
   ],
   "intents": {
