@@ -7,6 +7,8 @@
 use std::path::Path;
 use std::process::Command;
 
+pub const NATIVE_WORKER_LOCK: &str = "assets/tools/vega-native/Cargo.lock";
+
 fn git(repo: &Path, args: &[&str]) -> Result<String, String> {
     let output = Command::new("git")
         .arg("-C")
@@ -132,6 +134,39 @@ pub(crate) fn version_only_lock(before: &str, after: &str, old: &str, new: &str)
     lines.concat() == after
 }
 
+/// Project the real manifest version into the separate worker's local path
+/// package record. This never resolves dependencies or predicts a version.
+/// All other lock bytes, including every external model/runtime pin, survive.
+pub fn align_path_dependency_lock(manifest: &str, lock: &str) -> Result<String, String> {
+    let new = manifest_version(manifest).ok_or("noncanonical Decapod package version")?;
+    let lines: Vec<_> = lock.split_inclusive('\n').collect();
+    let old = lines
+        .windows(3)
+        .find(|row| {
+            row[0].trim_end_matches('\n') == "[[package]]"
+                && row[1].trim_end_matches('\n') == "name = \"decapod\""
+        })
+        .and_then(|row| quoted_version(row[2].trim_end_matches('\n')))
+        .ok_or("missing canonical Decapod path package in worker lock")?;
+    let index = lock_root_version_line(lock, old)
+        .ok_or("ambiguous or nonlocal Decapod package in worker lock")?;
+    if stable_version(old) > stable_version(new) {
+        return Err("worker lock is newer than the actual manifest; refusing downgrade".into());
+    }
+    let mut updated: Vec<_> = lines.iter().map(|line| (*line).to_owned()).collect();
+    let newline = if lines[index].ends_with('\n') {
+        "\n"
+    } else {
+        ""
+    };
+    updated[index] = format!("version = \"{new}\"{newline}");
+    let updated = updated.concat();
+    if !version_only_lock(lock, &updated, old, new) {
+        return Err("worker lock projection changed unrelated bytes".into());
+    }
+    Ok(updated)
+}
+
 fn is_commit_id(value: &str) -> bool {
     matches!(value.len(), 40 | 64)
         && value.bytes().all(|byte| byte.is_ascii_hexdigit())
@@ -236,7 +271,12 @@ pub fn classify(repo: &Path, event: &str, base: &str, head: &str) -> Result<bool
         let [status, path] = change else {
             unreachable!()
         };
-        if *status != "M" || !matches!(*path, "Cargo.toml" | "Cargo.lock" | "CHANGELOG.md") {
+        if *status != "M"
+            || !matches!(
+                *path,
+                "Cargo.toml" | "Cargo.lock" | "CHANGELOG.md" | NATIVE_WORKER_LOCK
+            )
+        {
             return Ok(false);
         }
         regular_blob(repo, &comparison_base, path)?;
@@ -253,10 +293,36 @@ pub fn classify(repo: &Path, event: &str, base: &str, head: &str) -> Result<bool
     ) else {
         return Ok(false);
     };
-    Ok(version_only_lock(
+    if !version_only_lock(
         &blob(&comparison_base, "Cargo.lock")?,
         &blob(head, "Cargo.lock")?,
         &old,
         &new,
-    ))
+    ) {
+        return Ok(false);
+    }
+    let native_lock = git(
+        repo,
+        &[
+            "ls-tree",
+            "--name-only",
+            &comparison_base,
+            "--",
+            NATIVE_WORKER_LOCK,
+        ],
+    )?;
+    if !native_lock.trim().is_empty() {
+        if native_lock.trim() != NATIVE_WORKER_LOCK || !paths.contains(&NATIVE_WORKER_LOCK) {
+            return Ok(false);
+        }
+        if !version_only_lock(
+            &blob(&comparison_base, NATIVE_WORKER_LOCK)?,
+            &blob(head, NATIVE_WORKER_LOCK)?,
+            &old,
+            &new,
+        ) {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
