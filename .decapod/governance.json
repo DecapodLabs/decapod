@@ -1124,6 +1124,16 @@
         "/private/tmp/decapod-01210-release-strict-policy-regressions.log",
         "/private/tmp/decapod-01210-release-validation-20261022T000220Z.json"
       ]
+    },
+    {
+      "id": "release-ci-repair-4",
+      "summary": "Repair actual Buildkite 2437 failures while preserving strict custody: .decapod/managed/specs/ARCHITECTURE.md is the only material path; historical optional policy remains tested, current stronger policy remains required.",
+      "input_digest": "sha256:888fba361c0304edee57e94945993285cb48ce9d4ec61ae6c5aaea383f2561bc",
+      "proof_refs": [
+        "/private/tmp/decapod-01210-release-policy-repair-fmt.log",
+        "/private/tmp/decapod-01210-release-strict-policy-regressions.log",
+        "/private/tmp/decapod-01210-release-validation-20261022T000220Z.json"
+      ]
     }
   ],
   "intents": {
