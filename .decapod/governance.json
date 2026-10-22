@@ -527,6 +527,15 @@
         "/private/tmp/decapod-01210-artifact-host-focused.log",
         "/private/tmp/decapod-01210-artifact-host-live.log"
       ]
+    },
+    {
+      "id": "artifact-host-8",
+      "summary": "Record security for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
+      "input_digest": "sha256:c66d08a20ca9262f372ae78d348312cf7140c943348ed6201e98d7daac5d0f0e",
+      "proof_refs": [
+        "/private/tmp/decapod-01210-artifact-host-focused.log",
+        "/private/tmp/decapod-01210-artifact-host-live.log"
+      ]
     }
   ],
   "intents": {
