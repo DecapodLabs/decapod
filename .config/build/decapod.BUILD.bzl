@@ -135,6 +135,7 @@ def decapod_targets():
         + native.glob(["src/decapod/core/snapshot_provider/source_execution/*.json"])
         # Public metadata regression fixtures and the authored policy they check.
         + native.glob(["src/decapod/core/snapshot_provider/public_buildkite/ci_attested/fixtures/*.json"])
+        + ["src/decapod/core/snapshot_provider/public_buildkite/ci_attested/fixtures/legacy-activation.toml"]
         + [".decapod/config.toml"]
         # The controller embeds the complete reviewed carrier, and runtime
         # admission fixtures materialize the same workflow bytes. Keep these

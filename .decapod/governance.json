@@ -1094,6 +1094,16 @@
         "/private/tmp/decapod-01210-release-final-profile.log",
         "/private/tmp/decapod-01210-release-final-runtime.log"
       ]
+    },
+    {
+      "id": "release-ci-repair-1",
+      "summary": "Repair actual Buildkite 2437 failures while preserving strict custody: .config/build/decapod.BUILD.bzl is the only material path; historical optional policy remains tested, current stronger policy remains required.",
+      "input_digest": "sha256:af2697237c5cbfdc5ba037974405451ed43eafb69f7f95089d01ff0652deb4d7",
+      "proof_refs": [
+        "/private/tmp/decapod-01210-release-policy-repair-fmt.log",
+        "/private/tmp/decapod-01210-release-strict-policy-regressions.log",
+        "/private/tmp/decapod-01210-release-validation-20261022T000220Z.json"
+      ]
     }
   ],
   "intents": {
@@ -1134,22 +1144,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed same source graph and byte-identical downstream matrix for the exact pinned preparation variant; accepted workflow retained for controller validation; no unmerged self-authorization.",
-          "reviewed_code_fingerprint": "27b60880e597034f38ea4ee505e562e469d8607835913b3f3c1786e1b3ccaea3",
-          "spec_material_hash": "67a90fc8fd9378511b3166e72f0c3b71ffdaeeb7102e460a1b8cc81e9f8cd706"
+          "reason": "Restored explicit current Direction without misrepresenting historical snapshots; current finite workflow support and stricter custody remain unchanged.",
+          "reviewed_code_fingerprint": "518ec713a68a5bce90ca86b4ef9b9773b9e0a6fc9ba3fb20a78378f8271cb04d",
+          "spec_material_hash": "a6e03bc876b27c4b950c659a4baf4d08baf8b94afa2b53e28a65ed35c0e6b993"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed exact finite workflow variant, current accepted active workflow, shared maintenance/driver operation and required independent activation; malformed or unavailable proof still blocks.",
-          "reviewed_code_fingerprint": "27b60880e597034f38ea4ee505e562e469d8607835913b3f3c1786e1b3ccaea3",
+          "reason": "The CI repair preserves all production interfaces, exact variant admission, strict active custody and independent release-before-activation boundary.",
+          "reviewed_code_fingerprint": "518ec713a68a5bce90ca86b4ef9b9773b9e0a6fc9ba3fb20a78378f8271cb04d",
           "spec_material_hash": "eecde1525f34b1b354cb226ded9efabf6c06ff2a2fc6e6a52b7c44442ab74f01"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Existing storage/link, source custody and bounded execution invariants remain; exact variant does not authorize unknown workflow bytes, model authority, publication side effects or earlier diagnostic evidence as current proof.",
-          "reviewed_code_fingerprint": "27b60880e597034f38ea4ee505e562e469d8607835913b3f3c1786e1b3ccaea3",
+          "reason": "Legacy optional-policy bytes are a versioned test fixture only; strict step/artifact verification remains required by current config and regressions; no authority or link safety changes.",
+          "reviewed_code_fingerprint": "518ec713a68a5bce90ca86b4ef9b9773b9e0a6fc9ba3fb20a78378f8271cb04d",
           "spec_material_hash": "e2a6cf917db9f3e30d269ce21a44fd934b66fc9083826cdf37107bca00aa8403"
         }
       ],
@@ -1161,21 +1171,23 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792622237Z"
+      "updated_at": "1792630206Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Actual release workflow retained; platform packaging and full parent issue completion remain open",
         "Current claimed task and isolated work branch",
         "Dependency-sized current PR retains broader parent obligations; no full issue closure or actual packaging claim",
+        "Nine metadata compatibility/strict-selection regressions pass; restore architecture Direction without replacing historical snapshots; full current-candidate proof remains required",
         "No unmerged controller authorizes its own workflow; accepted workflow retained; exact reviewed variant ships as controller support before activation",
+        "Preserve real 37/39 source-job result; repair required architecture heading and retain legacy metadata compatibility coverage separately from stricter active policy; no source or native gate waived",
         "Preserve release-pr then release order using two official pinned action calls. Only the private cloned release-PR source is updated/projected; publishing retains the original accepted checkout. The pinned upstream release-pr implementation copies allowed dirty tracked changes before generation, so no unsupported hook or new GitHub writer is needed.",
         "Required #1070 hosted evidence will use the shipped default strict Buildkite importer rather than the optional metadata-only CI-attested policy. This selects existing stronger raw artifact, measured step and source/R/H custody verification; keep the same provider, candidate branch, required graph, native worker recipe and final gate.",
         "Supported todo.get from both root and workspace confirmed the same canonical store and existing open unassigned code_01m5ez322h6hw829 after initialization reported a claim conflict. Reclaimed the SAME task and original intent anchor under codex-delivery-parity; branch, plan and journal preserved. No database edits, transfer replay or replacement ownership.",
         "The earlier trajectory reference ending upstream-release-plz-source-tree.json was a filename typo, not execution evidence; use decapod-01210-release-plz-source-tree.json, the independently fetched pinned upstream tree.",
         "V0.121.0 official published binary installed; original tasks and PR1464 preserved. Actual workflow floating action selects release-plz0.3.173 while shared pins require0.3.171; pinned upstream f393a7b defaults to0.3.171. Native child lock currently lags root0.121.0. No generated update hook exists in the pinned upstream schema; do not invent one."
       ],
-      "artifact_hash": "sha256:f769e730f27748e033bb2a7dc67e6b0ee93ea4cf0dece2ab8b4b3934e8739ec8",
+      "artifact_hash": "sha256:a2168de1905b13d822ca0dcff82f0f3ca23de80a2a36a31d50a8c97c0b27dcb0",
       "checks": [
         {
           "name": "exact-candidate-validation",
@@ -1214,11 +1226,19 @@
           "status": "passed"
         },
         {
+          "name": "source-buildkite-2437",
+          "status": "failed"
+        },
+        {
+          "name": "strict-policy-compatibility",
+          "status": "passed"
+        },
+        {
           "name": "supported-profile",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -1274,10 +1294,24 @@
             "intent_id": "intent:change_01M5EZ5XWEQ3PZ6VQCVV54SK2E",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M5EZ5XZMDXH6A56M3E2M1NT7",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M5EZ5XWEQ3PZ6VQCVV54SK2E",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M5EZ5XZMDXH6A56M3E2M1NT7",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M5EZ5XWEQ3PZ6VQCVV54SK2E",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M5EZ5XZMDXH6A56M3E2M1NT7": {
@@ -1396,6 +1430,38 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "/private/tmp/decapod-01210-release-validation-20261022T000220Z.json",
+                  "/private/tmp/decapod-01210-buildkite-2437-health.log",
+                  "/private/tmp/decapod-01210-buildkite-2437-supabase.log"
+                ],
+                "proof_refs": [
+                  "source-buildkite-2437"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "/private/tmp/decapod-01210-release-strict-policy-regressions.log"
+                ],
+                "proof_refs": [
+                  "strict-policy-compatibility"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -1404,6 +1470,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/decapod-01210-buildkite-2437-health.log",
+        "/private/tmp/decapod-01210-buildkite-2437-supabase.log",
         "/private/tmp/decapod-01210-native-locked-metadata.json",
         "/private/tmp/decapod-01210-official-release.json",
         "/private/tmp/decapod-01210-real-preparation-1/diagnostic.json",
@@ -1416,8 +1484,10 @@
         "/private/tmp/decapod-01210-release-final-runtime.log",
         "/private/tmp/decapod-01210-release-helper-execution.log",
         "/private/tmp/decapod-01210-release-plz-source-tree.json",
+        "/private/tmp/decapod-01210-release-strict-policy-regressions.log",
         "/private/tmp/decapod-01210-release-supported-init.log",
         "/private/tmp/decapod-01210-release-validation-20261021T213703Z.json",
+        "/private/tmp/decapod-01210-release-validation-20261022T000220Z.json",
         "/private/tmp/decapod-01210-upstream-release-plz-source-tree.json",
         "/private/tmp/decapod-01210-upstream-release-pr.rs",
         "/private/tmp/decapod-1201-pinned-release-action.yml",
