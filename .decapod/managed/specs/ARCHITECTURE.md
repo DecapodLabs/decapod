@@ -7,6 +7,15 @@ structured RPC. It connects human intent, project authority, coordinated
 execution, and evidence in repository-owned state. Each invocation is finite;
 the repository carries the work between invocations.
 
+`snapshot_provider::public_buildkite::CurlPublicReader` retains its typed,
+anonymous GET authorization and bounded redirect loop. Artifact redirects admit
+the exact documented `https://buildkiteartifacts.com/` origin and legacy owned
+S3 bucket, then apply the same four-UUID layout, producer-job and safe object-path
+checks before following. Provider metadata and content hashes still bind the
+download. No arbitrary host, authentication, alternate downloader or new backend
+is introduced. This controller prerequisite keeps the accepted active evidence
+policy; the separate stricter rollout waits for independent controller release.
+
 Functional qualification and product permission remain distinct. Following the
 maintainer's delegated decision, the native reducer allows valid conservative
 abstention on a ready control while retaining the original expected-accept
@@ -558,7 +567,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
+- Repository signal fingerprint: `ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
