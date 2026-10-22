@@ -5,6 +5,15 @@ execution archives, or evidence that this candidate is publication-ready. The
 regressions run the production collector against an exact three-GET fake reader.
 Any artifact, log, redirect, duplicate request, or other URL is rejected.
 
+`legacy-activation.toml` preserves the optional provider-metadata policy from
+accepted v0.121.0 source `d05c43746830c4829f54f23c339ebcdce40a68fb`. It contains
+only the historical proof setting and five exact workflow policies, without
+session, machine or authentication state. Its regression still checks the entire
+independently frozen catalog. The repository now selects the existing strict
+preparation/step/artifact collector; a separate current-configuration regression
+prevents accidentally reactivating metadata-only proof. Neither fixture proves
+hosted execution or current-candidate readiness.
+
 ## Provider sources
 
 The original inputs came from these public Buildkite metadata routes, without
