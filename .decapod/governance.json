@@ -1224,6 +1224,16 @@
         "/private/tmp/decapod-01210-release-strict-policy-regressions.log",
         "/private/tmp/decapod-01210-release-validation-20261022T000220Z.json"
       ]
+    },
+    {
+      "id": "release-ci-repair-14",
+      "summary": "Repair actual Buildkite 2437 failures while preserving strict custody: src/decapod/core/snapshot_provider/public_buildkite/ci_attested/fixtures/legacy-activation.toml is the only material path; historical optional policy remains tested, current stronger policy remains required.",
+      "input_digest": "sha256:8b8b118bc180d2cd0e70005bccd71e47afb269d92ac9193a605c8a0348b45b11",
+      "proof_refs": [
+        "/private/tmp/decapod-01210-release-policy-repair-fmt.log",
+        "/private/tmp/decapod-01210-release-strict-policy-regressions.log",
+        "/private/tmp/decapod-01210-release-validation-20261022T000220Z.json"
+      ]
     }
   ],
   "intents": {
