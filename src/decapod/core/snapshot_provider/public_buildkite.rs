@@ -287,7 +287,9 @@ impl CurlPublicReader {
         })
     }
 }
-/// Only the observed Buildkite-owned S3 bucket layout is supported. Validation
+/// Only Buildkite's documented artifact host and legacy owned S3 bucket layout
+/// are supported. https://buildkite.com/docs/agent/self-hosted/security/network-requirements
+/// Both retain the same producer-bound object path. Validation
 /// runs before issuing the redirected GET. Query signatures remain opaque and
 /// are never included in errors, logs, authorization scopes or persisted state.
 fn validate_storage_redirect(request: &PublicRequest, location: &str) -> Result<()> {
@@ -303,6 +305,7 @@ fn validate_storage_redirect(request: &PublicRequest, location: &str) -> Result<
     )?;
     let relative = location
         .strip_prefix("https://s3.amazonaws.com/buildkiteartifacts.com/")
+        .or_else(|| location.strip_prefix("https://buildkiteartifacts.com/"))
         .ok_or_else(|| invalid("unsupported artifact storage destination"))?;
     let path = relative.split('?').next().unwrap();
     let parts: Vec<_> = path.split('/').collect();

@@ -733,20 +733,40 @@ fn redirects_are_validated_before_following_and_bound_to_exact_producer() {
     let valid = format!(
         "https://s3.amazonaws.com/buildkiteartifacts.com/{BUILD}/{PIPE}/{ISTEP}/{JOB}/.buildkite-gha/plans/file.json?opaque=signature"
     );
-    validate_storage_redirect(&request, &valid).unwrap();
-    for bad in [
-        valid.replace("s3.amazonaws.com", "evil.invalid"),
-        valid.replace("https://", "http://"),
-        valid.replace("s3.amazonaws.com/", "s3.amazonaws.com:444/"),
-        valid.replace("s3.amazonaws.com/", "name@s3.amazonaws.com/"),
-        valid.replace("buildkiteartifacts.com/", "another-bucket/"),
-        valid.replace(JOB, IMPORTER),
-        valid.replace("file.json", "../file.json"),
-        valid.replace("file.json", "%2e%2e/file.json"),
-        format!("{valid}#fragment"),
-    ] {
-        assert!(validate_storage_redirect(&request, &bad).is_err());
+    let current = valid.replace(
+        "https://s3.amazonaws.com/buildkiteartifacts.com/",
+        "https://buildkiteartifacts.com/",
+    );
+    for valid in [valid.clone(), current] {
+        validate_storage_redirect(&request, &valid).unwrap();
+        for bad in [
+            valid.replace("https://", "http://"),
+            valid.replace("https://", "https://name@"),
+            valid.replace("https://", "https://evil.invalid/"),
+            valid.replace("buildkiteartifacts.com/", "buildkiteartifacts.com:444/"),
+            valid.replace(
+                "buildkiteartifacts.com/",
+                "buildkiteartifacts.com.evil.invalid/",
+            ),
+            valid.replace("buildkiteartifacts.com/", "another-bucket/"),
+            valid.replace(JOB, IMPORTER),
+            valid.replace(PIPE, "not-a-uuid"),
+            valid.replace("file.json", "../file.json"),
+            valid.replace("file.json", "%2e%2e/file.json"),
+            valid.replace("file.json", "%2f/file.json"),
+            format!("{valid}#fragment"),
+        ] {
+            assert!(validate_storage_redirect(&request, &bad).is_err(), "{bad}");
+        }
     }
+    assert!(
+        validate_storage_redirect(
+            &request,
+            &valid.replace("s3.amazonaws.com/", "s3.amazonaws.com:444/")
+        )
+        .is_err()
+    );
+    assert!(validate_storage_redirect(&request, "https://buildkiteartifacts.com/").is_err());
 }
 #[test]
 fn http_parser_rejects_ambiguous_locations_and_keeps_raw_body() {
@@ -757,6 +777,40 @@ fn http_parser_rejects_ambiguous_locations_and_keeps_raw_body() {
     assert_eq!(status, 200);
     assert!(location.is_none());
     assert_eq!(body, b"\x00binary\n");
+}
+
+/// Live compatibility diagnostic through the production reader, never imported
+/// into a validation receipt. The immutable producer/result hash comes from the
+/// public provider artifact inventory, independently of this implementation.
+#[cfg(unix)]
+#[test]
+#[ignore = "requires public Buildkite access; old provider artifact may expire"]
+fn live_documented_artifact_host_retains_exact_content_and_producer_binding() {
+    let route = "/organizations/decapodlabs/pipelines/decapod/builds/2442/jobs/01a16158-4cb1-428e-b73b-208b827a59d7/artifacts/01a1615b-1291-4514-9704-da711d502fe0";
+    let request = PublicRequest {
+        path: route.into(),
+        artifact_redirect: true,
+        log_redirect: None,
+    };
+    let curl = std::path::Path::new("/usr/bin/curl")
+        .canonicalize()
+        .unwrap();
+    let mut reader = CurlPublicReader::new(curl, move |request, _| {
+        ensure(
+            request.path == route,
+            "live diagnostic escaped its fixed artifact",
+        )
+    })
+    .unwrap();
+    let cancel = Cancellation::default();
+    let budget = Budget::new(Duration::from_secs(60), 16 * 1024, &cancel).unwrap();
+    let bytes = read_request(&mut reader, &request, &budget).unwrap();
+    assert_eq!(
+        hash(&bytes),
+        "sha256:08739aaaba96db1f10136d6cc2c8d73d9b7cb180740785f6704e67c5763c1edf"
+    );
+    assert_eq!(bytes.len(), 952);
+    assert_eq!(json(&bytes).unwrap()["result"], "success");
 }
 #[test]
 fn imported_source_archive_is_bound_to_manifest_site_digest_and_real_job() {

@@ -10,6 +10,13 @@ coordination, validation, and publication boundaries. Decapod exposes the state,
 constraints, evidence, and blockers that govern those transitions. Each CLI or
 RPC invocation is ephemeral; repository state preserves continuity between calls.
 
+The public Buildkite reader supports its documented exact HTTPS artifact origin
+and legacy owned S3 bucket without changing CLI/RPC or project configuration.
+Both routes enforce producer/path and content integrity restrictions. Signed
+queries remain opaque and private. Unknown origins, ports, userinfo, malformed
+producer identities, fragments and encoded traversal reject before transport.
+An opt-in live-reader diagnostic has no authority to populate validation receipts.
+
 The optional post-validation Vega request uses `validation-results.v3` in
 `core::vega_readiness::project`. It retains the plan's declared proof hooks,
 unknowns, human and deferred questions, stop conditions, contradictions and
@@ -651,7 +658,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
+- Repository signal fingerprint: `ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

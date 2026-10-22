@@ -7,7 +7,17 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
-The current follow-up preserves the accepted #1462 delivery and v0.120.1 release.
+The current follow-up repairs a demonstrated public Buildkite artifact-origin
+compatibility defect in the released v0.121.0 controller. Accept the documented
+exact HTTPS artifact host alongside the legacy bucket, preserving producer,
+path, checksum, output and deadline checks. This independently qualified
+controller prerequisite retains accepted master's existing source-bound CI API
+attestation policy and every required source/native check. The original stricter
+derived-release branch and its failed collection remain preserved until an
+independently supported release can resume them; this fix does not close the
+broader #1070/#1398/#779 or four-platform packaging requirements.
+
+Merged #1464 preserves the accepted #1462 delivery and v0.120.1 release.
 Its native execution changes extend the existing runner with reviewed finite
 command sequences, complete step evidence and original deadline/cancellation
 propagation. A successful first command cannot stand in for a later required
@@ -223,7 +233,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
+- Repository signal fingerprint: `ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

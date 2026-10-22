@@ -2,6 +2,17 @@
 
 ## Validation Overview
 
+The artifact-origin controller prerequisite uses the accepted source-bound CI API
+attestation policy, complete Buildkite catalog and unchanged eight-run Vega
+recipe. Adversarial Rust tests cover both exact storage origins and rejection of
+host/port/userinfo/producer/path substitutions. A separately opted-in live test
+uses the production reader for one fixed public producer artifact and verifies
+its independently observed provider SHA-256 and byte count. That diagnostic is
+not imported as execution custody or readiness evidence. The prior stricter
+rollout's failed `f475d078` report remains preserved; actual full strict collection
+awaits independent acceptance/release. No required deterministic/native gate or
+model tolerance is changed, and no broader umbrella is declared complete.
+
 ### Current acceptance: active functional integration, 2026-10-20
 
 The maintainer explicitly replaces the implementation-added statistical
@@ -803,7 +814,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3356808e6489c2f5aa9bcf1eb954f6b4d575c032849a5d1359e0123f2427e28c`
+- Repository signal fingerprint: `ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
