@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.121.1](https://github.com/DecapodLabs/decapod/compare/v0.121.0...v0.121.1) - 2026-10-22
+
+### Fixed
+
+- *(validation)* support the documented Buildkite artifact origin ([#1466](https://github.com/DecapodLabs/decapod/pull/1466))
+
 ## [0.121.0](https://github.com/DecapodLabs/decapod/compare/v0.120.1...v0.121.0) - 2026-10-21
 
 ### Fixed
