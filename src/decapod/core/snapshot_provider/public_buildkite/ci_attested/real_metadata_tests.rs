@@ -394,15 +394,15 @@ fn branch_changes_rederive_concurrency_keys_and_cannot_reuse_successful_old_gate
 }
 
 #[test]
-fn activated_policy_matches_all_five_workflows_and_the_entire_unfiltered_catalog() {
+fn historical_metadata_policy_matches_all_five_workflows_and_the_entire_unfiltered_catalog() {
     let config = crate::core::validation_runtime::proof_configuration(include_bytes!(
-        "../../../../../../.decapod/config.toml"
+        "fixtures/legacy-activation.toml"
     ))
     .unwrap();
     assert!(config.validation_buildkite_preflights);
     let configured = config
         .ci_attested
-        .expect("reviewed activation policy is checked in");
+        .expect("historical reviewed activation fixture is checked in");
     let frozen = accepted_mapping();
     let expected_workflows: BTreeSet<_> = frozen.iter().map(|row| row.workflow.as_str()).collect();
     let actual_workflows: BTreeSet<_> = configured
@@ -507,4 +507,15 @@ fn activated_policy_matches_all_five_workflows_and_the_entire_unfiltered_catalog
         "duplicate check mapping"
     );
     assert_eq!(actual, expected);
+}
+
+#[test]
+fn repository_requires_strict_step_and_artifact_custody_instead_of_metadata_only() {
+    let config = crate::core::validation_runtime::proof_configuration(include_bytes!(
+        "../../../../../../.decapod/config.toml"
+    ))
+    .unwrap();
+    assert!(config.validation_buildkite_preflights);
+    assert!(config.ci_attested.is_none());
+    assert_eq!(config.required_profile.unwrap().id, REQUIRED_PROFILE);
 }
