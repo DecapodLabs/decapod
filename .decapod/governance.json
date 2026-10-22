@@ -599,6 +599,15 @@
         "/private/tmp/decapod-01210-artifact-host-focused.log",
         "/private/tmp/decapod-01210-artifact-host-live.log"
       ]
+    },
+    {
+      "id": "artifact-host-16",
+      "summary": "Record gemini for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
+      "input_digest": "sha256:dcfac9d1eed0f518602ac48c0abe00b5a9bfdae85409829b91912592159ec0d8",
+      "proof_refs": [
+        "/private/tmp/decapod-01210-artifact-host-focused.log",
+        "/private/tmp/decapod-01210-artifact-host-live.log"
+      ]
     }
   ],
   "intents": {
