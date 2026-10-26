@@ -142,161 +142,126 @@ bounded by the declared requirements and checks. A subsequent readiness decision
 can evaluate that result; the agent publishes through the applicable gate and
 the human retains merge authority. This principle adds no unimplemented guarantee.
 
-## Optional vega post-validation assessment
+## Optional Laya post-validation assessment
 
-Vega runs only after the complete deterministic proof profile passes. Failed, missing or stale required validation returns before model inference and blocks PR readiness directly. Vega cannot supply proof, waive checks, alter policy or publish. The agent creates the PR through the existing gate; the human merges. Active Jev integration is removed; historical observations remain readable without governing work. Selecting Vega during init does not add this repository's scientific model-verification corpus or Metal development recipe to other projects.
+This section describes the current candidate implementation. The Laya migration
+has not passed functional qualification or final publication validation. Three
+pinned profiles failed corrected development controls; a bounded final-affine
+fit also failed before its frozen evaluation could run. Do not treat this
+candidate guide as a released, qualified model profile. See the measured
+[qualification outcome](../laya-readiness-migration.md#qualification-outcome-on-2026-10-25).
 
-`init --vega-decisions[=true|false]` and `init with --vega-decisions[=true|false]`
-select required or disabled Vega assessment. Interactive init offers the same
-choice. Refresh preserves the existing choice and installation pins unless
-explicitly changed. Selection installs no model and executes no inference.
+Laya runs after complete mandatory deterministic validation passes. Failed,
+missing or stale required proof blocks readiness before model inference. Laya
+cannot supply proof, waive checks, change policy, orchestrate the agent or
+publish. The agent creates an authorized PR through the resulting gates; the
+human reviews and merges.
 
-Init refresh retires only a recognized `[decision].provider = "none" | "jev"`
-selector, removes an empty retired section, and preserves unrelated authored
-settings, including extension keys in that section. Unknown or malformed provider
-selectors stop refresh without rewriting the configuration. Dry-run remains read-only.
+`init --laya-decisions[=true|false]` and
+`init with --laya-decisions[=true|false]` select required or disabled assessment.
+Interactive init offers the same choice. Refresh preserves selection, local
+pins and unrelated authored settings unless explicitly changed. Selection
+installs no model and executes no inference. By default Laya is disabled.
 
-By default `[vega]` is disabled. Required mode additionally needs a positive
-singleton yes, no abstention or unbound/OOD signal, and unchanged exact validated
-material, intent, proof, configuration and model/runtime pins. Negative singleton
-rejects; ambiguous/missing sets, invalid numerical output and unavailable runtime
-abstain. Upstream confidence and conformal settings are not established
-code-readiness risk guarantees.
-The bounded `validation-results.v3` input retains declared proof hooks,
-unresolved and deferred questions, contradictions, stop conditions and phase
-gates alongside intent and actual check observations. Gate satisfaction flags
-remain plan declarations, not independent execution proof. Oversized inputs
-are refused without truncating obligations; administrative metadata and raw
-logs are not supplied. The final custody check rejects changed governance.
-Supported `alpha` values are `"0.1"` and `"0.05"`; `risk` values are `"0.05"`,
-`"0.1"` and `"0.2"`. These select pinned upstream calibration entries, not
-readiness-domain guarantees. `[vega].model_manifest_digest` is the shared immutable
-compound model pin. `setup vega --runtime <installed-worker>` explicitly registers
-each maintainer's canonical runtime path and executable hash in private local cache
-metadata. Registration does not build or execute the worker or certify its source.
-The team configuration contains no maintainer-specific path. Legacy explicit
-`[vega.installation]` directory/runtime/manifest/hash bindings remain supported;
-if both forms are present their model identities must agree.
+```toml
+[laya]
+mode = "required"
+backend = "auto"
+cpu_fallback = true
+model_manifest_digest = "sha256:<digest printed by setup laya>"
+```
 
-An already-required accepted-target vega policy cannot be disabled, repinned or
-have its calibration settings changed by the candidate it governs. Validation
-rejects that transition before proof execution with `VEGA_ACCEPTED_POLICY_CHANGED`;
-it needs independent acceptance of the policy change. A disabled accepted target
-retains ordinary behavior and may add an explicit required assessment. Setup
-refresh changes the cache only and never silently rewrites publication policy.
+The team shares an immutable model manifest digest. Each maintainer independently
+installs and verifies that profile and registers a native worker in private local
+metadata. Team configuration contains no machine-specific path or credential.
+Optional explicit `[laya.installation]` bindings must agree with the shared pin.
+`setup laya --runtime <canonical-native-worker>` performs registration; source
+installation uses `cargo install --path assets/tools/laya-native --locked` from
+a reviewed release. Weights are external data and are not in the published
+Decapod crate. No hosted Jev endpoint, API token or Python runtime is involved.
 
-`validation-results.v3` contains actual check outcomes, stage dispositions,
-exclusions, simulated stages, blockers and unresolved trajectory facts, plus
-declared intent, explicit plan obligations and changed paths. Identical semantic observations and
-stage definitions are indexed once. Every check keeps its identity and outcome;
-missing checks remain explicit. Full custody identities bind the complete report
-outside the model prompt. No whole plan, source diff or raw log enters the prompt;
-unrepresented warnings and untested intent remain unknown. The 32 KiB projection
-and 4,096 total-token limits fail closed rather than clipping evidence.
+`setup laya --offline` verifies and reuses cached artifacts without networking.
+An initial installation downloads only pinned public files, verifies sizes and
+SHA-256, copies cache hits into separately verified single-link artifacts and
+atomically publishes a complete immutable installation. Unsafe hardlinks remain
+rejected. A failed or interrupted installation leaves earlier complete versions
+and runtime bindings intact. `--cache-directory` chooses a private cache location;
+validation never follows an active pointer or silently updates an asset.
+`--check-updates` reports current immutable upstream identities without activation.
+Only the identical reviewed revisions are compatible automatically; changed
+source/model/conversion revisions need explicit review and a new qualified pin.
+This metadata check is not weight, numerical or readiness-accuracy verification.
 
-### Explicit installation
+`backend = "auto"` retains Metal preference on macOS and CUDA preference on
+other hosts. `"cpu"`, `"metal"` and `"cuda"` select explicit execution. The worker
+reports the actual backend. CPU uses the pinned maintained Laya Rust SDK and
+ONNX Runtime; the separate Candle path runs the original checkpoint on supported
+Metal/CUDA devices. A model-free GPU probe dispatches arithmetic, synchronizes
+and checks numerical readback. It cannot authorize readiness.
 
-`decapod setup vega` installs verified external model data in a private cache.
-`--check-updates` checks bounded official metadata, `--refresh` explicitly selects
-a compatible new revision, `--offline` verifies cached files without networking,
-and `--rollback <manifest-digest>` atomically activates a verified prior install.
-Use `--cache-directory` to select another private cache. Engine/config/calibration,
-backbone, tokenizer and source/license identities have independent immutable pins.
-Unchanged backbone components are reused by content hash without another download.
-Each immutable installation receives a separately verified private copy, requiring
-additional disk space while retaining the single-link storage safety contract.
-Incomplete or cancelled copies never activate an installation. Unsupported architecture,
-quantization, tokenizer or adapter changes fail compatibility checks. A changed
-upstream source revision is surfaced for review, never substituted as runtime code.
+With `cpu_fallback = true`, a typed hardware/unsupported-backend result carrying
+no model answer permits a fresh bound CPU process under the original deadline.
+A GPU loader failure requires a separately registered CPU companion:
+`setup laya --runtime <gpu-worker> --cpu-runtime <cpu-only-worker>`.
+Negative answers, abstention, malformed IPC, arithmetic failures, crashes and
+timeouts never authorize retrying for a better answer. Failed required inference
+blocks readiness. NVIDIA hardware execution must be reported separately from
+an exercised unsupported-CUDA-to-CPU fallback.
 
-Setup prints disabled portable TOML with the verified compound model digest.
-It does not pretend to install a native executable. The Rust worker is built from
-`assets/tools/vega-native/Cargo.toml`. A source-install command from
-a reviewed release is `cargo install --path assets/tools/vega-native --locked`.
-Repository development builds/tests remain owned by ordinary governed validation.
-Run the worker's `--probe` to require a genuine finite Metal numerical result.
-Register the installed worker with `decapod setup vega --offline --runtime <canonical-worker-path>`.
-Apply the shared `model_manifest_digest` from setup and explicitly choose
-`[vega] mode = "required"`, or select `--vega-decisions` during init. Each maintainer
-performs local setup; validation freezes that binding before proof and rechecks it
-before inference and publication. Missing, replaced or malformed local metadata
-cannot authorize readiness. Runtime bytes and model files are reverified locally.
-Runtime digests use `sha256:<64 lowercase hex>`.
+### Judgment and evidence boundaries
 
-Runtime never follows a floating active pointer, downloads artifacts or selects a
-different model during fallback. `[vega] backend = "auto"` (the default) prefers
-Metal on macOS and CUDA elsewhere; `metal`, `cuda` and `cpu` explicitly select a
-backend. `cpu_fallback` defaults true. A CUDA-enabled non-Apple worker requires
-its `cuda` Cargo feature and NVIDIA toolchain; ordinary CPU builds need no CUDA
-toolkit. AMD/Intel GPU acceleration is not implemented. These source paths still
-require execution evidence before portability can be claimed.
+The production `validation-results.v3` projection preserves intent, declared
+proof hooks, unresolved/deferred questions, contradictions, phase gates, stop
+conditions and actual validation observations. Gate satisfaction declarations
+are not execution proof. Repeated check facts are indexed once; every outcome
+and adverse fact remains represented. Source diffs and raw logs are omitted;
+unrepresented warnings and untested intent remain unknown.
 
-A CUDA-linked executable may fail in the OS loader before it can select CPU.
-`setup vega --runtime <gpu-worker> --cpu-runtime <cpu-only-worker>` verifies and
-atomically registers both executable pins in private local metadata. The CPU
-companion uses the same reviewed Rust source with CUDA disabled. Neither path
-belongs in shared project policy; no runtime is built or executed during setup.
+The entire serialized state, fixed question and false/true alternatives must
+fit the selected checkpoint. The reviewed multilingual profile permits 1,024
+total tokens and a 32 KiB state-byte bound. Oversize inputs, injected marker
+tokens or SDK truncation of any state/question/option are refused. The
+most-confident-window API is not used to discard obligations.
 
-After deterministic proof passes, a bounded `--backend-check <metal|cuda>` process
-checks GPU startup and real model-free arithmetic without receiving model paths,
-validation state or an inference request. A typed hardware-unavailable result may
-select CPU. A verified executable reporting an absent ELF interpreter or empty
-loader exit 127 may use only an explicitly pinned CPU companion. Every executable
-pin and the model binding are rechecked before fallback; the overall deadline
-and model/calibration identities stay fixed. Missing companions fail closed.
+A required decision needs a valid affirmative binary result and the trained
+`act` disposition. Rejection, escalation/abstention, invalid probabilities,
+malformed output and execution errors block it. Interpretation accounts for the
+SDK's four-decimal probability resolution; a rounding interval touching a
+boundary abstains. This follows the upstream decision contract, not a fitted
+readiness-domain risk bound. The receipt binds the exact material, intent,
+governance, evidence, policy, rubric, model manifest and runtime executable.
+Relevant changes invalidate it. The controller independently rechecks proof
+and accepted target after inference; a worker cannot declare publication ready.
 
-Malformed or contradictory capability reports, crashes, timeouts and numerical
-errors fail closed. Once inference starts, only typed hardware unavailability
-without any tokens or outcome permits a fresh CPU attempt. Negative decisions,
-abstention and malformed model results never trigger a retry to seek acceptance.
-Set `cpu_fallback = false` to require the selected accelerator. Receipts distinguish
-capability checks from inference and disclose each runtime digest and actual final
-backend. CPU success never proves Metal ran. These paths need actual native
-execution evidence; authored tests and source inspection do not establish it.
+An already-required accepted policy cannot be disabled or repinned by the
+candidate it governs. Legacy required `[vega]` configuration produces explicit
+migration guidance; it is never silently translated into Laya or disabled.
+Historical Vega observations and scientific recipes remain readable and
+mandatory where already accepted. Jev selector retirement still removes only
+recognized `none`/`jev` keys, preserving unrelated settings and rejecting unknown
+or malformed selectors before rewrite.
 
-The pinned Candle GPU path captures raw blocks 13/19 and pools
-F32 state/question/option/chunk features. The separate Rust CPU path uses the same
-checkpoint and pooling with CPU attention/recurrence, without a generation API.
-It is not an independently reviewed parity reference. The verified BF16 backbone is
-upcast to F32, increasing weight memory accordingly. Base dynamics run in Rust F32
-on CPU; calibration uses F64 probabilities. This profile has adapters off, no image
-path and fresh recurrent state for every request.
+### What verification establishes
 
-### Honest native evidence
+Real model inference, exact token/marker comparisons and raw-logit comparisons
+against published pinned upstream outputs establish bounded numerical behavior.
+Backend enumeration and compilation alone do not. Receipts distinguish model
+load, synchronized inference, integrity hashing, wall time and the process RSS
+high-water mark; host RSS is not isolated GPU allocation. Complete validation
+latency includes Buildkite and other required proof, independently of inference.
 
-Vega supplies a bounded model judgment about validated work, intent and explicit
-obligations. Required mode is active: a current valid affirmative answer satisfies
-the model condition; rejection, abstention, invalid output and execution failure
-prevent readiness. It cannot certify facts omitted from its input or waive proof.
-Domain-level readiness reliability and production-calibrated accuracy remain
-**unestablished**. Upstream confidence/conformal settings are not repository risk
-guarantees. Teams choosing this additional gate must retain the human review and
-deterministic validation authority described above.
+Functional qualification must demonstrate useful ready-work approval and safe
+handling of unmet obligations, uncertainty, stale/failed proof and malformed
+responses through the production path on actual supported backends. A ready
+control may safely abstain, but that assessed work remains blocked and its
+expected-accept mismatch remains visible. Always accepting or always abstaining
+is not working qualification. Deterministic policy rejection does not establish
+model understanding.
 
-On 2026-10-20 the maintainer explicitly replaced this implementation's statistical
-59-acceptance/5%-risk/95%-confidence/50%-coverage prerequisite with functional
-integration acceptance. The old studies and failures remain diagnostic history,
-not a passing original criterion. Fixed functional cases use shared production
-projection, request, response and final predicate on actual Metal and CPU. They
-require meaningful positive acceptance as well as rejection/uncertainty and
-failed/stale/malformed proof controls; collection alone cannot pass the aggregate.
-Following the maintainer's delegated functional interpretation, qualification
-requires genuine approval on each actual backend and every adverse/control case.
-A ready control may validly abstain, but its expected-accept mismatch remains
-reported separately and that assessed work remains blocked. An always-abstaining
-model cannot qualify. This changes no production threshold or publication rule.
-The [completion checklist](../vega-completion-checklist.md) separates these checks
-from unestablished domain accuracy. No inactive/advisory substitute is used.
-
-The private bounded `--proof-output` diagnostic contains exact tokens/spans,
-pooled vectors, engine/calibrated outputs and synchronized timing. Candidate
-`59eaf087` passed 57 native tests and three fixed 138/314/4,096-token Metal/CPU
-comparisons against separate Rust calculations; 4,097 tokens reject. This is
-fixed fresh pure-text evidence with shared authorship/infrastructure, not all-mode
-or independently human-reviewed equivalence. Actual unsupported CUDA followed by
-fresh CPU inference exercised component fallback; NVIDIA hardware and full Linux
-loader-companion routing remain unmeasured. Both backends approved two meaningful
-ready controls; a third validly abstained and missed its expected-accept label.
-The original strict aggregate failed, and domain-level accuracy remains unestablished. See
-[the reference contract](../vega-reference-contract.md) for pins, unchanged
-tolerances, timings/memory scope, historical failures and current-candidate results.
+Readiness-domain reliability and production-calibrated accuracy remain
+**unestablished**. The 2026-10-20 maintainer revision replaced the former
+59-acceptance/5%-risk/95%-confidence/50%-coverage research prerequisite with
+functional integration acceptance. Original studies, failed results, numerical
+tolerances and safe-abstention mismatches remain historical evidence, not a
+passing old criterion. See [Laya migration and provenance](../laya-readiness-migration.md)
+and [the historical Vega reference contract](../vega-reference-contract.md).
