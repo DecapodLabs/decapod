@@ -224,9 +224,6 @@ pub fn manifest_digest(manifest: &InstallManifest) -> io::Result<String> {
     ))
 }
 
-pub(crate) fn baseline_digest() -> io::Result<String> {
-    manifest_digest(&baseline())
-}
 fn json_digest(value: &Value) -> io::Result<String> {
     Ok(hash(&serde_json::to_vec(value).map_err(io::Error::other)?))
 }
@@ -916,98 +913,116 @@ impl Transport for PublicCurl<'_> {
         if !permitted_url(url) || maximum == 0 || maximum > MAX_ARTIFACT {
             return Err(invalid("unsupported public Vega transport request"));
         }
-        self.checkpoint()?;
-        let remaining = self
-            .deadline
-            .checked_duration_since(Instant::now())
-            .ok_or_else(|| {
-                io::Error::new(io::ErrorKind::TimedOut, "Vega setup deadline exceeded")
-            })?;
-        let timeout = remaining.min(if maximum > 4 * 1024 * 1024 {
-            DEADLINE
-        } else {
-            Duration::from_secs(60)
-        });
-        if timeout.as_secs() == 0 {
-            return Err(io::Error::new(
-                io::ErrorKind::TimedOut,
-                "Vega setup deadline exceeded",
-            ));
-        }
-        safe_path(destination)?;
-        private_directory(
-            destination
-                .parent()
-                .ok_or_else(|| invalid("download parent missing"))?,
-            false,
-        )?;
-        let output_file = fs_permissions::open_private_file(
-            destination,
-            OpenOptions::new().write(true).create_new(true),
-        )?;
-        let mut command = curl_command(url, destination, maximum, timeout);
-        // Enforce a child-only file-size bound even for chunked responses.
-        #[cfg(unix)]
-        {
-            use std::os::unix::process::CommandExt;
-            unsafe {
-                command.pre_exec(move || {
-                    let limit = libc::rlimit {
-                        rlim_cur: maximum as libc::rlim_t,
-                        rlim_max: maximum as libc::rlim_t,
-                    };
-                    if libc::setrlimit(libc::RLIMIT_FSIZE, &limit) != 0 {
-                        return Err(io::Error::last_os_error());
-                    }
-                    libc::umask(0o077);
-                    Ok(())
-                });
-            }
-        }
-        let capture = command.bounded_capture(
-            ProcessLimits {
-                timeout,
-                max_output_bytes: 8192,
-            },
-            self.cancellation,
-        )?;
-        if capture.termination == Termination::Cancelled {
-            return Err(io::Error::new(
-                io::ErrorKind::Interrupted,
-                "Vega download cancelled",
-            ));
-        }
-        if capture.termination == Termination::TimedOut {
-            return Err(io::Error::new(
-                io::ErrorKind::TimedOut,
-                "Vega download deadline exceeded",
-            ));
-        }
-        self.checkpoint()?;
-        let http_status = std::str::from_utf8(&capture.output.stdout)
-            .ok()
-            .and_then(|text| text.trim().parse::<u16>().ok());
-        if matches!(http_status, Some(401 | 403)) {
-            return Err(io::Error::new(
-                io::ErrorKind::PermissionDenied,
-                "public Vega access denied; no fallback, credential or agreement accepted",
-            ));
-        }
-        if capture.termination != Termination::Exited || !capture.output.status.success() {
-            return Err(invalid(format!(
-                "public Vega download failed ({:?}, HTTP {:?}, exit {:?}); no checkpoint activated",
-                capture.termination,
-                http_status,
-                capture.output.status.code()
-            )));
-        }
-        let file = checked_file(destination)?;
-        if file.metadata()?.len() == 0 || file.metadata()?.len() > maximum {
-            return Err(invalid("Vega download length outside bound"));
-        }
-        output_file.sync_all()
+        download_public_asset(url, destination, maximum, self.deadline, self.cancellation)
     }
 }
+
+/// Caller supplies only a reviewed, immutable allowlisted URL. This helper
+/// preserves the existing bounded, credential-free model transport and safe
+/// single-link destination contract for both native decision providers.
+pub(crate) fn download_public_asset(
+    url: &str,
+    destination: &Path,
+    maximum: u64,
+    deadline: Instant,
+    cancellation: &Cancellation,
+) -> io::Result<()> {
+    if maximum == 0 || maximum > MAX_ARTIFACT || !url.starts_with("https://") {
+        return Err(invalid("invalid bounded public model transport request"));
+    }
+    let transport = LocalVerification {
+        deadline,
+        cancellation,
+    };
+    transport.checkpoint()?;
+    let remaining = deadline
+        .checked_duration_since(Instant::now())
+        .ok_or_else(|| io::Error::new(io::ErrorKind::TimedOut, "model setup deadline exceeded"))?;
+    let timeout = remaining.min(if maximum > 4 * 1024 * 1024 {
+        DEADLINE
+    } else {
+        Duration::from_secs(60)
+    });
+    if timeout.as_secs() == 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::TimedOut,
+            "model setup deadline exceeded",
+        ));
+    }
+    safe_path(destination)?;
+    private_directory(
+        destination
+            .parent()
+            .ok_or_else(|| invalid("download parent missing"))?,
+        false,
+    )?;
+    let output_file = fs_permissions::open_private_file(
+        destination,
+        OpenOptions::new().write(true).create_new(true),
+    )?;
+    let mut command = curl_command(url, destination, maximum, timeout);
+    // Enforce a child-only file-size bound even for chunked responses.
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        unsafe {
+            command.pre_exec(move || {
+                let limit = libc::rlimit {
+                    rlim_cur: maximum as libc::rlim_t,
+                    rlim_max: maximum as libc::rlim_t,
+                };
+                if libc::setrlimit(libc::RLIMIT_FSIZE, &limit) != 0 {
+                    return Err(io::Error::last_os_error());
+                }
+                libc::umask(0o077);
+                Ok(())
+            });
+        }
+    }
+    let capture = command.bounded_capture(
+        ProcessLimits {
+            timeout,
+            max_output_bytes: 8192,
+        },
+        cancellation,
+    )?;
+    if capture.termination == Termination::Cancelled {
+        return Err(io::Error::new(
+            io::ErrorKind::Interrupted,
+            "model download cancelled",
+        ));
+    }
+    if capture.termination == Termination::TimedOut {
+        return Err(io::Error::new(
+            io::ErrorKind::TimedOut,
+            "model download deadline exceeded",
+        ));
+    }
+    transport.checkpoint()?;
+    let http_status = std::str::from_utf8(&capture.output.stdout)
+        .ok()
+        .and_then(|text| text.trim().parse::<u16>().ok());
+    if matches!(http_status, Some(401 | 403)) {
+        return Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "public model access denied; no fallback, credential or agreement accepted",
+        ));
+    }
+    if capture.termination != Termination::Exited || !capture.output.status.success() {
+        return Err(invalid(format!(
+            "public model download failed ({:?}, HTTP {:?}, exit {:?}); no checkpoint activated",
+            capture.termination,
+            http_status,
+            capture.output.status.code()
+        )));
+    }
+    let file = checked_file(destination)?;
+    if file.metadata()?.len() == 0 || file.metadata()?.len() > maximum {
+        return Err(invalid("model download length outside bound"));
+    }
+    output_file.sync_all()
+}
+
 fn curl_command(url: &str, destination: &Path, maximum: u64, timeout: Duration) -> Command {
     let mut command = Command::new("/usr/bin/curl");
     // No ambient token, netrc, proxy, cookies, user config or custom trust roots.
