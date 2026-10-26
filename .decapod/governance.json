@@ -1012,6 +1012,15 @@
         "/private/tmp/decapod-laya-corrected-fit-diagnosis.log",
         "tests/unit/core/laya_readiness_tests.rs"
       ]
+    },
+    {
+      "id": "laya-development-preservation-20261025-101",
+      "summary": "Preserve .decapod/managed/specs/.manifest.json as one material path with mandatory governance. Native numerical, CPU fallback and init checks have focused passing evidence. Three original profiles and bounded final-affine fitting failed readiness qualification. Both fitting failures remain preserved; held-out evaluation is unscored; experimental readout is not installed. Full final validation and PR publication remain unsatisfied. This development checkpoint claims no completion or publication readiness.",
+      "input_digest": "sha256:bdafa2efe431f9438472ef5307e1236ca76400312aa3d7f1ffc330e2a0ac8739",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json",
+        "/private/tmp/decapod-laya-corrected-fit-diagnosis.log"
+      ]
     }
   ],
   "intents": {
@@ -1065,7 +1074,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:6056cca02b2ed7b739f4fcb0588201190b1b1dd2f1d3b2ca6127a4a7db33d013",
+      "artifact_hash": "sha256:dc3a1e7b361513f487e2efa2b8e7c294856705095acadf3c491f97b2e9555aec",
       "checks": [
         {
           "name": "actual-cpu-fallback-tokenizer",
@@ -1086,6 +1095,10 @@
         {
           "name": "fitting_math_unit_checks",
           "status": "passed"
+        },
+        {
+          "name": "fixed-fitted-metal-model",
+          "status": "failed"
         },
         {
           "name": "init-configuration",
@@ -1179,10 +1192,17 @@
             "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M5RMTS8AP56RDV7PYVRS32ET",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M5RMTS8AP56RDV7PYVRS32ET": {
@@ -1305,6 +1325,23 @@
                 "validation_findings": [
                   "Independent component checks only. Actual Metal matched the pinned producer 760-state-token/three-question calibrated outputs within unchanged 1e-4 tolerance. All 18 worker unit regressions pass. Required readiness qualification remains failed; final full validation has not passed. Preserve committed freeze, private failed fits and source snapshots. Formatting-only generator changes are not relabelled as new fitting or evaluation."
                 ]
+              },
+              {
+                "action": "loop:laya-fixed-fit-native-diagnosis:1",
+                "custody_event_id": "event:11",
+                "observations": [],
+                "proof_refs": [
+                  "/private/tmp/decapod-laya-fixed-fit-native-diagnostic.log",
+                  "/private/tmp/decapod-laya-affine-fit-20261025-v3/fixed-fit-native-execution.json",
+                  "docs/laya-readiness-migration.md"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": [
+                  "No new fitting or evaluation. Actual Metal inference with immutable corrected artifact c3123413d4f88f9d9e64f3f1e8d1924b659210e34d2b2612b831156fa3abd74c on its original fitting inputs, unchanged action head/calibration and production response predicate accepted 6/20 adverse controls, accepted 8/12 ready controls and rejected 4/12 ready controls. Every adverse accept reported act probability 1.0; failures were genuine model accepts, not protocol, abstention or downstream mapping. No installation, IPC custody, held-out execution or publication success claimed. Full readiness remains unqualified."
+                ]
               }
             ]
           }
@@ -1412,6 +1449,24 @@
             "docs/laya-readiness-migration.md"
           ],
           "status": "passed",
+          "trajectory_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
+          "trigger": "agent"
+        },
+        {
+          "attempt": 1,
+          "custody_event_id": "event:11",
+          "feedback": "No new fitting or evaluation. Actual Metal inference with immutable corrected artifact c3123413d4f88f9d9e64f3f1e8d1924b659210e34d2b2612b831156fa3abd74c on its original fitting inputs, unchanged action head/calibration and production response predicate accepted 6/20 adverse controls, accepted 8/12 ready controls and rejected 4/12 ready controls. Every adverse accept reported act probability 1.0; failures were genuine model accepts, not protocol, abstention or downstream mapping. No installation, IPC custody, held-out execution or publication success claimed. Full readiness remains unqualified.",
+          "grader_result": "fail",
+          "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+          "loop_id": "laya-fixed-fit-native-diagnosis",
+          "loop_type": "verification",
+          "mutation_proposal": "none",
+          "proof_refs": [
+            "/private/tmp/decapod-laya-affine-fit-20261025-v3/fixed-fit-native-execution.json",
+            "/private/tmp/decapod-laya-fixed-fit-native-diagnostic.log",
+            "docs/laya-readiness-migration.md"
+          ],
+          "status": "failed",
           "trajectory_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
           "trigger": "agent"
         },
