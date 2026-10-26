@@ -28,6 +28,11 @@ ten fitting-score errors (six adverse affirmative and four ready negative).
 Fitting therefore stops before evaluation: the frozen evaluation is unscored,
 the artifact remains uninstalled, and full publication validation is unsatisfied.
 Do not tune thresholds, safety bounds or held-out units to change that outcome.
+Actual Metal diagnosis of the fixed artifact on fitting inputs subsequently
+confirmed six adverse accepts through the unchanged action head, calibration
+and production response predicate, alongside eight ready accepts and four
+ready rejections. This was in-process diagnosis, not IPC custody or publication
+proof. It confirms a functional failure without reopening or tuning the holdout.
 
 Focused checks passed eight kernel tests, 35 init/config tests, actual CPU/Metal
 published-logit comparisons, exact token/marker and calibrated SDK outputs,
@@ -851,7 +856,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f9b774084b7fe99199ad99802b2182cd5d37935125eb2309484fd88dafabc8ba`
+- Repository signal fingerprint: `c8f088e8d67d51f87be5a536fd51259cde51747e7321727912d30ea0fc04d85e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (55 files), `docs/` (1 files), `src/` (214 files), `tests/` (197 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
