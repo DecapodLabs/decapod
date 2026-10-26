@@ -363,6 +363,7 @@ impl Receipt {
     }
 }
 
+#[cfg(test)]
 pub(crate) fn permits_publication(proof_ready: bool, receipt: &Receipt) -> bool {
     permits_decision(proof_ready, receipt.mode, receipt.decision)
 }
@@ -375,16 +376,14 @@ pub fn permits_decision(proof_ready: bool, mode: Mode, decision: Decision) -> bo
             || (mode == Mode::Disabled && decision == Decision::Disabled))
 }
 
-use super::bounded_process::{BoundedCommand, Cancellation, ProcessLimits, Termination};
+use super::bounded_process::Cancellation;
+#[cfg(test)]
+use super::bounded_process::{BoundedCommand, ProcessLimits, Termination};
 use super::readiness_evidence as evidence;
 use sha2::{Digest, Sha256};
-use std::{
-    fs,
-    io::{self, Read, Write},
-    path::Path,
-    process::Command,
-    time::{Duration, Instant},
-};
+#[cfg(test)]
+use std::{fs, io::Write, process::Command, time::Duration};
+use std::{io, path::Path, time::Instant};
 const MAX_INPUT: usize = 32 * 1024;
 fn invalid(message: impl Into<String>) -> io::Error {
     io::Error::other(message.into())
@@ -394,14 +393,6 @@ pub fn hash(bytes: &[u8]) -> String {
 }
 fn digest<T: Serialize>(value: &T) -> io::Result<String> {
     evidence::digest(value).map_err(io::Error::other)
-}
-
-pub(crate) fn configuration(root: &Path) -> io::Result<Configuration> {
-    let mut bytes = Vec::new();
-    fs::File::open(root.join(".decapod/config.toml"))?
-        .take(1024 * 1024 + 1)
-        .read_to_end(&mut bytes)?;
-    configuration_from_bytes(&bytes)
 }
 
 pub(crate) fn configuration_from_bytes(bytes: &[u8]) -> io::Result<Configuration> {
@@ -449,6 +440,7 @@ pub(crate) fn verify_policy_acceptance(
     }
     Ok(())
 }
+#[cfg(test)]
 fn private_write(path: &Path, bytes: &[u8]) -> io::Result<()> {
     let mut options = fs::OpenOptions::new();
     options.write(true).create_new(true);
@@ -524,7 +516,12 @@ impl EvaluationSnapshot {
     }
 }
 fn bounded_projection(value: &serde_json::Value) -> io::Result<String> {
-    let state = serde_json::to_string(value).map_err(io::Error::other)?;
+    // The Laya SDK enables serde_json/preserve_order in its separate worker.
+    // Model input must remain byte-identical to the controller's projection
+    // regardless of Cargo feature unification. Preserve arrays and text.
+    let mut value = value.clone();
+    value.sort_all_objects();
+    let state = serde_json::to_string(&value).map_err(io::Error::other)?;
     if state.len() > MAX_INPUT {
         return Err(invalid("projection_overflow_no_truncation"));
     }
@@ -561,7 +558,7 @@ fn plan_obligations(plan: &crate::plan_governance::GovernedPlan) -> serde_json::
         })).collect::<Vec<_>>()
     })
 }
-fn projection(
+pub(crate) fn projection(
     root: &Path,
     binding: &Binding,
     validation: &ValidationSummary<'_>,
@@ -734,7 +731,7 @@ fn pinned_runtime(
     Ok(())
 }
 
-fn verify_runtime_pins(
+pub(crate) fn verify_runtime_pins(
     installation: &Installation,
     deadline: Instant,
     cancel: &Cancellation,
@@ -750,6 +747,7 @@ fn verify_runtime_pins(
     }
     Ok(())
 }
+#[cfg(test)]
 fn runtime_for(installation: &Installation, backend: Backend) -> (&Path, &str) {
     if backend == Backend::Cpu
         && let Some(cpu) = &installation.cpu_runtime
@@ -760,6 +758,7 @@ fn runtime_for(installation: &Installation, backend: Backend) -> (&Path, &str) {
 }
 
 #[derive(Debug)]
+#[cfg(test)]
 enum GpuStartup {
     Available,
     Unavailable {
@@ -767,6 +766,7 @@ enum GpuStartup {
         separate_cpu_required: bool,
     },
 }
+#[cfg(test)]
 fn backend_check_response(bytes: &[u8], backend: Backend) -> io::Result<GpuStartup> {
     let check: BackendCheck = serde_json::from_slice(bytes).map_err(io::Error::other)?;
     if check.schema != BACKEND_CHECK_SCHEMA || check.backend != backend || backend == Backend::Cpu {
@@ -790,6 +790,7 @@ fn backend_check_response(bytes: &[u8], backend: Backend) -> io::Result<GpuStart
 /// Only typed hardware unavailability or the loader's empty exit127 can select
 /// another executable. Crashes, timeouts, malformed reports and compute errors
 /// remain failures. Inference outcomes never enter this startup classifier.
+#[cfg(test)]
 fn check_gpu_startup(
     installation: &Installation,
     backend: Backend,
@@ -844,6 +845,7 @@ fn check_gpu_startup(
     backend_check_response(&capture.output.stdout, backend)
 }
 
+#[cfg(test)]
 pub(crate) fn capture_installation(config: &Configuration) -> io::Result<Option<Installation>> {
     if config.mode == Mode::Disabled {
         return Ok(None);
@@ -860,6 +862,7 @@ pub(crate) fn capture_installation(config: &Configuration) -> io::Result<Option<
     Ok(Some(installation))
 }
 
+#[cfg(test)]
 pub(crate) fn verify_installation_snapshot(
     config: &Configuration,
     captured: &io::Result<Option<Installation>>,
@@ -884,6 +887,7 @@ pub(crate) fn verify_installation_snapshot(
 }
 
 /// Shared policy and per-maintainer custody captured at validation entry.
+#[cfg(test)]
 pub(crate) struct AssessmentConfig<'a> {
     pub policy: &'a Configuration,
     pub captured_installation: &'a io::Result<Option<Installation>>,
@@ -891,6 +895,7 @@ pub(crate) struct AssessmentConfig<'a> {
 
 /// Sole caller: validation_runtime after `readiness_profile::finish` succeeds.
 /// Caller must independently re-run proof and local custody freshness afterwards.
+#[cfg(test)]
 pub(crate) fn assess(
     root: &Path,
     directory: &Path,
@@ -1121,7 +1126,7 @@ pub(crate) fn assess(
 }
 
 #[cfg(test)]
-mod projection_tests {
+pub(crate) mod projection_tests {
     use super::*;
     fn obligation_fixture() -> crate::plan_governance::GovernedPlan {
         serde_json::from_value(serde_json::json!({
@@ -1185,7 +1190,17 @@ mod projection_tests {
             .is_err()
         );
     }
-    fn fixture() -> (Binding, evidence::SuiteEvidence) {
+    #[test]
+    fn projection_is_canonical_without_reordering_requirements() {
+        let value: serde_json::Value = serde_json::from_str(
+            r#"{"z":{"proof":false,"obligation":"keep exact text"},"a":[{"z":2,"a":1},"second","first"]}"#
+        ).unwrap();
+        assert_eq!(
+            bounded_projection(&value).unwrap(),
+            r#"{"a":[{"a":1,"z":2},"second","first"],"z":{"obligation":"keep exact text","proof":false}}"#
+        );
+    }
+    pub(crate) fn fixture() -> (Binding, evidence::SuiteEvidence) {
         let material = evidence::MaterialIdentity {
             repository: "example/repo".into(),
             work_branch: "agent/test/task".into(),
