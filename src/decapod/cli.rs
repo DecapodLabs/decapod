@@ -260,10 +260,10 @@ pub(crate) struct InitGroupCli {
     /// Proof command in `name=command` form (repeatable/comma-separated).
     #[clap(long = "proof-command", value_delimiter = ',')]
     pub proof_commands: Vec<String>,
-    /// Require Vega readiness decisions after deterministic validation passes.
+    /// Require Laya readiness decisions after deterministic validation passes.
     /// Omission preserves the existing setting; runtime/model setup is separate.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
-    pub vega_decisions: Option<bool>,
+    pub laya_decisions: Option<bool>,
     /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
@@ -413,10 +413,10 @@ pub(crate) struct InitWithCli {
     pub existing_rust_workers: Option<crate::core::validation_runtime::rust_worker::Configuration>,
     #[clap(skip)]
     pub existing_ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
-    /// Require Vega readiness decisions after deterministic validation passes.
+    /// Require Laya readiness decisions after deterministic validation passes.
     /// Omission preserves the existing setting; runtime/model setup is separate.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
-    pub vega_decisions: Option<bool>,
+    pub laya_decisions: Option<bool>,
     /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
@@ -461,7 +461,13 @@ pub struct DecapodProjectConfig {
         default,
         skip_serializing_if = "crate::core::vega_readiness::Configuration::is_default"
     )]
+    /// Preserved legacy policy; never silently reinterpreted as Laya or none.
     pub vega: crate::core::vega_readiness::Configuration,
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
+    )]
+    pub laya: crate::core::laya_readiness::Configuration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -788,6 +794,7 @@ impl Default for DecapodProjectConfig {
             tracker: TrackerConfig::default(),
             context: DeclaredContextConfig::default(),
             vega: crate::core::vega_readiness::Configuration::default(),
+            laya: crate::core::laya_readiness::Configuration::default(),
         }
     }
 }
@@ -847,7 +854,20 @@ pub(crate) struct SetupCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum SetupCommand {
-    /// Explicitly install, verify or refresh the external vega model cache.
+    /// Install pinned external Laya artifacts and register a private local worker.
+    Laya {
+        #[clap(long)]
+        cache_directory: Option<PathBuf>,
+        #[clap(long,conflicts_with_all=["runtime","cpu_runtime","offline"])]
+        check_updates: bool,
+        #[clap(long)]
+        runtime: Option<PathBuf>,
+        #[clap(long, requires = "runtime")]
+        cpu_runtime: Option<PathBuf>,
+        #[clap(long)]
+        offline: bool,
+    },
+    /// Historical Vega qualification cache; active readiness uses Laya.
     Vega {
         #[clap(long)]
         cache_directory: Option<PathBuf>,
