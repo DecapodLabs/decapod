@@ -64,6 +64,10 @@ pub mod release_archive;
 pub mod repository_profile;
 // The standalone helper and runtime share one classifier module per crate.
 pub use readiness_profile::source::workflow_owned::release_classifier::implementation as release_metadata;
+pub mod laya_assets;
+pub mod laya_protocol;
+pub mod laya_readiness;
+pub mod laya_setup;
 pub mod release_projection_drift;
 pub mod release_toolchain;
 pub mod repo_identity;
