@@ -10,6 +10,35 @@ coordination, validation, and publication boundaries. Decapod exposes the state,
 constraints, evidence, and blockers that govern those transitions. Each CLI or
 RPC invocation is ephemeral; repository state preserves continuity between calls.
 
+The active candidate exposes `init --laya-decisions[=true|false]`, the same
+interactive choice and `[laya]` team policy. Selection alone downloads nothing.
+`setup laya` installs a pinned external profile; `--offline` requires verified
+cached artifacts, `--runtime` registers each maintainer's canonical worker and
+hash privately, and `--cpu-runtime` can bind a distinct CPU executable.
+`--check-updates` reports immutable upstream revisions without activating them.
+Unknown or changed upstream profiles require review and a new compatible pin.
+Init preserves unrelated authored settings and prior Vega configuration; it
+never silently translates an already-required Vega policy into Laya or none.
+
+The Laya request/response schemas are `decapod.laya-worker.v1`; the reviewed
+question rubric is versioned independently. The false/true binary label order,
+act/escalate interpretation and four-decimal quantization are explicit.
+The worker must receive the entire production projection and complete question
+and options within the checkpoint's 1,024-token total bound. No truncation or
+most-confident-window selection is allowed. An affirmative model judgment can
+satisfy only the additional configured condition after mandatory proof passes.
+Reject, abstain, invalid response, stale custody and failed inference deny it.
+`laya-readiness.json` records the bound model observation and remaining accuracy
+limits. Historical `vega-readiness.json` data remains readable, without governing
+new Laya work. The agent publishes through the resulting gates; the human merges.
+
+These are candidate interfaces, not a qualified or released migration. A local
+fitting tool's `decapod.laya-affine-readout.v1` data is separate from the reviewed
+installation manifest and cannot activate by file presence. The rejected
+experimental artifact does not change setup's baseline, response mapping,
+thresholds or inherited calibration. Its diagnostic report explicitly carries
+`publication_ready=false`, `fitting_only=true`, and `evaluation_accessed=false`.
+
 The public Buildkite reader supports its documented exact HTTPS artifact origin
 and legacy owned S3 bucket without changing CLI/RPC or project configuration.
 Both routes enforce producer/path and content integrity restrictions. Signed
@@ -658,8 +687,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `f9b774084b7fe99199ad99802b2182cd5d37935125eb2309484fd88dafabc8ba`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (55 files), `docs/` (1 files), `src/` (214 files), `tests/` (197 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
