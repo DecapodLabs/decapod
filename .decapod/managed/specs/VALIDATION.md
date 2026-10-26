@@ -33,6 +33,12 @@ confirmed six adverse accepts through the unchanged action head, calibration
 and production response predicate, alongside eight ready accepts and four
 ready rejections. This was in-process diagnosis, not IPC custody or publication
 proof. It confirms a functional failure without reopening or tuning the holdout.
+The independent real-model offline installation check passed for all six pinned
+assets (1,968,585,010 bytes): corrupt-cache rejection and staging cleanup,
+repaired atomic installation, verified version reuse, single-link/distinct-inode
+artifacts and preserved original hashes. Its temporary cache registered no
+runtime and activated no global profile. Installation success cannot qualify
+the demonstrated readiness failures.
 
 Focused checks passed eight kernel tests, 35 init/config tests, actual CPU/Metal
 published-logit comparisons, exact token/marker and calibrated SDK outputs,
@@ -856,7 +862,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c8f088e8d67d51f87be5a536fd51259cde51747e7321727912d30ea0fc04d85e`
+- Repository signal fingerprint: `59a55284003816b35138b535df0c6d30c7a7dd379fc00a2b8f13f3853512d24e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (55 files), `docs/` (1 files), `src/` (214 files), `tests/` (197 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
