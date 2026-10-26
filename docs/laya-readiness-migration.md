@@ -90,6 +90,17 @@ classifications still disagreed**: six adverse rows scored affirmative and four
 ready rows scored negative. This is a fitting diagnostic, not execution of the
 fitted profile through the complete worker or readiness predicate.
 
+A subsequent diagnostic executed those **same fitting inputs** with the fixed
+artifact on actual Metal, including the unchanged action head, calibration and
+production response predicate. It approved eight of twelve ready controls,
+rejected four ready controls, and **approved six of twenty adverse controls**.
+No malformed-response, abstention or downstream policy interpretation concealed
+these six accepts. They concern unmet requirements (three families), contradictory
+requirements, declaration-only proof and injected approval instructions. This
+is a direct functional failure, not the superseded statistical research gate.
+The diagnostic stayed in process: it did not install the artifact, establish
+IPC custody, run the held-out evaluation or authorize publication.
+
 The structurally valid but unqualified readout has SHA-256
 `c3123413d4f88f9d9e64f3f1e8d1924b659210e34d2b2612b831156fa3abd74c`.
 It remains private, was not installed or activated, and is not the baseline
@@ -98,12 +109,14 @@ diagnostic report. Fitting stops here; these results do not justify threshold
 changes, a relaxed coefficient limit or tuning against the untouched cases.
 
 The precise unmet condition is useful, safe model judgment on the actual
-production representation. The smallest next capability route is a compatible
-readiness-specific upstream profile or a separately scoped adaptation of more
-than this final linear scorer, followed by fresh qualification. Neither has
-been demonstrated here. This is not a request for unknown private datasets,
-a claim that all Laya models are incapable, or permission to ship an inactive
-or advisory substitute. Existing required deterministic gates stay intact.
+production representation. The next capability route is a compatible
+readiness-specific upstream profile or a separately scoped adaptation study,
+followed by fresh qualification. The tested fit does not establish whether a
+different fitting objective would suffice or additional head capacity is
+necessary. Neither route has been qualified here. This is not a request for
+unknown private datasets, a claim that all Laya models are incapable, or
+permission to ship an inactive or advisory substitute. Existing required
+deterministic gates stay intact.
 
 ## Runtime and artifact boundaries
 
