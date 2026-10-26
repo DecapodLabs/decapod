@@ -301,32 +301,32 @@ fn init_refuses_ambiguous_retired_selectors_without_rewriting_user_configuration
 }
 
 #[test]
-fn init_can_select_vega_and_refresh_preserves_policy_and_local_pins() {
+fn init_can_select_laya_and_refresh_preserves_policy_and_local_pins() {
     for mut surface in [vec!["init"], vec!["init", "with"]] {
         let project = tempdir().unwrap();
         surface.push("--force");
         let mut enable = surface.clone();
-        enable.push("--vega-decisions");
+        enable.push("--laya-decisions");
         assert!(run_decapod(project.path(), &enable).status.success());
         let path = project.path().join(".decapod/config.toml");
         let mut configured = fs::read_to_string(&path).unwrap();
         let selected: toml::Value = toml::from_str(&configured).unwrap();
-        assert_eq!(selected["vega"]["mode"].as_str(), Some("required"));
+        assert_eq!(selected["laya"]["mode"].as_str(), Some("required"));
         assert!(
-            selected["vega"]["model_manifest_digest"]
+            selected["laya"]["model_manifest_digest"]
                 .as_str()
                 .unwrap()
                 .starts_with("sha256:")
         );
-        assert!(selected["vega"].get("installation").is_none());
+        assert!(selected["laya"].get("installation").is_none());
         configured = configured.replacen(
-            "[vega]\n",
-            "[vega]\nbackend = 'cpu'\ncpu_fallback = false\n",
+            "backend = \"auto\"\ncpu_fallback = true",
+            "backend = 'cpu'\ncpu_fallback = false",
             1,
         );
         configured.push_str(&format!(
             "\n[custom]\nnote = 'keep team settings'\n\
-             [vega.installation]\ndirectory = '/unavailable-model'\n\
+             [laya.installation]\ndirectory = '/unavailable-model'\n\
              manifest_digest = 'sha256:{}'\nruntime = '/unavailable-worker'\n\
              runtime_sha256 = 'sha256:{}'\n",
             "a".repeat(64),
@@ -336,31 +336,31 @@ fn init_can_select_vega_and_refresh_preserves_policy_and_local_pins() {
         assert!(run_decapod(project.path(), &surface).status.success());
         let preserved = fs::read_to_string(&path).unwrap();
         let before: toml::Value = toml::from_str(&preserved).unwrap();
-        assert_eq!(before["vega"]["mode"].as_str(), Some("required"));
-        assert_eq!(before["vega"]["backend"].as_str(), Some("cpu"));
-        assert_eq!(before["vega"]["cpu_fallback"].as_bool(), Some(false));
+        assert_eq!(before["laya"]["mode"].as_str(), Some("required"));
+        assert_eq!(before["laya"]["backend"].as_str(), Some("cpu"));
+        assert_eq!(before["laya"]["cpu_fallback"].as_bool(), Some(false));
         let mut disable = surface.clone();
-        disable.push("--vega-decisions=false");
+        disable.push("--laya-decisions=false");
         let mut dry = disable.clone();
         dry.push("--dry-run");
         assert!(run_decapod(project.path(), &dry).status.success());
         assert_eq!(fs::read_to_string(&path).unwrap(), preserved);
         assert!(run_decapod(project.path(), &disable).status.success());
         let after: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
-        assert_eq!(after["vega"]["mode"].as_str(), Some("disabled"));
-        assert_eq!(after["vega"]["backend"], before["vega"]["backend"]);
+        assert_eq!(after["laya"]["mode"].as_str(), Some("disabled"));
+        assert_eq!(after["laya"]["backend"], before["laya"]["backend"]);
         assert_eq!(
-            after["vega"]["cpu_fallback"],
-            before["vega"]["cpu_fallback"]
+            after["laya"]["cpu_fallback"],
+            before["laya"]["cpu_fallback"]
         );
         assert_eq!(
-            after["vega"]["installation"],
-            before["vega"]["installation"]
+            after["laya"]["installation"],
+            before["laya"]["installation"]
         );
         assert_eq!(after["custom"], before["custom"]);
         assert!(run_decapod(project.path(), &enable).status.success());
         let restored: toml::Value = toml::from_str(&fs::read_to_string(path).unwrap()).unwrap();
-        assert_eq!(restored["vega"], before["vega"]);
+        assert_eq!(restored["laya"], before["laya"]);
     }
 }
 
