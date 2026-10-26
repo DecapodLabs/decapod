@@ -1,0 +1,10 @@
+{
+  "schema": "decapod.laya-affine-corpus.v1",
+  "partition": "fit",
+  "label_provenance": "Agent-authored bounded dispositions supported by the named Rust contract and executed assertions; not independent human ground truth or production calibration",
+  "grouping_unit": "contract family; variants are related and never counted as independent originals",
+  "families": ["signed_sort", "whitespace_trim", "bounded_integer_parse", "response_binding"],
+  "variants": ["ready", "ready-proof-hook", "ready-observed-gate", "unmet-explicit", "unresolved", "contradictory", "declared-proof", "manipulation"],
+  "fit": {"parameters": "existing final shared scorer affine weights only; original bias retained", "max_parameters": 1024, "regularization": 0.001, "max_iterations": 5000, "class_balance": "equal total ready/not-ready weight", "normalization": "training feature RMS, floor 0.000001; no evaluation statistics", "evaluation_access": false},
+  "scope": "Functional regression adaptation only; no broad accuracy, confidence or risk bound"
+}
