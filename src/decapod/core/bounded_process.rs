@@ -12,6 +12,7 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
+#[path = "bounded_process/signal.rs"]
 mod signal;
 pub use signal::SignalCancellationGuard;
 
