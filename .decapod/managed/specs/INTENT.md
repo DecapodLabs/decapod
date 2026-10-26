@@ -7,7 +7,26 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
-The current follow-up repairs a demonstrated public Buildkite artifact-origin
+The active development intent is the maintainer's 2026-10-24 selection of Laya
+for bounded post-validation readiness. It replaces the evaluator in the current
+accepted architecture rather than reverting unrelated kernel releases or
+restoring hosted Jev. Required deterministic proof, private task custody, exact
+state/model binding, fail-closed assessment and human merge authority remain.
+`core::laya_readiness` and `assets/tools/laya-native` implement the candidate
+path; their presence is not proof that the model satisfies readiness behavior.
+The history audit in `docs/laya-readiness-migration.md` distinguishes release
+PR #1345 from implementations #1343/#1346/#1351 and later #1460. Inference speed
+and broader #1400 validation latency are separate claims.
+
+This replacement remains unqualified development work. Corrected production
+controls exposed false-ready judgments in English and multilingual profiles;
+the typed profile rejected ready work too. A bounded 768-coefficient adaptation
+failed its fitting acceptance even after correcting its optimizer's prior.
+Frozen evaluation remains unscored, the fitted artifact is not installed, and
+no full-validation or publication success is claimed. The detailed decision
+and measured runtime/configuration evidence are preserved in the migration doc.
+
+The earlier follow-up repaired a demonstrated public Buildkite artifact-origin
 compatibility defect in the released v0.121.0 controller. Accept the documented
 exact HTTPS artifact host alongside the legacy bucket, preserving producer,
 path, checksum, output and deadline checks. This independently qualified
@@ -233,8 +252,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `f9b774084b7fe99199ad99802b2182cd5d37935125eb2309484fd88dafabc8ba`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (55 files), `docs/` (1 files), `src/` (214 files), `tests/` (197 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
