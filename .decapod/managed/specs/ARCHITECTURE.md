@@ -7,6 +7,42 @@ structured RPC. It connects human intent, project authority, coordinated
 execution, and evidence in repository-owned state. Each invocation is finite;
 the repository carries the work between invocations.
 
+The current candidate selects Laya through `core::laya_readiness` after the
+existing deterministic verdict. Its separate `assets/tools/laya-native` worker
+uses the pinned upstream Rust SDK for CPU and a numerically checked Candle
+ModernBERT/head implementation for native Metal and optional CUDA. Heavy model
+decoding and SDK dependencies stay outside the published kernel crate. The
+existing `vega_readiness::project` remains the shared validation-results.v3
+projection; its name and historical wire types preserve prior evidence. The old
+live Vega assessor is retained only for historical regressions, not selected
+by current validation. Accepted native proof recipes remain mandatory.
+
+`laya_assets` pins original SafeTensors/configuration and a separately identified
+community ONNX conversion. `laya_setup` reuses bounded public transport, safe
+single-link files and the local runtime registry in a separate Laya namespace.
+It copies and verifies cache artifacts before atomic installation. Assessment
+is offline and never follows a floating revision. A typed hardware/backend
+failure with no answer may select a fresh CPU attempt within the original
+budget; negative, abstaining, malformed or timed-out inference cannot do so.
+
+`laya_protocol::Response` checks request/input/manifest/rubric/backend binding,
+finite bounded probabilities, exact reported resolution and token bounds.
+The parent retains proof authority and rechecks source, target, governance,
+policy, runtime and model after inference. A worker cannot assert publication
+readiness. Development runs revealed false-ready judgments even though CPU and
+Metal agreed numerically; model capability remains an unresolved qualification
+obligation. No accuracy or complete-validation success follows from source code.
+
+`laya-native::affine` is a bounded experimental scalar optimizer, not an active
+model loader or policy substitute. It can fit only the final shared scorer while
+freezing original bias and other model weights. Runtime-weight L2 regularization
+and a sample-space Newton solve prevent normalized-coordinate amplification.
+The resulting profile was structurally valid but missed ten fitting labels;
+it was rejected, retained privately and never installed. The production manifest
+still pins the original profile. No worker auto-discovers a fitted overlay.
+The device wrapper also guards an actually empty Metal inventory before the
+pinned Candle constructor, returning unavailability rather than panicking.
+
 `snapshot_provider::public_buildkite::CurlPublicReader` retains its typed,
 anonymous GET authorization and bounded redirect loop. Artifact redirects admit
 the exact documented `https://buildkiteartifacts.com/` origin and legacy owned
@@ -567,8 +603,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `f9b774084b7fe99199ad99802b2182cd5d37935125eb2309484fd88dafabc8ba`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (55 files), `docs/` (1 files), `src/` (214 files), `tests/` (197 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
