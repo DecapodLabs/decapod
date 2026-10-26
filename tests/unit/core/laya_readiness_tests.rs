@@ -25,6 +25,85 @@ fn required_configuration_is_pinned_and_never_silently_migrates_vega() {
 }
 
 #[test]
+#[ignore = "requires verified external original model; exercises real offline installation without runtime registration"]
+fn actual_offline_install_reuses_single_link_assets_and_recovers_failure()
+-> Result<(), Box<dyn std::error::Error>> {
+    use crate::core::fs_permissions;
+    let source =
+        std::path::PathBuf::from(std::env::var("DECAPOD_LAYA_REFERENCE_MODEL")?).canonicalize()?;
+    let manifest = laya_assets::baseline();
+    let digest = laya_assets::manifest_digest(&manifest)?;
+    let verify_source = || {
+        laya_setup::verify_installation(
+            &source,
+            &digest,
+            Instant::now() + Duration::from_secs(180),
+            &Cancellation::default(),
+        )
+    };
+    verify_source()?;
+    let directory = tempfile::tempdir()?;
+    let root = directory.path().canonicalize()?.join("cache");
+    let cache = root.join("artifacts");
+    fs_permissions::ensure_private_dir(&cache)?;
+    // Seed an explicitly offline cache from already independently verified
+    // public originals. No URLs, credentials or active global registry change.
+    for asset in &manifest.assets {
+        fs::copy(source.join(&asset.path), cache.join(&asset.sha256))?;
+    }
+    let options = laya_setup::SetupOptions {
+        cache_directory: Some(root.clone()),
+        offline: true,
+        ..Default::default()
+    };
+    let first_asset = &manifest.assets[0];
+    fs::write(cache.join(&first_asset.sha256), b"corrupted cache fixture")?;
+    assert!(laya_setup::run(&options).is_err());
+    assert_eq!(
+        fs::read_dir(root.join("versions"))?.count(),
+        0,
+        "failed installation must remove only its staging tree"
+    );
+    verify_source()?;
+    fs::copy(
+        source.join(&first_asset.path),
+        cache.join(&first_asset.sha256),
+    )?;
+    let first = laya_setup::run(&options)?;
+    assert!(!first.runtime_registered);
+    let second = laya_setup::run(&options)?;
+    assert_eq!(first.model_directory, second.model_directory);
+    assert_eq!(first.manifest_digest, digest);
+    assert_eq!(second.manifest_digest, digest);
+    assert_eq!(fs::read_dir(root.join("versions"))?.count(), 1);
+    laya_setup::verify_installation(
+        &first.model_directory,
+        &digest,
+        Instant::now() + Duration::from_secs(180),
+        &Cancellation::default(),
+    )?;
+    #[cfg(unix)]
+    for asset in &manifest.assets {
+        use std::os::unix::fs::MetadataExt;
+        let cached = fs::metadata(cache.join(&asset.sha256))?;
+        let installed = fs::metadata(first.model_directory.join(&asset.path))?;
+        assert_eq!(cached.nlink(), 1);
+        assert_eq!(installed.nlink(), 1);
+        assert_ne!(
+            (cached.dev(), cached.ino()),
+            (installed.dev(), installed.ino())
+        );
+    }
+    verify_source()?;
+    eprintln!(
+        "real offline model install: assets={} bytes={} corrupt-cache failure recovered; atomic version reused; original hashes preserved; no runtime registered",
+        manifest.assets.len(),
+        manifest.assets.iter().map(|a| a.bytes).sum::<u64>()
+    );
+    Ok(())
+}
+
+#[test]
 fn stale_and_failed_evidence_block_before_production_projection() {
     for variant in ["failed-proof", "stale-proof"] {
         assert!(test_fixture::fixture(variant).unwrap().project().is_err());
