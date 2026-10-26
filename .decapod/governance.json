@@ -463,6 +463,15 @@
         "/private/tmp/decapod-laya-freeze-corpora-v2.log",
         "tests/fixtures/laya-readiness-evaluation-corpus.json"
       ]
+    },
+    {
+      "id": "laya-development-preservation-20261025-1",
+      "summary": "Preserve .decapod/managed/Dockerfile.decapod as one material path with mandatory governance. Native numerical, CPU fallback and init checks have focused passing evidence. Three original profiles and bounded final-affine fitting failed readiness qualification. Both fitting failures remain preserved; held-out evaluation is unscored; experimental readout is not installed. Full final validation and PR publication remain unsatisfied. This development checkpoint claims no completion or publication readiness.",
+      "input_digest": "sha256:e29d12a6650dfc649a9102bc5041b63449860b13fd82e4cd2fb511787b58d474",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod",
+        "/private/tmp/decapod-laya-corrected-fit-diagnosis.log"
+      ]
     }
   ],
   "intents": {
@@ -493,7 +502,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "The maintainer selects Rust-native Laya for bounded active post-validation readiness. Preserve deterministic proof, exact state/custody/model/runtime binding, fail-closed required judgment, external pinned assets, offline verified installation, existing authority and human merge. Historical #1345 is the release of hosted-Jev implementation #1343; #1346/#1351 and #1460 contribute history, not a rollback target. Three pinned upstream Laya profiles have now failed fixed production-shaped readiness development controls; preserve both original confounded-input and corrected-input failures. Use the already-authorized smallest local Rust-native adaptation: fit only the final affine scorer (at most 1024 coefficients), freezing the pretrained encoder, decision-head architecture and action head. Source-ground fitting labels in explicitly executed Rust contracts; label provenance is agent-authored and bounded, not human ground truth or broad calibration. Freeze new evaluation families before fitting, keep them disjoint from exposed development and fitting units, and do not tune after evaluation. Pin reproducible training inputs/source/base, output scorer/calibration and all original artifacts independently outside the published Decapod crate; publish only nonsensitive public-derived model metadata/artifacts if needed for reproducible installation. No Python, paid compute, private-data sharing, full-model training, replacement agent framework, statistical accuracy claim, weakened checks, force-push, merge or release. One material path plus mandatory governance per commit. Complete native Metal/CPU/fallback, unchanged original numerical comparisons plus separate scalar verification of the fitted affine readout, installation/init/error regressions, source/generated docs and exact-candidate Decapod validation before one PR. If the bounded fit fails frozen acceptance, preserve it and report the concrete capability gap rather than train against that evaluation.",
+      "intent": "Replace active Vega readiness with Rust-native Laya under existing deterministic proof authority, exact binding and fail-closed required judgment; preserve all prior failures and the frozen evaluation. Native CPU/Metal, tokenizer, calibration, fallback and original numerical comparisons have passed focused execution. Three original profiles failed corrected production development controls. The first bounded final-affine fitting implementation also failed: six fitting errors and invalid coefficients. Repair the demonstrated optimizer defect before one corrected fitting attempt: apply the declared L2 prior around original runtime weights, rather than penalizing only normalized coordinate changes which permits huge unscaled coefficients. Keep lambda 0.001, maximum 5000 iterations, original bias/encoder/Transformer head/action weights frozen, 768 coefficients, existing coefficient safety bound and fixed decision mapping. Use a deterministic damped Newton solver with scalar gradient/linear-solve regressions and an objective-derived coefficient bound; this is a numerical correction, not threshold or holdout tuning. Reuse the exact captured fitting features without new feature generation. The evaluation inputs remain unscored and may be opened only after fitting is valid and its artifact is frozen. If corrected fit or frozen acceptance fails, stop fitting, retain failures and report the concrete gap. No Python, paid compute, private sharing, full-model training, relaxed gates, merge or release. Finish authorized independent integration checks, specifications and exact-candidate full validation before a PR; do not claim passing publication evidence without it.",
       "phases": [],
       "proof_hooks": [
         "Pinned upstream tokenizer/sequence/backbone/head numerical comparisons and independently calculated fitted-scorer arithmetic with unchanged existing tolerances",
@@ -510,16 +519,44 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792972290Z"
+      "updated_at": "1792977765Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2769d0c4ff60e39da8906c606a18fdfbd461581b3213aff03d04f1ec18faa736",
+      "artifact_hash": "sha256:6056cca02b2ed7b739f4fcb0588201190b1b1dd2f1d3b2ca6127a4a7db33d013",
       "checks": [
         {
+          "name": "actual-cpu-fallback-tokenizer",
+          "status": "passed"
+        },
+        {
+          "name": "bounded-affine-fitting",
+          "status": "failed"
+        },
+        {
+          "name": "corrected-affine-fitting",
+          "status": "failed"
+        },
+        {
+          "name": "final-full-validation",
+          "status": "unavailable"
+        },
+        {
           "name": "fitting_math_unit_checks",
+          "status": "passed"
+        },
+        {
+          "name": "init-configuration",
+          "status": "passed"
+        },
+        {
+          "name": "metal-published-760-token-answers",
+          "status": "passed"
+        },
+        {
+          "name": "original-cpu-metal-numerics",
           "status": "passed"
         },
         {
@@ -529,6 +566,14 @@
         {
           "name": "unadapted_corrected_production_readiness",
           "status": "failed"
+        },
+        {
+          "name": "worker-final-unit-tests",
+          "status": "passed"
+        },
+        {
+          "name": "worker-runtime-regressions",
+          "status": "passed"
         }
       ],
       "current_phase": "intent",
@@ -573,10 +618,31 @@
             "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M5RMTS8AP56RDV7PYVRS32ET",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M5RMTS8AP56RDV7PYVRS32ET",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M5RMTS8AP56RDV7PYVRS32ET",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M5RMTS8AP56RDV7PYVRS32ET": {
@@ -643,6 +709,62 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "loop:laya-bounded-affine-fitting:1",
+                "custody_event_id": "event:8",
+                "observations": [],
+                "proof_refs": [
+                  "/private/tmp/decapod-laya-affine-first-accessible-metal-fit.log",
+                  "/private/tmp/decapod-laya-affine-recovery-diagnostic.log",
+                  "/private/tmp/decapod-laya-affine-fit-20261025-v3/fitting-features.json",
+                  "/private/tmp/decapod-laya-affine-fit-20261025-v3/recovered-readiness-affine.json"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Actual Metal feature extraction succeeded for all 32 fitting rows. Fixed Rust affine fitting left 6 training errors and produced a maximum coefficient magnitude 386606.72, exceeding the existing reviewed-profile safety bound 10000. Artifact validation rejected it. Frozen evaluation has not been scored; no threshold, safety-bound or evaluation-driven tuning is authorized by this result."
+                ]
+              },
+              {
+                "action": "loop:laya-bounded-affine-fitting:2",
+                "custody_event_id": "event:9",
+                "observations": [],
+                "proof_refs": [
+                  "/private/tmp/decapod-laya-corrected-affine-math.log",
+                  "/private/tmp/decapod-laya-affine-corrected-fit.log",
+                  "/private/tmp/decapod-laya-affine-fit-20261025-v3/corrected-fit-diagnosis.json",
+                  "/private/tmp/decapod-laya-final-original-pinned-parity.log",
+                  "/private/tmp/decapod-laya-final-cpu-fallback-tokenizer.log",
+                  "/private/tmp/decapod-laya-init-regression-final.log"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Corrected runtime-weight prior and scalar Newton solver passed four mathematical regressions. Fixed lambda 0.001 and identical captured fitting features converged in 5 iterations to structurally valid weights (max magnitude 1.5782235), but 10/32 fitting-score classifications disagree: 6 adverse affirmative and 4 ready negative. No complete fitted-worker execution or evaluation occurred. Stop adaptation, retain both failures, do not activate artifact or claim final validation/publication success."
+                ]
+              },
+              {
+                "action": "loop:laya-final-independent-verification:1",
+                "custody_event_id": "event:10",
+                "observations": [],
+                "proof_refs": [
+                  "/private/tmp/decapod-laya-metal-long-published-first.log",
+                  "/private/tmp/decapod-laya-final-worker-unit-tests.log",
+                  "/private/tmp/decapod-laya-frozen-cases-7385.rs",
+                  "docs/laya-readiness-migration.md"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": [
+                  "Independent component checks only. Actual Metal matched the pinned producer 760-state-token/three-question calibrated outputs within unchanged 1e-4 tolerance. All 18 worker unit regressions pass. Required readiness qualification remains failed; final full validation has not passed. Preserve committed freeze, private failed fits and source snapshots. Formatting-only generator changes are not relabelled as new fitting or evaluation."
+                ]
               }
             ]
           }
@@ -689,6 +811,65 @@
           ],
           "proof_refs": [
             "/private/tmp/decapod-laya-affine-math-first.log"
+          ],
+          "status": "passed",
+          "trajectory_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
+          "trigger": "agent"
+        },
+        {
+          "attempt": 1,
+          "custody_event_id": "event:8",
+          "feedback": "Actual Metal feature extraction succeeded for all 32 fitting rows. Fixed Rust affine fitting left 6 training errors and produced a maximum coefficient magnitude 386606.72, exceeding the existing reviewed-profile safety bound 10000. Artifact validation rejected it. Frozen evaluation has not been scored; no threshold, safety-bound or evaluation-driven tuning is authorized by this result.",
+          "grader_result": "fail",
+          "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+          "loop_id": "laya-bounded-affine-fitting",
+          "loop_type": "verification",
+          "mutation_proposal": "none",
+          "proof_refs": [
+            "/private/tmp/decapod-laya-affine-first-accessible-metal-fit.log",
+            "/private/tmp/decapod-laya-affine-fit-20261025-v3/fitting-features.json",
+            "/private/tmp/decapod-laya-affine-fit-20261025-v3/recovered-readiness-affine.json",
+            "/private/tmp/decapod-laya-affine-recovery-diagnostic.log"
+          ],
+          "status": "failed",
+          "trajectory_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
+          "trigger": "agent"
+        },
+        {
+          "attempt": 2,
+          "custody_event_id": "event:9",
+          "feedback": "Corrected runtime-weight prior and scalar Newton solver passed four mathematical regressions. Fixed lambda 0.001 and identical captured fitting features converged in 5 iterations to structurally valid weights (max magnitude 1.5782235), but 10/32 fitting-score classifications disagree: 6 adverse affirmative and 4 ready negative. No complete fitted-worker execution or evaluation occurred. Stop adaptation, retain both failures, do not activate artifact or claim final validation/publication success.",
+          "grader_result": "fail",
+          "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+          "loop_id": "laya-bounded-affine-fitting",
+          "loop_type": "verification",
+          "mutation_proposal": "none",
+          "proof_refs": [
+            "/private/tmp/decapod-laya-affine-corrected-fit.log",
+            "/private/tmp/decapod-laya-affine-fit-20261025-v3/corrected-fit-diagnosis.json",
+            "/private/tmp/decapod-laya-corrected-affine-math.log",
+            "/private/tmp/decapod-laya-final-cpu-fallback-tokenizer.log",
+            "/private/tmp/decapod-laya-final-original-pinned-parity.log",
+            "/private/tmp/decapod-laya-init-regression-final.log"
+          ],
+          "status": "failed",
+          "trajectory_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
+          "trigger": "agent"
+        },
+        {
+          "attempt": 1,
+          "custody_event_id": "event:10",
+          "feedback": "Independent component checks only. Actual Metal matched the pinned producer 760-state-token/three-question calibrated outputs within unchanged 1e-4 tolerance. All 18 worker unit regressions pass. Required readiness qualification remains failed; final full validation has not passed. Preserve committed freeze, private failed fits and source snapshots. Formatting-only generator changes are not relabelled as new fitting or evaluation.",
+          "grader_result": "pass",
+          "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+          "loop_id": "laya-final-independent-verification",
+          "loop_type": "verification",
+          "mutation_proposal": "none",
+          "proof_refs": [
+            "/private/tmp/decapod-laya-final-worker-unit-tests.log",
+            "/private/tmp/decapod-laya-frozen-cases-7385.rs",
+            "/private/tmp/decapod-laya-metal-long-published-first.log",
+            "docs/laya-readiness-migration.md"
           ],
           "status": "passed",
           "trajectory_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
