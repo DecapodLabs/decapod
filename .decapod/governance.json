@@ -724,6 +724,15 @@
         "/private/tmp/decapod-laya-corrected-fit-diagnosis.log",
         "assets/tools/laya-native/Cargo.lock"
       ]
+    },
+    {
+      "id": "laya-development-preservation-20261025-30",
+      "summary": "Preserve assets/tools/laya-native/Cargo.toml as one material path with mandatory governance. Native numerical, CPU fallback and init checks have focused passing evidence. Three original profiles and bounded final-affine fitting failed readiness qualification. Both fitting failures remain preserved; held-out evaluation is unscored; experimental readout is not installed. Full final validation and PR publication remain unsatisfied. This development checkpoint claims no completion or publication readiness.",
+      "input_digest": "sha256:c58377ac8df9e2818e65560c1e12e2b1e93e146dcd5837cc4d3bfa25af87672f",
+      "proof_refs": [
+        "/private/tmp/decapod-laya-corrected-fit-diagnosis.log",
+        "assets/tools/laya-native/Cargo.toml"
+      ]
     }
   ],
   "intents": {
