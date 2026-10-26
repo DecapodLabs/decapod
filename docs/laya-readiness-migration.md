@@ -189,6 +189,14 @@ tests, and four external frontend/fallback/SDK tests. Those commands are focused
 checks, not the prescribed final publication validation. Timings are individual
 observations, not repeated-sample guarantees or complete validation latency.
 
+The real-model offline installer regression also passed using all six pinned
+original assets (1,968,585,010 bytes). It rejected a corrupt cache, removed its
+failed staging installation, recovered after repair, atomically installed and
+reused the same verified version. Every cache/installed pair retained a single
+link and distinct inode, and original source hashes remained intact. This used
+an isolated temporary cache with no runtime registration or global activation;
+it does not qualify the rejected fitted artifact or model judgment.
+
 The executed fitting inputs retain their original generator digest
 `7385bd750a28c7118739630404dd7a4447eb704bed41467b66771b144087d4cb`.
 Its exact source snapshot is preserved privately. Subsequent rustfmt-only
