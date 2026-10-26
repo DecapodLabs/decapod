@@ -112,6 +112,98 @@ fn report_rejected_fitting_artifact() -> Result<()> {
     Ok(())
 }
 
+/// A fixed failed fit can be diagnosed on its fitting inputs without opening
+/// the held-out evaluation or changing any parameter. This exercises actual
+/// native model/action outputs and the production response predicate, rather
+/// than treating scalar fitting margins as complete readiness decisions.
+#[test]
+#[ignore = "requires actual Metal; diagnostic execution of fixed rejected weights on fitting inputs only"]
+fn fixed_readout_native_fitting_diagnostic() -> Result<()> {
+    use decapod_laya_infer::protocol::{Decision, Request, Response, WORKER_SCHEMA};
+    assert_eq!(
+        std::env::var("DECAPOD_LAYA_REFERENCE_PROFILE")?,
+        "multilingual"
+    );
+    let directory =
+        std::path::PathBuf::from(std::env::var("DECAPOD_LAYA_REFERENCE_MODEL")?).canonicalize()?;
+    support::profile().verify(&directory)?;
+    let artifact = fs::read(std::env::var("DECAPOD_LAYA_RECOVERED_READOUT")?)?;
+    assert_eq!(
+        laya_assets::hash(&artifact),
+        "sha256:c3123413d4f88f9d9e64f3f1e8d1924b659210e34d2b2612b831156fa3abd74c"
+    );
+    let readout: affine::Readout = serde_json::from_slice(&artifact)?;
+    readout
+        .validate(
+            &format!("sha256:{}", support::profile().weights_sha256),
+            768,
+        )
+        .map_err(std::io::Error::other)?;
+    let inputs_raw = fs::read(std::env::var("DECAPOD_LAYA_FIT_INPUTS")?)?;
+    assert_eq!(readout.fit_inputs_sha256, laya_assets::hash(&inputs_raw));
+    let inputs: Value = serde_json::from_slice(&inputs_raw)?;
+    assert_eq!(inputs["partition"], "fit");
+    let frontend = Frontend::open(&directory)?;
+    let mut engine = Engine::open_native(&directory, Backend::Metal)?;
+    engine.replace_scorer(&readout.weights)?;
+    let mut rows = Vec::new();
+    let mut adverse_accepts = 0;
+    for case in inputs["cases"].as_array().unwrap() {
+        let state = case["state"].as_str().unwrap();
+        assert_eq!(case["state_sha256"], laya_assets::hash(state.as_bytes()));
+        let request = Request {
+            schema: WORKER_SCHEMA.into(),
+            rubric: RUBRIC.into(),
+            request_id: laya_assets::hash(case["id"].as_str().unwrap().as_bytes()),
+            input_digest: laya_assets::hash(state.as_bytes()),
+            manifest_digest: laya_assets::hash(&artifact),
+            installation: directory.clone(),
+            backend: Backend::Metal,
+            state: state.into(),
+        };
+        let answer = engine.predict(&frontend.prepare(state)?)?;
+        let response = Response {
+            schema: WORKER_SCHEMA.into(),
+            rubric: RUBRIC.into(),
+            request_id: request.request_id.clone(),
+            input_digest: request.input_digest.clone(),
+            manifest_digest: request.manifest_digest.clone(),
+            publication_ready: false,
+            judgment: Some(answer),
+            error_kind: None,
+            error: None,
+            metrics: None,
+        };
+        let decision = response
+            .decision(&request, 1024)
+            .map_err(std::io::Error::other)?;
+        if !case["expected_ready"].as_bool().unwrap() && decision == Decision::Accept {
+            adverse_accepts += 1;
+        }
+        rows.push(json!({"id":case["id"],"family":case["family"],
+            "expected_ready":case["expected_ready"],"state_sha256":case["state_sha256"],
+            "response":response,"decision":decision}));
+    }
+    support::profile().verify(&directory)?;
+    let report = json!({"schema":"decapod.laya-fixed-readout-diagnostic.v1",
+        "publication_ready":false,"scope":"in-process native model and production response predicate on fitting inputs; not installation, IPC custody or publication proof",
+        "fitting_performed":false,"evaluation_accessed":false,"artifact_installed":false,
+        "readout_sha256":laya_assets::hash(&artifact),"fit_inputs_sha256":laya_assets::hash(&inputs_raw),
+        "adverse_accepts":adverse_accepts,"rows":rows});
+    write_new(
+        Path::new(&std::env::var("DECAPOD_LAYA_FIXED_FIT_EXECUTION")?),
+        &report,
+    )?;
+    eprintln!(
+        "fixed rejected readout: rows=32 actual_metal_adverse_accepts={adverse_accepts}; evaluation_accessed=false"
+    );
+    assert_eq!(
+        adverse_accepts, 0,
+        "fixed fitted model remains unsafe on its fitting controls; preserve failure and do not tune on held-out evaluation"
+    );
+    Ok(())
+}
+
 #[test]
 #[ignore = "explicit local fitting stage; requires frozen fitting corpus and pinned original model"]
 fn fit_only_final_affine_on_frozen_training_partition() -> Result<()> {
