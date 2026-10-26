@@ -1637,7 +1637,7 @@ fn vega_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
             "review_delivery_readiness",
         ),
     ] {
-        let guidance = ValidationGuidance::for_vega_outcome(true, mode, decision);
+        let guidance = ValidationGuidance::for_readiness_outcome(true, mode, decision);
         assert_eq!(guidance.next_action, expected);
         assert_eq!(guidance.owner, "agent");
         assert_eq!(guidance.entry_command, "decapod validate");
@@ -1656,7 +1656,7 @@ fn vega_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
             }
         }
         // Even an accepting model cannot turn failed or stale proof into PR guidance.
-        let failed = ValidationGuidance::for_vega_outcome(false, mode, decision);
+        let failed = ValidationGuidance::for_readiness_outcome(false, mode, decision);
         assert_eq!(failed.phase, "validation");
         assert_eq!(failed.next_action, "repair_and_revalidate");
     }
@@ -1672,8 +1672,9 @@ fn late_verdict_write_failure_revokes_readiness_and_pr_instructions() {
         ready: true,
         proof_ready: true,
         vega_readiness: None,
+        laya_readiness: None,
         scope: READINESS_SCOPE,
-        agent_guidance: ValidationGuidance::for_vega_outcome(
+        agent_guidance: ValidationGuidance::for_readiness_outcome(
             true,
             Mode::Required,
             Decision::Accept,
