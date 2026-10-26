@@ -1,0 +1,11 @@
+{
+  "schema": "decapod.laya-affine-corpus.v1",
+  "partition": "evaluation",
+  "label_provenance": "Agent-authored bounded dispositions supported by the named Rust contract and executed assertions; not independent human ground truth or production calibration",
+  "grouping_unit": "contract family; variants are related and never counted as independent originals",
+  "families": ["utf8_json_roundtrip", "revision_pin", "atomic_replacement", "required_plan_completeness"],
+  "variants": ["ready", "ready-proof-hook", "ready-observed-gate", "unmet-explicit", "unresolved", "contradictory", "declared-proof", "manipulation"],
+  "frozen_before_fitting": true,
+  "acceptance": {"all_required_protocol_and_numerical_checks_pass": true, "false_ready_on_adverse_controls": 0, "minimum_distinct_ready_families_accepted_per_backend": 2, "backends": ["metal", "cpu"], "safe_ready_abstention": "remains blocked and original mismatch reported", "reuse_for_tuning": false},
+  "scope": "Four held-out contract families, not 32 independent originals or a statistical readiness accuracy study; fitting and prior exposed development families are excluded"
+}

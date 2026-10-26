@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d05c43746830c4829f54f23c339ebcdce40a68fb",
-    "release": "v0.121.0",
+    "accepted_commit": "2939be8bd146a28cc16cbfdde1aba4ba9b6e3a20",
+    "release": "v0.121.1",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -395,6 +395,7 @@
       "trajectory:42a30b6dcb8fd580": "Provider scheduling and ARM execution currently exceed the five-minute full target; only completed comparable runs can establish gain",
       "trajectory:448419562500c551": "Actual40 native tests and real Metal primitive checks pass, but download failures and incomplete CPU holdout with false-ready outcomes are not model parity or production calibration. Preserve later diagnostics on early strict aggregate error without making collection success readiness. Pin/error reporting preserves denial kinds and all setup safety. New source must run through official1191 validation; no manual builds or source-proof reuse as current scientific acceptance.",
       "trajectory:44ab164f90c301d9": "The existing traversal regression expected compact human output to contain every failure; use the complete structured failure list and preserve the exact traversal rejection assertion.",
+      "trajectory:4d4fa5c9f32018c3": "Focused tests and live GET are diagnostic; full released-controller validation remains required.",
       "trajectory:4daee12c8c51710b": "Fullvalidate5635stoppedbefore native because public docs workflow2290failed generatedconfigschema. Followed actualreport source-built docs build via reviewed existing docs-repairscript; no candidatecontrollergovernance. GitHubClippydiagnostic found single needlessborrow newly extracted sharedfunction. Fixwithoutlint suppression, preservefailedreport, rerunexactcandidate. No previousnativepassisclaimedforthisnewcode.",
       "trajectory:50af5d188a338fdf": "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement.",
       "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
@@ -449,187 +450,23 @@
     }
   },
   "change": {
-    "id": "change_01M5GWBX4RMCQK0TPV63Q60AM4",
-    "base_commit": "d05c43746830c4829f54f23c339ebcdce40a68fb",
+    "id": "change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+    "base_commit": "2939be8bd146a28cc16cbfdde1aba4ba9b6e3a20",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "exact-public-artifact-host": {
-      "statement": "The public reader accepts only the documented current artifact origin or legacy owned S3 prefix while preserving producer binding, unsafe-path rejection, byte/deadline limits and independent content integrity.",
-      "falsifier": "A permitted redirect escapes those two exact origins or producer-bound safe paths, or the fixed live artifact fails independently anchored SHA and size.",
-      "status": "supported",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "artifact-host-1",
-      "summary": "Record reader-origin for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:17c521a4b6ad4e1d25a211b45a0e8e9e0301e3707b082b18f82764eb1495f763",
+      "id": "laya-evaluation-freeze-01",
+      "summary": "Freeze four held-out evaluation contract families and explicit acceptance before any affine fitting. Agent-authored source-grounded controls, not human ground truth or a statistical risk study. All model qualification failures remain failed and full candidate validation has not passed.",
+      "input_digest": "sha256:c6dd34e1339a571a4272137514652b7e06a99be52dd053e0bcc3162c3e5b018f",
       "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-2",
-      "summary": "Record redirect-regressions for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:5d5fcf95cfd222fcc26fbad4bff2443dd56a402227c4441dbd0d10e098b8d46a",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-3",
-      "summary": "Record native-path-version for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:41b3cc71a8ffd5bcbf7392e7b063c21f87dea712143746ea98ee83784e499272",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-4",
-      "summary": "Record reviewed-inventory for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:fd94f97824eec69a34edb70119c91e5dc85ef3cf1b4558a09ce4e8ad519141a5",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-5",
-      "summary": "Record intent for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:a1b6ff4be01034117fe733475c068f39c7c80538c833c216cf067b99ccb21c77",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-6",
-      "summary": "Record architecture for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:ebc87a54fa06d9a4917dc0dc315694c57631a3e6cfcf2c69664fdb29dc982a5e",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-7",
-      "summary": "Record interfaces for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:6de53077a3b54d47e2c9f712cd35b73bac4bdb0c0a6a20d12b205f5594e72c45",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-8",
-      "summary": "Record security for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:c66d08a20ca9262f372ae78d348312cf7140c943348ed6201e98d7daac5d0f0e",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-9",
-      "summary": "Record validation for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:697f32552bb39e02dfe1abba60ead851ba1d357f166ac735339f20704abd2eec",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-10",
-      "summary": "Record operations for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:1085bbdf1f10c0177e56abb081d1a64cf95b80e32afa6cd8a659ee93459fac46",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-11",
-      "summary": "Record readme for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:f9e4f18a3d5a241f4427cb3567999271731b83841a9e6c10ecf5211899f580ff",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-12",
-      "summary": "Record semantics for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:381190640b1eb5881c690db58dab80a41dc5ecc39b6c28650123837184b64edf",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-13",
-      "summary": "Record agents for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:9882a5ca3f2d2bc0df356d9c0d5b4d42066288d87cb30801d0a2401768f979cc",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-14",
-      "summary": "Record claude for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:c8dd34ba072557115fd081de6de94204d99cfc557b32b49738ac163690e86af5",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-15",
-      "summary": "Record codex for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:e0b92921396f3642b31c41ad01612fb3f1edcb8013134d673833aa8871d9a0e8",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-16",
-      "summary": "Record gemini for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:dcfac9d1eed0f518602ac48c0abe00b5a9bfdae85409829b91912592159ec0d8",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-17",
-      "summary": "Record docker-pin for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:227f322afb456d4fc1ea1a196a618af84d0c8b4dd26767be6da600d30d4dafba",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ]
-    },
-    {
-      "id": "artifact-host-18",
-      "summary": "Record specs-manifest for the documented exact Buildkite origin fix; unchanged accepted policy and native checks; focused and live diagnostic proofs retained.",
-      "input_digest": "sha256:a738b9209edcc20cdb298ee04fa008dfc2cc9d1003f62f4a9dc1c73ee5b961af",
-      "proof_refs": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
+        "/private/tmp/decapod-laya-freeze-corpora-v2.log",
+        "tests/fixtures/laya-readiness-evaluation-corpus.json"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M5GWBX4RMCQK0TPV63Q60AM4": {
+    "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -639,11 +476,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M5GWBX4RMCQK0TPV63Q60AM4",
+      "id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix public Buildkite artifact origin compatibility\n\nIndependent controller defect blocking strict #1070/#1398/#779 evidence collection: official v0.121.0 permits only the legacy S3 artifact prefix, while public Buildkite returns its documented exact buildkiteartifacts.com origin. Carry the small prepared Rust fix from the owned derived-release task without changing its identity or dropping its failed reports. Qualify the fix from accepted master using that base existing source-bound CI API attestation and unchanged required native proof; do not weaken any accepted policy or activate the blocked stricter configuration. Preserve producer/path/digest/limit checks, reject hostile redirect variants, test the real reader, update security/interface specs, run official validate and publish a passing focused PR. No alternate downloader, credentials, self-authorizing unmerged controller, merge or release.",
-      "refined_intent": "Fix public Buildkite artifact origin compatibility\n\nIndependent controller defect blocking strict #1070/#1398/#779 evidence collection: official v0.121.0 permits only the legacy S3 artifact prefix, while public Buildkite returns its documented exact buildkiteartifacts.com origin. Carry the small prepared Rust fix from the owned derived-release task without changing its identity or dropping its failed reports. Qualify the fix from accepted master using that base existing source-bound CI API attestation and unchanged required native proof; do not weaken any accepted policy or activate the blocked stricter configuration. Preserve producer/path/digest/limit checks, reject hostile redirect variants, test the real reader, update security/interface specs, run official validate and publish a passing focused PR. No alternate downloader, credentials, self-authorizing unmerged controller, merge or release.",
+      "raw_intent": "Replace Vega post-validation readiness with native Rust Laya\n\nUser2026-10-24 explicitly changes the product direction from Vega to Laya following creator speed advice at https://x.com/raberhalex/status/2114117592021717050. Review historical releasePR1345 and implementation1343/1346/1351, their releasechain, latency1400/1403/1404, current1460/1445 and CHANGELOG before implementation. Preserve current deterministic proof authority, local-first/noPython, external verified pinned model artifacts, exact-state binding, fail-closed required judgment and humanmerge. Do not roll back unrelated releases or revive retired externalJevAPI. Reuse existing readiness architecture and upstream Laya Rust sources/fixtures where applicable. UpstreamSDK0.4.15 uses ONNX but official modelbundle currently publishes SafeTensors only; resolve this concretely inRust or identify precise capability dependency without pretending artifacts exist. Preserve all existing tasks/worktrees/failures and paused unrelated work. Each newcommit one materialpath plus mandatory governance checkpoint. Validate/publish through normal supportedflow; noforce/merge/release.",
+      "refined_intent": "Replace Vega post-validation readiness with native Rust Laya\n\nUser2026-10-24 explicitly changes the product direction from Vega to Laya following creator speed advice at https://x.com/raberhalex/status/2114117592021717050. Review historical releasePR1345 and implementation1343/1346/1351, their releasechain, latency1400/1403/1404, current1460/1445 and CHANGELOG before implementation. Preserve current deterministic proof authority, local-first/noPython, external verified pinned model artifacts, exact-state binding, fail-closed required judgment and humanmerge. Do not roll back unrelated releases or revive retired externalJevAPI. Reuse existing readiness architecture and upstream Laya Rust sources/fixtures where applicable. UpstreamSDK0.4.15 uses ONNX but official modelbundle currently publishes SafeTensors only; resolve this concretely inRust or identify precise capability dependency without pretending artifacts exist. Preserve all existing tasks/worktrees/failures and paused unrelated work. Each newcommit one materialpath plus mandatory governance checkpoint. Validate/publish through normal supportedflow; noforce/merge/release.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -656,113 +493,156 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Deliver the isolated Rust controller fix for the actual v0.121.0 strict-collection failure at f475d078: accept only the documented exact HTTPS buildkiteartifacts.com origin in addition to the legacy owned S3 bucket, preserving producer/path/checksum/size/deadline restrictions and opaque signed queries. Use accepted master d05c4374 and its existing complete source-bound CI API attestation, unchanged source graph and eight required Vega native runs; do not activate the original release branch stricter policy or weaken any accepted gate. The original derived-release task and its failure reports remain preserved, with strict collection requiring this independent fix to be accepted/released before resuming. Run adversarial Rust redirect tests, a fixed public-artifact diagnostic through the actual production reader, official exact-candidate validate and terminal PR CI. No alternate downloader or imported diagnostic as readiness proof, Python, model/pin/tolerance/authority change, unmerged-controller self-authorization, force-push, merge or release.",
+      "intent": "The maintainer selects Rust-native Laya for bounded active post-validation readiness. Preserve deterministic proof, exact state/custody/model/runtime binding, fail-closed required judgment, external pinned assets, offline verified installation, existing authority and human merge. Historical #1345 is the release of hosted-Jev implementation #1343; #1346/#1351 and #1460 contribute history, not a rollback target. Three pinned upstream Laya profiles have now failed fixed production-shaped readiness development controls; preserve both original confounded-input and corrected-input failures. Use the already-authorized smallest local Rust-native adaptation: fit only the final affine scorer (at most 1024 coefficients), freezing the pretrained encoder, decision-head architecture and action head. Source-ground fitting labels in explicitly executed Rust contracts; label provenance is agent-authored and bounded, not human ground truth or broad calibration. Freeze new evaluation families before fitting, keep them disjoint from exposed development and fitting units, and do not tune after evaluation. Pin reproducible training inputs/source/base, output scorer/calibration and all original artifacts independently outside the published Decapod crate; publish only nonsensitive public-derived model metadata/artifacts if needed for reproducible installation. No Python, paid compute, private-data sharing, full-model training, replacement agent framework, statistical accuracy claim, weakened checks, force-push, merge or release. One material path plus mandatory governance per commit. Complete native Metal/CPU/fallback, unchanged original numerical comparisons plus separate scalar verification of the fitted affine readout, installation/init/error regressions, source/generated docs and exact-candidate Decapod validation before one PR. If the bounded fit fails frozen acceptance, preserve it and report the concrete capability gap rather than train against that evaluation.",
       "phases": [],
       "proof_hooks": [
-        "Host/producer/path/port/userinfo/traversal adversarial regressions and actual fixed artifact read with independent provider SHA",
-        "Official released-controller validate with accepted source policy, complete Buildkite graph and required native worker proof, then terminal PR CI"
+        "Pinned upstream tokenizer/sequence/backbone/head numerical comparisons and independently calculated fitted-scorer arithmetic with unchanged existing tolerances",
+        "Versioned bounded final-affine fitting inputs and exact reproducible output; separate pre-frozen evaluation families, useful actual-backend ready acceptance and all adverse controls; no holdout tuning or broad accuracy claims",
+        "Verified external installation, actual CPU/Metal inference and explicit fallback with synchronized timing and process RSS reporting",
+        "Exact final-candidate full Decapod validation and terminal PR CI; all prior failures preserved"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed exact documented Buildkite artifact origin with unchanged producer, safe-path, integrity and deadline boundaries; accepted CI policy and required native recipe remain unchanged. No broader release qualification or Vega accuracy claim.",
-          "reviewed_code_fingerprint": "ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853",
-          "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed exact documented Buildkite artifact origin with unchanged producer, safe-path, integrity and deadline boundaries; accepted CI policy and required native recipe remain unchanged. No broader release qualification or Vega accuracy claim.",
-          "reviewed_code_fingerprint": "ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853",
-          "spec_material_hash": "a227ee81c08e687d9dfa5ec539625a29c86d32b8a80653fa08178a493494869e"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed exact documented Buildkite artifact origin with unchanged producer, safe-path, integrity and deadline boundaries; accepted CI policy and required native recipe remain unchanged. No broader release qualification or Vega accuracy claim.",
-          "reviewed_code_fingerprint": "ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853",
-          "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Support the documented public Buildkite artifact host",
+      "title": "Replace Vega readiness with Rust-native Laya",
       "todo_ids": [
-        "bugs_01m5gst041kbknjj"
+        "perf_01m5rmtesgpkvddx"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1792650161Z"
+      "updated_at": "1792972290Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9787782cdf1196bd62b3c8ef9c7260b7eae6d4a6b0299d66d04ff9ca300f06fd",
+      "artifact_hash": "sha256:2769d0c4ff60e39da8906c606a18fdfbd461581b3213aff03d04f1ec18faa736",
       "checks": [
         {
-          "name": "fixed_public_artifact_diagnostic",
+          "name": "fitting_math_unit_checks",
           "status": "passed"
         },
         {
-          "name": "public_reader_regressions",
+          "name": "published_multilingual_native_parity",
           "status": "passed"
+        },
+        {
+          "name": "unadapted_corrected_production_readiness",
+          "status": "failed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M5GWBX4RMCQK0TPV63Q60AM4",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M5GWBX4RMCQK0TPV63Q60AM4",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M5GWBX8Y66A7DYJX7AWJGYH4",
+            "detail": "trajectory:branch_01M5RMTS8AP56RDV7PYVRS32ET",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M5GWBX4RMCQK0TPV63Q60AM4",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M5RMTS8AP56RDV7PYVRS32ET",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M5RMTS8AP56RDV7PYVRS32ET",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M5RMTS8AP56RDV7PYVRS32ET",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M5GWBX8Y66A7DYJX7AWJGYH4": {
+          "branch_01M5RMTS8AP56RDV7PYVRS32ET": {
             "evidence_only": true,
-            "id": "branch_01M5GWBX8Y66A7DYJX7AWJGYH4",
-            "intent_id": "intent:change_01M5GWBX4RMCQK0TPV63Q60AM4",
+            "id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
+            "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
             "steps": [
               {
-                "action": "verification",
+                "action": "loop:laya-multilingual-published-vectors:1",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/snapshot_provider/public_buildkite.rs",
-                  "src/decapod/core/snapshot_provider/public_buildkite/tests.rs",
-                  "/private/tmp/decapod-01210-artifact-host-focused.log",
-                  "/private/tmp/decapod-01210-artifact-host-live.log"
+                  "Five executed focused checks passed: tokenizer rows, SDK calibrated answers, bounded frontend, CPU and actual synchronized Metal raw logits against independently published upstream vectors. This is component numerical evidence, not readiness-domain accuracy or full validation."
                 ],
                 "proof_refs": [
-                  "public_reader_regressions",
-                  "fixed_public_artifact_diagnostic"
+                  "/private/tmp/decapod-laya-multilingual-first-pinned.log"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "loop:laya-unadapted-corrected-production-study:1",
+                "custody_event_id": "event:5",
+                "observations": [],
+                "proof_refs": [
+                  "/private/tmp/decapod-laya-english-corrected-inputs-v3.log",
+                  "/private/tmp/decapod-laya-multilingual-corrected-inputs-v3.log",
+                  "/private/tmp/decapod-laya-typed-decisions-corrected-inputs-v3.log"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
                 "validation_findings": [
-                  "Focused tests and live GET are diagnostic; full released-controller validation remains required."
+                  "After correcting replay-only scope and workflow labels, English and multilingual approve the ready case and all three adverse cases; typed-decisions rejects every case including ready. All original logs and prior confounded studies remain failed diagnostics. No threshold or label changes."
                 ]
+              },
+              {
+                "action": "loop:laya-affine-evaluation-freeze:1",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Before any parameter fitting: fitting definition sha256:9c6d9a6388ea633581731fa082f39baba17a57f5b5b2c5685449587e68dea735; evaluation definition sha256:b8de1e38cccc8146e7dbe12acbbf9bc7e677458c358354cbc22901d2e4f7c217; shared source witness generator sha256:7385bd750a28c7118739630404dd7a4447eb704bed41467b66771b144087d4cb. Separate 4 fitting/4 evaluation families, 32 related variants each; distinct family-specific evaluation wording; not independent human labels or a risk study. Freeze evaluation before fitting; no evaluation-driven tuning."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "loop:laya-affine-math-unit-checks:1",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Two executed pure-Rust tests passed: stable loss finite-difference derivative, deterministic balanced fitting, fitting/evaluation role rejection and malformed-feature rejection. No real profile fitting or held-out model evaluation has run yet."
+                ],
+                "proof_refs": [
+                  "/private/tmp/decapod-laya-affine-math-first.log"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -770,31 +650,100 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "/private/tmp/decapod-01210-artifact-host-focused.log",
-        "/private/tmp/decapod-01210-artifact-host-live.log"
-      ],
+      "evidence": [],
       "inspected_files": [
-        "src/decapod/core/snapshot_provider/public_buildkite.rs"
+        "CHANGELOG.md",
+        "assets/tools/laya-native/src/engine.rs",
+        "src/decapod/core/vega_readiness.rs",
+        "tests/fixtures/laya-readiness-evaluation-corpus.json",
+        "tests/fixtures/laya-readiness-fit-corpus.json",
+        "tests/support/laya_fitting_cases.rs"
       ],
-      "intent_id": "intent:change_01M5GWBX4RMCQK0TPV63Q60AM4",
-      "modified_files": [
-        "src/decapod/core/snapshot_provider/public_buildkite/tests.rs"
+      "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+      "loops": [
+        {
+          "attempt": 1,
+          "custody_event_id": "event:6",
+          "grader_result": "skipped",
+          "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+          "loop_id": "laya-affine-evaluation-freeze",
+          "loop_type": "event",
+          "mutation_proposal": "none",
+          "observations": [
+            "Before any parameter fitting: fitting definition sha256:9c6d9a6388ea633581731fa082f39baba17a57f5b5b2c5685449587e68dea735; evaluation definition sha256:b8de1e38cccc8146e7dbe12acbbf9bc7e677458c358354cbc22901d2e4f7c217; shared source witness generator sha256:7385bd750a28c7118739630404dd7a4447eb704bed41467b66771b144087d4cb. Separate 4 fitting/4 evaluation families, 32 related variants each; distinct family-specific evaluation wording; not independent human labels or a risk study. Freeze evaluation before fitting; no evaluation-driven tuning."
+          ],
+          "status": "open",
+          "trajectory_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
+          "trigger": "agent"
+        },
+        {
+          "attempt": 1,
+          "custody_event_id": "event:7",
+          "grader_result": "pass",
+          "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+          "loop_id": "laya-affine-math-unit-checks",
+          "loop_type": "verification",
+          "mutation_proposal": "none",
+          "observations": [
+            "Two executed pure-Rust tests passed: stable loss finite-difference derivative, deterministic balanced fitting, fitting/evaluation role rejection and malformed-feature rejection. No real profile fitting or held-out model evaluation has run yet."
+          ],
+          "proof_refs": [
+            "/private/tmp/decapod-laya-affine-math-first.log"
+          ],
+          "status": "passed",
+          "trajectory_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
+          "trigger": "agent"
+        },
+        {
+          "attempt": 1,
+          "custody_event_id": "event:4",
+          "grader_result": "pass",
+          "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+          "loop_id": "laya-multilingual-published-vectors",
+          "loop_type": "verification",
+          "mutation_proposal": "none",
+          "observations": [
+            "Five executed focused checks passed: tokenizer rows, SDK calibrated answers, bounded frontend, CPU and actual synchronized Metal raw logits against independently published upstream vectors. This is component numerical evidence, not readiness-domain accuracy or full validation."
+          ],
+          "proof_refs": [
+            "/private/tmp/decapod-laya-multilingual-first-pinned.log"
+          ],
+          "status": "passed",
+          "trajectory_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
+          "trigger": "agent"
+        },
+        {
+          "attempt": 1,
+          "custody_event_id": "event:5",
+          "feedback": "After correcting replay-only scope and workflow labels, English and multilingual approve the ready case and all three adverse cases; typed-decisions rejects every case including ready. All original logs and prior confounded studies remain failed diagnostics. No threshold or label changes.",
+          "grader_result": "fail",
+          "intent_id": "intent:change_01M5RMTS5AHZXV1B9JBWG2GDCT",
+          "loop_id": "laya-unadapted-corrected-production-study",
+          "loop_type": "verification",
+          "mutation_proposal": "none",
+          "proof_refs": [
+            "/private/tmp/decapod-laya-english-corrected-inputs-v3.log",
+            "/private/tmp/decapod-laya-multilingual-corrected-inputs-v3.log",
+            "/private/tmp/decapod-laya-typed-decisions-corrected-inputs-v3.log"
+          ],
+          "status": "failed",
+          "trajectory_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
+          "trigger": "agent"
+        }
       ],
+      "modified_files": [],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M5GWBX8Y66A7DYJX7AWJGYH4",
+      "run_id": "branch_01M5RMTS8AP56RDV7PYVRS32ET",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m5gst041kbknjj",
+      "task_id": "perf_01m5rmtesgpkvddx",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Focused tests and live GET are diagnostic; full released-controller validation remains required."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
