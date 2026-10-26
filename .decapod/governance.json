@@ -994,6 +994,15 @@
         "/private/tmp/decapod-laya-corrected-fit-diagnosis.log",
         "tests/support/laya_fitting_cases.rs"
       ]
+    },
+    {
+      "id": "laya-development-preservation-20261025-60",
+      "summary": "Preserve tests/support/readiness_snapshot.rs as one material path with mandatory governance. Native numerical, CPU fallback and init checks have focused passing evidence. Three original profiles and bounded final-affine fitting failed readiness qualification. Both fitting failures remain preserved; held-out evaluation is unscored; experimental readout is not installed. Full final validation and PR publication remain unsatisfied. This development checkpoint claims no completion or publication readiness.",
+      "input_digest": "sha256:a7154c7596e39ee3f3974c439e90a89ed55ebe870e511a2b380ecb0548d13a9a",
+      "proof_refs": [
+        "/private/tmp/decapod-laya-corrected-fit-diagnosis.log",
+        "tests/support/readiness_snapshot.rs"
+      ]
     }
   ],
   "intents": {
