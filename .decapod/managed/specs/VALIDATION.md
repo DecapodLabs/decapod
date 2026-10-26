@@ -2,7 +2,44 @@
 
 ## Validation Overview
 
-The artifact-origin controller prerequisite uses the accepted source-bound CI API
+Current Laya development reuses the complete accepted source/Buildkite and
+native-worker validation contract. Focused Rust checks exercised safe artifact
+copying, unsafe-hardlink rejection, response binding, malformed numerics,
+quantization-aware abstention and deterministic-before-model behavior. Public
+pinned upstream vectors passed five multilingual checks including exact token
+IDs/markers, calibrated Rust SDK answers and actual synchronized Metal/CPU raw
+logits within predeclared tolerances. These fixed examples are not all-input
+parity or readiness-domain calibration.
+
+The production projection was exercised with four exposed development cases.
+Original confounded inputs remain preserved; corrected inputs use executed
+assertions, a test-binary digest and consistent workflow identity, keeping
+replay qualifications outside the model state. English and multilingual
+profiles accepted ready work and all three adverse controls. Typed decisions
+rejected all four. Correct mapping or numerical agreement did not qualify any
+of these profiles for readiness.
+
+Four new evaluation families and their fixed acceptance were committed before
+bounded final-affine fitting. Thirty-two fitting rows belong to four different
+agent-authored contract families, not independent human labels. Actual Metal
+captured their frozen features. The initial optimizer produced unsafe weights;
+the corrected runtime-weight prior converged to valid coefficients but retained
+ten fitting-score errors (six adverse affirmative and four ready negative).
+Fitting therefore stops before evaluation: the frozen evaluation is unscored,
+the artifact remains uninstalled, and full publication validation is unsatisfied.
+Do not tune thresholds, safety bounds or held-out units to change that outcome.
+
+Focused checks passed eight kernel tests, 35 init/config tests, actual CPU/Metal
+published-logit comparisons, exact token/marker and calibrated SDK outputs,
+unsupported-CUDA-to-actual-CPU retry and corrected scalar optimizer math. The
+same original numerical tolerances apply. These checks do not substitute for
+functional qualification, a required native recipe or final `decapod validate`.
+No full validation or migration PR success is claimed. The maintainer's prior
+functional acceptance revision remains explicit; no statistical prerequisite
+or human ground-truth claim is added. `docs/laya-readiness-migration.md` records
+source identities, exact results, rejected artifact identity and remaining gap.
+
+The previously accepted artifact-origin controller prerequisite uses the accepted source-bound CI API
 attestation policy, complete Buildkite catalog and unchanged eight-run Vega
 recipe. Adversarial Rust tests cover both exact storage origins and rejection of
 host/port/userinfo/producer/path substitutions. A separately opted-in live test
@@ -814,8 +851,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ae33549b89d1c324997fcd11bb735080b78fd824a313c43882a0166ad3ccd853`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `f9b774084b7fe99199ad99802b2182cd5d37935125eb2309484fd88dafabc8ba`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (55 files), `docs/` (1 files), `src/` (214 files), `tests/` (197 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
