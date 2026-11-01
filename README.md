@@ -22,7 +22,7 @@ Coding agents are fast. They also misunderstand requirements, lose context, repe
 
 Decapod gives agentic development a persistent engineering record and a way to check progress against the original intent. You describe what you want to build. Your agent plans and implements it. Decapod keeps the requirements, decisions, task ownership, and validation evidence attached to the repository, so the work can continue across agents and sessions without starting over.
 
-**Decapod validates that the work converges on what you asked for, and that its evidence is persistence for future reference.**
+**Decapod validates that the work converges on what you asked for, and that its evidence persists for future reference.**
 
 ## Get started
 
