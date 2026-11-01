@@ -1,13 +1,13 @@
+
 <p align="center">🦀</p>
 
-<p align="center">
-  <strong>Decapod</strong><br />
-  AI coding work you can verify.
-</p>
+<h1 align="center">Decapod</h1>
+
+<p align="center"><strong>Give your coding agents a target. Make them prove they reached it.</strong></p>
 
 <p align="center">
-  Work in Cursor, Claude Code, Codex, Antigravity, Grok, or your preferred coding agent.
-  Decapod governs the work while you keep using the same tools.
+  Works with Cursor, Claude Code, Codex, Antigravity, Grok, and other coding agents.<br />
+  Keep your tools. Govern the work.
 </p>
 
 <p align="center">
@@ -18,71 +18,75 @@
   <a href="https://decapodlabs.github.io/accountable-agentic-execution/"><img alt="Research" src="https://img.shields.io/badge/Research-Accountable%20Agentic%20Execution-blueviolet"></a>
 </p>
 
+Coding agents are fast. They also misunderstand requirements, lose context, repeat failed approaches, and sometimes declare work complete before the important checks have passed. Running more agents makes those problems harder to track.
 
-Tell your agent what you want to build. Decapod helps it turn that request into
-a plan and keeps the work tied to your requirements as the code changes.
-The agent handles the engineering and prepares a checked pull request for you
-to review and merge.
+Decapod gives agentic development a persistent engineering record and a way to check progress against the original intent. You describe what you want to build. Your agent plans and implements it. Decapod keeps the requirements, decisions, task ownership, and validation evidence attached to the repository, so the work can continue across agents and sessions without starting over.
 
-Run agents in parallel on separate tasks, or switch agents and tools during the
-same pull request. Plans and decisions stay in the repository, so the next agent
-can continue from recorded work without relying on the previous chat.
+**The goal isn't more generated code. It's work that converges on what you asked for—and can be reviewed on evidence.**
 
-## Quick start
+## Get started
 
-Run this in your project, then open your coding agent and tell it what you want to build.
+Run this inside your project:
 
 ```bash
 cargo binstall decapod && decapod init
 ```
 
-## Capabilities
+Then open your preferred coding agent and describe the change you want. Decapod supplies the project guidance and workflow the agent uses to plan, implement, and validate the work.
 
-1. **Catch misunderstandings early.** Project specs record the intended behavior. A plan gives each change a clear scope before the agent starts implementing it.
-2. **Give agents useful context.** Agents retrieve relevant project guidance with source references, including the repository's own requirements.
-3. **Run agents in parallel.** Task claims make ownership explicit. Overlap checks and isolated workspaces help keep concurrent changes separate.
-4. **Continue the same PR in another tool.** The next agent can use the recorded plan, decisions and work history to pick up where work stopped.
-5. **Apply your project’s rules.** Agents consult engineering guidance as they plan and build. Conflicts that need your decision stay visible.
-6. **Know what has been checked.** Built-in validation ties results to the current change and the project's required checks. Missing required proof keeps the work unverified.
+## What changes with Decapod
+
+| Without a durable workflow | With Decapod |
+| --- | --- |
+| Requirements drift as the conversation grows | Project specs and plans preserve intended behavior and scope |
+| A new agent must reconstruct what happened | Recorded decisions and work history support handoffs |
+| Parallel agents can step on the same work | Task claims, overlap checks, and isolated workspaces make ownership explicit |
+| Engineering rules depend on what fits in a prompt | A shared Constitution and project overrides provide guidance |
+| “Done” can mean the agent stopped working | Configured checks and recorded evidence determine what has actually been verified |
+
+Decapod does not replace the agent's judgment or guarantee correctness. It makes the work easier to inspect, continue, and challenge.
 
 ## How it works
 
-Decapod is a Rust CLI that agents use throughout development. It reads the
-project's configuration and recorded work, checks the relevant requirements, and
-returns context or a next step. The agent writes the code and operates the
-project's tools, including configuring builds and CI when needed.
+**1. Establish intent.** Project specs describe the system's purpose, architecture, and expected behavior. The agent creates a scoped plan before implementation.
 
-Each call runs and exits. There is no background service to keep alive. The
-repository keeps the working record:
+**2. Execute with context.** The agent retrieves relevant guidance with source references, follows project rules, and records decisions as it works. Multiple agents can claim separate tasks and use isolated workspaces.
 
-- `.decapod/governance.json` holds the plan, work history, claims and validation results
-- `.decapod/managed/specs/` describes the project's purpose, architecture and behavior
-- `.decapod/workspaces/` gives tasks separate checkouts
-- `.decapod/config.toml` holds project and validation settings
-- `.decapod/OVERRIDE.md` records project-specific engineering instructions
+**3. Check the result.** Decapod runs the configured validation workflow and associates results with the current change. Missing required evidence leaves the work unverified, rather than silently treating it as complete.
 
-The validation pipeline runs locally by default and can use remote Buildkite
-preflight when configured. You keep your coding tools, tracker and review
-process. Validation covers the configured requirements; Decapod cannot govern commands an agent runs
-outside its workflow.
+**4. Continue or hand off.** Another agent can pick up the same pull request using the recorded plan, decisions, work history, and validation state—not a reconstructed chat transcript.
 
-[Governed execution architecture](docs/architecture/governed-execution.md) ·
-[Configuration reference](docs/book/src/reference/config-toml.md)
+The agent still writes code, runs project tools, and prepares the pull request. You still review and merge it.
+
+## Built for the tools you already use
+
+Decapod is a **Rust CLI**, not a resident service or inference router. Each invocation runs, returns its result, and exits. No daemon is required.
+
+Its state lives with the project:
+
+```text
+.decapod/
+├── governance.json       # Plans, work history, claims, validation results
+├── managed/specs/        # Purpose, architecture, expected behavior
+├── workspaces/           # Isolated task checkouts
+├── config.toml           # Project and validation settings
+└── OVERRIDE.md           # Project-specific engineering guidance
+```
+
+The validation pipeline runs locally by default, with optional remote Buildkite preflight. Decapod works alongside your existing tracker, CI, and code review process.
+
+**Boundary:** Decapod governs the workflow agents use through it. It cannot guarantee the behavior of commands executed outside that workflow, and validation is only as comprehensive as the checks you configure.
+
+[Governed execution architecture](docs/architecture/governed-execution.md) · [Configuration reference](docs/book/src/reference/config-toml.md)
 
 ## The Constitution
 
-Decapod includes engineering guidance that agents consult before and during
-implementation, covering areas such as architecture, security and testing.
-Project overrides add your local requirements.
+Decapod includes engineering guidance for architecture, security, testing, and other development decisions. Agents consult it during planning and implementation; `.decapod/OVERRIDE.md` adds project-specific instructions. When a decision requires human judgment, the conflict remains visible instead of being quietly resolved by the model.
 
-## Documentation
+## Documentation and research
 
-- [Human docs](https://decapodlabs.github.io/decapod/)
-- [Agent API](docs/agent/api-index.md)
-- [Agent contract](AGENTS.md)
-- [Paper](https://github.com/DecapodLabs/accountable-agentic-execution/blob/main/paper/Accountable_Agentic_Execution.pdf)
-- [Research](https://decapodlabs.github.io/accountable-agentic-execution/)
+[Documentation](https://decapodlabs.github.io/decapod/) · [Agent API](docs/agent/api-index.md) · [Agent contract](AGENTS.md) · [Research paper](https://github.com/DecapodLabs/accountable-agentic-execution/blob/main/paper/Accountable_Agentic_Execution.pdf) · [Research site](https://decapodlabs.github.io/accountable-agentic-execution/)
 
 ## Contributing
 
-[CONTRIBUTING](CONTRIBUTING.md) · [SECURITY](SECURITY.md) · [Issues](https://github.com/DecapodLabs/decapod/issues)
+[Contributing guide](CONTRIBUTING.md) · [Security](SECURITY.md) · [Issues](https://github.com/DecapodLabs/decapod/issues)
