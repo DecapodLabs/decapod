@@ -6,8 +6,8 @@
 <p align="center"><strong>Give your coding agents a target. Make them prove they reached it.</strong></p>
 
 <p align="center">
-  Works with Cursor, Claude Code, Codex, Antigravity, Grok, and other coding agents.<br />
-  Keep your tools. Govern the work.
+  Works with Cursor, Claude Code, Codex, Amp, Pi, Antigravity, Grok, and other coding agents.<br />
+  Keep your harness. Govern the work.
 </p>
 
 <p align="center">
@@ -22,7 +22,7 @@ Coding agents are fast. They also misunderstand requirements, lose context, repe
 
 Decapod gives agentic development a persistent engineering record and a way to check progress against the original intent. You describe what you want to build. Your agent plans and implements it. Decapod keeps the requirements, decisions, task ownership, and validation evidence attached to the repository, so the work can continue across agents and sessions without starting over.
 
-**The goal isn't more generated code. It's work that converges on what you asked for—and can be reviewed on evidence.**
+**Decapod validates that the work converges on what you asked for, and that its evidence is persistence for future reference.**
 
 ## Get started
 
