@@ -536,6 +536,11 @@
       "id": "issue-1479-ci-projection-refresh",
       "summary": "Refresh canonical projections and current-source spec reviews after entrypoint regeneration",
       "input_digest": "sha256:2b324068d32e62496e087e778ba0922f18281908efcd8efc443813b0e75c46c2"
+    },
+    {
+      "id": "issue-1479-candidate-manifest",
+      "summary": "Generate source-template manifest identities with exact CI candidate generator",
+      "input_digest": "sha256:ad3843bc3b1907c82024ead390819c3b81d56b3971470a989be1aa03abbf0e5c"
     }
   ],
   "intents": {
@@ -609,8 +614,12 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:940aa83847fe56686e0c93766176427bd609cf65ad89fb536c5d7d06047e592c",
+      "artifact_hash": "sha256:87035861e98af17c0b581a30dfd80a2e7313c28772fae389765ac8f4c3b9df7d",
       "checks": [
+        {
+          "name": "candidate_manifest_generation_review",
+          "status": "passed"
+        },
         {
           "name": "candidate_template_generation",
           "status": "passed"
@@ -735,10 +744,17 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HRS2HTMS019S8KA64YD7": {
@@ -924,6 +940,22 @@
                 ],
                 "sequence": 14,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:15",
+                "observations": [
+                  ".decapod/managed/specs/.manifest.json",
+                  "Source inspection project_specs::entrypoint_manifest_entries derives template_hash/fingerprint from compiled template, while content_hash reads root file. Official released generator necessarily retained old template metadata after source template update; exact CI candidate rpc specs.refresh was therefore used solely as projection generator. Independently reviewed only generated_at and four template_hash/fingerprint pairs changed; all now align with canonical generated root files. No proof execution or candidate self-acceptance; official controller remains independent authority and must validate published head."
+                ],
+                "proof_refs": [
+                  "candidate_manifest_generation_review"
+                ],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 15,
+                "validation_findings": []
               }
             ]
           }
@@ -940,7 +972,8 @@
         "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered.",
         "Correction to prior checkpoint: initial comparison followed rust-toolchain.toml symlink and aborted before config edit; shell then recorded intended inventory evidence prematurely. Rerun now explicitly hashes symlink target text and regular-file bytes, verifies all discovered hashes and confirms exactly Cargo.lock/MODULE.bazel.lock differ from public 7780e0a2. Config declaration now actually updated to reviewed 80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985. No runtime tests claimed.",
         "Exact 93c80db3 GitHub CI run41542763408 Core job125611719308 failed test_root_entrypoints_match_scaffold_generators (31 passed, 1 failed, 4 ignored); health job125614915669 and companion run41542763292 job125610762963 reported four entrypoint integrity failures. Preserved failed head and full-controller SNAPSHOT_NOT_READY anonymous403 evidence. Downloaded exact CI debug artifact13186789964 from run41542763408/head93c80db3; archive SHA256 dbb6c76d6223d984d78f6207a6a881ddf89c377a8cc1d149ec9b35d25a5da71d, binary SHA256 0b0f7ae6dc3300539625e7089ddd41a23058b52588c5efd76e4510b2344c08a7. Used candidate init --all --no-specs --no-ci --proof only in disposable generator directory, copied four exact generated root Markdown artifacts. Diff is bootstrap reorder/explicit task branch plus canonical fingerprints only. Candidate is not an acceptance controller; official0.121.2 remains governance/full-validation authority. No manual build or shadow tests run.",
-        "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed."
+        "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed.",
+        "Source inspection project_specs::entrypoint_manifest_entries derives template_hash/fingerprint from compiled template, while content_hash reads root file. Official released generator necessarily retained old template metadata after source template update; exact CI candidate rpc specs.refresh was therefore used solely as projection generator. Independently reviewed only generated_at and four template_hash/fingerprint pairs changed; all now align with canonical generated root files. No proof execution or candidate self-acceptance; official controller remains independent authority and must validate published head."
       ],
       "inspected_files": [
         "Cargo.lock",
