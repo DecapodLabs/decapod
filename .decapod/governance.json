@@ -486,6 +486,11 @@
       "id": "http-auth-markers",
       "summary": "Retain review gates for HTTP authentication and mutating methods",
       "input_digest": "sha256:e9edb3767f732f031e70b8b7ab90fa89c2b0d156d090fa9229f6b2cf0926d48a"
+    },
+    {
+      "id": "http-auth-tests",
+      "summary": "Add credential header and method variants",
+      "input_digest": "sha256:96fc57ede606f0a94cfcc8bc45f9fed0955dafdbcaa7e997c2c85fb114542c4f"
     }
   ],
   "intents": {
