@@ -476,6 +476,11 @@
       "id": "activation-order",
       "summary": "Replay authored tests/activation_conformance.rs from preserved failed candidate with official controller",
       "input_digest": "sha256:3bf14c0119bcb755f6d153fd3e6a3511d712f198a808d5a9753f66d75638409e"
+    },
+    {
+      "id": "quickstart-order",
+      "summary": "Replay authored docs/book/src/quickstart.md from preserved failed candidate with official controller",
+      "input_digest": "sha256:d06e2be2f754a1aae1e261336811ea3b034e65d95e9f3bee4b9a7b4ef673c3de"
     }
   ],
   "intents": {
@@ -526,7 +531,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:657f2bf862dbdaddce259b42fdd848cb35f707bb0cd4fe8b8c7150b385429f68",
+      "artifact_hash": "sha256:d2f8dc1c0cfba7bf172df9a4300a413aa68911b454b4948d28c4ef24e8b27ffd",
       "checks": [
         {
           "name": "official_validation",
@@ -561,10 +566,17 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HRS2HTMS019S8KA64YD7": {
@@ -601,6 +613,21 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "docs/book/src/quickstart.md"
+                ],
+                "proof_refs": [
+                  "official_validation"
+                ],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -612,6 +639,7 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
       "modified_files": [
+        "docs/book/src/quickstart.md",
         "src/decapod/core/assets.rs",
         "tests/activation_conformance.rs"
       ],
