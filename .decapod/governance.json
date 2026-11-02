@@ -665,6 +665,11 @@
       "id": "dagger-ci-argv-format",
       "summary": "Apply formatter to fixed Dagger workspace argv matching CI fmt finding; no execution or permission change",
       "input_digest": "sha256:82fa7fbbbe35e083a8b4f6b87b5eb6edc9a765b8a7edc25369a8ceb3eb1468cd"
+    },
+    {
+      "id": "dagger-ci-repair-projections",
+      "summary": "Refresh generated specs and content-bound reviews after narrow observed CI root repairs; preserve failed evidence and no-live-proof limits",
+      "input_digest": "sha256:273d80a5741fd49463e39fa2c291e28af2d37f626adbaa772a2f03901a385c43"
     }
   ],
   "intents": {
@@ -703,24 +708,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Source review of repository_profile DaggerExecution, accepted-only dormant map, canonical config/init preservation and repository_host bounded snapshot execution; new optional existing-engine section preserves daemonless kernel and hosted profile authority. No live-engine or CI success claimed.",
-          "reviewed_code_fingerprint": "2fccb2aa3903a8ef34f31b054233ee7cf8a6a81fb75a8b01a65338c41294b93a",
+          "reason": "Reviewed CI repair diff: explicit repository_profile import and rustfmt argv layout only. Existing authored descriptions of accepted-only dormant activation, Dagger1.0 root workspace protocol, trusted preexisting mutable engine, default-denied permissions and no hosted substitution remain accurate; failed a2b8 source CI and live-engine gap are not passing proof.",
+          "reviewed_code_fingerprint": "32146b0703d890387c12ab8c5fd31db59c4b7d25cd6a7c0a0b3656117594b25e",
           "spec_material_hash": "8e3ceeeac52762000d0cb2d831bdcc16ba288b7959c5d23eb9a5031eedbd0218"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed implemented Dagger1.0 --workspace . check, root config/lock inventory, accepted dormant stage-activate-rotate-revoke and deny-by-default capabilities against source and config schema; authored interface section matches current source. Fixture coverage is not passing runtime evidence.",
-          "reviewed_code_fingerprint": "2fccb2aa3903a8ef34f31b054233ee7cf8a6a81fb75a8b01a65338c41294b93a",
+          "reason": "Reviewed CI repair diff: explicit repository_profile import and rustfmt argv layout only. Existing authored descriptions of accepted-only dormant activation, Dagger1.0 root workspace protocol, trusted preexisting mutable engine, default-denied permissions and no hosted substitution remain accurate; failed a2b8 source CI and live-engine gap are not passing proof.",
+          "reviewed_code_fingerprint": "32146b0703d890387c12ab8c5fd31db59c4b7d25cd6a7c0a0b3656117594b25e",
           "spec_material_hash": "134ec8c87c34d93107e6e3532ff036fe2e9e479fd2f2eb3ce2957eb62d0372c9"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed external_action and engine inspection against explicit trusted local Docker/engine boundary, separate default-denied capabilities, exact accepted authority and no lifecycle or hosted substitution; added dependency lock consistency requirement. Mutable runtime is not attested; no live-engine proof claimed.",
-          "reviewed_code_fingerprint": "2fccb2aa3903a8ef34f31b054233ee7cf8a6a81fb75a8b01a65338c41294b93a",
+          "reason": "Reviewed CI repair diff: explicit repository_profile import and rustfmt argv layout only. Existing authored descriptions of accepted-only dormant activation, Dagger1.0 root workspace protocol, trusted preexisting mutable engine, default-denied permissions and no hosted substitution remain accurate; failed a2b8 source CI and live-engine gap are not passing proof.",
+          "reviewed_code_fingerprint": "32146b0703d890387c12ab8c5fd31db59c4b7d25cd6a7c0a0b3656117594b25e",
           "spec_material_hash": "eb8a12e853f7459ab9cda70be86dd24f6388fa50a198063d70eb06335700d8b8"
         }
       ],
@@ -732,14 +737,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793660300Z"
+      "updated_at": "1793662610Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9f6e436c470783838f37888f52f113212ed5f725175febe069e9c8e1882d3fde",
+      "artifact_hash": "sha256:ea95b18e31fc9840279a817a6ac36d2ef26028bd320c63154b8d19f116225dbc",
       "checks": [
+        {
+          "name": "ci-source-compile",
+          "status": "failed"
+        },
+        {
+          "name": "ci-source-format",
+          "status": "failed"
+        },
         {
           "name": "configured-buildkite-proof",
           "status": "unavailable"
@@ -777,10 +790,17 @@
             "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MSA6NJNNFSAD36MDNVNK": {
@@ -824,6 +844,22 @@
                 "validation_findings": [
                   "Independent source review corrected legacy CLI syntax to Dagger 1.0 workspace/check contract, first-adoption deadlock via dormant accepted authority, and canonical config/init map preservation. Fixture tests authored but not executed. Official snapshot preparation reached pending upload at superseded 15bad19e; unavailable upload prevents real configured CI proof. Reviewed inherited source inventory drift is only Cargo package version 0.121.0 to 0.121.2 from 213ed9ca; every discovered source matches accepted 3216d717."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [],
+                "proof_refs": [
+                  "ci-source-compile",
+                  "ci-source-format"
+                ],
+                "scope": [
+                  "issue-1475-dagger"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Exact published a2b8e499 source CI run41542321861 failed E0433 repository_profile import at validation_runtime.rs628 in clippy125609503788 and setup125609503827; fmt125609503901 reported only fixed workspace argv vector layout. Source repair adds import and formatter output, preserving accepted-only authority and capabilities. Earlier local collector session is unavailable; no full readiness or live engine execution claimed."
+                ]
               }
             ]
           }
@@ -854,6 +890,7 @@
       "task_id": "feat_01m6f0mcy91wgq8z",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Exact published a2b8e499 source CI run41542321861 failed E0433 repository_profile import at validation_runtime.rs628 in clippy125609503788 and setup125609503827; fmt125609503901 reported only fixed workspace argv vector layout. Source repair adds import and formatter output, preserving accepted-only authority and capabilities. Earlier local collector session is unavailable; no full readiness or live engine execution claimed.",
         "Independent source review corrected legacy CLI syntax to Dagger 1.0 workspace/check contract, first-adoption deadlock via dormant accepted authority, and canonical config/init map preservation. Fixture tests authored but not executed. Official snapshot preparation reached pending upload at superseded 15bad19e; unavailable upload prevents real configured CI proof. Reviewed inherited source inventory drift is only Cargo package version 0.121.0 to 0.121.2 from 213ed9ca; every discovered source matches accepted 3216d717.",
         "The explicitly accepted pre-provisioned local Docker daemon and Dagger engine are trusted executors, including writable runtime state; image ID is identity not filesystem attestation. No live engine integration or tests have run. Current official Dagger container driver attaches to existing full container ID without provisioning."
       ]
