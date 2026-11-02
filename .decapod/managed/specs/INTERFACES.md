@@ -1,5 +1,31 @@
 # Interfaces
 
+## Local broker caller protocol
+
+The internal Unix-socket broker request in
+`src/decapod/core/group_broker.rs` advances to protocol version 2. Alongside
+request ID and arguments, each request carries a canonical absolute working
+directory and an explicitly allowlisted caller context. Agent identity, session,
+task, correlation, causation, idempotency and claim-autorun inputs replace—not
+merge with—the elected leader's corresponding environment. The child executable
+is resolved independently of either working directory.
+
+This internal protocol is not a new public task ownership or authorization API.
+The ordinary CLI/session/policy checks still execute; request fields cannot grant
+trust or approval. Missing or unrecognized caller fields fail validation rather
+than inheriting the leader identity. The existing restricted local socket alone
+transports the ephemeral session password; durable dedupe stores no credential.
+Structured replay binding includes arguments, actor, working directory and
+non-secret context, but excludes password rotation. Protocol mismatch fails
+closed; no persistent daemon or alternate IPC transport is introduced.
+
+The regression in `tests/group_broker.rs` requires two concurrent claim callers
+to traverse the same elected leader and checks both returned and stored owners.
+Unit coverage in `tests/unit/core/group_broker_tests.rs` checks replay separation,
+rejected arbitrary environment keys and removal of absent leader credentials.
+Current full publication proof remains required; these declarations are not a
+substitute for the controller's authenticated test result.
+
 ## Interface Overview
 
 Decapod's interfaces connect human intent, agent work, repository state, and
