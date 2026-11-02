@@ -810,7 +810,13 @@ via the explicit `dagger-1.0-workspace-check.v1` argv contract to inventoried
 root workspace/module/lock sources inside the exact immutable native snapshot,
 measured Dagger/Docker installations, and an explicitly accepted full engine
 container ID, image configuration digest and local Unix Docker socket.
-`preserve_accepted_dagger` rejects candidate self-authorization. Separate
+`ProofConfiguration::dagger_authorizations` stages a typed dormant execution
+proposal under the unchanged existing proof path. After independent target
+acceptance, `preserve_accepted_dagger` permits only the exact matching execution
+from that accepted map, rejecting candidate self-authorization, changed engines
+and revoked authority. Dormant declarations themselves do not activate execution
+or grant external access. Rotation and revocation use the same reviewed two-stage
+boundary while complete source/command coverage remains enforced. Separate
 `dagger_proof_exec` and `dagger_engine_read` capabilities default to denied;
 Buildkite-required profiles and final Decapod readiness authority are unchanged.
 `repository_host::dagger::inspect_engines` checks running identity before/after

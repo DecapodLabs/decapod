@@ -585,6 +585,11 @@
       "id": "dagger-two-stage-docs",
       "summary": "Document reachable dormant-acceptance activation, rotation and revocation without self-authorization or proof downgrade",
       "input_digest": "sha256:3e7a51ce992d4b67fe1a04aa352dc5ca131e66c7f4619d7caf2e10bf18b749ae"
+    },
+    {
+      "id": "dagger-dormant-interface",
+      "summary": "Specify dormant accepted-authority transition and preserve complete coverage and external access boundaries",
+      "input_digest": "sha256:b3633fcb0ab6d3f51f3c40c02dfe018817e3d6078f93da13a39556f62c2adec8"
     }
   ],
   "intents": {
