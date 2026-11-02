@@ -504,6 +504,11 @@
       "id": "refresh-shared-leader-proof",
       "summary": "Refresh generated attestations after shared-leader regression assertion",
       "input_digest": "sha256:425147b78110b39b5100e54fc09d69a9c3286ca4b004039ac9de1cdf4e4194fc"
+    },
+    {
+      "id": "tokio-advisory-remediation",
+      "summary": "Update only Tokio lock version and registry checksum to 1.53.3 for RUSTSEC-2026-0386; preserve dependency graph and advisory checks",
+      "input_digest": "sha256:d8401e13031cd32e8d3ef3e913a39c81927d505f705cd17e67f367479d6fc268"
     }
   ],
   "intents": {
