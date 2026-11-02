@@ -709,7 +709,7 @@ mod tests {
             directory: ".".into(),
             timeout_seconds: 5,
             dagger: Some(repository_profile::DaggerExecution {
-                module: ".dagger/ci".into(),
+                cli_contract: "dagger-1.0-workspace-check.v1".into(),
                 engine_container: "a".repeat(64),
                 engine_image: format!("sha256:{}", "b".repeat(64)),
                 docker_socket: "/run/docker.sock".into(),
@@ -729,7 +729,7 @@ mod tests {
         );
         assert_eq!(
             invocation.arguments,
-            ["--mod", ".dagger/ci", "check"].map(|s| native_proof::Value::Literal(s.into()))
+            ["--workspace", ".", "check"].map(|s| native_proof::Value::Literal(s.into()))
         );
         assert_eq!(
             invocation.environment["DAGGER_ENGINE"],

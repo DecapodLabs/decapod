@@ -535,6 +535,11 @@
       "id": "dagger-workspace-contract",
       "summary": "Correct reviewed Dagger 1.0 workspace contract and root config/lock inventory; legacy syntax unsupported",
       "input_digest": "sha256:70744585bed37323590cb8f8430b23c279b0cb29b8a5c8c67402146bc5f57dcd"
+    },
+    {
+      "id": "dagger-workspace-argv",
+      "summary": "Use actual current Dagger workspace check argv and assert exact snapshot-root invocation",
+      "input_digest": "sha256:bf29d50ec1041f682870ab9c8ad654b5788c7db7409dd64c34f043766366c034"
     }
   ],
   "intents": {
