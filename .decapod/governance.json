@@ -546,6 +546,11 @@
       "id": "readonly-spec-bind",
       "summary": "Bind reviewed read-only diagnostic repair to current source; tests unavailable and upload not retried",
       "input_digest": "sha256:3a824d8eeb40a148b78d6c6447ebca79b00746830aefff463001fba476316a6d"
+    },
+    {
+      "id": "handoff-tokio-advisory",
+      "summary": "Repair required CI RustSec RUSTSEC-2026-0386 using reviewed minimal Tokio 1.53.3 version/checksum patch; before/after lock hashes verified, no other dependency changes",
+      "input_digest": "sha256:9a5deac15bc5eb6ac613bf193f446633a1696424cd14305fb328ad5fe6e85c97"
     }
   ],
   "intents": {
