@@ -555,6 +555,11 @@
       "id": "dagger-doc-correction-0",
       "summary": "Reconcile supported workspace-check contract and reviewed unchanged source inventory: docs/agent/config-schema.md",
       "input_digest": "sha256:d5d2c1f4f6537e1fa79f66950b47696b6ecb3a0c1d88975b1dba314a2a9d57e2"
+    },
+    {
+      "id": "dagger-doc-correction-1",
+      "summary": "Reconcile supported workspace-check contract and reviewed unchanged source inventory: .decapod/managed/specs/INTERFACES.md",
+      "input_digest": "sha256:44d088b3f60ae4d56630d8b32d97a63f0d617fd71249e592fc3d934cc7d33ffa"
     }
   ],
   "intents": {

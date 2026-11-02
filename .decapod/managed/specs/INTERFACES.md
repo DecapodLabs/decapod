@@ -806,7 +806,8 @@ CI context errors remain failures, never these local skip dispositions.
 
 `core::repository_profile::DaggerExecution` extends only the reviewed repository
 local proof contract. `repository_host::command_invocation` binds `dagger check`
-to inventoried module/lock sources inside the exact immutable native snapshot,
+via the explicit `dagger-1.0-workspace-check.v1` argv contract to inventoried
+root workspace/module/lock sources inside the exact immutable native snapshot,
 measured Dagger/Docker installations, and an explicitly accepted full engine
 container ID, image configuration digest and local Unix Docker socket.
 `preserve_accepted_dagger` rejects candidate self-authorization. Separate
