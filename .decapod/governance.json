@@ -521,6 +521,11 @@
       "id": "atomic-consumer-completion",
       "summary": "Real native execution regression reads paired completion verdict and receipt, no standalone success verdict; pending official tests",
       "input_digest": "sha256:62683e38dbbfc82a76193d9529cad381777b8d7144db25e63be5e36180c9196e"
+    },
+    {
+      "id": "completion-location-guidance",
+      "summary": "Point inspection guidance to atomic native completion receipt location",
+      "input_digest": "sha256:9cd874ea6cafaff47c49fd2c4f50e2bf6d99578b181de1a9902b752a0edfbc78"
     }
   ],
   "intents": {

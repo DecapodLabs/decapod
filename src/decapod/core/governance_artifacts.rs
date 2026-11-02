@@ -350,7 +350,7 @@ fn entry(
                     .into()
             }
             "validation" => {
-                "Run `decapod govern project-check` only if a legacy preparation receipt is needed. Full `decapod validate` establishes publication readiness independently; native success writes native-readiness-receipt.json in its external evidence directory."
+                "Run `decapod govern project-check` only if a legacy preparation receipt is needed. Full `decapod validate` establishes publication readiness independently; native success publishes completion/native-readiness-receipt.json alongside its verdict in the external evidence directory."
                     .into()
             }
             _ => format!(
