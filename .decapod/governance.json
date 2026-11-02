@@ -571,6 +571,11 @@
       "id": "tokio-reviewed-inventory",
       "summary": "Review complete discovered source inventory versus public54a6eb09: only exact audited Tokio lock delta; reconcile digest26f194a9 without altering proof coverage",
       "input_digest": "sha256:f7c799dbb6ed30b42bf829176144e57b5b02c3f79c407d331ad25ac690a1ba97"
+    },
+    {
+      "id": "receipt-repair-spec-projections",
+      "summary": "Refresh generated projections after source-grounded receipt contracts and security lock repair",
+      "input_digest": "sha256:d0e5813da7fab24a3c096e106e5afabf963b161cca474fdd636c4b6a4d575871"
     }
   ],
   "intents": {
