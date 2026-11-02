@@ -481,6 +481,11 @@
       "id": "source-spelling-spec",
       "summary": "Replay authored source identity specification without replacing generated boundaries",
       "input_digest": "sha256:4ebac2e155e61afcf6a200e90782852696ea5478dc99da242860cb16136917ac"
+    },
+    {
+      "id": "refresh-specs",
+      "summary": "Refresh generated spec fingerprints after semantic architecture change",
+      "input_digest": "sha256:0358eab4267a878bc35e1ad08edf4dc8cebdcbb3656f2220c46ed4f65cae8c5c"
     }
   ],
   "intents": {
