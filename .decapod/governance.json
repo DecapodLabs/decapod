@@ -595,6 +595,11 @@
       "id": "dagger-final-projections",
       "summary": "Refresh official generated specs after current CLI and staged authorization repairs",
       "input_digest": "sha256:0ef9cf146e1a975cd9bb40cbb0cebd1e015f04a403c94ac29099f7dec9f0e5cc"
+    },
+    {
+      "id": "dagger-public-config-0",
+      "summary": "Preserve dormant Dagger authorization through canonical config and guided initialization: src/decapod/core/proof.rs",
+      "input_digest": "sha256:3aafe0941c70250df141be39eb69502e5c2f6cad3b25d0200d0d0b84c77d46ff"
     }
   ],
   "intents": {

@@ -48,6 +48,10 @@ pub struct ProjectProofConfig {
     pub required_profile: Option<crate::core::readiness_profile::ProfileDeclaration>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub repository_contract: Option<crate::core::repository_profile::RepositoryContract>,
+    /// Dormant proposals only; activation reads independently accepted authority.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub dagger_authorizations:
+        std::collections::BTreeMap<String, crate::core::repository_profile::RepositoryExecution>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rust_workers: Option<crate::core::validation_runtime::rust_worker::Configuration>,
     #[serde(default)]
