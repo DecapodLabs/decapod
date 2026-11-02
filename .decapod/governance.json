@@ -469,6 +469,11 @@
       "id": "replay-group_broker_tests.rs",
       "summary": "Replay authored caller isolation implementation or regression from preserved candidate; tests pending",
       "input_digest": "sha256:09728072b362ca92385730f40541ccd83d3893af057755785da3c5e4ea521875"
+    },
+    {
+      "id": "replay-integration-group-broker",
+      "summary": "Replay concurrent caller identity integration regression; tests pending",
+      "input_digest": "sha256:57ec51b4d166a1074a4aac04e2e82e8d1cdb1b07ed588322e5800ab1dc56d19e"
     }
   ],
   "intents": {
