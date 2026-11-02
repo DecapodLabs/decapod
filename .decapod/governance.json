@@ -499,6 +499,11 @@
       "id": "cli-recovery-projections",
       "summary": "Refresh supported generated projections after CLI regression; tests remain unexecuted",
       "input_digest": "sha256:3077ff24009b13eb6168948f01a71dcdefd89938fd631aaa269f232d86477ba0"
+    },
+    {
+      "id": "tokio-advisory-repair",
+      "summary": "Apply independently hash-verified minimal Tokio1.52.3 to1.53.3 lock version/checksum patch for observed RUSTSEC-2026-0386; no other dependency edges changed, no tests claimed",
+      "input_digest": "sha256:1400430b7f78820e8b327a7841f035a22b7f93cd9a1cd346f248b904cd74efa1"
     }
   ],
   "intents": {
