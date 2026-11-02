@@ -464,6 +464,11 @@
       "id": "dagger-contract",
       "summary": "Declare explicit accepted Dagger engine contract and negative fixture cases; no tests executed",
       "input_digest": "sha256:a957977bd5baf967f19acf92f42f5590fbeb489054f233f9ace61f60b9d62b2b"
+    },
+    {
+      "id": "dagger-file-0",
+      "summary": "Implement bounded optional Dagger adapter: .decapod/managed/specs/INTERFACES.md; checks pending official validation",
+      "input_digest": "sha256:6450a428010738226284e6d42fe9fdb16bd875827b66e834597d23d8457baf30"
     }
   ],
   "intents": {

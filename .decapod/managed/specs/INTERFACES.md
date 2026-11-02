@@ -801,3 +801,24 @@ pass/skip disposition. A valid immutable release emits
 `material_specs: outcome=passed proof=version_only_exact_projections`;
 a local early exit instead identifies its explicit skipped reason. Required
 CI context errors remain failures, never these local skip dispositions.
+
+
+## Optional local Dagger proof boundary
+
+`core::repository_profile::DaggerExecution` extends only the reviewed repository
+local proof contract. `repository_host::command_invocation` binds `dagger check`
+to inventoried module/lock sources inside the exact immutable native snapshot,
+measured Dagger/Docker installations, and an explicitly accepted full engine
+container ID, image configuration digest and local Unix Docker socket.
+`preserve_accepted_dagger` rejects candidate self-authorization. Separate
+`dagger_proof_exec` and `dagger_engine_read` capabilities default to denied;
+Buildkite-required profiles and final Decapod readiness authority are unchanged.
+`repository_host::dagger::inspect_engines` checks running identity before/after
+bounded execution and retains observations, rejecting missing/changed engines.
+The local Docker service and existing engine are trusted executors, not an
+immutable-runtime attestation: writable engine state, module semantic coverage
+and transitive input pins remain reviewed assumptions. No engine lifecycle,
+installation, hosted GitHub status import or Dagger Cloud support is introduced.
+Tests in these modules exercise fixture-level contracts; live engine proof is a
+separate qualification and is not established by fixture success. See
+`docs/agent/config-schema.md` for configuration and adoption constraints.
