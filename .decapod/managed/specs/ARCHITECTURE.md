@@ -37,6 +37,32 @@ prospective public review inputs without fitting or inference. Its independently
 collected report cannot satisfy numerical or readiness-calibration acceptance;
 missing source research cannot suppress independent Metal/CPU diagnostics.
 
+## Broker caller custody
+
+The finite group broker in `src/decapod/core/group_broker.rs` serializes local
+mutations without adopting the elected leader's identity. Protocol version 2
+requires an explicit caller context: canonical working directory and a closed
+allowlist of agent, session, task, correlation, idempotency and claim-autorun
+fields. Each child command clears those inherited fields before installing the
+request values; absent caller metadata cannot fall back to the leader's values.
+The ordinary session and operation-policy checks still run in that child.
+Context conveys the caller's execution inputs, not a grant of trust or approval.
+
+The active session password is transported only on the existing restricted local
+socket, without a debug representation, response echo or durable request storage.
+Dedupe stores only the result and a structured digest of arguments and non-secret
+caller context. That digest binds identity and worktree while permitting password
+rotation for an already authenticated same-caller retry. Unknown context fields
+and inconsistent payload hashes fail closed; old context-free broker clients
+cannot silently execute under a leader's identity. Broker election, bounded
+execution and idle shutdown remain unchanged: this adds no daemon or service.
+
+`tests/group_broker.rs` exercises two callers claiming distinct tasks through a
+third caller's live broker and checks returned and persisted ownership; the
+unit suite covers actor/workspace replay separation, credential rotation,
+rejected context keys and removal of absent leader metadata. These are required
+regressions, not a claim that unexecuted candidate tests have passed.
+
 ## Direction
 
 The d3ebad07 eight-run recipe actually compiled and passed40native tests and

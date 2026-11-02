@@ -474,6 +474,11 @@
       "id": "replay-integration-group-broker",
       "summary": "Replay concurrent caller identity integration regression; tests pending",
       "input_digest": "sha256:57ec51b4d166a1074a4aac04e2e82e8d1cdb1b07ed588322e5800ab1dc56d19e"
+    },
+    {
+      "id": "caller-custody-spec",
+      "summary": "Document caller custody, ephemeral session transport and unexecuted regression obligations",
+      "input_digest": "sha256:8f9d2afb78426af849e13b739a3df0f1bf3e720a457d1952b9a12af972ffc554"
     }
   ],
   "intents": {
