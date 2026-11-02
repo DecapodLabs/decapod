@@ -152,8 +152,25 @@ fn unsafe_http_context(prompt: &str) -> bool {
             .match_indices(delimiter)
             .map(|(at, _)| (at, &joined[at + 2..]))
         {
-            let body = tail.split(')').next().unwrap_or(tail);
-            if command_words(body).iter().any(|word| is_http_client(word)) {
+            let mut depth = 1;
+            let mut end = tail.len();
+            for (at, ch) in tail.char_indices() {
+                match ch {
+                    '(' => depth += 1,
+                    ')' => {
+                        depth -= 1;
+                        if depth == 0 {
+                            end = at;
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            if command_words(&tail[..end])
+                .iter()
+                .any(|word| is_http_client(word))
+            {
                 return true;
             }
         }

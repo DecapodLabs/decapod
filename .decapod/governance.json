@@ -526,6 +526,11 @@
       "id": "bounded-http-projections",
       "summary": "Refresh generated spec projections after bounded HTTP context repair; publication validation remains blocked",
       "input_digest": "sha256:0dd927d4ecccba8d78b4b738c8f7a91f788bed3f38320a6f836c862e15961775"
+    },
+    {
+      "id": "nested-http-substitution",
+      "summary": "Retain full nested substitution body when bounding HTTP command context; no runtime proof",
+      "input_digest": "sha256:2f591e86da632f65ba83530f463ccbf3d092bf4a7ddf2d2d81d26504c625f42b"
     }
   ],
   "intents": {
