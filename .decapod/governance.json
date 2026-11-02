@@ -551,6 +551,11 @@
       "id": "dynamic-http-spec",
       "summary": "Document dynamic request uncertainty gate while preserving literal public query values and out-of-span prose",
       "input_digest": "sha256:de7aac4a451a24240adfd25a956bb505ea6a4a0f0ed5269b9a3438e401678b09"
+    },
+    {
+      "id": "dynamic-http-projections",
+      "summary": "Refresh generated projections after dynamic argument contract update",
+      "input_digest": "sha256:69ccc808f64409180ae4c774cfbbf488b05b56447d7d05399eeaf328225116cd"
     }
   ],
   "intents": {
