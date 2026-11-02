@@ -590,6 +590,11 @@
       "id": "dagger-dormant-interface",
       "summary": "Specify dormant accepted-authority transition and preserve complete coverage and external access boundaries",
       "input_digest": "sha256:b3633fcb0ab6d3f51f3c40c02dfe018817e3d6078f93da13a39556f62c2adec8"
+    },
+    {
+      "id": "dagger-final-projections",
+      "summary": "Refresh official generated specs after current CLI and staged authorization repairs",
+      "input_digest": "sha256:0ef9cf146e1a975cd9bb40cbb0cebd1e015f04a403c94ac29099f7dec9f0e5cc"
     }
   ],
   "intents": {
