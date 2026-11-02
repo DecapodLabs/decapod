@@ -139,67 +139,135 @@ const MARKERS: &[Marker] = &[
     },
 ];
 
-// HTTP clients alone are not execution or exfiltration. Keep inspection over the
-// entire prompt: quotes, fences and a caller-supplied "history" label are not a
-// trust boundary. This is a conservative marker detector, not a shell parser or
-// an authorization to execute a command which evaluates to Allow.
+// Inspect every command-like span, including quoted/history content. Backticks
+// and line boundaries delimit context, not trust: contents and adjacent shell
+// operators are still checked. This bounded marker detector is not a shell
+// interpreter, nor does Allow authorize execution.
 fn unsafe_http_context(prompt: &str) -> bool {
-    let words = command_words(prompt);
-    let has_http_client = words.iter().any(|word| {
-        matches!(
-            word.to_ascii_lowercase().rsplit('/').next(),
-            Some("curl" | "wget")
-        )
-    });
-    if !has_http_client {
-        return false;
+    let joined = prompt.replace("\\\r\n", "").replace("\\\n", "");
+    // Substitutions can span lines. Inspect their contents independently of
+    // presentation boundaries; an unclosed substitution is not an exemption.
+    for delimiter in ["$(", "<("] {
+        for (_, tail) in joined
+            .match_indices(delimiter)
+            .map(|(at, _)| (at, &joined[at + 2..]))
+        {
+            let body = tail.split(')').next().unwrap_or(tail);
+            if command_words(body).iter().any(|word| is_http_client(word)) {
+                return true;
+            }
+        }
     }
-
-    let chained_http = words.iter().enumerate().any(|(index, word)| {
-        matches!(
-            word.to_ascii_lowercase().rsplit('/').next(),
-            Some("curl" | "wget")
-        ) && words[index + 1..]
+    let (spans, boundaries) = http_spans(&joined);
+    for (index, span) in spans.iter().enumerate() {
+        let words = command_words(span);
+        let Some(client) = words.iter().position(|word| is_http_client(word)) else {
+            continue;
+        };
+        let arguments = &words[client + 1..];
+        if arguments.iter().any(|word| {
+            matches!(word.as_str(), "|" | ";" | "&&" | ">") || http_sensitive_argument(word)
+        }) || arguments.windows(2).any(|pair| {
+            matches!(pair[0].as_str(), "-X" | "--request" | "--method")
+                && !matches!(pair[1].to_ascii_uppercase().as_str(), "GET" | "HEAD")
+        }) {
+            return true;
+        }
+        // Closing a quotation or introducing a line break must not hide a
+        // following pipe/chain. Empty spans account for Markdown fence runs.
+        if let Some(next) = spans[index + 1..]
             .iter()
-            .any(|token| matches!(token.as_str(), "|" | ";" | "&&" | ">"))
-    });
-    let non_read_only_method = words.windows(2).any(|pair| {
-        matches!(pair[0].as_str(), "-X" | "--request" | "--method")
-            && !matches!(pair[1].to_ascii_uppercase().as_str(), "GET" | "HEAD")
-    });
-    chained_http
-        || non_read_only_method
-        || prompt.contains("$(")
-        || prompt.contains("<(")
-        || words.iter().any(|word| {
-            let lower = word.to_ascii_lowercase();
-            let program = lower.rsplit('/').next().unwrap_or(&lower);
-            // Include chained downloads, command/process substitution and execution
-            // through wrappers, not only the literal spelling of a pipe into sh.
-            matches!(
-                program,
-                "sh" | "bash"
-                    | "dash"
-                    | "zsh"
-                    | "ksh"
-                    | "fish"
-                    | "ash"
-                    | "python"
-                    | "python3"
-                    | "perl"
-                    | "ruby"
-                    | "node"
-                    | "nodejs"
-                    | "php"
-                    | "powershell"
-                    | "pwsh"
-                    | "eval"
-                    | "exec"
-                    | "source"
-                    | "chmod"
-            ) || word == "."
-                || http_sensitive_argument(word)
-        })
+            .find(|part| !part.trim().is_empty())
+        {
+            let next = next.trim_start();
+            if next.starts_with(['|', ';', '>']) || next.starts_with("&&") {
+                return true;
+            }
+        }
+        // Shell backtick substitution: a nearby executor outside the inline
+        // body is relevant; an unrelated mention of Python/source is not.
+        if index > 0 && boundaries[index - 1] == '`' {
+            let before = command_words(spans[index - 1]);
+            let end = before.last().map(String::as_str);
+            let executor = if end == Some("-c") {
+                before.iter().rev().nth(1).map(String::as_str)
+            } else {
+                end
+            };
+            if executor.is_some_and(is_executor) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+// Retain which boundary ended a span so a fenced language tag is not mistaken
+// for a shell wrapper. Newlines inside shell quotes remain argument context.
+fn http_spans(prompt: &str) -> (Vec<&str>, Vec<char>) {
+    let mut spans = Vec::new();
+    let mut boundaries = Vec::new();
+    let mut start = 0;
+    let mut quote = None;
+    let mut escaped = false;
+    for (at, ch) in prompt.char_indices() {
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        if ch == '\\' {
+            escaped = true;
+            continue;
+        }
+        if matches!(ch, '\'' | '"') {
+            if quote == Some(ch) {
+                quote = None;
+            } else if quote.is_none() {
+                quote = Some(ch);
+            }
+        }
+        if ch == '`' || (matches!(ch, '\n' | '\r') && quote.is_none()) {
+            spans.push(&prompt[start..at]);
+            boundaries.push(ch);
+            start = at + ch.len_utf8();
+        }
+    }
+    spans.push(&prompt[start..]);
+    (spans, boundaries)
+}
+
+fn is_http_client(word: &str) -> bool {
+    matches!(
+        word.to_ascii_lowercase().rsplit('/').next(),
+        Some("curl" | "wget")
+    )
+}
+
+fn is_executor(word: &str) -> bool {
+    matches!(
+        word.to_ascii_lowercase().rsplit('/').next(),
+        Some(
+            "sh" | "bash"
+                | "dash"
+                | "zsh"
+                | "ksh"
+                | "fish"
+                | "ash"
+                | "python"
+                | "python3"
+                | "perl"
+                | "ruby"
+                | "node"
+                | "nodejs"
+                | "php"
+                | "powershell"
+                | "pwsh"
+                | "eval"
+                | "exec"
+                | "source"
+                | "."
+        )
+    )
 }
 
 fn http_sensitive_argument(word: &str) -> bool {
@@ -208,6 +276,8 @@ fn http_sensitive_argument(word: &str) -> bool {
     // including attached short-option values and long options with '='.
     let lower = word.to_ascii_lowercase();
     [
+        "--output",
+        "--remote-name",
         "--data",
         "--json",
         "--form",
@@ -234,7 +304,7 @@ fn http_sensitive_argument(word: &str) -> bool {
     .any(|prefix| lower.starts_with(prefix))
         || (word.starts_with('-')
             && !word.starts_with("--")
-            && word[1..].chars().any(|ch| "dFTubKk".contains(ch)))
+            && word[1..].chars().any(|ch| "dFTubKkoO".contains(ch)))
         || lower.contains("authorization:")
         || lower.contains("cookie:")
         || lower.contains("api-key:")

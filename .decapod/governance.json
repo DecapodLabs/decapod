@@ -506,6 +506,11 @@
       "id": "released-source-inventory",
       "summary": "Reconcile release-only package version inventory drift without changing proof graph",
       "input_digest": "sha256:0d7589a8138d7a88b3d410200673412d5f4733166b00915aeee6db22299f2350"
+    },
+    {
+      "id": "bounded-http-context",
+      "summary": "Bound HTTP checks to command-like spans; preserve substitution and adjacent operators, conservatively gate file output; independent review regressions pending official execution",
+      "input_digest": "sha256:44bfc816831934a6e7db8b4dbed9e6824805ba1844a39c8256a25415d150a8a7"
     }
   ],
   "intents": {
@@ -558,11 +563,15 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f714fa8044b31eb69c48b6912d53524d60a047a482b3de38a7e97e704c5db895",
+      "artifact_hash": "sha256:4345d41e866bbedc3eebd875a4f167bee699a09ee700a86ba9abf5a7c89b3dd5",
       "checks": [
         {
           "name": "implementation",
           "status": "partial"
+        },
+        {
+          "name": "independent-source-review",
+          "status": "failed"
         },
         {
           "name": "official-validation",
@@ -597,10 +606,17 @@
             "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MBT4709VS1T8ZYG4Z85X",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MBT4709VS1T8ZYG4Z85X": {
@@ -646,6 +662,21 @@
                 "validation_findings": [
                   "Compared last reviewed inventory commit213ed9ca to candidate: only Cargo package versions0.121.0 to0.121.2 changed among complete inventory paths; workflow graph/adapters and dependencies unchanged"
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/agent_eval.rs"
+                ],
+                "proof_refs": [
+                  "independent-source-review"
+                ],
+                "scope": [
+                  "issue-1478-prompt-context"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
