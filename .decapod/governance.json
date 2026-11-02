@@ -576,6 +576,11 @@
       "id": "receipt-repair-spec-projections",
       "summary": "Refresh generated projections after source-grounded receipt contracts and security lock repair",
       "input_digest": "sha256:d0e5813da7fab24a3c096e106e5afabf963b161cca474fdd636c4b6a4d575871"
+    },
+    {
+      "id": "source-bound-spec-review",
+      "summary": "Reviewed all3 CLI-required specs ARCHITECTURE INTERFACES SECURITY against source; operations and validation prose updated; INTENT product authority SEMANTICS exact proof and README ownership remain source-correct unchanged. Official CLI supports only3 review paths; no proof claimed.",
+      "input_digest": "sha256:475aaac17ae320e5fb24eb26cbd499f87b96ecf3685107d558193195b8bc2316"
     }
   ],
   "intents": {
@@ -617,6 +622,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed run and write_native_completion: synced private staging followed by one atomic completion-directory rename outside candidate, fail-closed returned report, unchanged full proof boundary. Authored architecture records these exact custody transitions.",
+          "reviewed_code_fingerprint": "6ee650a74c5eacfa82636662798a0194f0a62534b324c4f061ef908118252f70",
+          "spec_material_hash": "ab03a7602c5b9a31bf8593d5544a682cf2687da47a1f92778fb0fe12f8e69310"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed native artifact compatibility: completion/verdict.json and completion/native-readiness-receipt.json replace standalone native-success verdict; remote/non-ready paths unchanged. Receipt schema digests match run; no import authority. Repository search found no production reader of old verdict path; regressions updated.",
+          "reviewed_code_fingerprint": "6ee650a74c5eacfa82636662798a0194f0a62534b324c4f061ef908118252f70",
+          "spec_material_hash": "2173c5d00c369fd9fe3c48b303700f8064e035fbe67b269ef2520eebd71a6325"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed native receipt authority and atomic write failure boundaries plus exact Cargo.lock Tokio1.52.3 to1.53.3 version/checksum patch for actual RUSTSEC-2026-0386 CI failure. No other dependency edges, credentials, execution exemptions or proof trust policy changed; no passing audit claim.",
+          "reviewed_code_fingerprint": "6ee650a74c5eacfa82636662798a0194f0a62534b324c4f061ef908118252f70",
+          "spec_material_hash": "36ac4730be3f5f96ac8621d96657dfc870cdf6d10fcb191e1b27d594ea42f18c"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Issue 1474 native receipt custody on release 0.121.2",
@@ -625,7 +653,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793652813Z"
+      "updated_at": "1793659021Z"
     },
     "trajectory": {
       "active_boundaries": [
