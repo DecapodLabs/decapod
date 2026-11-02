@@ -596,6 +596,11 @@
       "id": "ci-format-consumer_readiness",
       "summary": "Apply exact formatter output from actual GitHub CI job125601585610 on3795e92c; no manual build or shadow tests",
       "input_digest": "sha256:5b60db66803fa230eabc1f2009f70885727a7abe9f790c7a8768ca29aacc193a"
+    },
+    {
+      "id": "generated-tokio-bazel-lock",
+      "summary": "Apply pinnedBazel9.3.0 systemJDK21 generated MODULE lock repair, exact shared before236449b9/after6aaafae3 verified; only Tokio refs/checksum and Cargo input digest, no proof claim",
+      "input_digest": "sha256:fbdd17f2620fb70ea109a697176ee77d4ba16d84b7a9e959f46bee82b7e1b585"
     }
   ],
   "intents": {
