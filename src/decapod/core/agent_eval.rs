@@ -130,10 +130,6 @@ const MARKERS: &[Marker] = &[
             "curl | bash",
             "wget | sh",
             "wget | bash",
-            "curl http://",
-            "curl https://",
-            "wget http://",
-            "wget https://",
             "disable security",
             "disable the security",
             "delete all files",
@@ -142,6 +138,156 @@ const MARKERS: &[Marker] = &[
         ],
     },
 ];
+
+// HTTP clients alone are not execution or exfiltration. Keep inspection over the
+// entire prompt: quotes, fences and a caller-supplied "history" label are not a
+// trust boundary. This is a conservative marker detector, not a shell parser or
+// an authorization to execute a command which evaluates to Allow.
+fn unsafe_http_context(prompt: &str) -> bool {
+    let words = command_words(prompt);
+    let has_http_client = words.iter().any(|word| {
+        matches!(
+            word.to_ascii_lowercase().rsplit('/').next(),
+            Some("curl" | "wget")
+        )
+    });
+    if !has_http_client {
+        return false;
+    }
+
+    let chained_http = words.iter().enumerate().any(|(index, word)| {
+        matches!(
+            word.to_ascii_lowercase().rsplit('/').next(),
+            Some("curl" | "wget")
+        ) && words[index + 1..]
+            .iter()
+            .any(|token| matches!(token.as_str(), "|" | ";" | "&&" | ">"))
+    });
+    chained_http
+        || prompt.contains("$(")
+        || prompt.contains("<(")
+        || words.iter().any(|word| {
+            let lower = word.to_ascii_lowercase();
+            let program = lower.rsplit('/').next().unwrap_or(&lower);
+            // Include chained downloads, command/process substitution and execution
+            // through wrappers, not only the literal spelling of a pipe into sh.
+            matches!(
+                program,
+                "sh" | "bash"
+                    | "dash"
+                    | "zsh"
+                    | "ksh"
+                    | "fish"
+                    | "ash"
+                    | "python"
+                    | "python3"
+                    | "perl"
+                    | "ruby"
+                    | "node"
+                    | "nodejs"
+                    | "php"
+                    | "powershell"
+                    | "pwsh"
+                    | "eval"
+                    | "exec"
+                    | "source"
+                    | "chmod"
+            ) || word == "."
+                || http_sensitive_argument(word)
+        })
+}
+
+fn http_sensitive_argument(word: &str) -> bool {
+    // Sending data, loading opaque configuration or authentication material is
+    // not a read-only public HTTP diagnostic. Keep these forms review-gated,
+    // including attached short-option values and long options with '='.
+    let lower = word.to_ascii_lowercase();
+    [
+        "--data",
+        "--json",
+        "--form",
+        "--upload-file",
+        "--post",
+        "--body",
+        "--user",
+        "--password",
+        "--http-user",
+        "--http-password",
+        "--proxy-user",
+        "--header=authorization",
+        "--header=cookie",
+        "--cookie",
+        "--netrc",
+        "--config",
+        "--execute",
+        "--input-file",
+        "--insecure",
+    ]
+    .iter()
+    .any(|prefix| lower.starts_with(prefix))
+        || (word.starts_with('-')
+            && !word.starts_with("--")
+            && word[1..].chars().any(|ch| "dFTubKk".contains(ch)))
+        || lower.contains("authorization:")
+        || lower.contains("cookie:")
+        || lower == "bearer"
+        || lower.starts_with('@')
+        || (lower.contains("://") && lower.contains('@'))
+        || ([
+            "api_key",
+            "api-key",
+            "access_token",
+            "secret",
+            "password",
+            "token",
+        ]
+        .iter()
+        .any(|name| lower.contains(name))
+            && (lower.contains('$') || lower.contains('=')))
+}
+
+fn command_words(prompt: &str) -> Vec<String> {
+    let mut words = Vec::new();
+    let mut word = String::new();
+    let mut chars = prompt.chars().peekable();
+    while let Some(ch) = chars.next() {
+        match ch {
+            // Joining quoted/escaped pieces catches c"ur"l and b\ash. Never
+            // discard the quoted content: an apparent example can be an attack.
+            '\'' | '"' | '`' => {}
+            '\\' => {
+                if let Some(next) = chars.next() {
+                    if next != '\n' && next != '\r' {
+                        word.push(next);
+                    }
+                }
+            }
+            ch if "|;>".contains(ch) => {
+                if !word.is_empty() {
+                    words.push(std::mem::take(&mut word));
+                }
+                words.push(ch.to_string());
+            }
+            '&' if chars.peek() == Some(&'&') => {
+                chars.next();
+                if !word.is_empty() {
+                    words.push(std::mem::take(&mut word));
+                }
+                words.push("&&".to_string());
+            }
+            ch if ch.is_whitespace() || "&()<{}[]".contains(ch) => {
+                if !word.is_empty() {
+                    words.push(std::mem::take(&mut word));
+                }
+            }
+            ch => word.push(ch),
+        }
+    }
+    if !word.is_empty() {
+        words.push(word);
+    }
+    words
+}
 
 pub fn evaluate_prompt(prompt: &str) -> EvalResult {
     let normalized = prompt
@@ -156,6 +302,7 @@ pub fn evaluate_prompt(prompt: &str) -> EvalResult {
             .needles
             .iter()
             .any(|needle| normalized.contains(needle))
+            || (marker.code == "prompt_injection.unsafe_execution" && unsafe_http_context(prompt))
         {
             findings.push(EvalFinding {
                 code: marker.code.to_string(),

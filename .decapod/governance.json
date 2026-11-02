@@ -466,6 +466,11 @@
       "id": "bootstrap-1478",
       "summary": "Official0.121.2 generated bootstrap and task governance",
       "input_digest": "sha256:4615803a677fa2c23aebfde31334a1d19e5be41774809015c6b0d0208183a5c2"
+    },
+    {
+      "id": "http-context",
+      "summary": "Replace blanket HTTP URL marker with conservative unsafe HTTP context detection",
+      "input_digest": "sha256:e51ef130009e43e6e2408aa6f3133a8b1e619ddf9ded9c5feb8f47610108b0eb"
     }
   ],
   "intents": {
@@ -518,8 +523,13 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a6496dac1d209191e7b6e0d888086136a41768165319bf379b24d7bc4bb1eb17",
-      "checks": [],
+      "artifact_hash": "sha256:5f85dbf8af46ec3d5915ec25d0043dc9fa10e46179ee2b7da275ff52ddfddf5f",
+      "checks": [
+        {
+          "name": "implementation",
+          "status": "partial"
+        }
+      ],
       "current_phase": "intent",
       "custody": {
         "events": [
@@ -534,19 +544,56 @@
             "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MBT4709VS1T8ZYG4Z85X",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M6F0MBT4709VS1T8ZYG4Z85X": {
+            "evidence_only": true,
+            "id": "branch_01M6F0MBT4709VS1T8ZYG4Z85X",
+            "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/agent_eval.rs",
+                  "src/decapod/core/agent_eval.rs"
+                ],
+                "proof_refs": [
+                  "implementation"
+                ],
+                "scope": [
+                  "issue-1478-prompt-context"
+                ],
+                "sequence": 4,
+                "validation_findings": [
+                  "Deterministic common-marker detector is not a general shell or semantic intent parser; unavailable private historical fixture not reproduced"
+                ]
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
-      "inspected_files": [],
+      "inspected_files": [
+        "src/decapod/core/agent_eval.rs"
+      ],
       "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/agent_eval.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
@@ -558,7 +605,9 @@
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m6f0kw6daz58af",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Deterministic common-marker detector is not a general shell or semantic intent parser; unavailable private historical fixture not reproduced"
+      ]
     }
   },
   "legacy_digests": {
