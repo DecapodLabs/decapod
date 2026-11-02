@@ -531,6 +531,11 @@
       "id": "issue-1479-ci-canonical-entrypoints",
       "summary": "Regenerate canonical root entrypoints from exact CI-built candidate after observed template drift",
       "input_digest": "sha256:1a95e24a6e77d3a85a8407006a5ea95c8c7d55432dd6a57e89402f3a14240045"
+    },
+    {
+      "id": "issue-1479-ci-projection-refresh",
+      "summary": "Refresh canonical projections and current-source spec reviews after entrypoint regeneration",
+      "input_digest": "sha256:2b324068d32e62496e087e778ba0922f18281908efcd8efc443813b0e75c46c2"
     }
   ],
   "intents": {
@@ -571,21 +576,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed assets.rs agent_entrypoint_body/template_agents changes, activation_conformance fixture, quickstart and OPERATIONS lifecycle prose against architectural constraints and delivery plan. Initialization now obtains task workspace custody before orientation; orientation still precedes implementation. No daemon, service, storage or authority topology changes. Tokio and canonical Bazel lock patch update one dependency, not architecture. Existing architecture remains accurate; task ordering is documented substantively in OPERATIONS.",
+          "reason": "Re-reviewed actual CI failure and candidate source-generated root entrypoints: only workspace-before-orientation example and canonical fingerprint now align with assets.rs. Architectural constraints retain session, custody, isolation and pre-implementation orientation. Generation uses exact CI artifact solely for four source projections, never as acceptance controller; no topology change.",
           "reviewed_code_fingerprint": "08e13f1fdc4e6fc67b09a990bd48526e645951dcc5b47aa85d052a1c7fc57321",
           "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed generated entrypoint bootstrap, CLI orientation/workspace calls, activation sequence test and quickstart against human/agent entrypoint contract. Uses existing workspace ensure --branch and infer orientation --task-id interfaces, with no new command, schema or output contract. OPERATIONS and quickstart carry corrected ordering. Checked-in release-bound entrypoints still derive from released controller; candidate template generation and exact official CI must assess that remaining risk. Tokio/Bazel repairs do not change Decapod interface declarations.",
+          "reason": "Root AGENTS/CLAUDE/CODEX/GEMINI now match candidate assets.rs bootstrap sequence through canonical CLI generation from exact CI artifact. Existing workspace ensure --branch and infer orientation --task-id commands unchanged; only execution order corrected. OPERATIONS and quickstart already document this contract. Actual Core failure preserved; new exact CI must establish repair, no result inferred from generation.",
           "reviewed_code_fingerprint": "08e13f1fdc4e6fc67b09a990bd48526e645951dcc5b47aa85d052a1c7fc57321",
           "spec_material_hash": "a227ee81c08e687d9dfa5ec539625a29c86d32b8a80653fa08178a493494869e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed task/workspace custody and pre-implementation orientation requirements against threat model and source changes. The template repair respects existing claim, isolation, session and prompt gates; it does not bypass orientation or weaken publication proof. Shared Tokio 1.53.3 security repair changes version/checksum plus canonical derived Bazel references only, with pinned generator and normal TLS. No credentials, trust policy, required checks or validation permission changes; existing security contract remains accurate.",
+          "reason": "Reviewed regenerated root entrypoint diff: task ownership and workspace isolation precede orientation, which still precedes implementation. No gates removed or trust/policy weakened. CI artifact provenance and byte hash bound generation only; independent official controller still determines acceptance. Existing security and proof boundaries remain accurate.",
           "reviewed_code_fingerprint": "08e13f1fdc4e6fc67b09a990bd48526e645951dcc5b47aa85d052a1c7fc57321",
           "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
         }
@@ -598,7 +603,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793660444Z"
+      "updated_at": "1793663334Z"
     },
     "trajectory": {
       "active_boundaries": [
