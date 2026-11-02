@@ -36,6 +36,41 @@ visible, but syncing its parent directory failed. Retain the file and journal,
 inspect their hashes, and retry supported recovery after fixing the filesystem
 problem. The failure is neither a success receipt nor a rollback receipt.
 
+### Completed TODOs with missing verification evidence
+
+`PROOF_HOOK_FAILED` means a completion claim lacks current accepted proof; a
+historical green PR is not automatically a Decapod verification baseline.
+For multiple completed tasks without captured artifacts, select current files
+relevant to each task and use the explicit batch capture path:
+
+```bash
+decapod qa verify recover --artifact <todo-a>=path/to/file --artifact <todo-b>=path/to/other-file
+```
+
+Repeat `--artifact TODO_ID=FILE` for each relevant file. Recovery identifies
+missing inputs before running validation or changing proof rows. Tasks outside
+the unverified completed batch are rejected, and additional task proof obligations
+cannot be silently replaced by a validation-only baseline. Existing valid file
+baselines can be revalidated without an explicit artifact argument.
+
+Recovery hashes the supplied current material before executing real validation,
+defers only the selected batch's own aggregate proof-admission check, and leaves
+all other governance, source, execution and publication checks in force. A failing
+snapshot is never accepted. Task/revision/baseline races, changed files or changed
+validation epochs abort the write. Captured evidence remains `CLAIMED` until the
+final aggregate validation and per-task artifact checks pass atomically.
+
+The original completed status, completion timestamp, revision and prior event
+history remain intact. Recovery events retain the previous proof fields and mark
+fresh captures as current material: this does not recreate missing historical
+proof or establish what passed when an old PR merged. An interrupted final phase
+leaves explicit pending proof that can be retried. `prune` remains a separate
+intentional reopen operation, not a prerequisite for this recovery path.
+
+If validation still fails after the exact proof-admission exemption, inspect its
+underlying blockers; resolve missing plans, native publication receipts, provider
+access or actual failing checks through their own supported recovery paths.
+
 ### `TODO_PROJECTION_MISSING`
 
 `govern plan check-execute` found no selected todo in the store named by the
