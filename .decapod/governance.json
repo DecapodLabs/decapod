@@ -611,6 +611,11 @@
       "id": "tokio-security-spec",
       "summary": "Document reviewed shared dependency repair without claiming candidate runtime proof",
       "input_digest": "sha256:ce0ee4bf1c6937fd7f98fee428cfbbfffc6745958df87344753530f51ceedc79"
+    },
+    {
+      "id": "reviewed-spec-projections",
+      "summary": "Record actual current-content spec reviews and refresh generated projections; full proof pending",
+      "input_digest": "sha256:334f47ac47274567455068b3b67788bdfca0ff7d4637516dd14697737b36c6b3"
     }
   ],
   "intents": {
@@ -647,6 +652,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed agent_eval helpers and dispatch: side-effect-free deterministic pre-repository gate remains existing architecture, no daemon/provider/state interface change; bounded span and option behavior documented in SECURITY.",
+          "reviewed_code_fingerprint": "4277960304213f7e01a5f5ae30a09679b2c48cf3ac1f9c6f36162ac9b7546000",
+          "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed eval schema, stdin CLI and integration tests: input, allow/block statuses, exit codes, original prompt fingerprint and no-echo contract unchanged; context classification details live in SECURITY.",
+          "reviewed_code_fingerprint": "4277960304213f7e01a5f5ae30a09679b2c48cf3ac1f9c6f36162ac9b7546000",
+          "spec_material_hash": "a227ee81c08e687d9dfa5ec539625a29c86d32b8a80653fa08178a493494869e"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed agent_eval.rs and unit/CLI regression sources: bounded all-span inspection, whole-prompt unsafe markers, substitutions, conservative outputs and unknown options; explicit limitations and no runtime-proof claim documented. Tokio/Bazel lock-only security repair verified.",
+          "reviewed_code_fingerprint": "4277960304213f7e01a5f5ae30a09679b2c48cf3ac1f9c6f36162ac9b7546000",
+          "spec_material_hash": "9c6b4b970b52f68a91f13a611eb040b61742023dfbc3b61bdf214307e362c686"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "Required governance gate or external authorization unavailable"
@@ -657,7 +685,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793652898Z"
+      "updated_at": "1793660339Z"
     },
     "trajectory": {
       "active_boundaries": [
