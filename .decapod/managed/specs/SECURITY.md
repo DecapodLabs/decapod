@@ -21,7 +21,6 @@ The required dependency check exposed RUSTSEC-2026-0386 in the accepted Tokio
 version and registry checksum without relaxing advisory policy or changing
 dependency edges. Fresh exact-candidate provider proof is still required.
 
-
 Public Buildkite artifact redirects admit only the exact documented HTTPS
 `buildkiteartifacts.com` host and legacy `s3.amazonaws.com/buildkiteartifacts.com`
 bucket prefix, with unchanged four-UUID layout, exact producer-job binding,
@@ -415,7 +414,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6d4849018600fdc3d7b7602ccde31b30d809ed02e8c4f5468155a9ed069964f4`
+- Repository signal fingerprint: `d9661d9feba61ab86b1d53b5bbb202f3ae582bcfb8a9fd4d4a1051351ab5b0bf`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

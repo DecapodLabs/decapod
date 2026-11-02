@@ -524,6 +524,11 @@
       "id": "reviewed-patched-tokio-inventory",
       "summary": "Reconcile only reviewed Tokio lock version/checksum inventory change; required graph and checks remain unchanged",
       "input_digest": "sha256:62e68f95e05ec016a45a49ca9932095e6b728784a4bf98611fff769807561bb6"
+    },
+    {
+      "id": "reviewed-caller-publication-specs",
+      "summary": "Refresh projections and bind actual current-content interface architecture and security reviews; readiness still pending",
+      "input_digest": "sha256:6d48a514a5f45cbb913afbeda67139272bfe77ace85ce81709d1b51ad93fd8a5"
     }
   ],
   "intents": {
@@ -562,6 +567,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed broker caller custody section against source and regression paths: finite daemonless election remains, child context and structured dedupe isolate callers; existing ordinary session policy retained.",
+          "reviewed_code_fingerprint": "d9661d9feba61ab86b1d53b5bbb202f3ae582bcfb8a9fd4d4a1051351ab5b0bf",
+          "spec_material_hash": "3a60cbc52d3b7a2446aa3154a1504b3eda75ed1ae72e756d2012c738dea78990"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed group_broker protocol2 CallerContext capture/validate/apply/hash and current_exe: explicitly documents caller identity/session/cwd replacement, allowlist and ephemeral secret transport, no new ownership authority.",
+          "reviewed_code_fingerprint": "d9661d9feba61ab86b1d53b5bbb202f3ae582bcfb8a9fd4d4a1051351ab5b0bf",
+          "spec_material_hash": "9678edf13f5d76cf18af059e2798ea98667d61950396785b5a33b79547c4a7be"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed secret capture, no Debug, password-excluding hash and dedupe persistence; existing cooperative same-user trust explicitly preserved, not claimed hardened authentication. Tokio1.53.3 fixes RustSec advisory without exemptions.",
+          "reviewed_code_fingerprint": "d9661d9feba61ab86b1d53b5bbb202f3ae582bcfb8a9fd4d4a1051351ab5b0bf",
+          "spec_material_hash": "450ac5f7759c01db3c63802e12515faef42e95b8748c0de52360b3232639a5e1"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "Stop for authorization denial; no upload retries or unverified publication"
@@ -572,7 +600,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793653138Z"
+      "updated_at": "1793659202Z"
     },
     "trajectory": {
       "active_boundaries": [
