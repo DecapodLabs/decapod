@@ -640,6 +640,11 @@
       "id": "dagger-security-review",
       "summary": "Specify explicit external-engine trust and deny-by-default accepted authority; record narrow dependency repair without audit or live-proof claims",
       "input_digest": "sha256:7eb26bc26071d149e3108d5a64b145857ed104b9e404d58ca0ec783ea9c2d7bb"
+    },
+    {
+      "id": "dagger-derived-bazel-lock",
+      "summary": "Apply canonical pinned Bazel 9.3.0 generated Tokio lock; exact before/after hashes and five-substitution scope independently verified; no tests claimed",
+      "input_digest": "sha256:32da74db188ac0eed15df3d8bf17f244cd03694aa093174c6b786d14b24fdc5c"
     }
   ],
   "intents": {
