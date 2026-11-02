@@ -2180,7 +2180,12 @@ fn native_completion_write_failures_never_publish_success_artifacts() {
             assert_eq!(report.exit_code(), 1);
             assert!(!directory.path().join("completion").exists());
             assert!(!directory.path().join("verdict.json").exists());
-            assert!(!directory.path().join("native-readiness-receipt.json").exists());
+            assert!(
+                !directory
+                    .path()
+                    .join("native-readiness-receipt.json")
+                    .exists()
+            );
             assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
         }
     }
