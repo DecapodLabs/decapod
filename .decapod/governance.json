@@ -496,6 +496,11 @@
       "id": "receipt-custody-spec",
       "summary": "Replay authored whole-product native receipt custody spec; preserve existing generated release blocks",
       "input_digest": "sha256:8a85fd830ac7bd9605aff29a9bc7de70b5cff8465e3618059bcbf8644863997a"
+    },
+    {
+      "id": "release-spec-projections",
+      "summary": "Refresh generated canonical release spec projections before exact validation",
+      "input_digest": "sha256:1dea95ef6b2ad22ed89e332d3c841092e77e1798336d1883bb55068bff64188e"
     }
   ],
   "intents": {
