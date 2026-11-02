@@ -471,6 +471,11 @@
       "id": "http-context",
       "summary": "Replace blanket HTTP URL marker with conservative unsafe HTTP context detection",
       "input_digest": "sha256:e51ef130009e43e6e2408aa6f3133a8b1e619ddf9ded9c5feb8f47610108b0eb"
+    },
+    {
+      "id": "http-context-regressions",
+      "summary": "Cover read-only reports and hostile quoted HTTP contexts",
+      "input_digest": "sha256:3cc836218f7881eebb2424fadb7a42ea0ab0e0fbd608d285fdd6d569c3be6ea6"
     }
   ],
   "intents": {
