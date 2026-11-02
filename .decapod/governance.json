@@ -471,6 +471,11 @@
       "id": "authored-src-decapod-core-todo-rs",
       "summary": "Replay reviewed issue1477 authored change in src/decapod/core/todo.rs with current release governance",
       "input_digest": "sha256:dfc702d0abc4e7d3778e0b9ea33b3fbc51dc3c931cf6440a05e1513e6a4c5bba"
+    },
+    {
+      "id": "authored-src-decapod-plugins-policy-rs",
+      "summary": "Replay reviewed issue1477 authored change in src/decapod/plugins/policy.rs with current release governance",
+      "input_digest": "sha256:50c040b4a1628fecd087ed807e7982da40898ec3a94b96c17d0160d2275ca818"
     }
   ],
   "intents": {
