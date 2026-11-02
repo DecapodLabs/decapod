@@ -530,6 +530,11 @@
       "id": "dagger-projections",
       "summary": "Refresh generated spec attestations via official RPC and record unproven local-engine claim",
       "input_digest": "sha256:e8dc8f3728236ec90e77f1d264eb44567a9e95efaf9ec1c7d27bcb031337ae46"
+    },
+    {
+      "id": "dagger-workspace-contract",
+      "summary": "Correct reviewed Dagger 1.0 workspace contract and root config/lock inventory; legacy syntax unsupported",
+      "input_digest": "sha256:70744585bed37323590cb8f8430b23c279b0cb29b8a5c8c67402146bc5f57dcd"
     }
   ],
   "intents": {

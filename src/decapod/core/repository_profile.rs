@@ -48,8 +48,8 @@ pub struct RepositoryExecution {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct DaggerExecution {
-    /// Repository-relative module directory, containing dagger.toml and dagger.lock.
-    pub module: String,
+    /// Explicit supported argv/config protocol; not a claim about other CLI releases.
+    pub cli_contract: String,
     /// Full immutable Docker container ID, never a mutable name.
     pub engine_container: String,
     /// Docker's content-addressed image configuration ID (sha256), not a tag.
@@ -70,7 +70,7 @@ impl DaggerExecution {
                 && v.bytes()
                     .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
         };
-        if !relative(&self.module)
+        if self.cli_contract != "dagger-1.0-workspace-check.v1"
             || !hex(&self.engine_container)
             || !self.engine_image.strip_prefix("sha256:").is_some_and(hex)
             || !Path::new(&self.docker_socket).is_absolute()
@@ -87,12 +87,8 @@ impl DaggerExecution {
                     || k.starts_with("_EXPERIMENTAL_DAGGER_")
                     || k.starts_with("DOCKER_")
             })
-            || !sources
-                .files
-                .contains_key(&format!("{}/dagger.toml", self.module))
-            || !sources
-                .files
-                .contains_key(&format!("{}/dagger.lock", self.module))
+            || !sources.files.contains_key("dagger.toml")
+            || !sources.files.contains_key("dagger.lock")
         {
             return Err(invalid(
                 "DAGGER_CONTRACT_INVALID: explicit pinned local engine, inventoried module/lock, measured docker and a single check command are required",
@@ -359,7 +355,7 @@ mod dagger_contract_tests {
         SourceInventory,
     ) {
         let policy = DaggerExecution {
-            module: ".dagger/ci".into(),
+            cli_contract: "dagger-1.0-workspace-check.v1".into(),
             engine_container: "a".repeat(64),
             engine_image: format!("sha256:{}", "b".repeat(64)),
             docker_socket: "/var/run/docker.sock".into(),
@@ -384,14 +380,8 @@ mod dagger_contract_tests {
         };
         let sources = SourceInventory {
             files: BTreeMap::from([
-                (
-                    ".dagger/ci/dagger.toml".into(),
-                    format!("sha256:{}", "c".repeat(64)),
-                ),
-                (
-                    ".dagger/ci/dagger.lock".into(),
-                    format!("sha256:{}", "d".repeat(64)),
-                ),
+                ("dagger.toml".into(), format!("sha256:{}", "c".repeat(64))),
+                ("dagger.lock".into(), format!("sha256:{}", "d".repeat(64))),
             ]),
         };
         (policy, command, execution, sources)
@@ -401,7 +391,7 @@ mod dagger_contract_tests {
         let (policy, command, execution, sources) = fixture();
         assert!(policy.validate(&command, &execution, &sources).is_ok());
         let mut missing = sources.clone();
-        missing.files.remove(".dagger/ci/dagger.lock");
+        missing.files.remove("dagger.lock");
         assert!(policy.validate(&command, &execution, &missing).is_err());
         let mut named = policy.clone();
         named.engine_container = "dagger-engine".into();
@@ -433,7 +423,7 @@ mod dagger_contract_tests {
             assert!(policy.validate(&command, &changed, &sources).is_err());
         }
         let mut escaped = policy.clone();
-        escaped.module = "../elsewhere".into();
+        escaped.cli_contract = "legacy-unknown".into();
         assert!(escaped.validate(&command, &execution, &sources).is_err());
     }
     #[test]
@@ -479,6 +469,6 @@ mod dagger_contract_tests {
             before,
             command_contract_digest(&[command], &contract).unwrap()
         );
-        assert_eq!(policy.module, ".dagger/ci");
+        assert_eq!(policy.cli_contract, "dagger-1.0-workspace-check.v1");
     }
 }
