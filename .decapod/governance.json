@@ -489,6 +489,11 @@
       "id": "reviewed-release-inventory",
       "summary": "Reconcile reviewed release-only Cargo version changes without source graph or gate weakening",
       "input_digest": "sha256:7580261f00863a18b02712fad72d244433c9c5061ee773b98b84764bbb85ce4c"
+    },
+    {
+      "id": "refresh-caller-specs",
+      "summary": "Refresh generated caller custody attestations under release 0.121.2",
+      "input_digest": "sha256:67a248d3e20b6786ef12c5fc5dba8ad0f7f83591f8f6602e53479d4e4f0b6053"
     }
   ],
   "intents": {
