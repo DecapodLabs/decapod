@@ -526,6 +526,11 @@
       "id": "issue-1479-final-spec-reviews",
       "summary": "Record source-bound publication spec reviews and refresh generated projections after final config",
       "input_digest": "sha256:4216166d2ce3a90c226bbed403b6cf4c779291cd1eb7ba2bbd2247fe80e0615d"
+    },
+    {
+      "id": "issue-1479-ci-canonical-entrypoints",
+      "summary": "Regenerate canonical root entrypoints from exact CI-built candidate after observed template drift",
+      "input_digest": "sha256:1a95e24a6e77d3a85a8407006a5ea95c8c7d55432dd6a57e89402f3a14240045"
     }
   ],
   "intents": {
@@ -599,8 +604,16 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3fe2366dae8f827ce2aa14660980bd28cc31e6a06deee32a15a30f0684fef10d",
+      "artifact_hash": "sha256:940aa83847fe56686e0c93766176427bd609cf65ad89fb536c5d7d06047e592c",
       "checks": [
+        {
+          "name": "candidate_template_generation",
+          "status": "passed"
+        },
+        {
+          "name": "exact_93c80db3_core_ci",
+          "status": "failed"
+        },
         {
           "name": "inventory_review",
           "status": "passed"
@@ -710,10 +723,17 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HRS2HTMS019S8KA64YD7": {
@@ -879,6 +899,26 @@
                 ],
                 "sequence": 13,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "Exact 93c80db3 GitHub CI run41542763408 Core job125611719308 failed test_root_entrypoints_match_scaffold_generators (31 passed, 1 failed, 4 ignored); health job125614915669 and companion run41542763292 job125610762963 reported four entrypoint integrity failures. Preserved failed head and full-controller SNAPSHOT_NOT_READY anonymous403 evidence. Downloaded exact CI debug artifact13186789964 from run41542763408/head93c80db3; archive SHA256 dbb6c76d6223d984d78f6207a6a881ddf89c377a8cc1d149ec9b35d25a5da71d, binary SHA256 0b0f7ae6dc3300539625e7089ddd41a23058b52588c5efd76e4510b2344c08a7. Used candidate init --all --no-specs --no-ci --proof only in disposable generator directory, copied four exact generated root Markdown artifacts. Diff is bootstrap reorder/explicit task branch plus canonical fingerprints only. Candidate is not an acceptance controller; official0.121.2 remains governance/full-validation authority. No manual build or shadow tests run."
+                ],
+                "proof_refs": [
+                  "exact_93c80db3_core_ci",
+                  "candidate_template_generation"
+                ],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 14,
+                "validation_findings": []
               }
             ]
           }
@@ -894,6 +934,7 @@
         "Compared every agent.init discovered source hash with actual bytes and previously reviewed public 7780e0a2. Only Cargo.lock and MODULE.bazel.lock differ, exact reviewed Tokio repair hashes; workflows, required steps, worker recipes and accepted executor remain unchanged. Reviewed inventory sha256:80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985 updates declaration only, no check waiver.",
         "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered.",
         "Correction to prior checkpoint: initial comparison followed rust-toolchain.toml symlink and aborted before config edit; shell then recorded intended inventory evidence prematurely. Rerun now explicitly hashes symlink target text and regular-file bytes, verifies all discovered hashes and confirms exactly Cargo.lock/MODULE.bazel.lock differ from public 7780e0a2. Config declaration now actually updated to reviewed 80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985. No runtime tests claimed.",
+        "Exact 93c80db3 GitHub CI run41542763408 Core job125611719308 failed test_root_entrypoints_match_scaffold_generators (31 passed, 1 failed, 4 ignored); health job125614915669 and companion run41542763292 job125610762963 reported four entrypoint integrity failures. Preserved failed head and full-controller SNAPSHOT_NOT_READY anonymous403 evidence. Downloaded exact CI debug artifact13186789964 from run41542763408/head93c80db3; archive SHA256 dbb6c76d6223d984d78f6207a6a881ddf89c377a8cc1d149ec9b35d25a5da71d, binary SHA256 0b0f7ae6dc3300539625e7089ddd41a23058b52588c5efd76e4510b2344c08a7. Used candidate init --all --no-specs --no-ci --proof only in disposable generator directory, copied four exact generated root Markdown artifacts. Diff is bootstrap reorder/explicit task branch plus canonical fingerprints only. Candidate is not an acceptance controller; official0.121.2 remains governance/full-validation authority. No manual build or shadow tests run.",
         "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed."
       ],
       "inspected_files": [
@@ -905,7 +946,11 @@
         ".decapod/config.toml",
         ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/OPERATIONS.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
         "Cargo.lock",
+        "GEMINI.md",
         "MODULE.bazel.lock",
         "docs/book/src/quickstart.md",
         "src/decapod/core/assets.rs",
