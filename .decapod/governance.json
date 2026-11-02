@@ -476,6 +476,11 @@
       "id": "replay-validation_runtime",
       "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
       "input_digest": "sha256:f738ab2ea3c47436c3bee1938540bec8016b5149b7859405c6e7ca45fa47b08b"
+    },
+    {
+      "id": "replay-workspace_publication_tests",
+      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
+      "input_digest": "sha256:9388f16cfcfd4f4ac957bcb35c9b079048306cf875f4ac1830014ec0c67f90ea"
     }
   ],
   "intents": {
@@ -531,7 +536,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:71fcf149f9e0f036117bc029338e47d6df2deae96ae9c390a22d0d065583a4ee",
+      "artifact_hash": "sha256:c39b21eb4bfcabf4e602a41fd84f08dac72f9db4e7bafa78b02be30650bc7b9f",
       "checks": [
         {
           "name": "native_receipt_regression",
@@ -566,10 +571,17 @@
             "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0K07GRCP71GJRSYSZ84V7": {
@@ -616,6 +628,26 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "proof_refs": [
+                  "native_receipt_regression"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -628,7 +660,8 @@
       "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
       "modified_files": [
         "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workspace.rs"
+        "src/decapod/core/workspace.rs",
+        "tests/unit/core/workspace_publication_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
