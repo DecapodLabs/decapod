@@ -54,8 +54,12 @@ arbitrary database writes and actor impersonation remain outside the guarantee.
    to a design. Read project configuration and overrides; expose unresolved
    intent, scope, boundary and proof questions.
 3. Acquire the local session, initialize the agent and establish task ownership.
-   Claim the task before creating or using its managed workspace. Enter that
-   workspace before edits; preserve the root checkout.
+   Claim the task before creating its managed workspace, using a branch name
+   containing the full task ID. Enter the exact `worktree_path` returned by
+   `workspace ensure`, then run `infer orientation --task-id <task-id>` there
+   before implementation. The orientation guard requires an isolated worktree;
+   workspace creation establishes that prerequisite but does not waive orientation,
+   task custody or proof requirements. Preserve the root checkout.
 4. Record the accepted interpretation, scope, assumptions, falsifiable claims
    and planned checks through Decapod. Author living-spec prose as understanding
    changes. Record inspected and changed files, actions and evidence at durable
@@ -69,6 +73,15 @@ arbitrary database writes and actor impersonation remain outside the guarantee.
 7. Create the PR only after full readiness succeeds. Preserve proof and complete
    the task through the governed lifecycle. A completion statement alone is
    insufficient.
+
+`src/decapod/core/assets.rs` supplies both the universal AGENTS entrypoint and
+host-specific initialization templates. They must order task claim, workspace
+creation, directory change and task orientation consistently. The generated
+entrypoint ordering assertion and `tests/activation_conformance.rs` cover that
+sequence, with the latter executing task orientation from the actual returned
+worktree before fixture implementation. The book quickstart describes the same
+order. Historical release-template fixtures retain their original bytes and do
+not define current initialization behavior.
 
 A task can span many sessions and invocations. Prompt and conversation context
 remain valid inside an isolated workspace. `TODO_PROJECTION_MISSING` requires
