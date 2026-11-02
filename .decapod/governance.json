@@ -491,6 +491,11 @@
       "id": "spec-refresh",
       "summary": "Refresh CLI-owned projections after authored operations update",
       "input_digest": "sha256:82d6202702fba28eb1ef8a510a6bf5cb26f732fc4e98b228421feccff6af9126"
+    },
+    {
+      "id": "source-inventory",
+      "summary": "Reconcile only accepted release version changes with unchanged complete source-CI graph",
+      "input_digest": "sha256:413aa037bc744bc16957ee92b83bdad37ad99b57d615c883ec472a9e2c609d07"
     }
   ],
   "intents": {
@@ -541,8 +546,12 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:28ba45169e91104800d18139531c0209435dfa2d49c3cbc1d174248d3f742f24",
+      "artifact_hash": "sha256:3aee4138187e92e3c9abfe5836a5351acfb18704bc90453b74904284940cf324",
       "checks": [
+        {
+          "name": "inventory_review",
+          "status": "passed"
+        },
         {
           "name": "official_validation",
           "status": "unavailable"
@@ -590,10 +599,17 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HRS2HTMS019S8KA64YD7": {
@@ -660,6 +676,24 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml",
+                  "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered."
+                ],
+                "proof_refs": [
+                  "inventory_review"
+                ],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -667,10 +701,16 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "evidence": [
+        "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered."
+      ],
+      "inspected_files": [
+        "Cargo.lock",
+        "Cargo.toml"
+      ],
       "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/OPERATIONS.md",
         "docs/book/src/quickstart.md",
         "src/decapod/core/assets.rs",
