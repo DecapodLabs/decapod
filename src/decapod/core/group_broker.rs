@@ -426,9 +426,8 @@ fn execute_request(
         });
     }
 
-    let exe = std::env::args()
-        .next()
-        .ok_or_else(|| error::DecapodError::ValidationError("BROKER_EXEC_PATH_MISSING".into()))?;
+    // Resolve the running binary independently of either caller's working directory.
+    let exe = std::env::current_exe()?;
     emit_phase_hook("pre_exec", &request.request_id);
     let claim_request = request.argv.iter().any(|arg| arg == "todo")
         && request.argv.iter().any(|arg| arg == "claim");

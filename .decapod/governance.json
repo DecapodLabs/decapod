@@ -479,6 +479,11 @@
       "id": "caller-custody-spec",
       "summary": "Document caller custody, ephemeral session transport and unexecuted regression obligations",
       "input_digest": "sha256:8f9d2afb78426af849e13b739a3df0f1bf3e720a457d1952b9a12af972ffc554"
+    },
+    {
+      "id": "caller-cwd-executable",
+      "summary": "Resolve running binary independently of request cwd; preserve existing subprocess boundary",
+      "input_digest": "sha256:942921ecc6f0863d66be5eb8d50b2f44574ec90767da816aca801603422856f8"
     }
   ],
   "intents": {
