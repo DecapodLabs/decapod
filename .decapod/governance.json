@@ -625,6 +625,11 @@
       "id": "dagger-public-config-projections",
       "summary": "Refresh generated specs after public config integration; retain unavailable configured and live engine proof honestly",
       "input_digest": "sha256:6a2c19a189fa8806ecc55bdd28a7a17ec2e9f2fbad1d2fca73438661e9357d03"
+    },
+    {
+      "id": "dagger-tokio-advisory",
+      "summary": "Apply independently verified minimal Tokio 1.53.3 lock remediation; canonical Bazel lock regeneration still pending, no passing tests claimed",
+      "input_digest": "sha256:3d342ddb2bd2c289999726a745361847475f78562c275eb8915581ec414b1063"
     }
   ],
   "intents": {
