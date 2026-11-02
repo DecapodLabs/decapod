@@ -526,6 +526,11 @@
       "id": "completion-location-guidance",
       "summary": "Point inspection guidance to atomic native completion receipt location",
       "input_digest": "sha256:9cd874ea6cafaff47c49fd2c4f50e2bf6d99578b181de1a9902b752a0edfbc78"
+    },
+    {
+      "id": "atomic-completion-spec",
+      "summary": "Document atomic native completion publication and fail-closed injected storage error regressions",
+      "input_digest": "sha256:f9c9fb533290d4886c3df7da0604b6021d3013d393505a1ad978cdf78c7ff523"
     }
   ],
   "intents": {
