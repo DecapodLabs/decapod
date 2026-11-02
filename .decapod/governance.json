@@ -561,6 +561,11 @@
       "id": "native-OPERATIONS-review",
       "summary": "Source-grounded OPERATIONS update for immutable atomic native completion and bounded dependency repair; no proof claim",
       "input_digest": "sha256:02bba96e076d1178ab89d3dbc75502b29604b2aaf0b6812905a37e83eb0e1f22"
+    },
+    {
+      "id": "native-SECURITY-review",
+      "summary": "Source-grounded SECURITY update for immutable atomic native completion and bounded dependency repair; no proof claim",
+      "input_digest": "sha256:955815822829a4be802a18c47e7362e30bb8f2d8b2f76086ea4e53e3ae948323"
     }
   ],
   "intents": {

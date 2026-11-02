@@ -1,5 +1,18 @@
 # Security
 
+## Native receipt and dependency repair boundaries
+
+Native success receipts are produced only after the complete selected proof and
+required readiness decision, bound to exact candidate/target and governance.
+They cannot be imported to authorize publication or replace execution. Atomic
+private completion staging prevents partial receipt/verdict writes from exposing
+a successful pair; no tracked candidate bytes are changed by receipt output.
+The root Cargo.lock updates Tokio1.52.3 to1.53.3 for RUSTSEC-2026-0386, changing
+only that package's version and registry checksum. This addresses the actual
+required dependency-check failure without suppressing advisories or modifying
+other dependency edges. It is not a claim that full validation has passed.
+
+
 Public Buildkite artifact redirects admit only the exact documented HTTPS
 `buildkiteartifacts.com` host and legacy `s3.amazonaws.com/buildkiteartifacts.com`
 bucket prefix, with unchanged four-UUID layout, exact producer-job binding,
