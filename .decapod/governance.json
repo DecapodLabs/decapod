@@ -534,6 +534,11 @@
       "id": "canonical-bazel-tokio-lock",
       "summary": "Apply independently generated Bazel9.3 Tokio lock refresh, verify hashes and five substitutions; preserve failed bb631 provider evidence",
       "input_digest": "sha256:b2b008d36c6fbbb18a0380b471fe6842eda1017236f6fb185e063322cc8fa9ff"
+    },
+    {
+      "id": "reviewed-bazel-tokio-inventory",
+      "summary": "Reconcile only independently reviewed generated Bazel lock source inventory change; graph/policy unchanged",
+      "input_digest": "sha256:c3f0b800ecec6001e3d94193f75cd1f4eacb73f1b2899c33c155579e8334ed75"
     }
   ],
   "intents": {
@@ -611,8 +616,12 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:785129ecc401cfe92343b4a183a1db9d98a09dc1d7f07b851b95264bfc8a2564",
+      "artifact_hash": "sha256:dd71645f8bed6cd65a2938813fc8ae082650e06a4c3d0b67e38bcee69e09739b",
       "checks": [
+        {
+          "name": "bazel-source-contract-review",
+          "status": "passed"
+        },
         {
           "name": "candidate-tests",
           "status": "unavailable"
@@ -654,10 +663,17 @@
             "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0WQQJ7DYQNBHW4GWPNDVG": {
@@ -708,6 +724,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "MODULE.bazel.lock",
+                  "Buildkite2608 bb631897 required build/contracts/RPC failed stale MODULE.bazel.lock after Cargo.lock Tokio update. Prior local collector interrupted (session absent); no success. Canonical shared Bazel9.3 regeneration verified SHA6aaafae3 and exactly five Tokio/Cargo digest substitutions, no unrelated graph changes."
+                ],
+                "proof_refs": [
+                  "bazel-source-contract-review"
+                ],
+                "scope": [
+                  "src/decapod/core/group_broker.rs",
+                  "tests/group_broker.rs",
+                  "tests/unit/core/group_broker_tests.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -716,6 +750,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Buildkite2608 bb631897 required build/contracts/RPC failed stale MODULE.bazel.lock after Cargo.lock Tokio update. Prior local collector interrupted (session absent); no success. Canonical shared Bazel9.3 regeneration verified SHA6aaafae3 and exactly five Tokio/Cargo digest substitutions, no unrelated graph changes.",
         "Published candidate0ab800c7 Buildkite2553 deps-lint and governance-artifacts failed; other observed test checks successful, no readiness. Controller resume ended BuildEnvelope exit22. Remediation updates Tokio1.53.3 only and actual current-content spec review; original failures preserved /tmp/1476-validation-resumed.log",
         "git diff 213ed9ca 3216d717 -- Cargo.toml Cargo.lock: only package version 0.121.0 to 0.121.2; inventory intersection contains these two paths only; required source graph unchanged"
       ],
@@ -724,6 +759,7 @@
         ".decapod/managed/specs/SECURITY.md",
         "Cargo.lock",
         "Cargo.toml",
+        "MODULE.bazel.lock",
         "src/decapod/core/group_broker.rs",
         "src/decapod/lib.rs"
       ],
