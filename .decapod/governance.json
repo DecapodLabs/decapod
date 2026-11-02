@@ -476,6 +476,11 @@
       "id": "source-spelling-tests",
       "summary": "Replay five regression cases preserving host filesystem behavior and non-Git coverage",
       "input_digest": "sha256:f742e00282ed82c55ab1f85822cd609d7300549955ae3d24bf483759bdcc07b3"
+    },
+    {
+      "id": "source-spelling-spec",
+      "summary": "Replay authored source identity specification without replacing generated boundaries",
+      "input_digest": "sha256:4ebac2e155e61afcf6a200e90782852696ea5478dc99da242860cb16136917ac"
     }
   ],
   "intents": {
