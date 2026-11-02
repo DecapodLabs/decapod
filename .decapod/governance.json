@@ -484,6 +484,11 @@
       "id": "caller-cwd-executable",
       "summary": "Resolve running binary independently of request cwd; preserve existing subprocess boundary",
       "input_digest": "sha256:942921ecc6f0863d66be5eb8d50b2f44574ec90767da816aca801603422856f8"
+    },
+    {
+      "id": "reviewed-release-inventory",
+      "summary": "Reconcile reviewed release-only Cargo version changes without source graph or gate weakening",
+      "input_digest": "sha256:7580261f00863a18b02712fad72d244433c9c5061ee773b98b84764bbb85ce4c"
     }
   ],
   "intents": {
@@ -538,8 +543,17 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f25809ead38707a9b0378f88310d66a0c8ec61cb8f920e3f9f34f768c0bd5a86",
-      "checks": [],
+      "artifact_hash": "sha256:4dd587f69aa1e3641c90164f51122ccfe23b6e06f897405704f20c21b51f1c69",
+      "checks": [
+        {
+          "name": "candidate-tests",
+          "status": "unavailable"
+        },
+        {
+          "name": "source-contract-review",
+          "status": "passed"
+        }
+      ],
       "current_phase": "intent",
       "custody": {
         "events": [
@@ -554,17 +568,63 @@
             "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M6F0WQQJ7DYQNBHW4GWPNDVG": {
+            "evidence_only": true,
+            "id": "branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
+            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/group_broker.rs",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "git diff 213ed9ca 3216d717 -- Cargo.toml Cargo.lock: only package version 0.121.0 to 0.121.2; inventory intersection contains these two paths only; required source graph unchanged"
+                ],
+                "proof_refs": [
+                  "source-contract-review",
+                  "candidate-tests"
+                ],
+                "scope": [
+                  "src/decapod/core/group_broker.rs",
+                  "tests/group_broker.rs",
+                  "tests/unit/core/group_broker_tests.rs"
+                ],
+                "sequence": 4,
+                "validation_findings": [
+                  "Independent security review pending; provider unavailable; no test execution claimed"
+                ]
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "evidence": [
+        "git diff 213ed9ca 3216d717 -- Cargo.toml Cargo.lock: only package version 0.121.0 to 0.121.2; inventory intersection contains these two paths only; required source graph unchanged"
+      ],
+      "inspected_files": [
+        "Cargo.lock",
+        "Cargo.toml",
+        "src/decapod/core/group_broker.rs",
+        "src/decapod/lib.rs"
+      ],
       "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
       "modified_files": [],
       "next_transitions": [
@@ -580,7 +640,9 @@
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m6f0w2a9z511c3",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Independent security review pending; provider unavailable; no test execution claimed"
+      ]
     }
   },
   "legacy_digests": {
