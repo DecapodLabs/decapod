@@ -596,6 +596,11 @@
       "id": "tokio-security-lock",
       "summary": "Apply reviewed Tokio1.53.3 security-only lock delta with exact before/after SHA256 verification; no tests run",
       "input_digest": "sha256:abd5fda92bad87da735593a72c91eebc5dc79aa54acdfddc1e097479119ad590"
+    },
+    {
+      "id": "tokio-bazel-lock",
+      "summary": "Apply officially generated and reviewed Tokio-only Bazel lock delta with patch/before/after hash verification; proof graph unchanged",
+      "input_digest": "sha256:75c263d87bbc29fe0f52f7c98a63e081b8801a5b0ebb1aab66e70215fc70f1a5"
     }
   ],
   "intents": {
