@@ -282,3 +282,44 @@ still rejects erased or rewritten records in authored commits.
 `inventory --claims-note "..."` records a current-PR checkpoint, not a fake claim
 or a policy-history append. `inventory --compact` performs lossless legacy
 normalization. Neither surface repairs malformed evidence by overwriting it.
+
+## `todo handoff`: caller and ownership recovery
+
+The acting caller is captured from the active `DECAPOD_AGENT_ID` request before
+broker execution. `--from` is an optional expected-current-owner precondition;
+it never selects the actor or supplies that owner's trust. `--to` selects only
+the receiver. Ordinary owner handoff can omit `--from`. A missing caller is a
+`HANDOFF_CALLER_MISSING` error rather than an assumed `unknown` owner.
+
+`govern policy eval --command todo.handoff --path <task-id>` reports the same
+handoff zone as mutation: verified trust and explicit approval by default,
+subject to the existing operator policy. Output also states the stronger
+cross-owner recovery conditions. Dependency, lease and overlap gates remain.
+
+When a recorded owner is unavailable or incorrect, the human operator can use
+the existing local operator role under their own session, retaining the actual
+recorded owner as an explicit precondition:
+
+1. Inspect `todo get --id <task-id>` and preserve its owner and history.
+2. As the operator, evaluate `govern policy eval --command todo.handoff --path
+   <task-id>` and review the proposed source owner and intended receiver.
+3. Execute the exact approval command returned by the diagnostic, with a bounded
+   lifetime. A command-wide or different-task approval cannot authorize recovery.
+4. In that same actual operator role, run `todo handoff --id <task-id> --from
+   <recorded-owner> --to <intended-receiver> --summary <reason>`.
+
+A verified agent may perform the same explicitly approved recovery under its
+own identity. Agents must not select the operator role or impersonate the old
+owner merely to pass a denied gate. The reserved `operator`, `cli` and `decapod`
+roles retain the existing local cooperative policy semantics; environment labels
+are not OS authentication, credentials, or proof against a hostile local process.
+No agent trust row is promoted by recovery.
+
+Cross-owner recovery requires an exact task-bound live approval even when a
+broader operator policy suppresses ordinary handoff prompts. Successful recovery
+consumes its exact approval records in the same transaction as the ownership
+change. Failed preconditions preserve both custody and approval. The event and
+result record the actual actor, previous owner, receiver, recovery flag and
+consumed approval IDs. Repeating a transfer requires fresh authority; a stale
+`--from` fails rather than silently transferring changed custody. This operation
+never marks task work verified or waives proof gates.

@@ -486,6 +486,11 @@
       "id": "authored-tests-plugins-policy-rs",
       "summary": "Replay reviewed issue1477 authored change in tests/plugins/policy.rs with current release governance",
       "input_digest": "sha256:00063f50be65392046506207e69a4e13893d8d3605c5abb3a7ca43b69f39d315"
+    },
+    {
+      "id": "authored-docs-agent-command-contracts-md",
+      "summary": "Replay reviewed issue1477 authored change in docs/agent/command-contracts.md with current release governance",
+      "input_digest": "sha256:9d5759988df746bc7e44d11627fcd52179676fe9b0c9c3ca6d7318074904e186"
     }
   ],
   "intents": {
