@@ -581,6 +581,11 @@
       "id": "source-bound-spec-review",
       "summary": "Reviewed all3 CLI-required specs ARCHITECTURE INTERFACES SECURITY against source; operations and validation prose updated; INTENT product authority SEMANTICS exact proof and README ownership remain source-correct unchanged. Official CLI supports only3 review paths; no proof claimed.",
       "input_digest": "sha256:475aaac17ae320e5fb24eb26cbd499f87b96ecf3685107d558193195b8bc2316"
+    },
+    {
+      "id": "ci-format-validation_runtime",
+      "summary": "Apply exact formatter output from actual GitHub CI job125601585610 on3795e92c; no manual build or shadow tests",
+      "input_digest": "sha256:4021849aaa3e1e7ea19dd82cb61db01009608a2695dcf8d31d6af4b663920121"
     }
   ],
   "intents": {

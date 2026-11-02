@@ -915,7 +915,10 @@ fn write_native_completion(
     let staging = tempfile::Builder::new()
         .prefix(".pending-completion-")
         .tempdir_in(directory)?;
-    writer(&staging.path().join("native-readiness-receipt.json"), receipt)?;
+    writer(
+        &staging.path().join("native-readiness-receipt.json"),
+        receipt,
+    )?;
     writer(&staging.path().join("verdict.json"), verdict)?;
     fs::rename(staging.path(), completed)
 }
@@ -1003,8 +1006,8 @@ fn run(
     let initial_governance = hash(&governance_bytes);
     let governance: serde_json::Value =
         serde_json::from_slice(&governance_bytes).map_err(io::Error::other)?;
-    let trajectory_digest = evidence::digest(&governance["sections"]["trajectory"])
-        .map_err(io::Error::other)?;
+    let trajectory_digest =
+        evidence::digest(&governance["sections"]["trajectory"]).map_err(io::Error::other)?;
     let initial_target =
         host.accepted_target(&options.repository, &options.base_branch, &budget)?;
     if initial_target != initial_identity.accepted_base_revision {
@@ -1299,8 +1302,7 @@ fn run(
             "evidence_digest": evidence::digest(&result.evidence).map_err(io::Error::other)?,
             "vega_readiness_digest": evidence::digest(&report.vega_readiness).map_err(io::Error::other)?,
         });
-        receipt["receipt_hash"] =
-            evidence::digest(&receipt).map_err(io::Error::other)?.into();
+        receipt["receipt_hash"] = evidence::digest(&receipt).map_err(io::Error::other)?.into();
         write_native_completion(
             &directory,
             &verdict_bytes,
