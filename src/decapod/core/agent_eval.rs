@@ -163,7 +163,12 @@ fn unsafe_http_context(prompt: &str) -> bool {
             .iter()
             .any(|token| matches!(token.as_str(), "|" | ";" | "&&" | ">"))
     });
+    let non_read_only_method = words.windows(2).any(|pair| {
+        matches!(pair[0].as_str(), "-X" | "--request" | "--method")
+            && !matches!(pair[1].to_ascii_uppercase().as_str(), "GET" | "HEAD")
+    });
     chained_http
+        || non_read_only_method
         || prompt.contains("$(")
         || prompt.contains("<(")
         || words.iter().any(|word| {
@@ -221,6 +226,8 @@ fn http_sensitive_argument(word: &str) -> bool {
         "--config",
         "--execute",
         "--input-file",
+        "--oauth2-bearer",
+        "--load-cookies",
         "--insecure",
     ]
     .iter()
@@ -230,6 +237,15 @@ fn http_sensitive_argument(word: &str) -> bool {
             && word[1..].chars().any(|ch| "dFTubKk".contains(ch)))
         || lower.contains("authorization:")
         || lower.contains("cookie:")
+        || lower.contains("api-key:")
+        || lower.contains("api_key:")
+        || lower.contains("auth-token:")
+        || (word.starts_with("-X") && word.len() > 2 && !matches!(&word[2..], "GET" | "HEAD"))
+        || ["--request=", "--method="].iter().any(|prefix| {
+            lower
+                .strip_prefix(prefix)
+                .is_some_and(|method| !matches!(method, "get" | "head"))
+        })
         || lower == "bearer"
         || lower.starts_with('@')
         || (lower.contains("://") && lower.contains('@'))
