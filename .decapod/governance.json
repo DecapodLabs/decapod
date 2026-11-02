@@ -551,6 +551,11 @@
       "id": "native-INTERFACES-review",
       "summary": "Source-grounded INTERFACES update for immutable atomic native completion and bounded dependency repair; no proof claim",
       "input_digest": "sha256:bc912b870a9d16fb131489259480100656b5163b69c7c08f28bcb59ef6a2ba28"
+    },
+    {
+      "id": "native-ARCHITECTURE-review",
+      "summary": "Source-grounded ARCHITECTURE update for immutable atomic native completion and bounded dependency repair; no proof claim",
+      "input_digest": "sha256:bc465022ad23884d973ab2a5b19cab2b2c2fc5d86a8503935eeae847e83dd88b"
     }
   ],
   "intents": {

@@ -1,5 +1,17 @@
 # Architecture
 
+## Native completion custody
+
+`validation_runtime::write_native_completion` writes and syncs native receipt
+and verdict into a private temporary directory outside the frozen checkout and
+Git metadata, then publishes the pair with one directory rename. No fallible
+operation follows that publication point. Creation, partial-write or sync
+failure leaves no published successful pair and the returned report fails closed.
+`workspace::ensure_required_governance_artifacts_in_pr` checks required intent
+and trajectory material independently of legacy preparation receipts; the full
+readiness boundary remains responsible for all selected proof and final custody.
+
+
 ## Architecture Overview
 
 Decapod is a Rust governance kernel invoked by coding agents through a CLI and
