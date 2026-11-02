@@ -551,6 +551,11 @@
       "id": "handoff-tokio-advisory",
       "summary": "Repair required CI RustSec RUSTSEC-2026-0386 using reviewed minimal Tokio 1.53.3 version/checksum patch; before/after lock hashes verified, no other dependency changes",
       "input_digest": "sha256:9a5deac15bc5eb6ac613bf193f446633a1696424cd14305fb328ad5fe6e85c97"
+    },
+    {
+      "id": "handoff-tokio-inventory",
+      "summary": "Compared all119 inventory sources against API-published accepted candidate: only reviewed Cargo.lock Tokio version/checksum changed; required graph and adapters unchanged",
+      "input_digest": "sha256:cd06c28cb574f5ea49f890b3207a5d5d50b0132a933248ab9fa487acd3d466ad"
     }
   ],
   "intents": {
