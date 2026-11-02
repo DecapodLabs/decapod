@@ -658,8 +658,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6af1c06908cb78992d805e98ac0ae37b71a4b88f37418b8afebc37bafb81ccec`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `16183525b8cdde06f30048c9c0cbe4cb16342b9bd6b45e454c545f0796eadcc4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -801,7 +801,6 @@ pass/skip disposition. A valid immutable release emits
 `material_specs: outcome=passed proof=version_only_exact_projections`;
 a local early exit instead identifies its explicit skipped reason. Required
 CI context errors remain failures, never these local skip dispositions.
-
 
 ## Optional local Dagger proof boundary
 

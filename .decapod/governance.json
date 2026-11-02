@@ -454,6 +454,17 @@
     "base_commit": "3216d7170b80a350c5a8417c38dda9c5c4d8bb23",
     "target_base": "origin/master"
   },
+  "claims": {
+    "local-dagger-identity": {
+      "statement": "Optional repository-local Dagger checks preserve exact snapshot/native custody and require an accepted explicitly authorized trusted local engine identity without satisfying hosted Buildkite proof.",
+      "falsifier": "Missing, changed or candidate-only engine identity, toolchain or source substitutions, denied external authority or mere green hosted status yields repository readiness; local Dagger satisfies a Buildkite-required profile.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime/repository_host/dagger.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "bootstrap1475",
@@ -514,6 +525,11 @@
       "id": "dagger-file-10",
       "summary": "Implement bounded optional Dagger adapter: src/decapod/core/validation_runtime/repository_host/dagger.rs; checks pending official validation",
       "input_digest": "sha256:3599701cb1666abb07f6973d8ec9a7327b116c1f0638612beffbe9e5e0e23a72"
+    },
+    {
+      "id": "dagger-projections",
+      "summary": "Refresh generated spec attestations via official RPC and record unproven local-engine claim",
+      "input_digest": "sha256:e8dc8f3728236ec90e77f1d264eb44567a9e95efaf9ec1c7d27bcb031337ae46"
     }
   ],
   "intents": {
