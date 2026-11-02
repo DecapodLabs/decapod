@@ -615,6 +615,11 @@
       "id": "dagger-public-config-3",
       "summary": "Preserve dormant Dagger authorization through canonical config and guided initialization: tests/consumer_readiness.rs",
       "input_digest": "sha256:cb681c85f416cd2f9a9dbc82cb762be705cb6b2b9ad64b6d2489b51eb005c062"
+    },
+    {
+      "id": "dagger-full-config-roundtrip",
+      "summary": "Exercise full public TOML parser, runtime parser and guided reinit preserving inert dormant authorization and existing proof",
+      "input_digest": "sha256:d3ee0f2a38a5a94794bdb1dd3147a9da050a25474111702af02a114a4416a799"
     }
   ],
   "intents": {

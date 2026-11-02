@@ -398,6 +398,25 @@ fn structured_init_proof_config() -> DecapodProjectConfig {
         }],
         executions: BTreeMap::new(),
     });
+    config.proof.dagger_authorizations.insert(
+        "dagger-check".into(),
+        core::repository_profile::RepositoryExecution {
+            program: "/opt/reviewed/bin/dagger".into(),
+            toolchain_files: BTreeMap::from([(
+                "dagger-docker".into(),
+                "/opt/reviewed/bin/docker".into(),
+            )]),
+            environment: BTreeMap::from([("PATH".into(), "/opt/reviewed/bin".into())]),
+            directory: ".".into(),
+            timeout_seconds: 60,
+            dagger: Some(core::repository_profile::DaggerExecution {
+                cli_contract: "dagger-1.0-workspace-check.v1".into(),
+                engine_container: "a".repeat(64),
+                engine_image: format!("sha256:{}", "b".repeat(64)),
+                docker_socket: "/run/docker.sock".into(),
+            }),
+        },
+    );
     config.proof.commands = vec![
         proof::ProofDef {
             name: "lint".to_string(),
@@ -581,5 +600,34 @@ fn init_config_preserves_reviewed_proof_order_and_contract_digest() {
         serde_json::to_value(&roundtrip.proof).unwrap(),
         serde_json::to_value(&config.proof).unwrap(),
         "re-init must not reorder reviewed commands or silently invalidate their contract"
+    );
+}
+
+#[test]
+fn full_project_toml_roundtrip_preserves_dormant_dagger_without_activation() {
+    let config = structured_init_proof_config();
+    let text = toml::to_string(&config).unwrap();
+    let parsed: DecapodProjectConfig = toml::from_str(&text).unwrap();
+    assert_eq!(
+        parsed.proof.dagger_authorizations,
+        config.proof.dagger_authorizations
+    );
+    assert_eq!(parsed.proof.commands, config.proof.commands);
+    assert_eq!(
+        parsed.proof.repository_contract,
+        config.proof.repository_contract
+    );
+    assert!(parsed.proof.validation_buildkite_preflights);
+    let runtime = core::validation_runtime::proof_configuration(text.as_bytes()).unwrap();
+    assert_eq!(
+        runtime.dagger_authorizations,
+        parsed.proof.dagger_authorizations
+    );
+    // Normal guided reinitialization must not drop a proposal or approve it.
+    let init = init_with_from_config(&parsed, PathBuf::from("."), false, false);
+    let restored = config_from_init_with(&init, parsed.repo.clone());
+    assert_eq!(
+        serde_json::to_value(&restored.proof).unwrap(),
+        serde_json::to_value(&parsed.proof).unwrap()
     );
 }
