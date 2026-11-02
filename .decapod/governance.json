@@ -616,6 +616,11 @@
       "id": "bazel-repair-spec-projections",
       "summary": "Refresh generated specs after exactCI formatter and generated module lock repairs; tests and full proof pending new candidate",
       "input_digest": "sha256:8bfb60f24e887fa697ef9db08b837e67b76415125f32826aab6ab40f80e778ae"
+    },
+    {
+      "id": "final-bazel-source-spec-reviews",
+      "summary": "Current-content reviews for all3 required publication specs after generated projections; preserve first full-validation GET timeout and actualCI formatter/strict-lock failures as failed evidence",
+      "input_digest": "sha256:104fb2f494a7bcd65bc06659537f63704b5c35cfe824373a3d2f6e832c058c0c"
     }
   ],
   "intents": {
@@ -661,23 +666,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed run and write_native_completion: synced private staging followed by one atomic completion-directory rename outside candidate, fail-closed returned report, unchanged full proof boundary. Authored architecture records these exact custody transitions.",
-          "reviewed_code_fingerprint": "6ee650a74c5eacfa82636662798a0194f0a62534b324c4f061ef908118252f70",
+          "reason": "Re-reviewed unchanged native atomic completion architecture against CI-formatted run/write_native_completion. Formatting is semantic-neutral; generated MODULE lock reflects existing pinned dependency generator rather than new architecture. Full proof remains required.",
+          "reviewed_code_fingerprint": "9f1faffa0307c5b124acf2bfc6a5517c578017d3dc00edbd51529dc123fe784f",
           "spec_material_hash": "ab03a7602c5b9a31bf8593d5544a682cf2687da47a1f92778fb0fe12f8e69310"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed native artifact compatibility: completion/verdict.json and completion/native-readiness-receipt.json replace standalone native-success verdict; remote/non-ready paths unchanged. Receipt schema digests match run; no import authority. Repository search found no production reader of old verdict path; regressions updated.",
-          "reviewed_code_fingerprint": "6ee650a74c5eacfa82636662798a0194f0a62534b324c4f061ef908118252f70",
+          "reason": "Re-reviewed actual completion/verdict.json and completion/native-readiness-receipt.json success pair, unchanged remote/nonready paths and schema digests against formatted source/tests. No artifact import or new API introduced by Tokio/Bazel metadata repair.",
+          "reviewed_code_fingerprint": "9f1faffa0307c5b124acf2bfc6a5517c578017d3dc00edbd51529dc123fe784f",
           "spec_material_hash": "2173c5d00c369fd9fe3c48b303700f8064e035fbe67b269ef2520eebd71a6325"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed native receipt authority and atomic write failure boundaries plus exact Cargo.lock Tokio1.52.3 to1.53.3 version/checksum patch for actual RUSTSEC-2026-0386 CI failure. No other dependency edges, credentials, execution exemptions or proof trust policy changed; no passing audit claim.",
-          "reviewed_code_fingerprint": "6ee650a74c5eacfa82636662798a0194f0a62534b324c4f061ef908118252f70",
-          "spec_material_hash": "36ac4730be3f5f96ac8621d96657dfc870cdf6d10fcb191e1b27d594ea42f18c"
+          "reason": "Re-reviewed exact shared pinnedBazel9.3.0 generation provenance and independent byte equality under five permitted Tokio substitutions; normal systemJDK21 TLS unchanged. Cargo advisory repair and atomic native receipt trust boundaries accurately documented. No source or dependency-check failures waived.",
+          "reviewed_code_fingerprint": "9f1faffa0307c5b124acf2bfc6a5517c578017d3dc00edbd51529dc123fe784f",
+          "spec_material_hash": "0eedf1f61b256408417dc024ba6cc0c9c50b0b87027fa7714138539d1cdd6677"
         }
       ],
       "state": "APPROVED",
@@ -688,7 +693,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793659021Z"
+      "updated_at": "1793660257Z"
     },
     "trajectory": {
       "active_boundaries": [
