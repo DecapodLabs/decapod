@@ -1635,6 +1635,7 @@ fn init_with_from_config(
         existing_proof_commands: config.proof.commands.clone(),
         existing_required_profile: config.proof.required_profile.clone(),
         existing_repository_contract: config.proof.repository_contract.clone(),
+        existing_dagger_authorizations: config.proof.dagger_authorizations.clone(),
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
         vega_decisions: Some(config.vega.mode == core::vega_readiness::Mode::Required),
@@ -1744,6 +1745,7 @@ fn preserve_unspecified_init_options(
     init.existing_required_profile = existing.existing_required_profile;
     init.existing_rust_workers = existing.existing_rust_workers;
     init.existing_repository_contract = existing.existing_repository_contract;
+    init.existing_dagger_authorizations = existing.existing_dagger_authorizations;
     init.existing_ci_attested = existing.existing_ci_attested;
 }
 
@@ -1832,6 +1834,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
             required_profile: init.existing_required_profile.clone(),
             repository_contract: init.existing_repository_contract.clone(),
+            dagger_authorizations: init.existing_dagger_authorizations.clone(),
             rust_workers: init.existing_rust_workers.clone(),
             ci_attested: init.existing_ci_attested.clone(),
             commands: proof_commands,
@@ -2495,6 +2498,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_proof_commands: Vec::new(),
                             existing_required_profile: None,
                             existing_repository_contract: None,
+                            existing_dagger_authorizations: std::collections::BTreeMap::new(),
                             existing_rust_workers: None,
                             existing_ci_attested: None,
                             vega_decisions: init_group.vega_decisions,
