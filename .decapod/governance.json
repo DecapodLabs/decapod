@@ -494,6 +494,11 @@
       "id": "cli-recovery-failclosed",
       "summary": "Add candidate-binary multi-TODO CLI recovery regression: missing inputs actionable; actual child validation rejects unrelated unapproved plan; task dates revisions and absent evidence preserved without prune. Authored not executed.",
       "input_digest": "sha256:05b13f401d4a7e9a931c03cd7f4fd561749c0771c4525ab8c6f7050a0962abf4"
+    },
+    {
+      "id": "cli-recovery-projections",
+      "summary": "Refresh supported generated projections after CLI regression; tests remain unexecuted",
+      "input_digest": "sha256:3077ff24009b13eb6168948f01a71dcdefd89938fd631aaa269f232d86477ba0"
     }
   ],
   "intents": {
