@@ -545,6 +545,11 @@
       "id": "dagger-workspace-literal",
       "summary": "Replace multiline legacy module argv with root workspace selection",
       "input_digest": "sha256:31e71a7284b4350527b880b03e5193268504a868768df65bb929ef68c53d4f24"
+    },
+    {
+      "id": "dagger-correction-0",
+      "summary": "Reconcile supported workspace-check contract and reviewed unchanged source inventory: src/decapod/core/validation_runtime/repository_host/dagger.rs",
+      "input_digest": "sha256:3efb508b294344161efad002528620d5d36a6e8ef373b0178114a89da44a34a2"
     }
   ],
   "intents": {

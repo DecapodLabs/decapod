@@ -121,7 +121,7 @@ mod tests {
     use super::*;
     fn policy() -> repository_profile::DaggerExecution {
         repository_profile::DaggerExecution {
-            module: ".dagger/ci".into(),
+            cli_contract: "dagger-1.0-workspace-check.v1".into(),
             engine_container: "a".repeat(64),
             engine_image: format!("sha256:{}", "b".repeat(64)),
             docker_socket: "/var/run/docker.sock".into(),
