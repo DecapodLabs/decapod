@@ -521,6 +521,11 @@
       "id": "issue1470-bazel-inventory",
       "summary": "Review sole MODULE.bazel.lock inventory change for pinned Tokio-derived metadata; required graph and adapters unchanged",
       "input_digest": "sha256:5c35d6c874a62c50f39e5cca66f2ffb5581252552a20943eb69a46f227631234"
+    },
+    {
+      "id": "issue1470-bazel-reviewed-projections",
+      "summary": "Refresh generated inventory-bound projections and honest current-content publication reviews",
+      "input_digest": "sha256:05778d1e3dea8f3bf6afe3e4f3054c53713fe23e20cc939a769efc9286ca3978"
     }
   ],
   "intents": {
@@ -561,21 +566,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed source_entry_path, metadata and Discovery::visit with tests: added semantic prose accurately documents actual entry identity, distinct same-content/hardlink paths, non-Git inputs,8192 lookup bound and real-host limitations. Tokio lock-only safety repair preserves components and execution graph.",
+          "reason": "Current authored source identity section matches source_entry_path/metadata/Discovery and tests: distinct actual entries, non-Git coverage,8192 bound and host caveats. Minimal Tokio1.53.3 plus canonical derived Bazel lock retain architecture and required proof graph; no package graph expansion.",
           "reviewed_code_fingerprint": "7afb594f658f759d37693125e280085d3c081cbaf98ac0a982c7b10d7821db5f",
           "spec_material_hash": "e778b434665a97ee71dbd9c6efd495f23f6996a72ebf7e6a52ee51a4afe51431"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed source_entry_path/discover_source_inventory and existing CLI/RPC callers: only internal filesystem spelling resolution changes, keeping inventory/report schemas, exact snapshot binding and public commands intact. Tokio 1.53.3 satisfies existing version1 manifest without a new public interface. Existing interface contract remains accurate; host-specific test execution is not asserted.",
+          "reason": "Reviewed source_entry_path/discovery callers and regenerated Tokio Bazel lock: existing CLI/RPC signatures, inventory schemas and exact-source interfaces unchanged. New filename behavior is internal correctness; derived lock only synchronizes existing dependency identity. No platform execution claim added.",
           "reviewed_code_fingerprint": "7afb594f658f759d37693125e280085d3c081cbaf98ac0a982c7b10d7821db5f",
           "spec_material_hash": "a227ee81c08e687d9dfa5ec539625a29c86d32b8a80653fa08178a493494869e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed metadata component and symlink rejection before spelling lookup, fail-closed ambiguous/bounded discovery, and unchanged exact-source proof. No authentication/storage/remote authority is added. Tokio advisory repaired with patched1.53.3 and no deny exemption; existing threat model and publication boundaries remain accurate.",
+          "reason": "Reviewed component symlink rejection before bounded resolution and unchanged snapshot binding. Patched Tokio safety version and generated Bazel identity are synchronized with exact checksum, without advisory exemption, TLS/auth change or new authority. Existing threat model and proof boundaries remain accurate.",
           "reviewed_code_fingerprint": "7afb594f658f759d37693125e280085d3c081cbaf98ac0a982c7b10d7821db5f",
           "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
         }
@@ -588,7 +593,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793658442Z"
+      "updated_at": "1793661530Z"
     },
     "trajectory": {
       "active_boundaries": [
