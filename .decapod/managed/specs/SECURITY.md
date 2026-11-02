@@ -579,3 +579,11 @@ escape variants. The public sanitized report is covered; the reporter's private
 historical summary was not supplied and has not been reproduced. These authored
 regressions require execution under full candidate validation before this change
 can claim publication readiness.
+
+The shared CI repair updates root Tokio from 1.52.3 to 1.53.3 for
+RUSTSEC-2026-0386 and synchronizes its derived Bazel lock metadata. Both deltas
+were reviewed and their exact before/after hashes verified locally; pinned Bazel
+9.3 generated the shared metadata with the existing system JDK and normal TLS.
+No required graph, trust, model, or execution policy changes. This dependency
+repair is not runtime proof: the prompt-gate candidate still requires fresh full
+validation against its exact published commit.

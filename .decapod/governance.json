@@ -606,6 +606,11 @@
       "id": "reviewed-tokio-inventory",
       "summary": "Independently reconcile inventory changes only Cargo.lock and MODULE.bazel.lock reviewed Tokio repair; graph/adapters unchanged",
       "input_digest": "sha256:3e8fe0e47f1aa141cad225b6cbb70740c8024ec2e283b1b1fc26bc3f26d74db4"
+    },
+    {
+      "id": "tokio-security-spec",
+      "summary": "Document reviewed shared dependency repair without claiming candidate runtime proof",
+      "input_digest": "sha256:ce0ee4bf1c6937fd7f98fee428cfbbfffc6745958df87344753530f51ceedc79"
     }
   ],
   "intents": {
