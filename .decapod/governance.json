@@ -529,6 +529,11 @@
       "id": "reviewed-caller-publication-specs",
       "summary": "Refresh projections and bind actual current-content interface architecture and security reviews; readiness still pending",
       "input_digest": "sha256:6d48a514a5f45cbb913afbeda67139272bfe77ace85ce81709d1b51ad93fd8a5"
+    },
+    {
+      "id": "canonical-bazel-tokio-lock",
+      "summary": "Apply independently generated Bazel9.3 Tokio lock refresh, verify hashes and five substitutions; preserve failed bb631 provider evidence",
+      "input_digest": "sha256:b2b008d36c6fbbb18a0380b471fe6842eda1017236f6fb185e063322cc8fa9ff"
     }
   ],
   "intents": {
