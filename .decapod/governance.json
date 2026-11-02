@@ -474,6 +474,11 @@
       "id": "replay-error-recovery-md",
       "summary": "Replay authored issue 1473 material only; tests not yet run",
       "input_digest": "sha256:a6d15e65c88af725bb0421b0b5347060f54c441baa1fb40da0f75334f489fe76"
+    },
+    {
+      "id": "replay-semantic-spec",
+      "summary": "Replay only authored recovery semantics preserving current generated attestations",
+      "input_digest": "sha256:9fa29e526457aec8777071a8cd7f0d888484f3829ac16188f8ef8a782aca14e2"
     }
   ],
   "intents": {

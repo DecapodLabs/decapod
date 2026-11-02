@@ -205,6 +205,34 @@ unknown Decapod-namespaced directives invalidate the whole overlay. Empty
 retired generated directives remain upgrade-compatible. Partial application
 must not conceal ambiguous authority.
 
+## Current-evidence recovery for historical completion claims
+
+`plugins::verify::VerifyCommand::Recover` accepts repeated `--artifact TODO_ID=FILE`
+inputs when an unverified completed task lacks a usable file baseline. Inputs
+must name tasks in the recovery batch and readable current files; no implicit
+AGENTS.md substitute or historical CI receipt is imported by this batch path.
+`prepare_recovery_captures` collects file hashes and the active validation epoch
+before validation, rejecting missing per-task inputs and additional proof
+obligations that cannot be established by the validation-only capture contract.
+
+`refresh_batch_baselines_with_captures` requires a genuinely passing current
+snapshot, checks the original task and proof projection under the write
+transaction, and rechecks captured file bytes and epoch before inserting pending
+proof. It preserves completed task status, timestamp and revision, and records
+previous proof fields plus the explicit fresh-current-material provenance in the
+append-only recovery event. `finalize_recovered_batch` remains the sole batch
+promotion boundary after final validation and every task's artifact checks.
+A pending or failed capture is not verified completion; a newer task, baseline,
+file or epoch invalidates the attempt. Existing proof plans containing additional
+obligations are not downgraded by supplying new files.
+
+The required regression surface in `tests/unit/plugins/verify_completion_tests.rs`
+includes multiple completed tasks without proof rows, missing/foreign artifact
+inputs, extra proof obligations, failed snapshots, changed files, concurrent task
+revision changes, pending final failure, retained completion history and atomic
+successful promotion. These are authored tests until exact-candidate validation
+executes them; source review alone is not passing proof.
+
 ## Sessions, tasks, and workspaces
 
 Most mutations require an active repository-local session. Local session
