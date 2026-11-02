@@ -481,6 +481,11 @@
       "id": "authored-tests-plugins-todo-rs",
       "summary": "Replay reviewed issue1477 authored change in tests/plugins/todo.rs with current release governance",
       "input_digest": "sha256:fbc429c2651fe5a66cc1ba200fafaf87ab3bd1b1be23f48d4e66332e9a40745b"
+    },
+    {
+      "id": "authored-tests-plugins-policy-rs",
+      "summary": "Replay reviewed issue1477 authored change in tests/plugins/policy.rs with current release governance",
+      "input_digest": "sha256:00063f50be65392046506207e69a4e13893d8d3605c5abb3a7ca43b69f39d315"
     }
   ],
   "intents": {

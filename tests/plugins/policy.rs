@@ -530,3 +530,76 @@ fn broker_zone_approvals_preserve_the_resource_target_and_trust_gate() {
     assert!(run("decapod", Some("alpha")).is_err());
     revoke_approval(&store, &legacy).unwrap();
 }
+
+#[test]
+fn handoff_diagnostic_uses_enforced_zone_on_fresh_store() {
+    use decapod::plugins::policy::{
+        enforce_broker_mutation_policy_for_target, eval_effective_policy,
+    };
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+    let (risk, requirements, hitl) = eval_effective_policy(
+        &store,
+        "todo.handoff",
+        Some("task-a"),
+        &RiskMap { zones: vec![] },
+    )
+    .unwrap();
+    assert_eq!(risk, RiskLevel::HIGH);
+    assert!(hitl);
+    assert!(requirements.iter().any(|r| r.contains("verified")));
+    assert!(
+        requirements
+            .iter()
+            .any(|r| r.contains("exact task-bound approval"))
+    );
+    let denied = enforce_broker_mutation_policy_for_target(
+        &store.root,
+        "basic-caller",
+        "todo.handoff",
+        Some("task-a"),
+    )
+    .unwrap_err();
+    assert!(denied.to_string().contains("trust"));
+    assert!(
+        enforce_broker_mutation_policy_for_target(
+            &store.root,
+            "operator",
+            "todo.handoff",
+            Some("task-a")
+        )
+        .is_err()
+    );
+    approve_action(&store, "todo.handoff", Some("task-a"), "operator", "global").unwrap();
+    assert!(
+        enforce_broker_mutation_policy_for_target(
+            &store.root,
+            "operator",
+            "todo.handoff",
+            Some("task-a")
+        )
+        .is_ok()
+    );
+    assert!(
+        enforce_broker_mutation_policy_for_target(
+            &store.root,
+            "operator",
+            "todo.handoff",
+            Some("task-b")
+        )
+        .is_err()
+    );
+    assert!(
+        enforce_broker_mutation_policy_for_target(
+            &store.root,
+            "basic-caller",
+            "todo.handoff",
+            Some("task-a")
+        )
+        .is_err()
+    );
+}
