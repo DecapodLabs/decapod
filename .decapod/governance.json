@@ -616,6 +616,11 @@
       "id": "reviewed-spec-projections",
       "summary": "Record actual current-content spec reviews and refresh generated projections; full proof pending",
       "input_digest": "sha256:334f47ac47274567455068b3b67788bdfca0ff7d4637516dd14697737b36c6b3"
+    },
+    {
+      "id": "ci-clippy-let-chain",
+      "summary": "Repair exact CI collapsible_if finding using equivalent let-chain; preserve all prompt safety markers and tests; RPC failure diagnosis separate",
+      "input_digest": "sha256:f51241d6c4644a29ca79257833c762c695a596ab739435ff854c2bf9449839c3"
     }
   ],
   "intents": {
@@ -691,8 +696,16 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:57c77151fd0b1f49fd8ceb3e6b40d72b4933dbf41761a8b766f0e43308bbe162",
+      "artifact_hash": "sha256:b073b4187e4228100158ed779f6e80353f9f74df217417a0b8b3332b5a462bf0",
       "checks": [
+        {
+          "name": "candidate-1c29096b-clippy",
+          "status": "failed"
+        },
+        {
+          "name": "candidate-1c29096b-collector",
+          "status": "unavailable"
+        },
         {
           "name": "implementation",
           "status": "partial"
@@ -763,10 +776,17 @@
             "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MBT4709VS1T8ZYG4Z85X",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MBT4709VS1T8ZYG4Z85X": {
@@ -859,6 +879,22 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Exact GHA job125610878117 run41542697894 failed clippy::collapsible_if at agent_eval.rs465; old collector21010 terminal SNAPSHOT_NOT_READY HTTP403, log /tmp/1478-full-validation-public.log and /tmp/decapod-snapshot-a6mAJZ preserved. GHA RPC job125610878207 passed; separate reported Buildkite RPC failure not yet diagnosed."
+                ],
+                "proof_refs": [
+                  "candidate-1c29096b-clippy",
+                  "candidate-1c29096b-collector"
+                ],
+                "scope": [
+                  "issue-1478-prompt-context"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -868,6 +904,7 @@
       "destination": "pull request",
       "evidence": [
         "/tmp/1478-validation.log",
+        "Exact GHA job125610878117 run41542697894 failed clippy::collapsible_if at agent_eval.rs465; old collector21010 terminal SNAPSHOT_NOT_READY HTTP403, log /tmp/1478-full-validation-public.log and /tmp/decapod-snapshot-a6mAJZ preserved. GHA RPC job125610878207 passed; separate reported Buildkite RPC failure not yet diagnosed.",
         "Independent reviewer /root/rereview_prompt_boundaries at 2026-11-02T21:23Z: no further blocking source finding at9954188c; safe fixtures logically compatible; source review only, no tests executed",
         "Prior GitTransport exit128 and snapshot blocker preserved in Git history; authenticated connector publication now independently fetched with all25 tree/message/parent mappings verified, public head e7a0ef04200b430629f983fc2faee276a34ab95c; runtime proof remains unavailable until fresh validation",
         "https://curl.se/docs/manpage.html#--url-query"

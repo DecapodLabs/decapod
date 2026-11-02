@@ -462,10 +462,11 @@ fn command_words(prompt: &str) -> Vec<String> {
             // discard the quoted content: an apparent example can be an attack.
             '\'' | '"' | '`' => {}
             '\\' => {
-                if let Some(next) = chars.next() {
-                    if next != '\n' && next != '\r' {
-                        word.push(next);
-                    }
+                if let Some(next) = chars.next()
+                    && next != '\n'
+                    && next != '\r'
+                {
+                    word.push(next);
                 }
             }
             ch if "|;>".contains(ch) => {
