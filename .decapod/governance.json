@@ -504,6 +504,11 @@
       "id": "tokio-advisory-repair",
       "summary": "Apply independently hash-verified minimal Tokio1.52.3 to1.53.3 lock version/checksum patch for observed RUSTSEC-2026-0386; no other dependency edges changed, no tests claimed",
       "input_digest": "sha256:1400430b7f78820e8b327a7841f035a22b7f93cd9a1cd346f248b904cd74efa1"
+    },
+    {
+      "id": "reviewed-tokio-inventory",
+      "summary": "Reviewed inventory delta is only Cargo.lock Tokio version/checksum; retain entire required profile and workflow graph, update user-editable review digest",
+      "input_digest": "sha256:5d1eec8921a83b95240e9f542a0ec0412f895f652dc137acb08a39b187c3b180"
     }
   ],
   "intents": {
