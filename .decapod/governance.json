@@ -531,6 +531,11 @@
       "id": "nested-http-substitution",
       "summary": "Retain full nested substitution body when bounding HTTP command context; no runtime proof",
       "input_digest": "sha256:2f591e86da632f65ba83530f463ccbf3d092bf4a7ddf2d2d81d26504c625f42b"
+    },
+    {
+      "id": "nested-http-regression",
+      "summary": "Specify nested command substitution regression with remote fetch after inner close; tests remain unrun",
+      "input_digest": "sha256:5f5e251cdffc758ca9f0fcaadd19681c423d10fe804c5a72fbb124242ad4af0b"
     }
   ],
   "intents": {
