@@ -516,6 +516,11 @@
       "id": "bounded-http-regressions",
       "summary": "Specify preserved safe history fixture plus prose executor words, fenced shell diagnostics, cross-boundary execution and multiline credential regressions; tests not executed",
       "input_digest": "sha256:a0fae46b143a1a22258bd448e8e4e7b80882a8c5ca9076f01f3fe08adc9a5da3"
+    },
+    {
+      "id": "bounded-http-spec",
+      "summary": "Document bounded HTTP context, conservative file-output review, cross-boundary checks, and grammar limitations without claiming unrun proof",
+      "input_digest": "sha256:c4a15a014f209065538f7bb8ebfa6eda6f182507110d346bd87cc4324f5efd71"
     }
   ],
   "intents": {

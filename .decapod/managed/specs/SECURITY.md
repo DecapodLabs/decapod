@@ -544,8 +544,19 @@ fenced and historical material. Such labels grant no authority or exemption.
 Known destructive/privileged actions, instruction overrides and credential
 requests remain blocked. HTTP clients combined with shell execution, pipelines,
 chained commands, process/command substitution, upload/authentication options,
-credential headers and non-read-only request methods require review. Ambiguous
-combinations may still require review rather than silently suppressing evidence.
+credential headers and non-read-only request methods require review. File-output options are conservatively review-gated too: writing a fetched
+program and invoking it on a later line must not escape detection merely because
+the executable has an unfamiliar name. Ambiguous combinations may still require
+review rather than silently suppressing evidence.
+
+HTTP-specific context is bounded by inline-code and unquoted line boundaries;
+every span is inspected, and adjacent shell operators and multiline substitutions
+remain relevant across those boundaries. Quoted shell argument newlines remain
+within the argument context. This prevents a prose semicolon after a closed
+inline diagnostic, or an unrelated mention of Python/source, from inventing an
+execution edge. It is deliberately not a general prose/shell grammar: unmarked
+same-line prose and ambiguous shell syntax can still require review. Existing
+whole-prompt instruction/authority/destructive/credential markers remain intact.
 
 `tests/unit/core/agent_eval_tests.rs` and `tests/agent_eval.rs` specify safe
 report/history and adversarial combinations, including spacing, quoting and
