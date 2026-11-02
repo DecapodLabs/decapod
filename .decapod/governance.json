@@ -531,6 +531,11 @@
       "id": "atomic-completion-spec",
       "summary": "Document atomic native completion publication and fail-closed injected storage error regressions",
       "input_digest": "sha256:f9c9fb533290d4886c3df7da0604b6021d3013d393505a1ad978cdf78c7ff523"
+    },
+    {
+      "id": "completion-regression-readability",
+      "summary": "Keep overwrite-preservation assertion readable; no test execution claimed",
+      "input_digest": "sha256:1b4d1a0469948b91e8a48f5e8e990af3be46ca08324d6cbeb152266f1f38fa2e"
     }
   ],
   "intents": {

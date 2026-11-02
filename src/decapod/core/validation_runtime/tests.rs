@@ -2198,7 +2198,10 @@ fn native_completion_publishes_both_files_together_and_preserves_existing_bundle
         fs::read(completed.join("native-readiness-receipt.json")).unwrap(),
         receipt
     );
-    assert!(write_native_completion(directory.path(), b"replacement", b"replacement", write_new).is_err());
+    let replacement = b"replacement";
+    assert!(
+        write_native_completion(directory.path(), replacement, replacement, write_new).is_err()
+    );
     assert_eq!(fs::read(completed.join("verdict.json")).unwrap(), verdict);
     assert_eq!(
         fs::read(completed.join("native-readiness-receipt.json")).unwrap(),
