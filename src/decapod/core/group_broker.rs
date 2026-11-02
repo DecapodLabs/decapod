@@ -6,6 +6,7 @@ use crate::core::time;
 use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
 use std::fs::{self, File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -20,13 +21,82 @@ const BROKER_PROTOCOL_CLIENT_OVERRIDE_ENV: &str = "DECAPOD_GROUP_BROKER_PROTOCOL
 const BROKER_PROTOCOL_SERVER_OVERRIDE_ENV: &str = "DECAPOD_GROUP_BROKER_PROTOCOL_SERVER_OVERRIDE";
 const BROKER_PHASE_HOOK_FILE_ENV: &str = "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE";
 const BROKER_HALT_PHASE_ENV: &str = "DECAPOD_GROUP_BROKER_TEST_HALT_PHASE";
-const BROKER_PROTOCOL_DEFAULT: u32 = 1;
+const BROKER_PROTOCOL_DEFAULT: u32 = 2;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+// Only request-scoped context crosses the existing private socket. In particular,
+// never inherit another caller's identity, session credential or claim behavior.
+const CALLER_ENV_KEYS: &[&str] = &[
+    "DECAPOD_AGENT_ID",
+    "DECAPOD_AGENT_PROVIDER",
+    "DECAPOD_SESSION_ID",
+    "DECAPOD_SESSION_PASSWORD",
+    "DECAPOD_TASK_ID",
+    "DECAPOD_CORRELATION_ID",
+    "DECAPOD_CAUSATION_ID",
+    "DECAPOD_IDEMPOTENCY_KEY",
+    "DECAPOD_CLAIM_AUTORUN",
+];
+
+// Deliberately no Debug implementation: the credential is ephemeral transport,
+// never diagnostic output, a result envelope, or a durable dedupe payload.
+#[derive(Clone, Serialize, Deserialize)]
+struct CallerContext {
+    cwd: PathBuf,
+    environment: BTreeMap<String, String>,
+}
+
+impl CallerContext {
+    fn capture() -> Result<Self, error::DecapodError> {
+        let mut environment = BTreeMap::new();
+        for key in CALLER_ENV_KEYS {
+            if let Ok(value) = std::env::var(key) {
+                environment.insert((*key).to_owned(), value);
+            }
+        }
+        environment.insert("DECAPOD_AGENT_ID".into(), crate::current_agent_id());
+        // Session validation may have auto-acquired a password process-locally.
+        if let Some(password) = crate::SESSION_P_VAL.get() {
+            environment.insert("DECAPOD_SESSION_PASSWORD".into(), password.clone());
+        }
+        let caller = Self {
+            cwd: std::env::current_dir()?.canonicalize()?,
+            environment,
+        };
+        caller.validate()?;
+        Ok(caller)
+    }
+
+    fn validate(&self) -> Result<(), error::DecapodError> {
+        if !self.cwd.is_absolute()
+            || self.cwd.to_str().is_none()
+            || !self.environment.contains_key("DECAPOD_AGENT_ID")
+            || self
+                .environment
+                .keys()
+                .any(|key| !CALLER_ENV_KEYS.contains(&key.as_str()))
+        {
+            return Err(error::DecapodError::ValidationError(
+                "BROKER_INVALID_CALLER_CONTEXT".into(),
+            ));
+        }
+        Ok(())
+    }
+
+    fn apply(&self, command: &mut Command) {
+        command.current_dir(&self.cwd);
+        for key in CALLER_ENV_KEYS {
+            command.env_remove(key);
+        }
+        command.envs(&self.environment);
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
 struct BrokerRequest {
     protocol_version: u32,
     request_id: String,
     argv: Vec<String>,
+    caller: CallerContext,
     payload_hash: String,
 }
 
@@ -113,12 +183,14 @@ fn run_unix_broker(
     ensure_socket_directory(socket_path.parent().expect("socket parent"))?;
     let lock_path = broker_lock_path(broker_root);
 
+    let caller = CallerContext::capture()?;
     let request = BrokerRequest {
         protocol_version: client_protocol_version(),
         request_id: std::env::var(BROKER_REQUEST_ID_ENV)
             .unwrap_or_else(|_| crate::core::ulid::new_ulid()),
         argv: argv.to_vec(),
-        payload_hash: hash_payload(argv),
+        payload_hash: hash_payload(argv, &caller),
+        caller,
     };
 
     match send_request(&socket_path, &request) {
@@ -325,6 +397,12 @@ fn execute_request(
     broker_root: &Path,
     request: &BrokerRequest,
 ) -> Result<BrokerResponse, error::DecapodError> {
+    request.caller.validate()?;
+    if request.payload_hash != hash_payload(&request.argv, &request.caller) {
+        return Err(error::DecapodError::ValidationError(
+            "BROKER_INVALID_PAYLOAD_HASH".into(),
+        ));
+    }
     if let Some(existing) = dedupe_lookup(broker_root, request)? {
         if existing.payload_hash != request.payload_hash {
             return Ok(BrokerResponse {
@@ -363,7 +441,9 @@ fn execute_request(
     } else {
         BUILD_TIMEOUT
     };
-    let output = match Command::new(exe)
+    let mut command = Command::new(exe);
+    request.caller.apply(&mut command);
+    let output = match command
         .args(&request.argv)
         .env(BROKER_INTERNAL_ENV, "1")
         .env("DECAPOD_GROUP_BROKER_REQUEST_ID", &request.request_id)
@@ -483,12 +563,19 @@ fn apply_response(
     }
 }
 
-fn hash_payload(argv: &[String]) -> String {
+fn hash_payload(argv: &[String], caller: &CallerContext) -> String {
     let mut hasher = Sha256::new();
-    for arg in argv {
-        hasher.update(arg.as_bytes());
-        hasher.update(b"\0");
-    }
+    // Length-delimited structured encoding binds replay to both the original
+    // actor and workspace, not merely identical command arguments. Credential
+    // rotation for that actor must not create a new logical mutation.
+    let environment: BTreeMap<_, _> = caller
+        .environment
+        .iter()
+        .filter(|(key, _)| key.as_str() != "DECAPOD_SESSION_PASSWORD")
+        .collect();
+    let payload = serde_json::to_vec(&(argv, &caller.cwd, environment))
+        .expect("broker payload contains only serializable strings and paths");
+    hasher.update(payload);
     format!("{:x}", hasher.finalize())
 }
 

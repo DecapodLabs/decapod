@@ -459,6 +459,11 @@
       "id": "bootstrap-1476-release",
       "summary": "Initialize fresh release 0.121.2 workspace preserving previous failed candidate",
       "input_digest": "sha256:6b1aa309178ea6b7fc14871af1cfae536be4ab94aa34c0bf99e79fe9a69e92b5"
+    },
+    {
+      "id": "replay-group_broker.rs",
+      "summary": "Replay authored caller isolation implementation or regression from preserved candidate; tests pending",
+      "input_digest": "sha256:76c2c98250ce79bc9b4059a6354618c4bff3feb21d481ddccb62d16820f9f75c"
     }
   ],
   "intents": {
