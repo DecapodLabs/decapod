@@ -570,6 +570,11 @@
       "id": "dagger-dormant-policy",
       "summary": "Separate dormant accepted Dagger authorization from active execution; add adoption, rotation and revocation fixture cases",
       "input_digest": "sha256:f88b2927851153f70e0dbf0ac34486be95263ca1e9c0770f5038ce8dae4b840d"
+    },
+    {
+      "id": "dagger-accepted-authority",
+      "summary": "Read execution authorization solely from accepted target dormant map; test inert configuration and candidate self-authorization rejection",
+      "input_digest": "sha256:dd41284a5a1474e8a15d10a105ed4c8323292f64e365dc4ce6999f8ea01f9f72"
     }
   ],
   "intents": {

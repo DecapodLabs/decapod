@@ -40,6 +40,9 @@ pub struct ProofConfiguration {
     pub commands: Vec<super::proof::ProofDef>,
     #[serde(default)]
     pub repository_contract: Option<super::repository_profile::RepositoryContract>,
+    /// Dormant proposals; only the accepted target's map can authorize execution.
+    #[serde(default)]
+    pub dagger_authorizations: BTreeMap<String, super::repository_profile::RepositoryExecution>,
     #[serde(default)]
     pub rust_workers: Option<rust_worker::Configuration>,
 }
@@ -624,7 +627,7 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     };
     repository_profile::preserve_accepted_dagger(
         configuration.repository_contract.as_ref(),
-        accepted.repository_contract.as_ref(),
+        &accepted.dagger_authorizations,
     )
     .map_err(|e| invalid(&format!("{e:?}")))?;
     rust_worker::preserve_accepted(
@@ -2416,3 +2419,51 @@ mod executor_contract;
 
 pub mod repository_host;
 pub mod rust_worker;
+
+#[cfg(test)]
+mod dagger_authorization_tests {
+    use super::*;
+
+    #[test]
+    fn parsing_dormant_authorization_does_not_activate_a_provider() {
+        let text = format!(
+            r#"
+[proof.dagger_authorizations.dagger-check]
+program = "/opt/reviewed/bin/dagger"
+toolchain_files = {{ dagger-docker = "/opt/reviewed/bin/docker" }}
+environment = {{ PATH = "/opt/reviewed/bin" }}
+timeout_seconds = 60
+[proof.dagger_authorizations.dagger-check.dagger]
+cli_contract = "dagger-1.0-workspace-check.v1"
+engine_container = "{}"
+engine_image = "sha256:{}"
+docker_socket = "/run/docker.sock"
+"#,
+            "a".repeat(64),
+            "b".repeat(64)
+        );
+        let configuration = proof_configuration(text.as_bytes()).unwrap();
+        assert!(configuration.required_profile.is_none());
+        assert!(configuration.commands.is_empty());
+        assert!(configuration.repository_contract.is_none());
+        assert!(!configuration.validation_buildkite_preflights);
+        assert_eq!(configuration.dagger_authorizations.len(), 1);
+        let active = repository_profile::RepositoryContract {
+            reviewed_commands_digest: String::new(),
+            source_coverage: vec![],
+            executions: configuration.dagger_authorizations.clone(),
+        };
+        let old = ProofConfiguration::default();
+        assert!(
+            repository_profile::preserve_accepted_dagger(Some(&active), &old.dagger_authorizations)
+                .is_err()
+        );
+        assert!(
+            repository_profile::preserve_accepted_dagger(
+                Some(&active),
+                &configuration.dagger_authorizations
+            )
+            .is_ok()
+        );
+    }
+}
