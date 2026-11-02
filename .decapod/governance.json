@@ -496,6 +496,11 @@
       "id": "semantic-interface",
       "summary": "Record handoff caller and recovery interfaces with explicit unexecuted proof obligations",
       "input_digest": "sha256:bb0bed1911dd9149c9d5314c868267b7748b91ff7d642aacbe0af0267a81bc35"
+    },
+    {
+      "id": "expired-recovery",
+      "summary": "Ensure expired exact recovery authority leaves recorded custody unchanged",
+      "input_digest": "sha256:ae73453cb001ced90850f5453d0b8328adfd18815618169514146a5726e2100a"
     }
   ],
   "intents": {

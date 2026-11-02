@@ -1758,6 +1758,34 @@ fn operator_recovery_requires_exact_one_use_authority() {
             .contains("HANDOFF_RECOVERY_APPROVAL_REQUIRED")
     );
 
+    let expired =
+        policy::approve_action(&store, "todo.handoff", Some(&id), "operator", "global").unwrap();
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    db.execute(
+        "UPDATE approvals SET expires_at='1Z' WHERE approval_id=?1",
+        [&expired],
+    )
+    .unwrap();
+    let expired_result = handoff_task_as(
+        &store,
+        &id,
+        "receiver",
+        Some("unavailable-owner"),
+        "expired recovery",
+        None,
+        "operator",
+    )
+    .unwrap_err();
+    assert!(
+        expired_result
+            .to_string()
+            .contains("HANDOFF_RECOVERY_APPROVAL_REQUIRED")
+    );
+    assert_eq!(
+        get_task(root, &id).unwrap().unwrap().assigned_to,
+        "unavailable-owner"
+    );
+
     let approval =
         policy::approve_action(&store, "todo.handoff", Some(&id), "operator", "global").unwrap();
     let missing_owner =
