@@ -606,6 +606,11 @@
       "id": "reviewed-bazel-source-inventory",
       "summary": "Independently compare generated lock to exact5 permitted Tokio substitutions and complete inventory versus3795e92c: MODULE.bazel.lock only; reconcile required-profile digest without weakening coverage",
       "input_digest": "sha256:a0fbb6ada7df899313310a5fcc6f67ebbfa29b5d920ed46bccf913c50e3b6187"
+    },
+    {
+      "id": "bazel-lock-security-spec",
+      "summary": "Specify normal pinned module metadata generation and exact bounded Tokio output review, preserving strict lock validation and no trust change",
+      "input_digest": "sha256:60b4af5f070b4b1e70267ad52cd94115d4399070872a8cb46c9053b78c314f20"
     }
   ],
   "intents": {

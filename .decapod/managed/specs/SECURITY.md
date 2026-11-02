@@ -10,7 +10,11 @@ a successful pair; no tracked candidate bytes are changed by receipt output.
 The root Cargo.lock updates Tokio1.52.3 to1.53.3 for RUSTSEC-2026-0386, changing
 only that package's version and registry checksum. This addresses the actual
 required dependency-check failure without suppressing advisories or modifying
-other dependency edges. It is not a claim that full validation has passed.
+other dependency edges. The pinned Bazel9.3.0 module dependency generator also
+refreshes `MODULE.bazel.lock` from that Cargo input; byte review permits only
+Tokio references/version/checksum and the Cargo input digest. Generation changes
+no trust configuration, proof profile, registry or unrelated dependency graph.
+It is not a claim that full validation has passed.
 
 Public Buildkite artifact redirects admit only the exact documented HTTPS
 `buildkiteartifacts.com` host and legacy `s3.amazonaws.com/buildkiteartifacts.com`
