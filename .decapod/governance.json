@@ -476,6 +476,11 @@
       "id": "http-context-regressions",
       "summary": "Cover read-only reports and hostile quoted HTTP contexts",
       "input_digest": "sha256:3cc836218f7881eebb2424fadb7a42ea0ab0e0fbd608d285fdd6d569c3be6ea6"
+    },
+    {
+      "id": "http-context-cli",
+      "summary": "Exercise actual CLI allow/block and non-echo contracts",
+      "input_digest": "sha256:62631529ca0553e6516bcda2012df0ebd928ecff87694a646064aa6c53889b87"
     }
   ],
   "intents": {
