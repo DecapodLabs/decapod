@@ -486,6 +486,11 @@
       "id": "refresh-specs",
       "summary": "Refresh generated spec fingerprints after semantic architecture change",
       "input_digest": "sha256:0358eab4267a878bc35e1ad08edf4dc8cebdcbb3656f2220c46ed4f65cae8c5c"
+    },
+    {
+      "id": "review-release-inventory",
+      "summary": "Review unchanged source execution graph with released package version 0.121.2 inventory",
+      "input_digest": "sha256:51d72800ac8a337b1f3fa2da669838da4048895c6e1431de0f31cf432d7e8c2d"
     }
   ],
   "intents": {
@@ -537,9 +542,14 @@
         "Current claimed task and isolated work branch",
         "No merge, release, credential changes or proof bypass; preserve failed earlier candidate."
       ],
-      "artifact_hash": "sha256:86d504a0158989bcb57e14b23be389bb7b69fa9ff2baa5537384bf599a127a83",
-      "checks": [],
-      "current_phase": "implementation",
+      "artifact_hash": "sha256:49f123e2d62584d5430e118cc0238b35fb548d2cd37b4545b820f2756ff74299",
+      "checks": [
+        {
+          "name": "full_validation",
+          "status": "failed"
+        }
+      ],
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -560,10 +570,17 @@
             "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HEXJCDCCEJTEY5JSGT8A": {
@@ -586,6 +603,25 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/config.toml",
+                  "Current candidate passes entrypoint-history stage. Inventory drift since last config review 213ed9ca is exclusively package version 0.121.0 to 0.121.2 in Cargo.toml/Cargo.lock; workflows, helpers, dependencies and execution graph unchanged."
+                ],
+                "proof_refs": [
+                  "full_validation"
+                ],
+                "scope": [
+                  "issue1470-source-inventory-recovery"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Real APFS/NTFS tests await configured provider execution; no source tests have run locally."
+                ]
               }
             ]
           }
@@ -596,13 +632,16 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Current candidate passes entrypoint-history stage. Inventory drift since last config review 213ed9ca is exclusively package version 0.121.0 to 0.121.2 in Cargo.toml/Cargo.lock; workflows, helpers, dependencies and execution graph unchanged.",
         "Previous candidate 03b63f55 failed entrypoint commit discipline before source tests; retained on original branch."
       ],
       "inspected_files": [
+        ".decapod/config.toml",
         "src/decapod/core/init_reconciliation/mod.rs"
       ],
       "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
       "modified_files": [
+        ".decapod/config.toml",
         "src/decapod/core/init_reconciliation/mod.rs"
       ],
       "next_transitions": [
@@ -616,7 +655,9 @@
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m6f0gxvn6gcm1z",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Real APFS/NTFS tests await configured provider execution; no source tests have run locally."
+      ]
     }
   },
   "legacy_digests": {
