@@ -459,6 +459,11 @@
       "id": "bootstrap1475",
       "summary": "Initialize release-bound governed issue1475 workspace",
       "input_digest": "sha256:f6cda198cd09f935af232ab9cb5d2321e5ff2eab1478602b0a57482b64252d32"
+    },
+    {
+      "id": "dagger-contract",
+      "summary": "Declare explicit accepted Dagger engine contract and negative fixture cases; no tests executed",
+      "input_digest": "sha256:a957977bd5baf967f19acf92f42f5590fbeb489054f233f9ace61f60b9d62b2b"
     }
   ],
   "intents": {
@@ -509,8 +514,13 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:075ac6fdb4d9208ec90d6d105cb25744f1ee8814887fd73099d84327d1806491",
-      "checks": [],
+      "artifact_hash": "sha256:60cfa1841fd17ca5b1203c5c5a58fdd3e24873c3886ad761da9e8e4eb37e843a",
+      "checks": [
+        {
+          "name": "live-dagger",
+          "status": "unavailable"
+        }
+      ],
       "current_phase": "intent",
       "custody": {
         "events": [
@@ -525,17 +535,51 @@
             "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M6F0MSA6NJNNFSAD36MDNVNK": {
+            "evidence_only": true,
+            "id": "branch_01M6F0MSA6NJNNFSAD36MDNVNK",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/validation_runtime/repository_host.rs"
+                ],
+                "proof_refs": [
+                  "live-dagger"
+                ],
+                "scope": [
+                  "issue-1475-dagger"
+                ],
+                "sequence": 4,
+                "validation_findings": [
+                  "The explicitly accepted pre-provisioned local Docker daemon and Dagger engine are trusted executors, including writable runtime state; image ID is identity not filesystem attestation. No live engine integration or tests have run. Current official Dagger container driver attaches to existing full container ID without provisioning."
+                ]
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
-      "inspected_files": [],
+      "inspected_files": [
+        "src/decapod/core/validation_runtime/repository_host.rs"
+      ],
       "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
       "modified_files": [],
       "next_transitions": [
@@ -549,7 +593,9 @@
       "shortcut_risk_signals": [],
       "task_id": "feat_01m6f0mcy91wgq8z",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "The explicitly accepted pre-provisioned local Docker daemon and Dagger engine are trusted executors, including writable runtime state; image ID is identity not filesystem attestation. No live engine integration or tests have run. Current official Dagger container driver attaches to existing full container ID without provisioning."
+      ]
     }
   },
   "legacy_digests": {

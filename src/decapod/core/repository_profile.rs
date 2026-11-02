@@ -40,6 +40,66 @@ pub struct RepositoryExecution {
     #[serde(default = "root_directory")]
     pub directory: String,
     pub timeout_seconds: u64,
+    /// Opt-in connection to an already running, independently provisioned engine.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dagger: Option<DaggerExecution>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct DaggerExecution {
+    /// Repository-relative module directory, containing dagger.toml and dagger.lock.
+    pub module: String,
+    /// Full immutable Docker container ID, never a mutable name.
+    pub engine_container: String,
+    /// Docker's content-addressed image configuration ID (sha256), not a tag.
+    pub engine_image: String,
+    /// Explicit local Docker socket; remote endpoints and ambient contexts are unsupported.
+    pub docker_socket: String,
+}
+
+impl DaggerExecution {
+    pub fn validate(
+        &self,
+        command: &ProofDef,
+        execution: &RepositoryExecution,
+        sources: &SourceInventory,
+    ) -> Result<(), PlanningFailure> {
+        let hex = |v: &str| {
+            v.len() == 64
+                && v.bytes()
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        };
+        if !relative(&self.module)
+            || !hex(&self.engine_container)
+            || !self.engine_image.strip_prefix("sha256:").is_some_and(hex)
+            || !Path::new(&self.docker_socket).is_absolute()
+            || self.docker_socket.contains(['\0', '\n', '\r'])
+            || Path::new(&execution.program)
+                .file_name()
+                .and_then(|n| n.to_str())
+                != Some("dagger")
+            || execution.directory != "."
+            || command.args != ["check"]
+            || !execution.toolchain_files.contains_key("dagger-docker")
+            || execution.environment.keys().any(|k| {
+                k.starts_with("DAGGER_")
+                    || k.starts_with("_EXPERIMENTAL_DAGGER_")
+                    || k.starts_with("DOCKER_")
+            })
+            || !sources
+                .files
+                .contains_key(&format!("{}/dagger.toml", self.module))
+            || !sources
+                .files
+                .contains_key(&format!("{}/dagger.lock", self.module))
+        {
+            return Err(invalid(
+                "DAGGER_CONTRACT_INVALID: explicit pinned local engine, inventoried module/lock, measured docker and a single check command are required",
+            ));
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -137,6 +197,17 @@ pub fn validate_contract(
                 "invalid explicit execution/toolchain/budget: {}",
                 command.name
             )));
+        }
+        if let Some(dagger) = &execution.dagger {
+            dagger.validate(command, execution, sources)?;
+        } else if Path::new(&execution.program)
+            .file_name()
+            .and_then(|n| n.to_str())
+            == Some("dagger")
+        {
+            return Err(invalid(
+                "DAGGER_CONTRACT_REQUIRED: engine execution is not a local-only command",
+            ));
         }
         // A reviewed canonical program may resolve a named installed command;
         // absolute proof commands must match it exactly. No silent substitution.
@@ -257,4 +328,157 @@ pub fn required_catalog(
         facts.clone(),
         source_inventory_digest,
     ))
+}
+
+/// Candidate configuration cannot authorize its own external engine boundary.
+pub fn preserve_accepted_dagger(
+    candidate: Option<&RepositoryContract>,
+    accepted: Option<&RepositoryContract>,
+) -> Result<(), PlanningFailure> {
+    if let Some(contract) = candidate {
+        for (name, execution) in &contract.executions {
+            if execution.dagger.is_some()
+                && accepted.and_then(|c| c.executions.get(name)) != Some(execution)
+            {
+                return Err(invalid(
+                    "DAGGER_POLICY_NOT_ACCEPTED: exact execution and engine contract must already be accepted on the target",
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod dagger_contract_tests {
+    use super::*;
+    fn fixture() -> (
+        DaggerExecution,
+        ProofDef,
+        RepositoryExecution,
+        SourceInventory,
+    ) {
+        let policy = DaggerExecution {
+            module: ".dagger/ci".into(),
+            engine_container: "a".repeat(64),
+            engine_image: format!("sha256:{}", "b".repeat(64)),
+            docker_socket: "/var/run/docker.sock".into(),
+        };
+        let command = ProofDef {
+            name: "dagger-check".into(),
+            command: "dagger".into(),
+            args: vec!["check".into()],
+            description: String::new(),
+            required: true,
+        };
+        let execution = RepositoryExecution {
+            program: "/opt/reviewed/bin/dagger".into(),
+            toolchain_files: BTreeMap::from([(
+                "dagger-docker".into(),
+                "/opt/reviewed/bin/docker".into(),
+            )]),
+            environment: BTreeMap::new(),
+            directory: ".".into(),
+            timeout_seconds: 30,
+            dagger: Some(policy.clone()),
+        };
+        let sources = SourceInventory {
+            files: BTreeMap::from([
+                (
+                    ".dagger/ci/dagger.toml".into(),
+                    format!("sha256:{}", "c".repeat(64)),
+                ),
+                (
+                    ".dagger/ci/dagger.lock".into(),
+                    format!("sha256:{}", "d".repeat(64)),
+                ),
+            ]),
+        };
+        (policy, command, execution, sources)
+    }
+    #[test]
+    fn dagger_requires_explicit_module_lock_and_pinned_engine() {
+        let (policy, command, execution, sources) = fixture();
+        assert!(policy.validate(&command, &execution, &sources).is_ok());
+        let mut missing = sources.clone();
+        missing.files.remove(".dagger/ci/dagger.lock");
+        assert!(policy.validate(&command, &execution, &missing).is_err());
+        let mut named = policy.clone();
+        named.engine_container = "dagger-engine".into();
+        assert!(named.validate(&command, &execution, &sources).is_err());
+        let mut tagged = policy.clone();
+        tagged.engine_image = "registry.dagger.io/engine:latest".into();
+        assert!(tagged.validate(&command, &execution, &sources).is_err());
+    }
+    #[test]
+    fn dagger_cannot_override_engine_source_or_execute_arbitrary_functions() {
+        let (policy, command, execution, sources) = fixture();
+        for args in [
+            vec!["check", "--engine=cloud"],
+            vec!["call", "publish"],
+            vec!["--mod", "/tmp/unbound", "check"],
+        ] {
+            let mut changed = command.clone();
+            changed.args = args.into_iter().map(str::to_owned).collect();
+            assert!(policy.validate(&changed, &execution, &sources).is_err());
+        }
+        for key in [
+            "DAGGER_ENGINE",
+            "DOCKER_HOST",
+            "_EXPERIMENTAL_DAGGER_RUNNER_HOST",
+            "DOCKER_CONTEXT",
+        ] {
+            let mut changed = execution.clone();
+            changed.environment.insert(key.into(), "override".into());
+            assert!(policy.validate(&command, &changed, &sources).is_err());
+        }
+        let mut escaped = policy.clone();
+        escaped.module = "../elsewhere".into();
+        assert!(escaped.validate(&command, &execution, &sources).is_err());
+    }
+    #[test]
+    fn candidate_cannot_authorize_new_or_changed_engine() {
+        let (_, _, execution, _) = fixture();
+        let accepted = RepositoryContract {
+            reviewed_commands_digest: String::new(),
+            source_coverage: vec![],
+            executions: BTreeMap::from([("dagger-check".into(), execution)]),
+        };
+        assert!(preserve_accepted_dagger(Some(&accepted), None).is_err());
+        assert!(preserve_accepted_dagger(Some(&accepted), Some(&accepted)).is_ok());
+        let mut changed = accepted.clone();
+        changed
+            .executions
+            .get_mut("dagger-check")
+            .unwrap()
+            .dagger
+            .as_mut()
+            .unwrap()
+            .engine_container = "f".repeat(64);
+        assert!(preserve_accepted_dagger(Some(&changed), Some(&accepted)).is_err());
+        assert!(preserve_accepted_dagger(None, None).is_ok());
+    }
+    #[test]
+    fn dagger_engine_contract_participates_in_review_digest() {
+        let (policy, command, execution, _) = fixture();
+        let mut contract = RepositoryContract {
+            reviewed_commands_digest: String::new(),
+            source_coverage: vec![],
+            executions: BTreeMap::from([("dagger-check".into(), execution)]),
+        };
+        let before = command_contract_digest(std::slice::from_ref(&command), &contract).unwrap();
+        contract
+            .executions
+            .get_mut("dagger-check")
+            .unwrap()
+            .dagger
+            .as_mut()
+            .unwrap()
+            .engine_image = format!("sha256:{}", "e".repeat(64));
+        assert_ne!(
+            before,
+            command_contract_digest(&[command], &contract).unwrap()
+        );
+        assert_eq!(policy.module, ".dagger/ci");
+    }
 }
