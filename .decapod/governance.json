@@ -586,6 +586,11 @@
       "id": "final-source-review",
       "summary": "Record independent bounded source review without claiming runtime proof; authenticated upload remains blocked",
       "input_digest": "sha256:cfd801496e60dcfe685112cb4576604fac81a5ca705be7322191b8595e01054f"
+    },
+    {
+      "id": "public-branch-resolution",
+      "summary": "Record verified publication resolving prior upload blocker; preserve failed validation history and require fresh runtime proof",
+      "input_digest": "sha256:182295cb78287cb19c6a4a7e7a02d0171bb007c60aa27e079b58a178a513162d"
     }
   ],
   "intents": {
@@ -638,10 +643,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a9d95b4c1ee01233c4d4b3524a423cb83e2e2a2d12cec71b31ae20dc1a521a97",
-      "blockers": [
-        "Official runtime proof requires authenticated GitTransport; previous upload failed exit128; no retry performed"
-      ],
+      "artifact_hash": "sha256:57c77151fd0b1f49fd8ceb3e6b40d72b4933dbf41761a8b766f0e43308bbe162",
       "checks": [
         {
           "name": "implementation",
@@ -658,6 +660,10 @@
         {
           "name": "official-validation",
           "status": "failed"
+        },
+        {
+          "name": "public-candidate-publication",
+          "status": "passed"
         }
       ],
       "current_phase": "intent",
@@ -702,10 +708,17 @@
             "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MBT4709VS1T8ZYG4Z85X",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MBT4709VS1T8ZYG4Z85X": {
@@ -783,6 +796,21 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Prior GitTransport exit128 and snapshot blocker preserved in Git history; authenticated connector publication now independently fetched with all25 tree/message/parent mappings verified, public head e7a0ef04200b430629f983fc2faee276a34ab95c; runtime proof remains unavailable until fresh validation"
+                ],
+                "proof_refs": [
+                  "public-candidate-publication"
+                ],
+                "scope": [
+                  "issue-1478-prompt-context"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -793,6 +821,7 @@
       "evidence": [
         "/tmp/1478-validation.log",
         "Independent reviewer /root/rereview_prompt_boundaries at 2026-11-02T21:23Z: no further blocking source finding at9954188c; safe fixtures logically compatible; source review only, no tests executed",
+        "Prior GitTransport exit128 and snapshot blocker preserved in Git history; authenticated connector publication now independently fetched with all25 tree/message/parent mappings verified, public head e7a0ef04200b430629f983fc2faee276a34ab95c; runtime proof remains unavailable until fresh validation",
         "https://curl.se/docs/manpage.html#--url-query"
       ],
       "inspected_files": [
