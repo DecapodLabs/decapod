@@ -912,6 +912,7 @@ mod tests {
                 required_profile: Some(declaration),
                 commands,
                 repository_contract: Some(contract),
+                dagger_authorizations: BTreeMap::new(),
                 ci_attested: None,
                 rust_workers: None,
             },

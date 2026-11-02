@@ -575,6 +575,11 @@
       "id": "dagger-accepted-authority",
       "summary": "Read execution authorization solely from accepted target dormant map; test inert configuration and candidate self-authorization rejection",
       "input_digest": "sha256:dd41284a5a1474e8a15d10a105ed4c8323292f64e365dc4ce6999f8ea01f9f72"
+    },
+    {
+      "id": "dagger-no-implicit-authority",
+      "summary": "Keep existing repository proof fixture without dormant Dagger authorization",
+      "input_digest": "sha256:b9c04adf7c694bef746d46c963110a16907daf972c3866ba496dccffd946fecc"
     }
   ],
   "intents": {
