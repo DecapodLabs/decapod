@@ -519,6 +519,11 @@
       "id": "broker-security-contract",
       "summary": "Document bounded secret custody and existing cooperative trust, and precise advisory remediation without gate waiver",
       "input_digest": "sha256:4402e73eac7f89c4daf02e568350a84c48e88461b9dba8445d91ea13d85628e6"
+    },
+    {
+      "id": "reviewed-patched-tokio-inventory",
+      "summary": "Reconcile only reviewed Tokio lock version/checksum inventory change; required graph and checks remain unchanged",
+      "input_digest": "sha256:62e68f95e05ec016a45a49ca9932095e6b728784a4bf98611fff769807561bb6"
     }
   ],
   "intents": {
@@ -573,11 +578,15 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4dd587f69aa1e3641c90164f51122ccfe23b6e06f897405704f20c21b51f1c69",
+      "artifact_hash": "sha256:785129ecc401cfe92343b4a183a1db9d98a09dc1d7f07b851b95264bfc8a2564",
       "checks": [
         {
           "name": "candidate-tests",
           "status": "unavailable"
+        },
+        {
+          "name": "full-provider-validation",
+          "status": "failed"
         },
         {
           "name": "source-contract-review",
@@ -605,10 +614,17 @@
             "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0WQQJ7DYQNBHW4GWPNDVG": {
@@ -639,6 +655,26 @@
                 "validation_findings": [
                   "Independent security review pending; provider unavailable; no test execution claimed"
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Cargo.lock",
+                  "Published candidate0ab800c7 Buildkite2553 deps-lint and governance-artifacts failed; other observed test checks successful, no readiness. Controller resume ended BuildEnvelope exit22. Remediation updates Tokio1.53.3 only and actual current-content spec review; original failures preserved /tmp/1476-validation-resumed.log"
+                ],
+                "proof_refs": [
+                  "full-provider-validation"
+                ],
+                "scope": [
+                  "src/decapod/core/group_broker.rs",
+                  "tests/group_broker.rs",
+                  "tests/unit/core/group_broker_tests.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -647,9 +683,12 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Published candidate0ab800c7 Buildkite2553 deps-lint and governance-artifacts failed; other observed test checks successful, no readiness. Controller resume ended BuildEnvelope exit22. Remediation updates Tokio1.53.3 only and actual current-content spec review; original failures preserved /tmp/1476-validation-resumed.log",
         "git diff 213ed9ca 3216d717 -- Cargo.toml Cargo.lock: only package version 0.121.0 to 0.121.2; inventory intersection contains these two paths only; required source graph unchanged"
       ],
       "inspected_files": [
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
         "Cargo.lock",
         "Cargo.toml",
         "src/decapod/core/group_broker.rs",
