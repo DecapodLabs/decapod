@@ -511,6 +511,11 @@
       "id": "issue1470-reviewed-projections",
       "summary": "Refresh config/code-bound generated projections and explicitly review current interfaces architecture security after CI repairs",
       "input_digest": "sha256:29042f65589358a38075ea9a456b6242bae08230f4d497f7f80feeb8cf5e9d49"
+    },
+    {
+      "id": "issue1470-bazel-lock",
+      "summary": "Synchronize pinned Bazel derived lock with reviewed Tokio patch; exact canonical artifact hashes verified",
+      "input_digest": "sha256:cb14e504dab349ea8649d955ced19836d77bde73fbcf6d2155bdf2dd54273c1c"
     }
   ],
   "intents": {
@@ -585,7 +590,7 @@
         "Current claimed task and isolated work branch",
         "No merge, release, credential changes or proof bypass; preserve failed earlier candidate."
       ],
-      "artifact_hash": "sha256:f22915ae5ceaf8852b37b48221884fd747435d046b7be43371b6e30c6d5ffdcb",
+      "artifact_hash": "sha256:d00e87b8863982b9bc3d7f6fc21e29ce257868909617ffc02824a15c0965bb71",
       "checks": [
         {
           "name": "full_validation",
@@ -638,10 +643,17 @@
             "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HEXJCDCCEJTEY5JSGT8A": {
@@ -716,6 +728,23 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "MODULE.bazel.lock",
+                  "Published 5d2d7699 remains historical failed/incomplete provider attempt2578; collector absent after interruption, no pass claimed. Independent exact-head GitHub setup125596011876 diagnoses stale MODULE.bazel.lock after Tokio update; GitHub is diagnostic not required-provider proof. Apply independently generated pinnedBazel9.3.0 normal-TLS/system-JDK lock patch, verifying exact original/patched hashes and Tokio-only refs/checksum/Cargo.lock digest. No build/test or policy waiver. New revision requires fresh full exact proof."
+                ],
+                "proof_refs": [
+                  "published_exact_validation"
+                ],
+                "scope": [
+                  "issue1470-source-inventory-recovery",
+                  "issue1470-source-inventory-recovery; minimal baseline Tokio advisory CI repair"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -733,6 +762,7 @@
         "Buildkite 2548 on exact 4c0ee3bf failed required dependencies-deny for Tokio 1.52.3 RUSTSEC-2026-0386 and required publication spec review. Official RustSec lists >=1.53.3 patched; existing manifest version 1 accepts it. Normal cargo update --precise 1.53.3 succeeded; restored six unrelated accepted windows-sys edges, cargo metadata --locked succeeded without builds/tests. Only Tokio version and registry checksum change; no advisory waiver, new dependencies, graph change, or old proof reuse. Maintenance interrupted first resume; supported same-handoff resume retained terminal failure before source edits.",
         "Current candidate passes entrypoint-history stage. Inventory drift since last config review 213ed9ca is exclusively package version 0.121.0 to 0.121.2 in Cargo.toml/Cargo.lock; workflows, helpers, dependencies and execution graph unchanged.",
         "Previous candidate 03b63f55 failed entrypoint commit discipline before source tests; retained on original branch.",
+        "Published 5d2d7699 remains historical failed/incomplete provider attempt2578; collector absent after interruption, no pass claimed. Independent exact-head GitHub setup125596011876 diagnoses stale MODULE.bazel.lock after Tokio update; GitHub is diagnostic not required-provider proof. Apply independently generated pinnedBazel9.3.0 normal-TLS/system-JDK lock patch, verifying exact original/patched hashes and Tokio-only refs/checksum/Cargo.lock digest. No build/test or policy waiver. New revision requires fresh full exact proof.",
         "User authorized public tracked governance/spec metadata. Connector publication preserved all six ordered trees and messages modulo terminal LF from original 9753d64b to published 172317acea8d7327ea42aab6f671d79b8102ec0c; independently fetched and checkpoint-verified, original backup retained. Historical source-review refs remain historical, no old pass reused. Buildkite 2545 exact published head failed standalone-validation on stale manifest config_input_hash after reviewed inventory config update; 189 prerequisite gates passed but full readiness failed. Official 0.121.2 specs.refresh regenerates matching config hash; revalidate exact uploaded repair candidate."
       ],
       "inspected_files": [
@@ -743,6 +773,7 @@
       "modified_files": [
         ".decapod/config.toml",
         "Cargo.lock",
+        "MODULE.bazel.lock",
         "src/decapod/core/init_reconciliation/mod.rs"
       ],
       "next_transitions": [
@@ -750,7 +781,8 @@
       ],
       "repo_scope": [
         "issue1470-source-inventory-recovery",
-        "issue1470-source-inventory-recovery; minimal baseline Tokio advisory CI repair"
+        "issue1470-source-inventory-recovery; minimal baseline Tokio advisory CI repair",
+        "issue1470-source-inventory-recovery; minimal baseline Tokio advisory and derived Bazel lock CI repair"
       ],
       "run_id": "branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
       "schema_version": "1.1.0",
