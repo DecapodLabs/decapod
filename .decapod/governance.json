@@ -501,6 +501,11 @@
       "id": "prompt-spec-refresh",
       "summary": "Refresh generated semantic spec attestations",
       "input_digest": "sha256:a8fba172ca30a0a93e7785ea5561adba2a63c2b37e5c10c2c93d2559de163e62"
+    },
+    {
+      "id": "released-source-inventory",
+      "summary": "Reconcile release-only package version inventory drift without changing proof graph",
+      "input_digest": "sha256:0d7589a8138d7a88b3d410200673412d5f4733166b00915aeee6db22299f2350"
     }
   ],
   "intents": {
@@ -553,11 +558,15 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5f85dbf8af46ec3d5915ec25d0043dc9fa10e46179ee2b7da275ff52ddfddf5f",
+      "artifact_hash": "sha256:f714fa8044b31eb69c48b6912d53524d60a047a482b3de38a7e97e704c5db895",
       "checks": [
         {
           "name": "implementation",
           "status": "partial"
+        },
+        {
+          "name": "official-validation",
+          "status": "failed"
         }
       ],
       "current_phase": "intent",
@@ -581,10 +590,17 @@
             "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MBT4709VS1T8ZYG4Z85X",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MBT4709VS1T8ZYG4Z85X": {
@@ -609,6 +625,27 @@
                 "validation_findings": [
                   "Deterministic common-marker detector is not a general shell or semantic intent parser; unavailable private historical fixture not reproduced"
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml",
+                  "/tmp/1478-validation.log"
+                ],
+                "proof_refs": [
+                  "official-validation"
+                ],
+                "scope": [
+                  "issue-1478-prompt-context"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Compared last reviewed inventory commit213ed9ca to candidate: only Cargo package versions0.121.0 to0.121.2 changed among complete inventory paths; workflow graph/adapters and dependencies unchanged"
+                ]
               }
             ]
           }
@@ -616,12 +653,18 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "/tmp/1478-validation.log"
+      ],
       "inspected_files": [
+        ".decapod/config.toml",
+        "Cargo.lock",
+        "Cargo.toml",
         "src/decapod/core/agent_eval.rs"
       ],
       "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
       "modified_files": [
+        ".decapod/config.toml",
         "src/decapod/core/agent_eval.rs"
       ],
       "next_transitions": [
@@ -636,6 +679,7 @@
       "task_id": "bugs_01m6f0kw6daz58af",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Compared last reviewed inventory commit213ed9ca to candidate: only Cargo package versions0.121.0 to0.121.2 changed among complete inventory paths; workflow graph/adapters and dependencies unchanged",
         "Deterministic common-marker detector is not a general shell or semantic intent parser; unavailable private historical fixture not reproduced"
       ]
     }
