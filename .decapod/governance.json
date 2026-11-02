@@ -626,6 +626,11 @@
       "id": "clippy-current-spec-review",
       "summary": "Refresh content-bound spec reviews after equivalent Clippy repair; preserve failures and require fresh exact-head proof",
       "input_digest": "sha256:c4d20d8a44cdeab939792d3da49f978f8ef84d764af5c3f2e506852eeda32fa7"
+    },
+    {
+      "id": "actual-rpc-bootstrap-diagnosis",
+      "summary": "Record independently verified Buildkite RPC tool download failure, distinct from source Clippy finding; no probe weakening",
+      "input_digest": "sha256:593510894040e39cbc10274e7a74a39841c5761410b4c600165ecb332b5a755d"
     }
   ],
   "intents": {
@@ -701,8 +706,12 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b073b4187e4228100158ed779f6e80353f9f74df217417a0b8b3332b5a462bf0",
+      "artifact_hash": "sha256:ea77ae9ba612aa1d2da9e09f75bce9dabe17b3bceffd5ed97ff010e2de3a4608",
       "checks": [
+        {
+          "name": "candidate-1c29096b-buildkite-rpc-bootstrap",
+          "status": "failed"
+        },
         {
           "name": "candidate-1c29096b-clippy",
           "status": "failed"
@@ -788,10 +797,17 @@
             "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MBT4709VS1T8ZYG4Z85X",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MBT4709VS1T8ZYG4Z85X": {
@@ -900,6 +916,21 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "BK2623 exact job01a19e84-5022-4d86-a478-029b0df5a680 artifact ZIP sha256:b386f0408688881a0bf18433e152430b3b5a8e05c5bd019cb7dcd48f04d703c9: RPC preparation Bazel9.3 download failed HTTP2 stream INTERNAL_ERROR from peer; subsequent same-job chaos preparation downloaded same Bazel successfully; chaos and daemonless passed. RPC was not run; independent transient bootstrap failure, not Clippy. Retain required probe and fresh proof."
+                ],
+                "proof_refs": [
+                  "candidate-1c29096b-buildkite-rpc-bootstrap"
+                ],
+                "scope": [
+                  "issue-1478-prompt-context"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -909,6 +940,7 @@
       "destination": "pull request",
       "evidence": [
         "/tmp/1478-validation.log",
+        "BK2623 exact job01a19e84-5022-4d86-a478-029b0df5a680 artifact ZIP sha256:b386f0408688881a0bf18433e152430b3b5a8e05c5bd019cb7dcd48f04d703c9: RPC preparation Bazel9.3 download failed HTTP2 stream INTERNAL_ERROR from peer; subsequent same-job chaos preparation downloaded same Bazel successfully; chaos and daemonless passed. RPC was not run; independent transient bootstrap failure, not Clippy. Retain required probe and fresh proof.",
         "Exact GHA job125610878117 run41542697894 failed clippy::collapsible_if at agent_eval.rs465; old collector21010 terminal SNAPSHOT_NOT_READY HTTP403, log /tmp/1478-full-validation-public.log and /tmp/decapod-snapshot-a6mAJZ preserved. GHA RPC job125610878207 passed; separate reported Buildkite RPC failure not yet diagnosed.",
         "Independent reviewer /root/rereview_prompt_boundaries at 2026-11-02T21:23Z: no further blocking source finding at9954188c; safe fixtures logically compatible; source review only, no tests executed",
         "Prior GitTransport exit128 and snapshot blocker preserved in Git history; authenticated connector publication now independently fetched with all25 tree/message/parent mappings verified, public head e7a0ef04200b430629f983fc2faee276a34ab95c; runtime proof remains unavailable until fresh validation",
