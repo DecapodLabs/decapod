@@ -576,6 +576,11 @@
       "id": "handoff-bazel-inventory",
       "summary": "Reviewed all119 source inventory hashes against bf8d47af: only MODULE.bazel.lock changed to align already-reviewed Tokio security patch; source proof graph and trust unchanged",
       "input_digest": "sha256:e3f3df4c3fed1398cf4efa53c7d1a309453dcf26b13f754b27d1b9210fb8ca98"
+    },
+    {
+      "id": "handoff-bazel-specs",
+      "summary": "Refresh source-bound spec projections and current-content reviews after module lock repair; old collector incomplete, new official proof pending",
+      "input_digest": "sha256:32a3f96f1a12e98582f6e8a9c4fff8e10f34c1b8a47dcd5feaabc0194b5bdf63"
     }
   ],
   "intents": {
@@ -616,21 +621,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed core todo transactional journal and plugins policy: changes retain daemonless CLI, canonical local datastore, existing broker and policy enforcement architecture; narrow caller resolution and authority consumption add no service or authority subsystem; Tokio patch only repairs dependency advisory",
+          "reason": "Current todo journal and policy broker architecture remain daemonless/local-first and unchanged by exact Tokio version/checksum Bazel lock synchronization; no new service or source proof graph changes",
           "reviewed_code_fingerprint": "15a253f05db0de5255a78ef2e4a2c38826ee33914adf4ea246622caa2f185455",
           "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed todo::handoff_task_as and policy::eval_effective_policy plus CLI initialization against interface spec: real actor separated from previous owner and receiver, exact one-use recovery approval, read-only helper boundary not whole CLI side-effect freedom; tests remain obligations",
+          "reason": "Rechecked current handoff actor/source/receiver separation, exact recovery authority and helper-only read boundary. Bazel Tokio lock repair changes no CLI interface; preexisting policy CLI initialization caveat remains explicit; validation is not complete",
           "reviewed_code_fingerprint": "15a253f05db0de5255a78ef2e4a2c38826ee33914adf4ea246622caa2f185455",
           "spec_material_hash": "ddfc4e2a454686480ab16efc761063517d4249624af507dbf4ea94304574c348"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed transaction and broker trust paths: existing reserved cooperative operator identity is not OS authentication; no stored trust promotion; recovery requires actual caller trust, explicit owner and exact live target approval consumed atomically; no proof or dependency bypass",
+          "reason": "Rechecked actual-caller trust, explicit recorded owner, one-use task-bound approval consumed transactionally and retained dependency/proof gates. Cooperative reserved operator is not OS auth; aligned Bazel Tokio1.53.3 security closure adds no authority or trust change",
           "reviewed_code_fingerprint": "15a253f05db0de5255a78ef2e4a2c38826ee33914adf4ea246622caa2f185455",
           "spec_material_hash": "0aa21326b991993236f3ab1fcb3f91e8f74de49d67a4a18a15ba24cfc98a5a71"
         }
@@ -643,7 +648,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793658994Z"
+      "updated_at": "1793661556Z"
     },
     "trajectory": {
       "active_boundaries": [
