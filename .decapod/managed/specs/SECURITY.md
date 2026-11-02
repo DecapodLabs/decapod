@@ -563,6 +563,16 @@ values that may be computed from local data. Dollar signs in prose outside a
 closed inline diagnostic do not become request arguments. Existing whole-prompt
 instruction/authority/destructive/credential markers remain intact.
 
+HTTP options are classified through a narrow read-only allowlist, with
+client-specific short flag meanings and existing method/header checks. Unknown
+options request review rather than inheriting a benign classification: client
+versions can add file-reading and opaque configuration features. Explicit static
+`--url-query name=value` pairs are classified, but file-backed query arguments
+are not. The [curl option contract](https://curl.se/docs/manpage.html#--url-query)
+defines `name@filename` as file-backed input; attached header-file values and
+variable/expanded-option mechanisms likewise remain review-gated. This bounded
+classification deliberately does not promise a complete curl/wget interpreter.
+
 `tests/unit/core/agent_eval_tests.rs` and `tests/agent_eval.rs` specify safe
 report/history and adversarial combinations, including spacing, quoting and
 escape variants. The public sanitized report is covered; the reporter's private

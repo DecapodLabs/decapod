@@ -571,6 +571,11 @@
       "id": "http-option-regressions",
       "summary": "Specify file-backed url-query, variable expansion, unknown options, attached header and client-specific short flag cases; static literal queries remain allowed; tests unrun",
       "input_digest": "sha256:71244dbcfb5a9296cfc2ab9e14c0e798b692fa64229841a556ff244d08ad5875"
+    },
+    {
+      "id": "http-option-spec",
+      "summary": "Document narrow client-specific option classification and curl official file-backed url-query contract",
+      "input_digest": "sha256:c5af542e07d5d62122b45ac6febcac85e6aa0d48fd6c5b1cc66c0cad2c711528"
     }
   ],
   "intents": {
