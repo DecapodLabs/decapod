@@ -541,6 +541,11 @@
       "id": "atomic-completion-projections",
       "summary": "Refresh generated spec projections after review repair; official upload remains blocked, no network retry",
       "input_digest": "sha256:40c48109a087a67d1bb68d5ac295f05e8a82a4abfe5e75831f7bd3e7ecb87394"
+    },
+    {
+      "id": "tokio-security-repair",
+      "summary": "Apply independently verified minimal Tokio1.53.3 security fix for actual CI RUSTSEC-2026-0386; exact before/after lock hashes verified, no other dependencies changed",
+      "input_digest": "sha256:d946853681bca74218b4f570f772d4f7e94998edd6e54d411399ea6794ccca6c"
     }
   ],
   "intents": {
