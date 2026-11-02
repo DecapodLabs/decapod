@@ -479,6 +479,11 @@
       "id": "replay-semantic-spec",
       "summary": "Replay only authored recovery semantics preserving current generated attestations",
       "input_digest": "sha256:9fa29e526457aec8777071a8cd7f0d888484f3829ac16188f8ef8a782aca14e2"
+    },
+    {
+      "id": "refresh-supported-spec",
+      "summary": "Refresh generated spec projections using supported release",
+      "input_digest": "sha256:b1bb5ec4a1b30f901d4dfb99ac8eb776a68ce05330d62c18e39ada0d15e8f883"
     }
   ],
   "intents": {
