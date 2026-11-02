@@ -514,6 +514,11 @@
       "id": "broker-interface-contract",
       "summary": "Specify internal protocol v2 caller replacement, secret transport and replay boundary after actual source review",
       "input_digest": "sha256:e29559d6dd8a9badcecd1af7e80e82c51165d998970efd24c96635522246dc6d"
+    },
+    {
+      "id": "broker-security-contract",
+      "summary": "Document bounded secret custody and existing cooperative trust, and precise advisory remediation without gate waiver",
+      "input_digest": "sha256:4402e73eac7f89c4daf02e568350a84c48e88461b9dba8445d91ea13d85628e6"
     }
   ],
   "intents": {

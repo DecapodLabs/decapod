@@ -1,5 +1,27 @@
 # Security
 
+## Broker caller context custody
+
+`group_broker::CallerContext` transports only a fixed set of request-scoped
+fields across the existing permission-restricted local socket. It is not a
+general environment-forwarding facility. The subprocess clears inherited
+identity/session fields before applying the caller values, retains ordinary
+session/policy validation, and does not grant authorization based on request
+metadata. Existing cooperative local-agent authentication and auto-acquisition
+remain unchanged; this fix does not authenticate hostile same-user processes.
+
+Session passwords remain ephemeral transport inputs, excluded from request
+Debug output, replay hashes and durable request records. Dedupe binds actor and
+working directory with non-secret context to prevent another caller's command
+from accidentally reusing the leader's result. Restricted socket access remains
+the existing trust boundary, not cryptographic isolation between local peers.
+
+The required dependency check exposed RUSTSEC-2026-0386 in the accepted Tokio
+1.52.3 lock entry. The minimal lock-only update to patched 1.53.3 changes its
+version and registry checksum without relaxing advisory policy or changing
+dependency edges. Fresh exact-candidate provider proof is still required.
+
+
 Public Buildkite artifact redirects admit only the exact documented HTTPS
 `buildkiteartifacts.com` host and legacy `s3.amazonaws.com/buildkiteartifacts.com`
 bucket prefix, with unchanged four-UUID layout, exact producer-job binding,
