@@ -556,6 +556,11 @@
       "id": "dynamic-http-projections",
       "summary": "Refresh generated projections after dynamic argument contract update",
       "input_digest": "sha256:69ccc808f64409180ae4c774cfbbf488b05b56447d7d05399eeaf328225116cd"
+    },
+    {
+      "id": "bounded-http-options",
+      "summary": "Conservatively classify known read-only options; unknown options request review; explicit static url-query pairs allowed, file-backed query syntax gated per curl official manpage",
+      "input_digest": "sha256:bf0ec70d66879837eb163e2ef54b0791ad58e23e0093a5d0556bcd994cd11b0f"
     }
   ],
   "intents": {

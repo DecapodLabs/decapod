@@ -208,7 +208,14 @@ fn unsafe_http_context(prompt: &str) -> bool {
             }
         }
         if arguments.iter().any(|word| {
-            matches!(word.as_str(), "|" | ";" | "&&" | ">") || http_sensitive_argument(word)
+            matches!(word.as_str(), "|" | ";" | "&&" | ">")
+                || http_sensitive_argument(word)
+                || (word.starts_with('-') && !read_only_http_option(word))
+        }) || arguments.iter().enumerate().any(|(at, word)| {
+            word == "--url-query"
+                && !arguments
+                    .get(at + 1)
+                    .is_some_and(|value| static_http_query(value))
         }) || arguments.windows(2).any(|pair| {
             matches!(pair[0].as_str(), "-X" | "--request" | "--method")
                 && !matches!(pair[1].to_ascii_uppercase().as_str(), "GET" | "HEAD")
@@ -310,6 +317,66 @@ fn is_executor(word: &str) -> bool {
                 | "."
         )
     )
+}
+
+// Unknown options can load files, credentials or opaque client configuration.
+// Only these common read-only forms are classified; all others require review.
+// Combined short options contain flags only, never attached argument values.
+fn read_only_http_option(word: &str) -> bool {
+    if matches!(
+        word,
+        "-H" | "-X"
+            | "--header"
+            | "--request"
+            | "--method"
+            | "--url-query"
+            | "--head"
+            | "--fail"
+            | "--silent"
+            | "--show-error"
+            | "--location"
+            | "--spider"
+            | "--server-response"
+            | "--max-time"
+            | "--connect-timeout"
+            | "--retry"
+            | "--compressed"
+    ) {
+        return true;
+    }
+    if let Some(query) = word.strip_prefix("--url-query=") {
+        return static_http_query(query);
+    }
+    if ["--header=", "--request=", "--method="]
+        .iter()
+        .any(|prefix| word.starts_with(prefix))
+    {
+        return true; // Existing header/method sensitivity checks still apply.
+    }
+    if ["--max-time=", "--connect-timeout=", "--retry="]
+        .iter()
+        .any(|prefix| {
+            word.strip_prefix(prefix).is_some_and(|value| {
+                !value.is_empty() && value.chars().all(|ch| ch.is_ascii_digit() || ch == '.')
+            })
+        })
+    {
+        return true;
+    }
+    word.starts_with('-')
+        && !word.starts_with("--")
+        && word.len() > 1
+        && word[1..].chars().all(|ch| "fsSLIivq".contains(ch))
+}
+
+fn static_http_query(value: &str) -> bool {
+    // curl --url-query uses data-urlencode syntax, including name@filename.
+    // Classify only an explicit literal name=value pair; dynamic/file forms
+    // and other syntaxes remain review-gated (see curl's official manpage).
+    value
+        .split_once('=')
+        .is_some_and(|(name, _)| !name.is_empty())
+        && !value.contains(['@', '$', '`'])
 }
 
 fn http_sensitive_argument(word: &str) -> bool {
