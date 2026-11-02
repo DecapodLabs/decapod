@@ -94,6 +94,64 @@ proof reports `scope = "repository_local_readiness"`; it makes no hosted-CI or
 release assurance claim. A provider job that itself invokes `decapod validate`
 still runs CI-local prerequisites, never recursively proves full publication.
 
+### Optional pre-provisioned local Dagger engine
+
+The repository-local profile has one explicit external-engine exception: a
+reviewed `dagger check` invocation. It does **not** satisfy Buildkite-required
+profiles or import GitHub check statuses. Add an optional `dagger` table beneath
+the corresponding `proof.repository_contract.executions.<name>`:
+
+```toml
+[proof.repository_contract.executions.dagger-check.dagger]
+module = ".dagger/modules/ci"
+engine_container = "<full 64 lowercase hex Docker container ID>"
+engine_image = "sha256:<64 lowercase hex Docker image configuration ID>"
+docker_socket = "/run/docker.sock"
+```
+
+This is illustrative, not a runnable identity. The execution program must be the
+canonical installed `dagger` binary, its command arguments exactly `["check"]`,
+and its working directory `.`. Declare the canonical `docker` executable under
+`toolchain_files.dagger-docker` and a dedicated reviewed PATH resolving that exact
+file. Both tools and the declared runtime closure are measured normally. The
+module's `dagger.toml` and `dagger.lock` must be inventoried alongside all module,
+workflow and helper sources; `.dagger` is included in source discovery. Review
+module coverage and dependency pins: the adapter does not infer their semantic
+completeness from a lockfile's presence.
+
+The exact execution declaration must already be independently accepted on the
+target; a candidate cannot authorize a new engine, socket or tool contract for
+itself. First adoption or engine replacement therefore requires a human-reviewed
+policy transition using an existing supported proof path, not this local adapter.
+Explicit external-action policy must allow `dagger_proof_exec` for `dagger` and
+`dagger_engine_read` for `docker`, in addition to any repository-proof restrictions.
+Neither capability is enabled by default; initialization never grants them.
+
+Decapod supplies a fixed module argument, `DAGGER_ENGINE=container+docker://<id>`,
+the matching legacy runner URI and `DOCKER_HOST=unix://<socket>`; engine/context
+overrides in the declared environment reject. It executes against its immutable
+exact-candidate source snapshot, not the caller's checkout. Bounded Docker
+inspection before and after checks the full ID, image ID, running state and
+unchanged start time, rootfs mode and mount destinations, retaining observations
+in `dagger-engine-custody.json`. Missing or changed identity blocks proof. Normal
+native output, toolchain/source checks and exact accepted-target bindings remain
+mandatory; an engine observation alone is never successful check evidence.
+
+**Trust boundary:** the pre-provisioned local Docker service and engine are
+trusted executors, including their mutable filesystem, configuration and cache.
+The image ID identifies the configured base image; inspection is not runtime
+filesystem attestation. Writable engine rootfs is supported, as in Dagger's
+standard engine. The reviewed module must restrict work to the intended checks;
+Decapod does not sandbox engine network access or attest transitive remote inputs.
+No caller HOME/credentials are inherited. This adapter never provisions, starts,
+updates or stops an engine and does not install dependencies. Unavailable engines
+fail closed. Hosted GitHub/Dagger Cloud execution is not supported by this path.
+
+Connection semantics follow Dagger's [CLI engine reference](https://docs.dagger.io/reference/cli/)
+and [Docker container driver](https://github.com/dagger/dagger/blob/main/engine/client/drivers/container.go).
+Unit fixtures cover contract rejection, invocation binding and identity changes;
+they are not evidence that a live Dagger engine has executed successfully.
+
 For Nix projects, installing this profile is not evidence that daemon-backed
 builds, remote builders or deployment ran. A supported local contract can use
 preinstalled pinned formatters/test tools directly; unavailable build/deployment

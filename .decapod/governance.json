@@ -469,6 +469,11 @@
       "id": "dagger-file-0",
       "summary": "Implement bounded optional Dagger adapter: .decapod/managed/specs/INTERFACES.md; checks pending official validation",
       "input_digest": "sha256:6450a428010738226284e6d42fe9fdb16bd875827b66e834597d23d8457baf30"
+    },
+    {
+      "id": "dagger-file-1",
+      "summary": "Implement bounded optional Dagger adapter: docs/agent/config-schema.md; checks pending official validation",
+      "input_digest": "sha256:a41f579ecb18b113d6305749c6076e538d91ad00748f594e3c87bc0edc117276"
     }
   ],
   "intents": {
