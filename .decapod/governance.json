@@ -516,6 +516,11 @@
       "id": "issue1470-bazel-lock",
       "summary": "Synchronize pinned Bazel derived lock with reviewed Tokio patch; exact canonical artifact hashes verified",
       "input_digest": "sha256:cb14e504dab349ea8649d955ced19836d77bde73fbcf6d2155bdf2dd54273c1c"
+    },
+    {
+      "id": "issue1470-bazel-inventory",
+      "summary": "Review sole MODULE.bazel.lock inventory change for pinned Tokio-derived metadata; required graph and adapters unchanged",
+      "input_digest": "sha256:5c35d6c874a62c50f39e5cca66f2ffb5581252552a20943eb69a46f227631234"
     }
   ],
   "intents": {
