@@ -1,5 +1,20 @@
 # Interfaces
 
+## Native readiness completion artifacts
+
+Full native validation in `validation_runtime::run` returns an evidence directory.
+Successful native completion is an atomic `completion/` bundle containing
+`verdict.json` and `native-readiness-receipt.json`; consumers must not expect a
+standalone root verdict for that successful native route. Remote and non-ready
+verdict paths remain unchanged. Receipt schema1.0.0 binds scope, invocation,
+material identity, committed governance, trajectory, expected plan, execution
+evidence and Vega decision digests; `receipt_hash` covers its other fields.
+The bundle is inspection output, not an import/replay API or publication token.
+The legacy tracked `sections.validation` remains explicit project-check output,
+not a full-native prerequisite. Missing plan, claims, trajectory or malformed
+configuration still blocks publication.
+
+
 ## Interface Overview
 
 Decapod's interfaces connect human intent, agent work, repository state, and

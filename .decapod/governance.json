@@ -546,6 +546,11 @@
       "id": "tokio-security-repair",
       "summary": "Apply independently verified minimal Tokio1.53.3 security fix for actual CI RUSTSEC-2026-0386; exact before/after lock hashes verified, no other dependencies changed",
       "input_digest": "sha256:d946853681bca74218b4f570f772d4f7e94998edd6e54d411399ea6794ccca6c"
+    },
+    {
+      "id": "native-INTERFACES-review",
+      "summary": "Source-grounded INTERFACES update for immutable atomic native completion and bounded dependency repair; no proof claim",
+      "input_digest": "sha256:bc912b870a9d16fb131489259480100656b5163b69c7c08f28bcb59ef6a2ba28"
     }
   ],
   "intents": {
