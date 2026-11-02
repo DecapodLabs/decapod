@@ -576,6 +576,11 @@
       "id": "http-option-spec",
       "summary": "Document narrow client-specific option classification and curl official file-backed url-query contract",
       "input_digest": "sha256:c5af542e07d5d62122b45ac6febcac85e6aa0d48fd6c5b1cc66c0cad2c711528"
+    },
+    {
+      "id": "http-option-projections",
+      "summary": "Refresh generated projections after HTTP option contract update",
+      "input_digest": "sha256:f218f8b9f2194cf331328401e2d07f6f62979988b95d7b626608adbd5abd9142"
     }
   ],
   "intents": {
