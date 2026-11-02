@@ -621,6 +621,11 @@
       "id": "ci-clippy-let-chain",
       "summary": "Repair exact CI collapsible_if finding using equivalent let-chain; preserve all prompt safety markers and tests; RPC failure diagnosis separate",
       "input_digest": "sha256:f51241d6c4644a29ca79257833c762c695a596ab739435ff854c2bf9449839c3"
+    },
+    {
+      "id": "clippy-current-spec-review",
+      "summary": "Refresh content-bound spec reviews after equivalent Clippy repair; preserve failures and require fresh exact-head proof",
+      "input_digest": "sha256:c4d20d8a44cdeab939792d3da49f978f8ef84d764af5c3f2e506852eeda32fa7"
     }
   ],
   "intents": {
@@ -661,22 +666,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed agent_eval helpers and dispatch: side-effect-free deterministic pre-repository gate remains existing architecture, no daemon/provider/state interface change; bounded span and option behavior documented in SECURITY.",
-          "reviewed_code_fingerprint": "4277960304213f7e01a5f5ae30a09679b2c48cf3ac1f9c6f36162ac9b7546000",
+          "reason": "Re-reviewed d9a014cc: equivalent escaped-character condition only; deterministic side-effect-free gate architecture and dependencies unchanged.",
+          "reviewed_code_fingerprint": "53baf95015eb2149229b9959294bf1fcb35740dd61726bf4900cf171373ae1ab",
           "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed eval schema, stdin CLI and integration tests: input, allow/block statuses, exit codes, original prompt fingerprint and no-echo contract unchanged; context classification details live in SECURITY.",
-          "reviewed_code_fingerprint": "4277960304213f7e01a5f5ae30a09679b2c48cf3ac1f9c6f36162ac9b7546000",
+          "reason": "Re-reviewed d9a014cc exact Clippy repair: tokenizer nested-if becomes equivalent let-chain; eval stdin/status/fingerprint/no-echo and interfaces unchanged.",
+          "reviewed_code_fingerprint": "53baf95015eb2149229b9959294bf1fcb35740dd61726bf4900cf171373ae1ab",
           "spec_material_hash": "a227ee81c08e687d9dfa5ec539625a29c86d32b8a80653fa08178a493494869e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed agent_eval.rs and unit/CLI regression sources: bounded all-span inspection, whole-prompt unsafe markers, substitutions, conservative outputs and unknown options; explicit limitations and no runtime-proof claim documented. Tokio/Bazel lock-only security repair verified.",
-          "reviewed_code_fingerprint": "4277960304213f7e01a5f5ae30a09679b2c48cf3ac1f9c6f36162ac9b7546000",
+          "reason": "Current authored issue1478 security section remains materially updated versus accepted base and matches source. d9a014cc let-chain preserves consumption order, newline handling, all strict option/span/substitution defenses and tests; no new semantic contract change.",
+          "reviewed_code_fingerprint": "53baf95015eb2149229b9959294bf1fcb35740dd61726bf4900cf171373ae1ab",
           "spec_material_hash": "9c6b4b970b52f68a91f13a611eb040b61742023dfbc3b61bdf214307e362c686"
         }
       ],
@@ -690,7 +695,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793660339Z"
+      "updated_at": "1793662613Z"
     },
     "trajectory": {
       "active_boundaries": [
