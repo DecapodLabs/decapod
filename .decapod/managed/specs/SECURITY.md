@@ -555,8 +555,13 @@ remain relevant across those boundaries. Quoted shell argument newlines remain
 within the argument context. This prevents a prose semicolon after a closed
 inline diagnostic, or an unrelated mention of Python/source, from inventing an
 execution edge. It is deliberately not a general prose/shell grammar: unmarked
-same-line prose and ambiguous shell syntax can still require review. Existing
-whole-prompt instruction/authority/destructive/credential markers remain intact.
+same-line prose and ambiguous shell syntax can still require review. Dynamic request arguments (shell command/process substitution, parameter
+expansion and embedded backticks) are review-gated before lexical normalization
+can erase their delimiters. This does not classify an arbitrary variable or
+literal public query value as a known secret; it preserves uncertainty about
+values that may be computed from local data. Dollar signs in prose outside a
+closed inline diagnostic do not become request arguments. Existing whole-prompt
+instruction/authority/destructive/credential markers remain intact.
 
 `tests/unit/core/agent_eval_tests.rs` and `tests/agent_eval.rs` specify safe
 report/history and adversarial combinations, including spacing, quoting and

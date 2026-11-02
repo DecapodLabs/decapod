@@ -546,6 +546,11 @@
       "id": "http-dynamic-regressions",
       "summary": "Specify HTTP query substitution, arbitrary parameter expansion, backtick/process/quoted/escaped forms and inert public data/prose regressions; tests unrun",
       "input_digest": "sha256:cafc5bbfe4a6f01db183fc6a76eea07b2d07b6bec822b7c5553cc43047c3d7f3"
+    },
+    {
+      "id": "dynamic-http-spec",
+      "summary": "Document dynamic request uncertainty gate while preserving literal public query values and out-of-span prose",
+      "input_digest": "sha256:de7aac4a451a24240adfd25a956bb505ea6a4a0f0ed5269b9a3438e401678b09"
     }
   ],
   "intents": {
