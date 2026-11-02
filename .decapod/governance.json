@@ -481,6 +481,11 @@
       "id": "replay-workspace_publication_tests",
       "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
       "input_digest": "sha256:9388f16cfcfd4f4ac957bcb35c9b079048306cf875f4ac1830014ec0c67f90ea"
+    },
+    {
+      "id": "replay-consumer_readiness",
+      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
+      "input_digest": "sha256:ea270912c6b4078d3b83fe35d97f345c746021d30d55930d77109c0e0c08dc5e"
     }
   ],
   "intents": {
@@ -536,7 +541,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c39b21eb4bfcabf4e602a41fd84f08dac72f9db4e7bafa78b02be30650bc7b9f",
+      "artifact_hash": "sha256:053c9def73029021cdabd8766e1aca6f40cde63ae536ad3a2b232ca5b40d7794",
       "checks": [
         {
           "name": "native_receipt_regression",
@@ -578,10 +583,17 @@
             "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0K07GRCP71GJRSYSZ84V7": {
@@ -648,6 +660,26 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/consumer_readiness.rs"
+                ],
+                "proof_refs": [
+                  "native_receipt_regression"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -661,6 +693,7 @@
       "modified_files": [
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/workspace.rs",
+        "tests/consumer_readiness.rs",
         "tests/unit/core/workspace_publication_tests.rs"
       ],
       "next_transitions": [
