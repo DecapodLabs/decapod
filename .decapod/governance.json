@@ -511,6 +511,11 @@
       "id": "bounded-http-context",
       "summary": "Bound HTTP checks to command-like spans; preserve substitution and adjacent operators, conservatively gate file output; independent review regressions pending official execution",
       "input_digest": "sha256:44bfc816831934a6e7db8b4dbed9e6824805ba1844a39c8256a25415d150a8a7"
+    },
+    {
+      "id": "bounded-http-regressions",
+      "summary": "Specify preserved safe history fixture plus prose executor words, fenced shell diagnostics, cross-boundary execution and multiline credential regressions; tests not executed",
+      "input_digest": "sha256:a0fae46b143a1a22258bd448e8e4e7b80882a8c5ca9076f01f3fe08adc9a5da3"
     }
   ],
   "intents": {
