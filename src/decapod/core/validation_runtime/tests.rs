@@ -2135,3 +2135,73 @@ fn history_checks_use_controller_git_instead_of_path() {
         0
     );
 }
+
+#[test]
+fn native_completion_write_failures_never_publish_success_artifacts() {
+    for failed_file in ["native-readiness-receipt.json", "verdict.json"] {
+        for stage in ["create", "write", "sync"] {
+            let directory = tempfile::tempdir().unwrap();
+            let result = write_native_completion(
+                directory.path(),
+                br#"{"ready":true}"#,
+                br#"{"status":"ok"}"#,
+                |path, bytes| {
+                    if path.file_name().unwrap() != failed_file {
+                        return write_new(path, bytes);
+                    }
+                    // Model creation failure, partial write and sync failure
+                    // after all success bytes reached the staging file.
+                    match stage {
+                        "create" => {}
+                        "write" => fs::write(path, &bytes[..bytes.len() / 2])?,
+                        "sync" => fs::write(path, bytes)?,
+                        _ => unreachable!(),
+                    }
+                    Err(io::Error::other(format!("injected {stage} failure")))
+                },
+            );
+            assert!(result.is_err(), "{failed_file}: {stage}");
+            let report = ValidationReport {
+                ready: true,
+                proof_ready: true,
+                vega_readiness: None,
+                scope: READINESS_SCOPE,
+                agent_guidance: ValidationGuidance::for_vega_outcome(
+                    true,
+                    crate::core::vega_readiness::Mode::Disabled,
+                    crate::core::vega_readiness::Decision::Accept,
+                ),
+                stage_dispositions: Vec::new(),
+                blockers: Vec::new(),
+                evidence_path: Some(directory.path().to_owned()),
+            }
+            .finish(result);
+            assert!(!report.ready);
+            assert_eq!(report.exit_code(), 1);
+            assert!(!directory.path().join("completion").exists());
+            assert!(!directory.path().join("verdict.json").exists());
+            assert!(!directory.path().join("native-readiness-receipt.json").exists());
+            assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+        }
+    }
+}
+
+#[test]
+fn native_completion_publishes_both_files_together_and_preserves_existing_bundle() {
+    let directory = tempfile::tempdir().unwrap();
+    let verdict = br#"{"ready":true}"#;
+    let receipt = br#"{"status":"ok"}"#;
+    write_native_completion(directory.path(), verdict, receipt, write_new).unwrap();
+    let completed = directory.path().join("completion");
+    assert_eq!(fs::read(completed.join("verdict.json")).unwrap(), verdict);
+    assert_eq!(
+        fs::read(completed.join("native-readiness-receipt.json")).unwrap(),
+        receipt
+    );
+    assert!(write_native_completion(directory.path(), b"replacement", b"replacement", write_new).is_err());
+    assert_eq!(fs::read(completed.join("verdict.json")).unwrap(), verdict);
+    assert_eq!(
+        fs::read(completed.join("native-readiness-receipt.json")).unwrap(),
+        receipt
+    );
+}

@@ -511,6 +511,11 @@
       "id": "atomic-native-completion",
       "summary": "Independent review: atomically publish receipt and verdict as completion directory only after both staged files sync; no fallible operation after publication",
       "input_digest": "sha256:6da08dd0aff6c936280da98a2accad3b8d4c484cc5f3bfcde30b8ed2a8c36fae"
+    },
+    {
+      "id": "atomic-completion-regressions",
+      "summary": "Inject receipt and verdict create/partial-write/sync failures: no published success artifacts and returned readiness false; tests unrun due transport blocker",
+      "input_digest": "sha256:c4a75c16211e96537bb0a9f0dbdc907366f47f78f1d624a26ec8b3b64c3e257d"
     }
   ],
   "intents": {
