@@ -1,5 +1,37 @@
 # Validation
 
+## Native readiness receipt custody
+
+Decapod remains the proof-gated governor of accepted work, not a receipt-import
+service. Native publication readiness in
+`src/decapod/core/validation_runtime.rs::run` executes the complete selected
+deterministic proof and configured Vega decision before producing
+`native-readiness-receipt.json` in the invocation's external evidence directory.
+The receipt binds the exact material identity (including accepted target),
+committed governance and trajectory digest, expected proof plan, measured
+execution evidence, decision, scope and invocation. Its hash covers every other
+receipt field. It is an output for inspection, never reusable authority to open
+a PR or waive a subsequent exact-candidate validation.
+
+`workspace::ensure_required_governance_artifacts_in_pr` requires current plan,
+claims and trajectory material but not the legacy tracked
+`sections.validation` preparation receipt. Requiring that output before native
+proof is circular, and writing it into the candidate after proof would stale
+the proof itself. `decapod govern project-check` retains the explicit legacy
+preparation writer; inventory continues to report its actual integrity and
+freshness rather than laundering absent or stale receipts into success.
+Malformed configuration and missing required governance still fail.
+
+The native receipt is written last, only for full native readiness success.
+Failed execution, stale candidate/target or blocked decision produces no success
+receipt; receipt-output failure revokes the returned readiness. No checkout or
+Git metadata is changed by receipt production. Regression coverage in
+`tests/consumer_readiness.rs` uses actual native source execution to assert
+binding, candidate immutability and absence on failed/stale proof;
+`tests/unit/core/workspace_publication_tests.rs` preserves material gates and
+legacy integrity diagnostics. These new regressions await the official
+configured validation of this candidate; their presence is not a passing result.
+
 ## Validation Overview
 
 The artifact-origin controller prerequisite uses the accepted source-bound CI API
