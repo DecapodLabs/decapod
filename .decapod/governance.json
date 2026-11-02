@@ -566,6 +566,11 @@
       "id": "native-SECURITY-review",
       "summary": "Source-grounded SECURITY update for immutable atomic native completion and bounded dependency repair; no proof claim",
       "input_digest": "sha256:955815822829a4be802a18c47e7362e30bb8f2d8b2f76086ea4e53e3ae948323"
+    },
+    {
+      "id": "tokio-reviewed-inventory",
+      "summary": "Review complete discovered source inventory versus public54a6eb09: only exact audited Tokio lock delta; reconcile digest26f194a9 without altering proof coverage",
+      "input_digest": "sha256:f7c799dbb6ed30b42bf829176144e57b5b02c3f79c407d331ad25ac690a1ba97"
     }
   ],
   "intents": {
