@@ -182,6 +182,31 @@ fn unsafe_http_context(prompt: &str) -> bool {
             continue;
         };
         let arguments = &words[client + 1..];
+        // Dynamic request arguments can transfer arbitrary local data even when
+        // neither their variable names nor query keys look like credentials.
+        // Inspect raw syntax before tokenization drops expansion delimiters.
+        // These markers request review; they do not assert a value is a secret.
+        if span.contains('$') || span.contains("<(") || span.contains('`') {
+            return true;
+        }
+        if boundaries.get(index) == Some(&'`') {
+            let inline_body = index > 0 && boundaries[index - 1] == '`';
+            let pending_argument = arguments
+                .last()
+                .is_some_and(|word| word.starts_with('-') || word.ends_with('='));
+            // Outside an inline body, a backtick following a client starts a
+            // dynamic argument. Inside one, adjacent non-prose text or an
+            // unfinished option/value also indicates an embedded substitution.
+            let adjacent_argument = spans.get(index + 1).is_some_and(|next| {
+                next.chars().next().is_some_and(|ch| {
+                    !ch.is_whitespace()
+                        && !matches!(ch, '.' | ',' | ':' | ';' | '!' | '?' | ')' | ']' | '`')
+                })
+            });
+            if !inline_body || pending_argument || adjacent_argument {
+                return true;
+            }
+        }
         if arguments.iter().any(|word| {
             matches!(word.as_str(), "|" | ";" | "&&" | ">") || http_sensitive_argument(word)
         }) || arguments.windows(2).any(|pair| {

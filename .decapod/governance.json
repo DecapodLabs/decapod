@@ -536,6 +536,11 @@
       "id": "nested-http-regression",
       "summary": "Specify nested command substitution regression with remote fetch after inner close; tests remain unrun",
       "input_digest": "sha256:5f5e251cdffc758ca9f0fcaadd19681c423d10fe804c5a72fbb124242ad4af0b"
+    },
+    {
+      "id": "http-dynamic-arguments",
+      "summary": "Review-gate dynamic HTTP arguments before tokenization, including arbitrary variable names and backtick context; runtime proof remains unavailable",
+      "input_digest": "sha256:71bf6dcaed15356c55d266adfb2f43ad816414c15ebd73580c1abf1e407ad054"
     }
   ],
   "intents": {
