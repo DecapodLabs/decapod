@@ -531,6 +531,11 @@
       "id": "handoff-readonly-regression",
       "summary": "Add unexecuted read-only diagnostic regression: mutation categories and critical path cannot require mutation authority or create database state",
       "input_digest": "sha256:6766a74108260dc30156c00e11e79034e339824c3797c4eb40b73df360277412"
+    },
+    {
+      "id": "readonly-configured-category",
+      "summary": "Use supported policy_changes category to exercise read-only policy.list bypass rather than unknown category",
+      "input_digest": "sha256:e7a9755a4d5911b727a8da73b2cf9759eaeeb346d47f5c3fcc15cdb854e81ee3"
     }
   ],
   "intents": {

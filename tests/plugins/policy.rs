@@ -612,7 +612,7 @@ fn read_only_diagnostic_has_no_mutation_requirements_or_database_side_effects() 
         kind: StoreKind::Repo,
         root: tmp.path().to_path_buf(),
     };
-    write_project_config(&store.root, "[\"all_mutations\"]");
+    write_project_config(&store.root, "[\"policy_changes\"]");
     let risk_map = RiskMap {
         zones: vec![RiskZone {
             path: ".decapod/".into(),
