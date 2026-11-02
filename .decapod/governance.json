@@ -499,6 +499,11 @@
       "id": "prove-shared-broker-regression",
       "summary": "Require both concurrent claims to traverse the same elected leader; prevent false-positive direct or re-elected execution",
       "input_digest": "sha256:dbded51cd3bbae2ba11bc41baf7e7bb182bd48487b7bccd735a0c49e31057e08"
+    },
+    {
+      "id": "refresh-shared-leader-proof",
+      "summary": "Refresh generated attestations after shared-leader regression assertion",
+      "input_digest": "sha256:425147b78110b39b5100e54fc09d69a9c3286ca4b004039ac9de1cdf4e4194fc"
     }
   ],
   "intents": {
