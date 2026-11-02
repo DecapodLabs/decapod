@@ -454,11 +454,23 @@
     "base_commit": "3216d7170b80a350c5a8417c38dda9c5c4d8bb23",
     "target_base": "origin/master"
   },
+  "claims": {
+    "issue1470-source-identity": {
+      "statement": "Source inventory retains each actual source path once without phantom case aliases or loss of distinct case-sensitive paths.",
+      "falsifier": "Regression fixtures produce an alias absent from the directory, drop a distinct same-content path, or omit untracked/non-Git inputs.",
+      "status": "open"
+    }
+  },
   "checkpoints": [
     {
       "id": "bootstrap",
       "summary": "Official 0.121.2 generated workspace bootstrap; preserved failed older-controller candidate 03b63f55 separately",
       "input_digest": "sha256:1639995a597a07fcea0e713d77113e4284b8fa8e4398ac784816f9a781faa661"
+    },
+    {
+      "id": "source-spelling",
+      "summary": "Replay and format actual directory-entry resolution without source identity collapse",
+      "input_digest": "sha256:7afd1fc3054bf2a6b2540fdb2dc96985d728c3c5755f7b013acf51623236cfb4"
     }
   ],
   "intents": {
@@ -507,11 +519,12 @@
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "No merge, release, credential changes or proof bypass; preserve failed earlier candidate."
       ],
-      "artifact_hash": "sha256:3a6822d9feb46eeee1778e1bf968640ef8a9472327fc3c1f6e08bab526166bf3",
+      "artifact_hash": "sha256:86d504a0158989bcb57e14b23be389bb7b69fa9ff2baa5537384bf599a127a83",
       "checks": [],
-      "current_phase": "intent",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -525,19 +538,58 @@
             "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M6F0HEXJCDCCEJTEY5JSGT8A": {
+            "evidence_only": true,
+            "id": "branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
+            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
+            "steps": [
+              {
+                "action": "implementation",
+                "command": "rustfmt --config skip_children=true --edition 2024 src/decapod/core/init_reconciliation/mod.rs",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/init_reconciliation/mod.rs",
+                  "src/decapod/core/init_reconciliation/mod.rs",
+                  "Previous candidate 03b63f55 failed entrypoint commit discipline before source tests; retained on original branch."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue1470-source-inventory-recovery"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "rustfmt --config skip_children=true --edition 2024 src/decapod/core/init_reconciliation/mod.rs"
+      ],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "evidence": [
+        "Previous candidate 03b63f55 failed entrypoint commit discipline before source tests; retained on original branch."
+      ],
+      "inspected_files": [
+        "src/decapod/core/init_reconciliation/mod.rs"
+      ],
       "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/init_reconciliation/mod.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
