@@ -524,6 +524,11 @@
       "id": "security-recovery-review",
       "summary": "Record current-content security review: recovery preserves historical custody and requires real exact-material proof, no authority or audit exemptions",
       "input_digest": "sha256:b0d4ba0a2449f9d845d050f7a7ac145ded26d6b7a07f4e688a3c0f7768f1d84c"
+    },
+    {
+      "id": "generated-bazel-tokio-lock",
+      "summary": "Prior collector session vanished while waiting; retained old handoff and immutable a99 source failure. Adopt hash-verified pinned Bazel9.3.0 generated lock, exactly five Tokio-related substitutions, no other graph or trust changes; not passing proof.",
+      "input_digest": "sha256:5a112175f8175e1a7365a7217e97fec1f135d2dc19c80271b8e429e2a42938e2"
     }
   ],
   "intents": {
