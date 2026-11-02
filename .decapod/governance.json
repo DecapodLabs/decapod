@@ -620,6 +620,11 @@
       "id": "dagger-full-config-roundtrip",
       "summary": "Exercise full public TOML parser, runtime parser and guided reinit preserving inert dormant authorization and existing proof",
       "input_digest": "sha256:d3ee0f2a38a5a94794bdb1dd3147a9da050a25474111702af02a114a4416a799"
+    },
+    {
+      "id": "dagger-public-config-projections",
+      "summary": "Refresh generated specs after public config integration; retain unavailable configured and live engine proof honestly",
+      "input_digest": "sha256:6a2c19a189fa8806ecc55bdd28a7a17ec2e9f2fbad1d2fca73438661e9357d03"
     }
   ],
   "intents": {
@@ -670,8 +675,12 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:60cfa1841fd17ca5b1203c5c5a58fdd3e24873c3886ad761da9e8e4eb37e843a",
+      "artifact_hash": "sha256:9f6e436c470783838f37888f52f113212ed5f725175febe069e9c8e1882d3fde",
       "checks": [
+        {
+          "name": "configured-buildkite-proof",
+          "status": "unavailable"
+        },
         {
           "name": "live-dagger",
           "status": "unavailable"
@@ -698,10 +707,17 @@
             "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MSA6NJNNFSAD36MDNVNK": {
@@ -725,6 +741,26 @@
                 "validation_findings": [
                   "The explicitly accepted pre-provisioned local Docker daemon and Dagger engine are trusted executors, including writable runtime state; image ID is identity not filesystem attestation. No live engine integration or tests have run. Current official Dagger container driver attaches to existing full container ID without provisioning."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_runtime/repository_host/dagger.rs",
+                  "src/decapod/core/proof.rs",
+                  "tests/unit/lib_init_prompt_tests.rs"
+                ],
+                "proof_refs": [
+                  "configured-buildkite-proof"
+                ],
+                "scope": [
+                  "issue-1475-dagger"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "Independent source review corrected legacy CLI syntax to Dagger 1.0 workspace/check contract, first-adoption deadlock via dormant accepted authority, and canonical config/init map preservation. Fixture tests authored but not executed. Official snapshot preparation reached pending upload at superseded 15bad19e; unavailable upload prevents real configured CI proof. Reviewed inherited source inventory drift is only Cargo package version 0.121.0 to 0.121.2 from 213ed9ca; every discovered source matches accepted 3216d717."
+                ]
               }
             ]
           }
@@ -737,7 +773,12 @@
         "src/decapod/core/validation_runtime/repository_host.rs"
       ],
       "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/proof.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime/repository_host/dagger.rs",
+        "tests/unit/lib_init_prompt_tests.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
@@ -750,6 +791,7 @@
       "task_id": "feat_01m6f0mcy91wgq8z",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Independent source review corrected legacy CLI syntax to Dagger 1.0 workspace/check contract, first-adoption deadlock via dormant accepted authority, and canonical config/init map preservation. Fixture tests authored but not executed. Official snapshot preparation reached pending upload at superseded 15bad19e; unavailable upload prevents real configured CI proof. Reviewed inherited source inventory drift is only Cargo package version 0.121.0 to 0.121.2 from 213ed9ca; every discovered source matches accepted 3216d717.",
         "The explicitly accepted pre-provisioned local Docker daemon and Dagger engine are trusted executors, including writable runtime state; image ID is identity not filesystem attestation. No live engine integration or tests have run. Current official Dagger container driver attaches to existing full container ID without provisioning."
       ]
     }
