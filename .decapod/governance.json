@@ -571,6 +571,11 @@
       "id": "handoff-bazel-tokio",
       "summary": "Repair required Bazel stale lock failure: verify shared generated module patch hashes and exact five Tokio-only substitutions; no unrelated dependency graph or proof changes",
       "input_digest": "sha256:dd857f3c704f6e300a27b254d8858d881b9180c74b37fa5c54cbbe27a9354b8d"
+    },
+    {
+      "id": "handoff-bazel-inventory",
+      "summary": "Reviewed all119 source inventory hashes against bf8d47af: only MODULE.bazel.lock changed to align already-reviewed Tokio security patch; source proof graph and trust unchanged",
+      "input_digest": "sha256:e3f3df4c3fed1398cf4efa53c7d1a309453dcf26b13f754b27d1b9210fb8ca98"
     }
   ],
   "intents": {
