@@ -650,6 +650,11 @@
       "id": "dagger-reviewed-dependency-inventory",
       "summary": "Review only Cargo.lock and generated MODULE.bazel.lock inventory changes; retain existing accepted controller, recipes, graph and Buildkite requirements",
       "input_digest": "sha256:ace7aad4c576903c0b64dd70867281bd723d6de63719a1790a2eb7e1399c4b92"
+    },
+    {
+      "id": "dagger-publication-spec-reviews",
+      "summary": "Record source-grounded current-content architecture/interface/security reviews and official generated spec refresh after minimal dependency repairs",
+      "input_digest": "sha256:678e7ba2ca9a9a2706904a41fbd59beefd023979a43890be7ed6643878fb1b62"
     }
   ],
   "intents": {
@@ -686,6 +691,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Source review of repository_profile DaggerExecution, accepted-only dormant map, canonical config/init preservation and repository_host bounded snapshot execution; new optional existing-engine section preserves daemonless kernel and hosted profile authority. No live-engine or CI success claimed.",
+          "reviewed_code_fingerprint": "2fccb2aa3903a8ef34f31b054233ee7cf8a6a81fb75a8b01a65338c41294b93a",
+          "spec_material_hash": "8e3ceeeac52762000d0cb2d831bdcc16ba288b7959c5d23eb9a5031eedbd0218"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed implemented Dagger1.0 --workspace . check, root config/lock inventory, accepted dormant stage-activate-rotate-revoke and deny-by-default capabilities against source and config schema; authored interface section matches current source. Fixture coverage is not passing runtime evidence.",
+          "reviewed_code_fingerprint": "2fccb2aa3903a8ef34f31b054233ee7cf8a6a81fb75a8b01a65338c41294b93a",
+          "spec_material_hash": "134ec8c87c34d93107e6e3532ff036fe2e9e479fd2f2eb3ce2957eb62d0372c9"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed external_action and engine inspection against explicit trusted local Docker/engine boundary, separate default-denied capabilities, exact accepted authority and no lifecycle or hosted substitution; added dependency lock consistency requirement. Mutable runtime is not attested; no live-engine proof claimed.",
+          "reviewed_code_fingerprint": "2fccb2aa3903a8ef34f31b054233ee7cf8a6a81fb75a8b01a65338c41294b93a",
+          "spec_material_hash": "eb8a12e853f7459ab9cda70be86dd24f6388fa50a198063d70eb06335700d8b8"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Add bounded local Dagger validation proof adapter for issue 1475",
@@ -694,7 +722,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793653004Z"
+      "updated_at": "1793660300Z"
     },
     "trajectory": {
       "active_boundaries": [
