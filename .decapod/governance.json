@@ -496,6 +496,11 @@
       "id": "issue1470-config-projection",
       "summary": "Regenerate config-bound manifest after reviewed source inventory update; retain exact published validation failure and publication custody",
       "input_digest": "sha256:6f1e0231ff61f63dc9094f7891014ff6113b29f208cacabe55fc596d0ebafbb3"
+    },
+    {
+      "id": "issue1470-tokio-advisory",
+      "summary": "Resolve required CI advisory with minimal registry-verified Tokio 1.53.3 lock update only",
+      "input_digest": "sha256:a0083e65ed54d62884743645d7e892140cc8d49477236e8f0e930e4a9c7a66ea"
     }
   ],
   "intents": {
@@ -547,7 +552,7 @@
         "Current claimed task and isolated work branch",
         "No merge, release, credential changes or proof bypass; preserve failed earlier candidate."
       ],
-      "artifact_hash": "sha256:176e91f27699dd972b5d4b2544e614ab1bf88f8145c19d6bfd3b1676070048f7",
+      "artifact_hash": "sha256:f22915ae5ceaf8852b37b48221884fd747435d046b7be43371b6e30c6d5ffdcb",
       "checks": [
         {
           "name": "full_validation",
@@ -593,10 +598,17 @@
             "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HEXJCDCCEJTEY5JSGT8A": {
@@ -654,18 +666,38 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "cargo update -p tokio --precise 1.53.3",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Cargo.lock",
+                  "Buildkite 2548 on exact 4c0ee3bf failed required dependencies-deny for Tokio 1.52.3 RUSTSEC-2026-0386 and required publication spec review. Official RustSec lists >=1.53.3 patched; existing manifest version 1 accepts it. Normal cargo update --precise 1.53.3 succeeded; restored six unrelated accepted windows-sys edges, cargo metadata --locked succeeded without builds/tests. Only Tokio version and registry checksum change; no advisory waiver, new dependencies, graph change, or old proof reuse. Maintenance interrupted first resume; supported same-handoff resume retained terminal failure before source edits."
+                ],
+                "proof_refs": [
+                  "published_exact_validation"
+                ],
+                "scope": [
+                  "issue1470-source-inventory-recovery"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "cargo metadata --locked --format-version 1",
+        "cargo update -p tokio --precise 1.53.3",
         "decapod rpc --op specs.refresh",
         "decapod validate",
         "rustfmt --config skip_children=true --edition 2024 src/decapod/core/init_reconciliation/mod.rs"
       ],
       "destination": "pull request",
       "evidence": [
+        "Buildkite 2548 on exact 4c0ee3bf failed required dependencies-deny for Tokio 1.52.3 RUSTSEC-2026-0386 and required publication spec review. Official RustSec lists >=1.53.3 patched; existing manifest version 1 accepts it. Normal cargo update --precise 1.53.3 succeeded; restored six unrelated accepted windows-sys edges, cargo metadata --locked succeeded without builds/tests. Only Tokio version and registry checksum change; no advisory waiver, new dependencies, graph change, or old proof reuse. Maintenance interrupted first resume; supported same-handoff resume retained terminal failure before source edits.",
         "Current candidate passes entrypoint-history stage. Inventory drift since last config review 213ed9ca is exclusively package version 0.121.0 to 0.121.2 in Cargo.toml/Cargo.lock; workflows, helpers, dependencies and execution graph unchanged.",
         "Previous candidate 03b63f55 failed entrypoint commit discipline before source tests; retained on original branch.",
         "User authorized public tracked governance/spec metadata. Connector publication preserved all six ordered trees and messages modulo terminal LF from original 9753d64b to published 172317acea8d7327ea42aab6f671d79b8102ec0c; independently fetched and checkpoint-verified, original backup retained. Historical source-review refs remain historical, no old pass reused. Buildkite 2545 exact published head failed standalone-validation on stale manifest config_input_hash after reviewed inventory config update; 189 prerequisite gates passed but full readiness failed. Official 0.121.2 specs.refresh regenerates matching config hash; revalidate exact uploaded repair candidate."
@@ -677,13 +709,15 @@
       "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
       "modified_files": [
         ".decapod/config.toml",
+        "Cargo.lock",
         "src/decapod/core/init_reconciliation/mod.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "issue1470-source-inventory-recovery"
+        "issue1470-source-inventory-recovery",
+        "issue1470-source-inventory-recovery; minimal baseline Tokio advisory CI repair"
       ],
       "run_id": "branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
       "schema_version": "1.1.0",
