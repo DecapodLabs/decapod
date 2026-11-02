@@ -484,6 +484,11 @@
       "id": "refresh-supported-spec",
       "summary": "Refresh generated spec projections using supported release",
       "input_digest": "sha256:b1bb5ec4a1b30f901d4dfb99ac8eb776a68ce05330d62c18e39ada0d15e8f883"
+    },
+    {
+      "id": "reconcile-reviewed-inventory",
+      "summary": "Independently compared discovered inventory vs213ed9ca: only Cargo.toml and Cargo.lock package release0.121.0 to0.121.2; no workflow checks changed; update user-editable review declaration only",
+      "input_digest": "sha256:cc10090b222368904f5d2e76623acd2d4831a276bc5697fd6cb985f0591351da"
     }
   ],
   "intents": {
