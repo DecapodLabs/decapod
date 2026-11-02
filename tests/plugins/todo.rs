@@ -7,7 +7,7 @@ use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::core::todo::{
     ClaimMode, TodoCommand, add_task, check_trust_level, claim_task, claim_task_with_lease,
-    fleet_health, get_task, get_work_claim, handoff_task, initialize_todo_db, list_tasks,
+    fleet_health, get_task, get_work_claim, handoff_task_as, initialize_todo_db, list_tasks,
     rebuild_from_events, renew_claim_lease, update_status, yield_claim_lease,
 };
 use decapod::plugins::policy;
@@ -1255,13 +1255,14 @@ fn handoff_advances_lease_generation_and_preserves_intent() {
     set_agent_trust(&db, "agent-from", "verified", "100Z");
     policy::approve_action(&store, "todo.handoff", None, "operator", "global").unwrap();
 
-    let handed = handoff_task(
+    let handed = handoff_task_as(
         &store,
         &task_id,
         "agent-to",
         Some("agent-from"),
         "wave4 lease transfer",
         Some(600),
+        "agent-from",
     )
     .unwrap();
     assert_eq!(handed["status"], "ok", "handoff: {handed}");
@@ -1584,4 +1585,296 @@ approval_categories = ["destructive_operations"]
     assert_eq!(archive(&beta).unwrap()["status"], "ok");
     policy::revoke_approval(&store, &general).unwrap();
     assert!(archive(&beta).is_err());
+}
+
+#[test]
+fn handoff_checks_real_actor_and_preserves_owner_until_approved() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    initialize_todo_db(root).unwrap();
+    let dir = root.join("handoff-recovery");
+    std::fs::create_dir_all(&dir).unwrap();
+    let id = add_scoped_task(
+        root,
+        "Handoff recovery",
+        "handoff-recovery",
+        dir.to_str().unwrap(),
+    );
+    claim_task(root, &id, "missing-owner", ClaimMode::Exclusive).unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.to_path_buf(),
+    };
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    set_agent_trust(&db, "missing-owner", "verified", "100Z");
+    set_agent_trust(&db, "recovery-caller", "verified", "100Z");
+
+    let absent =
+        handoff_task_as(&store, &id, "receiver", None, "recover", None, "unknown").unwrap_err();
+    assert!(absent.to_string().contains("HANDOFF_CALLER_MISSING"));
+    let impersonation = handoff_task_as(
+        &store,
+        &id,
+        "receiver",
+        Some("missing-owner"),
+        "recover",
+        None,
+        "basic-caller",
+    )
+    .unwrap_err();
+    assert!(impersonation.to_string().contains("trust"));
+    let unapproved = handoff_task_as(
+        &store,
+        &id,
+        "receiver",
+        None,
+        "recover",
+        None,
+        "recovery-caller",
+    )
+    .unwrap_err();
+    assert!(unapproved.to_string().contains("approval"));
+    assert_eq!(
+        get_task(root, &id).unwrap().unwrap().assigned_to,
+        "missing-owner"
+    );
+
+    policy::approve_action(&store, "todo.handoff", Some(&id), "operator", "global").unwrap();
+    let stale = handoff_task_as(
+        &store,
+        &id,
+        "receiver",
+        Some("wrong-owner"),
+        "recover",
+        None,
+        "recovery-caller",
+    )
+    .unwrap();
+    assert_eq!(stale["status"], "error");
+    assert_eq!(
+        get_task(root, &id).unwrap().unwrap().assigned_to,
+        "missing-owner"
+    );
+    let handed = handoff_task_as(
+        &store,
+        &id,
+        "recovery-caller",
+        Some("missing-owner"),
+        "operator approved ownership recovery",
+        None,
+        "recovery-caller",
+    )
+    .unwrap();
+    assert_eq!(handed["status"], "ok");
+    assert_eq!(handed["result"]["actor"], "recovery-caller");
+    assert_eq!(handed["result"]["from"], "missing-owner");
+    assert_eq!(handed["result"]["to"], "recovery-caller");
+    assert_eq!(
+        get_task(root, &id).unwrap().unwrap().assigned_to,
+        "recovery-caller"
+    );
+    let event: String = db.query_row("SELECT payload FROM events WHERE stream='todo' AND subject_id=?1 AND event_type='task.handoff' ORDER BY seq DESC LIMIT 1", [&id], |row| row.get(0)).unwrap();
+    let event: Value = serde_json::from_str(&event).unwrap();
+    assert_eq!(event["actor"], "recovery-caller");
+    assert_eq!(event["payload"]["from"], "missing-owner");
+}
+
+#[test]
+fn operator_recovery_requires_exact_one_use_authority() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    initialize_todo_db(root).unwrap();
+    let dir = root.join("operator-recovery");
+    std::fs::create_dir_all(&dir).unwrap();
+    let id = add_scoped_task(
+        root,
+        "Operator recovery",
+        "operator-recovery",
+        dir.to_str().unwrap(),
+    );
+    claim_task(root, &id, "unavailable-owner", ClaimMode::Exclusive).unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.to_path_buf(),
+    };
+
+    let spoof = handoff_task_as(
+        &store,
+        &id,
+        "operator",
+        Some("operator"),
+        "recover",
+        None,
+        "basic-caller",
+    )
+    .unwrap_err();
+    assert!(spoof.to_string().contains("trust"));
+    assert!(
+        handoff_task_as(
+            &store,
+            &id,
+            "receiver",
+            Some("unavailable-owner"),
+            "recover",
+            None,
+            "operator"
+        )
+        .is_err()
+    );
+    policy::approve_action(
+        &store,
+        "todo.handoff",
+        Some("another-task"),
+        "operator",
+        "global",
+    )
+    .unwrap();
+    assert!(
+        handoff_task_as(
+            &store,
+            &id,
+            "receiver",
+            Some("unavailable-owner"),
+            "recover",
+            None,
+            "operator"
+        )
+        .is_err()
+    );
+    policy::approve_action(&store, "todo.handoff", None, "operator", "global").unwrap();
+    let general = handoff_task_as(
+        &store,
+        &id,
+        "receiver",
+        Some("unavailable-owner"),
+        "recover",
+        None,
+        "operator",
+    )
+    .unwrap_err();
+    assert!(
+        general
+            .to_string()
+            .contains("HANDOFF_RECOVERY_APPROVAL_REQUIRED")
+    );
+
+    let approval =
+        policy::approve_action(&store, "todo.handoff", Some(&id), "operator", "global").unwrap();
+    let missing_owner =
+        handoff_task_as(&store, &id, "receiver", None, "recover", None, "operator").unwrap_err();
+    assert!(
+        missing_owner
+            .to_string()
+            .contains("HANDOFF_RECOVERY_OWNER_REQUIRED")
+    );
+    assert!(
+        policy::list_approvals(&store)
+            .unwrap()
+            .iter()
+            .any(|a| a.approval_id == approval)
+    );
+    let handed = handoff_task_as(
+        &store,
+        &id,
+        "receiver",
+        Some("unavailable-owner"),
+        "approved operator recovery",
+        None,
+        "operator",
+    )
+    .unwrap();
+    assert_eq!(handed["status"], "ok");
+    assert_eq!(handed["result"]["actor"], "operator");
+    assert_eq!(handed["result"]["recovery"], true);
+    assert_eq!(handed["result"]["consumed_approval_ids"][0], approval);
+    assert!(
+        !policy::list_approvals(&store)
+            .unwrap()
+            .iter()
+            .any(|a| a.approval_id == approval)
+    );
+    let replay = handoff_task_as(
+        &store,
+        &id,
+        "next-receiver",
+        Some("receiver"),
+        "reuse old approval",
+        None,
+        "operator",
+    )
+    .unwrap_err();
+    assert!(
+        replay
+            .to_string()
+            .contains("HANDOFF_RECOVERY_APPROVAL_REQUIRED")
+    );
+    assert_eq!(
+        get_task(root, &id).unwrap().unwrap().assigned_to,
+        "receiver"
+    );
+}
+
+#[test]
+fn cli_handoff_without_from_uses_active_caller() {
+    let tmp = tempdir().unwrap();
+    let repo = tmp.path();
+    let run = |args: &[&str]| {
+        Command::new(resolve_decapod_bin())
+            .current_dir(repo)
+            .args(args)
+            .env("DECAPOD_AGENT_ID", "active-owner")
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
+            .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+            .stdin(std::process::Stdio::null())
+            .output()
+            .unwrap()
+    };
+    let init = run(&["init", "--force"]);
+    assert!(
+        init.status.success(),
+        "{}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+    let root = repo.join(".decapod/data");
+    initialize_todo_db(&root).unwrap();
+    let id = add_scoped_task(
+        &root,
+        "CLI handoff identity",
+        "cli-handoff",
+        repo.to_str().unwrap(),
+    );
+    claim_task(&root, &id, "active-owner", ClaimMode::Exclusive).unwrap();
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    set_agent_trust(&db, "active-owner", "verified", "100Z");
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.clone(),
+    };
+    policy::approve_action(&store, "todo.handoff", Some(&id), "operator", "global").unwrap();
+    let output = run(&[
+        "todo",
+        "--format",
+        "json",
+        "handoff",
+        "--id",
+        &id,
+        "--to",
+        "receiver",
+        "--summary",
+        "ordinary handoff",
+    ]);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let json: Value = serde_json::from_str(&stdout[stdout.find('{').unwrap()..]).unwrap();
+    assert_eq!(json["result"]["actor"], "active-owner");
+    assert_eq!(json["result"]["from"], "active-owner");
+    assert_eq!(json["result"]["recovery"], false);
+    assert_eq!(
+        get_task(&root, &id).unwrap().unwrap().assigned_to,
+        "receiver"
+    );
 }
