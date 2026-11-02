@@ -459,6 +459,11 @@
       "id": "controller-bootstrap",
       "summary": "Fresh supported 0.121.2 generated workspace; prior failed branch preserved; no checks claimed",
       "input_digest": "sha256:90e0bb1b57786033083d6af1e7c75cdf32399d83755bef1fbc0f688ba736544c"
+    },
+    {
+      "id": "replay-verify-rs",
+      "summary": "Replay authored issue 1473 material only; tests not yet run",
+      "input_digest": "sha256:d47280f0cf14606c57f71d8b0dce551acfa9a7db0dfda046d2de0518ebaf861e"
     }
   ],
   "intents": {
