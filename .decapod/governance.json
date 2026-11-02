@@ -506,6 +506,11 @@
       "id": "issue1470-reviewed-patched-inventory",
       "summary": "Review inventory delta confined to minimal Tokio lock update; adopt official agent.init inventory digest with required graph unchanged",
       "input_digest": "sha256:480005bf4c4366def60c9a7d1428757cff19696d0d6dcd12b87c51cb9abf32e8"
+    },
+    {
+      "id": "issue1470-reviewed-projections",
+      "summary": "Refresh config/code-bound generated projections and explicitly review current interfaces architecture security after CI repairs",
+      "input_digest": "sha256:29042f65589358a38075ea9a456b6242bae08230f4d497f7f80feeb8cf5e9d49"
     }
   ],
   "intents": {
@@ -542,6 +547,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed source_entry_path, metadata and Discovery::visit with tests: added semantic prose accurately documents actual entry identity, distinct same-content/hardlink paths, non-Git inputs,8192 lookup bound and real-host limitations. Tokio lock-only safety repair preserves components and execution graph.",
+          "reviewed_code_fingerprint": "7afb594f658f759d37693125e280085d3c081cbaf98ac0a982c7b10d7821db5f",
+          "spec_material_hash": "e778b434665a97ee71dbd9c6efd495f23f6996a72ebf7e6a52ee51a4afe51431"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed source_entry_path/discover_source_inventory and existing CLI/RPC callers: only internal filesystem spelling resolution changes, keeping inventory/report schemas, exact snapshot binding and public commands intact. Tokio 1.53.3 satisfies existing version1 manifest without a new public interface. Existing interface contract remains accurate; host-specific test execution is not asserted.",
+          "reviewed_code_fingerprint": "7afb594f658f759d37693125e280085d3c081cbaf98ac0a982c7b10d7821db5f",
+          "spec_material_hash": "a227ee81c08e687d9dfa5ec539625a29c86d32b8a80653fa08178a493494869e"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed metadata component and symlink rejection before spelling lookup, fail-closed ambiguous/bounded discovery, and unchanged exact-source proof. No authentication/storage/remote authority is added. Tokio advisory repaired with patched1.53.3 and no deny exemption; existing threat model and publication boundaries remain accurate.",
+          "reviewed_code_fingerprint": "7afb594f658f759d37693125e280085d3c081cbaf98ac0a982c7b10d7821db5f",
+          "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Fix issue 1470 source inventory with official 0.121.2 bootstrap",
@@ -550,7 +578,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793652754Z"
+      "updated_at": "1793658442Z"
     },
     "trajectory": {
       "active_boundaries": [
