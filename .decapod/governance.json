@@ -496,6 +496,11 @@
       "id": "prompt-context-spec",
       "summary": "Specify HTTP context boundaries and proof limits",
       "input_digest": "sha256:ea3c8c012dd5bdb3a57a74dc531d473288914c3497d53aa4617f44db07a16e17"
+    },
+    {
+      "id": "prompt-spec-refresh",
+      "summary": "Refresh generated semantic spec attestations",
+      "input_digest": "sha256:a8fba172ca30a0a93e7785ea5561adba2a63c2b37e5c10c2c93d2559de163e62"
     }
   ],
   "intents": {
