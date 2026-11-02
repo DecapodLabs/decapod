@@ -536,6 +536,11 @@
       "id": "completion-regression-readability",
       "summary": "Keep overwrite-preservation assertion readable; no test execution claimed",
       "input_digest": "sha256:1b4d1a0469948b91e8a48f5e8e990af3be46ca08324d6cbeb152266f1f38fa2e"
+    },
+    {
+      "id": "atomic-completion-projections",
+      "summary": "Refresh generated spec projections after review repair; official upload remains blocked, no network retry",
+      "input_digest": "sha256:40c48109a087a67d1bb68d5ac295f05e8a82a4abfe5e75831f7bd3e7ecb87394"
     }
   ],
   "intents": {
