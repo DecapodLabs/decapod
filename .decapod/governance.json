@@ -526,6 +526,11 @@
       "id": "handoff-readonly-diagnostic",
       "summary": "Align diagnostic early read-only boundary with broker enforcement; no TODO initialization or mutation approval requirements for read operations",
       "input_digest": "sha256:5586666954a18c0794595d534f28dc7381be9b6846fdd6e79d1fc63cf6f024aa"
+    },
+    {
+      "id": "handoff-readonly-regression",
+      "summary": "Add unexecuted read-only diagnostic regression: mutation categories and critical path cannot require mutation authority or create database state",
+      "input_digest": "sha256:6766a74108260dc30156c00e11e79034e339824c3797c4eb40b73df360277412"
     }
   ],
   "intents": {

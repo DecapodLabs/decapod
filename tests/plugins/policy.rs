@@ -603,3 +603,38 @@ fn handoff_diagnostic_uses_enforced_zone_on_fresh_store() {
         .is_err()
     );
 }
+
+#[test]
+fn read_only_diagnostic_has_no_mutation_requirements_or_database_side_effects() {
+    use decapod::plugins::policy::eval_effective_policy;
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    write_project_config(&store.root, "[\"all_mutations\"]");
+    let risk_map = RiskMap {
+        zones: vec![RiskZone {
+            path: ".decapod/".into(),
+            level: RiskLevel::CRITICAL,
+            rules: vec!["NO_AGENT_WRITE".into()],
+        }],
+    };
+    for command in ["todo.get", "todo.list", "todo.status", "policy.list"] {
+        let (risk, requirements, hitl) =
+            eval_effective_policy(&store, command, Some(".decapod/task"), &risk_map).unwrap();
+        assert_eq!(risk, RiskLevel::LOW, "{command}");
+        assert!(requirements.is_empty(), "{command}: {requirements:?}");
+        assert!(!hitl, "{command}");
+        enforce_broker_mutation_policy(&store.root, "basic-caller", command).unwrap();
+    }
+    // The config is the only pre-existing entry. No TODO/policy database,
+    // broker, journal, or auxiliary state may be created by these diagnostics.
+    let entries: Vec<_> = fs::read_dir(&store.root).unwrap().collect();
+    assert_eq!(entries.len(), 1);
+    let entries: Vec<_> = fs::read_dir(store.root.join(".decapod"))
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name())
+        .collect();
+    assert_eq!(entries, vec![std::ffi::OsString::from("config.toml")]);
+}
