@@ -229,6 +229,11 @@ pub fn eval_effective_policy(
     target_path: Option<&str>,
     risk_map: &RiskMap,
 ) -> Result<(RiskLevel, Vec<String>, bool), error::DecapodError> {
+    // Keep the same early boundary as broker mutation enforcement. A read
+    // diagnostic must neither seed mutation state nor imply mutation authority.
+    if is_read_only_operation(command) {
+        return Ok((RiskLevel::LOW, Vec::new(), false));
+    }
     if command.starts_with("todo.") {
         // Match mutation bootstrap so a fresh store cannot report no policy
         // merely because the first TODO command has not seeded its zones yet.
