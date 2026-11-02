@@ -565,6 +565,11 @@
       "id": "dagger-doc-correction-2",
       "summary": "Reconcile supported workspace-check contract and reviewed unchanged source inventory: .decapod/config.toml",
       "input_digest": "sha256:b573468c50cc7f5cff8700e9b19006c38c55f485e96f0a163611b28ab020e56c"
+    },
+    {
+      "id": "dagger-dormant-policy",
+      "summary": "Separate dormant accepted Dagger authorization from active execution; add adoption, rotation and revocation fixture cases",
+      "input_digest": "sha256:f88b2927851153f70e0dbf0ac34486be95263ca1e9c0770f5038ce8dae4b840d"
     }
   ],
   "intents": {

@@ -329,13 +329,11 @@ pub fn required_catalog(
 /// Candidate configuration cannot authorize its own external engine boundary.
 pub fn preserve_accepted_dagger(
     candidate: Option<&RepositoryContract>,
-    accepted: Option<&RepositoryContract>,
+    accepted_authorizations: &BTreeMap<String, RepositoryExecution>,
 ) -> Result<(), PlanningFailure> {
     if let Some(contract) = candidate {
         for (name, execution) in &contract.executions {
-            if execution.dagger.is_some()
-                && accepted.and_then(|c| c.executions.get(name)) != Some(execution)
-            {
+            if execution.dagger.is_some() && accepted_authorizations.get(name) != Some(execution) {
                 return Err(invalid(
                     "DAGGER_POLICY_NOT_ACCEPTED: exact execution and engine contract must already be accepted on the target",
                 ));
@@ -427,17 +425,23 @@ mod dagger_contract_tests {
         assert!(escaped.validate(&command, &execution, &sources).is_err());
     }
     #[test]
-    fn candidate_cannot_authorize_new_or_changed_engine() {
+    fn dormant_policy_can_be_staged_then_activated_but_not_self_authorized() {
         let (_, _, execution, _) = fixture();
-        let accepted = RepositoryContract {
+        let active = RepositoryContract {
             reviewed_commands_digest: String::new(),
             source_coverage: vec![],
             executions: BTreeMap::from([("dagger-check".into(), execution)]),
         };
-        assert!(preserve_accepted_dagger(Some(&accepted), None).is_err());
-        assert!(preserve_accepted_dagger(Some(&accepted), Some(&accepted)).is_ok());
-        let mut changed = accepted.clone();
-        changed
+        let empty = BTreeMap::new();
+        // Staging a dormant proposal does not execute it or require old authority.
+        assert!(preserve_accepted_dagger(None, &empty).is_ok());
+        // Merely authoring the proposal in this candidate cannot grant authority.
+        assert!(preserve_accepted_dagger(Some(&active), &empty).is_err());
+        // After independent acceptance, that exact execution may be activated.
+        let accepted_authorizations = active.executions.clone();
+        assert!(preserve_accepted_dagger(Some(&active), &accepted_authorizations).is_ok());
+        let mut rotated = active.clone();
+        rotated
             .executions
             .get_mut("dagger-check")
             .unwrap()
@@ -445,8 +449,18 @@ mod dagger_contract_tests {
             .as_mut()
             .unwrap()
             .engine_container = "f".repeat(64);
-        assert!(preserve_accepted_dagger(Some(&changed), Some(&accepted)).is_err());
-        assert!(preserve_accepted_dagger(None, None).is_ok());
+        assert!(preserve_accepted_dagger(Some(&rotated), &accepted_authorizations).is_err());
+        // A dormant rotation may be accepted while old authorized execution runs.
+        assert!(preserve_accepted_dagger(Some(&active), &accepted_authorizations).is_ok());
+        assert!(preserve_accepted_dagger(Some(&rotated), &rotated.executions).is_ok());
+        assert!(preserve_accepted_dagger(Some(&active), &rotated.executions).is_err());
+        // Deactivation grants no engine access; revoked engines cannot reactivate.
+        assert!(preserve_accepted_dagger(None, &accepted_authorizations).is_ok());
+        assert!(preserve_accepted_dagger(Some(&active), &empty).is_err());
+        let mut renamed = accepted_authorizations;
+        let execution = renamed.remove("dagger-check").unwrap();
+        renamed.insert("unrelated-check".into(), execution);
+        assert!(preserve_accepted_dagger(Some(&active), &renamed).is_err());
     }
     #[test]
     fn dagger_engine_contract_participates_in_review_digest() {
