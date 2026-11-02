@@ -53,6 +53,7 @@ pub(crate) fn reviewed_source_alias(
 // These are discovery roots, not an inferred executable profile. Unknown source
 // providers are deliberately retained so additions cannot disappear from the pin.
 const SOURCE_DIRECTORIES: &[&str] = &[
+    ".dagger",
     ".github/workflows",
     ".github/actions",
     ".github/scripts",
@@ -69,6 +70,8 @@ const SOURCE_DIRECTORIES: &[&str] = &[
     "scripts",
 ];
 const SOURCE_FILES: &[&str] = &[
+    "dagger.toml",
+    "dagger.lock",
     "Cargo.toml",
     "Cargo.lock",
     "rust-toolchain",
