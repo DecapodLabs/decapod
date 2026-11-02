@@ -6587,6 +6587,14 @@ fn run_current_workbranch_readiness_with(
         let authorize = |action: runtime::NativeAction<'_>| -> std::io::Result<()> {
             use core::external_action::{self, ExternalCapability};
             let result = match action {
+                runtime::NativeAction::DaggerEngineInspect { program, container } => {
+                    external_action::authorize(
+                        &store_root,
+                        ExternalCapability::DaggerEngineRead,
+                        &format!("readiness.dagger-engine:{container}"),
+                        &program.to_string_lossy(),
+                    )
+                }
                 runtime::NativeAction::ToolProbe { program, arguments } => {
                     let args: Vec<_> = arguments.iter().map(String::as_str).collect();
                     external_action::authorize_preflight_probe(&store_root, program, &args)
