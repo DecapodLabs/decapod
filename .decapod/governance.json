@@ -489,6 +489,11 @@
       "id": "reconcile-reviewed-inventory",
       "summary": "Independently compared discovered inventory vs213ed9ca: only Cargo.toml and Cargo.lock package release0.121.0 to0.121.2; no workflow checks changed; update user-editable review declaration only",
       "input_digest": "sha256:cc10090b222368904f5d2e76623acd2d4831a276bc5697fd6cb985f0591351da"
+    },
+    {
+      "id": "cli-recovery-failclosed",
+      "summary": "Add candidate-binary multi-TODO CLI recovery regression: missing inputs actionable; actual child validation rejects unrelated unapproved plan; task dates revisions and absent evidence preserved without prune. Authored not executed.",
+      "input_digest": "sha256:05b13f401d4a7e9a931c03cd7f4fd561749c0771c4525ab8c6f7050a0962abf4"
     }
   ],
   "intents": {
