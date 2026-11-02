@@ -534,6 +534,11 @@
       "id": "reviewed-bazel-inventory",
       "summary": "Review discovered source delta only generated MODULE.bazel.lock Tokio checksum version and Cargo-input digest; required commands providers and policy unchanged",
       "input_digest": "sha256:ee9219bc90350d71b301deae525268afbb2b5bc537461574d0eb96527aa4a1e1"
+    },
+    {
+      "id": "bazel-current-spec-reviews",
+      "summary": "Refresh generated projections and current-content semantic reviews after independently verified Bazel lock repair; preserve proof gap",
+      "input_digest": "sha256:1e516bac0c0db910834f999fa2bd9d4a5006653a6e792cead7fcfee8ce3b8da2"
     }
   ],
   "intents": {
@@ -577,21 +582,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed existing CLI/RPC and repository-owned finite invocation architecture against RecoveryCapture, refresh_batch_baselines_with_captures and finalize_recovered_batch. Changes remain inside existing verify plugin and transactional task journal, without new authority, service, provider or data ownership boundary; Tokio patch retains runtime architecture.",
+          "reason": "Current source review: generated Bazel lock changes exactly Tokio version, checksum and Cargo input digest, preserving architecture and executor boundaries. Recovery remains existing verify plugin with current-material capture and transactional pending/final promotion; no new subsystem.",
           "reviewed_code_fingerprint": "f5520ee143c53cea83f0824ba06a465324cbafd5ca215e659f790a4b33ba4d07",
           "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed repeated recover --artifact TODO_ID=FILE CLI contract and current hashes/epoch admission, task CAS and pending CLAIMED versus atomic final verification against verify.rs. Authored current-evidence section and real CLI failure regression accurately preserve obligations/history and distinguish unexecuted tests from passing proof.",
+          "reason": "Reviewed authored repeated recover --artifact TODO_ID=FILE interface against current verify.rs and CLI failure regression. Explicit current files, epoch checks, original task CAS and genuine two-stage validation preserve historical claims; Bazel lock repair changes no CLI contract. Successful full-native recovery remains unproven.",
           "reviewed_code_fingerprint": "f5520ee143c53cea83f0824ba06a465324cbafd5ca215e659f790a4b33ba4d07",
           "spec_material_hash": "89fa666e232a4665ab990ac230d86ccac9e775da185634e94b27f2ebd7f1af5b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed Recovery cannot grant authority and proof trust boundaries against explicit per-task capture, current hash/epoch checks, original-task CAS, append-only old proof fields, refusal of additional obligations and required two-stage validation. Existing security boundary remains accurate: recovery grants no authority or fabricated success; Tokio-only advisory patch changes dependency bytes without waiving audit or execution proof.",
+          "reason": "Current source review preserves recovery-cannot-grant-authority boundary: old proof retained, extra obligations rejected, current file hashes/epochs and task revisions checked, real validation required. Generated Tokio lock repair alters no credentials, registries, command authorization or proof gates; prior failure is not accepted evidence.",
           "reviewed_code_fingerprint": "f5520ee143c53cea83f0824ba06a465324cbafd5ca215e659f790a4b33ba4d07",
           "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
         }
@@ -604,7 +609,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793658560Z"
+      "updated_at": "1793661552Z"
     },
     "trajectory": {
       "active_boundaries": [
