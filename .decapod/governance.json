@@ -506,6 +506,11 @@
       "id": "reviewed-source-release-drift",
       "summary": "Official dry-run discovery3844276 independently reviewed full inventory versus213ed9ca: only Cargo.toml/lock0.121.0 to0.121.2 version bumps, no proof jobs/helpers/dependencies changed; reconcile declaration without changing coverage",
       "input_digest": "sha256:e772329542869b4c40802a0c5d08d3abdddf278e9ac67dc0db78e43f6383b2ad"
+    },
+    {
+      "id": "atomic-native-completion",
+      "summary": "Independent review: atomically publish receipt and verdict as completion directory only after both staged files sync; no fallible operation after publication",
+      "input_digest": "sha256:6da08dd0aff6c936280da98a2accad3b8d4c484cc5f3bfcde30b8ed2a8c36fae"
     }
   ],
   "intents": {
@@ -561,8 +566,12 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:fc9cdac000127f08b638e18eef69492c5183e7ea58c92b5d05d55e62ff2b0859",
+      "artifact_hash": "sha256:4049548d7490541b3d481fabfa3268955eb509e27076a2884b536b03cc7d3996",
       "checks": [
+        {
+          "name": "native_receipt_finalization",
+          "status": "unavailable"
+        },
         {
           "name": "native_receipt_regression",
           "status": "unavailable"
@@ -635,10 +644,17 @@
             "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0K07GRCP71GJRSYSZ84V7": {
@@ -786,6 +802,26 @@
                   "tests/unit/core/workspace_publication_tests.rs"
                 ],
                 "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "src/decapod/core/validation_runtime.rs"
+                ],
+                "proof_refs": [
+                  "native_receipt_finalization"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 11,
                 "validation_findings": []
               }
             ]

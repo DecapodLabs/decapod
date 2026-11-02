@@ -896,6 +896,30 @@ fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
     out.sync_all()
 }
 
+// Native success is one atomic completion bundle, not two independently
+// publishable files. Staging bytes are non-authoritative until the directory
+// rename; no fallible operation follows that publication point.
+fn write_native_completion(
+    directory: &Path,
+    verdict: &[u8],
+    receipt: &[u8],
+    mut writer: impl FnMut(&Path, &[u8]) -> io::Result<()>,
+) -> io::Result<()> {
+    let completed = directory.join("completion");
+    if completed.try_exists()? {
+        return Err(io::Error::new(
+            io::ErrorKind::AlreadyExists,
+            "native completion already exists",
+        ));
+    }
+    let staging = tempfile::Builder::new()
+        .prefix(".pending-completion-")
+        .tempdir_in(directory)?;
+    writer(&staging.path().join("native-readiness-receipt.json"), receipt)?;
+    writer(&staging.path().join("verdict.json"), verdict)?;
+    fs::rename(staging.path(), completed)
+}
+
 /// Public caller must use this report's exit_code, never the partial prerequisite
 /// result. This function cannot open a PR, push a work branch, or mutate tracked receipts.
 pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -> ValidationReport {
@@ -1258,13 +1282,9 @@ fn run(
             "STALE_POST_VALIDATION_DECISION: {error:?}"
         )));
     }
-    write_new(
-        &directory.join("verdict.json"),
-        &serde_json::to_vec_pretty(report).map_err(io::Error::other)?,
-    )?;
+    let verdict_bytes = serde_json::to_vec_pretty(report).map_err(io::Error::other)?;
     // A receipt describes completed proof; it is never imported as authority.
-    // Write it last, outside the checkout and Git metadata, so recording
-    // success cannot invalidate the exact candidate that produced it.
+    // Publish verdict and receipt together outside the frozen candidate.
     if report.ready && !selection.policy.buildkite_preflights {
         let mut receipt = serde_json::json!({
             "schema_version": "1.0.0",
@@ -1281,10 +1301,14 @@ fn run(
         });
         receipt["receipt_hash"] =
             evidence::digest(&receipt).map_err(io::Error::other)?.into();
-        write_new(
-            &directory.join("native-readiness-receipt.json"),
+        write_native_completion(
+            &directory,
+            &verdict_bytes,
             &serde_json::to_vec_pretty(&receipt).map_err(io::Error::other)?,
+            write_new,
         )?;
+    } else {
+        write_new(&directory.join("verdict.json"), &verdict_bytes)?;
     }
     Ok(())
 }
