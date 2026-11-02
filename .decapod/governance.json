@@ -501,6 +501,11 @@
       "id": "issue1470-tokio-advisory",
       "summary": "Resolve required CI advisory with minimal registry-verified Tokio 1.53.3 lock update only",
       "input_digest": "sha256:a0083e65ed54d62884743645d7e892140cc8d49477236e8f0e930e4a9c7a66ea"
+    },
+    {
+      "id": "issue1470-reviewed-patched-inventory",
+      "summary": "Review inventory delta confined to minimal Tokio lock update; adopt official agent.init inventory digest with required graph unchanged",
+      "input_digest": "sha256:480005bf4c4366def60c9a7d1428757cff19696d0d6dcd12b87c51cb9abf32e8"
     }
   ],
   "intents": {
