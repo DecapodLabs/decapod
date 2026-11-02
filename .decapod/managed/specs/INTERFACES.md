@@ -233,6 +233,15 @@ revision changes, pending final failure, retained completion history and atomic
 successful promotion. These are authored tests until exact-candidate validation
 executes them; source review alone is not passing proof.
 
+The candidate-binary regression in `tests/verify_deadlock_regression.rs` also
+invokes the real recovery CLI for two completed tasks lacking proof rows. With
+explicit current artifacts, an independently unapproved plan still fails actual
+child validation; recovery must preserve task status, completion timestamp and
+revision without creating evidence or pruning either task. This failure-path
+coverage does not establish successful full-native CLI recovery or publication
+readiness. The Tokio lock repair changes only the runtime package version and
+checksum, not this interface or its evidence-admission obligations.
+
 ## Sessions, tasks, and workspaces
 
 Most mutations require an active repository-local session. Local session

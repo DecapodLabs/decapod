@@ -509,6 +509,11 @@
       "id": "reviewed-tokio-inventory",
       "summary": "Reviewed inventory delta is only Cargo.lock Tokio version/checksum; retain entire required profile and workflow graph, update user-editable review digest",
       "input_digest": "sha256:5d1eec8921a83b95240e9f542a0ec0412f895f652dc137acb08a39b187c3b180"
+    },
+    {
+      "id": "reviewed-cli-recovery-contract",
+      "summary": "Describe actual CLI failure-path regression and its unproven success boundary; preserve product-wide interface identity",
+      "input_digest": "sha256:cce75364076dd2a68a8a21f260709ddd8db92304fce09f5a15e349991f6e1643"
     }
   ],
   "intents": {
