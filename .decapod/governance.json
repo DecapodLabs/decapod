@@ -509,6 +509,11 @@
       "id": "dagger-file-9",
       "summary": "Implement bounded optional Dagger adapter: tests/consumer_readiness.rs; checks pending official validation",
       "input_digest": "sha256:8a361685a590db9b71a4212f66b6c660963e5e188d36a900325dba9fee42b4c6"
+    },
+    {
+      "id": "dagger-file-10",
+      "summary": "Implement bounded optional Dagger adapter: src/decapod/core/validation_runtime/repository_host/dagger.rs; checks pending official validation",
+      "input_digest": "sha256:3599701cb1666abb07f6973d8ec9a7327b116c1f0638612beffbe9e5e0e23a72"
     }
   ],
   "intents": {
