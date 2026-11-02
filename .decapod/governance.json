@@ -610,6 +610,11 @@
       "id": "dagger-public-config-2",
       "summary": "Preserve dormant Dagger authorization through canonical config and guided initialization: src/decapod/lib.rs",
       "input_digest": "sha256:95c501059250113c50cfc0871504112a52746389abc1f1f08996a60d79968e39"
+    },
+    {
+      "id": "dagger-public-config-3",
+      "summary": "Preserve dormant Dagger authorization through canonical config and guided initialization: tests/consumer_readiness.rs",
+      "input_digest": "sha256:cb681c85f416cd2f9a9dbc82cb762be705cb6b2b9ad64b6d2489b51eb005c062"
     }
   ],
   "intents": {

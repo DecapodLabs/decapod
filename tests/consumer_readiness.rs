@@ -210,6 +210,7 @@ impl Fixture {
                 reviewed_sources_digest: sources.digest().unwrap(),
             }),
             repository_contract: Some(contract),
+            dagger_authorizations: BTreeMap::new(),
             rust_workers: None,
             ci_attested: None,
             commands,
