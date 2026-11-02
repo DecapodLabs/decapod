@@ -824,3 +824,11 @@ The scoped tests in `tests/plugins/todo.rs` and `tests/plugins/policy.rs` cover
 caller/source separation, CLI default caller, operator recovery, policy parity
 and rejection boundaries. These tests are authored obligations until full
 candidate validation executes; no test or PR-readiness success is asserted here.
+
+Read-only policy diagnostics share `is_read_only_operation` with broker
+mutation enforcement and return LOW with no mutation requirements or HITL gate
+before reading mutation policy or initializing a datastore. In particular,
+`todo.get`, `todo.list`, `todo.status`, and `policy.list` cannot seed TODO state
+or inherit mutation-zone trust and approval requirements, including for paths
+whose write-risk classification is critical. The read-only side-effect regression
+in `tests/plugins/policy.rs` remains authored and unexecuted pending validation.

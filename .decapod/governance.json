@@ -536,6 +536,11 @@
       "id": "readonly-configured-category",
       "summary": "Use supported policy_changes category to exercise read-only policy.list bypass rather than unknown category",
       "input_digest": "sha256:e7a9755a4d5911b727a8da73b2cf9759eaeeb346d47f5c3fcc15cdb854e81ee3"
+    },
+    {
+      "id": "readonly-interface-contract",
+      "summary": "Document read-only diagnostic enforcement parity and no mutation side effects; regression remains unexecuted",
+      "input_digest": "sha256:c99da499f2e397912e243c676e67fbafceb28bf7d6fd12ec8d447d92ccde1284"
     }
   ],
   "intents": {
