@@ -528,3 +528,28 @@ regenerated from the normal root Cargo lock and checked in strict lockfile mode.
 Required hosted dependency checks and full validation still govern publication;
 neither a lock update nor a public CI log is a passing receipt. Prior failed
 validation and provider bootstrap/metadata rate-limit errors remain recorded.
+
+## Prompt context and HTTP diagnostics
+
+The side-effect-free evaluator in `src/decapod/core/agent_eval.rs` distinguishes
+an ordinary HTTP client reference from unsafe execution context: a read-only
+public request in a diagnostic, API example or restored command history is not
+itself a remote-execution finding. The original bytes remain the hashed subject,
+and CLI responses never echo the prompt. Allowing inspection does not authorize
+network access or command execution; those actions retain their normal gates.
+
+This is a conservative common-marker detector, not a shell interpreter or a
+semantic proof of benign intent. It inspects the entire prompt, including quoted,
+fenced and historical material. Such labels grant no authority or exemption.
+Known destructive/privileged actions, instruction overrides and credential
+requests remain blocked. HTTP clients combined with shell execution, pipelines,
+chained commands, process/command substitution, upload/authentication options,
+credential headers and non-read-only request methods require review. Ambiguous
+combinations may still require review rather than silently suppressing evidence.
+
+`tests/unit/core/agent_eval_tests.rs` and `tests/agent_eval.rs` specify safe
+report/history and adversarial combinations, including spacing, quoting and
+escape variants. The public sanitized report is covered; the reporter's private
+historical summary was not supplied and has not been reproduced. These authored
+regressions require execution under full candidate validation before this change
+can claim publication readiness.

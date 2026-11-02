@@ -491,6 +491,11 @@
       "id": "http-auth-tests",
       "summary": "Add credential header and method variants",
       "input_digest": "sha256:96fc57ede606f0a94cfcc8bc45f9fed0955dafdbcaa7e997c2c85fb114542c4f"
+    },
+    {
+      "id": "prompt-context-spec",
+      "summary": "Specify HTTP context boundaries and proof limits",
+      "input_digest": "sha256:ea3c8c012dd5bdb3a57a74dc531d473288914c3497d53aa4617f44db07a16e17"
     }
   ],
   "intents": {
