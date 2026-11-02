@@ -501,6 +501,11 @@
       "id": "issue-1479-config-manifest-refresh",
       "summary": "Refresh generated specs manifest after reviewed config reconciliation; runtime validation remains outstanding",
       "input_digest": "sha256:efd06e7f443cd5c8c21d0521793f23c4993423bbfad8e95bd4212cb40d8a2718"
+    },
+    {
+      "id": "issue-1479-tokio-security",
+      "summary": "Update only Tokio lock version/checksum for shared dependency advisory",
+      "input_digest": "sha256:51bce0e9d38a4888e376f56be6e8403a813aaa0d1e93a8db112db9d10d4274cd"
     }
   ],
   "intents": {
@@ -551,7 +556,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1ba19e9288f154d7498eb8d9c0dd60381f524f328a2abed1cbcece04ad0f8aaa",
+      "artifact_hash": "sha256:dc617d2ca03ea143eea11228fc87a3eff5706068e98d1088100c96bcecacfba9",
       "checks": [
         {
           "name": "inventory_review",
@@ -564,6 +569,10 @@
         {
           "name": "official_validation",
           "status": "unavailable"
+        },
+        {
+          "name": "shared_tokio_exact_hash_review",
+          "status": "passed"
         }
       ],
       "current_phase": "intent",
@@ -622,10 +631,17 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HRS2HTMS019S8KA64YD7": {
@@ -727,6 +743,22 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Cargo.lock",
+                  "Adopted public 7780e0a29244f70e76d306e05d4f5b7c367cd4fc after independent tree/message/parent mapping verification. Applied shared minimal RUSTSEC-2026-0386 repair: Tokio 1.52.3 to 1.53.3 and registry checksum only. Cargo.lock SHA256 34babf48746441e1f8656fdc09b8ba2e38c0d9ab930cae92bd3770dfa10fd4e3 becomes 63b7542ae1758437da611cde4e896f2d98d6af659ef5c03ad8606f65b817694e. No test/build executed; prior upload failure and old checked-in release template order remain unverified concerns until official full validation."
+                ],
+                "proof_refs": [
+                  "shared_tokio_exact_hash_review"
+                ],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -737,6 +769,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Adopted public 7780e0a29244f70e76d306e05d4f5b7c367cd4fc after independent tree/message/parent mapping verification. Applied shared minimal RUSTSEC-2026-0386 repair: Tokio 1.52.3 to 1.53.3 and registry checksum only. Cargo.lock SHA256 34babf48746441e1f8656fdc09b8ba2e38c0d9ab930cae92bd3770dfa10fd4e3 becomes 63b7542ae1758437da611cde4e896f2d98d6af659ef5c03ad8606f65b817694e. No test/build executed; prior upload failure and old checked-in release template order remain unverified concerns until official full validation.",
         "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered.",
         "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed."
       ],
@@ -749,6 +782,7 @@
         ".decapod/config.toml",
         ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/OPERATIONS.md",
+        "Cargo.lock",
         "docs/book/src/quickstart.md",
         "src/decapod/core/assets.rs",
         "tests/activation_conformance.rs"
