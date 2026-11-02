@@ -511,6 +511,11 @@
       "id": "security-contract",
       "summary": "Describe unchanged local identity boundary and stricter audited cross-owner recovery authority",
       "input_digest": "sha256:4fa4e300565c3177054d62b7fd48f15ba47b28fe9fe4422d02be84d57eb24e50"
+    },
+    {
+      "id": "final-generated-specs",
+      "summary": "Bind reviewed publication specs to authored recovery candidate",
+      "input_digest": "sha256:e5c3ecea0788b7b499ab772a7bb0f10200d40752c6b0c6524ac3fc2f44416cd6"
     }
   ],
   "intents": {
@@ -547,6 +552,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Issue1477 retains daemonless repo-native governance architecture and proof authority; only existing handoff caller and recovery contract changes",
+          "reviewed_code_fingerprint": "f237d2c864c5965710921c10ac7e075d30b827eca1a926532f5f01e343fb15e0",
+          "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Authored caller and auditable recovery semantics preserve existing governance authority; checks remain unexecuted",
+          "reviewed_code_fingerprint": "f237d2c864c5965710921c10ac7e075d30b827eca1a926532f5f01e343fb15e0",
+          "spec_material_hash": "35e6b1f8ec567c94d76869b8d3ce003ba016a76a076a1251465efd7d306af95f"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Authored caller and auditable recovery semantics preserve existing governance authority; checks remain unexecuted",
+          "reviewed_code_fingerprint": "f237d2c864c5965710921c10ac7e075d30b827eca1a926532f5f01e343fb15e0",
+          "spec_material_hash": "0aa21326b991993236f3ab1fcb3f91e8f74de49d67a4a18a15ba24cfc98a5a71"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Fix handoff actor and enforced policy diagnostics issue 1477",
@@ -555,7 +583,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793652940Z"
+      "updated_at": "1793653009Z"
     },
     "trajectory": {
       "active_boundaries": [
