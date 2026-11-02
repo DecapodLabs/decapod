@@ -516,6 +516,11 @@
       "id": "atomic-completion-regressions",
       "summary": "Inject receipt and verdict create/partial-write/sync failures: no published success artifacts and returned readiness false; tests unrun due transport blocker",
       "input_digest": "sha256:c4a75c16211e96537bb0a9f0dbdc907366f47f78f1d624a26ec8b3b64c3e257d"
+    },
+    {
+      "id": "atomic-consumer-completion",
+      "summary": "Real native execution regression reads paired completion verdict and receipt, no standalone success verdict; pending official tests",
+      "input_digest": "sha256:62683e38dbbfc82a76193d9529cad381777b8d7144db25e63be5e36180c9196e"
     }
   ],
   "intents": {
