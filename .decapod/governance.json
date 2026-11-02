@@ -491,6 +491,11 @@
       "id": "authored-docs-agent-command-contracts-md",
       "summary": "Replay reviewed issue1477 authored change in docs/agent/command-contracts.md with current release governance",
       "input_digest": "sha256:9d5759988df746bc7e44d11627fcd52179676fe9b0c9c3ca6d7318074904e186"
+    },
+    {
+      "id": "semantic-interface",
+      "summary": "Record handoff caller and recovery interfaces with explicit unexecuted proof obligations",
+      "input_digest": "sha256:bb0bed1911dd9149c9d5314c868267b7748b91ff7d642aacbe0af0267a81bc35"
     }
   ],
   "intents": {

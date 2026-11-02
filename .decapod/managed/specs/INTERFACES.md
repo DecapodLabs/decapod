@@ -801,3 +801,26 @@ pass/skip disposition. A valid immutable release emits
 `material_specs: outcome=passed proof=version_only_exact_projections`;
 a local early exit instead identifies its explicit skipped reason. Required
 CI context errors remain failures, never these local skip dispositions.
+
+## Handoff caller and recovery contract
+
+The `todo handoff` interface captures the actual request caller before broker
+execution. `--from` asserts the expected recorded owner and `--to` selects the
+receiver; neither changes caller identity or trust. The result and task event
+preserve actor, source owner, receiver and recovery authority separately.
+`plugins::policy::eval_effective_policy` reports the enforced handoff zone,
+including verified trust and approval, from the same canonical risk-zone data.
+
+`core::todo::handoff_task_as` supports an explicit in-process request caller and
+shares the broker's existing cooperative operator trust semantics for handoff.
+It never promotes stored agent trust. Cross-owner recovery additionally requires
+an explicit matching source owner and live exact task-bound approval. Successful
+recovery consumes the approval records atomically with custody mutation and
+records their IDs; failed preconditions retain both state and authority. General,
+wrong-target, expired and consumed approvals cannot authorize that recovery.
+The reserved local operator identity is not operating-system authentication.
+
+The scoped tests in `tests/plugins/todo.rs` and `tests/plugins/policy.rs` cover
+caller/source separation, CLI default caller, operator recovery, policy parity
+and rejection boundaries. These tests are authored obligations until full
+candidate validation executes; no test or PR-readiness success is asserted here.
