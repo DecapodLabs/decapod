@@ -516,6 +516,11 @@
       "id": "issue-1479-lock-inventory",
       "summary": "Reconcile reviewed source inventory for exact Tokio lock repair",
       "input_digest": "sha256:fdb7138863645a2e69e30b9fed035a78e740f8ebda57fa223e30a699deee1764"
+    },
+    {
+      "id": "issue-1479-inventory-correction",
+      "summary": "Correct evidence and apply independently verified inventory after symlink-aware review",
+      "input_digest": "sha256:f474ee324e20632213a24200168b89ee940a1920f9f4eccbd981ee26550423d1"
     }
   ],
   "intents": {
@@ -566,7 +571,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f33ed58e7904cc88739b8577dcd8e7e1433d2636e3a7e0077ede95843bca2920",
+      "artifact_hash": "sha256:3fe2366dae8f827ce2aa14660980bd28cc31e6a06deee32a15a30f0684fef10d",
       "checks": [
         {
           "name": "inventory_review",
@@ -670,10 +675,17 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HRS2HTMS019S8KA64YD7": {
@@ -823,6 +835,22 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:13",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Correction to prior checkpoint: initial comparison followed rust-toolchain.toml symlink and aborted before config edit; shell then recorded intended inventory evidence prematurely. Rerun now explicitly hashes symlink target text and regular-file bytes, verifies all discovered hashes and confirms exactly Cargo.lock/MODULE.bazel.lock differ from public 7780e0a2. Config declaration now actually updated to reviewed 80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985. No runtime tests claimed."
+                ],
+                "proof_refs": [
+                  "required_profile_inventory_review"
+                ],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -837,6 +865,7 @@
         "Applied exact shared canonical Bazel 9.3.0 generated lock repair (mod deps --lockfile_mode=update, existing system JDK21 normal TLS, no tests). Verified patch SHA256 b5104712cbec54a84424e6e8feb36e91cc23a27ee3464bc3ce96d1b01a19981a and module lock before 236449b998d9b02d3d85bb36af541c331dae3a08cd3397a7cf2865d530531dbf / after 6aaafae31750c2a065d03f237bf330c5dcf5f09733c98d128f8914028c05e9c0. Scope is Tokio version/checksum/derived dependency digest references only. No required checks, tool pins or trust relaxed.",
         "Compared every agent.init discovered source hash with actual bytes and previously reviewed public 7780e0a2. Only Cargo.lock and MODULE.bazel.lock differ, exact reviewed Tokio repair hashes; workflows, required steps, worker recipes and accepted executor remain unchanged. Reviewed inventory sha256:80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985 updates declaration only, no check waiver.",
         "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered.",
+        "Correction to prior checkpoint: initial comparison followed rust-toolchain.toml symlink and aborted before config edit; shell then recorded intended inventory evidence prematurely. Rerun now explicitly hashes symlink target text and regular-file bytes, verifies all discovered hashes and confirms exactly Cargo.lock/MODULE.bazel.lock differ from public 7780e0a2. Config declaration now actually updated to reviewed 80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985. No runtime tests claimed.",
         "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed."
       ],
       "inspected_files": [
