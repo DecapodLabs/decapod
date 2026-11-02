@@ -506,6 +506,11 @@
       "id": "generated-specs",
       "summary": "Refresh generated spec attestations after handoff implementation",
       "input_digest": "sha256:3a7d341dde0f4e123b9f6baf66e85bd3d7bd263db3be674429c0354926438620"
+    },
+    {
+      "id": "security-contract",
+      "summary": "Describe unchanged local identity boundary and stricter audited cross-owner recovery authority",
+      "input_digest": "sha256:4fa4e300565c3177054d62b7fd48f15ba47b28fe9fe4422d02be84d57eb24e50"
     }
   ],
   "intents": {

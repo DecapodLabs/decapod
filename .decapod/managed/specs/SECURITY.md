@@ -528,3 +528,20 @@ regenerated from the normal root Cargo lock and checked in strict lockfile mode.
 Required hosted dependency checks and full validation still govern publication;
 neither a lock update nor a public CI log is a passing receipt. Prior failed
 validation and provider bootstrap/metadata rate-limit errors remain recorded.
+
+## Approved ownership recovery
+
+Handoff resolves policy from the actual caller, never from the optional expected
+owner or intended receiver. A basic caller cannot acquire operator authority by
+putting an operator label in either field. The transactional handoff gate uses
+the same existing local cooperative operator trust interpretation as the broker;
+other task operations and stored trust levels are unchanged. These role labels
+are self-declared local authority, not OS authentication or remote credentials.
+
+Cross-owner recovery requires explicit expected owner and an exact task-bound
+live approval, consumed atomically on successful custody transfer. Prior owner,
+actual actor, receiver and consumed approval IDs remain in the task event. Wrong,
+expired, broad and already-consumed grants cannot authorize this recovery, and
+failed preconditions do not consume authority. Dependency, lease, overlap and
+completion-proof gates remain independently required. The new regressions are
+unexecuted until official candidate validation succeeds.
