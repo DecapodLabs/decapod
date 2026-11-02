@@ -119,10 +119,26 @@ workflow and helper sources; `.dagger` is included in source discovery. Review
 module coverage and dependency pins: the adapter does not infer their semantic
 completeness from a lockfile's presence.
 
-The exact execution declaration must already be independently accepted on the
-target; a candidate cannot authorize a new engine, socket or tool contract for
-itself. First adoption or engine replacement therefore requires a human-reviewed
-policy transition using an existing supported proof path, not this local adapter.
+Activation is a two-step reviewed transition. First, propose the complete future
+execution table under `proof.dagger_authorizations.<name>` (the same execution
+fields, including its nested `dagger` table), leaving the active profile, commands,
+coverage and execution contract unchanged. Validate and accept that proposal
+through the existing proof path. This dormant table executes nothing and grants
+no external access. In a subsequent candidate, add the required `dagger check`
+command and corresponding active `repository_contract.executions.<name>` table;
+the execution must exactly equal the accepted target's dormant authorization.
+Candidate-only authorizations never grant access. Review the complete coverage
+and command/source digests; existing required checks remain required unless an
+explicit reviewed contract change replaces them. Strict accepted profiles still
+cannot downgrade to repository-local proof.
+
+Engine/tool rotation follows the same sequence: accept a changed dormant entry
+while executing the old accepted contract, then activate the newly accepted entry.
+After that acceptance, the old engine no longer matches and fails closed until
+activation is updated. To revoke, remove active use and the dormant entry through
+an independently valid remaining proof contract; after acceptance, attempting to
+reactivate the revoked engine fails. An empty or incomplete proof catalog cannot
+substitute for the original checks during any transition.
 Explicit external-action policy must allow `dagger_proof_exec` for `dagger` and
 `dagger_engine_read` for `docker`, in addition to any repository-proof restrictions.
 Neither capability is enabled by default; initialization never grants them.

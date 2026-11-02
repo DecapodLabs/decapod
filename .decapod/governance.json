@@ -580,6 +580,11 @@
       "id": "dagger-no-implicit-authority",
       "summary": "Keep existing repository proof fixture without dormant Dagger authorization",
       "input_digest": "sha256:b9c04adf7c694bef746d46c963110a16907daf972c3866ba496dccffd946fecc"
+    },
+    {
+      "id": "dagger-two-stage-docs",
+      "summary": "Document reachable dormant-acceptance activation, rotation and revocation without self-authorization or proof downgrade",
+      "input_digest": "sha256:3e7a51ce992d4b67fe1a04aa352dc5ca131e66c7f4619d7caf2e10bf18b749ae"
     }
   ],
   "intents": {
