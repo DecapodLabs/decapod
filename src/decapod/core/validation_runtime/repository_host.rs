@@ -444,11 +444,7 @@ fn command_invocation(
             native_proof::Value::Literal(format!("unix://{}", dagger.docker_socket)),
         );
         (
-            vec![
-                "--workspace".to_owned(),
-                ".".to_owned(),
-                "check".to_owned(),
-            ],
+            vec!["--workspace".to_owned(), ".".to_owned(), "check".to_owned()],
             native_proof::ReviewedCapabilities::RepositoryDaggerCheck,
         )
     } else {

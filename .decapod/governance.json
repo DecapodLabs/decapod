@@ -660,6 +660,11 @@
       "id": "dagger-ci-module-import",
       "summary": "Repair CI E0433 by importing repository_profile for accepted Dagger authority call; policy semantics unchanged, downstream execution unproven",
       "input_digest": "sha256:605f1215d21507ec6629646b22f3c97706e1b5761dfc99190cc30f240b01faa8"
+    },
+    {
+      "id": "dagger-ci-argv-format",
+      "summary": "Apply formatter to fixed Dagger workspace argv matching CI fmt finding; no execution or permission change",
+      "input_digest": "sha256:82fa7fbbbe35e083a8b4f6b87b5eb6edc9a765b8a7edc25369a8ceb3eb1468cd"
     }
   ],
   "intents": {
