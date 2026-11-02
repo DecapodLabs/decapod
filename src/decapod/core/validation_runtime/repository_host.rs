@@ -5,6 +5,7 @@
 //! Tool installations and their declared closure are explicitly reviewed; no
 //! Rust, Cargo, Decapod executable, ambient PATH or installation is assumed.
 use super::*;
+mod dagger;
 use crate::core::snapshot_provider;
 use crate::core::{proof::ProofDef, repository_profile};
 
@@ -43,8 +44,7 @@ impl AuthorizedRepositoryProof {
                     "REPOSITORY_PROOF_SEAL_EXPIRED: original validation deadline elapsed",
                 )
             })?;
-        if invocation.capabilities
-            != native_proof::ReviewedCapabilities::RepositoryDeclaredLocalCheck
+        if !invocation.capabilities.is_repository()
             || invocation.digest()? != self.invocation_digest
             || native_proof::toolchain_digest_bounded(invocation, remaining, &self.cancel)?
                 != self.toolchain_digest
@@ -243,6 +243,7 @@ impl Host for RepositoryHost<'_> {
             verify_invocation_path(invocation, &project.identity_inputs.root, budget)?;
             (self.authorize)(NativeAction::RepositoryCheck { invocation, seal })?;
         }
+        let engines_before = dagger::inspect_engines(project, &mut self.authorize, budget)?;
         let result = execute_native(
             project,
             selection,
@@ -251,6 +252,18 @@ impl Host for RepositoryHost<'_> {
             evidence_directory,
             budget,
         )?;
+        let engines_after = dagger::inspect_engines(project, &mut self.authorize, budget)?;
+        if engines_before != engines_after {
+            return Err(invalid(
+                "DAGGER_ENGINE_CHANGED: local engine changed during proof",
+            ));
+        }
+        if !engines_after.is_empty() {
+            fs::write(
+                evidence_directory.join("dagger-engine-custody.json"),
+                serde_json::to_vec_pretty(&engines_after).map_err(io::Error::other)?,
+            )?;
+        }
         for invocation in selection.native_invocations.values() {
             verify_invocation_path(invocation, &project.identity_inputs.root, budget)?;
         }
@@ -395,12 +408,60 @@ fn command_invocation(
     environment
         .entry("PATH".into())
         .or_insert_with(|| native_proof::Value::Literal(String::new()));
+    let (arguments, capabilities) = if let Some(dagger) = &execution.dagger {
+        let docker = toolchain_files
+            .get("dagger-docker")
+            .ok_or_else(|| invalid("DAGGER_DOCKER_TOOL_MISSING"))?;
+        let resolves_docker = execution.environment.get("PATH").is_some_and(|path| {
+            std::env::split_paths(path)
+                .find_map(|directory| {
+                    let candidate = directory.join("docker");
+                    candidate.is_file().then(|| candidate.canonicalize().ok())
+                })
+                .flatten()
+                .as_ref()
+                == Some(docker)
+        });
+        if !resolves_docker {
+            return Err(invalid(
+                "DAGGER_DOCKER_PATH_MISMATCH: reviewed PATH must resolve the measured Docker executable",
+            ));
+        }
+        environment.insert(
+            "DAGGER_ENGINE".into(),
+            native_proof::Value::Literal(format!("container+docker://{}", dagger.engine_container)),
+        );
+        environment.insert(
+            "_EXPERIMENTAL_DAGGER_RUNNER_HOST".into(),
+            native_proof::Value::Literal(format!("docker-container://{}", dagger.engine_container)),
+        );
+        environment.insert(
+            "DECAPOD_DAGGER_ENGINE_IMAGE".into(),
+            native_proof::Value::Literal(dagger.engine_image.clone()),
+        );
+        environment.insert(
+            "DOCKER_HOST".into(),
+            native_proof::Value::Literal(format!("unix://{}", dagger.docker_socket)),
+        );
+        (
+            vec![
+                "--mod".to_owned(),
+                dagger.module.clone(),
+                "check".to_owned(),
+            ],
+            native_proof::ReviewedCapabilities::RepositoryDaggerCheck,
+        )
+    } else {
+        (
+            command.args.clone(),
+            native_proof::ReviewedCapabilities::RepositoryDeclaredLocalCheck,
+        )
+    };
     Ok(Invocation {
         platform: native_proof::NativePlatform::current()?,
         program,
         toolchain_files,
-        arguments: command
-            .args
+        arguments: arguments
             .iter()
             .cloned()
             .map(native_proof::Value::Literal)
@@ -408,7 +469,7 @@ fn command_invocation(
         directory: PathBuf::from(&execution.directory),
         environment,
         purpose: native_proof::ExecutionPurpose::SourceCheck,
-        capabilities: native_proof::ReviewedCapabilities::RepositoryDeclaredLocalCheck,
+        capabilities,
         timeout_ms: execution.timeout_seconds.saturating_mul(1000),
         output_limit: budget.output_limit().min(64 * 1024 * 1024),
         artifacts: BTreeSet::new(),
@@ -620,6 +681,78 @@ mod tests {
     }
 
     #[test]
+    fn dagger_selection_binds_module_engine_and_measured_docker() {
+        let storage = tempfile::tempdir().unwrap();
+        let root = storage.path().canonicalize().unwrap();
+        let source = root.join("source");
+        let tools = root.join("tools");
+        fs::create_dir(&source).unwrap();
+        fs::create_dir(&tools).unwrap();
+        let program = tools.join("dagger");
+        let docker = tools.join("docker");
+        fs::write(&program, b"fixture dagger; never executed").unwrap();
+        fs::write(&docker, b"fixture docker; never executed").unwrap();
+        let command = ProofDef {
+            name: "dagger-check".into(),
+            command: "dagger".into(),
+            args: vec!["check".into()],
+            description: String::new(),
+            required: true,
+        };
+        let mut execution = repository_profile::RepositoryExecution {
+            program: program.to_string_lossy().into(),
+            toolchain_files: BTreeMap::from([(
+                "dagger-docker".into(),
+                docker.to_string_lossy().into(),
+            )]),
+            environment: BTreeMap::from([("PATH".into(), tools.to_string_lossy().into())]),
+            directory: ".".into(),
+            timeout_seconds: 5,
+            dagger: Some(repository_profile::DaggerExecution {
+                module: ".dagger/ci".into(),
+                engine_container: "a".repeat(64),
+                engine_image: format!("sha256:{}", "b".repeat(64)),
+                docker_socket: "/run/docker.sock".into(),
+            }),
+        };
+        let cancel = Cancellation::default();
+        let budget = RuntimeBudget {
+            deadline: Instant::now() + Duration::from_secs(5),
+            cancel: &cancel,
+            max_output_bytes: 1024,
+            bytes_left: 1024,
+        };
+        let invocation = command_invocation(&command, &execution, &source, &budget).unwrap();
+        assert_eq!(
+            invocation.capabilities,
+            native_proof::ReviewedCapabilities::RepositoryDaggerCheck
+        );
+        assert_eq!(
+            invocation.arguments,
+            ["--mod", ".dagger/ci", "check"].map(|s| native_proof::Value::Literal(s.into()))
+        );
+        assert_eq!(
+            invocation.environment["DAGGER_ENGINE"],
+            native_proof::Value::Literal(format!("container+docker://{}", "a".repeat(64)))
+        );
+        assert_eq!(
+            invocation.environment["DOCKER_HOST"],
+            native_proof::Value::Literal("unix:///run/docker.sock".into())
+        );
+        let digest = invocation.digest().unwrap();
+        execution.dagger.as_mut().unwrap().engine_image = format!("sha256:{}", "c".repeat(64));
+        assert_ne!(
+            digest,
+            command_invocation(&command, &execution, &source, &budget)
+                .unwrap()
+                .digest()
+                .unwrap()
+        );
+        execution.environment.remove("PATH");
+        assert!(command_invocation(&command, &execution, &source, &budget).is_err());
+    }
+
+    #[test]
     fn command_selection_preserves_arguments_and_reserves_owned_home() {
         let storage = tempfile::tempdir().unwrap();
         let root = storage.path().canonicalize().unwrap();
@@ -642,6 +775,7 @@ mod tests {
             environment: BTreeMap::from([("LANG".into(), "C".into())]),
             directory: ".".into(),
             timeout_seconds: 5,
+            dagger: None,
         };
         let cancel = Cancellation::default();
         let budget = RuntimeBudget {
@@ -746,6 +880,7 @@ mod tests {
                     environment: BTreeMap::new(),
                     directory: ".".into(),
                     timeout_seconds: 5,
+                    dagger: None,
                 },
             )]),
         };
