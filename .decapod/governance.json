@@ -591,6 +591,11 @@
       "id": "ci-format-tests",
       "summary": "Apply exact formatter output from actual GitHub CI job125601585610 on3795e92c; no manual build or shadow tests",
       "input_digest": "sha256:0c4af7212d3a6fac204b2682ab5b235f2c1f75eef1a394252bfc0ef21ebe7e88"
+    },
+    {
+      "id": "ci-format-consumer_readiness",
+      "summary": "Apply exact formatter output from actual GitHub CI job125601585610 on3795e92c; no manual build or shadow tests",
+      "input_digest": "sha256:5b60db66803fa230eabc1f2009f70885727a7abe9f790c7a8768ca29aacc193a"
     }
   ],
   "intents": {
