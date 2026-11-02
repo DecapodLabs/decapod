@@ -645,6 +645,11 @@
       "id": "dagger-derived-bazel-lock",
       "summary": "Apply canonical pinned Bazel 9.3.0 generated Tokio lock; exact before/after hashes and five-substitution scope independently verified; no tests claimed",
       "input_digest": "sha256:32da74db188ac0eed15df3d8bf17f244cd03694aa093174c6b786d14b24fdc5c"
+    },
+    {
+      "id": "dagger-reviewed-dependency-inventory",
+      "summary": "Review only Cargo.lock and generated MODULE.bazel.lock inventory changes; retain existing accepted controller, recipes, graph and Buildkite requirements",
+      "input_digest": "sha256:ace7aad4c576903c0b64dd70867281bd723d6de63719a1790a2eb7e1399c4b92"
     }
   ],
   "intents": {
