@@ -511,6 +511,11 @@
       "id": "issue-1479-bazel-tokio",
       "summary": "Synchronize canonical generated Bazel lock with Tokio repair",
       "input_digest": "sha256:0ead687bee1fc96a3b3c8998f103f67a755105afc889b502e92d091ca71992f5"
+    },
+    {
+      "id": "issue-1479-lock-inventory",
+      "summary": "Reconcile reviewed source inventory for exact Tokio lock repair",
+      "input_digest": "sha256:fdb7138863645a2e69e30b9fed035a78e740f8ebda57fa223e30a699deee1764"
     }
   ],
   "intents": {
@@ -561,7 +566,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:6f3de8e01ba2cd22f4afd2bf44ed38e5648d27dcadd3c47bd8e6e4633a43a0f9",
+      "artifact_hash": "sha256:f33ed58e7904cc88739b8577dcd8e7e1433d2636e3a7e0077ede95843bca2920",
       "checks": [
         {
           "name": "inventory_review",
@@ -574,6 +579,10 @@
         {
           "name": "official_validation",
           "status": "unavailable"
+        },
+        {
+          "name": "required_profile_inventory_review",
+          "status": "passed"
         },
         {
           "name": "shared_bazel_generated_hash_review",
@@ -654,10 +663,17 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HRS2HTMS019S8KA64YD7": {
@@ -791,6 +807,22 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Compared every agent.init discovered source hash with actual bytes and previously reviewed public 7780e0a2. Only Cargo.lock and MODULE.bazel.lock differ, exact reviewed Tokio repair hashes; workflows, required steps, worker recipes and accepted executor remain unchanged. Reviewed inventory sha256:80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985 updates declaration only, no check waiver."
+                ],
+                "proof_refs": [
+                  "required_profile_inventory_review"
+                ],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -803,6 +835,7 @@
       "evidence": [
         "Adopted public 7780e0a29244f70e76d306e05d4f5b7c367cd4fc after independent tree/message/parent mapping verification. Applied shared minimal RUSTSEC-2026-0386 repair: Tokio 1.52.3 to 1.53.3 and registry checksum only. Cargo.lock SHA256 34babf48746441e1f8656fdc09b8ba2e38c0d9ab930cae92bd3770dfa10fd4e3 becomes 63b7542ae1758437da611cde4e896f2d98d6af659ef5c03ad8606f65b817694e. No test/build executed; prior upload failure and old checked-in release template order remain unverified concerns until official full validation.",
         "Applied exact shared canonical Bazel 9.3.0 generated lock repair (mod deps --lockfile_mode=update, existing system JDK21 normal TLS, no tests). Verified patch SHA256 b5104712cbec54a84424e6e8feb36e91cc23a27ee3464bc3ce96d1b01a19981a and module lock before 236449b998d9b02d3d85bb36af541c331dae3a08cd3397a7cf2865d530531dbf / after 6aaafae31750c2a065d03f237bf330c5dcf5f09733c98d128f8914028c05e9c0. Scope is Tokio version/checksum/derived dependency digest references only. No required checks, tool pins or trust relaxed.",
+        "Compared every agent.init discovered source hash with actual bytes and previously reviewed public 7780e0a2. Only Cargo.lock and MODULE.bazel.lock differ, exact reviewed Tokio repair hashes; workflows, required steps, worker recipes and accepted executor remain unchanged. Reviewed inventory sha256:80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985 updates declaration only, no check waiver.",
         "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered.",
         "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed."
       ],
