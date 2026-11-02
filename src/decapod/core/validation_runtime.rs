@@ -14,6 +14,7 @@ use super::readiness_profile::{
     self as profile, ExecutionBinding, ExecutionPolicy, InvocationRole, ProfileDeclaration,
     ProjectPrerequisites, PublicationState, RequiredCatalog, SourceInventory, TargetObservation,
 };
+use super::repository_profile;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};

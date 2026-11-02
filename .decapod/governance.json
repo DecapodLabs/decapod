@@ -655,6 +655,11 @@
       "id": "dagger-publication-spec-reviews",
       "summary": "Record source-grounded current-content architecture/interface/security reviews and official generated spec refresh after minimal dependency repairs",
       "input_digest": "sha256:678e7ba2ca9a9a2706904a41fbd59beefd023979a43890be7ed6643878fb1b62"
+    },
+    {
+      "id": "dagger-ci-module-import",
+      "summary": "Repair CI E0433 by importing repository_profile for accepted Dagger authority call; policy semantics unchanged, downstream execution unproven",
+      "input_digest": "sha256:605f1215d21507ec6629646b22f3c97706e1b5761dfc99190cc30f240b01faa8"
     }
   ],
   "intents": {
