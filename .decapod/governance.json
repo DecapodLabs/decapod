@@ -471,6 +471,11 @@
       "id": "template-order",
       "summary": "Replay authored src/decapod/core/assets.rs from preserved failed candidate with official controller",
       "input_digest": "sha256:32132fd833e34ced35a5c8ae7d9c3e49a88bb8c06ecdd4d5412896c937ad24ed"
+    },
+    {
+      "id": "activation-order",
+      "summary": "Replay authored tests/activation_conformance.rs from preserved failed candidate with official controller",
+      "input_digest": "sha256:3bf14c0119bcb755f6d153fd3e6a3511d712f198a808d5a9753f66d75638409e"
     }
   ],
   "intents": {
@@ -521,7 +526,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4044fdc96f18f96052ac8b152259f798e841b2f8f811ee38a1274a1e1e190496",
+      "artifact_hash": "sha256:657f2bf862dbdaddce259b42fdd848cb35f707bb0cd4fe8b8c7150b385429f68",
       "checks": [
         {
           "name": "official_validation",
@@ -549,10 +554,17 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HRS2HTMS019S8KA64YD7": {
@@ -574,6 +586,21 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "tests/activation_conformance.rs"
+                ],
+                "proof_refs": [
+                  "official_validation"
+                ],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -585,7 +612,8 @@
       "inspected_files": [],
       "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
       "modified_files": [
-        "src/decapod/core/assets.rs"
+        "src/decapod/core/assets.rs",
+        "tests/activation_conformance.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"

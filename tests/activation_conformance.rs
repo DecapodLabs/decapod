@@ -224,6 +224,19 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
             passed: missing.is_empty(),
             evidence: format!("{entrypoint}: missing={missing:?}"),
         });
+        let ordered_steps = [
+            "decapod todo claim --id <task-id>",
+            "decapod workspace ensure --branch agent/<agent-id>/<task-id>-<topic>",
+            "cd .decapod/workspaces/<your-worktree>",
+            "decapod infer orientation --task-id <task-id>",
+        ];
+        let positions = ordered_steps.map(|step| content.find(step));
+        observations.push(Observation {
+            id: "entrypoint_initialization_order",
+            passed: positions.iter().all(Option::is_some)
+                && positions.windows(2).all(|pair| pair[0] < pair[1]),
+            evidence: format!("{entrypoint}: initialization positions={positions:?}"),
+        });
     }
 
     let todo = parse_json(
@@ -247,34 +260,6 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
         id: "task_custody",
         passed: true,
         evidence: format!("claimed todo {task_id}"),
-    });
-
-    let orientation = parse_json(
-        &run_decapod(
-            &root,
-            &[
-                "infer",
-                "orientation",
-                "--intent",
-                INTENT,
-                "--task-id",
-                &task_id,
-            ],
-            Some(&password),
-        ),
-        "infer orientation",
-    );
-    let proof_required = orientation["proof_required"]
-        .as_array()
-        .expect("proof_required array");
-    observations.push(Observation {
-        id: "orientation_before_mutation",
-        passed: proof_required.iter().any(|item| {
-            item.as_str()
-                .map(|value| value.contains("decapod validate"))
-                .unwrap_or(false)
-        }),
-        evidence: format!("proof_required={proof_required:?}"),
     });
 
     let workspace = parse_json(
@@ -301,6 +286,34 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
         passed: workspace["status"] == "ok"
             && canonical_workspace_path.starts_with(canonical_workspace_root),
         evidence: workspace_path.display().to_string(),
+    });
+
+    let orientation = parse_json(
+        &run_decapod(
+            &workspace_path,
+            &[
+                "infer",
+                "orientation",
+                "--intent",
+                INTENT,
+                "--task-id",
+                &task_id,
+            ],
+            Some(&password),
+        ),
+        "infer orientation",
+    );
+    let proof_required = orientation["proof_required"]
+        .as_array()
+        .expect("proof_required array");
+    observations.push(Observation {
+        id: "orientation_before_mutation",
+        passed: proof_required.iter().any(|item| {
+            item.as_str()
+                .map(|value| value.contains("decapod validate"))
+                .unwrap_or(false)
+        }),
+        evidence: format!("proof_required={proof_required:?}"),
     });
 
     let init = rpc(
