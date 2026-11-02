@@ -516,6 +516,11 @@
       "id": "final-generated-specs",
       "summary": "Bind reviewed publication specs to authored recovery candidate",
       "input_digest": "sha256:e5c3ecea0788b7b499ab772a7bb0f10200d40752c6b0c6524ac3fc2f44416cd6"
+    },
+    {
+      "id": "handoff-source-inventory",
+      "summary": "Reviewed all 119 source paths against accepted declaration 213ed9ca: only Cargo.toml and Cargo.lock package version changes 0.121.0 to 0.121.2; complete provider graph and recipes unchanged",
+      "input_digest": "sha256:6fcf2c5a7b6e3e9733c821f6605853f01a75b162a0ce6c72266724abd0be9867"
     }
   ],
   "intents": {
