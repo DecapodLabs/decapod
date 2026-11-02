@@ -566,6 +566,11 @@
       "id": "handoff-publication-review",
       "summary": "Bind refreshed projections and current-content review of INTERFACES SECURITY ARCHITECTURE after source review; no validation success asserted",
       "input_digest": "sha256:79600f80b9d1631c2600b07852e2f904f61f04b679bdadf0480a7a9624024f78"
+    },
+    {
+      "id": "handoff-bazel-tokio",
+      "summary": "Repair required Bazel stale lock failure: verify shared generated module patch hashes and exact five Tokio-only substitutions; no unrelated dependency graph or proof changes",
+      "input_digest": "sha256:dd857f3c704f6e300a27b254d8858d881b9180c74b37fa5c54cbbe27a9354b8d"
     }
   ],
   "intents": {
