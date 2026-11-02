@@ -183,6 +183,7 @@ impl Fixture {
             )]),
             directory: ".".into(),
             timeout_seconds: 10,
+            dagger: None,
         };
         let mut contract = RepositoryContract {
             reviewed_commands_digest: String::new(),
