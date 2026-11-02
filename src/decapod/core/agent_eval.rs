@@ -210,7 +210,7 @@ fn unsafe_http_context(prompt: &str) -> bool {
         if arguments.iter().any(|word| {
             matches!(word.as_str(), "|" | ";" | "&&" | ">")
                 || http_sensitive_argument(word)
-                || (word.starts_with('-') && !read_only_http_option(word))
+                || (word.starts_with('-') && !read_only_http_option(word, &words[client]))
         }) || arguments.iter().enumerate().any(|(at, word)| {
             word == "--url-query"
                 && !arguments
@@ -322,7 +322,7 @@ fn is_executor(word: &str) -> bool {
 // Unknown options can load files, credentials or opaque client configuration.
 // Only these common read-only forms are classified; all others require review.
 // Combined short options contain flags only, never attached argument values.
-fn read_only_http_option(word: &str) -> bool {
+fn read_only_http_option(word: &str, client: &str) -> bool {
     if matches!(
         word,
         "-H" | "-X"
@@ -347,6 +347,12 @@ fn read_only_http_option(word: &str) -> bool {
     if let Some(query) = word.strip_prefix("--url-query=") {
         return static_http_query(query);
     }
+    if word
+        .strip_prefix("--header=")
+        .is_some_and(|value| value.starts_with('@'))
+    {
+        return false;
+    }
     if ["--header=", "--request=", "--method="]
         .iter()
         .any(|prefix| word.starts_with(prefix))
@@ -363,10 +369,15 @@ fn read_only_http_option(word: &str) -> bool {
     {
         return true;
     }
+    let flags = if client.to_ascii_lowercase().rsplit('/').next() == Some("wget") {
+        "qSv"
+    } else {
+        "fsSLIivq"
+    };
     word.starts_with('-')
         && !word.starts_with("--")
         && word.len() > 1
-        && word[1..].chars().all(|ch| "fsSLIivq".contains(ch))
+        && word[1..].chars().all(|ch| flags.contains(ch))
 }
 
 fn static_http_query(value: &str) -> bool {

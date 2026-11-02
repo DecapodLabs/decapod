@@ -561,6 +561,11 @@
       "id": "bounded-http-options",
       "summary": "Conservatively classify known read-only options; unknown options request review; explicit static url-query pairs allowed, file-backed query syntax gated per curl official manpage",
       "input_digest": "sha256:bf0ec70d66879837eb163e2ef54b0791ad58e23e0093a5d0556bcd994cd11b0f"
+    },
+    {
+      "id": "http-client-specific-flags",
+      "summary": "Keep short flag meanings client-specific and reject file-backed attached header values",
+      "input_digest": "sha256:125c017ee80b6bb2403b2e8a27d483785fc3388da70bb56b051f81d46db5a195"
     }
   ],
   "intents": {
