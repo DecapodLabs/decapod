@@ -581,6 +581,11 @@
       "id": "http-option-projections",
       "summary": "Refresh generated projections after HTTP option contract update",
       "input_digest": "sha256:f218f8b9f2194cf331328401e2d07f6f62979988b95d7b626608adbd5abd9142"
+    },
+    {
+      "id": "final-source-review",
+      "summary": "Record independent bounded source review without claiming runtime proof; authenticated upload remains blocked",
+      "input_digest": "sha256:cfd801496e60dcfe685112cb4576604fac81a5ca705be7322191b8595e01054f"
     }
   ],
   "intents": {
@@ -633,7 +638,10 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4345d41e866bbedc3eebd875a4f167bee699a09ee700a86ba9abf5a7c89b3dd5",
+      "artifact_hash": "sha256:a9d95b4c1ee01233c4d4b3524a423cb83e2e2a2d12cec71b31ae20dc1a521a97",
+      "blockers": [
+        "Official runtime proof requires authenticated GitTransport; previous upload failed exit128; no retry performed"
+      ],
       "checks": [
         {
           "name": "implementation",
@@ -641,7 +649,11 @@
         },
         {
           "name": "independent-source-review",
-          "status": "failed"
+          "status": "passed"
+        },
+        {
+          "name": "official-runtime-proof",
+          "status": "unavailable"
         },
         {
           "name": "official-validation",
@@ -683,10 +695,17 @@
             "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MBT4709VS1T8ZYG4Z85X",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MBT4709VS1T8ZYG4Z85X": {
@@ -747,6 +766,23 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Independent reviewer /root/rereview_prompt_boundaries at 2026-11-02T21:23Z: no further blocking source finding at9954188c; safe fixtures logically compatible; source review only, no tests executed",
+                  "https://curl.se/docs/manpage.html#--url-query"
+                ],
+                "proof_refs": [
+                  "independent-source-review",
+                  "official-runtime-proof"
+                ],
+                "scope": [
+                  "issue-1478-prompt-context"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -755,7 +791,9 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/tmp/1478-validation.log"
+        "/tmp/1478-validation.log",
+        "Independent reviewer /root/rereview_prompt_boundaries at 2026-11-02T21:23Z: no further blocking source finding at9954188c; safe fixtures logically compatible; source review only, no tests executed",
+        "https://curl.se/docs/manpage.html#--url-query"
       ],
       "inspected_files": [
         ".decapod/config.toml",
