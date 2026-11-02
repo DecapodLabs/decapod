@@ -447,6 +447,38 @@ permissions in a present policy and malformed policy fail closed. No policy
 file is rewritten as a repair, and generic callers cannot request the sealed
 capability without the reviewed contract and measured invocation.
 
+### Explicit Dagger executor exception
+
+The optional `RepositoryDaggerCheck` capability is the bounded exception to
+local-only command assumptions above. `repository_profile::preserve_accepted_dagger`
+requires an exact execution declaration in the accepted target's dormant
+`dagger_authorizations`; writing candidate declarations does not grant authority.
+`external_action::authorize_repository_proof` additionally requires explicit
+`dagger_proof_exec`, and bounded engine inspection requires `dagger_engine_read`.
+Both are denied by default. Publishing implementation/configuration types is not
+permission to provision or access an engine, change external policy or activate
+any repository's dormant proposal.
+
+The declared local Docker service and existing Dagger engine are trusted
+executors, including writable runtime state and caches. Full container/image
+identity plus unchanged start time, rootfs mode and mount destinations are
+checked before/after execution; image inspection is not executable-filesystem
+attestation. Exact snapshot and measured tool/output custody still apply. The
+reviewed workspace owns semantic check coverage and remote dependency pins;
+the adapter does not sandbox engine network access or infer reproducibility.
+Fixed Dagger 1.0 workspace/check arguments, root configuration/lock inventory,
+cleared environment and a measured Docker PATH prevent ambient engine/context
+selection. Unsupported identities and candidate-only activation fail closed.
+No arbitrary GitHub green status, hosted assurance substitution, engine lifecycle
+operation or blanket external permission is introduced. Live engine integration
+has not been established by the authored fixture regressions.
+
+The root Cargo lock remediation changes only Tokio 1.52.3 to 1.53.3 and its
+registry checksum. The derived Bazel lock must be regenerated under the pinned
+Bazel toolchain before publication so dependency identities agree. Dependency
+resolution is not audit/test success; required hosted checks remain mandatory,
+with no ignored advisory or weakened validation requirement.
+
 ## CPU companion and pre-inference startup custody
 
 Both local executable pins are frozen and verified with native-format, owner,

@@ -635,6 +635,11 @@
       "id": "dagger-architecture-review",
       "summary": "Ground architecture in accepted-only dormant Dagger policy, current workspace protocol, bounded existing engine identity and unchanged hosted proof",
       "input_digest": "sha256:9366755a91c287feaee90bd9062e99fb8f8140674a0a48919d1eb0cdaeb366c4"
+    },
+    {
+      "id": "dagger-security-review",
+      "summary": "Specify explicit external-engine trust and deny-by-default accepted authority; record narrow dependency repair without audit or live-proof claims",
+      "input_digest": "sha256:7eb26bc26071d149e3108d5a64b145857ed104b9e404d58ca0ec783ea9c2d7bb"
     }
   ],
   "intents": {
