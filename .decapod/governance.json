@@ -491,6 +491,11 @@
       "id": "review-release-inventory",
       "summary": "Review unchanged source execution graph with released package version 0.121.2 inventory",
       "input_digest": "sha256:51d72800ac8a337b1f3fa2da669838da4048895c6e1431de0f31cf432d7e8c2d"
+    },
+    {
+      "id": "issue1470-config-projection",
+      "summary": "Regenerate config-bound manifest after reviewed source inventory update; retain exact published validation failure and publication custody",
+      "input_digest": "sha256:6f1e0231ff61f63dc9094f7891014ff6113b29f208cacabe55fc596d0ebafbb3"
     }
   ],
   "intents": {
@@ -542,10 +547,14 @@
         "Current claimed task and isolated work branch",
         "No merge, release, credential changes or proof bypass; preserve failed earlier candidate."
       ],
-      "artifact_hash": "sha256:49f123e2d62584d5430e118cc0238b35fb548d2cd37b4545b820f2756ff74299",
+      "artifact_hash": "sha256:176e91f27699dd972b5d4b2544e614ab1bf88f8145c19d6bfd3b1676070048f7",
       "checks": [
         {
           "name": "full_validation",
+          "status": "failed"
+        },
+        {
+          "name": "published_exact_validation",
           "status": "failed"
         }
       ],
@@ -577,10 +586,17 @@
             "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HEXJCDCCEJTEY5JSGT8A": {
@@ -622,18 +638,37 @@
                 "validation_findings": [
                   "Real APFS/NTFS tests await configured provider execution; no source tests have run locally."
                 ]
+              },
+              {
+                "action": "validation",
+                "command": "decapod validate",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "User authorized public tracked governance/spec metadata. Connector publication preserved all six ordered trees and messages modulo terminal LF from original 9753d64b to published 172317acea8d7327ea42aab6f671d79b8102ec0c; independently fetched and checkpoint-verified, original backup retained. Historical source-review refs remain historical, no old pass reused. Buildkite 2545 exact published head failed standalone-validation on stale manifest config_input_hash after reviewed inventory config update; 189 prerequisite gates passed but full readiness failed. Official 0.121.2 specs.refresh regenerates matching config hash; revalidate exact uploaded repair candidate."
+                ],
+                "proof_refs": [
+                  "published_exact_validation"
+                ],
+                "scope": [
+                  "issue1470-source-inventory-recovery"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "decapod rpc --op specs.refresh",
+        "decapod validate",
         "rustfmt --config skip_children=true --edition 2024 src/decapod/core/init_reconciliation/mod.rs"
       ],
       "destination": "pull request",
       "evidence": [
         "Current candidate passes entrypoint-history stage. Inventory drift since last config review 213ed9ca is exclusively package version 0.121.0 to 0.121.2 in Cargo.toml/Cargo.lock; workflows, helpers, dependencies and execution graph unchanged.",
-        "Previous candidate 03b63f55 failed entrypoint commit discipline before source tests; retained on original branch."
+        "Previous candidate 03b63f55 failed entrypoint commit discipline before source tests; retained on original branch.",
+        "User authorized public tracked governance/spec metadata. Connector publication preserved all six ordered trees and messages modulo terminal LF from original 9753d64b to published 172317acea8d7327ea42aab6f671d79b8102ec0c; independently fetched and checkpoint-verified, original backup retained. Historical source-review refs remain historical, no old pass reused. Buildkite 2545 exact published head failed standalone-validation on stale manifest config_input_hash after reviewed inventory config update; 189 prerequisite gates passed but full readiness failed. Official 0.121.2 specs.refresh regenerates matching config hash; revalidate exact uploaded repair candidate."
       ],
       "inspected_files": [
         ".decapod/config.toml",
