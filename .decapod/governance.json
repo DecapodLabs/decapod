@@ -561,6 +561,11 @@
       "id": "handoff-readonly-caveat",
       "summary": "Clarify reviewed no-side-effect guarantee is evaluation-helper-only; retain existing policy CLI storage initialization caveat",
       "input_digest": "sha256:4b6e1762dfd565c31f22bbbf411400dd551640ca4db44e88d2961ce3abb981ec"
+    },
+    {
+      "id": "handoff-publication-review",
+      "summary": "Bind refreshed projections and current-content review of INTERFACES SECURITY ARCHITECTURE after source review; no validation success asserted",
+      "input_digest": "sha256:79600f80b9d1631c2600b07852e2f904f61f04b679bdadf0480a7a9624024f78"
     }
   ],
   "intents": {
@@ -601,22 +606,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Issue1477 retains daemonless repo-native governance architecture and proof authority; only existing handoff caller and recovery contract changes",
-          "reviewed_code_fingerprint": "f237d2c864c5965710921c10ac7e075d30b827eca1a926532f5f01e343fb15e0",
+          "reason": "Reviewed core todo transactional journal and plugins policy: changes retain daemonless CLI, canonical local datastore, existing broker and policy enforcement architecture; narrow caller resolution and authority consumption add no service or authority subsystem; Tokio patch only repairs dependency advisory",
+          "reviewed_code_fingerprint": "15a253f05db0de5255a78ef2e4a2c38826ee33914adf4ea246622caa2f185455",
           "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Authored caller and auditable recovery semantics preserve existing governance authority; checks remain unexecuted",
-          "reviewed_code_fingerprint": "f237d2c864c5965710921c10ac7e075d30b827eca1a926532f5f01e343fb15e0",
-          "spec_material_hash": "35e6b1f8ec567c94d76869b8d3ce003ba016a76a076a1251465efd7d306af95f"
+          "reason": "Reviewed todo::handoff_task_as and policy::eval_effective_policy plus CLI initialization against interface spec: real actor separated from previous owner and receiver, exact one-use recovery approval, read-only helper boundary not whole CLI side-effect freedom; tests remain obligations",
+          "reviewed_code_fingerprint": "15a253f05db0de5255a78ef2e4a2c38826ee33914adf4ea246622caa2f185455",
+          "spec_material_hash": "ddfc4e2a454686480ab16efc761063517d4249624af507dbf4ea94304574c348"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Authored caller and auditable recovery semantics preserve existing governance authority; checks remain unexecuted",
-          "reviewed_code_fingerprint": "f237d2c864c5965710921c10ac7e075d30b827eca1a926532f5f01e343fb15e0",
+          "reason": "Reviewed transaction and broker trust paths: existing reserved cooperative operator identity is not OS authentication; no stored trust promotion; recovery requires actual caller trust, explicit owner and exact live target approval consumed atomically; no proof or dependency bypass",
+          "reviewed_code_fingerprint": "15a253f05db0de5255a78ef2e4a2c38826ee33914adf4ea246622caa2f185455",
           "spec_material_hash": "0aa21326b991993236f3ab1fcb3f91e8f74de49d67a4a18a15ba24cfc98a5a71"
         }
       ],
@@ -628,7 +633,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793653009Z"
+      "updated_at": "1793658994Z"
     },
     "trajectory": {
       "active_boundaries": [
