@@ -611,6 +611,11 @@
       "id": "bazel-lock-security-spec",
       "summary": "Specify normal pinned module metadata generation and exact bounded Tokio output review, preserving strict lock validation and no trust change",
       "input_digest": "sha256:60b4af5f070b4b1e70267ad52cd94115d4399070872a8cb46c9053b78c314f20"
+    },
+    {
+      "id": "bazel-repair-spec-projections",
+      "summary": "Refresh generated specs after exactCI formatter and generated module lock repairs; tests and full proof pending new candidate",
+      "input_digest": "sha256:8bfb60f24e887fa697ef9db08b837e67b76415125f32826aab6ab40f80e778ae"
     }
   ],
   "intents": {
