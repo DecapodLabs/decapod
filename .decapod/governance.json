@@ -486,6 +486,11 @@
       "id": "operations-order",
       "summary": "Replay authored .decapod/managed/specs/OPERATIONS.md from preserved failed candidate with official controller",
       "input_digest": "sha256:8290548cb851278449e7e48a042667e64f9418788eca9153f25f24017e003dc9"
+    },
+    {
+      "id": "spec-refresh",
+      "summary": "Refresh CLI-owned projections after authored operations update",
+      "input_digest": "sha256:82d6202702fba28eb1ef8a510a6bf5cb26f732fc4e98b228421feccff6af9126"
     }
   ],
   "intents": {
