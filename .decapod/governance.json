@@ -556,6 +556,11 @@
       "id": "handoff-tokio-inventory",
       "summary": "Compared all119 inventory sources against API-published accepted candidate: only reviewed Cargo.lock Tokio version/checksum changed; required graph and adapters unchanged",
       "input_digest": "sha256:cd06c28cb574f5ea49f890b3207a5d5d50b0132a933248ab9fa487acd3d466ad"
+    },
+    {
+      "id": "handoff-readonly-caveat",
+      "summary": "Clarify reviewed no-side-effect guarantee is evaluation-helper-only; retain existing policy CLI storage initialization caveat",
+      "input_digest": "sha256:4b6e1762dfd565c31f22bbbf411400dd551640ca4db44e88d2961ce3abb981ec"
     }
   ],
   "intents": {
