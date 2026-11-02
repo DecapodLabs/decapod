@@ -1020,6 +1020,7 @@ fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
                         ("DECAPOD_AGENT_ID", &agent),
                         ("DECAPOD_SESSION_PASSWORD", &credential),
                         ("DECAPOD_CLAIM_AUTORUN", "0"),
+                        ("DECAPOD_GROUP_BROKER_REQUEST_ID", &agent),
                     ],
                     Duration::from_secs(60),
                     "concurrent caller identity claim",
@@ -1035,6 +1036,15 @@ fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
         "{}",
         String::from_utf8_lossy(&leader_output.stderr)
     );
+    let leader_hooks = std::fs::read_to_string(&hooks).unwrap();
+    for (agent, _, _) in &tasks {
+        assert!(
+            leader_hooks
+                .lines()
+                .any(|line| line.contains(&format!("queued|{agent}"))),
+            "claim did not traverse the elected leader: {agent}"
+        );
+    }
     for result in results {
         let (agent, id, output) = result.unwrap();
         assert!(

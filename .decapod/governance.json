@@ -494,6 +494,11 @@
       "id": "refresh-caller-specs",
       "summary": "Refresh generated caller custody attestations under release 0.121.2",
       "input_digest": "sha256:67a248d3e20b6786ef12c5fc5dba8ad0f7f83591f8f6602e53479d4e4f0b6053"
+    },
+    {
+      "id": "prove-shared-broker-regression",
+      "summary": "Require both concurrent claims to traverse the same elected leader; prevent false-positive direct or re-elected execution",
+      "input_digest": "sha256:dbded51cd3bbae2ba11bc41baf7e7bb182bd48487b7bccd735a0c49e31057e08"
     }
   ],
   "intents": {
