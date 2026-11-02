@@ -519,6 +519,11 @@
       "id": "supported-reviewed-spec-projections",
       "summary": "Record actual current-content INTENT ARCHITECTURE INTERFACES reviews and refreshed generated projections; no validation success claimed",
       "input_digest": "sha256:91841d04670d611720ec76c2542d9199a5a838695f08685908d3244b5441aa8d"
+    },
+    {
+      "id": "security-recovery-review",
+      "summary": "Record current-content security review: recovery preserves historical custody and requires real exact-material proof, no authority or audit exemptions",
+      "input_digest": "sha256:b0d4ba0a2449f9d845d050f7a7ac145ded26d6b7a07f4e688a3c0f7768f1d84c"
     }
   ],
   "intents": {
@@ -572,6 +577,13 @@
           "reason": "Reviewed repeated recover --artifact TODO_ID=FILE CLI contract and current hashes/epoch admission, task CAS and pending CLAIMED versus atomic final verification against verify.rs. Authored current-evidence section and real CLI failure regression accurately preserve obligations/history and distinguish unexecuted tests from passing proof.",
           "reviewed_code_fingerprint": "f5520ee143c53cea83f0824ba06a465324cbafd5ca215e659f790a4b33ba4d07",
           "spec_material_hash": "89fa666e232a4665ab990ac230d86ccac9e775da185634e94b27f2ebd7f1af5b"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed Recovery cannot grant authority and proof trust boundaries against explicit per-task capture, current hash/epoch checks, original-task CAS, append-only old proof fields, refusal of additional obligations and required two-stage validation. Existing security boundary remains accurate: recovery grants no authority or fabricated success; Tokio-only advisory patch changes dependency bytes without waiving audit or execution proof.",
+          "reviewed_code_fingerprint": "f5520ee143c53cea83f0824ba06a465324cbafd5ca215e659f790a4b33ba4d07",
+          "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
         }
       ],
       "state": "APPROVED",
@@ -582,7 +594,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793658542Z"
+      "updated_at": "1793658560Z"
     },
     "trajectory": {
       "active_boundaries": [
