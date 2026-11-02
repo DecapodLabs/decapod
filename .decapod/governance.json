@@ -541,6 +541,11 @@
       "id": "readonly-interface-contract",
       "summary": "Document read-only diagnostic enforcement parity and no mutation side effects; regression remains unexecuted",
       "input_digest": "sha256:c99da499f2e397912e243c676e67fbafceb28bf7d6fd12ec8d447d92ccde1284"
+    },
+    {
+      "id": "readonly-spec-bind",
+      "summary": "Bind reviewed read-only diagnostic repair to current source; tests unavailable and upload not retried",
+      "input_digest": "sha256:3a824d8eeb40a148b78d6c6447ebca79b00746830aefff463001fba476316a6d"
     }
   ],
   "intents": {
@@ -614,7 +619,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e6328fb912ce34747c68484fda0a3ae82239b93d297a346165fb8385e086e81e",
+      "artifact_hash": "sha256:75bf2cc222c6cf786fb36d9662d6c9c9751505f3633159280c2f948d7a22bcd7",
       "checks": [
         {
           "name": "required-tests",
@@ -642,10 +647,17 @@
             "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MQZZ75W5PEXHA7QVY3FQ": {
@@ -676,6 +688,22 @@
                 "validation_findings": [
                   "Official tests require authenticated exact candidate upload; no test pass claimed"
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/plugins/policy.rs",
+                  "tests/plugins/policy.rs"
+                ],
+                "proof_refs": [
+                  "required-tests"
+                ],
+                "scope": [
+                  "issue-1477-handoff"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -688,7 +716,8 @@
       ],
       "inspected_files": [
         "src/decapod/core/todo.rs",
-        "src/decapod/plugins/policy.rs"
+        "src/decapod/plugins/policy.rs",
+        "tests/plugins/policy.rs"
       ],
       "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
       "modified_files": [
