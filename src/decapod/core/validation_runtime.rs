@@ -622,6 +622,11 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
             &["show", &format!("{base}:{CONFIG}")],
         )?)?
     };
+    repository_profile::preserve_accepted_dagger(
+        configuration.repository_contract.as_ref(),
+        accepted.repository_contract.as_ref(),
+    )
+    .map_err(|e| invalid(&format!("{e:?}")))?;
     rust_worker::preserve_accepted(
         configuration.rust_workers.as_ref(),
         accepted.rust_workers.as_ref(),
@@ -1695,6 +1700,10 @@ pub fn run_native_source_slice(
 /// Requests presented to the existing external-action authorization boundary.
 /// This enum does not grant authority or persist an authorization decision.
 pub enum NativeAction<'a> {
+    DaggerEngineInspect {
+        program: &'a Path,
+        container: &'a str,
+    },
     ToolProbe {
         program: &'a Path,
         arguments: &'a [String],
