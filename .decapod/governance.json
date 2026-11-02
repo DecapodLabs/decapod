@@ -514,6 +514,11 @@
       "id": "reviewed-cli-recovery-contract",
       "summary": "Describe actual CLI failure-path regression and its unproven success boundary; preserve product-wide interface identity",
       "input_digest": "sha256:cce75364076dd2a68a8a21f260709ddd8db92304fce09f5a15e349991f6e1643"
+    },
+    {
+      "id": "supported-reviewed-spec-projections",
+      "summary": "Record actual current-content INTENT ARCHITECTURE INTERFACES reviews and refreshed generated projections; no validation success claimed",
+      "input_digest": "sha256:91841d04670d611720ec76c2542d9199a5a838695f08685908d3244b5441aa8d"
     }
   ],
   "intents": {
@@ -553,6 +558,22 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed existing CLI/RPC and repository-owned finite invocation architecture against RecoveryCapture, refresh_batch_baselines_with_captures and finalize_recovered_batch. Changes remain inside existing verify plugin and transactional task journal, without new authority, service, provider or data ownership boundary; Tokio patch retains runtime architecture.",
+          "reviewed_code_fingerprint": "f5520ee143c53cea83f0824ba06a465324cbafd5ca215e659f790a4b33ba4d07",
+          "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed repeated recover --artifact TODO_ID=FILE CLI contract and current hashes/epoch admission, task CAS and pending CLAIMED versus atomic final verification against verify.rs. Authored current-evidence section and real CLI failure regression accurately preserve obligations/history and distinguish unexecuted tests from passing proof.",
+          "reviewed_code_fingerprint": "f5520ee143c53cea83f0824ba06a465324cbafd5ca215e659f790a4b33ba4d07",
+          "spec_material_hash": "89fa666e232a4665ab990ac230d86ccac9e775da185634e94b27f2ebd7f1af5b"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Issue 1473 explicit fresh proof recovery",
@@ -561,7 +582,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793653127Z"
+      "updated_at": "1793658542Z"
     },
     "trajectory": {
       "active_boundaries": [
