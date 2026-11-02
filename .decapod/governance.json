@@ -501,6 +501,11 @@
       "id": "release-spec-projections",
       "summary": "Refresh generated canonical release spec projections before exact validation",
       "input_digest": "sha256:1dea95ef6b2ad22ed89e332d3c841092e77e1798336d1883bb55068bff64188e"
+    },
+    {
+      "id": "reviewed-source-release-drift",
+      "summary": "Official dry-run discovery3844276 independently reviewed full inventory versus213ed9ca: only Cargo.toml/lock0.121.0 to0.121.2 version bumps, no proof jobs/helpers/dependencies changed; reconcile declaration without changing coverage",
+      "input_digest": "sha256:e772329542869b4c40802a0c5d08d3abdddf278e9ac67dc0db78e43f6383b2ad"
     }
   ],
   "intents": {
@@ -556,11 +561,15 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:28544cab0521401d69cf09383c76c16ec4a64b1f403295e932a32af2a1dbbe69",
+      "artifact_hash": "sha256:fc9cdac000127f08b638e18eef69492c5183e7ea58c92b5d05d55e62ff2b0859",
       "checks": [
         {
           "name": "native_receipt_regression",
           "status": "unavailable"
+        },
+        {
+          "name": "official_validation",
+          "status": "failed"
         }
       ],
       "current_phase": "intent",
@@ -619,10 +628,17 @@
             "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0K07GRCP71GJRSYSZ84V7": {
@@ -749,6 +765,28 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml"
+                ],
+                "proof_refs": [
+                  "official_validation"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -757,9 +795,13 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
-      "inspected_files": [],
+      "inspected_files": [
+        "Cargo.lock",
+        "Cargo.toml"
+      ],
       "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/VALIDATION.md",
         "src/decapod/core/governance_artifacts.rs",
         "src/decapod/core/validation_runtime.rs",
