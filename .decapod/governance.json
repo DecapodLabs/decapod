@@ -591,6 +591,11 @@
       "id": "public-branch-resolution",
       "summary": "Record verified publication resolving prior upload blocker; preserve failed validation history and require fresh runtime proof",
       "input_digest": "sha256:182295cb78287cb19c6a4a7e7a02d0171bb007c60aa27e079b58a178a513162d"
+    },
+    {
+      "id": "tokio-security-lock",
+      "summary": "Apply reviewed Tokio1.53.3 security-only lock delta with exact before/after SHA256 verification; no tests run",
+      "input_digest": "sha256:abd5fda92bad87da735593a72c91eebc5dc79aa54acdfddc1e097479119ad590"
     }
   ],
   "intents": {
