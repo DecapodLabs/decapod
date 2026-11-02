@@ -466,6 +466,11 @@
       "id": "bootstrap-01212",
       "summary": "Initialize issue1477 candidate with official0.121.2 governed projections",
       "input_digest": "sha256:363b06ec282aa0f2e3bbde2b7800d06d6d7d8beaf04c80a51aeecca6fc746664"
+    },
+    {
+      "id": "authored-src-decapod-core-todo-rs",
+      "summary": "Replay reviewed issue1477 authored change in src/decapod/core/todo.rs with current release governance",
+      "input_digest": "sha256:dfc702d0abc4e7d3778e0b9ea33b3fbc51dc3c931cf6440a05e1513e6a4c5bba"
     }
   ],
   "intents": {

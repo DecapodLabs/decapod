@@ -652,6 +652,7 @@ pub enum TodoCommand {
         #[clap(long)]
         to: String,
         #[clap(long)]
+        /// Expected current owner; never changes the acting caller identity.
         from: Option<String>,
         #[clap(long)]
         summary: String,
@@ -2582,7 +2583,12 @@ fn enforce_operation_policy(
         return Ok(());
     };
 
-    let current_level = get_agent_trust_level(conn, agent_id)?;
+    let current_level = if zone_name == "todo.handoff" {
+        // Preserve the broker's existing cooperative operator identity model.
+        policy::actor_trust_level_on_conn(conn, agent_id)?
+    } else {
+        get_agent_trust_level(conn, agent_id)?
+    };
     if trust_level_to_int(&current_level) < trust_level_to_int(&required_trust) {
         return Err(error::DecapodError::ValidationError(format!(
             "Policy gate denied for {zone_name}: agent '{agent_id}' trust '{current_level}' < required '{required_trust}'"
@@ -5126,8 +5132,30 @@ pub fn handoff_task(
     summary: &str,
     lease_seconds: Option<u64>,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    // Capture the request caller before entering broker callbacks. --from is
+    // an optimistic ownership precondition, never an identity credential.
+    let actor = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+    handoff_task_as(store, id, to, from, summary, lease_seconds, &actor)
+}
+
+/// Explicit-caller form for trusted in-process callers. The caller must supply
+/// its own request identity, not the previous owner's identity.
+pub fn handoff_task_as(
+    store: &Store,
+    id: &str,
+    to: &str,
+    from: Option<&str>,
+    summary: &str,
+    lease_seconds: Option<u64>,
+    acting_agent: &str,
+) -> Result<serde_json::Value, error::DecapodError> {
+    if acting_agent.trim().is_empty() || acting_agent == "unknown" {
+        return Err(error::DecapodError::ValidationError(
+            "HANDOFF_CALLER_MISSING: use the actual active caller identity; --from only asserts the previous owner".to_string(),
+        ));
+    }
     let root = &store.root;
-    let broker = DbBroker::new(root);
+    let broker = DbBroker::new(root).with_target(id);
     let db_path = todo_db_path(root);
     let ts = now_iso();
     let now_secs = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
@@ -5169,13 +5197,12 @@ pub fn handoff_task(
     let result = with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        acting_agent,
         None,
         "todo.handoff",
         TaskJournalSelection::Ids(vec![id.to_owned()]),
         |conn| {
             ensure_schema(conn)?;
-            let acting_agent = from.unwrap_or("unknown");
             enforce_operation_policy(root, conn, "todo.handoff", acting_agent, id)?;
             touch_agent_presence(conn, to, &ts)?;
 
@@ -5258,6 +5285,27 @@ pub fn handoff_task(
                     String::new(),
                 ));
             }
+
+            // A caller recovering somebody else's custody must name the old
+            // owner and supply fresh, exact-target authority. No --from value
+            // promotes caller trust, and a general command approval is not enough.
+            let recovery = !row.assigned_to.is_empty() && row.assigned_to != acting_agent;
+            let recovery_approval_ids = if recovery {
+                if from != Some(row.assigned_to.as_str()) {
+                    return Err(error::DecapodError::ValidationError(
+                        "HANDOFF_RECOVERY_OWNER_REQUIRED: pass --from with the recorded owner; retain your actual caller identity".into(),
+                    ));
+                }
+                let ids = policy::exact_target_approval_ids_on_conn(conn, "todo.handoff", id)?;
+                if ids.is_empty() {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "HANDOFF_RECOVERY_APPROVAL_REQUIRED: recovery requires a live exact task approval; run decapod govern policy eval --command todo.handoff --path {id}"
+                    )));
+                }
+                ids
+            } else {
+                Vec::new()
+            };
 
             // Fail closed on dependency/proof readiness, same contract as exclusive claim.
             let dependency_readiness = load_dependency_readiness(conn, id)?;
@@ -5362,6 +5410,15 @@ pub fn handoff_task(
             )
             .map_err(error::DecapodError::StorageError)?;
 
+            // Consume recovery authority only inside the successful custody
+            // transaction; errors roll back both task state and consumption.
+            for approval_id in &recovery_approval_ids {
+                conn.execute(
+                    "DELETE FROM approvals WHERE approval_id = ?1",
+                    [approval_id],
+                )?;
+            }
+
             let claim_id = upsert_task_owner(conn, id, to, "primary", &ts)?;
             sync_legacy_owner_column(conn, id)?;
 
@@ -5373,6 +5430,9 @@ pub fn handoff_task(
                 status: "success".to_string(),
                 task_id: Some(id.to_string()),
                 payload: serde_json::json!({
+                    "actor": acting_agent,
+                    "recovery": recovery,
+                    "consumed_approval_ids": recovery_approval_ids,
                     "from": previous,
                     "to": to,
                     "summary": summary,
@@ -5395,6 +5455,9 @@ pub fn handoff_task(
                 serde_json::json!({
                     "status": "ok",
                     "message": format!("Task {} handed off to {}", id, to),
+                    "actor": acting_agent,
+                    "recovery": recovery,
+                    "consumed_approval_ids": recovery_approval_ids,
                     "from": previous,
                     "to": to,
                     "claim_id": claim_id,
@@ -5433,7 +5496,9 @@ pub fn handoff_task(
     {
         let knowledge_id = format!("H_{}", crate::core::ulid::new_ulid());
         let title = format!("Task handoff {id}");
-        let content = format!("Handoff from {from:?} to {to}. Summary: {summary}");
+        let previous = status_result["from"].as_str().unwrap_or("unassigned");
+        let content =
+            format!("Handoff by {acting_agent} from {previous} to {to}. Summary: {summary}");
         let provenance = format!("event:{event_id}");
         let _ = knowledge::add_knowledge(
             store,
