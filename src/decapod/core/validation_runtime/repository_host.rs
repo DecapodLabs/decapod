@@ -445,8 +445,8 @@ fn command_invocation(
         );
         (
             vec![
-                "--mod".to_owned(),
-                dagger.module.clone(),
+                "--workspace".to_owned(),
+                ".".to_owned(),
                 "check".to_owned(),
             ],
             native_proof::ReviewedCapabilities::RepositoryDaggerCheck,

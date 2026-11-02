@@ -540,6 +540,11 @@
       "id": "dagger-workspace-argv",
       "summary": "Use actual current Dagger workspace check argv and assert exact snapshot-root invocation",
       "input_digest": "sha256:bf29d50ec1041f682870ab9c8ad654b5788c7db7409dd64c34f043766366c034"
+    },
+    {
+      "id": "dagger-workspace-literal",
+      "summary": "Replace multiline legacy module argv with root workspace selection",
+      "input_digest": "sha256:31e71a7284b4350527b880b03e5193268504a868768df65bb929ef68c53d4f24"
     }
   ],
   "intents": {
