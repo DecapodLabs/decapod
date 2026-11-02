@@ -521,6 +521,11 @@
       "id": "bounded-http-spec",
       "summary": "Document bounded HTTP context, conservative file-output review, cross-boundary checks, and grammar limitations without claiming unrun proof",
       "input_digest": "sha256:c4a15a014f209065538f7bb8ebfa6eda6f182507110d346bd87cc4324f5efd71"
+    },
+    {
+      "id": "bounded-http-projections",
+      "summary": "Refresh generated spec projections after bounded HTTP context repair; publication validation remains blocked",
+      "input_digest": "sha256:0dd927d4ecccba8d78b4b738c8f7a91f788bed3f38320a6f836c862e15961775"
     }
   ],
   "intents": {
