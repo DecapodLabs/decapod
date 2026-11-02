@@ -601,6 +601,11 @@
       "id": "tokio-bazel-lock",
       "summary": "Apply officially generated and reviewed Tokio-only Bazel lock delta with patch/before/after hash verification; proof graph unchanged",
       "input_digest": "sha256:75c263d87bbc29fe0f52f7c98a63e081b8801a5b0ebb1aab66e70215fc70f1a5"
+    },
+    {
+      "id": "reviewed-tokio-inventory",
+      "summary": "Independently reconcile inventory changes only Cargo.lock and MODULE.bazel.lock reviewed Tokio repair; graph/adapters unchanged",
+      "input_digest": "sha256:3e8fe0e47f1aa141cad225b6cbb70740c8024ec2e283b1b1fc26bc3f26d74db4"
     }
   ],
   "intents": {
