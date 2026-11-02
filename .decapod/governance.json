@@ -630,6 +630,11 @@
       "id": "dagger-tokio-advisory",
       "summary": "Apply independently verified minimal Tokio 1.53.3 lock remediation; canonical Bazel lock regeneration still pending, no passing tests claimed",
       "input_digest": "sha256:3d342ddb2bd2c289999726a745361847475f78562c275eb8915581ec414b1063"
+    },
+    {
+      "id": "dagger-architecture-review",
+      "summary": "Ground architecture in accepted-only dormant Dagger policy, current workspace protocol, bounded existing engine identity and unchanged hosted proof",
+      "input_digest": "sha256:9366755a91c287feaee90bd9062e99fb8f8140674a0a48919d1eb0cdaeb366c4"
     }
   ],
   "intents": {

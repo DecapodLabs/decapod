@@ -623,6 +623,27 @@ Decapod source-CI adapters retain their stricter authority and cannot be downgra
 by a candidate switching to local proof. Unsupported remote/daemon operations
 remain explicit limitations, rather than fabricated native evidence.
 
+### Optional existing-engine Dagger execution
+
+`core::repository_profile::DaggerExecution` is an opt-in extension of the
+repository-local contract, not a new controller or resident service.
+`validation_runtime::ProofConfiguration` and `proof::ProjectProofConfig` retain
+`dagger_authorizations` as dormant typed proposals; `cli::InitWithCli` and guided
+init roundtrips preserve them without activation. The old proof path can validate
+a proposal first. Only after target acceptance may an active execution match it;
+`preserve_accepted_dagger` reads accepted authority rather than candidate grants.
+
+`repository_host::command_invocation` emits only the declared Dagger 1.0 protocol
+`--workspace . check` against the immutable exact-candidate snapshot, requiring
+root `dagger.toml`/`dagger.lock`, reviewed module sources and measured installed
+Dagger/Docker tools. `repository_host::dagger::inspect_engines` performs bounded
+identity observations around execution of the full local command catalog. The
+explicit local socket, full container ID and image configuration digest select a
+pre-existing trusted engine. Neither Decapod nor this adapter creates, starts,
+updates or stops an engine. Independent hosted/Buildkite requirements and the
+kernel's final verdict remain authoritative. Contract fixtures are not proof
+that a live Dagger engine has executed; that qualification remains unavailable.
+
 ### Optional CI-attested validation boundary
 
 Validation establishes whether the agent's work has converged on the user's
