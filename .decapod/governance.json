@@ -496,6 +496,11 @@
       "id": "source-inventory",
       "summary": "Reconcile only accepted release version changes with unchanged complete source-CI graph",
       "input_digest": "sha256:413aa037bc744bc16957ee92b83bdad37ad99b57d615c883ec472a9e2c609d07"
+    },
+    {
+      "id": "issue-1479-config-manifest-refresh",
+      "summary": "Refresh generated specs manifest after reviewed config reconciliation; runtime validation remains outstanding",
+      "input_digest": "sha256:efd06e7f443cd5c8c21d0521793f23c4993423bbfad8e95bd4212cb40d8a2718"
     }
   ],
   "intents": {
@@ -546,10 +551,14 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3aee4138187e92e3c9abfe5836a5351acfb18704bc90453b74904284940cf324",
+      "artifact_hash": "sha256:1ba19e9288f154d7498eb8d9c0dd60381f524f328a2abed1cbcece04ad0f8aaa",
       "checks": [
         {
           "name": "inventory_review",
+          "status": "passed"
+        },
+        {
+          "name": "manifest_diff_review",
           "status": "passed"
         },
         {
@@ -606,10 +615,17 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HRS2HTMS019S8KA64YD7": {
@@ -694,15 +710,35 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "decapod rpc --op specs.refresh",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/managed/specs/.manifest.json",
+                  "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed."
+                ],
+                "proof_refs": [
+                  "manifest_diff_review"
+                ],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod rpc --op specs.refresh"
+      ],
       "destination": "pull request",
       "evidence": [
-        "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered."
+        "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered.",
+        "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed."
       ],
       "inspected_files": [
         "Cargo.lock",
@@ -711,6 +747,7 @@
       "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/OPERATIONS.md",
         "docs/book/src/quickstart.md",
         "src/decapod/core/assets.rs",
