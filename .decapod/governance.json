@@ -464,6 +464,11 @@
       "id": "replay-verify-rs",
       "summary": "Replay authored issue 1473 material only; tests not yet run",
       "input_digest": "sha256:d47280f0cf14606c57f71d8b0dce551acfa9a7db0dfda046d2de0518ebaf861e"
+    },
+    {
+      "id": "replay-verify_completion_tests-rs",
+      "summary": "Replay authored issue 1473 material only; tests not yet run",
+      "input_digest": "sha256:9cd95121020dcb1830bc50d888c2f0a75a63df471fb8aec5c144d308b18ce6c4"
     }
   ],
   "intents": {
