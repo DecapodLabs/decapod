@@ -466,6 +466,11 @@
       "id": "release-bootstrap",
       "summary": "Canonical0.121.2 workspace bootstrap preserving earlier blocked candidate f9043ea6; no execution proof yet",
       "input_digest": "sha256:772c1a3b7628706eff6157e0e22bce348e26a181df2de78a7322491a2a73e25c"
+    },
+    {
+      "id": "replay-workspace",
+      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
+      "input_digest": "sha256:6e245d346ab1d98ebf0f513429007ddf4e4179a70a52eb1810d950213e18ab2b"
     }
   ],
   "intents": {
@@ -521,8 +526,13 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:54390a4348ca4067d332e79bbaffeb82e8f328c29b7d6a220efcb1e6b207acdb",
-      "checks": [],
+      "artifact_hash": "sha256:8980a3b981fc541a95d825d6791628d97a0404bf0e06202225ca095286d18e0e",
+      "checks": [
+        {
+          "name": "native_receipt_regression",
+          "status": "unavailable"
+        }
+      ],
       "current_phase": "intent",
       "custody": {
         "events": [
@@ -537,19 +547,56 @@
             "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M6F0K07GRCP71GJRSYSZ84V7": {
+            "evidence_only": true,
+            "id": "branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/workspace.rs"
+                ],
+                "proof_refs": [
+                  "native_receipt_regression"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
       "inspected_files": [],
       "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/workspace.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
