@@ -103,7 +103,7 @@ the corresponding `proof.repository_contract.executions.<name>`:
 
 ```toml
 [proof.repository_contract.executions.dagger-check.dagger]
-module = ".dagger/modules/ci"
+cli_contract = "dagger-1.0-workspace-check.v1"
 engine_container = "<full 64 lowercase hex Docker container ID>"
 engine_image = "sha256:<64 lowercase hex Docker image configuration ID>"
 docker_socket = "/run/docker.sock"
@@ -114,7 +114,7 @@ canonical installed `dagger` binary, its command arguments exactly `["check"]`,
 and its working directory `.`. Declare the canonical `docker` executable under
 `toolchain_files.dagger-docker` and a dedicated reviewed PATH resolving that exact
 file. Both tools and the declared runtime closure are measured normally. The
-module's `dagger.toml` and `dagger.lock` must be inventoried alongside all module,
+workspace root's `dagger.toml` and `dagger.lock` must be inventoried alongside all module,
 workflow and helper sources; `.dagger` is included in source discovery. Review
 module coverage and dependency pins: the adapter does not infer their semantic
 completeness from a lockfile's presence.
@@ -127,7 +127,10 @@ Explicit external-action policy must allow `dagger_proof_exec` for `dagger` and
 `dagger_engine_read` for `docker`, in addition to any repository-proof restrictions.
 Neither capability is enabled by default; initialization never grants them.
 
-Decapod supplies a fixed module argument, `DAGGER_ENGINE=container+docker://<id>`,
+The protocol explicitly targets Dagger 1.0 workspace/check syntax; other CLI
+protocols and legacy `dagger.json`/`--mod` invocations are unsupported. Select a
+reviewed compatible Dagger installation; its bytes are measured, not inferred
+from a version label. Decapod supplies fixed `--workspace . check` arguments, `DAGGER_ENGINE=container+docker://<id>`,
 the matching legacy runner URI and `DOCKER_HOST=unix://<socket>`; engine/context
 overrides in the declared environment reject. It executes against its immutable
 exact-candidate source snapshot, not the caller's checkout. Bounded Docker

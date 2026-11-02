@@ -550,6 +550,11 @@
       "id": "dagger-correction-0",
       "summary": "Reconcile supported workspace-check contract and reviewed unchanged source inventory: src/decapod/core/validation_runtime/repository_host/dagger.rs",
       "input_digest": "sha256:3efb508b294344161efad002528620d5d36a6e8ef373b0178114a89da44a34a2"
+    },
+    {
+      "id": "dagger-doc-correction-0",
+      "summary": "Reconcile supported workspace-check contract and reviewed unchanged source inventory: docs/agent/config-schema.md",
+      "input_digest": "sha256:d5d2c1f4f6537e1fa79f66950b47696b6ecb3a0c1d88975b1dba314a2a9d57e2"
     }
   ],
   "intents": {
