@@ -466,6 +466,11 @@
       "id": "official-bootstrap",
       "summary": "Bootstrap issue1479 with official0.121.2 preserving rejected0.121.1 branch8b9a5799",
       "input_digest": "sha256:fcdf41205b6551f82f7417542424ca298c761795797bf88304fba52d536648d1"
+    },
+    {
+      "id": "template-order",
+      "summary": "Replay authored src/decapod/core/assets.rs from preserved failed candidate with official controller",
+      "input_digest": "sha256:32132fd833e34ced35a5c8ae7d9c3e49a88bb8c06ecdd4d5412896c937ad24ed"
     }
   ],
   "intents": {
@@ -516,8 +521,13 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9927ce95b5659b2030027321a9e1ebed413d8c89e788f1273b9da006d869553a",
-      "checks": [],
+      "artifact_hash": "sha256:4044fdc96f18f96052ac8b152259f798e841b2f8f811ee38a1274a1e1e190496",
+      "checks": [
+        {
+          "name": "official_validation",
+          "status": "unavailable"
+        }
+      ],
       "current_phase": "intent",
       "custody": {
         "events": [
@@ -532,19 +542,51 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M6F0HRS2HTMS019S8KA64YD7": {
+            "evidence_only": true,
+            "id": "branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/assets.rs"
+                ],
+                "proof_refs": [
+                  "official_validation"
+                ],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
       "inspected_files": [],
       "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/assets.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
