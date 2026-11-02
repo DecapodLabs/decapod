@@ -501,6 +501,11 @@
       "id": "expired-recovery",
       "summary": "Ensure expired exact recovery authority leaves recorded custody unchanged",
       "input_digest": "sha256:ae73453cb001ced90850f5453d0b8328adfd18815618169514146a5726e2100a"
+    },
+    {
+      "id": "generated-specs",
+      "summary": "Refresh generated spec attestations after handoff implementation",
+      "input_digest": "sha256:3a7d341dde0f4e123b9f6baf66e85bd3d7bd263db3be674429c0354926438620"
     }
   ],
   "intents": {
@@ -537,7 +542,7 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
       "title": "Fix handoff actor and enforced policy diagnostics issue 1477",
       "todo_ids": [
@@ -545,14 +550,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793652859Z"
+      "updated_at": "1793652940Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9b2abb82bc085ab576b70d4f4b87e521dff269953164408832cdd176031a677f",
-      "checks": [],
+      "artifact_hash": "sha256:e6328fb912ce34747c68484fda0a3ae82239b93d297a346165fb8385e086e81e",
+      "checks": [
+        {
+          "name": "required-tests",
+          "status": "unavailable"
+        }
+      ],
       "current_phase": "intent",
       "custody": {
         "events": [
@@ -567,19 +577,69 @@
             "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M6F0MQZZ75W5PEXHA7QVY3FQ": {
+            "evidence_only": true,
+            "id": "branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "tests/plugins/todo.rs",
+                  "tests/plugins/policy.rs",
+                  "docs/agent/command-contracts.md",
+                  "Source review confirms prior caller-from conflation and handoff policy diagnostic mismatch"
+                ],
+                "proof_refs": [
+                  "required-tests"
+                ],
+                "scope": [
+                  "issue-1477-handoff"
+                ],
+                "sequence": 4,
+                "validation_findings": [
+                  "Official tests require authenticated exact candidate upload; no test pass claimed"
+                ]
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "evidence": [
+        "Source review confirms prior caller-from conflation and handoff policy diagnostic mismatch"
+      ],
+      "inspected_files": [
+        "src/decapod/core/todo.rs",
+        "src/decapod/plugins/policy.rs"
+      ],
       "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
-      "modified_files": [],
+      "modified_files": [
+        "docs/agent/command-contracts.md",
+        "src/decapod/core/todo.rs",
+        "src/decapod/plugins/policy.rs",
+        "tests/plugins/policy.rs",
+        "tests/plugins/todo.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
@@ -591,7 +651,9 @@
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m6f06f1rknvc3w",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Official tests require authenticated exact candidate upload; no test pass claimed"
+      ]
     }
   },
   "legacy_digests": {
