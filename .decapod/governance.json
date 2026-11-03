@@ -493,6 +493,11 @@
       "id": "reconcile-master-01235",
       "summary": "Merge accepted master with exact first-parent journal preserved; regenerate using official0.123.5 after configuration reconciliation",
       "input_digest": "sha256:975532c66988a4bdfd3bcf7df51848a8ff9986405def574d2a104899a4b9f40c"
+    },
+    {
+      "id": "review-relative-master",
+      "summary": "Correct interface review disposition relative to accepted target without changing source or proof gates",
+      "input_digest": "sha256:e721cc942f63f67f2fbe15acbb578821969465614997e9189edf30f0db998bdd"
     }
   ],
   "intents": {
@@ -539,9 +544,9 @@
           "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged accepted recovery interface interpretation from master43d5ecda while preserving existing CLI/bootstrap contracts. Test-only PR adds no API; current generated sequence and negative root controls remain accurate.",
+          "reason": "Relative to accepted master43d5ecda, interface prose is unchanged: accepted recovery interpretation is retained, with no new API or production behavior in this test-only PR. Existing generated bootstrap sequence remains accurate.",
           "reviewed_code_fingerprint": "3f7fe33969c8d6e7a69846c58ca1fd73bbec93accf1e54e02925ace997ef3b86",
           "spec_material_hash": "f0ca488501b1f43d968dd78e1d45b1f08adbd046d1f824d0ebfad42e1c4e7f5c"
         },
@@ -561,13 +566,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793702174Z"
+      "updated_at": "1793702219Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:36542880c80715d362e3d36ae478ef6dc2275048f02fbf80c1bca1b168ab03b5",
+      "artifact_hash": "sha256:2d4359db7254e89ad27a074ba54d9378cd1d963a61af753d39079e148850e4d3",
       "blockers": [
         "PROOF_PROFILE_RECONCILIATION_REQUIRED: unchanged inherited source inventory 2d773cc1833a077b22700e94d87952e6fa215bb8bb761b777cb4a2b0ab902c79 differs from reviewed b2dad13cc7ab218b124a945e01fcb56b4bb9f5bbe044cb3785814cd07ef01b1a; required remote checks not run."
       ],
@@ -654,10 +659,17 @@
             "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6GATD6C1BQ5PHDKYCHC4B00": {
@@ -755,6 +767,19 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Exact-current-target publication-material check caught interface review disposition updated although prose is unchanged relative to accepted master. Corrected review to unchanged-with-reason; preserved failure as evidence and changed no source/proof gate."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -765,6 +790,7 @@
       "evidence": [
         "Both GitHub push and PR governance jobs fail SPEC_REVIEW_REQUIRED for INTERFACES.md with identical stderr digest 6d11fee31a4ca14d56a17e5e57421925552538c9715cdfb4987926209221aac9. Reviewed unchanged interface, architecture and security contracts against test-only change and recorded content-bound reviews through govern plan review-spec. No guard/check changes.",
         "Earlier publication security-review denials concerned historical journal paths already public in the accepted repository; byte comparison and independent public fetch established no new private disclosure, and bounded retries succeeded. Later bulk publication was interrupted before tree/commit/ref publication; remote remained f7d28b65. The user subsequently explicitly authorized continuing this same PR. Prior failed/incomplete proof remains failed/incomplete.",
+        "Exact-current-target publication-material check caught interface review disposition updated although prose is unchanged relative to accepted master. Corrected review to unchanged-with-reason; preserved failure as evidence and changed no source/proof gate.",
         "Independent Python diagnostic executed generated AGENTS commands against official 0.123.4: committed fixture, own session, task add/claim, two main-checkout orientation denials, ensure returned path, bound orientation success, context resolution, workspace-only write and unchanged root HEAD/status. This is released-binary runtime evidence, not execution of the new Rust test.",
         "Inspected GitHub CLI job125830745485: selection status not_applicable on test-only paths. Existing source_ci_profile always selects cli-contracts targeting cli_contract_enforcement. Moved regression inline there, removing undeclared Bazel support input and avoiding recipe/policy changes. Previous green selective job was not execution evidence.",
         "Official 0.123.4 actual CLI claim, workspace ensure, returned worktree orientation succeeded before implementation in this independent clone.",
