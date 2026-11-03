@@ -506,6 +506,14 @@
       "proof_refs": [
         "Git merge source audit; no tests or final readiness run"
       ]
+    },
+    {
+      "id": "native-diagnostics-release-1241",
+      "summary": "Refresh official v0.124.1 release and specification projections after CI drift finding",
+      "input_digest": "sha256:5428c3057b3c191a431c9c7ef3c005600cb845d3de8185df79764f7da14c2e07",
+      "proof_refs": [
+        "Verified official release archive checksum; CI drift comparison; no local tests or full validation"
+      ]
     }
   ],
   "intents": {
@@ -546,22 +554,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Existing proof custody and publication architecture remain unchanged; new files are private diagnostic metadata only",
-          "reviewed_code_fingerprint": "ca291d210f23deacb394eb5259fb68641f3be7e77c1dfaf5b2b10572625176c8",
+          "reason": "Release refresh changes projection only; proof custody and publication architecture remain unchanged",
+          "reviewed_code_fingerprint": "0d78ea5999c0deecee438b655d04e5a2accbbeddbfc75c7df87da9e0a15164ff",
           "spec_material_hash": "98a2637b868afbe10ae3540caf6eb64900616211fe9da6db499fe3bb157c8711"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document native per-check recovery diagnostics as non-authoritative evidence",
-          "reviewed_code_fingerprint": "ca291d210f23deacb394eb5259fb68641f3be7e77c1dfaf5b2b10572625176c8",
-          "spec_material_hash": "6b4dd4fd11d33806549a4b5519b6fe2c3b0525dd8106654b675bd6377b14b37c"
+          "reason": "Reviewed native check diagnostic contract after v0.124.1 refresh; diagnostics do not grant readiness",
+          "reviewed_code_fingerprint": "0d78ea5999c0deecee438b655d04e5a2accbbeddbfc75c7df87da9e0a15164ff",
+          "spec_material_hash": "d72555a17bec50bccc837c63040ae6a372aac35120f2eea503e7d75276137506"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Private evidence custody and all readiness, authorization and configuration gates remain unchanged",
-          "reviewed_code_fingerprint": "ca291d210f23deacb394eb5259fb68641f3be7e77c1dfaf5b2b10572625176c8",
+          "reason": "Release refresh changes projection only; no readiness, authorization or security gates are weakened",
+          "reviewed_code_fingerprint": "0d78ea5999c0deecee438b655d04e5a2accbbeddbfc75c7df87da9e0a15164ff",
           "spec_material_hash": "f94e47ab37cc50c85daa5c1821caadb20cc3646f9aecdcf1b7b81a12210a73fa"
         }
       ],
@@ -575,13 +583,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793744877Z"
+      "updated_at": "1793746560Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Preserve existing readiness gates, receipts, config, and accepted authority; no local tests"
       ],
-      "artifact_hash": "sha256:49f9342e69e56967fea0bfc441ac55b2f67d0c1141adf539916cbf0740c1a991",
+      "artifact_hash": "sha256:016bd449ec7babe2112431d98967e4ac09c89f9ed34f10605341764dc8c566e6",
       "checks": [
         {
           "name": "diff_whitespace",
@@ -592,7 +600,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "reconciliation",
+      "current_phase": "ci-repair",
       "custody": {
         "events": [
           {
@@ -620,10 +628,17 @@
             "intent_id": "intent:native-diagnostics-1474",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:native-diagnostics-1474",
+            "event_id": "event:6",
+            "intent_id": "intent:native-diagnostics-1474",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "native-diagnostics-1474": {
@@ -667,6 +682,21 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "PR head b66096c GitHub Decapod Validate reported 189 passed, zero failed in CI-local gates before rejecting stale release and living-spec projections. Official v0.124.1 archive and checksum were verified against release metadata; supported workspace refresh regenerated release pins and specs. Source and spec fingerprints match the failed CI generated diff. No local tests or full validation were run."
+                ],
+                "proof_refs": [
+                  "local_tests"
+                ],
+                "scope": [
+                  "native validation recovery"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -676,6 +706,7 @@
       "destination": "pull request",
       "evidence": [
         "Accepted v0.124.1 release fd6d8daba0af03905b23e71e38530757b7baa574 merged as second parent; preserve accepted workspace-recovery claim and specs. The original checkpoint and task journal are retained. No tests or validation run; matching released controller unavailable, so projections remain pending.",
+        "PR head b66096c GitHub Decapod Validate reported 189 passed, zero failed in CI-local gates before rejecting stale release and living-spec projections. Official v0.124.1 archive and checksum were verified against release metadata; supported workspace refresh regenerated release pins and specs. Source and spec fingerprints match the failed CI generated diff. No local tests or full validation were run.",
         "Source inspection found native runner retained check key, termination and error in memory but persisted only numbered output and step files. Added private non-authoritative per-check recovery metadata and focused assertions. No local tests or full readiness run by user instruction; remote checks are pending."
       ],
       "inspected_files": [
@@ -691,6 +722,7 @@
       ],
       "next_transitions": [
         "Publish dedicated PR and observe exact-head CI",
+        "Push refreshed checkpoint and observe exact-head CI",
         "Refresh and review release-bound specs with official v0.124.1 controller when available, then publish"
       ],
       "repo_scope": [
