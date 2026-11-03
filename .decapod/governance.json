@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "b4a1374b78857cc8816844fb812101783ae864d0",
+    "accepted_commit": "55a83aa25035e2fc0dff9c46d47b663bdfe6403f",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -25,11 +25,6 @@
       "claim:atomic-completion": {
         "falsifier": "An unresolved dependency or unproven exclusive task can commit done through a direct mutation",
         "statement": "Every task done mutation enforces dependency and lease proof within its transaction",
-        "status": "open"
-      },
-      "claim:bootstrap-order": {
-        "falsifier": "Any generated initialization path or quickstart runs task orientation outside its governed worktree.",
-        "statement": "Generated entrypoints enter claimed isolated worktree before orientation and preserve orientation before implementation.",
         "status": "open"
       },
       "claim:bounded-integration-matrix": {
@@ -266,6 +261,11 @@
         "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
         "status": "open"
       },
+      "claim:safe-http-context": {
+        "falsifier": "A sanitized safe report blocks or a dangerous HTTP execution/adversarial quoted prompt is allowed",
+        "statement": "Read-only HTTP examples and history pass while unsafe command combinations and override/exfiltration markers remain blocked",
+        "status": "open"
+      },
       "claim:strict-protocol-rollout": {
         "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
         "proof_refs": [
@@ -421,6 +421,7 @@
       "trajectory:832c680f315def69": "Onlyimportandidentityconsistentfixturecorrected; retainfullfailurehistory, publicsource50ce data, baselineweights/upstreamcalibration andstrictv2criterion. Mainplanobligation testsactualpass1461, sixnewnativetestsnotyetexecuted. No sourceorcontrolstatechangeswhileactivevalidation. Pushsamebranch, allowactualsourceCIterminalcollection andnormalfullvalidate; publicCIreadingisnotshadowbuild/proofimport, allrequiredchecksremain.",
       "trajectory:844b15c92b3dbce1": "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change.",
       "trajectory:85ab507d85803a47": "Actual9a5source39passedandGitHubCIgreen, thenpublicGithubObjectscommitrecheck403quotareset1792469427before native. Preserve report, do not auth-fallback/newprerequisite. Usewaitforreversible27-line shared final-gate/refREADMEcorrection; current noindependentreadinesslabels, no modelclaims. Reviewedd6cb helperinventory with unchangedd6d98runrecipe. Existingpublicationregression exercisesextractedfunction; no modelgateweakening. Retryplainvalidateafter04:10:27UTCresetexactnewsource/target, no identicalexposedv2run.",
+      "trajectory:8825b7f6a1b7e7a2": "Compared last reviewed inventory commit213ed9ca to candidate: only Cargo package versions0.121.0 to0.121.2 changed among complete inventory paths; workflow graph/adapters and dependencies unchanged",
       "trajectory:89475bf5c998bfde": "The accepted source executor closure changed in merged PR1462; final publication requires an official controller independently supporting that accepted closure, not this candidate authorizing itself",
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
       "trajectory:8a7663240329d9ea": "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
@@ -443,6 +444,7 @@
       "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
       "trajectory:d9ace8c29a759626": "All six frozen v2 holdout shards completed: each backend executed102 cases with36 unsupported lengths,52 abstentions,29 acceptances and23 false-ready proxy outcomes. Preserve this failure and original corpus/criteria. Actual source1459 tests, native43 tests and138/314/4096-token fixed numerical comparisons passed. Public review corpus remains prospective and unverified; no fitting or heldout inference has used it. Inspection confirmed projection includes plan.intent only, omitting proof_hooks/deferred questions/stop conditions and phase gates. Add bounded obligation facts without whole-plan metadata, model changes, relaxed gates or fabricated rationale. Final source/material/governance identity checks remain authoritative.",
       "trajectory:da69bbaf7f07e535": "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody.",
+      "trajectory:e0832fa08225856e": "Deterministic common-marker detector is not a general shell or semantic intent parser; unavailable private historical fixture not reproduced",
       "trajectory:e0f0a51392feb190": "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
       "trajectory:e59eda56341d71a3": "New tests/MetalCPUproductiondiagnostics authored and require prescribed validate; no new pass claims. User rejects inactive stage; fitting source only inspected, no Python executed. Current official upstream has old base+two generic adapters and incompatible universal port/stats engine, none demonstrated readiness-qualified. Reviewed24source candidates still zero admissible complete final units. Preserve old study/failures and every required original criterion. Final admission stays missing rather than repeating exposed final data. No branch/custody/controller changes.",
       "trajectory:e6b0bb96ddfbd405": "Preserve040d sourceCI lock failure and separate officialvalidator publicGithubCommitChecks403/reset1792449991. Actual anonymous publicBuildkite setup log confirms MODULE.bazel.lock stale because Cargo.toml packagingexclusion changed; prescribed repair is bazel mod deps --lockfile_mode=update. Installed officialHomebrewBazelisk1.29 afterreading officialformula/installerdocs, restored Homebrew developer modeoff. Run batch metadata regeneration only underrepositorypinnedBazel9.3, notmanualbuild/test orshadowpreflight; preserve dependencies, scientificgates and failedholdout. No native execution on040d is claimed. Newfullvalidation mustwaitreportedpublicAPIreset and bindcorrectedexactcandidate.",
@@ -454,67 +456,58 @@
     }
   },
   "change": {
-    "id": "change_01M6GATD58RAT5YVA5AFZMZNZ5",
-    "base_commit": "b4a1374b78857cc8816844fb812101783ae864d0",
+    "id": "change_01M6G9WW26WHBE9D1VN7XAEXKN",
+    "base_commit": "55a83aa25035e2fc0dff9c46d47b663bdfe6403f",
     "target_base": "origin/master"
   },
   "claims": {
-    "bootstrap-order": {
-      "statement": "The documented agent bootstrap sequence succeeds in its returned task workspace and rejects orientation in the main checkout",
-      "falsifier": "Real CLI integration fails at any required step or accepts main-checkout orientation",
-      "status": "supported",
+    "native-cli-acceptance": {
+      "statement": "Released native CLI acceptance must prove actual prerequisites, unchanged candidate paired receipts, failed execution and stale candidate rejection",
+      "falsifier": "Missing real invocation evidence, changed candidate, successful failure verdict or reused prerequisite stub",
+      "status": "blocked",
       "proof_refs": [
-        "Released 0.123.4 real CLI diagnostic; new Rust regression awaits configured execution"
+        "docs/native-readiness-acceptance.md"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "bootstrap-regression",
-      "summary": "Execute generated agent bootstrap commands with real task claim, guarded root denial and returned worktree orientation",
-      "input_digest": "sha256:90cde41f6c00789d582a7a318323853fdc97d73cad6110cbe6fda0d9f8206d18"
-    },
-    {
-      "id": "bootstrap-evidence",
-      "summary": "Format portable fixture and record released CLI execution plus truthful source-validation blocker",
-      "input_digest": "sha256:ff340d0a8f2a2daf0ade11cb3cecb6b3bac89bf3dfe57616c74a536e5a0ed1ca"
-    },
-    {
-      "id": "spec-review-repair",
-      "summary": "Record missing source-grounded publication spec reviews for test-only bootstrap regression",
-      "input_digest": "sha256:5726d45dc96aad17a2cb499c9f0fd8ae3898eaa0160d812a1a655b0f7ad07ad9"
-    },
-    {
-      "id": "always-executed-bootstrap",
-      "summary": "Run bootstrap regression in always-selected CLI contract target, with declared Bazel source and unchanged proof policy",
-      "input_digest": "sha256:184dc2fc58697a244328247678bd20b371a8985b0ce72d63c2f71319edbccb66"
-    },
-    {
-      "id": "reconcile-master-01235",
-      "summary": "Merge accepted master with exact first-parent journal preserved; regenerate using official0.123.5 after configuration reconciliation",
-      "input_digest": "sha256:975532c66988a4bdfd3bcf7df51848a8ff9986405def574d2a104899a4b9f40c"
-    },
-    {
-      "id": "review-relative-master",
-      "summary": "Correct interface review disposition relative to accepted target without changing source or proof gates",
-      "input_digest": "sha256:e721cc942f63f67f2fbe15acbb578821969465614997e9189edf30f0db998bdd"
-    },
-    {
-      "id": "bootstrap-local-cleanup",
-      "summary": "Keep local bootstrap regression out of optional container autorun and require deterministic fixture cleanup",
-      "input_digest": "sha256:a589f70fbf0bfd5cbe5b681251cea8faff638d9e1f8c26b3b41617f061591901",
+      "id": "native-acceptance-observer",
+      "summary": "Prepare real released CLI acceptance observer; live execution remains unavailable and is not claimed",
+      "input_digest": "sha256:0c65786b00ac7476eed3baccc090139f260338db962010b6ecf13058a7fd144c",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/41621467352/job/125868212569"
+        "docs/native-readiness-acceptance.md"
       ]
     },
     {
-      "id": "bootstrap-local-cleanup-reviewed",
-      "summary": "Bind unchanged production spec reviews to corrected local bootstrap fixture",
-      "input_digest": "sha256:78cfa4ab07efd9c48bda7b22875700a2e46d58520affc01be1d3127cc19d4faa"
+      "id": "reconcile-01234",
+      "summary": "Rebase accepted b4a1374, preserve original PR journal, refresh official0.123.4 projections, reconcile unchanged accepted119-input source inventory without changing required proof or provider",
+      "input_digest": "sha256:db62519210af3c8664b59e9fdf2be6ef5d01ecede5654c769292535a197682cd"
+    },
+    {
+      "id": "native-acceptance-01234-final",
+      "summary": "Assemble accepted-master rebased native acceptance observer and release0.123.4 projections as one candidate; preserve failed checks and outstanding live acceptance",
+      "input_digest": "sha256:5948d1423fdbc8bdc19ecad257e2334301427ecb017ee1dbadc9ea7826188aa7"
+    },
+    {
+      "id": "native-acceptance-release01236",
+      "summary": "Reconcile PR1499 with accepted release0.123.6 using ordered merge history; preserve authored acceptance and accepted agent bootstrap specs. Review all119 accepted proof sources, regenerate official projections, and retain blocked negative/stale and full-source proof limits.",
+      "input_digest": "sha256:90155d8bc3bba6755a149d5e24bcc24f40489542013de203ba8600460bf70d19",
+      "proof_refs": [
+        "tests/acceptance/native_readiness.py"
+      ]
+    },
+    {
+      "id": "native-acceptance-release01236-final",
+      "summary": "Bind release0.123.6 merge to exact final source and honestly unchanged accepted interfaces; preserve all native and full-source proof limits.",
+      "input_digest": "sha256:f94724f5725b95497b6e6b8e306c8dd143ba35d5d1f510c44ef8ff28beb272cb",
+      "proof_refs": [
+        "tests/acceptance/native_readiness.py"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5": {
+    "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -524,11 +517,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+      "id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Exercise documented bootstrap CLI order for issue 1479",
-      "refined_intent": "Exercise documented bootstrap CLI order for issue 1479",
+      "raw_intent": "Prove real native readiness for issue 1474",
+      "refined_intent": "Prove real native readiness for issue 1474",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -541,211 +534,157 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Finish issue #1479 with an executable CLI bootstrap regression following generated command order; keep root isolation and orientation-before-implementation gates unchanged",
+      "intent": "Prove real native readiness for issue 1474",
       "phases": [],
       "proof_hooks": [
-        "decapod validate",
-        "Always-selected cli-contracts proof executes cli_contract_enforcement::documented_bootstrap"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Compared current authored prose and production sources with accepted master 43d5ecda. Only local bootstrap test environment and cleanup assertions changed: optional DECAPOD_CLAIM_AUTORUN is false, real lease and orientation gates remain active. No production API, architectural component, or security policy changed; test scope and cleanup semantics are documented in VALIDATION.md.",
-          "reviewed_code_fingerprint": "7f2bc29b98203aa8c1394d3b788fe731a1cd5e23771e4a0fed58109722bf13fe",
+          "reason": "Release reconciliation preserves accepted architecture; the opt-in observer changes no provider or production architecture.",
+          "reviewed_code_fingerprint": "d7cf9c144b1b8caac86f5e0f7376398bc7405b4402c22696892decac4c2b2bb8",
           "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Compared current authored prose and production sources with accepted master 43d5ecda. Only local bootstrap test environment and cleanup assertions changed: optional DECAPOD_CLAIM_AUTORUN is false, real lease and orientation gates remain active. No production API, architectural component, or security policy changed; test scope and cleanup semantics are documented in VALIDATION.md.",
-          "reviewed_code_fingerprint": "7f2bc29b98203aa8c1394d3b788fe731a1cd5e23771e4a0fed58109722bf13fe",
+          "reason": "Accepted target already contains the recovery interface contract. This reconciliation preserves it unchanged and adds no production interface beyond the existing opt-in observer.",
+          "reviewed_code_fingerprint": "d7cf9c144b1b8caac86f5e0f7376398bc7405b4402c22696892decac4c2b2bb8",
           "spec_material_hash": "f0ca488501b1f43d968dd78e1d45b1f08adbd046d1f824d0ebfad42e1c4e7f5c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Compared current authored prose and production sources with accepted master 43d5ecda. Only local bootstrap test environment and cleanup assertions changed: optional DECAPOD_CLAIM_AUTORUN is false, real lease and orientation gates remain active. No production API, architectural component, or security policy changed; test scope and cleanup semantics are documented in VALIDATION.md.",
-          "reviewed_code_fingerprint": "7f2bc29b98203aa8c1394d3b788fe731a1cd5e23771e4a0fed58109722bf13fe",
+          "reason": "Release reconciliation preserves accepted security authority. The native observer remains agent-operated and cannot authorize publication, fake evidence, or bypass denied execution.",
+          "reviewed_code_fingerprint": "d7cf9c144b1b8caac86f5e0f7376398bc7405b4402c22696892decac4c2b2bb8",
           "spec_material_hash": "e2090e911112df35b36fb5845c7871be442f147bb1b3a723e04e3f17f76f56b9"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Exercise documented bootstrap CLI order for issue 1479",
+      "title": "Prove real native readiness for issue 1474",
       "todo_ids": [
-        "bugs_01m6gasw1zdy9ztz"
+        "bugs_01m6g9w9k64r3qkx",
+        "cicd_01m6h7mmyp5t0p15"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793703304Z"
+      "updated_at": "1793727513Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5eaaf1f4e818a1b5211b4d0abd3a25054f6610003787f6a2a461b6a89f7323e0",
-      "blockers": [
-        "PROOF_PROFILE_RECONCILIATION_REQUIRED: unchanged inherited source inventory 2d773cc1833a077b22700e94d87952e6fa215bb8bb761b777cb4a2b0ab902c79 differs from reviewed b2dad13cc7ab218b124a945e01fcb56b4bb9f5bbe044cb3785814cd07ef01b1a; required remote checks not run."
-      ],
+      "artifact_hash": "sha256:3d790a5fc47bf7c94f7f2f57b26951c7cda903fe364297e8d82167e127a22784",
       "checks": [
         {
-          "name": "compiled-bootstrap-b3220b7",
+          "name": "acceptance_help",
           "status": "passed"
         },
         {
-          "name": "compiled-rust-regression",
+          "name": "all_119_proof_inputs_match_accepted_b4a1374",
+          "status": "passed"
+        },
+        {
+          "name": "full_native_acceptance",
           "status": "unavailable"
         },
         {
-          "name": "contract-job-cleanup-b3220b7",
+          "name": "initial_validation",
           "status": "failed"
         },
         {
-          "name": "full-validation",
-          "status": "failed"
+          "name": "native_live_acceptance",
+          "status": "unavailable"
         },
         {
-          "name": "governance-artifacts",
-          "status": "failed"
-        },
-        {
-          "name": "manual-bootstrap",
+          "name": "python_syntax",
           "status": "passed"
         },
         {
-          "name": "project-check",
-          "status": "failed"
-        },
-        {
-          "name": "release-regeneration",
-          "status": "passed"
-        },
-        {
-          "name": "released-cli-bootstrap",
-          "status": "passed"
-        },
-        {
-          "name": "rustfmt",
+          "name": "released_controller_orientation",
           "status": "passed"
         }
       ],
-      "current_phase": "reconciliation",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
+            "detail": "trajectory:branch_01M6G9WW35AGTDZ5JKXCWFV5YB",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
+            "detail": "trajectory:branch_01M6G9WW35AGTDZ5JKXCWFV5YB",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
+            "detail": "trajectory:branch_01M6G9WW35AGTDZ5JKXCWFV5YB",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6GATD6C1BQ5PHDKYCHC4B00": {
+          "branch_01M6G9WW35AGTDZ5JKXCWFV5YB": {
             "evidence_only": true,
-            "id": "branch_01M6GATD6C1BQ5PHDKYCHC4B00",
-            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "id": "branch_01M6G9WW35AGTDZ5JKXCWFV5YB",
+            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
             "steps": [
               {
-                "action": "implementation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "tests/infer_precision.rs",
-                  "tests/support/documented_bootstrap.rs",
-                  "tests/cli_contracts.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Official 0.123.4 actual CLI claim, workspace ensure, returned worktree orientation succeeded before implementation in this independent clone."
+                  "tests/consumer_readiness.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_runtime/repository_host.rs"
                 ],
                 "proof_refs": [
-                  "manual-bootstrap"
+                  "released_controller_orientation",
+                  "full_native_acceptance"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Regression covers committed local-backend non-container fixture; no Docker or macOS execution claim."
-                ]
+                "validation_findings": []
               },
               {
-                "action": "publication",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Independent Python diagnostic executed generated AGENTS commands against official 0.123.4: committed fixture, own session, task add/claim, two main-checkout orientation denials, ensure returned path, bound orientation success, context resolution, workspace-only write and unchanged root HEAD/status. This is released-binary runtime evidence, not execution of the new Rust test.",
-                  "User explicitly requests regular PR publication while validation remains an action to complete; no readiness or merge claim."
+                  "tests/acceptance/native_readiness.py",
+                  "docs/native-readiness-acceptance.md",
+                  ".decapod/managed/specs/VALIDATION.md"
                 ],
                 "proof_refs": [
-                  "released-cli-bootstrap",
-                  "rustfmt",
-                  "compiled-rust-regression",
-                  "full-validation"
+                  "python_syntax",
+                  "acceptance_help",
+                  "native_live_acceptance"
                 ],
                 "scope": [
                   "root"
@@ -757,97 +696,21 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Both GitHub push and PR governance jobs fail SPEC_REVIEW_REQUIRED for INTERFACES.md with identical stderr digest 6d11fee31a4ca14d56a17e5e57421925552538c9715cdfb4987926209221aac9. Reviewed unchanged interface, architecture and security contracts against test-only change and recorded content-bound reviews through govern plan review-spec. No guard/check changes."
+                  "assets/tools/source_ci_profile.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  ".github/actions/source-ci-profile/action.yml",
+                  ".github/workflows/ci.yml",
+                  ".decapod/config.toml"
                 ],
                 "proof_refs": [
-                  "governance-artifacts"
+                  "all_119_proof_inputs_match_accepted_b4a1374",
+                  "initial_validation",
+                  "native_live_acceptance"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "tests/cli_contract_enforcement.rs",
-                  "tests/cli_contracts.rs",
-                  "tests/support/documented_bootstrap.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Inspected GitHub CLI job125830745485: selection status not_applicable on test-only paths. Existing source_ci_profile always selects cli-contracts targeting cli_contract_enforcement. Moved regression inline there, removing undeclared Bazel support input and avoiding recipe/policy changes. Previous green selective job was not execution evidence."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "reconciliation",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "User explicitly authorized latest official v0.123.5 regeneration and push for PR1498 after publication interruption. Preserved local and remote histories before merging accepted master43d5ecda as second parent. Preserved exact first-parent governance bytes before CLI updates; retained accepted authored specs and reapplied only bootstrap validation prose. Configuration was byte-identical to accepted master before all spec regeneration. Official binary SHA256 bd82d8ce9828d221845517f9f825177118aa54617ea4c62d42f56ad7a60cedcf regenerated release-bound entrypoints, Dockerfile pin and spec projections.",
-                  "Earlier publication security-review denials concerned historical journal paths already public in the accepted repository; byte comparison and independent public fetch established no new private disclosure, and bounded retries succeeded. Later bulk publication was interrupted before tree/commit/ref publication; remote remained f7d28b65. The user subsequently explicitly authorized continuing this same PR. Prior failed/incomplete proof remains failed/incomplete.",
-                  "Official project-check refreshed all four entrypoints and Dockerfile to0.123.5; it remains publication_ready=false and failed host container proof, dirty/uncommitted merge gates and existing gatekeeper findings. No readiness inferred. Unpublished always-selected bootstrap regression remains preserved without further source changes."
-                ],
-                "proof_refs": [
-                  "release-regeneration",
-                  "project-check"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "Exact-current-target publication-material check caught interface review disposition updated although prose is unchanged relative to accepted master. Corrected review to unchanged-with-reason; preserved failure as evidence and changed no source/proof gate."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "src/decapod/core/todo.rs",
-                  "tests/cli_contract_enforcement.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "GitHub jobs 125868212569 and 125868204699 ran all 21 Rust tests successfully including documented_bootstrap, then failed scratch cleanup on Podman overlay mode-555 directories in the fixture private HOME.",
-                  "Local-backend fixture explicitly disables optional claim container autorun, retains real exclusive lease and both main-checkout negative controls, asserts no container image storage and requires TempDir.close success. Production defaults and proof gates unchanged; repaired compiled regression awaits CI."
-                ],
-                "proof_refs": [
-                  "compiled-bootstrap-b3220b7",
-                  "contract-job-cleanup-b3220b7",
-                  "rustfmt"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "Initial staging used manifest.json instead of .manifest.json, causing checkpoint to reject unstaged material; an unpublished governance-only commit was created by a non-fail-fast command. Corrected staging and checkpoint before amending that unpublished commit; no remote publication occurred."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 11,
                 "validation_findings": []
               }
             ]
@@ -856,31 +719,22 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "Both GitHub push and PR governance jobs fail SPEC_REVIEW_REQUIRED for INTERFACES.md with identical stderr digest 6d11fee31a4ca14d56a17e5e57421925552538c9715cdfb4987926209221aac9. Reviewed unchanged interface, architecture and security contracts against test-only change and recorded content-bound reviews through govern plan review-spec. No guard/check changes.",
-        "Earlier publication security-review denials concerned historical journal paths already public in the accepted repository; byte comparison and independent public fetch established no new private disclosure, and bounded retries succeeded. Later bulk publication was interrupted before tree/commit/ref publication; remote remained f7d28b65. The user subsequently explicitly authorized continuing this same PR. Prior failed/incomplete proof remains failed/incomplete.",
-        "Exact-current-target publication-material check caught interface review disposition updated although prose is unchanged relative to accepted master. Corrected review to unchanged-with-reason; preserved failure as evidence and changed no source/proof gate.",
-        "GitHub jobs 125868212569 and 125868204699 ran all 21 Rust tests successfully including documented_bootstrap, then failed scratch cleanup on Podman overlay mode-555 directories in the fixture private HOME.",
-        "Independent Python diagnostic executed generated AGENTS commands against official 0.123.4: committed fixture, own session, task add/claim, two main-checkout orientation denials, ensure returned path, bound orientation success, context resolution, workspace-only write and unchanged root HEAD/status. This is released-binary runtime evidence, not execution of the new Rust test.",
-        "Initial staging used manifest.json instead of .manifest.json, causing checkpoint to reject unstaged material; an unpublished governance-only commit was created by a non-fail-fast command. Corrected staging and checkpoint before amending that unpublished commit; no remote publication occurred.",
-        "Inspected GitHub CLI job125830745485: selection status not_applicable on test-only paths. Existing source_ci_profile always selects cli-contracts targeting cli_contract_enforcement. Moved regression inline there, removing undeclared Bazel support input and avoiding recipe/policy changes. Previous green selective job was not execution evidence.",
-        "Local-backend fixture explicitly disables optional claim container autorun, retains real exclusive lease and both main-checkout negative controls, asserts no container image storage and requires TempDir.close success. Production defaults and proof gates unchanged; repaired compiled regression awaits CI.",
-        "Official 0.123.4 actual CLI claim, workspace ensure, returned worktree orientation succeeded before implementation in this independent clone.",
-        "Official project-check refreshed all four entrypoints and Dockerfile to0.123.5; it remains publication_ready=false and failed host container proof, dirty/uncommitted merge gates and existing gatekeeper findings. No readiness inferred. Unpublished always-selected bootstrap regression remains preserved without further source changes.",
-        "User explicitly authorized latest official v0.123.5 regeneration and push for PR1498 after publication interruption. Preserved local and remote histories before merging accepted master43d5ecda as second parent. Preserved exact first-parent governance bytes before CLI updates; retained accepted authored specs and reapplied only bootstrap validation prose. Configuration was byte-identical to accepted master before all spec regeneration. Official binary SHA256 bd82d8ce9828d221845517f9f825177118aa54617ea4c62d42f56ad7a60cedcf regenerated release-bound entrypoints, Dockerfile pin and spec projections.",
-        "User explicitly requests regular PR publication while validation remains an action to complete; no readiness or merge claim."
-      ],
+      "evidence": [],
       "inspected_files": [
-        "src/decapod/core/todo.rs",
-        "src/decapod/lib.rs",
-        "tests/infer_precision.rs"
+        ".github/actions/source-ci-profile/action.yml",
+        ".github/workflows/ci.yml",
+        "assets/tools/source_ci_profile.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/repository_host.rs",
+        "tests/consumer_readiness.rs"
       ],
-      "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+      "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/VALIDATION.md",
-        "tests/cli_contract_enforcement.rs",
-        "tests/cli_contracts.rs",
-        "tests/support/documented_bootstrap.rs"
+        "docs/native-readiness-acceptance.md",
+        "tests/acceptance/native_readiness.py"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -888,14 +742,12 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M6GATD6C1BQ5PHDKYCHC4B00",
+      "run_id": "branch_01M6G9WW35AGTDZ5JKXCWFV5YB",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6gasw1zdy9ztz",
+      "task_id": "bugs_01m6g9w9k64r3qkx",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Regression covers committed local-backend non-container fixture; no Docker or macOS execution claim."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
