@@ -1004,7 +1004,10 @@ mod documented_bootstrap {
             .env("HOME", home)
             .env("XDG_CONFIG_HOME", home.join("config"))
             .env("XDG_DATA_HOME", home.join("data"))
-            .env("DECAPOD_AGENT_ID", "bootstrap-test");
+            .env("DECAPOD_AGENT_ID", "bootstrap-test")
+            // Claiming still acquires a real lease. Only its optional container
+            // launch is disabled: this fixture exercises local Git worktrees.
+            .env("DECAPOD_CLAIM_AUTORUN", "false");
         command
     }
 
@@ -1163,5 +1166,10 @@ mod documented_bootstrap {
         assert!(!root.join("implementation.txt").exists());
         assert_eq!(git(&root, &["rev-parse", "HEAD"]).stdout, initial_head);
         assert!(git(&root, &["status", "--porcelain"]).stdout.is_empty());
+        assert!(
+            !home.join("data/containers/storage").exists(),
+            "local bootstrap must not initialize container image storage"
+        );
+        fixture.close().expect("remove isolated bootstrap fixture");
     }
 }

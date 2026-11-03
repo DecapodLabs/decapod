@@ -498,6 +498,19 @@
       "id": "review-relative-master",
       "summary": "Correct interface review disposition relative to accepted target without changing source or proof gates",
       "input_digest": "sha256:e721cc942f63f67f2fbe15acbb578821969465614997e9189edf30f0db998bdd"
+    },
+    {
+      "id": "bootstrap-local-cleanup",
+      "summary": "Keep local bootstrap regression out of optional container autorun and require deterministic fixture cleanup",
+      "input_digest": "sha256:a589f70fbf0bfd5cbe5b681251cea8faff638d9e1f8c26b3b41617f061591901",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/41621467352/job/125868212569"
+      ]
+    },
+    {
+      "id": "bootstrap-local-cleanup-reviewed",
+      "summary": "Bind unchanged production spec reviews to corrected local bootstrap fixture",
+      "input_digest": "sha256:78cfa4ab07efd9c48bda7b22875700a2e46d58520affc01be1d3127cc19d4faa"
     }
   ],
   "intents": {
@@ -539,22 +552,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted master adds recovery test coverage and release0.123.5; this PR preserves its architecture prose. Bootstrap regression remains in existing always-selected CLI contract target; no production component or proof adapter changes.",
-          "reviewed_code_fingerprint": "3f7fe33969c8d6e7a69846c58ca1fd73bbec93accf1e54e02925ace997ef3b86",
+          "reason": "Compared current authored prose and production sources with accepted master 43d5ecda. Only local bootstrap test environment and cleanup assertions changed: optional DECAPOD_CLAIM_AUTORUN is false, real lease and orientation gates remain active. No production API, architectural component, or security policy changed; test scope and cleanup semantics are documented in VALIDATION.md.",
+          "reviewed_code_fingerprint": "7f2bc29b98203aa8c1394d3b788fe731a1cd5e23771e4a0fed58109722bf13fe",
           "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Relative to accepted master43d5ecda, interface prose is unchanged: accepted recovery interpretation is retained, with no new API or production behavior in this test-only PR. Existing generated bootstrap sequence remains accurate.",
-          "reviewed_code_fingerprint": "3f7fe33969c8d6e7a69846c58ca1fd73bbec93accf1e54e02925ace997ef3b86",
+          "reason": "Compared current authored prose and production sources with accepted master 43d5ecda. Only local bootstrap test environment and cleanup assertions changed: optional DECAPOD_CLAIM_AUTORUN is false, real lease and orientation gates remain active. No production API, architectural component, or security policy changed; test scope and cleanup semantics are documented in VALIDATION.md.",
+          "reviewed_code_fingerprint": "7f2bc29b98203aa8c1394d3b788fe731a1cd5e23771e4a0fed58109722bf13fe",
           "spec_material_hash": "f0ca488501b1f43d968dd78e1d45b1f08adbd046d1f824d0ebfad42e1c4e7f5c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed accepted master and preserved regression: no security checks, source proof requirements, permissions or session gates weakened. Host project-check failures remain explicit rather than waived.",
-          "reviewed_code_fingerprint": "3f7fe33969c8d6e7a69846c58ca1fd73bbec93accf1e54e02925ace997ef3b86",
+          "reason": "Compared current authored prose and production sources with accepted master 43d5ecda. Only local bootstrap test environment and cleanup assertions changed: optional DECAPOD_CLAIM_AUTORUN is false, real lease and orientation gates remain active. No production API, architectural component, or security policy changed; test scope and cleanup semantics are documented in VALIDATION.md.",
+          "reviewed_code_fingerprint": "7f2bc29b98203aa8c1394d3b788fe731a1cd5e23771e4a0fed58109722bf13fe",
           "spec_material_hash": "e2090e911112df35b36fb5845c7871be442f147bb1b3a723e04e3f17f76f56b9"
         }
       ],
@@ -566,20 +579,28 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793702219Z"
+      "updated_at": "1793703304Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2d4359db7254e89ad27a074ba54d9378cd1d963a61af753d39079e148850e4d3",
+      "artifact_hash": "sha256:5eaaf1f4e818a1b5211b4d0abd3a25054f6610003787f6a2a461b6a89f7323e0",
       "blockers": [
         "PROOF_PROFILE_RECONCILIATION_REQUIRED: unchanged inherited source inventory 2d773cc1833a077b22700e94d87952e6fa215bb8bb761b777cb4a2b0ab902c79 differs from reviewed b2dad13cc7ab218b124a945e01fcb56b4bb9f5bbe044cb3785814cd07ef01b1a; required remote checks not run."
       ],
       "checks": [
         {
+          "name": "compiled-bootstrap-b3220b7",
+          "status": "passed"
+        },
+        {
           "name": "compiled-rust-regression",
           "status": "unavailable"
+        },
+        {
+          "name": "contract-job-cleanup-b3220b7",
+          "status": "failed"
         },
         {
           "name": "full-validation",
@@ -666,10 +687,24 @@
             "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6GATD6C1BQ5PHDKYCHC4B00": {
@@ -780,6 +815,40 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "src/decapod/core/todo.rs",
+                  "tests/cli_contract_enforcement.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "GitHub jobs 125868212569 and 125868204699 ran all 21 Rust tests successfully including documented_bootstrap, then failed scratch cleanup on Podman overlay mode-555 directories in the fixture private HOME.",
+                  "Local-backend fixture explicitly disables optional claim container autorun, retains real exclusive lease and both main-checkout negative controls, asserts no container image storage and requires TempDir.close success. Production defaults and proof gates unchanged; repaired compiled regression awaits CI."
+                ],
+                "proof_refs": [
+                  "compiled-bootstrap-b3220b7",
+                  "contract-job-cleanup-b3220b7",
+                  "rustfmt"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Initial staging used manifest.json instead of .manifest.json, causing checkpoint to reject unstaged material; an unpublished governance-only commit was created by a non-fail-fast command. Corrected staging and checkpoint before amending that unpublished commit; no remote publication occurred."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -791,14 +860,18 @@
         "Both GitHub push and PR governance jobs fail SPEC_REVIEW_REQUIRED for INTERFACES.md with identical stderr digest 6d11fee31a4ca14d56a17e5e57421925552538c9715cdfb4987926209221aac9. Reviewed unchanged interface, architecture and security contracts against test-only change and recorded content-bound reviews through govern plan review-spec. No guard/check changes.",
         "Earlier publication security-review denials concerned historical journal paths already public in the accepted repository; byte comparison and independent public fetch established no new private disclosure, and bounded retries succeeded. Later bulk publication was interrupted before tree/commit/ref publication; remote remained f7d28b65. The user subsequently explicitly authorized continuing this same PR. Prior failed/incomplete proof remains failed/incomplete.",
         "Exact-current-target publication-material check caught interface review disposition updated although prose is unchanged relative to accepted master. Corrected review to unchanged-with-reason; preserved failure as evidence and changed no source/proof gate.",
+        "GitHub jobs 125868212569 and 125868204699 ran all 21 Rust tests successfully including documented_bootstrap, then failed scratch cleanup on Podman overlay mode-555 directories in the fixture private HOME.",
         "Independent Python diagnostic executed generated AGENTS commands against official 0.123.4: committed fixture, own session, task add/claim, two main-checkout orientation denials, ensure returned path, bound orientation success, context resolution, workspace-only write and unchanged root HEAD/status. This is released-binary runtime evidence, not execution of the new Rust test.",
+        "Initial staging used manifest.json instead of .manifest.json, causing checkpoint to reject unstaged material; an unpublished governance-only commit was created by a non-fail-fast command. Corrected staging and checkpoint before amending that unpublished commit; no remote publication occurred.",
         "Inspected GitHub CLI job125830745485: selection status not_applicable on test-only paths. Existing source_ci_profile always selects cli-contracts targeting cli_contract_enforcement. Moved regression inline there, removing undeclared Bazel support input and avoiding recipe/policy changes. Previous green selective job was not execution evidence.",
+        "Local-backend fixture explicitly disables optional claim container autorun, retains real exclusive lease and both main-checkout negative controls, asserts no container image storage and requires TempDir.close success. Production defaults and proof gates unchanged; repaired compiled regression awaits CI.",
         "Official 0.123.4 actual CLI claim, workspace ensure, returned worktree orientation succeeded before implementation in this independent clone.",
         "Official project-check refreshed all four entrypoints and Dockerfile to0.123.5; it remains publication_ready=false and failed host container proof, dirty/uncommitted merge gates and existing gatekeeper findings. No readiness inferred. Unpublished always-selected bootstrap regression remains preserved without further source changes.",
         "User explicitly authorized latest official v0.123.5 regeneration and push for PR1498 after publication interruption. Preserved local and remote histories before merging accepted master43d5ecda as second parent. Preserved exact first-parent governance bytes before CLI updates; retained accepted authored specs and reapplied only bootstrap validation prose. Configuration was byte-identical to accepted master before all spec regeneration. Official binary SHA256 bd82d8ce9828d221845517f9f825177118aa54617ea4c62d42f56ad7a60cedcf regenerated release-bound entrypoints, Dockerfile pin and spec projections.",
         "User explicitly requests regular PR publication while validation remains an action to complete; no readiness or merge claim."
       ],
       "inspected_files": [
+        "src/decapod/core/todo.rs",
         "src/decapod/lib.rs",
         "tests/infer_precision.rs"
       ],

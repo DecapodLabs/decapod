@@ -7,8 +7,12 @@ The always-selected `cli-contracts` proof executes the inline
 interprets the generated
 `AGENTS.md` initialization commands through real CLI subprocesses. Human
 provisioning creates a committed local-backend project with container workspaces
-disabled; installation, remote backends and Docker execution are outside this
-fixture's scope. The agent acquires its own session, initializes context, creates
+disabled. The fixture sets `DECAPOD_CLAIM_AUTORUN=false` because claiming
+otherwise attempts an optional container launch independently of that project
+setting. This disables no claim lease, orientation, or proof gate. It asserts
+that container image storage was not initialized and explicitly closes its
+temporary directory so cleanup failures fail the test. Installation, remote
+backends and Docker execution are outside this fixture's scope. The agent acquires its own session, initializes context, creates
 and claims a task, creates a governed workspace, enters the returned path, and
 orients before any implementation file is written.
 
@@ -875,7 +879,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3f7fe33969c8d6e7a69846c58ca1fd73bbec93accf1e54e02925ace997ef3b86`
+- Repository signal fingerprint: `7f2bc29b98203aa8c1394d3b788fe731a1cd5e23771e4a0fed58109722bf13fe`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
