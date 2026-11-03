@@ -715,6 +715,16 @@
       "id": "issue1475-recovery-projections",
       "summary": "Refresh projections and required current-content reviews for Dagger recovery output; actual CI pending",
       "input_digest": "sha256:295596fd83d636eab8a370694676c1066077ec34c1c3463bea94a65aa6adb272"
+    },
+    {
+      "id": "issue1475-merge-release-01221",
+      "summary": "Merge accepted master as second parent preserving active journal, upstream recovery and atomic receipts; reconcile release-only source inventory before official0.122.1 projection refresh and current-content reviews",
+      "input_digest": "sha256:94d56037737489954bc86b8560e975bacadb9edf9958446165fba195e9fdd9e8",
+      "proof_refs": [
+        "git:77b9468f9fe9b4db467cd8e84349a286faa15666",
+        "git:8d6a64169930e746bb86a965acf486505e163f2f",
+        "sha256:fecf2227072e84fa6e30ba08cf14b1b52389f5ed247bcfa765d95ff408a01b6e"
+      ]
     }
   ],
   "intents": {
@@ -753,25 +763,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Recovery reuses existing ValidationGuidance and ValidationReport.finish. Same finite adapter, accepted-only authorization, immutable snapshot and pre-existing trusted engine; no new orchestrator, command or authority.",
-          "reviewed_code_fingerprint": "5eedd609f837d09b10d55e9f613098d31d8a8bca6a74b9b11a28ab221bb98e62",
-          "spec_material_hash": "8e3ceeeac52762000d0cb2d831bdcc16ba288b7959c5d23eb9a5031eedbd0218"
+          "reason": "Reviewed true merge: accepted exact-name inventory resolver, classification guidance and atomic native completion coexist with Dagger pre-existing executor. Runtime writes receipt and verdict outside frozen candidate; Dagger identity and accepted authority remain unchanged. Authored architecture retains both upstream and feature descriptions.",
+          "reviewed_code_fingerprint": "26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d",
+          "spec_material_hash": "7302c9056a80d882ef9c238915bf8346a0db83fef965148dd99f6ebbd006ff3a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Added source-grounded description of emitted Dagger-specific structured agent recovery, named config diagnostics, preserved I/O causes, conversational decisions and independently accepted rotation before activation.",
-          "reviewed_code_fingerprint": "5eedd609f837d09b10d55e9f613098d31d8a8bca6a74b9b11a28ab221bb98e62",
-          "spec_material_hash": "54d2d1ed4bfaad6583f72428eb58abdabeb52e8c66bb8ef7e8d29ed948bbeb94"
+          "reason": "Reviewed upstream actionable recovery and atomic receipt interfaces against merged runtime; Dagger structured agent guidance and dormant accepted-target configuration remain intact. All recovery is agent/harness output, conversational human decisions only; no new user-operated command or self-authorization.",
+          "reviewed_code_fingerprint": "26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d",
+          "spec_material_hash": "34d7aa9c2f8f8159e12c61353b3670b1f264578ddfc4fc27679612e8b89ecdec"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Recovery strings and error context remain advisory only: no predicate, capability, accepted authority, engine lifecycle or proof requirement changed. Missing/denied access stops; humans supply conversational decisions rather than recovery CLI execution.",
-          "reviewed_code_fingerprint": "5eedd609f837d09b10d55e9f613098d31d8a8bca6a74b9b11a28ab221bb98e62",
-          "spec_material_hash": "eb8a12e853f7459ab9cda70be86dd24f6388fa50a198063d70eb06335700d8b8"
+          "reason": "Reviewed retained native receipt bindings, fail-closed write behavior and upstream recovery labels alongside trusted pre-existing Dagger engine boundary. Same required proof and default-denied capabilities; exact engine identity checks remain observations, not immutable runtime attestation. Release-only inventory reconciliation changes no permission.",
+          "reviewed_code_fingerprint": "26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d",
+          "spec_material_hash": "002f4b77e79ab2363d896c679179061e37133983356caf1809b079e198ee3464"
         }
       ],
       "state": "APPROVED",
@@ -782,13 +792,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793666998Z"
+      "updated_at": "1793675041Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d2b495be9f7fa5f83634bb7b9a58bc531a59e3d7c9866261baea9f6d6b4e94cf",
+      "artifact_hash": "sha256:2c1eab5a9c08de94e530863a71e1d97b75c773007f721e0ff3f2837dfbb25ba6",
       "checks": [
         {
           "name": "ci-source-compile",
@@ -807,6 +817,10 @@
           "status": "unavailable"
         },
         {
+          "name": "current-target-full-proof",
+          "status": "unavailable"
+        },
+        {
           "name": "docs-ci-bf496",
           "status": "passed"
         },
@@ -819,8 +833,16 @@
           "status": "unavailable"
         },
         {
+          "name": "merge-source-review",
+          "status": "passed"
+        },
+        {
           "name": "recovery-fixtures",
           "status": "unavailable"
+        },
+        {
+          "name": "release-inventory-review",
+          "status": "passed"
         }
       ],
       "current_phase": "intent",
@@ -886,10 +908,17 @@
             "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MSA6NJNNFSAD36MDNVNK": {
@@ -1015,6 +1044,23 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Merge current accepted master8d6a64169930e746bb86a965acf486505e163f2f into existing77b9468f as second parent. Original first-parent journal bytes preserved SHA25697bbd321b26946b083a8615c324b2cc37545a88929264404e71db746da01a262 before CLI review updates; imported journal remains in second-parent history. Independent review confirms recovery and atomic native receipt source compose with Dagger authority. Verified official0.122.1 binary e26da8b05a91940e0d640b7601ae2fba9e87af7f0c565967567744e2621bb3c5 regenerated projections only after independently measured119-source config digest was finalized. Inventory changes only Cargo package version0.121.2 to0.122.1. Full current-target proof and live Dagger qualification remain unavailable."
+                ],
+                "proof_refs": [
+                  "merge-source-review",
+                  "release-inventory-review",
+                  "current-target-full-proof"
+                ],
+                "scope": [
+                  "issue-1475-dagger"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -1028,6 +1074,7 @@
         "Exact bf496 source-built Documentation Sync job125648538570 passed, as did CI-local Validate; main CI still queued. New recovery edits invalidate prior candidate results. Emitted agent guidance uses existing schema; no human recovery CLI or engine authorization grant. New fixture execution awaits official CI.",
         "Generator embeds repository-readiness.md at compile time. Existing generated config-schema already carries exact Dagger text, now copied to canonical authored input. Official release generation removed that text only; restored tracked projection. Exact source-built CI generator verification remains required, no local source build performed.",
         "GitHub source CI job 125627507466 at 13201 reports needless_borrows_for_generic_args at validation_runtime.rs633; job 125626769890 source-build succeeds but generated docs drift. Remove unnecessary format borrow without changing failure semantics; checks remain required.",
+        "Merge current accepted master8d6a64169930e746bb86a965acf486505e163f2f into existing77b9468f as second parent. Original first-parent journal bytes preserved SHA25697bbd321b26946b083a8615c324b2cc37545a88929264404e71db746da01a262 before CLI review updates; imported journal remains in second-parent history. Independent review confirms recovery and atomic native receipt source compose with Dagger authority. Verified official0.122.1 binary e26da8b05a91940e0d640b7601ae2fba9e87af7f0c565967567744e2621bb3c5 regenerated projections only after independently measured119-source config digest was finalized. Inventory changes only Cargo package version0.121.2 to0.122.1. Full current-target proof and live Dagger qualification remain unavailable.",
         "Prior policy-context checkpoint recorded intention only: guarded edit aborted before writing because fixture occurs twice. This checkpoint applies the actual source change and diagnostic assertions; no test execution claimed."
       ],
       "inspected_files": [

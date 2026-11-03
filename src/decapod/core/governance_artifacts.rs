@@ -187,7 +187,7 @@ pub fn inventory_with_options(
         entry(
             repo_root,
             "validation",
-            "successful Decapod validation receipt bound to the current trajectory",
+            "legacy project-prerequisite receipt bound to its preparation trajectory; not full publication proof",
             ArtifactValidity {
                 valid: receipt_chain_valid,
                 semantic_freshness: receipt_freshness,
@@ -350,7 +350,7 @@ fn entry(
                     .into()
             }
             "validation" => {
-                "Run `decapod validate` to refresh the receipt bound to current governance inputs."
+                "Run `decapod govern project-check` only if a legacy preparation receipt is needed. Full `decapod validate` establishes publication readiness independently; native success publishes completion/native-readiness-receipt.json alongside its verdict in the external evidence directory."
                     .into()
             }
             _ => format!(

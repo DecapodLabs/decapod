@@ -1,11 +1,43 @@
 # Architecture
 
+## Native completion custody
+
+`validation_runtime::write_native_completion` writes and syncs native receipt
+and verdict into a private temporary directory outside the frozen checkout and
+Git metadata, then publishes the pair with one directory rename. No fallible
+operation follows that publication point. Creation, partial-write or sync
+failure leaves no published successful pair and the returned report fails closed.
+`workspace::ensure_required_governance_artifacts_in_pr` checks required intent
+and trajectory material independently of legacy preparation receipts; the full
+readiness boundary remains responsible for all selected proof and final custody.
+
 ## Architecture Overview
 
 Decapod is a Rust governance kernel invoked by coding agents through a CLI and
 structured RPC. It connects human intent, project authority, coordinated
 execution, and evidence in repository-owned state. Each invocation is finite;
 the repository carries the work between invocations.
+
+Source adoption inventory in `src/decapod/core/init_reconciliation/mod.rs` binds
+actual directory-entry paths, rather than successful filesystem probe spellings.
+The `source_entry_path` resolver checks source components and the existing
+reviewed symlink policy first, then resolves each existing discovery root to its
+exact entry spelling before `Discovery::visit` hashes it. This keeps a single
+`Justfile` from producing a phantom `justfile` on case-insensitive filesystems;
+distinct entries on case-sensitive filesystems remain separate even when their
+contents or underlying inode are identical. Discovery still includes untracked
+files and works before Git initialization, so a Git-only listing cannot hide new
+build inputs. Snapshot binding remains exact and does not forgive case-only
+working-tree drift from the tracked candidate.
+
+Spelling resolution reads at most 8,192 entries per containing directory and
+rejects ambiguous or unresolved aliases, while the existing source entry,
+depth, per-file and total-byte bounds remain in force. Failure returns an
+incomplete-discovery blocker rather than a partial accepted inventory. Tests in
+`init_reconciliation/tests.rs` cover both Justfile spellings without Git,
+same-content and hardlinked distinct names, nested spelling resolution and the
+lookup bound; their filesystem-sensitive branches exercise the host's actual
+case behavior and do not claim emulated APFS or Windows execution on Linux.
 
 `snapshot_provider::public_buildkite::CurlPublicReader` retains its typed,
 anonymous GET authorization and bounded redirect loop. Artifact redirects admit
@@ -567,7 +599,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5eedd609f837d09b10d55e9f613098d31d8a8bca6a74b9b11a28ab221bb98e62`
+- Repository signal fingerprint: `26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

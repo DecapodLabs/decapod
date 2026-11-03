@@ -1,5 +1,21 @@
 # Security
 
+## Native receipt and dependency repair boundaries
+
+Native success receipts are produced only after the complete selected proof and
+required readiness decision, bound to exact candidate/target and governance.
+They cannot be imported to authorize publication or replace execution. Atomic
+private completion staging prevents partial receipt/verdict writes from exposing
+a successful pair; no tracked candidate bytes are changed by receipt output.
+The root Cargo.lock updates Tokio1.52.3 to1.53.3 for RUSTSEC-2026-0386, changing
+only that package's version and registry checksum. This addresses the actual
+required dependency-check failure without suppressing advisories or modifying
+other dependency edges. The pinned Bazel9.3.0 module dependency generator also
+refreshes `MODULE.bazel.lock` from that Cargo input; byte review permits only
+Tokio references/version/checksum and the Cargo input digest. Generation changes
+no trust configuration, proof profile, registry or unrelated dependency graph.
+It is not a claim that full validation has passed.
+
 Public Buildkite artifact redirects admit only the exact documented HTTPS
 `buildkiteartifacts.com` host and legacy `s3.amazonaws.com/buildkiteartifacts.com`
 bucket prefix, with unchanged four-UUID layout, exact producer-job binding,
@@ -393,7 +409,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5eedd609f837d09b10d55e9f613098d31d8a8bca6a74b9b11a28ab221bb98e62`
+- Repository signal fingerprint: `26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

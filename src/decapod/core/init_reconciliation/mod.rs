@@ -16,6 +16,9 @@ const MAX_ENTRIES: usize = 512;
 const MAX_DEPTH: usize = 8;
 const MAX_FILE_BYTES: usize = 1024 * 1024;
 const MAX_TOTAL_BYTES: usize = 8 * 1024 * 1024;
+// Resolving a fixed discovery root must not scan an unbounded parent directory.
+// Unrelated entries do not consume the smaller source-inventory entry budget.
+const MAX_NAME_LOOKUP_ENTRIES: usize = 8192;
 
 pub(crate) const TOOLCHAIN_ALIAS: &str = "rust-toolchain.toml";
 pub(crate) const TOOLCHAIN_TARGET: &str = ".config/build/rust-toolchain.toml";
@@ -201,6 +204,64 @@ fn metadata(root: &Path, relative: &str) -> Result<Option<fs::Metadata>, Decapod
     Ok(last)
 }
 
+/// Filesystem lookup may accept a different spelling (for example `justfile`
+/// for `Justfile` on default APFS). Inventory directory-entry names, not probe
+/// aliases, so the resulting keys can be bound by an exact-path snapshot.
+/// Keep discovery independent of Git: untracked and not-yet-adopted source
+/// inputs still invalidate the reviewed inventory.
+fn source_entry_path(root: &Path, relative: &str) -> Result<Option<String>, DecapodError> {
+    // Preserve validation of every component and the reviewed symlink exception
+    // before inspecting directories; never follow an unreviewed source ancestor.
+    if metadata(root, relative)?.is_none() {
+        return Ok(None);
+    }
+    let mut directory = root.to_path_buf();
+    let mut resolved = Vec::new();
+    for component in Path::new(relative).components() {
+        let Component::Normal(requested) = component else {
+            return Err(invalid(format!("unsupported source path: {relative}")));
+        };
+        let requested = requested
+            .to_str()
+            .ok_or_else(|| invalid("non-UTF-8 source filename"))?;
+        let mut exact = None;
+        let mut aliases = BTreeSet::new();
+        for (index, entry) in fs::read_dir(&directory)
+            .map_err(DecapodError::IoError)?
+            .enumerate()
+        {
+            if index >= MAX_NAME_LOOKUP_ENTRIES {
+                return Err(invalid(
+                    "source spelling lookup exceeds the bounded entry limit",
+                ));
+            }
+            let entry = entry.map_err(DecapodError::IoError)?;
+            let name = entry.file_name();
+            // Unrelated non-UTF-8 names are not source inputs.
+            let Some(name) = name.to_str() else {
+                continue;
+            };
+            if name == requested {
+                exact = Some(name.to_owned());
+            } else if name.eq_ignore_ascii_case(requested) {
+                aliases.insert(name.to_owned());
+            }
+        }
+        let name = match exact {
+            Some(name) => name,
+            None if aliases.len() == 1 => aliases.into_iter().next().unwrap(),
+            _ => {
+                return Err(invalid(format!(
+                    "cannot resolve exact source spelling: {relative}"
+                )));
+            }
+        };
+        directory.push(&name);
+        resolved.push(name);
+    }
+    Ok(Some(resolved.join("/")))
+}
+
 impl Discovery {
     fn visit(&mut self, root: &Path, relative: &str, depth: usize) -> Result<(), DecapodError> {
         if self.files.contains_key(relative) {
@@ -297,7 +358,9 @@ fn discover(root: &Path) -> Result<Discovery, DecapodError> {
                 "profile declarations cannot hash their own config file",
             ));
         }
-        discovery.visit(root, path, 0)?;
+        if let Some(path) = source_entry_path(root, path)? {
+            discovery.visit(root, &path, 0)?;
+        }
     }
     Ok(discovery)
 }
