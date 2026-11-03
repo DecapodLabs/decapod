@@ -749,7 +749,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef`
+- Repository signal fingerprint: `9b2d8b291b2e9774becdc5a8281b12553f67fbeb7999fc5543c31c1c06b77d92`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -940,3 +940,92 @@ requires independently accepted dormant authority before activation. Restored
 prerequisites require fresh complete validation, not reuse of failed evidence.
 Fixture tests cover guidance fields, cause retention and rejection; actual
 Dagger engine execution remains unqualified.
+
+## Handoff caller and recovery contract
+
+The `todo handoff` interface captures the actual request caller before broker
+execution. `--from` asserts the expected recorded owner and `--to` selects the
+receiver; neither changes caller identity or trust. The result and task event
+preserve actor, source owner, receiver and recovery authority separately.
+`plugins::policy::eval_effective_policy` reports the enforced handoff zone,
+including verified trust and approval, from the same canonical risk-zone data.
+
+`core::todo::handoff_task_as` supports an explicit in-process request caller and
+shares the broker's existing cooperative operator trust semantics for handoff.
+It never promotes stored agent trust. Cross-owner recovery additionally requires
+an explicit matching source owner and live exact task-bound approval. Successful
+recovery consumes the approval records atomically with custody mutation and
+records their IDs; failed preconditions retain both state and authority. General,
+wrong-target, expired and consumed approvals cannot authorize that recovery.
+The reserved local operator identity is not operating-system authentication.
+
+The scoped tests in `tests/plugins/todo.rs` and `tests/plugins/policy.rs` cover
+caller/source separation, CLI default caller, operator recovery, policy parity
+and rejection boundaries. These tests are authored obligations until full
+candidate validation executes; no test or PR-readiness success is asserted here.
+
+The `eval_effective_policy` helper shares `is_read_only_operation` with broker
+mutation enforcement and return LOW with no mutation requirements or HITL gate
+before reading mutation policy or initializing a datastore. In particular,
+`todo.get`, `todo.list`, `todo.status`, and `policy.list` cannot seed TODO state
+or inherit mutation-zone trust and approval requirements, including for paths
+whose write-risk classification is critical. The read-only side-effect regression
+in `tests/plugins/policy.rs` remains authored and unexecuted pending validation.
+This helper-level guarantee does not make the entire CLI side-effect-free:
+preexisting policy CLI initialization can still initialize policy storage.
+
+The first executed plugin suite on `fe0b7b77` passed policy tests and 24 of
+27 TODO tests, but three TODO fixtures failed before exercising their intended
+assertions: missing subprocess Git author identity, identical source/recipient
+input, and a legacy CLI fixture omitting actual caller identity. The fixtures
+now supply explicit caller context and deterministic local test Git identity,
+and separately check source-owner and recipient spoof rejection. These repairs
+remain unverified until the exact new candidate executes; no runtime policy
+requirements were relaxed to accommodate the fixtures.
+
+### Agent/harness execution boundary
+
+Users execute only `decapod init`. All other Decapod interfaces, including
+handoff evaluation, approval recording and recovery execution, are invoked by
+the AI agent/harness. A human provides intent and explicit approval through
+that agent/harness, never a required human operator CLI session. The harness
+preserves the actual established caller independently of approval attribution,
+expected owner and recipient, and reports the resulting audit. Missing caller
+authority remains a blocker; the execution boundary grants no role elevation.
+
+The invoking agent/harness discovers handoff recovery in actual failure output:
+`ValidationError` preserves the denial reason and appends `HANDOFF_RECOVERY:`
+plus JSON schema `decapod.todo.handoff-recovery.v1`; non-success JSON responses
+carry the same object as `recovery`. Fields identify task, actual actor, expected
+owner and recipient. `inspect_argv` and `evaluate_argv` provide bounded read and
+policy-evaluation actions; `next_action` requires established authority and
+conversational human approval when necessary, never self-authorization. It
+warns that reconciliation can fail after custody commits, requiring inspection
+before retry. Diagnostic construction itself does not read or write state.
+Regression assertions cover both early validation errors and JSON precondition
+failures without creating storage; these new assertions await exact CI execution.
+
+Other typed failures, including post-transfer reconciliation I/O, emit the same
+versioned recovery context to stderr on a best-effort basis before returning the
+original typed error unchanged. Failure to write diagnostic output cannot mask
+the original error. The context uses a bounded generic reason for these failures
+and does not duplicate their potentially sensitive raw cause into recovery JSON;
+the ordinary error retains its original cause. Unit regressions cover preserved
+I/O classification and diagnostic broken-pipe behavior.
+
+### Integration with request-scoped broker identity
+
+The v0.123.1 accepted broker carries each request's established caller and working
+directory into its subprocess. Handoff reads that request identity independently
+of expected owner and receiver; merging the broker fix does not promote caller
+trust or remove exact recovery approval. Accepted Dagger/native-proof interfaces
+and their agent-directed recovery remain intact alongside this handoff contract.
+The earlier fixture-repair candidate `67b166d9` passed both push and PR GitHub
+plugin suites; this integrated candidate still requires fresh complete proof.
+
+The concurrent caller regression uses distinct seeded `features` and `docs`
+categories while retaining independent caller identities, directories, scopes,
+leader traversal and response/persisted-owner assertions. Normal category
+validation remains enforced: caller names do not create categories. Buildkite
+build 2931 exposed the invalid-category fixture setup before either claim;
+the corrected fixture requires fresh official execution evidence.

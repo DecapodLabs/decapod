@@ -430,7 +430,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef`
+- Repository signal fingerprint: `9b2d8b291b2e9774becdc5a8281b12553f67fbeb7999fc5543c31c1c06b77d92`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -597,3 +597,28 @@ regenerated from the normal root Cargo lock and checked in strict lockfile mode.
 Required hosted dependency checks and full validation still govern publication;
 neither a lock update nor a public CI log is a passing receipt. Prior failed
 validation and provider bootstrap/metadata rate-limit errors remain recorded.
+
+## Approved ownership recovery
+
+Handoff resolves policy from the actual caller, never from the optional expected
+owner or intended receiver. A basic caller cannot acquire operator authority by
+putting an operator label in either field. The transactional handoff gate uses
+the same existing local cooperative operator trust interpretation as the broker;
+other task operations and stored trust levels are unchanged. These role labels
+are self-declared local authority, not OS authentication or remote credentials.
+
+Cross-owner recovery requires explicit expected owner and an exact task-bound
+live approval, consumed atomically on successful custody transfer. Prior owner,
+actual actor, receiver and consumed approval IDs remain in the task event. Wrong,
+expired, broad and already-consumed grants cannot authorize this recovery, and
+failed preconditions do not consume authority. Dependency, lease, overlap and
+completion-proof gates remain independently required. The new regressions are
+unexecuted until official candidate validation succeeds.
+
+Recovery never requires a human to execute Decapod beyond `decapod init`.
+The AI agent/harness obtains the human decision and records its exact bounded
+approval before acting under its already established authorized request identity.
+Approval attribution does not elevate the executing caller; a harness must not
+self-select a reserved role, promote its trust, or impersonate the previous owner
+to evade a denial. Existing trust, exact-target single-use approval and custody
+checks remain unchanged; this is an execution-contract correction, not new authority.

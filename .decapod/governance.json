@@ -450,134 +450,274 @@
     }
   },
   "change": {
-    "id": "change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+    "id": "change_01M6F0MQZC0RPBJ0MMR9D6H77D",
     "base_commit": "3216d7170b80a350c5a8417c38dda9c5c4d8bb23",
     "target_base": "origin/master"
   },
+  "claims": {
+    "handoff-custody": {
+      "statement": "Handoff binds actual caller, enforces trust and exact one-use recovery approval, and audits actual identities",
+      "falsifier": "CLI uses from identity as actor, diagnostics omit handoff policy, or missing wrong expired reused recovery approval changes custody",
+      "status": "open"
+    }
+  },
   "checkpoints": [
     {
-      "id": "bootstrap-1476-release",
-      "summary": "Initialize fresh release 0.121.2 workspace preserving previous failed candidate",
-      "input_digest": "sha256:6b1aa309178ea6b7fc14871af1cfae536be4ab94aa34c0bf99e79fe9a69e92b5"
+      "id": "bootstrap-01212",
+      "summary": "Initialize issue1477 candidate with official0.121.2 governed projections",
+      "input_digest": "sha256:363b06ec282aa0f2e3bbde2b7800d06d6d7d8beaf04c80a51aeecca6fc746664"
     },
     {
-      "id": "replay-group_broker.rs",
-      "summary": "Replay authored caller isolation implementation or regression from preserved candidate; tests pending",
-      "input_digest": "sha256:76c2c98250ce79bc9b4059a6354618c4bff3feb21d481ddccb62d16820f9f75c"
+      "id": "authored-src-decapod-core-todo-rs",
+      "summary": "Replay reviewed issue1477 authored change in src/decapod/core/todo.rs with current release governance",
+      "input_digest": "sha256:dfc702d0abc4e7d3778e0b9ea33b3fbc51dc3c931cf6440a05e1513e6a4c5bba"
     },
     {
-      "id": "replay-group_broker_tests.rs",
-      "summary": "Replay authored caller isolation implementation or regression from preserved candidate; tests pending",
-      "input_digest": "sha256:09728072b362ca92385730f40541ccd83d3893af057755785da3c5e4ea521875"
+      "id": "authored-src-decapod-plugins-policy-rs",
+      "summary": "Replay reviewed issue1477 authored change in src/decapod/plugins/policy.rs with current release governance",
+      "input_digest": "sha256:50c040b4a1628fecd087ed807e7982da40898ec3a94b96c17d0160d2275ca818"
     },
     {
-      "id": "replay-integration-group-broker",
-      "summary": "Replay concurrent caller identity integration regression; tests pending",
-      "input_digest": "sha256:57ec51b4d166a1074a4aac04e2e82e8d1cdb1b07ed588322e5800ab1dc56d19e"
+      "id": "authored-tests-plugins-todo-rs",
+      "summary": "Replay reviewed issue1477 authored change in tests/plugins/todo.rs with current release governance",
+      "input_digest": "sha256:fbc429c2651fe5a66cc1ba200fafaf87ab3bd1b1be23f48d4e66332e9a40745b"
     },
     {
-      "id": "caller-custody-spec",
-      "summary": "Document caller custody, ephemeral session transport and unexecuted regression obligations",
-      "input_digest": "sha256:8f9d2afb78426af849e13b739a3df0f1bf3e720a457d1952b9a12af972ffc554"
+      "id": "authored-tests-plugins-policy-rs",
+      "summary": "Replay reviewed issue1477 authored change in tests/plugins/policy.rs with current release governance",
+      "input_digest": "sha256:00063f50be65392046506207e69a4e13893d8d3605c5abb3a7ca43b69f39d315"
     },
     {
-      "id": "caller-cwd-executable",
-      "summary": "Resolve running binary independently of request cwd; preserve existing subprocess boundary",
-      "input_digest": "sha256:942921ecc6f0863d66be5eb8d50b2f44574ec90767da816aca801603422856f8"
+      "id": "authored-docs-agent-command-contracts-md",
+      "summary": "Replay reviewed issue1477 authored change in docs/agent/command-contracts.md with current release governance",
+      "input_digest": "sha256:9d5759988df746bc7e44d11627fcd52179676fe9b0c9c3ca6d7318074904e186"
     },
     {
-      "id": "reviewed-release-inventory",
-      "summary": "Reconcile reviewed release-only Cargo version changes without source graph or gate weakening",
-      "input_digest": "sha256:7580261f00863a18b02712fad72d244433c9c5061ee773b98b84764bbb85ce4c"
+      "id": "semantic-interface",
+      "summary": "Record handoff caller and recovery interfaces with explicit unexecuted proof obligations",
+      "input_digest": "sha256:bb0bed1911dd9149c9d5314c868267b7748b91ff7d642aacbe0af0267a81bc35"
     },
     {
-      "id": "refresh-caller-specs",
-      "summary": "Refresh generated caller custody attestations under release 0.121.2",
-      "input_digest": "sha256:67a248d3e20b6786ef12c5fc5dba8ad0f7f83591f8f6602e53479d4e4f0b6053"
+      "id": "expired-recovery",
+      "summary": "Ensure expired exact recovery authority leaves recorded custody unchanged",
+      "input_digest": "sha256:ae73453cb001ced90850f5453d0b8328adfd18815618169514146a5726e2100a"
     },
     {
-      "id": "prove-shared-broker-regression",
-      "summary": "Require both concurrent claims to traverse the same elected leader; prevent false-positive direct or re-elected execution",
-      "input_digest": "sha256:dbded51cd3bbae2ba11bc41baf7e7bb182bd48487b7bccd735a0c49e31057e08"
+      "id": "generated-specs",
+      "summary": "Refresh generated spec attestations after handoff implementation",
+      "input_digest": "sha256:3a7d341dde0f4e123b9f6baf66e85bd3d7bd263db3be674429c0354926438620"
     },
     {
-      "id": "refresh-shared-leader-proof",
-      "summary": "Refresh generated attestations after shared-leader regression assertion",
-      "input_digest": "sha256:425147b78110b39b5100e54fc09d69a9c3286ca4b004039ac9de1cdf4e4194fc"
+      "id": "security-contract",
+      "summary": "Describe unchanged local identity boundary and stricter audited cross-owner recovery authority",
+      "input_digest": "sha256:4fa4e300565c3177054d62b7fd48f15ba47b28fe9fe4422d02be84d57eb24e50"
     },
     {
-      "id": "tokio-advisory-remediation",
-      "summary": "Update only Tokio lock version and registry checksum to 1.53.3 for RUSTSEC-2026-0386; preserve dependency graph and advisory checks",
-      "input_digest": "sha256:d8401e13031cd32e8d3ef3e913a39c81927d505f705cd17e67f367479d6fc268"
+      "id": "final-generated-specs",
+      "summary": "Bind reviewed publication specs to authored recovery candidate",
+      "input_digest": "sha256:e5c3ecea0788b7b499ab772a7bb0f10200d40752c6b0c6524ac3fc2f44416cd6"
     },
     {
-      "id": "broker-interface-contract",
-      "summary": "Specify internal protocol v2 caller replacement, secret transport and replay boundary after actual source review",
-      "input_digest": "sha256:e29559d6dd8a9badcecd1af7e80e82c51165d998970efd24c96635522246dc6d"
+      "id": "handoff-source-inventory",
+      "summary": "Reviewed all 119 source paths against accepted declaration 213ed9ca: only Cargo.toml and Cargo.lock package version changes 0.121.0 to 0.121.2; complete provider graph and recipes unchanged",
+      "input_digest": "sha256:6fcf2c5a7b6e3e9733c821f6605853f01a75b162a0ce6c72266724abd0be9867"
     },
     {
-      "id": "broker-security-contract",
-      "summary": "Document bounded secret custody and existing cooperative trust, and precise advisory remediation without gate waiver",
-      "input_digest": "sha256:4402e73eac7f89c4daf02e568350a84c48e88461b9dba8445d91ea13d85628e6"
+      "id": "handoff-readonly-diagnostic",
+      "summary": "Align diagnostic early read-only boundary with broker enforcement; no TODO initialization or mutation approval requirements for read operations",
+      "input_digest": "sha256:5586666954a18c0794595d534f28dc7381be9b6846fdd6e79d1fc63cf6f024aa"
     },
     {
-      "id": "reviewed-patched-tokio-inventory",
-      "summary": "Reconcile only reviewed Tokio lock version/checksum inventory change; required graph and checks remain unchanged",
-      "input_digest": "sha256:62e68f95e05ec016a45a49ca9932095e6b728784a4bf98611fff769807561bb6"
+      "id": "handoff-readonly-regression",
+      "summary": "Add unexecuted read-only diagnostic regression: mutation categories and critical path cannot require mutation authority or create database state",
+      "input_digest": "sha256:6766a74108260dc30156c00e11e79034e339824c3797c4eb40b73df360277412"
     },
     {
-      "id": "reviewed-caller-publication-specs",
-      "summary": "Refresh projections and bind actual current-content interface architecture and security reviews; readiness still pending",
-      "input_digest": "sha256:6d48a514a5f45cbb913afbeda67139272bfe77ace85ce81709d1b51ad93fd8a5"
+      "id": "readonly-configured-category",
+      "summary": "Use supported policy_changes category to exercise read-only policy.list bypass rather than unknown category",
+      "input_digest": "sha256:e7a9755a4d5911b727a8da73b2cf9759eaeeb346d47f5c3fcc15cdb854e81ee3"
     },
     {
-      "id": "canonical-bazel-tokio-lock",
-      "summary": "Apply independently generated Bazel9.3 Tokio lock refresh, verify hashes and five substitutions; preserve failed bb631 provider evidence",
-      "input_digest": "sha256:b2b008d36c6fbbb18a0380b471fe6842eda1017236f6fb185e063322cc8fa9ff"
+      "id": "readonly-interface-contract",
+      "summary": "Document read-only diagnostic enforcement parity and no mutation side effects; regression remains unexecuted",
+      "input_digest": "sha256:c99da499f2e397912e243c676e67fbafceb28bf7d6fd12ec8d447d92ccde1284"
     },
     {
-      "id": "reviewed-bazel-tokio-inventory",
-      "summary": "Reconcile only independently reviewed generated Bazel lock source inventory change; graph/policy unchanged",
-      "input_digest": "sha256:c3f0b800ecec6001e3d94193f75cd1f4eacb73f1b2899c33c155579e8334ed75"
+      "id": "readonly-spec-bind",
+      "summary": "Bind reviewed read-only diagnostic repair to current source; tests unavailable and upload not retried",
+      "input_digest": "sha256:3a824d8eeb40a148b78d6c6447ebca79b00746830aefff463001fba476316a6d"
     },
     {
-      "id": "refresh-bazel-current-spec-reviews",
-      "summary": "Refresh generated projections and current-content reviews after canonical build lock repair",
-      "input_digest": "sha256:4ff87b9d13455e46dd69a31c97742b9b54812b8595f93ffb4e415b9a9ab29616"
+      "id": "handoff-tokio-advisory",
+      "summary": "Repair required CI RustSec RUSTSEC-2026-0386 using reviewed minimal Tokio 1.53.3 version/checksum patch; before/after lock hashes verified, no other dependency changes",
+      "input_digest": "sha256:9a5deac15bc5eb6ac613bf193f446633a1696424cd14305fb328ad5fe6e85c97"
     },
     {
-      "id": "issue1476-v0123-merge",
-      "summary": "Merge accepted master2893f1c0 into caller isolation PR with original journal custody, preserved identity source/tests, merged authored specs and official0.123.0 projections after inventory review",
-      "input_digest": "sha256:fe967ac64bb310ca5ecc3c3ad5a1bda10c56969331eb6a9a4a3ef721df187376",
+      "id": "handoff-tokio-inventory",
+      "summary": "Compared all119 inventory sources against API-published accepted candidate: only reviewed Cargo.lock Tokio version/checksum changed; required graph and adapters unchanged",
+      "input_digest": "sha256:cd06c28cb574f5ea49f890b3207a5d5d50b0132a933248ab9fa487acd3d466ad"
+    },
+    {
+      "id": "handoff-readonly-caveat",
+      "summary": "Clarify reviewed no-side-effect guarantee is evaluation-helper-only; retain existing policy CLI storage initialization caveat",
+      "input_digest": "sha256:4b6e1762dfd565c31f22bbbf411400dd551640ca4db44e88d2961ce3abb981ec"
+    },
+    {
+      "id": "handoff-publication-review",
+      "summary": "Bind refreshed projections and current-content review of INTERFACES SECURITY ARCHITECTURE after source review; no validation success asserted",
+      "input_digest": "sha256:79600f80b9d1631c2600b07852e2f904f61f04b679bdadf0480a7a9624024f78"
+    },
+    {
+      "id": "handoff-bazel-tokio",
+      "summary": "Repair required Bazel stale lock failure: verify shared generated module patch hashes and exact five Tokio-only substitutions; no unrelated dependency graph or proof changes",
+      "input_digest": "sha256:dd857f3c704f6e300a27b254d8858d881b9180c74b37fa5c54cbbe27a9354b8d"
+    },
+    {
+      "id": "handoff-bazel-inventory",
+      "summary": "Reviewed all119 source inventory hashes against bf8d47af: only MODULE.bazel.lock changed to align already-reviewed Tokio security patch; source proof graph and trust unchanged",
+      "input_digest": "sha256:e3f3df4c3fed1398cf4efa53c7d1a309453dcf26b13f754b27d1b9210fb8ca98"
+    },
+    {
+      "id": "handoff-bazel-specs",
+      "summary": "Refresh source-bound spec projections and current-content reviews after module lock repair; old collector incomplete, new official proof pending",
+      "input_digest": "sha256:32a3f96f1a12e98582f6e8a9c4fff8e10f34c1b8a47dcd5feaabc0194b5bdf63"
+    },
+    {
+      "id": "handoff-executed-fixtures",
+      "summary": "Repair three actual plugin CI fixture failures job125618302466: explicit actual caller across risk test session, deterministic CLI Git identity, separate source/receiver spoof rejection without invalid same-agent precondition; no production gates changed",
+      "input_digest": "sha256:13de4842e696ca1340f7884e363a71f96aa75d6983e2553e15b98ba70e851afb"
+    },
+    {
+      "id": "handoff-ci-fixture-evidence",
+      "summary": "Record actual prior plugin results and bounded fixture repairs without claiming repaired candidate passes",
+      "input_digest": "sha256:8bf0f5e41f074c3c2d370791e0213384992c3b52b6c6abfe4c2f8ecf2860ceae"
+    },
+    {
+      "id": "handoff-ci-fixture-projections",
+      "summary": "Refresh current source-bound projections and reviews after actual plugin CI fixture repairs; full validation pending",
+      "input_digest": "sha256:b2d8e78ebc4a9017d00f5e36afb19ce2efd44e2a972803b062b098ef968eb954"
+    },
+    {
+      "id": "handoff-agent-only-recovery",
+      "summary": "Correct user interface contract: only agent/harness executes after human init; human decisions through harness, existing actual actor trust and exact approval retained, no self-promotion",
+      "input_digest": "sha256:6b16a953b958da6167a72ecabb7ae4b1bf5824e7843b0a63f3be32775ad05ab4"
+    },
+    {
+      "id": "handoff-agent-only-interface",
+      "summary": "Specify user init-only boundary and agent/harness execution of all recovery interfaces, with human decisions communicated through agent",
+      "input_digest": "sha256:7d395536192a4185438e565819c8cee7c49e00849e20b50c3abd85e5197f05d1"
+    },
+    {
+      "id": "handoff-agent-only-security",
+      "summary": "Preserve no-self-promotion and independent approval attribution under AI-only execution; no new authority or production policy changes",
+      "input_digest": "sha256:9302f2fce05c495520f16a72484f236764d9ffbe76767e5c5e60a2a314c719b7"
+    },
+    {
+      "id": "handoff-agent-only-projections",
+      "summary": "Bind canonical agent-only recovery contract and current-content reviews; prior exact CI still pending and production policy unchanged",
+      "input_digest": "sha256:0b5799c3e77a0b188dd5fde596fe6433700f7e7e3423c5ae1ecdc57a08ba71e8"
+    },
+    {
+      "id": "handoff-agent-recovery-output",
+      "summary": "Expose versioned recovery diagnostic in actual ValidationError and JSON failure outputs for invoking agent/harness; inspect/eval argv only, no self-authorizing approval or blind custody retry, unchanged policy enforcement",
+      "input_digest": "sha256:c2848dbbccef745ea780c5324fb9709d5b55080840f1b299809c552aad61d2b6"
+    },
+    {
+      "id": "handoff-agent-recovery-regression",
+      "summary": "Add actual failure-output contract regression: reason/context/read-only argv, conversational human decision, no self-promotion or approval command, no state created for precondition failures; authored not executed",
+      "input_digest": "sha256:873c33123d6a1ddad7a6f4e8dfccda14b0c0b89944642005e01c87e4c7118b08"
+    },
+    {
+      "id": "handoff-runtime-recovery-reference",
+      "summary": "Document idiomatic failed-execution recovery diagnostic returned to agent/harness, not human-run CLI instructions; preserve uncertain committed-custody warning",
+      "input_digest": "sha256:9939e3d9668fc21f5118520ab02d26db4e0d11decc2683b52f57e2b704faca65"
+    },
+    {
+      "id": "handoff-runtime-recovery-spec",
+      "summary": "Specify actual failure output recovery contract and diagnostic no-side-effect boundary; human decision via agent only, no granted authority or blind replay",
+      "input_digest": "sha256:4ddc983934a40f19029d7e097bd2d6e46364deeca6304ebb2b29911faa2e6ba2"
+    },
+    {
+      "id": "handoff-runtime-recovery-projections",
+      "summary": "Bind runtime recovery contract code/tests/specs to exact candidate; source CI pending, no local shadow tests",
+      "input_digest": "sha256:9b64211f9eb3a693fabb4a4f29206b7199551ed3d264eb0e38268276546ea7f6"
+    },
+    {
+      "id": "handoff-io-recovery-context",
+      "summary": "Independent review repair: emit best-effort recovery context for non-validation errors while returning original typed cause; stderr failure cannot replace it; unit regressions for IO type and broken pipe; normalize JSON reason",
+      "input_digest": "sha256:c26273fc184a51e3d23d57de23b515c67a8550ea61c543603eb9517980816452"
+    },
+    {
+      "id": "handoff-reason-normalization",
+      "summary": "Assert recovery reason remains plain original message rather than serialized quoted JSON string",
+      "input_digest": "sha256:8f96f3770e7839ee131c342e597f0714da28f1a6bf859406fd8bc9500da38a74"
+    },
+    {
+      "id": "handoff-typed-failure-contract",
+      "summary": "Document best-effort stderr recovery for original typed failures without replacing cause or embedding sensitive raw cause in context",
+      "input_digest": "sha256:0b4a5d396ee26b897b81816e1eaad8e5242bc3a61585059c23952bdcb97b0636"
+    },
+    {
+      "id": "handoff-reviewed-recovery-projections",
+      "summary": "Bind independently reviewed recovery context correction and authored regressions; exact CI remains required",
+      "input_digest": "sha256:e03dca4bbe8104da369f15ca16f873221217ee2247712c9f756c6003ae14a60f"
+    },
+    {
+      "id": "handoff-v1231-accepted-merge",
+      "summary": "True two-parent reconciliation of PR53454e6a with accepted cc72bd54; preserved first-parent journal blob f836dd2bf2ff81c7ed131036bdb76dfc273ad804 before CLI updates, accepted history remains second parent. Reviewed all119 source inventory paths and only version delta from prior declaration; finalized config before official0.123.1 init/spec refresh; preserved actual actor and agent-only recovery; full validation pending",
+      "input_digest": "sha256:1e8aac5346a143dbda3ccccbc9536cace5580f3beb5c8b4f5dfe0627e04e5882"
+    },
+    {
+      "id": "handoff-v1231-task-binding",
+      "summary": "Bind preserved trajectory to currently claimed recovery task as required by publication-material verifier; no historical journal reset or claimed validation pass",
+      "input_digest": "sha256:881618481d6619bf49aa2a7141e569dffff24bda0f9412f26f37b535f0a568cb"
+    },
+    {
+      "id": "handoff-v1231-architecture-review",
+      "summary": "Correct review disposition relative to accepted target: architecture prose unchanged, interfaces and security materially preserve handoff contract; no test pass claimed",
+      "input_digest": "sha256:cdb6baeb52b9ae4bb97ffca003a9f9afcb5278d70c247aedceba0d2750f995bf"
+    },
+    {
+      "id": "handoff-broker-seeded-categories",
+      "summary": "Repair observed Buildkite core fixture failure by using distinct seeded categories; retain real caller identities, scoped directories, concurrent leader routing and persisted owner assertions.",
+      "input_digest": "sha256:6350c98b88318c5aa11c85ef8bf04313666a224265ac96b9128f52059a7b5540",
       "proof_refs": [
-        "independent-merge-source-review",
-        "inventory-byte-identity-master2893f1c0"
+        "tests/group_broker.rs"
       ]
     },
     {
-      "id": "issue1476-v0123-entrypoints",
-      "summary": "Official0.123.0 init regenerates four entrypoints and managed Dockerfile; final config unchanged and specs refreshed after regeneration",
-      "input_digest": "sha256:3da8aee6d3d7d3cadcb1a9ef1227ed85b1a3e0a3f45f854d0a6d86b913791d94"
+      "id": "handoff-broker-fixture-contract",
+      "summary": "Document seeded-category fixture preconditions and observed failure without claiming corrected proof.",
+      "input_digest": "sha256:91cd822be9f04bab98cba23f2cb810eaba41c2c5b6d7add4485e65e476e531b4",
+      "proof_refs": [
+        "tests/group_broker.rs"
+      ]
+    },
+    {
+      "id": "handoff-broker-fixture-projections",
+      "summary": "Refresh current-source spec reviews and generated fingerprints for the seeded-category fixture repair; configuration unchanged.",
+      "input_digest": "sha256:fbc2f755caf5ec1e441e7562169139b9342ff824442505c1599d7b04441f13c5",
+      "proof_refs": [
+        "tests/group_broker.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7": {
+    "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/group_broker.rs",
-        "tests/group_broker.rs",
-        "tests/unit/core/group_broker_tests.rs"
+        "issue-1477-handoff"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+      "id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix issue 1476 caller isolation using release controller",
-      "refined_intent": "Fix issue 1476 caller isolation using release controller",
+      "raw_intent": "Fix handoff actor and enforced policy diagnostics issue 1477",
+      "refined_intent": "Fix handoff actor and enforced policy diagnostics issue 1477",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -590,7 +730,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Preserve request-scoped caller identity, session and cwd isolation while integrating accepted master2893f1c0 into PR1485 with official0.123.0 regeneration, reviewed inventory and unchanged trust boundaries.",
+      "intent": "Resolve PR1486 conflicts by true merge of accepted v0.123.1, preserve actual caller ownership/recovery authority, agent-only execution and canonical first-parent history; regenerate measured release projections and prove exact candidate without weakening gates",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -598,102 +738,92 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed merged current source and preserved caller isolation section alongside accepted native receipt and recovery contracts. No broader trust, session, daemon or proof-policy change; independent semantic review confirms both authored contracts retained.",
-          "reviewed_code_fingerprint": "47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef",
+          "reason": "Reviewed current fixture and runtime category validation; no production architecture changed, accepted broker and handoff authority boundaries remain intact.",
+          "reviewed_code_fingerprint": "9b2d8b291b2e9774becdc5a8281b12553f67fbeb7999fc5543c31c1c06b77d92",
           "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed merged current source and preserved caller isolation section alongside accepted native receipt and recovery contracts. No broader trust, session, daemon or proof-policy change; independent semantic review confirms both authored contracts retained.",
-          "reviewed_code_fingerprint": "47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef",
-          "spec_material_hash": "0f1daca8197c3ef728b03e0aa631532c3873d78137a567aa89256aac7008b20c"
+          "reason": "Current source review documents valid seeded categories for concurrent caller fixture, retaining all identity assertions and recording observed failure without claiming proof.",
+          "reviewed_code_fingerprint": "9b2d8b291b2e9774becdc5a8281b12553f67fbeb7999fc5543c31c1c06b77d92",
+          "spec_material_hash": "111b63acca3b5b52d373a6ff7c57a81b4374b4af7348fb7a7770fb2370e62195"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed merged current source and preserved caller isolation section alongside accepted native receipt and recovery contracts. No broader trust, session, daemon or proof-policy change; independent semantic review confirms both authored contracts retained.",
-          "reviewed_code_fingerprint": "47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef",
-          "spec_material_hash": "f6d0c3ead3b71de95a2c6fbd61a01a1ec2423bb57f0c070cdb60595778a5875c"
+          "reason": "Security handoff prose remains the material approved recovery addition against accepted master; current test-only category repair does not alter trust, approval, or caller authority.",
+          "reviewed_code_fingerprint": "9b2d8b291b2e9774becdc5a8281b12553f67fbeb7999fc5543c31c1c06b77d92",
+          "spec_material_hash": "07b7773a883249690b14ce85ba9b982a06480204057ae59caebc2062a932b7ed"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Stop for authorization denial; no upload retries or unverified publication"
-      ],
-      "title": "Fix issue 1476 caller isolation using release controller",
+      "stop_conditions": [],
+      "title": "Fix handoff actor and enforced policy diagnostics issue 1477",
       "todo_ids": [
-        "code_01m6fzzj7qyqts21"
+        "bugs_01m6g21pc4qththw"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793685899Z"
+      "updated_at": "1793689269Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a5ba36b355ee54bc9920c9e06892d01a3c605c3f22f1e42e715e8d257f9d0494",
+      "artifact_hash": "sha256:05378453c529e5c04824d038440d43d404e8bd56cf6f0a1e49301d2702fa357c",
       "checks": [
         {
-          "name": "bazel-source-contract-review",
-          "status": "passed"
-        },
-        {
-          "name": "candidate-tests",
+          "name": "full-validation",
           "status": "unavailable"
         },
         {
-          "name": "full-provider-validation",
-          "status": "failed"
-        },
-        {
-          "name": "source-contract-review",
-          "status": "passed"
+          "name": "required-tests",
+          "status": "unavailable"
         }
       ],
-      "current_phase": "v0.123.0 target reconciliation",
+      "current_phase": "merge recovery validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
+            "detail": "trajectory:branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
+            "detail": "trajectory:branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
+            "detail": "trajectory:branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
+            "detail": "trajectory:branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           }
@@ -702,51 +832,47 @@
         "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6F0WQQJ7DYQNBHW4GWPNDVG": {
+          "branch_01M6F0MQZZ75W5PEXHA7QVY3FQ": {
             "evidence_only": true,
-            "id": "branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
-            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "id": "branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/group_broker.rs",
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "git diff 213ed9ca 3216d717 -- Cargo.toml Cargo.lock: only package version 0.121.0 to 0.121.2; inventory intersection contains these two paths only; required source graph unchanged"
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "tests/plugins/todo.rs",
+                  "tests/plugins/policy.rs",
+                  "docs/agent/command-contracts.md",
+                  "Source review confirms prior caller-from conflation and handoff policy diagnostic mismatch"
                 ],
                 "proof_refs": [
-                  "source-contract-review",
-                  "candidate-tests"
+                  "required-tests"
                 ],
                 "scope": [
-                  "src/decapod/core/group_broker.rs",
-                  "tests/group_broker.rs",
-                  "tests/unit/core/group_broker_tests.rs"
+                  "issue-1477-handoff"
                 ],
                 "sequence": 4,
                 "validation_findings": [
-                  "Independent security review pending; provider unavailable; no test execution claimed"
+                  "Official tests require authenticated exact candidate upload; no test pass claimed"
                 ]
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "Cargo.lock",
-                  "Published candidate0ab800c7 Buildkite2553 deps-lint and governance-artifacts failed; other observed test checks successful, no readiness. Controller resume ended BuildEnvelope exit22. Remediation updates Tokio1.53.3 only and actual current-content spec review; original failures preserved /tmp/1476-validation-resumed.log"
+                  "src/decapod/plugins/policy.rs",
+                  "tests/plugins/policy.rs"
                 ],
                 "proof_refs": [
-                  "full-provider-validation"
+                  "required-tests"
                 ],
                 "scope": [
-                  "src/decapod/core/group_broker.rs",
-                  "tests/group_broker.rs",
-                  "tests/unit/core/group_broker_tests.rs"
+                  "issue-1477-handoff"
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -755,38 +881,32 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "MODULE.bazel.lock",
-                  "Buildkite2608 bb631897 required build/contracts/RPC failed stale MODULE.bazel.lock after Cargo.lock Tokio update. Prior local collector interrupted (session absent); no success. Canonical shared Bazel9.3 regeneration verified SHA6aaafae3 and exactly five Tokio/Cargo digest substitutions, no unrelated graph changes."
+                  "src/decapod/core/group_broker.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "docs/agent/command-contracts.md"
                 ],
                 "proof_refs": [
-                  "bazel-source-contract-review"
+                  "full-validation"
                 ],
                 "scope": [
-                  "src/decapod/core/group_broker.rs",
-                  "tests/group_broker.rs",
-                  "tests/unit/core/group_broker_tests.rs"
+                  "issue-1477-handoff"
                 ],
                 "sequence": 6,
                 "validation_findings": []
               },
               {
-                "action": "v0.123.0 target reconciliation",
+                "action": "merge recovery validation",
                 "custody_event_id": "event:7",
-                "observations": [
-                  "First-parent governance blob d71c454b2790570a20e8e8e82c8aae871dee3412 preserved exactly before CLI updates; accepted master2893f1c075680f9649a8aaf836768ba9f5675b58 retained as second parent.",
-                  "All discovered inventory inputs byte-identical to accepted master; only Cargo.toml and Cargo.lock version0.121.2 to0.123.0 differ from first parent. No workflow, helper, required check or trust setting changes.",
-                  "Independent staged source/spec review passed; runtime tests remain unexecuted on merged candidate."
+                "observations": [],
+                "proof_refs": [
+                  "full-validation"
                 ],
-                "proof_refs": [],
                 "scope": [
-                  "src/decapod/core/group_broker.rs",
-                  "tests/group_broker.rs",
-                  "tests/unit/core/group_broker_tests.rs"
+                  "issue-1477-handoff"
                 ],
                 "sequence": 7,
-                "validation_findings": [
-                  "Original workspace datastore absent after restored environment; new claimed task recovers coordination without reconstructing old records."
-                ]
+                "validation_findings": []
               }
             ]
           }
@@ -795,40 +915,36 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "All discovered inventory inputs byte-identical to accepted master; only Cargo.toml and Cargo.lock version0.121.2 to0.123.0 differ from first parent. No workflow, helper, required check or trust setting changes.",
-        "Buildkite2608 bb631897 required build/contracts/RPC failed stale MODULE.bazel.lock after Cargo.lock Tokio update. Prior local collector interrupted (session absent); no success. Canonical shared Bazel9.3 regeneration verified SHA6aaafae3 and exactly five Tokio/Cargo digest substitutions, no unrelated graph changes.",
-        "First-parent governance blob d71c454b2790570a20e8e8e82c8aae871dee3412 preserved exactly before CLI updates; accepted master2893f1c075680f9649a8aaf836768ba9f5675b58 retained as second parent.",
-        "Independent staged source/spec review passed; runtime tests remain unexecuted on merged candidate.",
-        "Published candidate0ab800c7 Buildkite2553 deps-lint and governance-artifacts failed; other observed test checks successful, no readiness. Controller resume ended BuildEnvelope exit22. Remediation updates Tokio1.53.3 only and actual current-content spec review; original failures preserved /tmp/1476-validation-resumed.log",
-        "git diff 213ed9ca 3216d717 -- Cargo.toml Cargo.lock: only package version 0.121.0 to 0.121.2; inventory intersection contains these two paths only; required source graph unchanged"
+        "Source review confirms prior caller-from conflation and handoff policy diagnostic mismatch"
       ],
       "inspected_files": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "Cargo.lock",
-        "Cargo.toml",
-        "MODULE.bazel.lock",
+        "docs/agent/command-contracts.md",
         "src/decapod/core/group_broker.rs",
-        "src/decapod/lib.rs"
+        "src/decapod/core/todo.rs",
+        "src/decapod/plugins/policy.rs",
+        "tests/plugins/policy.rs"
       ],
-      "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
-      "modified_files": [],
+      "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
+      "modified_files": [
+        "docs/agent/command-contracts.md",
+        "src/decapod/core/todo.rs",
+        "src/decapod/plugins/policy.rs",
+        "tests/plugins/policy.rs",
+        "tests/plugins/todo.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/group_broker.rs",
-        "tests/group_broker.rs",
-        "tests/unit/core/group_broker_tests.rs"
+        "issue-1477-handoff"
       ],
-      "run_id": "branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
+      "run_id": "branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m6fzzj7qyqts21",
+      "task_id": "bugs_01m6g21pc4qththw",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Independent security review pending; provider unavailable; no test execution claimed",
-        "Original workspace datastore absent after restored environment; new claimed task recovers coordination without reconstructing old records."
+        "Official tests require authenticated exact candidate upload; no test pass claimed"
       ]
     }
   },

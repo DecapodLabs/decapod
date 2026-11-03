@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.123.0 -->
-<!-- decapod-fingerprint: 21ae9267aef3320f81929466d9ce3c3a545149ddfe2b02d9e1a44ec1dee29e0f -->
+<!-- decapod-release: 0.123.1 -->
+<!-- decapod-fingerprint: 072fa8052c2e9f912c6ae3511fce206f417e2ab17963a007ec78ce40d53f18d7 -->
 # CLAUDE.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
