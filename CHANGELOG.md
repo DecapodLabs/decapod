@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.124.0](https://github.com/DecapodLabs/decapod/compare/v0.123.8...v0.124.0) - 2026-11-03
+
+### Other
+
+- *(proof)* remove core Dagger integration
+
 ## [0.123.8](https://github.com/DecapodLabs/decapod/compare/v0.123.7...v0.123.8) - 2026-11-03
 
 ### Fixed
