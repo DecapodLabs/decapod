@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.7](https://github.com/DecapodLabs/decapod/compare/v0.123.6...v0.123.7) - 2026-11-03
+
+### Other
+
+- Merge release v0.123.6 into native acceptance follow-up
+- add real released native readiness acceptance observer
+
 ## [0.123.6](https://github.com/DecapodLabs/decapod/compare/v0.123.5...v0.123.6) - 2026-11-03
 
 ### Other
