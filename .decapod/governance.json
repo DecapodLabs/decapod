@@ -478,6 +478,11 @@
       "id": "bootstrap-evidence",
       "summary": "Format portable fixture and record released CLI execution plus truthful source-validation blocker",
       "input_digest": "sha256:ff340d0a8f2a2daf0ade11cb3cecb6b3bac89bf3dfe57616c74a536e5a0ed1ca"
+    },
+    {
+      "id": "spec-review-repair",
+      "summary": "Record missing source-grounded publication spec reviews for test-only bootstrap regression",
+      "input_digest": "sha256:5726d45dc96aad17a2cb499c9f0fd8ae3898eaa0160d812a1a655b0f7ad07ad9"
     }
   ],
   "intents": {
@@ -515,6 +520,29 @@
         "entrypoint_correctness documented bootstrap CLI regression"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed test harness and workspace/session lifecycle. No production component, datastore, concurrency or control-plane architecture changes. Local fixture isolates subprocess environment and executes the existing generated order; architecture claims remain unchanged.",
+          "reviewed_code_fingerprint": "3cddcb259968fdf5f3abc9c0dcf3a23f3a1c5bcc550c4b4d0a9f1c52e39c5b63",
+          "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed issue1479 test-only delta against CLI contracts, worktree enforcement in src/decapod/lib.rs and existing interface spec. No public command, argument, schema or authorization behavior changes; the new regression executes those existing surfaces. Runtime proof scope belongs in VALIDATION.md.",
+          "reviewed_code_fingerprint": "3cddcb259968fdf5f3abc9c0dcf3a23f3a1c5bcc550c4b4d0a9f1c52e39c5b63",
+          "spec_material_hash": "111b63acca3b5b52d373a6ff7c57a81b4374b4af7348fb7a7770fb2370e62195"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed negative orientation controls and child command environment. All production isolation/session/policy gates remain unchanged; no bypass flags are added. Fixture removes inherited overrides, uses private temp home, and creates no remote credentials or external access.",
+          "reviewed_code_fingerprint": "3cddcb259968fdf5f3abc9c0dcf3a23f3a1c5bcc550c4b4d0a9f1c52e39c5b63",
+          "spec_material_hash": "e2090e911112df35b36fb5845c7871be442f147bb1b3a723e04e3f17f76f56b9"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Exercise documented bootstrap CLI order for issue 1479",
@@ -523,13 +551,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793697110Z"
+      "updated_at": "1793698740Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:753ddb6d3f19b8a419c66191c3e9148129db43264b3148d152234e294ee18eaa",
+      "artifact_hash": "sha256:7955b0f0079bd2ba326d851f1011a6e98142ec6a91a47610fb6e609085546e41",
       "blockers": [
         "PROOF_PROFILE_RECONCILIATION_REQUIRED: unchanged inherited source inventory 2d773cc1833a077b22700e94d87952e6fa215bb8bb761b777cb4a2b0ab902c79 differs from reviewed b2dad13cc7ab218b124a945e01fcb56b4bb9f5bbe044cb3785814cd07ef01b1a; required remote checks not run."
       ],
@@ -540,6 +568,10 @@
         },
         {
           "name": "full-validation",
+          "status": "failed"
+        },
+        {
+          "name": "governance-artifacts",
           "status": "failed"
         },
         {
@@ -583,10 +615,17 @@
             "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6GATD6C1BQ5PHDKYCHC4B00": {
@@ -634,6 +673,21 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Both GitHub push and PR governance jobs fail SPEC_REVIEW_REQUIRED for INTERFACES.md with identical stderr digest 6d11fee31a4ca14d56a17e5e57421925552538c9715cdfb4987926209221aac9. Reviewed unchanged interface, architecture and security contracts against test-only change and recorded content-bound reviews through govern plan review-spec. No guard/check changes."
+                ],
+                "proof_refs": [
+                  "governance-artifacts"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -642,6 +696,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Both GitHub push and PR governance jobs fail SPEC_REVIEW_REQUIRED for INTERFACES.md with identical stderr digest 6d11fee31a4ca14d56a17e5e57421925552538c9715cdfb4987926209221aac9. Reviewed unchanged interface, architecture and security contracts against test-only change and recorded content-bound reviews through govern plan review-spec. No guard/check changes.",
         "Independent Python diagnostic executed generated AGENTS commands against official 0.123.4: committed fixture, own session, task add/claim, two main-checkout orientation denials, ensure returned path, bound orientation success, context resolution, workspace-only write and unchanged root HEAD/status. This is released-binary runtime evidence, not execution of the new Rust test.",
         "Official 0.123.4 actual CLI claim, workspace ensure, returned worktree orientation succeeded before implementation in this independent clone.",
         "User explicitly requests regular PR publication while validation remains an action to complete; no readiness or merge claim."
