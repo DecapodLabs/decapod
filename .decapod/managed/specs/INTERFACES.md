@@ -1,5 +1,31 @@
 # Interfaces
 
+## Local broker caller protocol
+
+The internal Unix-socket broker request in
+`src/decapod/core/group_broker.rs` advances to protocol version 2. Alongside
+request ID and arguments, each request carries a canonical absolute working
+directory and an explicitly allowlisted caller context. Agent identity, session,
+task, correlation, causation, idempotency and claim-autorun inputs replace—not
+merge with—the elected leader's corresponding environment. The child executable
+is resolved independently of either working directory.
+
+This internal protocol is not a new public task ownership or authorization API.
+The ordinary CLI/session/policy checks still execute; request fields cannot grant
+trust or approval. Missing or unrecognized caller fields fail validation rather
+than inheriting the leader identity. The existing restricted local socket alone
+transports the ephemeral session password; durable dedupe stores no credential.
+Structured replay binding includes arguments, actor, working directory and
+non-secret context, but excludes password rotation. Protocol mismatch fails
+closed; no persistent daemon or alternate IPC transport is introduced.
+
+The regression in `tests/group_broker.rs` requires two concurrent claim callers
+to traverse the same elected leader and checks both returned and stored owners.
+Unit coverage in `tests/unit/core/group_broker_tests.rs` checks replay separation,
+rejected arbitrary environment keys and removal of absent leader credentials.
+Current full publication proof remains required; these declarations are not a
+substitute for the controller's authenticated test result.
+
 ## Native readiness completion artifacts
 
 Full native validation in `validation_runtime::run` returns an evidence directory.
@@ -723,7 +749,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d`
+- Repository signal fingerprint: `47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

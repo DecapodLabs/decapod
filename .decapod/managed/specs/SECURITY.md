@@ -1,5 +1,26 @@
 # Security
 
+## Broker caller context custody
+
+`group_broker::CallerContext` transports only a fixed set of request-scoped
+fields across the existing permission-restricted local socket. It is not a
+general environment-forwarding facility. The subprocess clears inherited
+identity/session fields before applying the caller values, retains ordinary
+session/policy validation, and does not grant authorization based on request
+metadata. Existing cooperative local-agent authentication and auto-acquisition
+remain unchanged; this fix does not authenticate hostile same-user processes.
+
+Session passwords remain ephemeral transport inputs, excluded from request
+Debug output, replay hashes and durable request records. Dedupe binds actor and
+working directory with non-secret context to prevent another caller's command
+from accidentally reusing the leader's result. Restricted socket access remains
+the existing trust boundary, not cryptographic isolation between local peers.
+
+The required dependency check exposed RUSTSEC-2026-0386 in the accepted Tokio
+1.52.3 lock entry. The minimal lock-only update to patched 1.53.3 changes its
+version and registry checksum without relaxing advisory policy or changing
+dependency edges. Fresh exact-candidate provider proof is still required.
+
 ## Native receipt and dependency repair boundaries
 
 Native success receipts are produced only after the complete selected proof and
@@ -409,7 +430,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d`
+- Repository signal fingerprint: `47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
