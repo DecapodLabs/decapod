@@ -321,6 +321,41 @@ fn hash_file(path: &Path) -> Result<(String, u64, Option<u64>), error::DecapodEr
     Ok((sha256_hex(&bytes), meta.len(), mtime))
 }
 
+// Return only fixed diagnostic labels, never child-controlled text, paths,
+// environment values or provider URLs. These labels survive the scoped recovery
+// validation, even when a separate ordinary validate would hit aggregate proof.
+fn safe_validation_failure_diagnostic(stdout: &[u8], stderr: &[u8]) -> String {
+    const MARKERS: &[&str] = &[
+        "NEEDS_PLAN_APPROVAL",
+        "PROOF_HOOK_FAILED",
+        "READINESS_BLOCKED",
+        "SNAPSHOT_NOT_READY",
+        "REQUIRED_PROOF_NOT_AUTHENTICATED",
+        "CONTROLLER_CONTRACT_UNSUPPORTED",
+        "SPEC_REVIEW_REQUIRED",
+        "STALE_SOURCE_INVENTORY",
+        "SNAPSHOT_UPLOAD_PENDING",
+    ];
+    let contains = |bytes: &[u8], marker: &str| {
+        bytes[..bytes.len().min(1024 * 1024)]
+            .windows(marker.len())
+            .any(|window| window == marker.as_bytes())
+    };
+    let found: Vec<_> = MARKERS
+        .iter()
+        .copied()
+        .filter(|marker| contains(stdout, marker) || contains(stderr, marker))
+        .collect();
+    if found.is_empty() {
+        "VALIDATION_CHILD_FAILED: no recognized safe blocker label; run `decapod validate --format json` for the current structured diagnostic, repair its blockers, then retry the original verification command. No child output was forwarded.".into()
+    } else {
+        format!(
+            "VALIDATION_CHILD_FAILED: scoped validation reported {}; run `decapod validate --format json` for current diagnostic detail, repair these blockers, then retry the original verification command. These labels are diagnostics, not proof; no child output was forwarded.",
+            found.join(", ")
+        )
+    }
+}
+
 fn run_validate_and_hash(
     store_root: &Path,
     repo_root: &Path,
@@ -364,6 +399,12 @@ fn run_validate_and_hash(
     } else {
         output
     };
+    if !output.status.success() {
+        eprintln!(
+            "{}",
+            safe_validation_failure_diagnostic(&output.stdout, &output.stderr)
+        );
+    }
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(&stdout) {
         let normalized = normalize_json_value(&value);

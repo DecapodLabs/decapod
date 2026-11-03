@@ -544,6 +544,11 @@
       "id": "agent-recovery-diagnostics",
       "summary": "Replace destructive epoch guidance with non-reopening recovery and safe explicit diagnostic-plus-retry command; no raw child output exposed, validation failures remain blocked",
       "input_digest": "sha256:854526f933914bdd16b82419ca67d82dfce002821c8d9e9fd40fbc5528a4d945"
+    },
+    {
+      "id": "safe-scoped-child-blockers",
+      "summary": "Return bounded fixed allowlisted blocker labels from actual scoped child validation; prevent aggregate deadlock from hiding unrelated blocker identity; never forward child-controlled text or paths",
+      "input_digest": "sha256:1cd429f7b64bff303a716ab3a4330ab2fef953105f454924fd4053eab7726a78"
     }
   ],
   "intents": {
