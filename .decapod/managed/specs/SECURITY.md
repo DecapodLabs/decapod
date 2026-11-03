@@ -430,7 +430,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9b2d8b291b2e9774becdc5a8281b12553f67fbeb7999fc5543c31c1c06b77d92`
+- Repository signal fingerprint: `b1a349fa5f19a41adf9f48e06cf10c03c0ddc8a506bb71dc7050fb34e0281764`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -622,3 +622,62 @@ Approval attribution does not elevate the executing caller; a harness must not
 self-select a reserved role, promote its trust, or impersonate the previous owner
 to evade a denial. Existing trust, exact-target single-use approval and custody
 checks remain unchanged; this is an execution-contract correction, not new authority.
+
+## Prompt context and HTTP diagnostics
+
+The side-effect-free evaluator in `src/decapod/core/agent_eval.rs` distinguishes
+an ordinary HTTP client reference from unsafe execution context: a read-only
+public request in a diagnostic, API example or restored command history is not
+itself a remote-execution finding. The original bytes remain the hashed subject,
+and CLI responses never echo the prompt. Allowing inspection does not authorize
+network access or command execution; those actions retain their normal gates.
+
+This is a conservative common-marker detector, not a shell interpreter or a
+semantic proof of benign intent. It inspects the entire prompt, including quoted,
+fenced and historical material. Such labels grant no authority or exemption.
+Known destructive/privileged actions, instruction overrides and credential
+requests remain blocked. HTTP clients combined with shell execution, pipelines,
+chained commands, process/command substitution, upload/authentication options,
+credential headers and non-read-only request methods require review. File-output options are conservatively review-gated too: writing a fetched
+program and invoking it on a later line must not escape detection merely because
+the executable has an unfamiliar name. Ambiguous combinations may still require
+review rather than silently suppressing evidence.
+
+HTTP-specific context is bounded by inline-code and unquoted line boundaries;
+every span is inspected, and adjacent shell operators and multiline substitutions
+remain relevant across those boundaries. Quoted shell argument newlines remain
+within the argument context. This prevents a prose semicolon after a closed
+inline diagnostic, or an unrelated mention of Python/source, from inventing an
+execution edge. It is deliberately not a general prose/shell grammar: unmarked
+same-line prose and ambiguous shell syntax can still require review. Dynamic request arguments (shell command/process substitution, parameter
+expansion and embedded backticks) are review-gated before lexical normalization
+can erase their delimiters. This does not classify an arbitrary variable or
+literal public query value as a known secret; it preserves uncertainty about
+values that may be computed from local data. Dollar signs in prose outside a
+closed inline diagnostic do not become request arguments. Existing whole-prompt
+instruction/authority/destructive/credential markers remain intact.
+
+HTTP options are classified through a narrow read-only allowlist, with
+client-specific short flag meanings and existing method/header checks. Unknown
+options request review rather than inheriting a benign classification: client
+versions can add file-reading and opaque configuration features. Explicit static
+`--url-query name=value` pairs are classified, but file-backed query arguments
+are not. The [curl option contract](https://curl.se/docs/manpage.html#--url-query)
+defines `name@filename` as file-backed input; attached header-file values and
+variable/expanded-option mechanisms likewise remain review-gated. This bounded
+classification deliberately does not promise a complete curl/wget interpreter.
+
+`tests/unit/core/agent_eval_tests.rs` and `tests/agent_eval.rs` specify safe
+report/history and adversarial combinations, including spacing, quoting and
+escape variants. The public sanitized report is covered; the reporter's private
+historical summary was not supplied and has not been reproduced. These authored
+regressions require execution under full candidate validation before this change
+can claim publication readiness.
+
+The shared CI repair updates root Tokio from 1.52.3 to 1.53.3 for
+RUSTSEC-2026-0386 and synchronizes its derived Bazel lock metadata. Both deltas
+were reviewed and their exact before/after hashes verified locally; pinned Bazel
+9.3 generated the shared metadata with the existing system JDK and normal TLS.
+No required graph, trust, model, or execution policy changes. This dependency
+repair is not runtime proof: the prompt-gate candidate still requires fresh full
+validation against its exact published commit.
