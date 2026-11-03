@@ -599,8 +599,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -654,6 +654,27 @@ the kernel enforces freshness, execution and custody mechanically. Existing
 Decapod source-CI adapters retain their stricter authority and cannot be downgraded
 by a candidate switching to local proof. Unsupported remote/daemon operations
 remain explicit limitations, rather than fabricated native evidence.
+
+### Optional existing-engine Dagger execution
+
+`core::repository_profile::DaggerExecution` is an opt-in extension of the
+repository-local contract, not a new controller or resident service.
+`validation_runtime::ProofConfiguration` and `proof::ProjectProofConfig` retain
+`dagger_authorizations` as dormant typed proposals; `cli::InitWithCli` and guided
+init roundtrips preserve them without activation. The old proof path can validate
+a proposal first. Only after target acceptance may an active execution match it;
+`preserve_accepted_dagger` reads accepted authority rather than candidate grants.
+
+`repository_host::command_invocation` emits only the declared Dagger 1.0 protocol
+`--workspace . check` against the immutable exact-candidate snapshot, requiring
+root `dagger.toml`/`dagger.lock`, reviewed module sources and measured installed
+Dagger/Docker tools. `repository_host::dagger::inspect_engines` performs bounded
+identity observations around execution of the full local command catalog. The
+explicit local socket, full container ID and image configuration digest select a
+pre-existing trusted engine. Neither Decapod nor this adapter creates, starts,
+updates or stops an engine. Independent hosted/Buildkite requirements and the
+kernel's final verdict remain authoritative. Contract fixtures are not proof
+that a live Dagger engine has executed; that qualification remains unavailable.
 
 ### Optional CI-attested validation boundary
 

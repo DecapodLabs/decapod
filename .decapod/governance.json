@@ -450,209 +450,299 @@
     }
   },
   "change": {
-    "id": "change_01M6F0K06W2R671HMFTEY3PKDM",
+    "id": "change_01M6F0MS9K712GC9H7KZ3FCYMQ",
     "base_commit": "3216d7170b80a350c5a8417c38dda9c5c4d8bb23",
     "target_base": "origin/master"
   },
   "claims": {
-    "native-receipt-custody": {
-      "statement": "Native full readiness does not require a legacy preparation receipt and successful proof emits immutable exact candidate receipt",
-      "falsifier": "Receipt-less native readiness blocked; failed or stale proof emits success receipt; recording success changes candidate",
-      "status": "open"
+    "local-dagger-identity": {
+      "statement": "Optional repository-local Dagger checks preserve exact snapshot/native custody and require an accepted explicitly authorized trusted local engine identity without satisfying hosted Buildkite proof.",
+      "falsifier": "Missing, changed or candidate-only engine identity, toolchain or source substitutions, denied external authority or mere green hosted status yields repository readiness; local Dagger satisfies a Buildkite-required profile.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime/repository_host/dagger.rs"
+      ]
     }
   },
   "checkpoints": [
     {
-      "id": "release-bootstrap",
-      "summary": "Canonical0.121.2 workspace bootstrap preserving earlier blocked candidate f9043ea6; no execution proof yet",
-      "input_digest": "sha256:772c1a3b7628706eff6157e0e22bce348e26a181df2de78a7322491a2a73e25c"
+      "id": "bootstrap1475",
+      "summary": "Initialize release-bound governed issue1475 workspace",
+      "input_digest": "sha256:f6cda198cd09f935af232ab9cb5d2321e5ff2eab1478602b0a57482b64252d32"
     },
     {
-      "id": "replay-workspace",
-      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
-      "input_digest": "sha256:6e245d346ab1d98ebf0f513429007ddf4e4179a70a52eb1810d950213e18ab2b"
+      "id": "dagger-contract",
+      "summary": "Declare explicit accepted Dagger engine contract and negative fixture cases; no tests executed",
+      "input_digest": "sha256:a957977bd5baf967f19acf92f42f5590fbeb489054f233f9ace61f60b9d62b2b"
     },
     {
-      "id": "replay-validation_runtime",
-      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
-      "input_digest": "sha256:f738ab2ea3c47436c3bee1938540bec8016b5149b7859405c6e7ca45fa47b08b"
+      "id": "dagger-file-0",
+      "summary": "Implement bounded optional Dagger adapter: .decapod/managed/specs/INTERFACES.md; checks pending official validation",
+      "input_digest": "sha256:6450a428010738226284e6d42fe9fdb16bd875827b66e834597d23d8457baf30"
     },
     {
-      "id": "replay-workspace_publication_tests",
-      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
-      "input_digest": "sha256:9388f16cfcfd4f4ac957bcb35c9b079048306cf875f4ac1830014ec0c67f90ea"
+      "id": "dagger-file-1",
+      "summary": "Implement bounded optional Dagger adapter: docs/agent/config-schema.md; checks pending official validation",
+      "input_digest": "sha256:a41f579ecb18b113d6305749c6076e538d91ad00748f594e3c87bc0edc117276"
     },
     {
-      "id": "replay-consumer_readiness",
-      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
-      "input_digest": "sha256:ea270912c6b4078d3b83fe35d97f345c746021d30d55930d77109c0e0c08dc5e"
+      "id": "dagger-file-2",
+      "summary": "Implement bounded optional Dagger adapter: src/decapod/core/external_action.rs; checks pending official validation",
+      "input_digest": "sha256:24215b1396c27617a2e3b8b40e5edfcc74a26f3a449448c71cb0cca2d2dcc0dd"
     },
     {
-      "id": "replay-governance_artifacts",
-      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
-      "input_digest": "sha256:8805729202f008ecbc545d4a31dc1b4e0aa2f036af761ed4e300bf0ab700c72e"
+      "id": "dagger-file-3",
+      "summary": "Implement bounded optional Dagger adapter: src/decapod/core/init_reconciliation/mod.rs; checks pending official validation",
+      "input_digest": "sha256:808b4e86fc811f2418d9ee3ddb0794a604afa18018d803d2a9152963a524756a"
     },
     {
-      "id": "receipt-custody-spec",
-      "summary": "Replay authored whole-product native receipt custody spec; preserve existing generated release blocks",
-      "input_digest": "sha256:8a85fd830ac7bd9605aff29a9bc7de70b5cff8465e3618059bcbf8644863997a"
+      "id": "dagger-file-4",
+      "summary": "Implement bounded optional Dagger adapter: src/decapod/core/native_proof.rs; checks pending official validation",
+      "input_digest": "sha256:ad9f24f0a3f084f255898a8eb3dbd932079544a424f023e965e0110288d8ef2f"
     },
     {
-      "id": "release-spec-projections",
-      "summary": "Refresh generated canonical release spec projections before exact validation",
-      "input_digest": "sha256:1dea95ef6b2ad22ed89e332d3c841092e77e1798336d1883bb55068bff64188e"
+      "id": "dagger-file-6",
+      "summary": "Implement bounded optional Dagger adapter: src/decapod/core/validation_runtime.rs; checks pending official validation",
+      "input_digest": "sha256:1c481bc8b6f7baf43ffc289389f56e1be400700d3eb48b5ef220c2b4969c5933"
     },
     {
-      "id": "reviewed-source-release-drift",
-      "summary": "Official dry-run discovery3844276 independently reviewed full inventory versus213ed9ca: only Cargo.toml/lock0.121.0 to0.121.2 version bumps, no proof jobs/helpers/dependencies changed; reconcile declaration without changing coverage",
-      "input_digest": "sha256:e772329542869b4c40802a0c5d08d3abdddf278e9ac67dc0db78e43f6383b2ad"
+      "id": "dagger-file-7",
+      "summary": "Implement bounded optional Dagger adapter: src/decapod/core/validation_runtime/repository_host.rs; checks pending official validation",
+      "input_digest": "sha256:cf2d81ff0110f2615ae797820a79d92eedfcee02c2919ce079a29753dd5fedc6"
     },
     {
-      "id": "atomic-native-completion",
-      "summary": "Independent review: atomically publish receipt and verdict as completion directory only after both staged files sync; no fallible operation after publication",
-      "input_digest": "sha256:6da08dd0aff6c936280da98a2accad3b8d4c484cc5f3bfcde30b8ed2a8c36fae"
+      "id": "dagger-file-8",
+      "summary": "Implement bounded optional Dagger adapter: src/decapod/lib.rs; checks pending official validation",
+      "input_digest": "sha256:975de0ec0d2a6037a0b9f4a30b4b15f588f0b9da3deca0b34f3b62aaf0410308"
     },
     {
-      "id": "atomic-completion-regressions",
-      "summary": "Inject receipt and verdict create/partial-write/sync failures: no published success artifacts and returned readiness false; tests unrun due transport blocker",
-      "input_digest": "sha256:c4a75c16211e96537bb0a9f0dbdc907366f47f78f1d624a26ec8b3b64c3e257d"
+      "id": "dagger-file-9",
+      "summary": "Implement bounded optional Dagger adapter: tests/consumer_readiness.rs; checks pending official validation",
+      "input_digest": "sha256:8a361685a590db9b71a4212f66b6c660963e5e188d36a900325dba9fee42b4c6"
     },
     {
-      "id": "atomic-consumer-completion",
-      "summary": "Real native execution regression reads paired completion verdict and receipt, no standalone success verdict; pending official tests",
-      "input_digest": "sha256:62683e38dbbfc82a76193d9529cad381777b8d7144db25e63be5e36180c9196e"
+      "id": "dagger-file-10",
+      "summary": "Implement bounded optional Dagger adapter: src/decapod/core/validation_runtime/repository_host/dagger.rs; checks pending official validation",
+      "input_digest": "sha256:3599701cb1666abb07f6973d8ec9a7327b116c1f0638612beffbe9e5e0e23a72"
     },
     {
-      "id": "completion-location-guidance",
-      "summary": "Point inspection guidance to atomic native completion receipt location",
-      "input_digest": "sha256:9cd874ea6cafaff47c49fd2c4f50e2bf6d99578b181de1a9902b752a0edfbc78"
+      "id": "dagger-projections",
+      "summary": "Refresh generated spec attestations via official RPC and record unproven local-engine claim",
+      "input_digest": "sha256:e8dc8f3728236ec90e77f1d264eb44567a9e95efaf9ec1c7d27bcb031337ae46"
     },
     {
-      "id": "atomic-completion-spec",
-      "summary": "Document atomic native completion publication and fail-closed injected storage error regressions",
-      "input_digest": "sha256:f9c9fb533290d4886c3df7da0604b6021d3013d393505a1ad978cdf78c7ff523"
+      "id": "dagger-workspace-contract",
+      "summary": "Correct reviewed Dagger 1.0 workspace contract and root config/lock inventory; legacy syntax unsupported",
+      "input_digest": "sha256:70744585bed37323590cb8f8430b23c279b0cb29b8a5c8c67402146bc5f57dcd"
     },
     {
-      "id": "completion-regression-readability",
-      "summary": "Keep overwrite-preservation assertion readable; no test execution claimed",
-      "input_digest": "sha256:1b4d1a0469948b91e8a48f5e8e990af3be46ca08324d6cbeb152266f1f38fa2e"
+      "id": "dagger-workspace-argv",
+      "summary": "Use actual current Dagger workspace check argv and assert exact snapshot-root invocation",
+      "input_digest": "sha256:bf29d50ec1041f682870ab9c8ad654b5788c7db7409dd64c34f043766366c034"
     },
     {
-      "id": "atomic-completion-projections",
-      "summary": "Refresh generated spec projections after review repair; official upload remains blocked, no network retry",
-      "input_digest": "sha256:40c48109a087a67d1bb68d5ac295f05e8a82a4abfe5e75831f7bd3e7ecb87394"
+      "id": "dagger-workspace-literal",
+      "summary": "Replace multiline legacy module argv with root workspace selection",
+      "input_digest": "sha256:31e71a7284b4350527b880b03e5193268504a868768df65bb929ef68c53d4f24"
     },
     {
-      "id": "tokio-security-repair",
-      "summary": "Apply independently verified minimal Tokio1.53.3 security fix for actual CI RUSTSEC-2026-0386; exact before/after lock hashes verified, no other dependencies changed",
-      "input_digest": "sha256:d946853681bca74218b4f570f772d4f7e94998edd6e54d411399ea6794ccca6c"
+      "id": "dagger-correction-0",
+      "summary": "Reconcile supported workspace-check contract and reviewed unchanged source inventory: src/decapod/core/validation_runtime/repository_host/dagger.rs",
+      "input_digest": "sha256:3efb508b294344161efad002528620d5d36a6e8ef373b0178114a89da44a34a2"
     },
     {
-      "id": "native-INTERFACES-review",
-      "summary": "Source-grounded INTERFACES update for immutable atomic native completion and bounded dependency repair; no proof claim",
-      "input_digest": "sha256:bc912b870a9d16fb131489259480100656b5163b69c7c08f28bcb59ef6a2ba28"
+      "id": "dagger-doc-correction-0",
+      "summary": "Reconcile supported workspace-check contract and reviewed unchanged source inventory: docs/agent/config-schema.md",
+      "input_digest": "sha256:d5d2c1f4f6537e1fa79f66950b47696b6ecb3a0c1d88975b1dba314a2a9d57e2"
     },
     {
-      "id": "native-ARCHITECTURE-review",
-      "summary": "Source-grounded ARCHITECTURE update for immutable atomic native completion and bounded dependency repair; no proof claim",
-      "input_digest": "sha256:bc465022ad23884d973ab2a5b19cab2b2c2fc5d86a8503935eeae847e83dd88b"
+      "id": "dagger-doc-correction-1",
+      "summary": "Reconcile supported workspace-check contract and reviewed unchanged source inventory: .decapod/managed/specs/INTERFACES.md",
+      "input_digest": "sha256:44d088b3f60ae4d56630d8b32d97a63f0d617fd71249e592fc3d934cc7d33ffa"
     },
     {
-      "id": "native-OPERATIONS-review",
-      "summary": "Source-grounded OPERATIONS update for immutable atomic native completion and bounded dependency repair; no proof claim",
-      "input_digest": "sha256:02bba96e076d1178ab89d3dbc75502b29604b2aaf0b6812905a37e83eb0e1f22"
+      "id": "dagger-doc-correction-2",
+      "summary": "Reconcile supported workspace-check contract and reviewed unchanged source inventory: .decapod/config.toml",
+      "input_digest": "sha256:b573468c50cc7f5cff8700e9b19006c38c55f485e96f0a163611b28ab020e56c"
     },
     {
-      "id": "native-SECURITY-review",
-      "summary": "Source-grounded SECURITY update for immutable atomic native completion and bounded dependency repair; no proof claim",
-      "input_digest": "sha256:955815822829a4be802a18c47e7362e30bb8f2d8b2f76086ea4e53e3ae948323"
+      "id": "dagger-dormant-policy",
+      "summary": "Separate dormant accepted Dagger authorization from active execution; add adoption, rotation and revocation fixture cases",
+      "input_digest": "sha256:f88b2927851153f70e0dbf0ac34486be95263ca1e9c0770f5038ce8dae4b840d"
     },
     {
-      "id": "tokio-reviewed-inventory",
-      "summary": "Review complete discovered source inventory versus public54a6eb09: only exact audited Tokio lock delta; reconcile digest26f194a9 without altering proof coverage",
-      "input_digest": "sha256:f7c799dbb6ed30b42bf829176144e57b5b02c3f79c407d331ad25ac690a1ba97"
+      "id": "dagger-accepted-authority",
+      "summary": "Read execution authorization solely from accepted target dormant map; test inert configuration and candidate self-authorization rejection",
+      "input_digest": "sha256:dd41284a5a1474e8a15d10a105ed4c8323292f64e365dc4ce6999f8ea01f9f72"
     },
     {
-      "id": "receipt-repair-spec-projections",
-      "summary": "Refresh generated projections after source-grounded receipt contracts and security lock repair",
-      "input_digest": "sha256:d0e5813da7fab24a3c096e106e5afabf963b161cca474fdd636c4b6a4d575871"
+      "id": "dagger-no-implicit-authority",
+      "summary": "Keep existing repository proof fixture without dormant Dagger authorization",
+      "input_digest": "sha256:b9c04adf7c694bef746d46c963110a16907daf972c3866ba496dccffd946fecc"
     },
     {
-      "id": "source-bound-spec-review",
-      "summary": "Reviewed all3 CLI-required specs ARCHITECTURE INTERFACES SECURITY against source; operations and validation prose updated; INTENT product authority SEMANTICS exact proof and README ownership remain source-correct unchanged. Official CLI supports only3 review paths; no proof claimed.",
-      "input_digest": "sha256:475aaac17ae320e5fb24eb26cbd499f87b96ecf3685107d558193195b8bc2316"
+      "id": "dagger-two-stage-docs",
+      "summary": "Document reachable dormant-acceptance activation, rotation and revocation without self-authorization or proof downgrade",
+      "input_digest": "sha256:3e7a51ce992d4b67fe1a04aa352dc5ca131e66c7f4619d7caf2e10bf18b749ae"
     },
     {
-      "id": "ci-format-validation_runtime",
-      "summary": "Apply exact formatter output from actual GitHub CI job125601585610 on3795e92c; no manual build or shadow tests",
-      "input_digest": "sha256:4021849aaa3e1e7ea19dd82cb61db01009608a2695dcf8d31d6af4b663920121"
+      "id": "dagger-dormant-interface",
+      "summary": "Specify dormant accepted-authority transition and preserve complete coverage and external access boundaries",
+      "input_digest": "sha256:b3633fcb0ab6d3f51f3c40c02dfe018817e3d6078f93da13a39556f62c2adec8"
     },
     {
-      "id": "ci-format-tests",
-      "summary": "Apply exact formatter output from actual GitHub CI job125601585610 on3795e92c; no manual build or shadow tests",
-      "input_digest": "sha256:0c4af7212d3a6fac204b2682ab5b235f2c1f75eef1a394252bfc0ef21ebe7e88"
+      "id": "dagger-final-projections",
+      "summary": "Refresh official generated specs after current CLI and staged authorization repairs",
+      "input_digest": "sha256:0ef9cf146e1a975cd9bb40cbb0cebd1e015f04a403c94ac29099f7dec9f0e5cc"
     },
     {
-      "id": "ci-format-consumer_readiness",
-      "summary": "Apply exact formatter output from actual GitHub CI job125601585610 on3795e92c; no manual build or shadow tests",
-      "input_digest": "sha256:5b60db66803fa230eabc1f2009f70885727a7abe9f790c7a8768ca29aacc193a"
+      "id": "dagger-public-config-0",
+      "summary": "Preserve dormant Dagger authorization through canonical config and guided initialization: src/decapod/core/proof.rs",
+      "input_digest": "sha256:3aafe0941c70250df141be39eb69502e5c2f6cad3b25d0200d0d0b84c77d46ff"
     },
     {
-      "id": "generated-tokio-bazel-lock",
-      "summary": "Apply pinnedBazel9.3.0 systemJDK21 generated MODULE lock repair, exact shared before236449b9/after6aaafae3 verified; only Tokio refs/checksum and Cargo input digest, no proof claim",
-      "input_digest": "sha256:fbdd17f2620fb70ea109a697176ee77d4ba16d84b7a9e959f46bee82b7e1b585"
+      "id": "dagger-public-config-1",
+      "summary": "Preserve dormant Dagger authorization through canonical config and guided initialization: src/decapod/cli.rs",
+      "input_digest": "sha256:e7640dc0d2432fa14499d166037016e7a140ed6285281a7da046c8417bbb03f8"
     },
     {
-      "id": "reviewed-bazel-source-inventory",
-      "summary": "Independently compare generated lock to exact5 permitted Tokio substitutions and complete inventory versus3795e92c: MODULE.bazel.lock only; reconcile required-profile digest without weakening coverage",
-      "input_digest": "sha256:a0fbb6ada7df899313310a5fcc6f67ebbfa29b5d920ed46bccf913c50e3b6187"
+      "id": "dagger-public-config-2",
+      "summary": "Preserve dormant Dagger authorization through canonical config and guided initialization: src/decapod/lib.rs",
+      "input_digest": "sha256:95c501059250113c50cfc0871504112a52746389abc1f1f08996a60d79968e39"
     },
     {
-      "id": "bazel-lock-security-spec",
-      "summary": "Specify normal pinned module metadata generation and exact bounded Tokio output review, preserving strict lock validation and no trust change",
-      "input_digest": "sha256:60b4af5f070b4b1e70267ad52cd94115d4399070872a8cb46c9053b78c314f20"
+      "id": "dagger-public-config-3",
+      "summary": "Preserve dormant Dagger authorization through canonical config and guided initialization: tests/consumer_readiness.rs",
+      "input_digest": "sha256:cb681c85f416cd2f9a9dbc82cb762be705cb6b2b9ad64b6d2489b51eb005c062"
     },
     {
-      "id": "bazel-repair-spec-projections",
-      "summary": "Refresh generated specs after exactCI formatter and generated module lock repairs; tests and full proof pending new candidate",
-      "input_digest": "sha256:8bfb60f24e887fa697ef9db08b837e67b76415125f32826aab6ab40f80e778ae"
+      "id": "dagger-full-config-roundtrip",
+      "summary": "Exercise full public TOML parser, runtime parser and guided reinit preserving inert dormant authorization and existing proof",
+      "input_digest": "sha256:d3ee0f2a38a5a94794bdb1dd3147a9da050a25474111702af02a114a4416a799"
     },
     {
-      "id": "final-bazel-source-spec-reviews",
-      "summary": "Current-content reviews for all3 required publication specs after generated projections; preserve first full-validation GET timeout and actualCI formatter/strict-lock failures as failed evidence",
-      "input_digest": "sha256:104fb2f494a7bcd65bc06659537f63704b5c35cfe824373a3d2f6e832c058c0c"
+      "id": "dagger-public-config-projections",
+      "summary": "Refresh generated specs after public config integration; retain unavailable configured and live engine proof honestly",
+      "input_digest": "sha256:6a2c19a189fa8806ecc55bdd28a7a17ec2e9f2fbad1d2fca73438661e9357d03"
     },
     {
-      "id": "issue1474-target-01220",
-      "summary": "Merge accepted master8868a1ec as second parent, preserve first-parent journal with exact-byte custody, retain upstream recovery and source inventory plus atomic native receipts; reconcile release-only Cargo inventory, then regenerate official0.122.0 entrypoints and specs after final config. Independent source review passed; CI and native proof remain pending.",
-      "input_digest": "sha256:a892f2889c66a80032aa4c68e552077fb5a8a24acfb63a8a04c1e209ce1db337",
+      "id": "dagger-tokio-advisory",
+      "summary": "Apply independently verified minimal Tokio 1.53.3 lock remediation; canonical Bazel lock regeneration still pending, no passing tests claimed",
+      "input_digest": "sha256:3d342ddb2bd2c289999726a745361847475f78562c275eb8915581ec414b1063"
+    },
+    {
+      "id": "dagger-architecture-review",
+      "summary": "Ground architecture in accepted-only dormant Dagger policy, current workspace protocol, bounded existing engine identity and unchanged hosted proof",
+      "input_digest": "sha256:9366755a91c287feaee90bd9062e99fb8f8140674a0a48919d1eb0cdaeb366c4"
+    },
+    {
+      "id": "dagger-security-review",
+      "summary": "Specify explicit external-engine trust and deny-by-default accepted authority; record narrow dependency repair without audit or live-proof claims",
+      "input_digest": "sha256:7eb26bc26071d149e3108d5a64b145857ed104b9e404d58ca0ec783ea9c2d7bb"
+    },
+    {
+      "id": "dagger-derived-bazel-lock",
+      "summary": "Apply canonical pinned Bazel 9.3.0 generated Tokio lock; exact before/after hashes and five-substitution scope independently verified; no tests claimed",
+      "input_digest": "sha256:32da74db188ac0eed15df3d8bf17f244cd03694aa093174c6b786d14b24fdc5c"
+    },
+    {
+      "id": "dagger-reviewed-dependency-inventory",
+      "summary": "Review only Cargo.lock and generated MODULE.bazel.lock inventory changes; retain existing accepted controller, recipes, graph and Buildkite requirements",
+      "input_digest": "sha256:ace7aad4c576903c0b64dd70867281bd723d6de63719a1790a2eb7e1399c4b92"
+    },
+    {
+      "id": "dagger-publication-spec-reviews",
+      "summary": "Record source-grounded current-content architecture/interface/security reviews and official generated spec refresh after minimal dependency repairs",
+      "input_digest": "sha256:678e7ba2ca9a9a2706904a41fbd59beefd023979a43890be7ed6643878fb1b62"
+    },
+    {
+      "id": "dagger-ci-module-import",
+      "summary": "Repair CI E0433 by importing repository_profile for accepted Dagger authority call; policy semantics unchanged, downstream execution unproven",
+      "input_digest": "sha256:605f1215d21507ec6629646b22f3c97706e1b5761dfc99190cc30f240b01faa8"
+    },
+    {
+      "id": "dagger-ci-argv-format",
+      "summary": "Apply formatter to fixed Dagger workspace argv matching CI fmt finding; no execution or permission change",
+      "input_digest": "sha256:82fa7fbbbe35e083a8b4f6b87b5eb6edc9a765b8a7edc25369a8ceb3eb1468cd"
+    },
+    {
+      "id": "dagger-ci-repair-projections",
+      "summary": "Refresh generated specs and content-bound reviews after narrow observed CI root repairs; preserve failed evidence and no-live-proof limits",
+      "input_digest": "sha256:273d80a5741fd49463e39fa2c291e28af2d37f626adbaa772a2f03901a385c43"
+    },
+    {
+      "id": "issue1475-clippy-borrow",
+      "summary": "Remove CI-reported needless borrow in accepted Dagger authorization error propagation",
+      "input_digest": "sha256:1562884f084e96eed94718b17f015e585b6e68b3fc6660e8e03387d479c1fed7"
+    },
+    {
+      "id": "issue1475-canonical-dagger-doc",
+      "summary": "Preserve Dagger contract in canonical repository-readiness input included by docs generator",
+      "input_digest": "sha256:3a1ef801cbb548363e966385af2731a09e912456c7322dd70dd4612af811a5d2"
+    },
+    {
+      "id": "issue1475-ci2-projections",
+      "summary": "Refresh generated specs and source-grounded reviews after actual Clippy and canonical documentation input repairs; exact CI generator verification remains pending",
+      "input_digest": "sha256:3295b3dc5506ae7e4af748b6443c443abde118c4ec7ad8d8d707cd855177e633"
+    },
+    {
+      "id": "issue1475-agent-recovery-guidance",
+      "summary": "Emit Dagger-specific structured agent-owned recovery in failed validation reports without granting authority or readiness; add regression fixtures",
+      "input_digest": "sha256:ed759f1bc656038b04eb15b44e3a037029857a43c0554d6121d00970f4594ddd"
+    },
+    {
+      "id": "issue1475-policy-recovery-context",
+      "summary": "Identify rejected Dagger execution and accepted authorization paths in error output; preserve fail-closed predicate and add diagnostic assertions",
+      "input_digest": "sha256:ed759f1bc656038b04eb15b44e3a037029857a43c0554d6121d00970f4594ddd"
+    },
+    {
+      "id": "issue1475-policy-recovery-applied",
+      "summary": "Apply named Dagger authorization diagnostic and regression assertions after aborted earlier edit",
+      "input_digest": "sha256:189ea6c1c4630e8aebea40ffbbc2ea79bcff0d76d850fe604e982b8dfd00b9bb"
+    },
+    {
+      "id": "issue1475-prerequisite-context",
+      "summary": "Retain Dagger tool/socket/inspection cause and error kind so execution failures select structured agent recovery; add context fixtures",
+      "input_digest": "sha256:90d24f571fa850ea513cb4637610c0ca116f6d72a35f988ff4658b5c5ebc8810"
+    },
+    {
+      "id": "issue1475-recovery-spec",
+      "summary": "Specify emitted agent-only Dagger recovery, preserved failures and accepted authority; no user CLI recovery burden",
+      "input_digest": "sha256:8d6523033811c9d714e94da29149c568dd552e1554ac31e5b2a9b1e0db723899"
+    },
+    {
+      "id": "issue1475-recovery-projections",
+      "summary": "Refresh projections and required current-content reviews for Dagger recovery output; actual CI pending",
+      "input_digest": "sha256:295596fd83d636eab8a370694676c1066077ec34c1c3463bea94a65aa6adb272"
+    },
+    {
+      "id": "issue1475-merge-release-01221",
+      "summary": "Merge accepted master as second parent preserving active journal, upstream recovery and atomic receipts; reconcile release-only source inventory before official0.122.1 projection refresh and current-content reviews",
+      "input_digest": "sha256:94d56037737489954bc86b8560e975bacadb9edf9958446165fba195e9fdd9e8",
       "proof_refs": [
-        "/tmp/1474-01220-inventory-review.diff",
-        "/workspace/shared/issue1474-01220-conflict-custody.json"
+        "git:77b9468f9fe9b4db467cd8e84349a286faa15666",
+        "git:8d6a64169930e746bb86a965acf486505e163f2f",
+        "sha256:fecf2227072e84fa6e30ba08cf14b1b52389f5ed247bcfa765d95ff408a01b6e"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M6F0K06W2R671HMFTEY3PKDM": {
+    "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workspace.rs",
-        "src/decapod/core/governance_artifacts.rs",
-        "tests/consumer_readiness.rs",
-        "tests/unit/core/workspace_publication_tests.rs",
-        ".decapod/managed/specs/VALIDATION.md"
+        "issue-1475-dagger"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+      "id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Issue 1474 native receipt custody on release 0.121.2\n\nReplay authored issue1474 repair onto canonical release workspace after bootstrap mismatch; preserve old branch evidence. Full native proof and immutable exact candidate receipt, no bypass.",
-      "refined_intent": "Issue 1474 native receipt custody on release 0.121.2\n\nReplay authored issue1474 repair onto canonical release workspace after bootstrap mismatch; preserve old branch evidence. Full native proof and immutable exact candidate receipt, no bypass.",
+      "raw_intent": "Add bounded local Dagger validation proof adapter for issue 1475",
+      "refined_intent": "Add bounded local Dagger validation proof adapter for issue 1475",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -665,7 +755,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Issue1474: replay receipt circularity repair on canonical0.121.2 candidate; full native proof emits immutable external exact candidate and trajectory-bound receipt. No proof weakening, credentials, merge or release.",
+      "intent": "Implement optional bounded Dagger execution against immutable exact-candidate snapshots with reviewed module sources, measured local toolchain and pre-existing local engine identity; preserve complete proof, Buildkite, and daemonless governance",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -675,52 +765,84 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed merged target8868a1ec with issue1474: upstream exact path inventory and non-reopening recovery remain intact; native verdict and receipt atomic completion remain exact first-parent source. Full proof authority unchanged. Cargo release-only version drift reviewed before config digest and generated projection refresh with official0.122.0.",
-          "reviewed_code_fingerprint": "4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d",
-          "spec_material_hash": "c020c6b914efacf1408cd5a069c649bf9987f4acdcf792211d147591785bdab9"
+          "reason": "Reviewed true merge: accepted exact-name inventory resolver, classification guidance and atomic native completion coexist with Dagger pre-existing executor. Runtime writes receipt and verdict outside frozen candidate; Dagger identity and accepted authority remain unchanged. Authored architecture retains both upstream and feature descriptions.",
+          "reviewed_code_fingerprint": "26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d",
+          "spec_material_hash": "7302c9056a80d882ef9c238915bf8346a0db83fef965148dd99f6ebbd006ff3a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed merged target8868a1ec with issue1474: upstream exact path inventory and non-reopening recovery remain intact; native verdict and receipt atomic completion remain exact first-parent source. Full proof authority unchanged. Cargo release-only version drift reviewed before config digest and generated projection refresh with official0.122.0.",
-          "reviewed_code_fingerprint": "4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d",
-          "spec_material_hash": "9d098e129b4e66cd3afbf9a27cbde682f16338cd442e739301d789662ea4737f"
+          "reason": "Reviewed upstream actionable recovery and atomic receipt interfaces against merged runtime; Dagger structured agent guidance and dormant accepted-target configuration remain intact. All recovery is agent/harness output, conversational human decisions only; no new user-operated command or self-authorization.",
+          "reviewed_code_fingerprint": "26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d",
+          "spec_material_hash": "34d7aa9c2f8f8159e12c61353b3670b1f264578ddfc4fc27679612e8b89ecdec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed merged target8868a1ec with issue1474: upstream exact path inventory and non-reopening recovery remain intact; native verdict and receipt atomic completion remain exact first-parent source. Full proof authority unchanged. Cargo release-only version drift reviewed before config digest and generated projection refresh with official0.122.0.",
-          "reviewed_code_fingerprint": "4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d",
-          "spec_material_hash": "0eedf1f61b256408417dc024ba6cc0c9c50b0b87027fa7714138539d1cdd6677"
+          "reason": "Reviewed retained native receipt bindings, fail-closed write behavior and upstream recovery labels alongside trusted pre-existing Dagger engine boundary. Same required proof and default-denied capabilities; exact engine identity checks remain observations, not immutable runtime attestation. Release-only inventory reconciliation changes no permission.",
+          "reviewed_code_fingerprint": "26d3d6feaab14e15e1d953608db690d9f3588b954d7e776469dd464e2b22c63d",
+          "spec_material_hash": "002f4b77e79ab2363d896c679179061e37133983356caf1809b079e198ee3464"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Issue 1474 native receipt custody on release 0.121.2",
+      "title": "Add bounded local Dagger validation proof adapter for issue 1475",
       "todo_ids": [
-        "bugs_01m6f0jc8040z1x7"
+        "feat_01m6f0mcy91wgq8z"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793672847Z"
+      "updated_at": "1793675041Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4049548d7490541b3d481fabfa3268955eb509e27076a2884b536b03cc7d3996",
+      "artifact_hash": "sha256:2c1eab5a9c08de94e530863a71e1d97b75c773007f721e0ff3f2837dfbb25ba6",
       "checks": [
         {
-          "name": "native_receipt_finalization",
-          "status": "unavailable"
-        },
-        {
-          "name": "native_receipt_regression",
-          "status": "unavailable"
-        },
-        {
-          "name": "official_validation",
+          "name": "ci-source-compile",
           "status": "failed"
+        },
+        {
+          "name": "ci-source-format",
+          "status": "failed"
+        },
+        {
+          "name": "clippy-13201",
+          "status": "failed"
+        },
+        {
+          "name": "configured-buildkite-proof",
+          "status": "unavailable"
+        },
+        {
+          "name": "current-target-full-proof",
+          "status": "unavailable"
+        },
+        {
+          "name": "docs-ci-bf496",
+          "status": "passed"
+        },
+        {
+          "name": "docs-sync-13201",
+          "status": "failed"
+        },
+        {
+          "name": "live-dagger",
+          "status": "unavailable"
+        },
+        {
+          "name": "merge-source-review",
+          "status": "passed"
+        },
+        {
+          "name": "recovery-fixtures",
+          "status": "unavailable"
+        },
+        {
+          "name": "release-inventory-review",
+          "status": "passed"
         }
       ],
       "current_phase": "intent",
@@ -728,69 +850,69 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 8
           },
           {
-            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
             "event_id": "event:9",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 9
           },
           {
-            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
             "event_id": "event:10",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 10
           },
           {
-            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
             "event_id": "event:11",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 11
           }
@@ -799,107 +921,94 @@
         "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6F0K07GRCP71GJRSYSZ84V7": {
+          "branch_01M6F0MSA6NJNNFSAD36MDNVNK": {
             "evidence_only": true,
-            "id": "branch_01M6F0K07GRCP71GJRSYSZ84V7",
-            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "id": "branch_01M6F0MSA6NJNNFSAD36MDNVNK",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/workspace.rs"
+                  "src/decapod/core/validation_runtime/repository_host.rs"
                 ],
                 "proof_refs": [
-                  "native_receipt_regression"
+                  "live-dagger"
                 ],
                 "scope": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "src/decapod/core/governance_artifacts.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/workspace.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/unit/core/workspace_publication_tests.rs"
+                  "issue-1475-dagger"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "The explicitly accepted pre-provisioned local Docker daemon and Dagger engine are trusted executors, including writable runtime state; image ID is identity not filesystem attestation. No live engine integration or tests have run. Current official Dagger container driver attaches to existing full container ID without provisioning."
+                ]
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/validation_runtime.rs"
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_runtime/repository_host/dagger.rs",
+                  "src/decapod/core/proof.rs",
+                  "tests/unit/lib_init_prompt_tests.rs"
                 ],
                 "proof_refs": [
-                  "native_receipt_regression"
+                  "configured-buildkite-proof"
                 ],
                 "scope": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "src/decapod/core/governance_artifacts.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/workspace.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/unit/core/workspace_publication_tests.rs"
+                  "issue-1475-dagger"
                 ],
                 "sequence": 5,
-                "validation_findings": []
+                "validation_findings": [
+                  "Independent source review corrected legacy CLI syntax to Dagger 1.0 workspace/check contract, first-adoption deadlock via dormant accepted authority, and canonical config/init map preservation. Fixture tests authored but not executed. Official snapshot preparation reached pending upload at superseded 15bad19e; unavailable upload prevents real configured CI proof. Reviewed inherited source inventory drift is only Cargo package version 0.121.0 to 0.121.2 from 213ed9ca; every discovered source matches accepted 3216d717."
+                ]
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
-                "observations": [
-                  "tests/unit/core/workspace_publication_tests.rs"
-                ],
+                "observations": [],
                 "proof_refs": [
-                  "native_receipt_regression"
+                  "ci-source-compile",
+                  "ci-source-format"
                 ],
                 "scope": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "src/decapod/core/governance_artifacts.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/workspace.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/unit/core/workspace_publication_tests.rs"
+                  "issue-1475-dagger"
                 ],
                 "sequence": 6,
-                "validation_findings": []
+                "validation_findings": [
+                  "Exact published a2b8e499 source CI run41542321861 failed E0433 repository_profile import at validation_runtime.rs628 in clippy125609503788 and setup125609503827; fmt125609503901 reported only fixed workspace argv vector layout. Source repair adds import and formatter output, preserving accepted-only authority and capabilities. Earlier local collector session is unavailable; no full readiness or live engine execution claimed."
+                ]
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "tests/consumer_readiness.rs"
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "GitHub source CI job 125627507466 at 13201 reports needless_borrows_for_generic_args at validation_runtime.rs633; job 125626769890 source-build succeeds but generated docs drift. Remove unnecessary format borrow without changing failure semantics; checks remain required."
                 ],
                 "proof_refs": [
-                  "native_receipt_regression"
+                  "clippy-13201",
+                  "docs-sync-13201"
                 ],
                 "scope": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "src/decapod/core/governance_artifacts.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/workspace.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/unit/core/workspace_publication_tests.rs"
+                  "issue-1475-dagger"
                 ],
                 "sequence": 7,
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
+                "command": "decapod docs build using official 0.121.2 then restore unchanged tracked projection pending exact source-built CI generator",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "src/decapod/core/governance_artifacts.rs"
+                  "src/decapod/core/docs_cli.rs",
+                  "docs/agent/repository-readiness.md",
+                  "Generator embeds repository-readiness.md at compile time. Existing generated config-schema already carries exact Dagger text, now copied to canonical authored input. Official release generation removed that text only; restored tracked projection. Exact source-built CI generator verification remains required, no local source build performed."
                 ],
-                "proof_refs": [
-                  "native_receipt_regression"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "src/decapod/core/governance_artifacts.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/workspace.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/unit/core/workspace_publication_tests.rs"
+                  "issue-1475-dagger"
                 ],
                 "sequence": 8,
                 "validation_findings": []
@@ -908,18 +1017,11 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:9",
                 "observations": [
-                  ".decapod/managed/specs/VALIDATION.md"
+                  "Prior policy-context checkpoint recorded intention only: guarded edit aborted before writing because fixture occurs twice. This checkpoint applies the actual source change and diagnostic assertions; no test execution claimed."
                 ],
-                "proof_refs": [
-                  "native_receipt_regression"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "src/decapod/core/governance_artifacts.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/workspace.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/unit/core/workspace_publication_tests.rs"
+                  "issue-1475-dagger"
                 ],
                 "sequence": 9,
                 "validation_findings": []
@@ -928,20 +1030,17 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:10",
                 "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  ".decapod/config.toml"
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_runtime/repository_host/dagger.rs",
+                  "Exact bf496 source-built Documentation Sync job125648538570 passed, as did CI-local Validate; main CI still queued. New recovery edits invalidate prior candidate results. Emitted agent guidance uses existing schema; no human recovery CLI or engine authorization grant. New fixture execution awaits official CI."
                 ],
                 "proof_refs": [
-                  "official_validation"
+                  "docs-ci-bf496",
+                  "recovery-fixtures"
                 ],
                 "scope": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "src/decapod/core/governance_artifacts.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/workspace.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/unit/core/workspace_publication_tests.rs"
+                  "issue-1475-dagger"
                 ],
                 "sequence": 10,
                 "validation_findings": []
@@ -950,18 +1049,15 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:11",
                 "observations": [
-                  "src/decapod/core/validation_runtime.rs"
+                  "Merge current accepted master8d6a64169930e746bb86a965acf486505e163f2f into existing77b9468f as second parent. Original first-parent journal bytes preserved SHA25697bbd321b26946b083a8615c324b2cc37545a88929264404e71db746da01a262 before CLI review updates; imported journal remains in second-parent history. Independent review confirms recovery and atomic native receipt source compose with Dagger authority. Verified official0.122.1 binary e26da8b05a91940e0d640b7601ae2fba9e87af7f0c565967567744e2621bb3c5 regenerated projections only after independently measured119-source config digest was finalized. Inventory changes only Cargo package version0.121.2 to0.122.1. Full current-target proof and live Dagger qualification remain unavailable."
                 ],
                 "proof_refs": [
-                  "native_receipt_finalization"
+                  "merge-source-review",
+                  "release-inventory-review",
+                  "current-target-full-proof"
                 ],
                 "scope": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "src/decapod/core/governance_artifacts.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/workspace.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/unit/core/workspace_publication_tests.rs"
+                  "issue-1475-dagger"
                 ],
                 "sequence": 11,
                 "validation_findings": []
@@ -970,40 +1066,47 @@
           }
         }
       },
-      "declared_commands": [],
-      "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [
-        "Cargo.lock",
-        "Cargo.toml"
+      "declared_commands": [
+        "decapod docs build using official 0.121.2 then restore unchanged tracked projection pending exact source-built CI generator"
       ],
-      "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
-      "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/VALIDATION.md",
-        "src/decapod/core/governance_artifacts.rs",
+      "destination": "pull request",
+      "evidence": [
+        "Exact bf496 source-built Documentation Sync job125648538570 passed, as did CI-local Validate; main CI still queued. New recovery edits invalidate prior candidate results. Emitted agent guidance uses existing schema; no human recovery CLI or engine authorization grant. New fixture execution awaits official CI.",
+        "Generator embeds repository-readiness.md at compile time. Existing generated config-schema already carries exact Dagger text, now copied to canonical authored input. Official release generation removed that text only; restored tracked projection. Exact source-built CI generator verification remains required, no local source build performed.",
+        "GitHub source CI job 125627507466 at 13201 reports needless_borrows_for_generic_args at validation_runtime.rs633; job 125626769890 source-build succeeds but generated docs drift. Remove unnecessary format borrow without changing failure semantics; checks remain required.",
+        "Merge current accepted master8d6a64169930e746bb86a965acf486505e163f2f into existing77b9468f as second parent. Original first-parent journal bytes preserved SHA25697bbd321b26946b083a8615c324b2cc37545a88929264404e71db746da01a262 before CLI review updates; imported journal remains in second-parent history. Independent review confirms recovery and atomic native receipt source compose with Dagger authority. Verified official0.122.1 binary e26da8b05a91940e0d640b7601ae2fba9e87af7f0c565967567744e2621bb3c5 regenerated projections only after independently measured119-source config digest was finalized. Inventory changes only Cargo package version0.121.2 to0.122.1. Full current-target proof and live Dagger qualification remain unavailable.",
+        "Prior policy-context checkpoint recorded intention only: guarded edit aborted before writing because fixture occurs twice. This checkpoint applies the actual source change and diagnostic assertions; no test execution claimed."
+      ],
+      "inspected_files": [
+        "src/decapod/core/docs_cli.rs",
         "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workspace.rs",
-        "tests/consumer_readiness.rs",
-        "tests/unit/core/workspace_publication_tests.rs"
+        "src/decapod/core/validation_runtime/repository_host.rs"
+      ],
+      "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
+      "modified_files": [
+        "docs/agent/repository-readiness.md",
+        "src/decapod/core/proof.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/repository_host/dagger.rs",
+        "tests/unit/lib_init_prompt_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "src/decapod/core/governance_artifacts.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workspace.rs",
-        "tests/consumer_readiness.rs",
-        "tests/unit/core/workspace_publication_tests.rs"
+        "issue-1475-dagger"
       ],
-      "run_id": "branch_01M6F0K07GRCP71GJRSYSZ84V7",
+      "run_id": "branch_01M6F0MSA6NJNNFSAD36MDNVNK",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6f0jc8040z1x7",
+      "task_id": "feat_01m6f0mcy91wgq8z",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Exact published a2b8e499 source CI run41542321861 failed E0433 repository_profile import at validation_runtime.rs628 in clippy125609503788 and setup125609503827; fmt125609503901 reported only fixed workspace argv vector layout. Source repair adds import and formatter output, preserving accepted-only authority and capabilities. Earlier local collector session is unavailable; no full readiness or live engine execution claimed.",
+        "Independent source review corrected legacy CLI syntax to Dagger 1.0 workspace/check contract, first-adoption deadlock via dormant accepted authority, and canonical config/init map preservation. Fixture tests authored but not executed. Official snapshot preparation reached pending upload at superseded 15bad19e; unavailable upload prevents real configured CI proof. Reviewed inherited source inventory drift is only Cargo package version 0.121.0 to 0.121.2 from 213ed9ca; every discovered source matches accepted 3216d717.",
+        "The explicitly accepted pre-provisioned local Docker daemon and Dagger engine are trusted executors, including writable runtime state; image ID is identity not filesystem attestation. No live engine integration or tests have run. Current official Dagger container driver attaches to existing full container ID without provisioning."
+      ]
     }
   },
   "legacy_digests": {

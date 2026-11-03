@@ -183,6 +183,7 @@ impl Fixture {
             )]),
             directory: ".".into(),
             timeout_seconds: 10,
+            dagger: None,
         };
         let mut contract = RepositoryContract {
             reviewed_commands_digest: String::new(),
@@ -209,6 +210,7 @@ impl Fixture {
                 reviewed_sources_digest: sources.digest().unwrap(),
             }),
             repository_contract: Some(contract),
+            dagger_authorizations: BTreeMap::new(),
             rust_workers: None,
             ci_attested: None,
             commands,
