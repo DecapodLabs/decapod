@@ -487,24 +487,34 @@
         "tests/plugins/todo.rs",
         "tests/unit/core/fleet_coord_tests.rs"
       ]
+    },
+    {
+      "id": "precise-claims-v1237-reconcile",
+      "summary": "Merge accepted 0.123.7 with bounded file claims; preserve original journal and regenerate official publication surfaces",
+      "input_digest": "sha256:8f08d279104979d4303f2ba37b58c4180fdd6149c9d3083378fcdcdd65a25524"
+    },
+    {
+      "id": "precise-claims-v1237-task-binding",
+      "summary": "Bind reconciled plan and trajectory to new owned reconciliation task without claiming recovery of lost custody",
+      "input_digest": "sha256:10263f90fb3f1e72947a892f1deebc9fd6daa77127993b5729148511d4e829d5"
     }
   ],
   "intents": {
-    "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7": {
+    "intent:reconcile-1500-v1237": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "No trust elevation, no human CLI, no merge or release"
       ],
       "constraints": [
-        "root"
+        "PR 1500 reconciliation"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7",
+      "id": "intent:reconcile-1500-v1237",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Resolve issue 1480 bounded disjoint-file claims",
-      "refined_intent": "Resolve issue 1480 bounded disjoint-file claims",
+      "raw_intent": "Update PR 1500 after accepted PR 1499 and official release 0.123.7",
+      "refined_intent": "Preserve bounded file claims and unchanged trust while merging accepted master and regenerating release-bound publication material",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -527,211 +537,93 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document precise ASCII footprints, conservative alias handling, unchanged legacy/trust behavior and unresolved trust administration",
-          "reviewed_code_fingerprint": "b542a530203aa76d5bd8cd7fecf03f26d2de5343ba58594fb2d31642112f7fa6",
+          "reason": "Reviewed accepted upstream prose and retained precise file-claim semantics; no trust elevation; v0.123.7 reconciliation preserves required proof and carries fresh execution uncertainty.",
+          "reviewed_code_fingerprint": "6e409a4a2758ac6b845f6c58516136327907ced399db0ef4bc93cf4d2b8a2061",
           "spec_material_hash": "88e3da882fd0bd878853001fee259d23dc3541d0e816007f80de709b769754bc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document precise ASCII footprints, conservative alias handling, unchanged legacy/trust behavior and unresolved trust administration",
-          "reviewed_code_fingerprint": "b542a530203aa76d5bd8cd7fecf03f26d2de5343ba58594fb2d31642112f7fa6",
-          "spec_material_hash": "5051896a970101b5210986c30f2dea8528cc1bfc990dc302c9ff94c117b0b4c2"
+          "reason": "Reviewed accepted upstream prose and retained precise file-claim semantics; no trust elevation; v0.123.7 reconciliation preserves required proof and carries fresh execution uncertainty.",
+          "reviewed_code_fingerprint": "6e409a4a2758ac6b845f6c58516136327907ced399db0ef4bc93cf4d2b8a2061",
+          "spec_material_hash": "ae87bf096b0f1e7075e4c961c065ed4723584cbd1cd9e73a6654999ed181c336"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document precise ASCII footprints, conservative alias handling, unchanged legacy/trust behavior and unresolved trust administration",
-          "reviewed_code_fingerprint": "b542a530203aa76d5bd8cd7fecf03f26d2de5343ba58594fb2d31642112f7fa6",
+          "reason": "Reviewed accepted upstream prose and retained precise file-claim semantics; no trust elevation; v0.123.7 reconciliation preserves required proof and carries fresh execution uncertainty.",
+          "reviewed_code_fingerprint": "6e409a4a2758ac6b845f6c58516136327907ced399db0ef4bc93cf4d2b8a2061",
           "spec_material_hash": "8a04e0f3dc35561fd70d49844063031291f049e4b42ea2e99c1e7634db846a1b"
         }
       ],
-      "state": "EXECUTING",
+      "state": "APPROVED",
       "stop_conditions": [
         "Do not publish before independent file-scope review and full exact-candidate validation"
       ],
       "title": "Resolve issue 1480 bounded disjoint-file claims",
       "todo_ids": [
-        "bugs_01m6ga8m79fpn8k9"
+        "cicd_01m6h97wxf8an58p"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793698677Z"
+      "updated_at": "1793729719Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Cooperative accepted-target policy only, no authenticated identity or consent claim; no live trust edits",
-        "Current claimed task and isolated work branch",
-        "No live trust changes, self-promotion, human CLI requirement, or fabricated proof",
-        "Only explicit file scopes; trust-grant portion of issue 1480 remains unresolved and will not be closed by this PR"
+        "No trust elevation, no human CLI, no merge or release"
       ],
-      "artifact_hash": "sha256:7516ea6e366da3183e640229ee4d403490c41636195e3152bb9fd603f9429832",
+      "artifact_hash": "sha256:3d3dd0d314b87da0ff06978993c5b8df1f1a3da8fcbd133b0e7306850933291e",
       "checks": [
         {
-          "name": "full-validation",
-          "status": "failed"
-        },
-        {
-          "name": "git-diff-check",
-          "status": "passed"
-        },
-        {
-          "name": "runtime-tests",
-          "status": "unavailable"
-        },
-        {
-          "name": "rustfmt",
-          "status": "passed"
-        },
-        {
-          "name": "source-assessment",
+          "name": "inventory-review",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7",
+            "intent_id": "intent:reconcile-1500-v1237",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7",
+            "intent_id": "intent:reconcile-1500-v1237",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6GA9HNZ0K3GJ2VPNPKYF8CQ",
+            "detail": "trajectory:reconcile-1500-v1237",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7",
+            "intent_id": "intent:reconcile-1500-v1237",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M6GA9HNZ0K3GJ2VPNPKYF8CQ",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M6GA9HNZ0K3GJ2VPNPKYF8CQ",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M6GA9HNZ0K3GJ2VPNPKYF8CQ",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M6GA9HNZ0K3GJ2VPNPKYF8CQ",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6GA9HNZ0K3GJ2VPNPKYF8CQ": {
+          "reconcile-1500-v1237": {
             "evidence_only": true,
-            "id": "branch_01M6GA9HNZ0K3GJ2VPNPKYF8CQ",
-            "intent_id": "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7",
+            "id": "reconcile-1500-v1237",
+            "intent_id": "intent:reconcile-1500-v1237",
             "steps": [
               {
-                "action": "assessment",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/work_claim.rs",
-                  "docs/agent/mcp.md",
-                  "master b4a1374b78857cc8816844fb812101783ae864d0 policy.rs actor_trust_level_on_conn treats literal roles as core and approve_action_with_expiry writes declared actor without independent authentication"
+                  "Compared all 119 discovered inventory entries to pre-release accepted 0a900ba3: only Cargo.toml and Cargo.lock version 0.123.6 to 0.123.7 changed; measured digest 5dbe4d4d4b8031aaf334ccf4498f9437995c4a8354d6e83ea881e747d555e4d4. Existing proof settings unchanged.",
+                  "Original control-plane state unavailable after environment replacement. Distinct reconciliation task owns this workspace; no claim of recovered old custody. Public PR head and exact first-parent journal preserved; accepted master remains ordered second parent."
                 ],
                 "proof_refs": [
-                  "source-assessment",
-                  "runtime-tests"
+                  "inventory-review"
                 ],
                 "scope": [
-                  "root"
+                  "PR 1500 reconciliation"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "User requested config interface; parent authorized default-empty accepted-target cooperative mapping and exact path scopes, preserving policy gates"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "src/decapod/core/fleet_coord.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/work_claim.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "tests/plugins/todo.rs",
-                  "tests/unit/core/fleet_coord_tests.rs",
-                  "Independent static file-scope review found no concrete defect; rejected trust configuration draft removed and preserved outside candidate; no tests executed yet"
-                ],
-                "proof_refs": [
-                  "rustfmt",
-                  "git-diff-check"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/config.toml",
-                  "1c16f0e2 validation stopped before tests: PROOF_PROFILE_RECONCILIATION_REQUIRED. Full discovered inventory comparison f89a9fa8 to candidate differs only accepted Cargo.toml/Cargo.lock 0.123.3 to 0.123.4 release version. Updated only reviewed_sources_digest to controller-reported 2d773cc1833a077b22700e94d87952e6fa215bb8bb761b777cb4a2b0ab902c79 and refreshed manifest; proof requirements unchanged."
-                ],
-                "proof_refs": [
-                  "full-validation"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Narrowed independent static review confirmed no trust lookup or elevation wiring remains. New explicit scopes conservatively fold ASCII case on every platform; non-ASCII explicit scopes fail with broad-directory recovery guidance; legacy scopes unchanged. Added case/Unicode/legacy regressions."
-                ],
-                "proof_refs": [
-                  "rustfmt"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -739,42 +631,20 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [
-        "1c16f0e2 validation stopped before tests: PROOF_PROFILE_RECONCILIATION_REQUIRED. Full discovered inventory comparison f89a9fa8 to candidate differs only accepted Cargo.toml/Cargo.lock 0.123.3 to 0.123.4 release version. Updated only reviewed_sources_digest to controller-reported 2d773cc1833a077b22700e94d87952e6fa215bb8bb761b777cb4a2b0ab902c79 and refreshed manifest; proof requirements unchanged.",
-        "Independent static file-scope review found no concrete defect; rejected trust configuration draft removed and preserved outside candidate; no tests executed yet",
-        "Narrowed independent static review confirmed no trust lookup or elevation wiring remains. New explicit scopes conservatively fold ASCII case on every platform; non-ASCII explicit scopes fail with broad-directory recovery guidance; legacy scopes unchanged. Added case/Unicode/legacy regressions.",
-        "User requested config interface; parent authorized default-empty accepted-target cooperative mapping and exact path scopes, preserving policy gates",
-        "master b4a1374b78857cc8816844fb812101783ae864d0 policy.rs actor_trust_level_on_conn treats literal roles as core and approve_action_with_expiry writes declared actor without independent authentication"
+        "Compared all 119 discovered inventory entries to pre-release accepted 0a900ba3: only Cargo.toml and Cargo.lock version 0.123.6 to 0.123.7 changed; measured digest 5dbe4d4d4b8031aaf334ccf4498f9437995c4a8354d6e83ea881e747d555e4d4. Existing proof settings unchanged.",
+        "Original control-plane state unavailable after environment replacement. Distinct reconciliation task owns this workspace; no claim of recovered old custody. Public PR head and exact first-parent journal preserved; accepted master remains ordered second parent."
       ],
-      "inspected_files": [
-        "docs/agent/mcp.md",
-        "src/decapod/core/todo.rs",
-        "src/decapod/core/work_claim.rs",
-        "src/decapod/plugins/policy.rs"
-      ],
-      "intent_id": "intent:change_01M6GA9HMF9NCDPPHD32FX3BG7",
-      "modified_files": [
-        ".decapod/config.toml",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/fleet_coord.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/core/work_claim.rs",
-        "tests/plugins/todo.rs",
-        "tests/unit/core/fleet_coord_tests.rs"
-      ],
-      "next_transitions": [
-        "Product/security decision on independent trust-grant authority; do not close issue 1480",
-        "Refine plan and declare falsifiable checks",
-        "Run full exact-candidate validation; leave trust-grant portion unresolved"
-      ],
+      "inspected_files": [],
+      "intent_id": "intent:reconcile-1500-v1237",
+      "modified_files": [],
       "repo_scope": [
-        "root"
+        "PR 1500 reconciliation"
       ],
-      "run_id": "branch_01M6GA9HNZ0K3GJ2VPNPKYF8CQ",
+      "run_id": "reconcile-1500-v1237",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6ga8m79fpn8k9",
+      "task_id": "cicd_01m6h97wxf8an58p",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

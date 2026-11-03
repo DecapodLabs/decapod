@@ -1,5 +1,32 @@
 # Validation
 
+## Documented agent bootstrap execution
+
+The always-selected `cli-contracts` proof executes the inline
+`documented_bootstrap` module in `tests/cli_contract_enforcement.rs`, which
+interprets the generated
+`AGENTS.md` initialization commands through real CLI subprocesses. Human
+provisioning creates a committed local-backend project with container workspaces
+disabled. The fixture sets `DECAPOD_CLAIM_AUTORUN=false` because claiming
+otherwise attempts an optional container launch independently of that project
+setting. This disables no claim lease, orientation, or proof gate. It asserts
+that container image storage was not initialized and explicitly closes its
+temporary directory so cleanup failures fail the test. Installation, remote
+backends and Docker execution are outside this fixture's scope. The agent acquires its own session, initializes context, creates
+and claims a task, creates a governed workspace, enters the returned path, and
+orients before any implementation file is written.
+
+The fixture removes inherited Decapod and Git environment overrides and CI mode
+flags rather than setting Git-gate bypasses. Orientation must fail with the
+worktree-specific diagnostic from the main checkout both before and after
+workspace creation. Successful orientation must retain the created task's intent
+and governed-plan binding in the actual worktree. Implementation then changes
+only that worktree, with the main checkout's HEAD and tracked work unchanged.
+The module is part of the target source itself, so Bazel cannot omit an
+undeclared support file. Unlike the selective CLI matrix, this proof also runs
+on test-only changes. This runtime regression complements the four-entrypoint text-order checks in
+`src/decapod/core/assets.rs`; neither substitutes for exact-candidate validation.
+
 ## Native readiness receipt custody
 
 Decapod remains the proof-gated governor of accepted work, not a receipt-import
@@ -852,8 +879,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b542a530203aa76d5bd8cd7fecf03f26d2de5343ba58594fb2d31642112f7fa6`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
+- Repository signal fingerprint: `6e409a4a2758ac6b845f6c58516136327907ced399db0ef4bc93cf4d2b8a2061`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1120,3 +1147,32 @@ local `outcome=skipped` reasons. These notes report the executed gate branch;
 they do not promote a project-check result into publication readiness. The
 whole-command regression inspects this JSON record and the non-ready scope rather
 than guessing proof execution from an aggregate green count or absent failure text.
+
+## Released native acceptance boundary
+
+The opt-in observer `tests/acceptance/native_readiness.py` invokes an externally
+installed released CLI on agent-prepared governed native branches. Unlike the
+runtime fixture, it cannot replace prerequisites or accepted-target transport.
+It requires a successful unchanged-candidate external receipt/verdict pair,
+actual failed native execution without success publication, and rejection of a
+subsequently dirty candidate. It is not a provider or publication authority and
+does not change plan acceptance or configured proof. Its failed-native and dirty
+controls are distinct from runtime in-flight target-race tests. See
+`docs/native-readiness-acceptance.md` for prerequisites and the outstanding real
+execution requirement; authored acceptance code alone does not close #1474.
+
+## File-claim reconciliation with native acceptance
+
+The file-scope candidate preserves the accepted native-readiness and live-recovery
+acceptance suites from PR 1499 alongside the bounded claim regressions. Explicit
+path scopes still require ordinary category, dependency, lease and trust gates;
+they neither replace native execution evidence nor establish isolated-worktree
+custody. The 0.123.7 release changes the discovered build inventory only through
+the accepted Cargo package version. The reviewed inventory declaration is measured
+after this merge, before spec refresh; required proof checks are unchanged.
+
+The earlier 0.123.4 source-CI run failed release-bound projection drift. Regenerating
+the entrypoints, managed Dockerfile and manifest with official 0.123.7 repairs
+those generated inputs but is not a passing test result. This merged candidate
+requires fresh exact-head execution evidence. Trust administration remains outside
+this PR and unresolved in issue 1480.

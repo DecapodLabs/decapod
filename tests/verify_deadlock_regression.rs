@@ -3,6 +3,9 @@ use std::path::Path;
 use std::process::{Command, Output};
 use tempfile::tempdir;
 
+#[path = "support/live_recovery.rs"]
+mod live_recovery;
+
 fn run_cmd(repo_root: &Path, args: &[&str], envs: &[(&str, &str)]) -> Output {
     let exe = env!("CARGO_BIN_EXE_decapod");
     let mut cmd = Command::new(exe);
