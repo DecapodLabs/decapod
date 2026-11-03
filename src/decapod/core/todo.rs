@@ -5149,6 +5149,59 @@ pub fn handoff_task_as(
     lease_seconds: Option<u64>,
     acting_agent: &str,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    match handoff_task_impl(store, id, to, from, summary, lease_seconds, acting_agent) {
+        Ok(mut output) => {
+            if output["status"] != "ok" {
+                output["recovery"] = handoff_recovery_diagnostic(
+                    id,
+                    to,
+                    from,
+                    acting_agent,
+                    &output["result"]["message"].to_string(),
+                );
+            }
+            Ok(output)
+        }
+        Err(error::DecapodError::ValidationError(reason)) => {
+            let recovery = handoff_recovery_diagnostic(id, to, from, acting_agent, &reason);
+            Err(error::DecapodError::ValidationError(format!(
+                "{reason}\nHANDOFF_RECOVERY: {recovery}"
+            )))
+        }
+        Err(other) => Err(other),
+    }
+}
+
+fn handoff_recovery_diagnostic(
+    id: &str,
+    to: &str,
+    from: Option<&str>,
+    actor: &str,
+    reason: &str,
+) -> serde_json::Value {
+    serde_json::json!({
+        "schema_version": "decapod.todo.handoff-recovery.v1",
+        "reason": reason,
+        "task_id": id,
+        "actor": actor,
+        "expected_owner": from,
+        "receiver": to,
+        "executor": "agent_or_harness",
+        "inspect_argv": ["decapod", "todo", "get", "--id", id],
+        "evaluate_argv": ["decapod", "govern", "policy", "eval", "--command", "todo.handoff", "--path", id],
+        "next_action": "Agent/harness: inspect current ownership and history before any retry; a reconciliation failure may follow a committed transfer. Retain your established actual caller identity, never impersonate the owner or self-promote trust. Evaluate the exact task policy. If approval is required, obtain the human decision through conversation, then record its bounded exact-task approval through the authorized harness; never manufacture approval. Retry only after resolving the reported precondition and confirming current custody. Users execute only decapod init; do not ask a human to run recovery commands."
+    })
+}
+
+fn handoff_task_impl(
+    store: &Store,
+    id: &str,
+    to: &str,
+    from: Option<&str>,
+    summary: &str,
+    lease_seconds: Option<u64>,
+    acting_agent: &str,
+) -> Result<serde_json::Value, error::DecapodError> {
     if acting_agent.trim().is_empty() || acting_agent == "unknown" {
         return Err(error::DecapodError::ValidationError(
             "HANDOFF_CALLER_MISSING: use the actual active caller identity; --from only asserts the previous owner".to_string(),
