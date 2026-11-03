@@ -487,6 +487,11 @@
       "id": "recovery-workspace-artifact-lookup",
       "summary": "Resolve replay artifacts through the task workspace used at capture; retain content hash checks and historical recovery acceptance boundary",
       "input_digest": "sha256:9e27e1788d466daed1485b51e7a21322a8bc406bcd0ea99e0e1771eed85c16a9"
+    },
+    {
+      "id": "release-drift-repair-124",
+      "summary": "Refresh release-bound entrypoints and managed Dockerfile using v0.124.0 to repair failed CI drift gate",
+      "input_digest": "sha256:c26b6aedfbbec3ed86e205492577af76e2bc75f18d2e3c624c2f8b411478f451"
     }
   ],
   "intents": {
@@ -560,14 +565,18 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e4be446f5391d7d46496e16ee200103fafdb439edb187270ab115a88ca0df343",
+      "artifact_hash": "sha256:8b4d5e5239ef2f922e66fa5435ac4833750ac8f38451868fa301a187a1a95f8b",
       "checks": [
         {
           "name": "local_tests",
           "status": "unavailable"
+        },
+        {
+          "name": "release_drift_ci",
+          "status": "failed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -588,10 +597,17 @@
             "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2": {
@@ -621,14 +637,39 @@
                 "validation_findings": [
                   "Task workspace discovery identifies the same owning workspace; artifact hash checks remain authoritative."
                 ]
+              },
+              {
+                "action": "repair",
+                "command": "Run v0.124.0 init --proof to regenerate release-bound files",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "GitHub Decapod Validate run 41726637713 failed because v0.124.0 entrypoints and managed Dockerfile were stale; generated content repaired with release CLI. No local tests run."
+                ],
+                "proof_refs": [
+                  "release_drift_ci"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "Run v0.124.0 init --proof to regenerate release-bound files"
+      ],
       "destination": "pull request",
       "evidence": [
+        "GitHub Decapod Validate run 41726637713 failed because v0.124.0 entrypoints and managed Dockerfile were stale; generated content repaired with release CLI. No local tests run.",
         "User directed PR action verification rather than local tests; live historical recovery acceptance remains unproven."
       ],
       "inspected_files": [
@@ -639,7 +680,13 @@
       ],
       "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/INTERFACES.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
         "src/decapod/plugins/verify.rs"
       ],
       "next_transitions": [
