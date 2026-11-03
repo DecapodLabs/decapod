@@ -710,6 +710,11 @@
       "id": "issue1475-recovery-spec",
       "summary": "Specify emitted agent-only Dagger recovery, preserved failures and accepted authority; no user CLI recovery burden",
       "input_digest": "sha256:8d6523033811c9d714e94da29149c568dd552e1554ac31e5b2a9b1e0db723899"
+    },
+    {
+      "id": "issue1475-recovery-projections",
+      "summary": "Refresh projections and required current-content reviews for Dagger recovery output; actual CI pending",
+      "input_digest": "sha256:295596fd83d636eab8a370694676c1066077ec34c1c3463bea94a65aa6adb272"
     }
   ],
   "intents": {
@@ -750,22 +755,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Inspected load_project accepted-only Dagger policy, command_invocation fixed workspace argv, and inspect_engines trust boundary. Removing a needless formatting borrow and relocating existing guidance into the docs generator canonical input changes no architecture or executor authority.",
-          "reviewed_code_fingerprint": "4a2d6af44973d7c4a2fc57bc022995e1eda86e966f4003ca32e5cba959aaba7d",
+          "reason": "Recovery reuses existing ValidationGuidance and ValidationReport.finish. Same finite adapter, accepted-only authorization, immutable snapshot and pre-existing trusted engine; no new orchestrator, command or authority.",
+          "reviewed_code_fingerprint": "5eedd609f837d09b10d55e9f613098d31d8a8bca6a74b9b11a28ab221bb98e62",
           "spec_material_hash": "8e3ceeeac52762000d0cb2d831bdcc16ba288b7959c5d23eb9a5031eedbd0218"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing Dagger section accurately describes typed dormant proposals, two-step accepted authorization, fixed Dagger 1.0 workspace syntax and missing live qualification. Canonical documentation input now retains exactly the same guidance on regeneration; no CLI or proof contract change.",
-          "reviewed_code_fingerprint": "4a2d6af44973d7c4a2fc57bc022995e1eda86e966f4003ca32e5cba959aaba7d",
-          "spec_material_hash": "134ec8c87c34d93107e6e3532ff036fe2e9e479fd2f2eb3ce2957eb62d0372c9"
+          "reason": "Added source-grounded description of emitted Dagger-specific structured agent recovery, named config diagnostics, preserved I/O causes, conversational decisions and independently accepted rotation before activation.",
+          "reviewed_code_fingerprint": "5eedd609f837d09b10d55e9f613098d31d8a8bca6a74b9b11a28ab221bb98e62",
+          "spec_material_hash": "54d2d1ed4bfaad6583f72428eb58abdabeb52e8c66bb8ef7e8d29ed948bbeb94"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed error propagation and canonical prose move: accepted-only authority, default-denied Dagger capabilities, trusted pre-existing local engine and unchanged Buildkite requirements remain intact. No live execution grant, policy weakening or additional identity claim.",
-          "reviewed_code_fingerprint": "4a2d6af44973d7c4a2fc57bc022995e1eda86e966f4003ca32e5cba959aaba7d",
+          "reason": "Recovery strings and error context remain advisory only: no predicate, capability, accepted authority, engine lifecycle or proof requirement changed. Missing/denied access stops; humans supply conversational decisions rather than recovery CLI execution.",
+          "reviewed_code_fingerprint": "5eedd609f837d09b10d55e9f613098d31d8a8bca6a74b9b11a28ab221bb98e62",
           "spec_material_hash": "eb8a12e853f7459ab9cda70be86dd24f6388fa50a198063d70eb06335700d8b8"
         }
       ],
@@ -777,13 +782,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793665870Z"
+      "updated_at": "1793666998Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2d5349d6d68339b9a242f628d31ea3269531bdb76d0c161f63da08346a271c53",
+      "artifact_hash": "sha256:d2b495be9f7fa5f83634bb7b9a58bc531a59e3d7c9866261baea9f6d6b4e94cf",
       "checks": [
         {
           "name": "ci-source-compile",
@@ -802,11 +807,19 @@
           "status": "unavailable"
         },
         {
+          "name": "docs-ci-bf496",
+          "status": "passed"
+        },
+        {
           "name": "docs-sync-13201",
           "status": "failed"
         },
         {
           "name": "live-dagger",
+          "status": "unavailable"
+        },
+        {
+          "name": "recovery-fixtures",
           "status": "unavailable"
         }
       ],
@@ -866,10 +879,17 @@
             "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MSA6NJNNFSAD36MDNVNK": {
@@ -976,6 +996,25 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_runtime/repository_host/dagger.rs",
+                  "Exact bf496 source-built Documentation Sync job125648538570 passed, as did CI-local Validate; main CI still queued. New recovery edits invalidate prior candidate results. Emitted agent guidance uses existing schema; no human recovery CLI or engine authorization grant. New fixture execution awaits official CI."
+                ],
+                "proof_refs": [
+                  "docs-ci-bf496",
+                  "recovery-fixtures"
+                ],
+                "scope": [
+                  "issue-1475-dagger"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -986,6 +1025,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Exact bf496 source-built Documentation Sync job125648538570 passed, as did CI-local Validate; main CI still queued. New recovery edits invalidate prior candidate results. Emitted agent guidance uses existing schema; no human recovery CLI or engine authorization grant. New fixture execution awaits official CI.",
         "Generator embeds repository-readiness.md at compile time. Existing generated config-schema already carries exact Dagger text, now copied to canonical authored input. Official release generation removed that text only; restored tracked projection. Exact source-built CI generator verification remains required, no local source build performed.",
         "GitHub source CI job 125627507466 at 13201 reports needless_borrows_for_generic_args at validation_runtime.rs633; job 125626769890 source-build succeeds but generated docs drift. Remove unnecessary format borrow without changing failure semantics; checks remain required.",
         "Prior policy-context checkpoint recorded intention only: guarded edit aborted before writing because fixture occurs twice. This checkpoint applies the actual source change and diagnostic assertions; no test execution claimed."
