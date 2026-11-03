@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.5](https://github.com/DecapodLabs/decapod/compare/v0.123.4...v0.123.5) - 2026-11-03
+
+### Fixed
+
+- *(tests)* compare recovery environment keys as OsStr
+
+### Other
+
+- *(governance)* review recovery-related publication contracts
+- *(governance)* review current recovery interface source
+- *(governance)* refresh official v0.123.4 entrypoints
+- *(verify)* add real CLI historical recovery acceptance harness
+
 ## [0.123.4](https://github.com/DecapodLabs/decapod/compare/v0.123.3...v0.123.4) - 2026-11-03
 
 ### Fixed
