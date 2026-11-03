@@ -589,6 +589,11 @@
       "id": "accepted-master-01213-merge",
       "summary": "Merge accepted5a477a5c as secondparent with b1 firstparent; exact prior machine bytes preserved during conflict resolution then official0.121.3 regenerated projections. Retain imported history and semantic inventory architecture. Review Cargo packageversion only source delta; all prior CI/proof invalidated by accepted-target move.",
       "input_digest": "sha256:35c4851db237d641ddaa505fc9958c4baddfa1779983831aac7b64bcd35c14fb"
+    },
+    {
+      "id": "accepted-target-review-correction",
+      "summary": "Publication verifier identified architecture unchanged versus new accepted target; correct review disposition while preserving imported semantic prose and all existing checkpoints",
+      "input_digest": "sha256:a473d352b0c01ea293f1ac42119ace00de4d47046a439f96fc88b335ef46e3e0"
     }
   ],
   "intents": {
@@ -630,9 +635,9 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved accepted master source_entry_path inventory implementation and its21line architecture explanation alongside existing recovery plugin boundaries. Newcontroller0.121.3 regenerates projections only; no authority/gate weakening or new subsystem.",
+          "reason": "Against the newly accepted5a477a5c target, architecture prose is unchanged: its21line inventory explanation was preserved exactly in the merge. Recovery remains existing verify plugin and transaction boundaries without architectural change; prior updated disposition compared firstparent rather than actual accepted target and is corrected honestly.",
           "reviewed_code_fingerprint": "595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3",
           "spec_material_hash": "e778b434665a97ee71dbd9c6efd495f23f6996a72ebf7e6a52ee51a4afe51431"
         },
@@ -659,7 +664,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793669980Z"
+      "updated_at": "1793669996Z"
     },
     "trajectory": {
       "active_boundaries": [
