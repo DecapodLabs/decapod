@@ -483,6 +483,11 @@
       "proof_refs": [
         "tests/consumer_readiness.rs"
       ]
+    },
+    "recovery-workspace-artifact-lookup": {
+      "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
+      "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
+      "status": "open"
     }
   },
   "checkpoints": [
@@ -492,6 +497,14 @@
       "input_digest": "sha256:d3a2072fd9a3233aad651a1acbfda26ff1d1ff84eb544cc1811d222ab52fd3da",
       "proof_refs": [
         "Source inspection and git diff --check; tests and full validation not run"
+      ]
+    },
+    {
+      "id": "reconcile-1241-source",
+      "summary": "Preserve original journal and accepted v0.124.1 source while awaiting matching controller refresh",
+      "input_digest": "sha256:6052a44129c698c92b15771e48d3c16eb8c164b485444411a0b8131b480c9726",
+      "proof_refs": [
+        "Git merge source audit; no tests or final readiness run"
       ]
     }
   ],
@@ -568,7 +581,7 @@
       "active_boundaries": [
         "Preserve existing readiness gates, receipts, config, and accepted authority; no local tests"
       ],
-      "artifact_hash": "sha256:91d279f449763a251c000b33f7f1542233ee060f8430551dd488e6e9e0989107",
+      "artifact_hash": "sha256:49f9342e69e56967fea0bfc441ac55b2f67d0c1141adf539916cbf0740c1a991",
       "checks": [
         {
           "name": "diff_whitespace",
@@ -579,7 +592,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "publication",
+      "current_phase": "reconciliation",
       "custody": {
         "events": [
           {
@@ -600,10 +613,17 @@
             "intent_id": "intent:native-diagnostics-1474",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:native-diagnostics-1474",
+            "event_id": "event:5",
+            "intent_id": "intent:native-diagnostics-1474",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "native-diagnostics-1474": {
@@ -632,6 +652,21 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "reconciliation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Accepted v0.124.1 release fd6d8daba0af03905b23e71e38530757b7baa574 merged as second parent; preserve accepted workspace-recovery claim and specs. The original checkpoint and task journal are retained. No tests or validation run; matching released controller unavailable, so projections remain pending."
+                ],
+                "proof_refs": [
+                  "local_tests"
+                ],
+                "scope": [
+                  "native validation recovery"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -640,6 +675,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Accepted v0.124.1 release fd6d8daba0af03905b23e71e38530757b7baa574 merged as second parent; preserve accepted workspace-recovery claim and specs. The original checkpoint and task journal are retained. No tests or validation run; matching released controller unavailable, so projections remain pending.",
         "Source inspection found native runner retained check key, termination and error in memory but persisted only numbered output and step files. Added private non-authoritative per-check recovery metadata and focused assertions. No local tests or full readiness run by user instruction; remote checks are pending."
       ],
       "inspected_files": [
@@ -654,7 +690,8 @@
         "tests/consumer_readiness.rs"
       ],
       "next_transitions": [
-        "Publish dedicated PR and observe exact-head CI"
+        "Publish dedicated PR and observe exact-head CI",
+        "Refresh and review release-bound specs with official v0.124.1 controller when available, then publish"
       ],
       "repo_scope": [
         "native validation recovery"

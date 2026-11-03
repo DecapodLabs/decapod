@@ -269,6 +269,10 @@ AGENTS.md substitute or historical CI receipt is imported by this batch path.
 `prepare_recovery_captures` collects file hashes and the active validation epoch
 before validation, rejecting missing per-task inputs and additional proof
 obligations that cannot be established by the validation-only capture contract.
+Relative artifact paths use the same task-aware lookup during capture and replay:
+the invoking checkout takes precedence, then the owning task workspace is
+consulted. Replay still requires the stored content hash to match; a missing or
+changed artifact is not accepted as proof.
 
 `refresh_batch_baselines_with_captures` requires a genuinely passing current
 snapshot, checks the original task and proof projection under the write
@@ -764,7 +768,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ca291d210f23deacb394eb5259fb68641f3be7e77c1dfaf5b2b10572625176c8`
+- Repository signal fingerprint: `6a223d952a5de1649b1d0f09695dcbc892114ae86550ab429959633ee768b310`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
