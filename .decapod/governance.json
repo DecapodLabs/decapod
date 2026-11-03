@@ -700,6 +700,11 @@
       "id": "issue1475-policy-recovery-applied",
       "summary": "Apply named Dagger authorization diagnostic and regression assertions after aborted earlier edit",
       "input_digest": "sha256:189ea6c1c4630e8aebea40ffbbc2ea79bcff0d76d850fe604e982b8dfd00b9bb"
+    },
+    {
+      "id": "issue1475-prerequisite-context",
+      "summary": "Retain Dagger tool/socket/inspection cause and error kind so execution failures select structured agent recovery; add context fixtures",
+      "input_digest": "sha256:90d24f571fa850ea513cb4637610c0ca116f6d72a35f988ff4658b5c5ebc8810"
     }
   ],
   "intents": {

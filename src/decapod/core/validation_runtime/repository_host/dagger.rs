@@ -18,11 +18,17 @@ pub(super) struct EngineObservation {
 
 const INSPECT_FORMAT: &str = r#"{"id":{{json .Id}},"image":{{json .Image}},"running":{{json .State.Running}},"started_at":{{json .State.StartedAt}},"readonly_rootfs":{{json .HostConfig.ReadonlyRootfs}},"mount_destinations":[{{range $i, $m := .Mounts}}{{if $i}},{{end}}{{json $m.Destination}}{{end}}]}"#;
 
+fn prerequisite_error(code: &str, cause: io::Error) -> io::Error {
+    io::Error::new(cause.kind(), format!("{code}: {cause}"))
+}
+
 fn decode_observation(
     bytes: &[u8],
     policy: &repository_profile::DaggerExecution,
 ) -> io::Result<EngineObservation> {
-    let observation: EngineObservation = serde_json::from_slice(bytes).map_err(io::Error::other)?;
+    let observation: EngineObservation = serde_json::from_slice(bytes).map_err(|cause| {
+        prerequisite_error("DAGGER_ENGINE_IDENTITY_MISMATCH", io::Error::other(cause))
+    })?;
     if observation.id != policy.engine_container
         || observation.image != policy.engine_image
         || !observation.running
@@ -54,14 +60,20 @@ pub(super) fn inspect_engines(
                 .get("dagger-docker")
                 .ok_or_else(|| invalid("DAGGER_DOCKER_TOOL_MISSING"))?,
             &project.identity_inputs.root,
-        )?;
+        )
+        .map_err(|cause| prerequisite_error("DAGGER_DOCKER_TOOL_INVALID", cause))?;
         if docker.file_name().and_then(|n| n.to_str()) != Some("docker") {
             return Err(invalid(
                 "DAGGER_DOCKER_TOOL_INVALID: explicit canonical Docker executable required",
             ));
         }
         let socket = Path::new(&policy.docker_socket);
-        if socket.starts_with(&project.identity_inputs.root) || socket.canonicalize()? != socket {
+        if socket.starts_with(&project.identity_inputs.root)
+            || socket
+                .canonicalize()
+                .map_err(|cause| prerequisite_error("DAGGER_SOCKET_INVALID", cause))?
+                != socket
+        {
             return Err(invalid(
                 "DAGGER_SOCKET_INVALID: canonical installed local socket required",
             ));
@@ -69,7 +81,11 @@ pub(super) fn inspect_engines(
         #[cfg(unix)]
         {
             use std::os::unix::fs::FileTypeExt;
-            if !fs::symlink_metadata(socket)?.file_type().is_socket() {
+            if !fs::symlink_metadata(socket)
+                .map_err(|cause| prerequisite_error("DAGGER_SOCKET_INVALID", cause))?
+                .file_type()
+                .is_socket()
+            {
                 return Err(invalid("DAGGER_SOCKET_INVALID: socket required"));
             }
         }
@@ -96,13 +112,15 @@ pub(super) fn inspect_engines(
                 INSPECT_FORMAT,
                 &policy.engine_container,
             ]);
-        let capture = command.bounded_capture(
-            ProcessLimits {
-                timeout: budget.remaining()?.min(Duration::from_secs(15)),
-                max_output_bytes: budget.output_limit().min(64 * 1024),
-            },
-            budget.cancel,
-        )?;
+        let capture = command
+            .bounded_capture(
+                ProcessLimits {
+                    timeout: budget.remaining()?.min(Duration::from_secs(15)),
+                    max_output_bytes: budget.output_limit().min(64 * 1024),
+                },
+                budget.cancel,
+            )
+            .map_err(|cause| prerequisite_error("DAGGER_ENGINE_INSPECTION_FAILED", cause))?;
         if capture.termination != Termination::Exited || !capture.output.status.success() {
             return Err(invalid(
                 "DAGGER_ENGINE_INSPECTION_FAILED: explicit local engine unavailable",
@@ -130,6 +148,25 @@ mod tests {
     fn observed() -> serde_json::Value {
         serde_json::json!({"id":"a".repeat(64),"image":format!("sha256:{}","b".repeat(64)),"running":true,"started_at":"2026-11-02T00:00:00Z","readonly_rootfs":false,"mount_destinations":["/var/lib/dagger"]})
     }
+    #[test]
+    fn prerequisite_failures_retain_cause_kind_and_recovery_context() {
+        let error = prerequisite_error(
+            "DAGGER_SOCKET_INVALID",
+            io::Error::new(io::ErrorKind::PermissionDenied, "socket access denied"),
+        );
+        assert_eq!(error.kind(), io::ErrorKind::PermissionDenied);
+        assert_eq!(
+            error.to_string(),
+            "DAGGER_SOCKET_INVALID: socket access denied"
+        );
+        assert!(
+            decode_observation(b"not json", &policy())
+                .unwrap_err()
+                .to_string()
+                .starts_with("DAGGER_ENGINE_IDENTITY_MISMATCH:")
+        );
+    }
+
     #[test]
     fn engine_witness_requires_exact_live_identity() {
         let valid = observed();
