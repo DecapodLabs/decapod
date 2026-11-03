@@ -852,8 +852,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
+- Repository signal fingerprint: `566d674464f43214dd26adaf3edd94c3d4cdbf8330c207591fb0a3538b246cff`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1120,3 +1120,16 @@ local `outcome=skipped` reasons. These notes report the executed gate branch;
 they do not promote a project-check result into publication readiness. The
 whole-command regression inspects this JSON record and the non-ready scope rather
 than guessing proof execution from an aggregate green count or absent failure text.
+
+## Released native acceptance boundary
+
+The opt-in observer `tests/acceptance/native_readiness.py` invokes an externally
+installed released CLI on agent-prepared governed native branches. Unlike the
+runtime fixture, it cannot replace prerequisites or accepted-target transport.
+It requires a successful unchanged-candidate external receipt/verdict pair,
+actual failed native execution without success publication, and rejection of a
+subsequently dirty candidate. It is not a provider or publication authority and
+does not change plan acceptance or configured proof. Its failed-native and dirty
+controls are distinct from runtime in-flight target-race tests. See
+`docs/native-readiness-acceptance.md` for prerequisites and the outstanding real
+execution requirement; authored acceptance code alone does not close #1474.
