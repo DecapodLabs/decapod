@@ -20,8 +20,11 @@ and inconsistent payload hashes fail closed; old context-free broker clients
 cannot silently execute under a leader's identity. Broker election, bounded
 execution and idle shutdown remain unchanged: this adds no daemon or service.
 
-`tests/group_broker.rs` exercises two callers claiming distinct tasks through a
-third caller's live broker and checks returned and persisted ownership; the
+`tests/support/caller_identity.rs` shares a two-caller scenario between optional
+broker-suite execution and unconditional daemonless acceptance. The latter fails
+if the probe cannot use a Unix socket and cannot opt out through the environment.
+Both callers claim distinct tasks through a third caller's live broker, with
+returned and persisted ownership assertions. The
 unit suite covers actor/workspace replay separation, credential rotation,
 rejected context keys and removal of absent leader metadata. These are required
 regressions, not a claim that unexecuted candidate tests have passed.

@@ -13,9 +13,9 @@ Only after these assertions does the test print its final acceptance marker.
 A failed probe in this required invocation fails rather than returning success.
 Unset or zero preserves an explicit optional skip in restricted local sandboxes;
 invalid flag values fail. This test-only switch does not alter runtime policy or
-caller identity. A green unfiltered suite without these post-probe markers is not
-evidence of this acceptance path. Actual execution remains unproven until the
-exact candidate execution supplies the named test output.
+caller identity. A green optional suite without these post-probe markers is not evidence of
+this acceptance path; the mandatory target contract below supplies an independent
+fail-on-skip route without broadening global logging.
 
 Because the source-CI carrier executes the independently accepted base recipe,
 the additive exact recipe does not become authority in its first candidate PR.
@@ -35,6 +35,13 @@ optional broker suite alone does not. The exact recipe additionally exposes the
 post-probe markers once accepted. Global logging and accepted executor authority
 are unchanged. Current-candidate execution must still be observed before claiming
 acceptance, and this test evidence never substitutes for complete validation.
+
+Public GitHub run 41626774360 on candidate `ab2948fc` (tree `f278e10e`)
+executed the accepted-base unfiltered daemonless target and reported PASSED in
+73.0 seconds, with one of one targets executed, exit zero and no cached result.
+The enforced scenario therefore passed its post-probe ownership assertions.
+This is target-contract evidence, not printed per-test stdout or full Buildkite
+readiness. Full validation remains separate; its denied session is unknown.
 
 ## Native readiness receipt custody
 

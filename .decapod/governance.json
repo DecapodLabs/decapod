@@ -520,6 +520,11 @@
       "id": "caller-socket-build-fix",
       "summary": "Fix Bazel exported label and extracted needless borrow found by public CI",
       "input_digest": "sha256:0e37770ea19dd2981ac35d287e2cf7608b7be2a392fad96907f6fc40cfff9171"
+    },
+    {
+      "id": "caller-socket-observed-proof",
+      "summary": "Record observed required socket target and current interface architecture security reviews",
+      "input_digest": "sha256:c05c28800503e2ff39468dfb3c24bc86061330279fa76d77268f7b87d69c62f9"
     }
   ],
   "intents": {
@@ -556,6 +561,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed against shared caller_identity scenario and daemonless target: required Linux socket acceptance is unconditional while optional broker skip and runtime protocol remain unchanged.",
+          "reviewed_code_fingerprint": "32e6f8823c65cc7355b6c84d89bacf642dc67e1912d6084be4fa3af8b8ad92ec",
+          "spec_material_hash": "3e1a65ceed4b5734b78059f963c40c5f086a43b733c75a3652e0d7a742dbc00c"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed against shared caller_identity scenario and daemonless target: required Linux socket acceptance is unconditional while optional broker skip and runtime protocol remain unchanged.",
+          "reviewed_code_fingerprint": "32e6f8823c65cc7355b6c84d89bacf642dc67e1912d6084be4fa3af8b8ad92ec",
+          "spec_material_hash": "ff0cca5d8f13550f6ceea7dcc5f3678fcbfa56cb85367520871dd73394d56084"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed issue1476 diff: only test harness, CI selection and cache contract changed; runtime CallerContext allowlist, ephemeral credentials, session/policy checks and accepted executor trust remain unchanged. Public target success grants no readiness.",
+          "reviewed_code_fingerprint": "32e6f8823c65cc7355b6c84d89bacf642dc67e1912d6084be4fa3af8b8ad92ec",
+          "spec_material_hash": "e2090e911112df35b36fb5845c7871be442f147bb1b3a723e04e3f17f76f56b9"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [
         "Unavailable accepted controller/executor or required access prevents publication; do not substitute suite green for named socket evidence"
@@ -566,18 +594,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793696220Z"
+      "updated_at": "1793705837Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No runtime identity, authorization, proof-policy weakening, merge or release"
       ],
-      "artifact_hash": "sha256:e5b6d6f9c908eb4b0f027cd280badab763f7fa7dc3c674303c6bb66a0b37bf32",
+      "artifact_hash": "sha256:15507f46ca07fd1c390d5326bd0a9fecec539015e39a65739a43dce930fc2e78",
       "checks": [
         {
           "name": "caller_socket_acceptance",
-          "status": "unavailable"
+          "status": "passed"
         },
         {
           "name": "full_validation",
@@ -693,10 +721,17 @@
             "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
             "kind": "trajectory_step_recorded",
             "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 16,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9YWNKFC66JMBTMHWVQ782": {
@@ -930,6 +965,22 @@
                 ],
                 "sequence": 16,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "Observed public GitHub CI41626774360 job125886703482: accepted executor43d5ecda ran unfiltered daemonless target on ab2948fc tree f278e10e, PASSED in73.0s, one of one targets executed, exit0. Unconditional fail-on-skip scenario establishes socket and both returned/persisted ownership assertions. This is not per-test stdout or full Buildkite readiness. CI only failure was missing spec review; reviewed current INTERFACES ARCHITECTURE SECURITY via supported CLI and clarified shared scenario prose."
+                ],
+                "proof_refs": [
+                  "caller_socket_acceptance"
+                ],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 17,
+                "validation_findings": []
               }
             ]
           }
@@ -951,6 +1002,7 @@
         "Generated branch had extraneous todo_01m6g9 parsed as a second task; renamed governed worktree branch retaining actual task. Next validation requires inventory reconciliation; accepted target advanced to release v0.123.4.",
         "Issue 1476 latest comment requires named post-probe evidence rather than suite-only success",
         "Merged accepted master 43d5ecda; inspected source-inventory delta from prior accepted b4a1374b: only Cargo version/lock changes to 0.123.5. Existing additive caller socket CI recipe remains only candidate inventory change. Official controller measured a16bd218 inventory; strict profile, carrier, provider and accepted authority unchanged.",
+        "Observed public GitHub CI41626774360 job125886703482: accepted executor43d5ecda ran unfiltered daemonless target on ab2948fc tree f278e10e, PASSED in73.0s, one of one targets executed, exit0. Unconditional fail-on-skip scenario establishes socket and both returned/persisted ownership assertions. This is not per-test stdout or full Buildkite readiness. CI only failure was missing spec review; reviewed current INTERFACES ARCHITECTURE SECURITY via supported CLI and clarified shared scenario prose.",
         "Official exact-head validation found ENTRYPOINT_COMMIT_DISCIPLINE only in reconciliation merge 002f1e1e, where accepted .4 entrypoints preceded official .5 refresh. Preserve old public head 639d3b32 at reachable backup/issue1476-before-entrypoint-repair-639d3b32. Replace only three reconciliation commits with one freshly checkpointed merge from original issue head c359ff17 and accepted master 43d5ecda. Retain complete journal and original three issue commits; no proof status upgraded.",
         "Official govern proof list resolves shared source-root config, not worktree config; no proof run or root mutation attempted. New recipe uses accepted-base executor and first-PR acceptance remains unproven.",
         "Official init --proof refreshed release-bound entrypoints and managed Dockerfile; finalized config remained byte-identical before init and after specs.refresh.",

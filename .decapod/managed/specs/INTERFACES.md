@@ -34,8 +34,11 @@ Structured replay binding includes arguments, actor, working directory and
 non-secret context, but excludes password rotation. Protocol mismatch fails
 closed; no persistent daemon or alternate IPC transport is introduced.
 
-The regression in `tests/group_broker.rs` requires two concurrent claim callers
-to traverse the same elected leader and checks both returned and stored owners.
+The shared regression in `tests/support/caller_identity.rs` requires two concurrent
+claim callers to traverse the same elected leader and checks both returned and
+stored owners. `tests/daemonless_lifecycle.rs` invokes it unconditionally with a
+required socket probe; `tests/group_broker.rs` retains optional sandbox skips.
+The mandatory acceptance target is the existing Linux x86_64 source-CI lane.
 Unit coverage in `tests/unit/core/group_broker_tests.rs` checks replay separation,
 rejected arbitrary environment keys and removal of absent leader credentials.
 Current full publication proof remains required; these declarations are not a
