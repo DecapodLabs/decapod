@@ -666,6 +666,11 @@
       "id": "handoff-v1231-accepted-merge",
       "summary": "True two-parent reconciliation of PR53454e6a with accepted cc72bd54; preserved first-parent journal blob f836dd2bf2ff81c7ed131036bdb76dfc273ad804 before CLI updates, accepted history remains second parent. Reviewed all119 source inventory paths and only version delta from prior declaration; finalized config before official0.123.1 init/spec refresh; preserved actual actor and agent-only recovery; full validation pending",
       "input_digest": "sha256:1e8aac5346a143dbda3ccccbc9536cace5580f3beb5c8b4f5dfe0627e04e5882"
+    },
+    {
+      "id": "handoff-v1231-task-binding",
+      "summary": "Bind preserved trajectory to currently claimed recovery task as required by publication-material verifier; no historical journal reset or claimed validation pass",
+      "input_digest": "sha256:881618481d6619bf49aa2a7141e569dffff24bda0f9412f26f37b535f0a568cb"
     }
   ],
   "intents": {
@@ -739,7 +744,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:047fc58c4d8e50a0cda32051a4464bb8302dc32a2974de0ee3ec8cd538ea8985",
+      "artifact_hash": "sha256:05378453c529e5c04824d038440d43d404e8bd56cf6f0a1e49301d2702fa357c",
       "checks": [
         {
           "name": "full-validation",
@@ -750,7 +755,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "merge recovery validation",
       "custody": {
         "events": [
           {
@@ -785,10 +790,17 @@
             "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MQZZ75W5PEXHA7QVY3FQ": {
@@ -853,6 +865,19 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "merge recovery validation",
+                "custody_event_id": "event:7",
+                "observations": [],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "issue-1477-handoff"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -887,7 +912,7 @@
       "run_id": "branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6f06f1rknvc3w",
+      "task_id": "bugs_01m6g21pc4qththw",
       "tool_calls": [],
       "unresolved_assumptions": [
         "Official tests require authenticated exact candidate upload; no test pass claimed"
