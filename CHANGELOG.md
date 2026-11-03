@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.122.1](https://github.com/DecapodLabs/decapod/compare/v0.122.0...v0.122.1) - 2026-11-03
+
+### Fixed
+
+- reconcile native receipt branch with release 0.122.0
+- *(governance)* reconcile generated Bazel source inventory
+- *(build)* synchronize Bazel lock for Tokio security update
+- *(governance)* reconcile Tokio source inventory
+- *(deps)* update Tokio for RUSTSEC-2026-0386
+- *(validation)* atomically publish native completion bundle
+- *(governance)* reconcile reviewed release source inventory
+- *(issue1474)* replay governance_artifacts.rs receipt custody repair
+- *(issue1474)* replay consumer_readiness.rs receipt custody repair
+- *(issue1474)* replay workspace_publication_tests.rs receipt custody repair
+- *(issue1474)* replay validation_runtime.rs receipt custody repair
+- *(issue1474)* replay workspace.rs receipt custody repair
+
+### Other
+
+- *(governance)* review final native receipt repair material
+- *(governance)* refresh repaired proof input projections
+- *(spec)* record bounded Tokio module lock repair
+- *(validation)* apply CI formatting for consumer_readiness.rs
+- *(validation)* apply CI formatting for tests.rs
+- *(validation)* apply CI formatting for validation_runtime.rs
+- *(governance)* record source-bound receipt spec reviews
+- *(governance)* refresh reviewed receipt specifications
+- *(spec)* reconcile native receipt SECURITY contract
+- *(spec)* reconcile native receipt OPERATIONS contract
+- *(spec)* reconcile native receipt ARCHITECTURE contract
+- *(spec)* reconcile native receipt INTERFACES contract
+- *(governance)* refresh atomic completion projections
+- *(validation)* clarify completion overwrite assertion
+- *(spec)* require atomic native success publication
+- *(governance)* locate atomic native receipt bundle
+- *(validation)* require paired native completion artifacts
+- *(validation)* cover failed native completion writes
+- *(governance)* refresh canonical receipt specs
+- *(spec)* define native full-proof receipt custody
+- *(governance)* initialize canonical native receipt repair
+
 ## [0.122.0](https://github.com/DecapodLabs/decapod/compare/v0.121.3...v0.122.0) - 2026-11-03
 
 ### Fixed
