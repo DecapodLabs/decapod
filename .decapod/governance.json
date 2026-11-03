@@ -591,6 +591,11 @@
       "id": "handoff-ci-fixture-evidence",
       "summary": "Record actual prior plugin results and bounded fixture repairs without claiming repaired candidate passes",
       "input_digest": "sha256:8bf0f5e41f074c3c2d370791e0213384992c3b52b6c6abfe4c2f8ecf2860ceae"
+    },
+    {
+      "id": "handoff-ci-fixture-projections",
+      "summary": "Refresh current source-bound projections and reviews after actual plugin CI fixture repairs; full validation pending",
+      "input_digest": "sha256:b2d8e78ebc4a9017d00f5e36afb19ce2efd44e2a972803b062b098ef968eb954"
     }
   ],
   "intents": {
@@ -631,22 +636,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current todo journal and policy broker architecture remain daemonless/local-first and unchanged by exact Tokio version/checksum Bazel lock synchronization; no new service or source proof graph changes",
-          "reviewed_code_fingerprint": "15a253f05db0de5255a78ef2e4a2c38826ee33914adf4ea246622caa2f185455",
+          "reason": "Tests and evidence prose only; no change to local daemonless broker, transaction custody, datastore or approval architecture",
+          "reviewed_code_fingerprint": "38f276a1f87e465e8dc745d4ece60cce2bddb81f83a2a66876863ea82a1f4aa7",
           "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rechecked current handoff actor/source/receiver separation, exact recovery authority and helper-only read boundary. Bazel Tokio lock repair changes no CLI interface; preexisting policy CLI initialization caveat remains explicit; validation is not complete",
-          "reviewed_code_fingerprint": "15a253f05db0de5255a78ef2e4a2c38826ee33914adf4ea246622caa2f185455",
-          "spec_material_hash": "ddfc4e2a454686480ab16efc761063517d4249624af507dbf4ea94304574c348"
+          "reason": "Actual CI fixture failures documented and repaired: explicit caller throughout isolated CLI session, deterministic Git identity, distinct source and receiver spoof tests. Production interface remains actual caller versus expected owner with exact recovery authority; new tests await execution",
+          "reviewed_code_fingerprint": "38f276a1f87e465e8dc745d4ece60cce2bddb81f83a2a66876863ea82a1f4aa7",
+          "spec_material_hash": "04ec1d51d5423f1d4f87dd3deaca24fdf0383ac38149a5909ae0f2452e3ca0e5"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Rechecked actual-caller trust, explicit recorded owner, one-use task-bound approval consumed transactionally and retained dependency/proof gates. Cooperative reserved operator is not OS auth; aligned Bazel Tokio1.53.3 security closure adds no authority or trust change",
-          "reviewed_code_fingerprint": "15a253f05db0de5255a78ef2e4a2c38826ee33914adf4ea246622caa2f185455",
+          "reason": "Fixture-only repair preserves actual caller verified trust, owner precondition, exact one-use approval and cooperative local operator boundary. Both source and recipient spoof attempts still must fail trust before mutation; no production changes",
+          "reviewed_code_fingerprint": "38f276a1f87e465e8dc745d4ece60cce2bddb81f83a2a66876863ea82a1f4aa7",
           "spec_material_hash": "0aa21326b991993236f3ab1fcb3f91e8f74de49d67a4a18a15ba24cfc98a5a71"
         }
       ],
@@ -658,7 +663,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793661556Z"
+      "updated_at": "1793665826Z"
     },
     "trajectory": {
       "active_boundaries": [
