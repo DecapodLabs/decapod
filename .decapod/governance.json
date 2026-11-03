@@ -496,6 +496,11 @@
       "id": "recovery-clippy-osstr",
       "summary": "Correct live recovery environment assertion OsStr predicate type; retain live acceptance limitation",
       "input_digest": "sha256:69db5338d88817b8843cd8eb755f9acc2a75446036b089f92d64bf1545adf130"
+    },
+    {
+      "id": "recovery-current-spec-review",
+      "summary": "Bind substantive recovery interface review and refreshed projections to the current OsStr-corrected source",
+      "input_digest": "sha256:29c1575a5d68a364df0e16462571ad3af3819314ea5811ec422405f17250c205"
     }
   ],
   "intents": {
@@ -536,8 +541,8 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Live recovery acceptance harness retains real gates and remains unproven until an authorized fixture executes",
-          "reviewed_code_fingerprint": "02d380ecec8416e1b0ed5c9e9c5b206983c82d40efb53aedbe9d9cf5d2b962f7",
+          "reason": "Reviewed the current historical-recovery interface section against live_recovery.rs after the OsStr correction: CLI recovery is task-bound, complete task records and original event fields are preserved, final validation is unscoped with real readiness, inherited CI exemptions are removed, and absent authorized live fixtures still prevent acceptance. The OsStr predicate changes only the environment-isolation assertion and does not change the interface contract.",
+          "reviewed_code_fingerprint": "e37a50609e2664d6e7d281d06874881b12ca63c545b31f91c3d3795772ce35ca",
           "spec_material_hash": "f0ca488501b1f43d968dd78e1d45b1f08adbd046d1f824d0ebfad42e1c4e7f5c"
         }
       ],
@@ -549,13 +554,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793697117Z"
+      "updated_at": "1793698854Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4f7a48052ac83ae66373065f9d62e593d631c7e697c78774d8b20bd9b117797b",
+      "artifact_hash": "sha256:2da5d5d8917018c06dfc6a763a4183e153591256e695876db3b082dd3e347b25",
       "blockers": [
         "No authorized already-governed fixture with multiple historical done tasks and real proof access is available; opt-in harness is not acceptance"
       ],
@@ -570,6 +575,10 @@
         },
         {
           "name": "rustfmt",
+          "status": "passed"
+        },
+        {
+          "name": "spec-review",
           "status": "passed"
         }
       ],
@@ -615,10 +624,17 @@
             "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6G9W51QAAFSNWD2E9D26EPW",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9W51QAAFSNWD2E9D26EPW": {
@@ -690,6 +706,23 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "tests/support/live_recovery.rs",
+                  "Re-reviewed current source after CI job 125836810903 reported STALE_SPEC_REVIEW; live acceptance remains unavailable."
+                ],
+                "proof_refs": [
+                  "spec-review"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -702,10 +735,13 @@
       "destination": "pull request",
       "evidence": [
         "GitHub Actions job 125829118700 reports E0277 at tests/support/live_recovery.rs:118; corrected iterator predicate dereference and OsStr comparison. New-head CI pending; successful live recovery remains unavailable.",
-        "Issue 1473 latest decision requires real successful non-reopening recovery"
+        "Issue 1473 latest decision requires real successful non-reopening recovery",
+        "Re-reviewed current source after CI job 125836810903 reported STALE_SPEC_REVIEW; live acceptance remains unavailable."
       ],
       "inspected_files": [
+        ".decapod/managed/specs/INTERFACES.md",
         "tests/consumer_readiness.rs",
+        "tests/support/live_recovery.rs",
         "tests/verify_deadlock_regression.rs"
       ],
       "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
