@@ -1,5 +1,19 @@
 # Interfaces
 
+## Native readiness completion artifacts
+
+Full native validation in `validation_runtime::run` returns an evidence directory.
+Successful native completion is an atomic `completion/` bundle containing
+`verdict.json` and `native-readiness-receipt.json`; consumers must not expect a
+standalone root verdict for that successful native route. Remote and non-ready
+verdict paths remain unchanged. Receipt schema1.0.0 binds scope, invocation,
+material identity, committed governance, trajectory, expected plan, execution
+evidence and Vega decision digests; `receipt_hash` covers its other fields.
+The bundle is inspection output, not an import/replay API or publication token.
+The legacy tracked `sections.validation` remains explicit project-check output,
+not a full-native prerequisite. Missing plan, claims, trajectory or malformed
+configuration still blocks publication.
+
 ## Interface Overview
 
 Decapod's interfaces connect human intent, agent work, repository state, and
@@ -709,7 +723,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3`
+- Repository signal fingerprint: `4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

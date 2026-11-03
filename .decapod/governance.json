@@ -450,176 +450,209 @@
     }
   },
   "change": {
-    "id": "change_01M6F0WT45WFWYNARKEXRWX6GH",
+    "id": "change_01M6F0K06W2R671HMFTEY3PKDM",
     "base_commit": "3216d7170b80a350c5a8417c38dda9c5c4d8bb23",
     "target_base": "origin/master"
   },
+  "claims": {
+    "native-receipt-custody": {
+      "statement": "Native full readiness does not require a legacy preparation receipt and successful proof emits immutable exact candidate receipt",
+      "falsifier": "Receipt-less native readiness blocked; failed or stale proof emits success receipt; recording success changes candidate",
+      "status": "open"
+    }
+  },
   "checkpoints": [
     {
-      "id": "controller-bootstrap",
-      "summary": "Fresh supported 0.121.2 generated workspace; prior failed branch preserved; no checks claimed",
-      "input_digest": "sha256:90e0bb1b57786033083d6af1e7c75cdf32399d83755bef1fbc0f688ba736544c"
+      "id": "release-bootstrap",
+      "summary": "Canonical0.121.2 workspace bootstrap preserving earlier blocked candidate f9043ea6; no execution proof yet",
+      "input_digest": "sha256:772c1a3b7628706eff6157e0e22bce348e26a181df2de78a7322491a2a73e25c"
     },
     {
-      "id": "replay-verify-rs",
-      "summary": "Replay authored issue 1473 material only; tests not yet run",
-      "input_digest": "sha256:d47280f0cf14606c57f71d8b0dce551acfa9a7db0dfda046d2de0518ebaf861e"
+      "id": "replay-workspace",
+      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
+      "input_digest": "sha256:6e245d346ab1d98ebf0f513429007ddf4e4179a70a52eb1810d950213e18ab2b"
     },
     {
-      "id": "replay-verify_completion_tests-rs",
-      "summary": "Replay authored issue 1473 material only; tests not yet run",
-      "input_digest": "sha256:9cd95121020dcb1830bc50d888c2f0a75a63df471fb8aec5c144d308b18ce6c4"
+      "id": "replay-validation_runtime",
+      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
+      "input_digest": "sha256:f738ab2ea3c47436c3bee1938540bec8016b5149b7859405c6e7ca45fa47b08b"
     },
     {
-      "id": "replay-error-recovery-md",
-      "summary": "Replay authored issue 1473 material only; tests not yet run",
-      "input_digest": "sha256:a6d15e65c88af725bb0421b0b5347060f54c441baa1fb40da0f75334f489fe76"
+      "id": "replay-workspace_publication_tests",
+      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
+      "input_digest": "sha256:9388f16cfcfd4f4ac957bcb35c9b079048306cf875f4ac1830014ec0c67f90ea"
     },
     {
-      "id": "replay-semantic-spec",
-      "summary": "Replay only authored recovery semantics preserving current generated attestations",
-      "input_digest": "sha256:9fa29e526457aec8777071a8cd7f0d888484f3829ac16188f8ef8a782aca14e2"
+      "id": "replay-consumer_readiness",
+      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
+      "input_digest": "sha256:ea270912c6b4078d3b83fe35d97f345c746021d30d55930d77109c0e0c08dc5e"
     },
     {
-      "id": "refresh-supported-spec",
-      "summary": "Refresh generated spec projections using supported release",
-      "input_digest": "sha256:b1bb5ec4a1b30f901d4dfb99ac8eb776a68ce05330d62c18e39ada0d15e8f883"
+      "id": "replay-governance_artifacts",
+      "summary": "Replay authored native receipt repair only from preserved candidate; tests await official validation",
+      "input_digest": "sha256:8805729202f008ecbc545d4a31dc1b4e0aa2f036af761ed4e300bf0ab700c72e"
     },
     {
-      "id": "reconcile-reviewed-inventory",
-      "summary": "Independently compared discovered inventory vs213ed9ca: only Cargo.toml and Cargo.lock package release0.121.0 to0.121.2; no workflow checks changed; update user-editable review declaration only",
-      "input_digest": "sha256:cc10090b222368904f5d2e76623acd2d4831a276bc5697fd6cb985f0591351da"
+      "id": "receipt-custody-spec",
+      "summary": "Replay authored whole-product native receipt custody spec; preserve existing generated release blocks",
+      "input_digest": "sha256:8a85fd830ac7bd9605aff29a9bc7de70b5cff8465e3618059bcbf8644863997a"
     },
     {
-      "id": "cli-recovery-failclosed",
-      "summary": "Add candidate-binary multi-TODO CLI recovery regression: missing inputs actionable; actual child validation rejects unrelated unapproved plan; task dates revisions and absent evidence preserved without prune. Authored not executed.",
-      "input_digest": "sha256:05b13f401d4a7e9a931c03cd7f4fd561749c0771c4525ab8c6f7050a0962abf4"
+      "id": "release-spec-projections",
+      "summary": "Refresh generated canonical release spec projections before exact validation",
+      "input_digest": "sha256:1dea95ef6b2ad22ed89e332d3c841092e77e1798336d1883bb55068bff64188e"
     },
     {
-      "id": "cli-recovery-projections",
-      "summary": "Refresh supported generated projections after CLI regression; tests remain unexecuted",
-      "input_digest": "sha256:3077ff24009b13eb6168948f01a71dcdefd89938fd631aaa269f232d86477ba0"
+      "id": "reviewed-source-release-drift",
+      "summary": "Official dry-run discovery3844276 independently reviewed full inventory versus213ed9ca: only Cargo.toml/lock0.121.0 to0.121.2 version bumps, no proof jobs/helpers/dependencies changed; reconcile declaration without changing coverage",
+      "input_digest": "sha256:e772329542869b4c40802a0c5d08d3abdddf278e9ac67dc0db78e43f6383b2ad"
     },
     {
-      "id": "tokio-advisory-repair",
-      "summary": "Apply independently hash-verified minimal Tokio1.52.3 to1.53.3 lock version/checksum patch for observed RUSTSEC-2026-0386; no other dependency edges changed, no tests claimed",
-      "input_digest": "sha256:1400430b7f78820e8b327a7841f035a22b7f93cd9a1cd346f248b904cd74efa1"
+      "id": "atomic-native-completion",
+      "summary": "Independent review: atomically publish receipt and verdict as completion directory only after both staged files sync; no fallible operation after publication",
+      "input_digest": "sha256:6da08dd0aff6c936280da98a2accad3b8d4c484cc5f3bfcde30b8ed2a8c36fae"
     },
     {
-      "id": "reviewed-tokio-inventory",
-      "summary": "Reviewed inventory delta is only Cargo.lock Tokio version/checksum; retain entire required profile and workflow graph, update user-editable review digest",
-      "input_digest": "sha256:5d1eec8921a83b95240e9f542a0ec0412f895f652dc137acb08a39b187c3b180"
+      "id": "atomic-completion-regressions",
+      "summary": "Inject receipt and verdict create/partial-write/sync failures: no published success artifacts and returned readiness false; tests unrun due transport blocker",
+      "input_digest": "sha256:c4a75c16211e96537bb0a9f0dbdc907366f47f78f1d624a26ec8b3b64c3e257d"
     },
     {
-      "id": "reviewed-cli-recovery-contract",
-      "summary": "Describe actual CLI failure-path regression and its unproven success boundary; preserve product-wide interface identity",
-      "input_digest": "sha256:cce75364076dd2a68a8a21f260709ddd8db92304fce09f5a15e349991f6e1643"
+      "id": "atomic-consumer-completion",
+      "summary": "Real native execution regression reads paired completion verdict and receipt, no standalone success verdict; pending official tests",
+      "input_digest": "sha256:62683e38dbbfc82a76193d9529cad381777b8d7144db25e63be5e36180c9196e"
     },
     {
-      "id": "supported-reviewed-spec-projections",
-      "summary": "Record actual current-content INTENT ARCHITECTURE INTERFACES reviews and refreshed generated projections; no validation success claimed",
-      "input_digest": "sha256:91841d04670d611720ec76c2542d9199a5a838695f08685908d3244b5441aa8d"
+      "id": "completion-location-guidance",
+      "summary": "Point inspection guidance to atomic native completion receipt location",
+      "input_digest": "sha256:9cd874ea6cafaff47c49fd2c4f50e2bf6d99578b181de1a9902b752a0edfbc78"
     },
     {
-      "id": "security-recovery-review",
-      "summary": "Record current-content security review: recovery preserves historical custody and requires real exact-material proof, no authority or audit exemptions",
-      "input_digest": "sha256:b0d4ba0a2449f9d845d050f7a7ac145ded26d6b7a07f4e688a3c0f7768f1d84c"
+      "id": "atomic-completion-spec",
+      "summary": "Document atomic native completion publication and fail-closed injected storage error regressions",
+      "input_digest": "sha256:f9c9fb533290d4886c3df7da0604b6021d3013d393505a1ad978cdf78c7ff523"
     },
     {
-      "id": "generated-bazel-tokio-lock",
-      "summary": "Prior collector session vanished while waiting; retained old handoff and immutable a99 source failure. Adopt hash-verified pinned Bazel9.3.0 generated lock, exactly five Tokio-related substitutions, no other graph or trust changes; not passing proof.",
-      "input_digest": "sha256:5a112175f8175e1a7365a7217e97fec1f135d2dc19c80271b8e429e2a42938e2"
+      "id": "completion-regression-readability",
+      "summary": "Keep overwrite-preservation assertion readable; no test execution claimed",
+      "input_digest": "sha256:1b4d1a0469948b91e8a48f5e8e990af3be46ca08324d6cbeb152266f1f38fa2e"
     },
     {
-      "id": "reviewed-bazel-inventory",
-      "summary": "Review discovered source delta only generated MODULE.bazel.lock Tokio checksum version and Cargo-input digest; required commands providers and policy unchanged",
-      "input_digest": "sha256:ee9219bc90350d71b301deae525268afbb2b5bc537461574d0eb96527aa4a1e1"
+      "id": "atomic-completion-projections",
+      "summary": "Refresh generated spec projections after review repair; official upload remains blocked, no network retry",
+      "input_digest": "sha256:40c48109a087a67d1bb68d5ac295f05e8a82a4abfe5e75831f7bd3e7ecb87394"
     },
     {
-      "id": "bazel-current-spec-reviews",
-      "summary": "Refresh generated projections and current-content semantic reviews after independently verified Bazel lock repair; preserve proof gap",
-      "input_digest": "sha256:1e516bac0c0db910834f999fa2bd9d4a5006653a6e792cead7fcfee8ce3b8da2"
+      "id": "tokio-security-repair",
+      "summary": "Apply independently verified minimal Tokio1.53.3 security fix for actual CI RUSTSEC-2026-0386; exact before/after lock hashes verified, no other dependencies changed",
+      "input_digest": "sha256:d946853681bca74218b4f570f772d4f7e94998edd6e54d411399ea6794ccca6c"
     },
     {
-      "id": "agent-recovery-diagnostics",
-      "summary": "Replace destructive epoch guidance with non-reopening recovery and safe explicit diagnostic-plus-retry command; no raw child output exposed, validation failures remain blocked",
-      "input_digest": "sha256:854526f933914bdd16b82419ca67d82dfce002821c8d9e9fd40fbc5528a4d945"
+      "id": "native-INTERFACES-review",
+      "summary": "Source-grounded INTERFACES update for immutable atomic native completion and bounded dependency repair; no proof claim",
+      "input_digest": "sha256:bc912b870a9d16fb131489259480100656b5163b69c7c08f28bcb59ef6a2ba28"
     },
     {
-      "id": "safe-scoped-child-blockers",
-      "summary": "Return bounded fixed allowlisted blocker labels from actual scoped child validation; prevent aggregate deadlock from hiding unrelated blocker identity; never forward child-controlled text or paths",
-      "input_digest": "sha256:1cd429f7b64bff303a716ab3a4330ab2fef953105f454924fd4053eab7726a78"
+      "id": "native-ARCHITECTURE-review",
+      "summary": "Source-grounded ARCHITECTURE update for immutable atomic native completion and bounded dependency repair; no proof claim",
+      "input_digest": "sha256:bc465022ad23884d973ab2a5b19cab2b2c2fc5d86a8503935eeae847e83dd88b"
     },
     {
-      "id": "aggregate-recovery-instructions",
-      "summary": "Aggregate missing-proof error exposes agent-owned non-destructive recovery and explicit task-bound file selection while retaining actual required checks",
-      "input_digest": "sha256:7f4080b2e5eeb85dbd2022571fa31bb21ea44950f49ffb16da25035f3ef26e6a"
+      "id": "native-OPERATIONS-review",
+      "summary": "Source-grounded OPERATIONS update for immutable atomic native completion and bounded dependency repair; no proof claim",
+      "input_digest": "sha256:02bba96e076d1178ab89d3dbc75502b29604b2aaf0b6812905a37e83eb0e1f22"
     },
     {
-      "id": "agent-diagnostic-regressions",
-      "summary": "Assert non-reopening exact task recovery advice, safe fixed child blocker labels, diagnostic command, no secret/provider content forwarding and bounded scan",
-      "input_digest": "sha256:d160ea6c126f942529b278e1a42312e038da179e03d43088f09702bb88e5b079"
+      "id": "native-SECURITY-review",
+      "summary": "Source-grounded SECURITY update for immutable atomic native completion and bounded dependency repair; no proof claim",
+      "input_digest": "sha256:955815822829a4be802a18c47e7362e30bb8f2d8b2f76086ea4e53e3ae948323"
     },
     {
-      "id": "real-cli-diagnostic-contract",
-      "summary": "Actual candidate CLI regression asserts aggregate recovery instructions and unrelated plan blocker survives scoped child hashing without raw output or prune advice; not executed locally",
-      "input_digest": "sha256:c939f842c3673050c6f9903e71c757646f20bd873a43c0c4eab1b0832222eba0"
+      "id": "tokio-reviewed-inventory",
+      "summary": "Review complete discovered source inventory versus public54a6eb09: only exact audited Tokio lock delta; reconcile digest26f194a9 without altering proof coverage",
+      "input_digest": "sha256:f7c799dbb6ed30b42bf829176144e57b5b02c3f79c407d331ad25ac690a1ba97"
     },
     {
-      "id": "agent-error-interface",
-      "summary": "Specify agent-only recovery error contract, safe bounded fixed labels from actual scoped child, explicit diagnostics/retry and unchanged proof boundaries",
-      "input_digest": "sha256:55c3a22edeffea93bf54371c9a3177c7933e41eb900ad4497790e97817315e44"
+      "id": "receipt-repair-spec-projections",
+      "summary": "Refresh generated projections after source-grounded receipt contracts and security lock repair",
+      "input_digest": "sha256:d0e5813da7fab24a3c096e106e5afabf963b161cca474fdd636c4b6a4d575871"
     },
     {
-      "id": "error-contract-spec-reviews",
-      "summary": "Refresh generated projections and actual current semantic reviews; authored regressions unexecuted pending official CI",
-      "input_digest": "sha256:007a0185f1021c0d1a957ea6d523926c845b4f52cebb10535aa2db8ecd02f84c"
+      "id": "source-bound-spec-review",
+      "summary": "Reviewed all3 CLI-required specs ARCHITECTURE INTERFACES SECURITY against source; operations and validation prose updated; INTENT product authority SEMANTICS exact proof and README ownership remain source-correct unchanged. Official CLI supports only3 review paths; no proof claimed.",
+      "input_digest": "sha256:475aaac17ae320e5fb24eb26cbd499f87b96ecf3685107d558193195b8bc2316"
     },
     {
-      "id": "diagnostic-observation-precision",
-      "summary": "Independent review: label substrings can appear in historical output; explicitly distinguish observed markers from established causal blockers or proof",
-      "input_digest": "sha256:684798442979a8bba30d1b8ee7d0c6739e2501cf94505cb31cf113ee2202e8c4"
+      "id": "ci-format-validation_runtime",
+      "summary": "Apply exact formatter output from actual GitHub CI job125601585610 on3795e92c; no manual build or shadow tests",
+      "input_digest": "sha256:4021849aaa3e1e7ea19dd82cb61db01009608a2695dcf8d31d6af4b663920121"
     },
     {
-      "id": "reviewed-final-diagnostics",
-      "summary": "Bind final current-source semantic reviews after independent diagnostic wording correction; no executed test claims",
-      "input_digest": "sha256:f83fe022831375945e99f268f2a4b23e42e0c0ddd0117b0465c28cf024fa831a"
+      "id": "ci-format-tests",
+      "summary": "Apply exact formatter output from actual GitHub CI job125601585610 on3795e92c; no manual build or shadow tests",
+      "input_digest": "sha256:0c4af7212d3a6fac204b2682ab5b235f2c1f75eef1a394252bfc0ef21ebe7e88"
     },
     {
-      "id": "accepted-master-01213-merge",
-      "summary": "Merge accepted5a477a5c as secondparent with b1 firstparent; exact prior machine bytes preserved during conflict resolution then official0.121.3 regenerated projections. Retain imported history and semantic inventory architecture. Review Cargo packageversion only source delta; all prior CI/proof invalidated by accepted-target move.",
-      "input_digest": "sha256:35c4851db237d641ddaa505fc9958c4baddfa1779983831aac7b64bcd35c14fb"
+      "id": "ci-format-consumer_readiness",
+      "summary": "Apply exact formatter output from actual GitHub CI job125601585610 on3795e92c; no manual build or shadow tests",
+      "input_digest": "sha256:5b60db66803fa230eabc1f2009f70885727a7abe9f790c7a8768ca29aacc193a"
     },
     {
-      "id": "accepted-target-review-correction",
-      "summary": "Publication verifier identified architecture unchanged versus new accepted target; correct review disposition while preserving imported semantic prose and all existing checkpoints",
-      "input_digest": "sha256:a473d352b0c01ea293f1ac42119ace00de4d47046a439f96fc88b335ef46e3e0"
+      "id": "generated-tokio-bazel-lock",
+      "summary": "Apply pinnedBazel9.3.0 systemJDK21 generated MODULE lock repair, exact shared before236449b9/after6aaafae3 verified; only Tokio refs/checksum and Cargo input digest, no proof claim",
+      "input_digest": "sha256:fbdd17f2620fb70ea109a697176ee77d4ba16d84b7a9e959f46bee82b7e1b585"
     },
     {
-      "id": "fix-1473-final-config-projection",
-      "summary": "Regenerate the living-spec manifest with official v0.121.3 after final reviewed inventory configuration; matches exact CI expected config hash without changing gates.",
-      "input_digest": "sha256:fc3523ec74d8846d88e520a4dddc5632de1fa8ac23ef3ef7475f861a24c4c140"
+      "id": "reviewed-bazel-source-inventory",
+      "summary": "Independently compare generated lock to exact5 permitted Tokio substitutions and complete inventory versus3795e92c: MODULE.bazel.lock only; reconcile required-profile digest without weakening coverage",
+      "input_digest": "sha256:a0fbb6ada7df899313310a5fcc6f67ebbfa29b5d920ed46bccf913c50e3b6187"
+    },
+    {
+      "id": "bazel-lock-security-spec",
+      "summary": "Specify normal pinned module metadata generation and exact bounded Tokio output review, preserving strict lock validation and no trust change",
+      "input_digest": "sha256:60b4af5f070b4b1e70267ad52cd94115d4399070872a8cb46c9053b78c314f20"
+    },
+    {
+      "id": "bazel-repair-spec-projections",
+      "summary": "Refresh generated specs after exactCI formatter and generated module lock repairs; tests and full proof pending new candidate",
+      "input_digest": "sha256:8bfb60f24e887fa697ef9db08b837e67b76415125f32826aab6ab40f80e778ae"
+    },
+    {
+      "id": "final-bazel-source-spec-reviews",
+      "summary": "Current-content reviews for all3 required publication specs after generated projections; preserve first full-validation GET timeout and actualCI formatter/strict-lock failures as failed evidence",
+      "input_digest": "sha256:104fb2f494a7bcd65bc06659537f63704b5c35cfe824373a3d2f6e832c058c0c"
+    },
+    {
+      "id": "issue1474-target-01220",
+      "summary": "Merge accepted master8868a1ec as second parent, preserve first-parent journal with exact-byte custody, retain upstream recovery and source inventory plus atomic native receipts; reconcile release-only Cargo inventory, then regenerate official0.122.0 entrypoints and specs after final config. Independent source review passed; CI and native proof remain pending.",
+      "input_digest": "sha256:a892f2889c66a80032aa4c68e552077fb5a8a24acfb63a8a04c1e209ce1db337",
+      "proof_refs": [
+        "/tmp/1474-01220-inventory-review.diff",
+        "/workspace/shared/issue1474-01220-conflict-custody.json"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M6F0WT45WFWYNARKEXRWX6GH": {
+    "intent:change_01M6F0K06W2R671HMFTEY3PKDM": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/plugins/verify.rs",
-        "tests/unit/plugins/verify_completion_tests.rs",
-        "docs/agent/error-recovery.md",
-        ".decapod/managed/specs/INTERFACES.md"
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/core/governance_artifacts.rs",
+        "tests/consumer_readiness.rs",
+        "tests/unit/core/workspace_publication_tests.rs",
+        ".decapod/managed/specs/VALIDATION.md"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6F0WT45WFWYNARKEXRWX6GH",
+      "id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix issue 1473 fresh proof recovery under 0.121.2\n\nPreserve failed candidate and replay authored current evidence recovery; completed history remains unverified until real required checks pass",
-      "refined_intent": "Fix issue 1473 fresh proof recovery under 0.121.2\n\nPreserve failed candidate and replay authored current evidence recovery; completed history remains unverified until real required checks pass",
+      "raw_intent": "Issue 1474 native receipt custody on release 0.121.2\n\nReplay authored issue1474 repair onto canonical release workspace after bootstrap mismatch; preserve old branch evidence. Full native proof and immutable exact candidate receipt, no bypass.",
+      "refined_intent": "Issue 1474 native receipt custody on release 0.121.2\n\nReplay authored issue1474 repair onto canonical release workspace after bootstrap mismatch; preserve old branch evidence. Full native proof and immutable exact candidate receipt, no bypass.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -632,7 +665,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Preserve completed historical claims and evidence; capture explicit current task artifacts and require genuine passing validation before final verification; replay authored work under supported controller without importing old governance.",
+      "intent": "Issue1474: replay receipt circularity repair on canonical0.121.2 candidate; full native proof emits immutable external exact candidate and trajectory-bound receipt. No proof weakening, credentials, merge or release.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -640,83 +673,335 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Against the newly accepted5a477a5c target, architecture prose is unchanged: its21line inventory explanation was preserved exactly in the merge. Recovery remains existing verify plugin and transaction boundaries without architectural change; prior updated disposition compared firstparent rather than actual accepted target and is corrected honestly.",
-          "reviewed_code_fingerprint": "595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3",
-          "spec_material_hash": "e778b434665a97ee71dbd9c6efd495f23f6996a72ebf7e6a52ee51a4afe51431"
+          "reason": "Reviewed merged target8868a1ec with issue1474: upstream exact path inventory and non-reopening recovery remain intact; native verdict and receipt atomic completion remain exact first-parent source. Full proof authority unchanged. Cargo release-only version drift reviewed before config digest and generated projection refresh with official0.122.0.",
+          "reviewed_code_fingerprint": "4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d",
+          "spec_material_hash": "c020c6b914efacf1408cd5a069c649bf9987f4acdcf792211d147591785bdab9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed merged source against recovery interface: new accepted inventory implementation does not change explicit task artifacts, observed-label diagnostic boundaries or atomic pending/final proof; current authored interface and regressions retained unchanged from reviewed recovery candidate.",
-          "reviewed_code_fingerprint": "595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3",
-          "spec_material_hash": "60e288463c4a14d266867d505c026bd23dbf5578550662263e98b03c423e209b"
+          "reason": "Reviewed merged target8868a1ec with issue1474: upstream exact path inventory and non-reopening recovery remain intact; native verdict and receipt atomic completion remain exact first-parent source. Full proof authority unchanged. Cargo release-only version drift reviewed before config digest and generated projection refresh with official0.122.0.",
+          "reviewed_code_fingerprint": "4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d",
+          "spec_material_hash": "9d098e129b4e66cd3afbf9a27cbde682f16338cd442e739301d789662ea4737f"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed merged inventory path canonicalization and non-destructive proof recovery: original obligations current material checks and safe observed diagnostics remain; preserving exact first-parent journal and accepted second-parent history does not import readiness. New release and dependency pins do not change trust policy.",
-          "reviewed_code_fingerprint": "595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3",
-          "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
+          "reason": "Reviewed merged target8868a1ec with issue1474: upstream exact path inventory and non-reopening recovery remain intact; native verdict and receipt atomic completion remain exact first-parent source. Full proof authority unchanged. Cargo release-only version drift reviewed before config digest and generated projection refresh with official0.122.0.",
+          "reviewed_code_fingerprint": "4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d",
+          "spec_material_hash": "0eedf1f61b256408417dc024ba6cc0c9c50b0b87027fa7714138539d1cdd6677"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Issue 1473 explicit fresh proof recovery",
+      "title": "Issue 1474 native receipt custody on release 0.121.2",
       "todo_ids": [
-        "bugs_01m6f0w8qgs9twzy"
+        "bugs_01m6f0jc8040z1x7"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793669996Z"
+      "updated_at": "1793672847Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ae91463be6f92d823d1dc91c9608ac699ce35e49e67238f3d6942f9cec60bf5e",
-      "checks": [],
+      "artifact_hash": "sha256:4049548d7490541b3d481fabfa3268955eb509e27076a2884b536b03cc7d3996",
+      "checks": [
+        {
+          "name": "native_receipt_finalization",
+          "status": "unavailable"
+        },
+        {
+          "name": "native_receipt_regression",
+          "status": "unavailable"
+        },
+        {
+          "name": "official_validation",
+          "status": "failed"
+        }
+      ],
       "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6F0WT45WFWYNARKEXRWX6GH",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6F0WT45WFWYNARKEXRWX6GH",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M6F0K07GRCP71GJRSYSZ84V7": {
+            "evidence_only": true,
+            "id": "branch_01M6F0K07GRCP71GJRSYSZ84V7",
+            "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/workspace.rs"
+                ],
+                "proof_refs": [
+                  "native_receipt_regression"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/validation_runtime.rs"
+                ],
+                "proof_refs": [
+                  "native_receipt_regression"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "proof_refs": [
+                  "native_receipt_regression"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/consumer_readiness.rs"
+                ],
+                "proof_refs": [
+                  "native_receipt_regression"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/governance_artifacts.rs"
+                ],
+                "proof_refs": [
+                  "native_receipt_regression"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [
+                  "native_receipt_regression"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml"
+                ],
+                "proof_refs": [
+                  "official_validation"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "src/decapod/core/validation_runtime.rs"
+                ],
+                "proof_refs": [
+                  "native_receipt_finalization"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "src/decapod/core/governance_artifacts.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/workspace_publication_tests.rs"
+                ],
+                "sequence": 11,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M6F0WT45WFWYNARKEXRWX6GH",
-      "modified_files": [],
+      "inspected_files": [
+        "Cargo.lock",
+        "Cargo.toml"
+      ],
+      "intent_id": "intent:change_01M6F0K06W2R671HMFTEY3PKDM",
+      "modified_files": [
+        ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/governance_artifacts.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/workspace.rs",
+        "tests/consumer_readiness.rs",
+        "tests/unit/core/workspace_publication_tests.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/managed/specs/INTERFACES.md",
-        "docs/agent/error-recovery.md",
-        "src/decapod/plugins/verify.rs",
-        "tests/unit/plugins/verify_completion_tests.rs"
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/governance_artifacts.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/workspace.rs",
+        "tests/consumer_readiness.rs",
+        "tests/unit/core/workspace_publication_tests.rs"
       ],
-      "run_id": "branch_01M6F0WT4TAJ6ZMZ8Q8RYDRRSG",
+      "run_id": "branch_01M6F0K07GRCP71GJRSYSZ84V7",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6f0w8qgs9twzy",
+      "task_id": "bugs_01m6f0jc8040z1x7",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

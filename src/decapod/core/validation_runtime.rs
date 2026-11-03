@@ -896,8 +896,35 @@ fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
     out.sync_all()
 }
 
+// Native success is one atomic completion bundle, not two independently
+// publishable files. Staging bytes are non-authoritative until the directory
+// rename; no fallible operation follows that publication point.
+fn write_native_completion(
+    directory: &Path,
+    verdict: &[u8],
+    receipt: &[u8],
+    mut writer: impl FnMut(&Path, &[u8]) -> io::Result<()>,
+) -> io::Result<()> {
+    let completed = directory.join("completion");
+    if completed.try_exists()? {
+        return Err(io::Error::new(
+            io::ErrorKind::AlreadyExists,
+            "native completion already exists",
+        ));
+    }
+    let staging = tempfile::Builder::new()
+        .prefix(".pending-completion-")
+        .tempdir_in(directory)?;
+    writer(
+        &staging.path().join("native-readiness-receipt.json"),
+        receipt,
+    )?;
+    writer(&staging.path().join("verdict.json"), verdict)?;
+    fs::rename(staging.path(), completed)
+}
+
 /// Public caller must use this report's exit_code, never the partial prerequisite
-/// result. This function cannot open a PR, push a work branch, or mint a receipt.
+/// result. This function cannot open a PR, push a work branch, or mutate tracked receipts.
 pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -> ValidationReport {
     let mut report = ValidationReport {
         ready: false,
@@ -975,7 +1002,12 @@ fn run(
         suite_limits(options, &budget)?,
         cancel,
     )?;
-    let initial_governance = hash(&budget.read(&file(&options.root, GOVERNANCE)?)?);
+    let governance_bytes = budget.read(&file(&options.root, GOVERNANCE)?)?;
+    let initial_governance = hash(&governance_bytes);
+    let governance: serde_json::Value =
+        serde_json::from_slice(&governance_bytes).map_err(io::Error::other)?;
+    let trajectory_digest =
+        evidence::digest(&governance["sections"]["trajectory"]).map_err(io::Error::other)?;
     let initial_target =
         host.accepted_target(&options.repository, &options.base_branch, &budget)?;
     if initial_target != initial_identity.accepted_base_revision {
@@ -1185,7 +1217,7 @@ fn run(
                 return Err(invalid("VEGA_POLICY_CHANGED_DURING_INFERENCE"));
             }
             let target = TargetObservation {
-                invocation_id: invocation,
+                invocation_id: invocation.clone(),
                 repository: options.repository.clone(),
                 branch: options.base_branch.clone(),
                 revision: host.accepted_target(
@@ -1253,10 +1285,33 @@ fn run(
             "STALE_POST_VALIDATION_DECISION: {error:?}"
         )));
     }
-    write_new(
-        &directory.join("verdict.json"),
-        &serde_json::to_vec_pretty(report).map_err(io::Error::other)?,
-    )?;
+    let verdict_bytes = serde_json::to_vec_pretty(report).map_err(io::Error::other)?;
+    // A receipt describes completed proof; it is never imported as authority.
+    // Publish verdict and receipt together outside the frozen candidate.
+    if report.ready && !selection.policy.buildkite_preflights {
+        let mut receipt = serde_json::json!({
+            "schema_version": "1.0.0",
+            "kind": "native_readiness_receipt",
+            "status": "ok",
+            "scope": report.scope,
+            "invocation_id": invocation,
+            "material": current.identity,
+            "governance_digest": initial_governance,
+            "trajectory_digest": trajectory_digest,
+            "proof_plan_digest": current_profile.plan().digest().map_err(io::Error::other)?,
+            "evidence_digest": evidence::digest(&result.evidence).map_err(io::Error::other)?,
+            "vega_readiness_digest": evidence::digest(&report.vega_readiness).map_err(io::Error::other)?,
+        });
+        receipt["receipt_hash"] = evidence::digest(&receipt).map_err(io::Error::other)?.into();
+        write_native_completion(
+            &directory,
+            &verdict_bytes,
+            &serde_json::to_vec_pretty(&receipt).map_err(io::Error::other)?,
+            write_new,
+        )?;
+    } else {
+        write_new(&directory.join("verdict.json"), &verdict_bytes)?;
+    }
     Ok(())
 }
 
