@@ -334,9 +334,9 @@ pub fn preserve_accepted_dagger(
     if let Some(contract) = candidate {
         for (name, execution) in &contract.executions {
             if execution.dagger.is_some() && accepted_authorizations.get(name) != Some(execution) {
-                return Err(invalid(
-                    "DAGGER_POLICY_NOT_ACCEPTED: exact execution and engine contract must already be accepted on the target",
-                ));
+                return Err(invalid(format!(
+                    "DAGGER_POLICY_NOT_ACCEPTED: .decapod/config.toml proof.repository_contract.executions.{name} must exactly match proof.dagger_authorizations.{name} on the accepted target"
+                )));
             }
         }
     }
@@ -436,7 +436,15 @@ mod dagger_contract_tests {
         // Staging a dormant proposal does not execute it or require old authority.
         assert!(preserve_accepted_dagger(None, &empty).is_ok());
         // Merely authoring the proposal in this candidate cannot grant authority.
-        assert!(preserve_accepted_dagger(Some(&active), &empty).is_err());
+        let rejected = preserve_accepted_dagger(Some(&active), &empty).unwrap_err();
+        let diagnostic = format!("{rejected:?}");
+        assert!(diagnostic.contains("DAGGER_POLICY_NOT_ACCEPTED"));
+        assert!(
+            diagnostic
+                .contains(".decapod/config.toml proof.repository_contract.executions.dagger-check")
+        );
+        assert!(diagnostic.contains("proof.dagger_authorizations.dagger-check"));
+        assert!(diagnostic.contains("accepted target"));
         // After independent acceptance, that exact execution may be activated.
         let accepted_authorizations = active.executions.clone();
         assert!(preserve_accepted_dagger(Some(&active), &accepted_authorizations).is_ok());

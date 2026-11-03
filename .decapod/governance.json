@@ -695,6 +695,11 @@
       "id": "issue1475-policy-recovery-context",
       "summary": "Identify rejected Dagger execution and accepted authorization paths in error output; preserve fail-closed predicate and add diagnostic assertions",
       "input_digest": "sha256:ed759f1bc656038b04eb15b44e3a037029857a43c0554d6121d00970f4594ddd"
+    },
+    {
+      "id": "issue1475-policy-recovery-applied",
+      "summary": "Apply named Dagger authorization diagnostic and regression assertions after aborted earlier edit",
+      "input_digest": "sha256:189ea6c1c4630e8aebea40ffbbc2ea79bcff0d76d850fe604e982b8dfd00b9bb"
     }
   ],
   "intents": {
@@ -768,7 +773,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:75b5990258ab4c1bffb67ccb990713ed853ce74dd33e20e90edd405c582f6592",
+      "artifact_hash": "sha256:2d5349d6d68339b9a242f628d31ea3269531bdb76d0c161f63da08346a271c53",
       "checks": [
         {
           "name": "ci-source-compile",
@@ -844,10 +849,17 @@
             "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MSA6NJNNFSAD36MDNVNK": {
@@ -941,6 +953,19 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Prior policy-context checkpoint recorded intention only: guarded edit aborted before writing because fixture occurs twice. This checkpoint applies the actual source change and diagnostic assertions; no test execution claimed."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1475-dagger"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -952,7 +977,8 @@
       "destination": "pull request",
       "evidence": [
         "Generator embeds repository-readiness.md at compile time. Existing generated config-schema already carries exact Dagger text, now copied to canonical authored input. Official release generation removed that text only; restored tracked projection. Exact source-built CI generator verification remains required, no local source build performed.",
-        "GitHub source CI job 125627507466 at 13201 reports needless_borrows_for_generic_args at validation_runtime.rs633; job 125626769890 source-build succeeds but generated docs drift. Remove unnecessary format borrow without changing failure semantics; checks remain required."
+        "GitHub source CI job 125627507466 at 13201 reports needless_borrows_for_generic_args at validation_runtime.rs633; job 125626769890 source-build succeeds but generated docs drift. Remove unnecessary format borrow without changing failure semantics; checks remain required.",
+        "Prior policy-context checkpoint recorded intention only: guarded edit aborted before writing because fixture occurs twice. This checkpoint applies the actual source change and diagnostic assertions; no test execution claimed."
       ],
       "inspected_files": [
         "src/decapod/core/docs_cli.rs",
