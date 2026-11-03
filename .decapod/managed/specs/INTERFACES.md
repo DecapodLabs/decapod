@@ -764,7 +764,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `51dfca970f10238f1cb75b796712d2307f5339fd5fd641ef229d31037eef2410`
+- Repository signal fingerprint: `ca291d210f23deacb394eb5259fb68641f3be7e77c1dfaf5b2b10572625176c8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1038,3 +1038,14 @@ command contracts and checks exact inclusion, single emission, required approval
 and unchanged trust boundaries. This repair changes documentation generation, not
 handoff authorization or task custody. Its runtime regression still requires
 execution through the configured validation workflow.
+
+### Native validation recovery diagnostics
+
+Each executed native check may produce `native-N.diagnostic.json` alongside its
+private stdout, stderr, and step records in the reported external evidence
+directory. The versioned diagnostic identifies the complete check key, elapsed
+milliseconds, termination, check-level error and the three related filenames.
+This metadata is an agent recovery aid, not an imported receipt or readiness
+authority. The independent evidence, candidate and target binding and all
+required gates remain necessary; incomplete or failed execution cannot publish a
+successful completion bundle.

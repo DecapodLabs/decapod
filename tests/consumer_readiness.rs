@@ -451,6 +451,23 @@ fn fresh_non_cargo_consumer_executes_every_required_source_check_in_snapshot() {
             }
         ));
     }
+    for (index, result) in evidence.results.iter().enumerate() {
+        let diagnostic: serde_json::Value = serde_json::from_slice(
+            &fs::read(directory.join(format!("native-{index}.diagnostic.json"))).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(diagnostic["schema_version"], "1.0.0");
+        assert_eq!(
+            diagnostic["check"],
+            serde_json::to_value(&result.key).unwrap()
+        );
+        assert_eq!(diagnostic["termination"], "exited");
+        assert!(diagnostic["error"].is_null());
+        for extension in ["stdout", "stderr", "steps"] {
+            let file = diagnostic[extension].as_str().unwrap();
+            assert!(directory.join(file).is_file());
+        }
+    }
     let stdout = [0, 1]
         .map(|index| fs::read_to_string(directory.join(format!("native-{index}.stdout"))).unwrap())
         .join("\n");
@@ -488,6 +505,24 @@ fn real_source_failure_is_not_ready_and_committed_repair_runs_new_proof() {
             .join("completion/native-readiness-receipt.json")
             .exists()
     );
+    let evidence: SuiteEvidence =
+        serde_json::from_slice(&fs::read(failed_path.join("observations.json")).unwrap()).unwrap();
+    let executed: Vec<_> = evidence
+        .results
+        .iter()
+        .filter(|result| matches!(result.observation, Observation::Executed { .. }))
+        .collect();
+    for (index, result) in executed.iter().enumerate() {
+        let diagnostic: serde_json::Value = serde_json::from_slice(
+            &fs::read(failed_path.join(format!("native-{index}.diagnostic.json"))).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(
+            diagnostic["check"],
+            serde_json::to_value(&result.key).unwrap()
+        );
+        assert_eq!(diagnostic["termination"], "exited");
+    }
     let stderr = fs::read_to_string(failed_path.join("native-1.stderr")).unwrap_or_default()
         + &fs::read_to_string(failed_path.join("native-0.stderr")).unwrap_or_default();
     assert!(
