@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.8](https://github.com/DecapodLabs/decapod/compare/v0.123.7...v0.123.8) - 2026-11-03
+
+### Fixed
+
+- preserve handoff contract during docs generation
+- reconcile bounded claims with release 0.123.7
+- reject ambiguous explicit claim footprints
+- scope exclusive task claims to declared paths
+
 ## [0.123.7](https://github.com/DecapodLabs/decapod/compare/v0.123.6...v0.123.7) - 2026-11-03
 
 ### Other
