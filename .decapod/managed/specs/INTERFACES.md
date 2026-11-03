@@ -828,3 +828,24 @@ installation, hosted GitHub status import or Dagger Cloud support is introduced.
 Tests in these modules exercise fixture-level contracts; live engine proof is a
 separate qualification and is not established by fixture success. See
 `docs/agent/config-schema.md` for configuration and adoption constraints.
+
+### Agent-owned Dagger recovery output
+
+`validation_runtime::ValidationReport::finish` retains Dagger failure causes and
+selects bounded recovery through the existing structured `ValidationGuidance`
+fields: agent owner, `decapod validate` entry command, next action, instruction,
+and conversational human-input boundary. `for_dagger_failure` distinguishes
+accepted-authorization reconciliation, contract repair, and restoration of the
+exact authorized local prerequisites. The policy error identifies the named
+execution and accepted dormant-authorization configuration paths. Socket, tool
+and inspection I/O errors retain their original cause/kind plus Dagger context.
+
+These instructions are emitted to the agent/harness, not delegated as user CLI
+work. Human decisions and missing access are requested conversationally; the
+agent remains the Decapod operator after user initialization. Recovery never
+grants engine lifecycle access, repins policy, drops checks, accepts a candidate's
+own proposal, or changes a failed verdict to ready. Intentional rotation still
+requires independently accepted dormant authority before activation. Restored
+prerequisites require fresh complete validation, not reuse of failed evidence.
+Fixture tests cover guidance fields, cause retention and rejection; actual
+Dagger engine execution remains unqualified.

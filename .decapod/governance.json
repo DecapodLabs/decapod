@@ -705,6 +705,11 @@
       "id": "issue1475-prerequisite-context",
       "summary": "Retain Dagger tool/socket/inspection cause and error kind so execution failures select structured agent recovery; add context fixtures",
       "input_digest": "sha256:90d24f571fa850ea513cb4637610c0ca116f6d72a35f988ff4658b5c5ebc8810"
+    },
+    {
+      "id": "issue1475-recovery-spec",
+      "summary": "Specify emitted agent-only Dagger recovery, preserved failures and accepted authority; no user CLI recovery burden",
+      "input_digest": "sha256:8d6523033811c9d714e94da29149c568dd552e1554ac31e5b2a9b1e0db723899"
     }
   ],
   "intents": {
