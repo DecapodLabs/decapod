@@ -675,6 +675,11 @@
       "id": "issue1475-clippy-borrow",
       "summary": "Remove CI-reported needless borrow in accepted Dagger authorization error propagation",
       "input_digest": "sha256:1562884f084e96eed94718b17f015e585b6e68b3fc6660e8e03387d479c1fed7"
+    },
+    {
+      "id": "issue1475-canonical-dagger-doc",
+      "summary": "Preserve Dagger contract in canonical repository-readiness input included by docs generator",
+      "input_digest": "sha256:3a1ef801cbb548363e966385af2731a09e912456c7322dd70dd4612af811a5d2"
     }
   ],
   "intents": {
