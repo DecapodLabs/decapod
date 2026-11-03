@@ -296,21 +296,30 @@ handoff zone as mutation: verified trust and explicit approval by default,
 subject to the existing operator policy. Output also states the stronger
 cross-owner recovery conditions. Dependency, lease and overlap gates remain.
 
-When a recorded owner is unavailable or incorrect, the human operator can use
-the existing local operator role under their own session, retaining the actual
-recorded owner as an explicit precondition:
+Only the AI agent/harness interfaces with and executes Decapod after setup;
+the only Decapod command a user executes is `decapod init`. Humans provide
+intent and approval through the agent/harness, not through operator CLI sessions.
+When a recorded owner is unavailable or incorrect, the authorized agent/harness:
 
-1. Inspect `todo get --id <task-id>` and preserve its owner and history.
-2. As the operator, evaluate `govern policy eval --command todo.handoff --path
-   <task-id>` and review the proposed source owner and intended receiver.
-3. Execute the exact approval command returned by the diagnostic, with a bounded
-   lifetime. A command-wide or different-task approval cannot authorize recovery.
-4. In that same actual operator role, run `todo handoff --id <task-id> --from
-   <recorded-owner> --to <intended-receiver> --summary <reason>`.
+1. Inspects `todo get --id <task-id>` and preserves its owner and history.
+2. Evaluates `govern policy eval --command todo.handoff --path <task-id>` under
+   its established request identity and presents the exact source owner,
+   intended receiver and reason to the human for a decision.
+3. After receiving the required explicit human approval, executes the diagnostic's
+   exact approval command with a bounded lifetime, recording the approving
+   decision separately from the executing caller. It must not manufacture approval.
+   A command-wide or different-task approval cannot authorize recovery.
+4. Under the same established authorized caller identity, executes
+   `todo handoff --id <task-id> --from <recorded-owner> --to <intended-receiver>
+   --summary <reason>` and reports the audited result.
 
-A verified agent may perform the same explicitly approved recovery under its
-own identity. Agents must not select the operator role or impersonate the old
-owner merely to pass a denied gate. The reserved `operator`, `cli` and `decapod`
+The actual caller must already satisfy the existing trust and ownership policy.
+An authorized harness may use its already established local operator role; a
+verified agent may recover under its own identity with the same exact approval.
+Neither may select a stronger role, promote its own trust, or impersonate the
+old owner merely to pass a denied gate. Missing authority remains a blocker to
+resolve through the authorized harness, not a request for a human CLI command.
+The reserved `operator`, `cli` and `decapod`
 roles retain the existing local cooperative policy semantics; environment labels
 are not OS authentication, credentials, or proof against a hostile local process.
 No agent trust row is promoted by recovery.
