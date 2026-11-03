@@ -485,6 +485,11 @@
       "id": "reconcile-v01235",
       "summary": "Reconcile accepted v0.123.5 with exact caller socket candidate, preserve first-parent custody, refresh reviewed inventory and generated specs",
       "input_digest": "sha256:0be7ea94839169998f31748a02960943ef797b20873549672065f79deafe784a"
+    },
+    {
+      "id": "release-bound-v01235",
+      "summary": "Refresh official v0.123.5 entrypoints and managed Dockerfile without modifying authored config or proof authority",
+      "input_digest": "sha256:1ed93dcfb409bd6017c8c461b15b91b424968ddfb73636d18f668f7c7f2a6411"
     }
   ],
   "intents": {
@@ -538,7 +543,7 @@
         "Current claimed task and isolated work branch",
         "No runtime identity, authorization, proof-policy weakening, merge or release"
       ],
-      "artifact_hash": "sha256:27c1be24718f05ff0bd1c8f89d279778d1bf8d6d8054e9649798df1eb63847d0",
+      "artifact_hash": "sha256:e9cc06ac6583c8056c936e2560e473336fecbde7ea6ade3802a7f2c73a976f6b",
       "checks": [
         {
           "name": "full_validation",
@@ -598,10 +603,17 @@
             "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9YWNKFC66JMBTMHWVQ782": {
@@ -707,6 +719,21 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "official v0.123.5 init --proof, specs.refresh",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Official init --proof refreshed release-bound entrypoints and managed Dockerfile; finalized config remained byte-identical before init and after specs.refresh."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -717,6 +744,7 @@
         "git branch -m agent/issue1476-caller-proof/bugs_01m6g9y7htjdyp30-socket-acceptance",
         "git merge --no-commit --no-ff origin/master",
         "official v0.123.4 docs ingest, agent.init, workspace ensure, specs.refresh",
+        "official v0.123.5 init --proof, specs.refresh",
         "rustfmt --edition 2024 tests/group_broker.rs tests/source_ci_profile_policy.rs assets/tools/source_ci_profile.rs"
       ],
       "destination": "pull request",
@@ -726,6 +754,7 @@
         "Issue 1476 latest comment requires named post-probe evidence rather than suite-only success",
         "Merged accepted master 43d5ecda; inspected source-inventory delta from prior accepted b4a1374b: only Cargo version/lock changes to 0.123.5. Existing additive caller socket CI recipe remains only candidate inventory change. Official controller measured a16bd218 inventory; strict profile, carrier, provider and accepted authority unchanged.",
         "Official govern proof list resolves shared source-root config, not worktree config; no proof run or root mutation attempted. New recipe uses accepted-base executor and first-PR acceptance remains unproven.",
+        "Official init --proof refreshed release-bound entrypoints and managed Dockerfile; finalized config remained byte-identical before init and after specs.refresh.",
         "Published verified exact tree/message/ordered-parent API mapping, head c359ff17, in regular PR 1503 as explicitly requested; no socket test execution claimed. Earlier interrupted create_commit may remain an unreachable immutable object; no branch/ref was created by that operation.",
         "Retained first-parent governance journal through merge and used official specs.refresh for generated conflict regions while retaining accepted and candidate authored prose.",
         "Reviewed complete inventory delta from f89a9fa8: accepted release changes Cargo version/lock to 0.123.4; candidate only adds mandatory named caller socket command to Linux daemonless recipe. No existing check removed, no workflow/carrier/trust change."
