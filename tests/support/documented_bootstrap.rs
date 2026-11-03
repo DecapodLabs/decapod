@@ -41,6 +41,9 @@ fn generated_agent_sequence_orients_only_after_entering_claimed_workspace() {
     let home = fixture.path().join("home");
     std::fs::create_dir_all(&root).unwrap();
     std::fs::create_dir_all(&home).unwrap();
+    // macOS temporary paths may enter through /var while Git returns /private/var.
+    let root = root.canonicalize().unwrap();
+    let home = home.canonicalize().unwrap();
     let binary = super::resolve_decapod_bin();
     let cli = |cwd: &Path, args: &[&str]| {
         isolated_command(&binary, cwd, &home)
@@ -69,7 +72,10 @@ fn generated_agent_sequence_orients_only_after_entering_claimed_workspace() {
     );
     git(&root, &["init", "-q", "-b", "main"]);
     git(&root, &["config", "user.name", "Bootstrap Test"]);
-    git(&root, &["config", "user.email", "bootstrap@example.invalid"]);
+    git(
+        &root,
+        &["config", "user.email", "bootstrap@example.invalid"],
+    );
     git(&root, &["add", "."]);
     git(&root, &["commit", "-qm", "Initialize governed fixture"]);
     let initial_head = git(&root, &["rev-parse", "HEAD"]).stdout;
@@ -101,7 +107,10 @@ fn generated_agent_sequence_orients_only_after_entering_claimed_workspace() {
     let task = "document-bootstrap-order";
     let deny_root_orientation = |task_id: &str| {
         let output = cli(&root, &["infer", "orientation", "--task-id", task_id]);
-        assert!(!output.status.success(), "main checkout accepted orientation");
+        assert!(
+            !output.status.success(),
+            "main checkout accepted orientation"
+        );
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(
             stderr.contains("requires isolated git worktree")

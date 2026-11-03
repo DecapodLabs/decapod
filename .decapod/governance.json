@@ -462,7 +462,10 @@
     "bootstrap-order": {
       "statement": "The documented agent bootstrap sequence succeeds in its returned task workspace and rejects orientation in the main checkout",
       "falsifier": "Real CLI integration fails at any required step or accepts main-checkout orientation",
-      "status": "open"
+      "status": "supported",
+      "proof_refs": [
+        "Released 0.123.4 real CLI diagnostic; new Rust regression awaits configured execution"
+      ]
     }
   },
   "checkpoints": [
@@ -470,6 +473,11 @@
       "id": "bootstrap-regression",
       "summary": "Execute generated agent bootstrap commands with real task claim, guarded root denial and returned worktree orientation",
       "input_digest": "sha256:90cde41f6c00789d582a7a318323853fdc97d73cad6110cbe6fda0d9f8206d18"
+    },
+    {
+      "id": "bootstrap-evidence",
+      "summary": "Format portable fixture and record released CLI execution plus truthful source-validation blocker",
+      "input_digest": "sha256:ff340d0a8f2a2daf0ade11cb3cecb6b3bac89bf3dfe57616c74a536e5a0ed1ca"
     }
   ],
   "intents": {
@@ -521,14 +529,33 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e31d8de364f73cd772241abc9d5a14d6aea2fbf9cec78fe0bc6cad6b000ad440",
+      "artifact_hash": "sha256:753ddb6d3f19b8a419c66191c3e9148129db43264b3148d152234e294ee18eaa",
+      "blockers": [
+        "PROOF_PROFILE_RECONCILIATION_REQUIRED: unchanged inherited source inventory 2d773cc1833a077b22700e94d87952e6fa215bb8bb761b777cb4a2b0ab902c79 differs from reviewed b2dad13cc7ab218b124a945e01fcb56b4bb9f5bbe044cb3785814cd07ef01b1a; required remote checks not run."
+      ],
       "checks": [
+        {
+          "name": "compiled-rust-regression",
+          "status": "unavailable"
+        },
+        {
+          "name": "full-validation",
+          "status": "failed"
+        },
         {
           "name": "manual-bootstrap",
           "status": "passed"
+        },
+        {
+          "name": "released-cli-bootstrap",
+          "status": "passed"
+        },
+        {
+          "name": "rustfmt",
+          "status": "passed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "publication",
       "custody": {
         "events": [
           {
@@ -549,10 +576,17 @@
             "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6GATD6C1BQ5PHDKYCHC4B00",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6GATD58RAT5YVA5AFZMZNZ5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6GATD6C1BQ5PHDKYCHC4B00": {
@@ -581,6 +615,25 @@
                 "validation_findings": [
                   "Regression covers committed local-backend non-container fixture; no Docker or macOS execution claim."
                 ]
+              },
+              {
+                "action": "publication",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Independent Python diagnostic executed generated AGENTS commands against official 0.123.4: committed fixture, own session, task add/claim, two main-checkout orientation denials, ensure returned path, bound orientation success, context resolution, workspace-only write and unchanged root HEAD/status. This is released-binary runtime evidence, not execution of the new Rust test.",
+                  "User explicitly requests regular PR publication while validation remains an action to complete; no readiness or merge claim."
+                ],
+                "proof_refs": [
+                  "released-cli-bootstrap",
+                  "rustfmt",
+                  "compiled-rust-regression",
+                  "full-validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -589,7 +642,9 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Official 0.123.4 actual CLI claim, workspace ensure, returned worktree orientation succeeded before implementation in this independent clone."
+        "Independent Python diagnostic executed generated AGENTS commands against official 0.123.4: committed fixture, own session, task add/claim, two main-checkout orientation denials, ensure returned path, bound orientation success, context resolution, workspace-only write and unchanged root HEAD/status. This is released-binary runtime evidence, not execution of the new Rust test.",
+        "Official 0.123.4 actual CLI claim, workspace ensure, returned worktree orientation succeeded before implementation in this independent clone.",
+        "User explicitly requests regular PR publication while validation remains an action to complete; no readiness or merge claim."
       ],
       "inspected_files": [
         "src/decapod/lib.rs",
