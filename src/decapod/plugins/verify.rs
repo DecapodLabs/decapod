@@ -679,10 +679,6 @@ fn is_stale(target: &VerifyTarget, now_secs: i64) -> bool {
     }
 }
 
-fn resolve_artifact_path(repo_root: &Path, stored: &str) -> PathBuf {
-    resolve_artifact_path_for_todo(repo_root, None, stored)
-}
-
 /// Resolve `--artifact` against the workspace that owns the claim.
 ///
 /// Local-clone worktrees can hold files that do not exist in the parent
@@ -1028,7 +1024,11 @@ fn verify_target(
     }
 
     for expected in artifacts.file_artifacts {
-        let disk_path = resolve_artifact_path(repo_root, &expected.path);
+        // Resolve through the same task workspace search used when this
+        // baseline was captured. Otherwise a valid artifact that exists only
+        // in the task worktree is recorded successfully but cannot verify.
+        let disk_path =
+            resolve_artifact_path_for_todo(repo_root, Some(&target.todo_id), &expected.path);
         if !disk_path.exists() {
             result.status = "fail".to_string();
             result.artifacts.push(ArtifactCheckResult {

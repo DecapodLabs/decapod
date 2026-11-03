@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "adcf32581269e17773f17735a49c3a76a2349967",
+    "accepted_commit": "304934c0d6632449bcd87d53f3882519185f876e",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -112,6 +112,14 @@
       "claim:current-task-proof": {
         "falsifier": "A stale or unbound pass completes a work claim, unlocks dependency admission, bypasses aggregate verification, or stale verifier overwrites newer evidence",
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
+        "status": "open"
+      },
+      "claim:dagger-removed": {
+        "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
+        "proof_refs": [
+          "PR source diff and pending remote validation"
+        ],
+        "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
         "status": "open"
       },
       "claim:durable-artifact-publication": {
@@ -463,32 +471,26 @@
     }
   },
   "change": {
-    "id": "change_01M6HJG4Q5ZJD38X0DME7AT3FP",
-    "base_commit": "adcf32581269e17773f17735a49c3a76a2349967",
+    "id": "change_01M6HNX5PAMC1RJSPY0N6CJZSR",
+    "base_commit": "304934c0d6632449bcd87d53f3882519185f876e",
     "target_base": "origin/master"
   },
   "claims": {
-    "dagger-removed": {
-      "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
-      "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
-      "status": "open",
-      "proof_refs": [
-        "PR source diff and pending remote validation"
-      ]
+    "recovery-workspace-artifact-lookup": {
+      "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
+      "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
+      "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "remove-dagger-source-v1",
-      "summary": "Remove core Dagger adapter, reject retired runtime configuration and preserve generic receipt and Buildkite gates",
-      "input_digest": "sha256:25d0713f3e95129c8f49867b847a84e82d9fa01fe8430e4692f76ea0069cb5da",
-      "proof_refs": [
-        "Source review and exact staged publication audit; no local tests run; GitHub Actions validation pending"
-      ]
+      "id": "recovery-workspace-artifact-lookup",
+      "summary": "Resolve replay artifacts through the task workspace used at capture; retain content hash checks and historical recovery acceptance boundary",
+      "input_digest": "sha256:9e27e1788d466daed1485b51e7a21322a8bc406bcd0ea99e0e1771eed85c16a9"
     }
   ],
   "intents": {
-    "intent:change_01M6HJG4Q5ZJD38X0DME7AT3FP": {
+    "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -498,11 +500,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6HJG4Q5ZJD38X0DME7AT3FP",
+      "id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Remove Dagger-specific core proof adapter",
-      "refined_intent": "Remove Dagger-specific core proof adapter",
+      "raw_intent": "Fix task workspace artifact verification in recovery",
+      "refined_intent": "Fix task workspace artifact verification in recovery",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -515,122 +517,99 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Remove PR 1484 Dagger-specific adapter while preserving issue 1474 native receipt custody, all shared proof gates, Buildkite requirements and user data; external skills and project CI remain outside the kernel",
+      "intent": "Fix task workspace artifact verification in recovery",
       "phases": [],
       "proof_hooks": [
-        "Configured remote validation; no local tests"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Remove core Dagger execution while preserving generic native receipt custody, receipt-independent prerequisites and Buildkite coverage; retired fields fail explicitly",
-          "reviewed_code_fingerprint": "51dfca970f10238f1cb75b796712d2307f5339fd5fd641ef229d31037eef2410",
+          "reason": "Current transaction, task binding, epoch and file verification architecture remains unchanged; this fix makes path lookup consistent with existing capture.",
+          "reviewed_code_fingerprint": "6a223d952a5de1649b1d0f09695dcbc892114ae86550ab429959633ee768b310",
           "spec_material_hash": "98a2637b868afbe10ae3540caf6eb64900616211fe9da6db499fe3bb157c8711"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Remove core Dagger execution while preserving generic native receipt custody, receipt-independent prerequisites and Buildkite coverage; retired fields fail explicitly",
-          "reviewed_code_fingerprint": "51dfca970f10238f1cb75b796712d2307f5339fd5fd641ef229d31037eef2410",
-          "spec_material_hash": "a0b06be47300649460503fd1a10bed2f6f67e359edd011e41bca9f4322b37958"
+          "reason": "Describe the same task-aware path lookup used for capture and replay, and retain content-hash enforcement.",
+          "reviewed_code_fingerprint": "6a223d952a5de1649b1d0f09695dcbc892114ae86550ab429959633ee768b310",
+          "spec_material_hash": "cbb61e531b9b7fc240317e25bb4df8a6cc1f56fc68955d825e7cc3e93869acf6"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Remove core Dagger execution while preserving generic native receipt custody, receipt-independent prerequisites and Buildkite coverage; retired fields fail explicitly",
-          "reviewed_code_fingerprint": "51dfca970f10238f1cb75b796712d2307f5339fd5fd641ef229d31037eef2410",
+          "reason": "Task and revision binding, content hash validation, and non-promotion of missing or changed proof remain in force.",
+          "reviewed_code_fingerprint": "6a223d952a5de1649b1d0f09695dcbc892114ae86550ab429959633ee768b310",
           "spec_material_hash": "f94e47ab37cc50c85daa5c1821caadb20cc3646f9aecdcf1b7b81a12210a73fa"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Denied disclosure, unavailable validation authority, or changed scope"
-      ],
-      "title": "Remove Dagger-specific core proof adapter",
+      "stop_conditions": [],
+      "title": "Fix task workspace artifact verification in recovery",
       "todo_ids": [
-        "cicd_01m6hjf5tezd8c0n"
+        "bugs_01m6hnw9mgw6jpb4"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793739046Z"
+      "updated_at": "1793742819Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Preserve issue 1474 receipts and Buildkite; no local tests, merge, release or denied disclosure retry"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e21f42340863f51cceec2075deac1f0680bc2a7d6e0bdaed4a0600d6c49431ae",
+      "artifact_hash": "sha256:e4be446f5391d7d46496e16ee200103fafdb439edb187270ab115a88ca0df343",
       "checks": [
-        {
-          "name": "diff_whitespace",
-          "status": "passed"
-        },
         {
           "name": "local_tests",
           "status": "unavailable"
         }
       ],
-      "current_phase": "publication",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6HJG4Q5ZJD38X0DME7AT3FP",
+            "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6HJG4Q5ZJD38X0DME7AT3FP",
+            "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6HJG4R92R0CMQEAS5H47G9B",
+            "detail": "trajectory:branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6HJG4Q5ZJD38X0DME7AT3FP",
+            "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M6HJG4R92R0CMQEAS5H47G9B",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M6HJG4Q5ZJD38X0DME7AT3FP",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M6HJG4R92R0CMQEAS5H47G9B",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M6HJG4Q5ZJD38X0DME7AT3FP",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M6HJG4R92R0CMQEAS5H47G9B",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M6HJG4Q5ZJD38X0DME7AT3FP",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6HJG4R92R0CMQEAS5H47G9B": {
+          "branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2": {
             "evidence_only": true,
-            "id": "branch_01M6HJG4R92R0CMQEAS5H47G9B",
-            "intent_id": "intent:change_01M6HJG4Q5ZJD38X0DME7AT3FP",
+            "id": "branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2",
+            "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
             "steps": [
               {
                 "action": "trajectory.record",
-                "command": "Reverse only PR 1484 source/docs/test integration hunks; preserve generated projections",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Local tests not run as instructed; source inspection only"
+                  "src/decapod/plugins/verify.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "src/decapod/plugins/verify.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "User directed PR action verification rather than local tests; live historical recovery acceptance remains unproven."
                 ],
                 "proof_refs": [
                   "local_tests"
@@ -639,100 +618,44 @@
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/init_reconciliation/mod.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "tests/consumer_readiness.rs",
-                  "Dagger source inventory paths retained to avoid stale-source proof downgrade; accepted config unchanged at blob 78f76a6a768ed460c72f92cc29ff0b4011bd5d9e"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "publication",
-                "command": "Format changed Rust source with the existing official rustfmt; refresh specs through RPC; audit publication delta",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/validation_runtime/tests.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  "Runtime parser now rejects retired proof.dagger_authorizations, including an empty map; regression cases cover that parser and the nested retired execution field",
-                  "User directs push and draft PR before PR Actions validation. No local tests or full decapod validation run; hosted checks remain pending and accepted config remains unchanged"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "git diff --check passed; exact staged audit covers 29 intended tracked paths, unchanged accepted config, and no denied config blob in changed entries"
-                ],
-                "proof_refs": [
-                  "diff_whitespace"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
+                "validation_findings": [
+                  "Task workspace discovery identifies the same owning workspace; artifact hash checks remain authoritative."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "Format changed Rust source with the existing official rustfmt; refresh specs through RPC; audit publication delta",
-        "Reverse only PR 1484 source/docs/test integration hunks; preserve generated projections"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Dagger source inventory paths retained to avoid stale-source proof downgrade; accepted config unchanged at blob 78f76a6a768ed460c72f92cc29ff0b4011bd5d9e",
-        "Local tests not run as instructed; source inspection only",
-        "Runtime parser now rejects retired proof.dagger_authorizations, including an empty map; regression cases cover that parser and the nested retired execution field",
-        "User directs push and draft PR before PR Actions validation. No local tests or full decapod validation run; hosted checks remain pending and accepted config remains unchanged",
-        "git diff --check passed; exact staged audit covers 29 intended tracked paths, unchanged accepted config, and no denied config blob in changed entries"
+        "User directed PR action verification rather than local tests; live historical recovery acceptance remains unproven."
       ],
       "inspected_files": [
-        "src/decapod/core/init_reconciliation/mod.rs",
-        "src/decapod/core/validation_runtime.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        "src/decapod/plugins/verify.rs"
       ],
-      "intent_id": "intent:change_01M6HJG4Q5ZJD38X0DME7AT3FP",
+      "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
       "modified_files": [
-        ".decapod/managed/specs/INTENT.md",
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/validation_runtime/tests.rs",
-        "tests/consumer_readiness.rs"
+        ".decapod/managed/specs/INTERFACES.md",
+        "src/decapod/plugins/verify.rs"
       ],
       "next_transitions": [
-        "Commit exact audited candidate and publish draft PR for GitHub Actions validation",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M6HJG4R92R0CMQEAS5H47G9B",
+      "run_id": "branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m6hjf5tezd8c0n",
+      "task_id": "bugs_01m6hnw9mgw6jpb4",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Task workspace discovery identifies the same owning workspace; artifact hash checks remain authoritative."
+      ]
     }
   },
   "legacy_digests": {
