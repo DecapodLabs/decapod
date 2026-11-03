@@ -488,6 +488,22 @@
       "id": "native-acceptance-01234-final",
       "summary": "Assemble accepted-master rebased native acceptance observer and release0.123.4 projections as one candidate; preserve failed checks and outstanding live acceptance",
       "input_digest": "sha256:5948d1423fdbc8bdc19ecad257e2334301427ecb017ee1dbadc9ea7826188aa7"
+    },
+    {
+      "id": "native-acceptance-release01236",
+      "summary": "Reconcile PR1499 with accepted release0.123.6 using ordered merge history; preserve authored acceptance and accepted agent bootstrap specs. Review all119 accepted proof sources, regenerate official projections, and retain blocked negative/stale and full-source proof limits.",
+      "input_digest": "sha256:90155d8bc3bba6755a149d5e24bcc24f40489542013de203ba8600460bf70d19",
+      "proof_refs": [
+        "tests/acceptance/native_readiness.py"
+      ]
+    },
+    {
+      "id": "native-acceptance-release01236-final",
+      "summary": "Bind release0.123.6 merge to exact final source and honestly unchanged accepted interfaces; preserve all native and full-source proof limits.",
+      "input_digest": "sha256:f94724f5725b95497b6e6b8e306c8dd143ba35d5d1f510c44ef8ff28beb272cb",
+      "proof_refs": [
+        "tests/acceptance/native_readiness.py"
+      ]
     }
   ],
   "intents": {
@@ -528,22 +544,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Observer is opt-in acceptance code with no new execution provider or runtime implementation; production architecture is unchanged",
-          "reviewed_code_fingerprint": "566d674464f43214dd26adaf3edd94c3d4cdbf8330c207591fb0a3538b246cff",
+          "reason": "Release reconciliation preserves accepted architecture; the opt-in observer changes no provider or production architecture.",
+          "reviewed_code_fingerprint": "d7cf9c144b1b8caac86f5e0f7376398bc7405b4402c22696892decac4c2b2bb8",
           "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The acceptance observer invokes existing released validate and reads its existing evidence; no CLI or production schema changed",
-          "reviewed_code_fingerprint": "566d674464f43214dd26adaf3edd94c3d4cdbf8330c207591fb0a3538b246cff",
-          "spec_material_hash": "111b63acca3b5b52d373a6ff7c57a81b4374b4af7348fb7a7770fb2370e62195"
+          "reason": "Accepted target already contains the recovery interface contract. This reconciliation preserves it unchanged and adds no production interface beyond the existing opt-in observer.",
+          "reviewed_code_fingerprint": "d7cf9c144b1b8caac86f5e0f7376398bc7405b4402c22696892decac4c2b2bb8",
+          "spec_material_hash": "f0ca488501b1f43d968dd78e1d45b1f08adbd046d1f824d0ebfad42e1c4e7f5c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted proof and authorization remain unchanged; observer requires exclusive prepared workspace and does not author machine receipts or weaken gates",
-          "reviewed_code_fingerprint": "566d674464f43214dd26adaf3edd94c3d4cdbf8330c207591fb0a3538b246cff",
+          "reason": "Release reconciliation preserves accepted security authority. The native observer remains agent-operated and cannot authorize publication, fake evidence, or bypass denied execution.",
+          "reviewed_code_fingerprint": "d7cf9c144b1b8caac86f5e0f7376398bc7405b4402c22696892decac4c2b2bb8",
           "spec_material_hash": "e2090e911112df35b36fb5845c7871be442f147bb1b3a723e04e3f17f76f56b9"
         }
       ],
@@ -551,11 +567,12 @@
       "stop_conditions": [],
       "title": "Prove real native readiness for issue 1474",
       "todo_ids": [
-        "bugs_01m6g9w9k64r3qkx"
+        "bugs_01m6g9w9k64r3qkx",
+        "cicd_01m6h7mmyp5t0p15"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793697163Z"
+      "updated_at": "1793727513Z"
     },
     "trajectory": {
       "active_boundaries": [
