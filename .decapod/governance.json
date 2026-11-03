@@ -483,6 +483,14 @@
       "proof_refs": [
         "rustfmt and git diff --check"
       ]
+    },
+    {
+      "id": "recovery-official-entrypoints-01234",
+      "summary": "Refresh release-bound entrypoints and managed Dockerfile through official noninteractive initialization, preserving configured proof requirements",
+      "input_digest": "sha256:a85101b5bfe51676795e8dea6b0f87850dced39048f0396197cf4ffcdcd3e723",
+      "proof_refs": [
+        "official v0.123.4 checksum verification"
+      ]
     }
   ],
   "intents": {
@@ -542,7 +550,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:db4cb84ec9947d35f9a0741acdc3d30ff8b41ac1dc0335f411cf8f4554cc650d",
+      "artifact_hash": "sha256:1ee096cb315eeda0071d7b1fcdd66126d275dcb2891b4cb578aefa8ec3b1b0bd",
       "blockers": [
         "No authorized already-governed fixture with multiple historical done tasks and real proof access is available; opt-in harness is not acceptance"
       ],
@@ -584,10 +592,17 @@
             "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6G9W51QAAFSNWD2E9D26EPW",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9W51QAAFSNWD2E9D26EPW": {
@@ -628,13 +643,28 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "decapod init --proof refreshed release-bound entrypoints and managed Dockerfile to verified official v0.123.4",
+                "custody_event_id": "event:6",
+                "observations": [],
+                "proof_refs": [
+                  "live recovery acceptance"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "Restore complete original journal after Git auto-merge invalidated its hash; refresh with official v0.123.4"
+        "Restore complete original journal after Git auto-merge invalidated its hash; refresh with official v0.123.4",
+        "decapod init --proof refreshed release-bound entrypoints and managed Dockerfile to verified official v0.123.4"
       ],
       "destination": "pull request",
       "evidence": [
