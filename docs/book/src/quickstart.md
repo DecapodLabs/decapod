@@ -38,13 +38,19 @@ decapod init
 decapod init --backend cloud
 ```
 
-## 3. Orientation
+## 3. Agent Documentation
 
-Verify that your repository meets basic governance requirements. Decapod will check for the presence of mandatory files and invariants, then report whether the current repo state satisfies the governed execution contract. Agents will automatically call `decapod validate` as needed (see [Proof & Validation](concepts/proof.md)).
+Before using Decapod, the agent loads the command contracts and evaluates the
+incoming prompt as required by the generated entrypoints. Task orientation is a
+later step: it runs inside the task's claimed, isolated worktree, not from the
+main checkout.
 
 ```bash
-decapod validate
+decapod docs ingest
+printf '%s' '<incoming prompt>' | decapod eval --stdin --format json
 ```
+
+Continue only when the prompt gate succeeds and returns `status: allow`.
 
 ## 4. The Agent Handshake
 
@@ -72,12 +78,28 @@ decapod todo claim --id <task-id>
 Create an isolated git worktree for the task. Decapod turns workspace custody into inspectable repo state and ensures you are working in a clean environment, safely away from the main branch (see [Workspace Sandboxing](concepts/workspaces.md)). Human users should never call this.
 
 ```bash
-decapod workspace ensure
+decapod workspace ensure --branch agent/<agent-id>/<task-id>-<topic>
+cd .decapod/workspaces/<your-worktree>
 ```
+
+Use the actual `worktree_path` returned by `workspace ensure` for the directory
+change; the path above is a placeholder.
 
 **Note:** If `container_workspaces = true` is set in your config (see [Config Specification](reference/config-toml.md)), add the `--container` flag to wrap the workspace in Docker (see [Workspace Isolation Workflow](workflows/workspace-isolation.md)).
 
-## 7. Delivery and Proof
+## 7. Task Orientation
+
+From the reported worktree, orient the agent before implementation. Creating the
+workspace satisfies the isolation prerequisite; it does not replace orientation
+or authorize work outside the claimed task.
+
+```bash
+decapod infer orientation --task-id <task-id>
+decapod constitution get core/DECAPOD
+decapod rpc --op context.resolve
+```
+
+## 8. Delivery and Proof
 
 After the agent has performed the work in the isolated workspace, it runs validation. A failed gate leaves the task incomplete. When the result includes supported remediation, the agent corrects the violated artifact or state, re-runs validation, and continues. Only passing required gates and evidence permit the governed completion and publication transitions (see [Artifact Reference](reference/artifacts.md)). Human users should never call these commands.
 

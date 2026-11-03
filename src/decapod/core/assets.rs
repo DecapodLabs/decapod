@@ -693,9 +693,9 @@ decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
-decapod infer orientation --task-id <task-id>
-decapod workspace ensure
+decapod workspace ensure --branch agent/<agent-id>/<task-id>-<topic>
 cd .decapod/workspaces/<your-worktree>
+decapod infer orientation --task-id <task-id>
 decapod constitution get core/DECAPOD
 decapod rpc --op context.resolve
 ```
@@ -762,9 +762,9 @@ decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
-decapod infer orientation --task-id <task-id>
-decapod workspace ensure
+decapod workspace ensure --branch agent/<agent-id>/<task-id>-<topic>
 cd .decapod/workspaces/<your-worktree>
+decapod infer orientation --task-id <task-id>
 decapod constitution get core/DECAPOD
 decapod rpc --op context.resolve
 ```
@@ -1079,6 +1079,26 @@ jobs:
 
 #[cfg(test)]
 mod validation_contract_tests {
+    #[test]
+    fn canonical_entrypoints_enter_claimed_workspace_before_orientation() {
+        for name in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
+            let body = crate::core::entrypoint_integrity::render_entrypoint(name).unwrap();
+            let claim = body.find("decapod todo claim --id <task-id>").unwrap();
+            let ensure = body
+                .find("decapod workspace ensure --branch agent/<agent-id>/<task-id>-<topic>")
+                .unwrap();
+            let enter = body.find("cd .decapod/workspaces/<your-worktree>").unwrap();
+            let orient = body
+                .find("decapod infer orientation --task-id <task-id>")
+                .unwrap();
+            let resolve = body.find("decapod rpc --op context.resolve").unwrap();
+            assert!(
+                claim < ensure && ensure < enter && enter < orient && orient < resolve,
+                "{name} must claim, create and enter the workspace, then orient before work"
+            );
+        }
+    }
+
     #[test]
     fn canonical_entrypoints_keep_validation_owned_execution_within_line_budgets() {
         for (name, limit) in [

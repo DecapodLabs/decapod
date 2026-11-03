@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.123.2 -->
-<!-- decapod-fingerprint: 39a5d2eb942e771fc6f684a6f77b2f201d4424a04b8a93cad9f2c53cb7f351f9 -->
+<!-- decapod-release: 0.123.3 -->
+<!-- decapod-fingerprint: f45e4e20c1f3f40f754ea2c6f157f6afbd1809847a7cf077e7db5dac63e121a9 -->
 # GEMINI.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -35,9 +35,9 @@ decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
-decapod infer orientation --task-id <task-id>
-decapod workspace ensure
+decapod workspace ensure --branch agent/<agent-id>/<task-id>-<topic>
 cd .decapod/workspaces/<your-worktree>
+decapod infer orientation --task-id <task-id>
 decapod constitution get core/DECAPOD
 decapod rpc --op context.resolve
 ```

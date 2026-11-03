@@ -64,8 +64,12 @@ arbitrary database writes and actor impersonation remain outside the guarantee.
    to a design. Read project configuration and overrides; expose unresolved
    intent, scope, boundary and proof questions.
 3. Acquire the local session, initialize the agent and establish task ownership.
-   Claim the task before creating or using its managed workspace. Enter that
-   workspace before edits; preserve the root checkout.
+   Claim the task before creating its managed workspace, using a branch name
+   containing the full task ID. Enter the exact `worktree_path` returned by
+   `workspace ensure`, then run `infer orientation --task-id <task-id>` there
+   before implementation. The orientation guard requires an isolated worktree;
+   workspace creation establishes that prerequisite but does not waive orientation,
+   task custody or proof requirements. Preserve the root checkout.
 4. Record the accepted interpretation, scope, assumptions, falsifiable claims
    and planned checks through Decapod. Author living-spec prose as understanding
    changes. Record inspected and changed files, actions and evidence at durable
@@ -79,6 +83,15 @@ arbitrary database writes and actor impersonation remain outside the guarantee.
 7. Create the PR only after full readiness succeeds. Preserve proof and complete
    the task through the governed lifecycle. A completion statement alone is
    insufficient.
+
+`src/decapod/core/assets.rs` supplies both the universal AGENTS entrypoint and
+host-specific initialization templates. They must order task claim, workspace
+creation, directory change and task orientation consistently. The generated
+entrypoint ordering assertion and `tests/activation_conformance.rs` cover that
+sequence, with the latter executing task orientation from the actual returned
+worktree before fixture implementation. The book quickstart describes the same
+order. Historical release-template fixtures retain their original bytes and do
+not define current initialization behavior.
 
 A task can span many sessions and invocations. Prompt and conversation context
 remain valid inside an isolated workspace. `TODO_PROJECTION_MISSING` requires
@@ -362,7 +375,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b1a349fa5f19a41adf9f48e06cf10c03c0ddc8a506bb71dc7050fb34e0281764`
+- Repository signal fingerprint: `370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

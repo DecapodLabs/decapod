@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.123.2 -->
-<!-- decapod-fingerprint: deea1a8eede645c19c41a4fd8327684099bb71a5464f36d332c3fc30938f4cc6 -->
+<!-- decapod-release: 0.123.3 -->
+<!-- decapod-fingerprint: 733d6eaa4dea199f33ff612a5171d6d89838b431bf26ee71b12cca4f236db134 -->
 # CLAUDE.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -35,9 +35,9 @@ decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
 decapod todo add "<task>" && decapod todo claim --id <task-id>
-decapod infer orientation --task-id <task-id>
-decapod workspace ensure
+decapod workspace ensure --branch agent/<agent-id>/<task-id>-<topic>
 cd .decapod/workspaces/<your-worktree>
+decapod infer orientation --task-id <task-id>
 decapod constitution get core/DECAPOD
 decapod rpc --op context.resolve
 ```
