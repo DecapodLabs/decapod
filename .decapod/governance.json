@@ -594,6 +594,11 @@
       "id": "accepted-target-review-correction",
       "summary": "Publication verifier identified architecture unchanged versus new accepted target; correct review disposition while preserving imported semantic prose and all existing checkpoints",
       "input_digest": "sha256:a473d352b0c01ea293f1ac42119ace00de4d47046a439f96fc88b335ef46e3e0"
+    },
+    {
+      "id": "fix-1473-final-config-projection",
+      "summary": "Regenerate the living-spec manifest with official v0.121.3 after final reviewed inventory configuration; matches exact CI expected config hash without changing gates.",
+      "input_digest": "sha256:fc3523ec74d8846d88e520a4dddc5632de1fa8ac23ef3ef7475f861a24c4c140"
     }
   ],
   "intents": {
