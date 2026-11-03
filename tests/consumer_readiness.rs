@@ -1059,6 +1059,10 @@ fn live_dagger_acceptance_preserves_candidate_target_and_custody() {
         decapod::core::readiness_evidence::digest(&observations).unwrap()
     );
     let custody = read_json(&evidence.join("dagger-engine-custody.json"));
+    let engine_observations = read_json(&evidence.join("dagger-engine-observations.json"));
+    assert_eq!(engine_observations["unchanged"], true);
+    assert_eq!(engine_observations["before"], custody);
+    assert_eq!(engine_observations["after"], custody);
     for (name, execution) in dagger {
         let observed = &custody[name];
         assert_eq!(

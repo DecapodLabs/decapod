@@ -458,11 +458,26 @@
     "base_commit": "aab2ab8794496370ae99c26ce4e4e53fdcaaf706",
     "target_base": "origin/master"
   },
+  "claims": {
+    "dagger-acceptance": {
+      "statement": "Live acceptance harness verifies installed-controller evidence without granting engine access or fabricating live execution",
+      "falsifier": "Harness accepts missing live inputs, missing accepted dormant authorization, changed identity, or missing actual successful Dagger observation",
+      "status": "open",
+      "proof_refs": [
+        "tests/consumer_readiness.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "issue-1475-test-recovery",
       "summary": "Preserve generated projections and exact task binding; add accepted-activation denial regression",
       "input_digest": "sha256:57a68fe1f9d543e6a905d937f14a93cb01cd9559460ff939e492b5c99fee3f24"
+    },
+    {
+      "id": "issue-1475-engine-custody",
+      "summary": "Retain changed engine diagnostics without success witness; no live run claimed",
+      "input_digest": "sha256:d38135034492e48818d025af49bcea331789617a24a3642c136b52c9463d9189"
     }
   ],
   "intents": {
@@ -513,11 +528,15 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:21c437a8b79d72540acc6caf8431c5981eebd6317c24397872348374a4e15369",
+      "artifact_hash": "sha256:144b54619d28172c98d6174f84f63136ac5665fb5fd1b9a57a2265d62cc0f157",
       "blockers": [
         "Real pre-provisioned pinned Dagger engine unavailable; live acceptance not run"
       ],
       "checks": [
+        {
+          "name": "cargo_diagnostic",
+          "status": "partial"
+        },
         {
           "name": "full_validation",
           "status": "failed"
@@ -559,10 +578,17 @@
             "intent_id": "intent:change_01M6G9Z6RQJDV415HQJ6DG62FE",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6G9Z6SZYA59VY400JM2RSSJ",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6G9Z6RQJDV415HQJ6DG62FE",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9Z6SZYA59VY400JM2RSSJ": {
@@ -603,6 +629,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/validation_runtime/repository_host/dagger.rs",
+                  "src/decapod/core/validation_runtime/repository_host.rs",
+                  "Manual Cargo diagnostic stopped with exit 130 before tests completed; no test or official proof claim"
+                ],
+                "proof_refs": [
+                  "cargo_diagnostic"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -610,7 +653,9 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "Manual Cargo diagnostic stopped with exit 130 before tests completed; no test or official proof claim"
+      ],
       "inspected_files": [
         "src/decapod/core/validation_runtime/repository_host/dagger.rs",
         "tests/consumer_readiness.rs"
@@ -619,6 +664,8 @@
       "modified_files": [
         ".decapod/managed/specs/VALIDATION.md",
         "docs/agent/repository-readiness.md",
+        "src/decapod/core/validation_runtime/repository_host.rs",
+        "src/decapod/core/validation_runtime/repository_host/dagger.rs",
         "tests/consumer_readiness.rs"
       ],
       "next_transitions": [

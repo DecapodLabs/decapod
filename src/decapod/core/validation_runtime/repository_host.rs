@@ -253,17 +253,7 @@ impl Host for RepositoryHost<'_> {
             budget,
         )?;
         let engines_after = dagger::inspect_engines(project, &mut self.authorize, budget)?;
-        if engines_before != engines_after {
-            return Err(invalid(
-                "DAGGER_ENGINE_CHANGED: local engine changed during proof",
-            ));
-        }
-        if !engines_after.is_empty() {
-            fs::write(
-                evidence_directory.join("dagger-engine-custody.json"),
-                serde_json::to_vec_pretty(&engines_after).map_err(io::Error::other)?,
-            )?;
-        }
+        dagger::record_custody(evidence_directory, &engines_before, &engines_after)?;
         for invocation in selection.native_invocations.values() {
             verify_invocation_path(invocation, &project.identity_inputs.root, budget)?;
         }

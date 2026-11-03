@@ -134,6 +134,36 @@ pub(super) fn inspect_engines(
     Ok(observations)
 }
 
+/// Preserve both observations even when a restart invalidates the proof. The
+/// diagnostic pair is never a successful custody witness or readiness receipt.
+pub(super) fn record_custody(
+    directory: &Path,
+    before: &BTreeMap<String, EngineObservation>,
+    after: &BTreeMap<String, EngineObservation>,
+) -> io::Result<()> {
+    if !before.is_empty() || !after.is_empty() {
+        fs::write(
+            directory.join("dagger-engine-observations.json"),
+            serde_json::to_vec_pretty(&serde_json::json!({
+                "before": before, "after": after, "unchanged": before == after
+            }))
+            .map_err(io::Error::other)?,
+        )?;
+    }
+    if before != after {
+        return Err(invalid(
+            "DAGGER_ENGINE_CHANGED: local engine changed during proof",
+        ));
+    }
+    if !after.is_empty() {
+        fs::write(
+            directory.join("dagger-engine-custody.json"),
+            serde_json::to_vec_pretty(after).map_err(io::Error::other)?,
+        )?;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -200,6 +230,73 @@ mod tests {
             decode_observation(&serde_json::to_vec(&changed).unwrap(), &policy()).unwrap()
         );
     }
+    #[test]
+    fn changed_engine_preserves_diagnostics_without_successful_custody() {
+        let first =
+            decode_observation(&serde_json::to_vec(&observed()).unwrap(), &policy()).unwrap();
+        let before = BTreeMap::from([("dagger-check".into(), first.clone())]);
+        for field in [
+            "id",
+            "image",
+            "started_at",
+            "mounts",
+            "readonly",
+            "running",
+            "missing",
+        ] {
+            let directory = tempfile::tempdir().unwrap();
+            let mut changed = first.clone();
+            match field {
+                "id" => changed.id = "c".repeat(64),
+                "image" => changed.image = format!("sha256:{}", "c".repeat(64)),
+                "started_at" => changed.started_at = "2026-11-02T01:00:00Z".into(),
+                "mounts" => changed.mount_destinations.push("/changed".into()),
+                "readonly" => changed.readonly_rootfs = !changed.readonly_rootfs,
+                "running" => changed.running = false,
+                "missing" => {}
+                _ => unreachable!(),
+            }
+            let after = if field == "missing" {
+                BTreeMap::new()
+            } else {
+                BTreeMap::from([("dagger-check".into(), changed)])
+            };
+            let error = record_custody(directory.path(), &before, &after).unwrap_err();
+            assert!(error.to_string().contains("DAGGER_ENGINE_CHANGED"));
+            assert!(!directory.path().join("dagger-engine-custody.json").exists());
+            let diagnostic: serde_json::Value = serde_json::from_slice(
+                &fs::read(directory.path().join("dagger-engine-observations.json")).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(diagnostic["unchanged"], false);
+            assert_eq!(diagnostic["before"], serde_json::to_value(&before).unwrap());
+            assert_eq!(diagnostic["after"], serde_json::to_value(&after).unwrap());
+        }
+    }
+
+    #[test]
+    fn unchanged_engine_retains_both_observations_and_successful_custody() {
+        let directory = tempfile::tempdir().unwrap();
+        let observation =
+            decode_observation(&serde_json::to_vec(&observed()).unwrap(), &policy()).unwrap();
+        let engines = BTreeMap::from([("dagger-check".into(), observation)]);
+        record_custody(directory.path(), &engines, &engines).unwrap();
+        assert!(
+            directory
+                .path()
+                .join("dagger-engine-observations.json")
+                .is_file()
+        );
+        let custody: BTreeMap<String, EngineObservation> = serde_json::from_slice(
+            &fs::read(directory.path().join("dagger-engine-custody.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(custody, engines);
+        let dormant = tempfile::tempdir().unwrap();
+        record_custody(dormant.path(), &BTreeMap::new(), &BTreeMap::new()).unwrap();
+        assert_eq!(fs::read_dir(dormant.path()).unwrap().count(), 0);
+    }
+
     #[test]
     fn inspection_template_does_not_request_container_environment_or_credentials() {
         assert!(!INSPECT_FORMAT.contains(".Config.Env"));

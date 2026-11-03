@@ -852,7 +852,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9fdd093471ac63ab0221947709ae136b154cd5be00415459f24e1163a561d268`
+- Repository signal fingerprint: `765a33ccb53fdbd080a6b09f0d14d04648650e9e589cdb81b4991e2b5d164a48`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1140,3 +1140,11 @@ restarted engine unit observations remain fixture coverage. A live engine run
 and live adverse scenarios require separate retained evidence and must never be
 inferred from ignored test compilation. The consumer-local acceptance scope
 cannot replace the required Buildkite suite for this repository.
+
+Complete engine observations are retained as diagnostic before/after evidence even
+when a restart changes identity. The equality decision remains fail-closed and
+only an unchanged pair produces the legacy successful custody witness. Missing
+or failed inspection is not replaced with an invented observation. Unit tests
+exercise each changed field, absent engines, unchanged success, and no-engine
+dormancy. Accepted activation also has a runtime denial regression proving that
+accepted configuration alone cannot authorize external execution.
