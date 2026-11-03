@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.6](https://github.com/DecapodLabs/decapod/compare/v0.123.5...v0.123.6) - 2026-11-03
+
+### Other
+
+- isolate local bootstrap from container autorun
+- bind interface review to accepted master
+- reconcile bootstrap regression with v0.123.5
+- schedule bootstrap regression for test-only changes
+- record bootstrap publication spec reviews
+- record bootstrap execution and portable fixture paths
+- execute documented task bootstrap order
+
 ## [0.123.5](https://github.com/DecapodLabs/decapod/compare/v0.123.4...v0.123.5) - 2026-11-03
 
 ### Fixed
