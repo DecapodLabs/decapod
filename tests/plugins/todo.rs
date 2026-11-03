@@ -1929,3 +1929,77 @@ fn cli_handoff_without_from_uses_active_caller() {
         "receiver"
     );
 }
+
+#[test]
+fn handoff_failure_returns_agent_recovery_without_authorizing_or_mutating() {
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    let error = handoff_task_as(
+        &store,
+        "task-identity",
+        "receiver",
+        Some("recorded-owner"),
+        "recover",
+        None,
+        "unknown",
+    )
+    .unwrap_err();
+    let message = error.to_string();
+    assert!(message.contains("HANDOFF_CALLER_MISSING"));
+    let recovery: Value =
+        serde_json::from_str(message.split("\nHANDOFF_RECOVERY: ").nth(1).unwrap()).unwrap();
+    assert_eq!(
+        recovery["schema_version"],
+        "decapod.todo.handoff-recovery.v1"
+    );
+    assert_eq!(recovery["task_id"], "task-identity");
+    assert_eq!(recovery["actor"], "unknown");
+    assert_eq!(recovery["expected_owner"], "recorded-owner");
+    assert_eq!(recovery["executor"], "agent_or_harness");
+    assert_eq!(
+        recovery["inspect_argv"],
+        serde_json::json!(["decapod", "todo", "get", "--id", "task-identity"])
+    );
+    assert_eq!(
+        recovery["evaluate_argv"],
+        serde_json::json!([
+            "decapod",
+            "govern",
+            "policy",
+            "eval",
+            "--command",
+            "todo.handoff",
+            "--path",
+            "task-identity"
+        ])
+    );
+    let next = recovery["next_action"].as_str().unwrap();
+    assert!(next.contains("obtain the human decision through conversation"));
+    assert!(next.contains("never impersonate the owner or self-promote trust"));
+    assert!(next.contains("before any retry"));
+    assert!(recovery.get("approve_argv").is_none());
+    assert_eq!(std::fs::read_dir(tmp.path()).unwrap().count(), 0);
+
+    let invalid = handoff_task_as(
+        &store,
+        "task-identity",
+        "",
+        None,
+        "recover",
+        None,
+        "actual-caller",
+    )
+    .unwrap();
+    assert_eq!(invalid["status"], "error");
+    assert_eq!(invalid["recovery"]["actor"], "actual-caller");
+    assert!(
+        invalid["recovery"]["reason"]
+            .as_str()
+            .unwrap()
+            .contains("non-empty")
+    );
+    assert_eq!(std::fs::read_dir(tmp.path()).unwrap().count(), 0);
+}

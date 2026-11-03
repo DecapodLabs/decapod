@@ -621,6 +621,11 @@
       "id": "handoff-agent-recovery-output",
       "summary": "Expose versioned recovery diagnostic in actual ValidationError and JSON failure outputs for invoking agent/harness; inspect/eval argv only, no self-authorizing approval or blind custody retry, unchanged policy enforcement",
       "input_digest": "sha256:c2848dbbccef745ea780c5324fb9709d5b55080840f1b299809c552aad61d2b6"
+    },
+    {
+      "id": "handoff-agent-recovery-regression",
+      "summary": "Add actual failure-output contract regression: reason/context/read-only argv, conversational human decision, no self-promotion or approval command, no state created for precondition failures; authored not executed",
+      "input_digest": "sha256:873c33123d6a1ddad7a6f4e8dfccda14b0c0b89944642005e01c87e4c7118b08"
     }
   ],
   "intents": {
