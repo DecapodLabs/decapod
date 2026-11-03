@@ -2,8 +2,9 @@
 
 ## Documented agent bootstrap execution
 
-The required `cli_contracts` suite includes
-`tests/support/documented_bootstrap.rs`, which interprets the generated
+The always-selected `cli-contracts` proof executes the inline
+`documented_bootstrap` module in `tests/cli_contract_enforcement.rs`, which
+interprets the generated
 `AGENTS.md` initialization commands through real CLI subprocesses. Human
 provisioning creates a committed local-backend project with container workspaces
 disabled; installation, remote backends and Docker execution are outside this
@@ -17,7 +18,9 @@ worktree-specific diagnostic from the main checkout both before and after
 workspace creation. Successful orientation must retain the created task's intent
 and governed-plan binding in the actual worktree. Implementation then changes
 only that worktree, with the main checkout's HEAD and tracked work unchanged.
-This runtime regression complements the four-entrypoint text-order checks in
+The module is part of the target source itself, so Bazel cannot omit an
+undeclared support file. Unlike the selective CLI matrix, this proof also runs
+on test-only changes. This runtime regression complements the four-entrypoint text-order checks in
 `src/decapod/core/assets.rs`; neither substitutes for exact-candidate validation.
 
 ## Native readiness receipt custody
@@ -872,8 +875,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8f7c834ac613255bdb770e0bbdf66b4b2c434e06ae5829c26b515e074dace65e`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (195 files)
+- Repository signal fingerprint: `49ca90c910824c400eec3dda8dcd7c7791172305c56c11e19dd734038f9d6cf0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
