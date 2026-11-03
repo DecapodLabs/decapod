@@ -342,3 +342,20 @@ the task, actual caller, expected owner and receiver, and supplies bounded
 `next_action` requires inspection before retry (reconciliation can fail after a
 committed transfer), established caller authority, and human decision through
 conversation when required. It never returns a self-authorizing approval step.
+
+## Explicit claim file scopes
+
+Agents can create a todo with `--scope 'paths:["src/a.rs","tests/a.rs"]'`
+and `--dir <repository-directory>`. This declares the intended literal file or
+directory footprint; it is coordination metadata, not proof of actual edits or
+an OS write sandbox. The existing task journal and transfer carry the scope.
+Use 1–256 bounded relative paths; traversal, absolute paths, glob syntax and
+existing symlink traversal are rejected. Disjoint explicit footprints avoid the
+old repository-root path conflict. Equal paths and parent/child paths conflict.
+A legacy or malformed scope retains conservative directory exclusion. Existing
+broad claims must be resolved rather than silently narrowed by another caller.
+Category/dependency/lease/approval gates remain independent and unchanged.
+File scopes do not create verified isolated-worktree custody or waive shared
+resource exclusion. Work-claim projections and fleet overlap diagnostics use
+the same footprint. Different explicit scopes are not fuzzy-merged as duplicate
+todos even when their titles are similar.

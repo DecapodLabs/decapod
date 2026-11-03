@@ -2007,3 +2007,128 @@ fn handoff_failure_returns_agent_recovery_without_authorizing_or_mutating() {
     );
     assert_eq!(std::fs::read_dir(tmp.path()).unwrap().count(), 0);
 }
+
+#[test]
+fn explicit_file_claims_keep_basic_agents_disjoint_without_shared_grants() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    initialize_todo_db(root).unwrap();
+    let dir = root.to_str().unwrap();
+    let a = add_scoped_task(root, "Amber parcel", r#"paths:["src/a.rs"]"#, dir);
+    let b = add_scoped_task(root, "Blue parcel", r#"paths:["src/b.rs"]"#, dir);
+    assert_ne!(a, b);
+    assert_eq!(
+        claim_task(root, &a, "alpha", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+    assert_eq!(
+        claim_task(root, &b, "beta", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+    assert!(!check_trust_level(root, "alpha", "verified").unwrap());
+    assert!(claim_task(root, &a, "beta", ClaimMode::Shared).is_err());
+    let overlap = add_scoped_task(root, "Copper parcel", r#"paths:["src/a.rs"]"#, dir);
+    assert_eq!(
+        claim_task(root, &overlap, "gamma", ClaimMode::Exclusive).unwrap()["status"],
+        "conflict"
+    );
+    assert_eq!(
+        get_work_claim(root, &a).unwrap().unwrap().paths,
+        vec![format!("{dir}/src/a.rs")]
+    );
+    rebuild_from_events(root).unwrap();
+    assert_eq!(
+        get_task(root, &a).unwrap().unwrap().scope,
+        r#"paths:["src/a.rs"]"#
+    );
+}
+
+#[test]
+fn explicit_scope_add_rejects_invalid_paths_and_existing_symlinks() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    initialize_todo_db(root).unwrap();
+    let args = |scope: &str| TodoCommand::Add {
+        title: "Literal footprint".into(),
+        description: String::new(),
+        tags: String::new(),
+        owner: String::new(),
+        due: None,
+        r#ref: String::new(),
+        scope: scope.into(),
+        dir: Some(root.to_string_lossy().into_owned()),
+        priority: "medium".into(),
+        depends_on: String::new(),
+        blocks: String::new(),
+        parent: None,
+        one_shot: 0,
+    };
+    for scope in [
+        "paths:[]",
+        r#"paths:["../outside"]"#,
+        r#"paths:["/absolute"]"#,
+        "paths:invalid",
+    ] {
+        assert!(add_task(root, &args(scope)).is_err(), "{scope}");
+    }
+    #[cfg(unix)]
+    {
+        std::os::unix::fs::symlink(tmp.path(), root.join("alias")).unwrap();
+        let error = add_task(root, &args(r#"paths:["alias/file.rs"]"#)).unwrap_err();
+        assert!(error.to_string().contains("symlink"));
+    }
+}
+
+#[test]
+fn explicit_scope_handoff_preserves_real_overlap_exclusion() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    initialize_todo_db(root).unwrap();
+    let dir = root.to_str().unwrap();
+    let a = add_scoped_task(root, "Amber parcel", r#"paths:["a.rs"]"#, dir);
+    let same = add_scoped_task(root, "Copper parcel", r#"paths:["a.rs"]"#, dir);
+    let different = add_scoped_task(root, "Blue parcel", r#"paths:["b.rs"]"#, dir);
+    for id in [&a, &same, &different] {
+        assert_eq!(
+            claim_task(root, id, "alpha", ClaimMode::Exclusive).unwrap()["status"],
+            "ok"
+        );
+    }
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.to_path_buf(),
+    };
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    set_agent_trust(&db, "alpha", "verified", "100Z");
+    policy::approve_action(&store, "todo.handoff", None, "operator", "global").unwrap();
+    assert_eq!(
+        handoff_task_as(
+            &store,
+            &same,
+            "beta",
+            Some("alpha"),
+            "overlap must remain",
+            None,
+            "alpha"
+        )
+        .unwrap()["status"],
+        "conflict"
+    );
+    assert_eq!(
+        handoff_task_as(
+            &store,
+            &different,
+            "beta",
+            Some("alpha"),
+            "disjoint footprint",
+            None,
+            "alpha"
+        )
+        .unwrap()["status"],
+        "ok"
+    );
+    assert_eq!(
+        get_task(root, &different).unwrap().unwrap().scope,
+        r#"paths:["b.rs"]"#
+    );
+}

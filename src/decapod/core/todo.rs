@@ -3381,6 +3381,30 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     } else {
         scope_from_dir(&dir_abs)
     };
+    if let Some(paths) =
+        fleet_coord::declared_paths(&scope).map_err(error::DecapodError::ValidationError)?
+    {
+        if !Path::new(&dir_abs).is_dir() {
+            return Err(error::DecapodError::ValidationError(
+                "Explicit claim paths require --dir to name the repository directory".into(),
+            ));
+        }
+        for path in paths {
+            let mut prefix = Path::new(&dir_abs).to_path_buf();
+            for component in Path::new(&path).components() {
+                prefix.push(component);
+                match std::fs::symlink_metadata(&prefix) {
+                    Ok(metadata) if metadata.file_type().is_symlink() => {
+                        return Err(error::DecapodError::ValidationError(
+                            "Explicit claim paths cannot traverse symlinks".into(),
+                        ));
+                    }
+                    Err(e) if e.kind() != std::io::ErrorKind::NotFound => return Err(e.into()),
+                    _ => {}
+                }
+            }
+        }
+    }
     let ts = now_iso();
     let intent_ref = format!("intent:todo.add:{}", crate::core::ulid::new_ulid());
     let owner_list = parse_owners_input(owner);
@@ -3405,7 +3429,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         |conn| {
             ensure_schema(conn)?;
 
-            let similar_active_task = if scope == "workspace" {
+            let similar_active_task = if scope == "workspace" || scope.starts_with("paths:") {
                 None
             } else {
                 find_similar_active_task(conn, title, description, &effective_tags, &primary_owner)?

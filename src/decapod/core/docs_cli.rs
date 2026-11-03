@@ -343,6 +343,25 @@ pub fn readiness_contract() -> &'static str {
 - **Recovery:** Do not ask again before an already-authorized configured validation push or a supported, safely replayable retry to the same repository and workspace branch. Recheck the exact source and accepted target; stop on explicit cancellation, access or authorization denial, or a change that requires new authority. Follow the validation report's actionable recovery instructions, preserve blockers requiring human input, repair root causes or missing proof, and rerun against the exact candidate. For supported remote source-CI contracts, validation uses the accepted target’s independently verified executor to build and test the candidate, even when candidate helper bytes change. The controller keeps the required graph and final verdict; candidate output cannot authorize itself. `CONTROLLER_CONTRACT_UNSUPPORTED` identifies an unsupported carrier, protocol or accepted executor. Rerunning the same controller, repinning configuration or running a manual build cannot resolve that blocker; use an independently supported controller for this exact contract, and preserve the blocker if none is available. No automatic controller replacement is performed. Do not mark unexecuted checks green, weaken the required profile to pass, or replace unavailable provider evidence with a local receipt."#
 }
 
+fn claim_scope_contract() -> &'static str {
+    r#"## Explicit claim file scopes
+
+Agents can create a todo with `--scope 'paths:["src/a.rs","tests/a.rs"]'`
+and `--dir <repository-directory>`. This declares the intended literal file or
+directory footprint; it is coordination metadata, not proof of actual edits or
+an OS write sandbox. The existing task journal and transfer carry the scope.
+Use 1–256 bounded relative paths; traversal, absolute paths, glob syntax and
+existing symlink traversal are rejected. Disjoint explicit footprints avoid the
+old repository-root path conflict. Equal paths and parent/child paths conflict.
+A legacy or malformed scope retains conservative directory exclusion. Existing
+broad claims must be resolved rather than silently narrowed by another caller.
+Category/dependency/lease/approval gates remain independent and unchanged.
+File scopes do not create verified isolated-worktree custody or waive shared
+resource exclusion. Work-claim projections and fleet overlap diagnostics use
+the same footprint. Different explicit scopes are not fuzzy-merged as duplicate
+todos even when their titles are similar."#
+}
+
 pub fn readiness_config_contract() -> &'static str {
     r#"## Required proof and execution provider
 
@@ -549,6 +568,7 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
         }
 
         writeln!(file, "\n{}", governance_artifacts_contract().trim_end())?;
+        writeln!(file, "\n{}", claim_scope_contract().trim_end())?;
     }
 
     if update_schema {

@@ -430,7 +430,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b`
+- Repository signal fingerprint: `c2f8a58e12fe4a532d748113dd75ac677e34e226358f2ff2d29863c59f1e03df`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -681,3 +681,21 @@ were reviewed and their exact before/after hashes verified locally; pinned Bazel
 No required graph, trust, model, or execution policy changes. This dependency
 repair is not runtime proof: the prompt-gate candidate still requires fresh full
 validation against its exact published commit.
+
+## Precise claim paths and unchanged trust
+
+The bounded file-scope change addresses the disjoint-work portion of issue 1480.
+Trust-grant administration remains unresolved and is not added by this change.
+There is no new config trust mapping, elevation API, trust-row mutation or human
+CLI requirement. Existing caller names and local approvals remain cooperative
+assertions, not authenticated principals or independent proof of human consent.
+
+`fleet_coord::declared_paths` recognizes bounded literal JSON file-set scopes.
+`todo::add_task` rejects traversal/symlink scopes and avoids fuzzy consolidation
+of explicitly scoped tasks. Claim/handoff overlap checks, fleet diagnostics and
+`work_claim::from_todo_with_lease` use the same footprints. Legacy/invalid scopes
+remain conservative. File sets do not bypass independent category ownership,
+dependency, lease, shared-claim trust or approval gates and do not establish
+verified isolated-worktree custody. Tests cover disjoint/intersecting/parent paths,
+malformed declarations, unchanged shared-claim trust and journaled scopes;
+source declarations are not a claim that tests have run.
