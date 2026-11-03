@@ -631,6 +631,11 @@
       "id": "handoff-runtime-recovery-reference",
       "summary": "Document idiomatic failed-execution recovery diagnostic returned to agent/harness, not human-run CLI instructions; preserve uncertain committed-custody warning",
       "input_digest": "sha256:9939e3d9668fc21f5118520ab02d26db4e0d11decc2683b52f57e2b704faca65"
+    },
+    {
+      "id": "handoff-runtime-recovery-spec",
+      "summary": "Specify actual failure output recovery contract and diagnostic no-side-effect boundary; human decision via agent only, no granted authority or blind replay",
+      "input_digest": "sha256:4ddc983934a40f19029d7e097bd2d6e46364deeca6304ebb2b29911faa2e6ba2"
     }
   ],
   "intents": {

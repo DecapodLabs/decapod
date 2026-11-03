@@ -853,3 +853,15 @@ that agent/harness, never a required human operator CLI session. The harness
 preserves the actual established caller independently of approval attribution,
 expected owner and recipient, and reports the resulting audit. Missing caller
 authority remains a blocker; the execution boundary grants no role elevation.
+
+The invoking agent/harness discovers handoff recovery in actual failure output:
+`ValidationError` preserves the denial reason and appends `HANDOFF_RECOVERY:`
+plus JSON schema `decapod.todo.handoff-recovery.v1`; non-success JSON responses
+carry the same object as `recovery`. Fields identify task, actual actor, expected
+owner and recipient. `inspect_argv` and `evaluate_argv` provide bounded read and
+policy-evaluation actions; `next_action` requires established authority and
+conversational human approval when necessary, never self-authorization. It
+warns that reconciliation can fail after custody commits, requiring inspection
+before retry. Diagnostic construction itself does not read or write state.
+Regression assertions cover both early validation errors and JSON precondition
+failures without creating storage; these new assertions await exact CI execution.
