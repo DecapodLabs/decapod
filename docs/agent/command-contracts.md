@@ -332,3 +332,13 @@ result record the actual actor, previous owner, receiver, recovery flag and
 consumed approval IDs. Repeating a transfer requires fresh authority; a stale
 `--from` fails rather than silently transferring changed custody. This operation
 never marks task work verified or waives proof gates.
+
+Recovery is discoverable in the failed invocation itself, not only in this
+reference: handoff validation errors retain their original reason and append
+`HANDOFF_RECOVERY:` with a `decapod.todo.handoff-recovery.v1` JSON diagnostic;
+non-success handoff JSON results include that diagnostic in `recovery`. It names
+the task, actual caller, expected owner and receiver, and supplies bounded
+`inspect_argv` and `evaluate_argv` arrays to the invoking agent/harness. Its
+`next_action` requires inspection before retry (reconciliation can fail after a
+committed transfer), established caller authority, and human decision through
+conversation when required. It never returns a self-authorizing approval step.

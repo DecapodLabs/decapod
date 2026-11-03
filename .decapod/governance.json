@@ -626,6 +626,11 @@
       "id": "handoff-agent-recovery-regression",
       "summary": "Add actual failure-output contract regression: reason/context/read-only argv, conversational human decision, no self-promotion or approval command, no state created for precondition failures; authored not executed",
       "input_digest": "sha256:873c33123d6a1ddad7a6f4e8dfccda14b0c0b89944642005e01c87e4c7118b08"
+    },
+    {
+      "id": "handoff-runtime-recovery-reference",
+      "summary": "Document idiomatic failed-execution recovery diagnostic returned to agent/harness, not human-run CLI instructions; preserve uncertain committed-custody warning",
+      "input_digest": "sha256:9939e3d9668fc21f5118520ab02d26db4e0d11decc2683b52f57e2b704faca65"
     }
   ],
   "intents": {
