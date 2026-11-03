@@ -6,9 +6,7 @@
 //! never be converted directly to Invocation. No shell/eval interface exists.
 //! Process groups cover ordinary children, not malicious setsid/double-fork
 //! escapes. Daemonizing, external writes/network, credentials and publication
-//! must be excluded by review or an upstream sandbox. The explicit Dagger
-//! capability is the sole external-engine exception: its host binds a pre-existing
-//! local engine and authorizes that connection separately; no daemon is created.
+//! must be excluded by review or an upstream sandbox; they are unsupported here.
 use super::bounded_process::{
     BoundedCommand, Cancellation, ProcessCapture, ProcessLimits, Termination,
 };
@@ -66,19 +64,6 @@ pub enum ReviewedCapabilities {
     /// Its declared toolchain files are measured, not inferred complete. This
     /// is local command evidence and is not a sandbox or provider attestation.
     RepositoryDeclaredLocalCheck,
-    /// Explicit accepted Dagger contract; the host separately checks the configured identity of the
-    /// already-running local engine and retains its before/after observations.
-    /// This is not local-only or a claim that hosted CI ran.
-    RepositoryDaggerCheck,
-}
-
-impl ReviewedCapabilities {
-    pub(crate) fn is_repository(self) -> bool {
-        matches!(
-            self,
-            Self::RepositoryDeclaredLocalCheck | Self::RepositoryDaggerCheck
-        )
-    }
 }
 
 /// Values are passed as individual arguments, never interpreted as shell text.
@@ -682,14 +667,13 @@ fn validate_invocation(
         "xargs",
         "timeout",
         "docker",
+        "dagger",
         "podman",
         "decapod",
         "decapod-native-proof",
     ]
     .contains(&name)
-        || (name == "dagger"
-            && invocation.capabilities != ReviewedCapabilities::RepositoryDaggerCheck)
-        || (!invocation.capabilities.is_repository()
+        || (invocation.capabilities != ReviewedCapabilities::RepositoryDeclaredLocalCheck
             && (name == "make"
                 || name.starts_with("python")
                 || name.starts_with("node")
@@ -1111,7 +1095,8 @@ pub fn run_native(
         if check.executor != Provider::Native
             || purpose(check.kind) != Some(invocation.purpose)
             || check.invocation_digest != invocation.digest()?
-            || (invocation.capabilities.is_repository() && check.kind != CheckKind::RepositoryLocal)
+            || (invocation.capabilities == ReviewedCapabilities::RepositoryDeclaredLocalCheck
+                && check.kind != CheckKind::RepositoryLocal)
         {
             return Err(invalid("unreviewed native invocation/purpose/backend"));
         }
@@ -1150,7 +1135,7 @@ pub fn run_native(
         let scratch = tempfile::Builder::new()
             .prefix("native-proof-")
             .tempdir_in(snapshot.storage.path())?;
-        if invocation.capabilities.is_repository() {
+        if invocation.capabilities == ReviewedCapabilities::RepositoryDeclaredLocalCheck {
             // The repository host reserves HOME for this owned directory;
             // ambient HOME is not inherited. This is not an OS sandbox.
             fs::create_dir(scratch.path().join("home"))?;

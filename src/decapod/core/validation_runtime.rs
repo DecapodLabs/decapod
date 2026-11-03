@@ -14,7 +14,6 @@ use super::readiness_profile::{
     self as profile, ExecutionBinding, ExecutionPolicy, InvocationRole, ProfileDeclaration,
     ProjectPrerequisites, PublicationState, RequiredCatalog, SourceInventory, TargetObservation,
 };
-use super::repository_profile;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
@@ -41,9 +40,6 @@ pub struct ProofConfiguration {
     pub commands: Vec<super::proof::ProofDef>,
     #[serde(default)]
     pub repository_contract: Option<super::repository_profile::RepositoryContract>,
-    /// Dormant proposals; only the accepted target's map can authorize execution.
-    #[serde(default)]
-    pub dagger_authorizations: BTreeMap<String, super::repository_profile::RepositoryExecution>,
     #[serde(default)]
     pub rust_workers: Option<rust_worker::Configuration>,
 }
@@ -55,6 +51,10 @@ pub fn proof_configuration(bytes: &[u8]) -> io::Result<ProofConfiguration> {
         .map_err(io::Error::other)?;
     match config.get("proof") {
         None => Ok(ProofConfiguration::default()),
+        Some(value) if value.get("dagger_authorizations").is_some() => Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "proof.dagger_authorizations is retired; Dagger execution is not supported by the core proof host",
+        )),
         Some(value) => value.clone().try_into().map_err(io::Error::other),
     }
 }
@@ -165,41 +165,6 @@ impl ValidationGuidance {
         }
     }
 
-    /// Recovery is advisory agent output, never a grant to change the accepted contract.
-    fn for_dagger_failure(detail: &str) -> Option<Self> {
-        let code = detail
-            .split(|c: char| !c.is_ascii_uppercase() && c != '_')
-            .find(|part| part.starts_with("DAGGER_"))?;
-        let (next_action, instruction) = match code {
-            "DAGGER_POLICY_NOT_ACCEPTED" => (
-                "reconcile_accepted_dagger_authorization",
-                "Agent/harness: compare the named .decapod/config.toml proof.repository_contract.executions entry with the accepted target's proof.dagger_authorizations entry. Restore an unintentionally changed active entry to its exact accepted authorization. For intentional adoption or rotation, obtain any missing human decision conversationally, stage the complete future execution only as a dormant proposal while preserving the existing valid proof contract, checkpoint and run decapod validate through that existing path, then wait for independent target acceptance before activating the exact accepted entry. A candidate proposal cannot authorize itself; do not repin policy or remove required checks to bypass rejection. After authorized repair, checkpoint and rerun decapod validate.",
-            ),
-            "DAGGER_CONTRACT_INVALID"
-            | "DAGGER_CONTRACT_REQUIRED"
-            | "DAGGER_DOCKER_TOOL_MISSING"
-            | "DAGGER_DOCKER_TOOL_INVALID"
-            | "DAGGER_DOCKER_PATH_MISMATCH" => (
-                "repair_reviewed_dagger_contract",
-                "Agent/harness: inspect the reported execution in .decapod/config.toml. Reconcile the supported dagger-1.0-workspace-check.v1 contract: required check arguments, root directory, inventoried dagger.toml/dagger.lock, measured dagger-docker tool and dedicated PATH; remove ambient engine/context overrides. Preserve required checks and exact accepted authorization. Any intentional tool or engine change requires a dormant proposal proved under the existing contract and independently accepted before activation, not candidate self-authorization. Obtain missing decisions or access conversationally; after authorized repair, checkpoint and rerun decapod validate.",
-            ),
-            "DAGGER_ENGINE_IDENTITY_MISMATCH"
-            | "DAGGER_ENGINE_CHANGED"
-            | "DAGGER_ENGINE_INSPECTION_FAILED"
-            | "DAGGER_SOCKET_INVALID"
-            | "DAGGER_PLATFORM_UNSUPPORTED" => (
-                "restore_authorized_dagger_prerequisites",
-                "Agent/harness: preserve the reported failure and inspect the declared local Unix socket, installed tools and pre-existing engine against the exact accepted configuration. Restore prerequisites only within existing authority; stop on unavailable services, unsupported platform or denied access and request the missing decision/access conversationally. Do not provision, start, replace or repin an engine to make proof pass. Intentional rotation requires a dormant proposal validated through the existing proof path and independently accepted before activation. Once the exact authorized prerequisites are restored, rerun decapod validate for fresh complete evidence; checkpoint any authorized source repair first.",
-            ),
-            _ => return None,
-        };
-        Some(Self {
-            next_action,
-            instruction,
-            ..Self::for_outcome(false)
-        })
-    }
-
     fn for_controller_contract_unsupported() -> Self {
         Self {
             next_action: "obtain_supported_controller",
@@ -231,8 +196,7 @@ impl ValidationReport {
             // A late evidence write/sync failure must revoke an earlier verdict
             // and its delivery instructions, even after proof and Vega passed.
             self.ready = false;
-            self.agent_guidance = ValidationGuidance::for_dagger_failure(&error.to_string())
-                .unwrap_or_else(|| ValidationGuidance::for_outcome(false));
+            self.agent_guidance = ValidationGuidance::for_outcome(false);
             let unsupported_controller = matches!(
                 error
                     .get_ref()
@@ -662,11 +626,6 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
             &["show", &format!("{base}:{CONFIG}")],
         )?)?
     };
-    repository_profile::preserve_accepted_dagger(
-        configuration.repository_contract.as_ref(),
-        &accepted.dagger_authorizations,
-    )
-    .map_err(|e| invalid(format!("{e:?}")))?;
     rust_worker::preserve_accepted(
         configuration.rust_workers.as_ref(),
         accepted.rust_workers.as_ref(),
@@ -1795,10 +1754,6 @@ pub fn run_native_source_slice(
 /// Requests presented to the existing external-action authorization boundary.
 /// This enum does not grant authority or persist an authorization decision.
 pub enum NativeAction<'a> {
-    DaggerEngineInspect {
-        program: &'a Path,
-        container: &'a str,
-    },
     ToolProbe {
         program: &'a Path,
         arguments: &'a [String],
@@ -2511,111 +2466,3 @@ mod executor_contract;
 
 pub mod repository_host;
 pub mod rust_worker;
-
-#[cfg(test)]
-mod dagger_authorization_tests {
-    use super::*;
-
-    #[test]
-    fn dagger_failure_emits_agent_owned_recovery_without_granting_readiness() {
-        for (code, action, required_instruction) in [
-            (
-                "DAGGER_POLICY_NOT_ACCEPTED",
-                "reconcile_accepted_dagger_authorization",
-                "independent target acceptance",
-            ),
-            (
-                "DAGGER_CONTRACT_INVALID",
-                "repair_reviewed_dagger_contract",
-                "not candidate self-authorization",
-            ),
-            (
-                "DAGGER_SOCKET_INVALID",
-                "restore_authorized_dagger_prerequisites",
-                "stop on unavailable services",
-            ),
-            (
-                "DAGGER_ENGINE_CHANGED",
-                "restore_authorized_dagger_prerequisites",
-                "Do not provision",
-            ),
-        ] {
-            let detail = format!("{code}: original exact cause");
-            let report = ValidationReport {
-                ready: true,
-                proof_ready: false,
-                vega_readiness: None,
-                scope: READINESS_SCOPE,
-                agent_guidance: ValidationGuidance::for_outcome(true),
-                stage_dispositions: vec![],
-                blockers: vec![],
-                evidence_path: None,
-            }
-            .finish(Err(invalid(&detail)));
-            assert!(!report.ready);
-            assert_eq!(report.exit_code(), 1);
-            assert_eq!(report.blockers[0].detail, detail);
-            let guidance = serde_json::to_value(&report.agent_guidance).unwrap();
-            assert_eq!(guidance["owner"], "agent");
-            assert_eq!(guidance["entry_command"], "decapod validate");
-            assert_eq!(guidance["next_action"], action);
-            assert!(
-                report
-                    .agent_guidance
-                    .instruction
-                    .contains(required_instruction)
-            );
-            assert!(
-                report
-                    .agent_guidance
-                    .instruction
-                    .contains("conversationally")
-            );
-        }
-        assert!(ValidationGuidance::for_dagger_failure("unrelated failure").is_none());
-        assert!(ValidationGuidance::for_dagger_failure("DAGGER_UNKNOWN: unsupported").is_none());
-    }
-
-    #[test]
-    fn parsing_dormant_authorization_does_not_activate_a_provider() {
-        let text = format!(
-            r#"
-[proof.dagger_authorizations.dagger-check]
-program = "/opt/reviewed/bin/dagger"
-toolchain_files = {{ dagger-docker = "/opt/reviewed/bin/docker" }}
-environment = {{ PATH = "/opt/reviewed/bin" }}
-timeout_seconds = 60
-[proof.dagger_authorizations.dagger-check.dagger]
-cli_contract = "dagger-1.0-workspace-check.v1"
-engine_container = "{}"
-engine_image = "sha256:{}"
-docker_socket = "/run/docker.sock"
-"#,
-            "a".repeat(64),
-            "b".repeat(64)
-        );
-        let configuration = proof_configuration(text.as_bytes()).unwrap();
-        assert!(configuration.required_profile.is_none());
-        assert!(configuration.commands.is_empty());
-        assert!(configuration.repository_contract.is_none());
-        assert!(!configuration.validation_buildkite_preflights);
-        assert_eq!(configuration.dagger_authorizations.len(), 1);
-        let active = repository_profile::RepositoryContract {
-            reviewed_commands_digest: String::new(),
-            source_coverage: vec![],
-            executions: configuration.dagger_authorizations.clone(),
-        };
-        let old = ProofConfiguration::default();
-        assert!(
-            repository_profile::preserve_accepted_dagger(Some(&active), &old.dagger_authorizations)
-                .is_err()
-        );
-        assert!(
-            repository_profile::preserve_accepted_dagger(
-                Some(&active),
-                &configuration.dagger_authorizations
-            )
-            .is_ok()
-        );
-    }
-}
