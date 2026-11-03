@@ -323,3 +323,36 @@ fn documented_minimal_trajectory_commands_execute_without_claiming_success() {
     assert_eq!(recorded_loop, example_loop());
     assert_ne!(record["verdicts"]["completion_proof"], "supported");
 }
+
+#[test]
+fn docs_build_preserves_agent_handoff_recovery_contract() {
+    let temp = TempDir::new().unwrap();
+    success(run(temp.path(), &["init", "--force"]));
+    fs::create_dir_all(temp.path().join("docs/agent")).unwrap();
+    let contracts = temp.path().join("docs/agent/command-contracts.md");
+    fs::write(&contracts, "stale documentation").unwrap();
+    success(run(
+        temp.path(),
+        &["docs", "build", "--touched", "src/decapod/core/docs_cli.rs"],
+    ));
+    let generated = fs::read_to_string(contracts).unwrap();
+    let contract = decapod::core::docs_cli::todo_handoff_contract();
+    assert!(CONTRACTS.contains(contract));
+    assert!(generated.contains(contract));
+    for required in [
+        "HANDOFF_CALLER_MISSING",
+        "the only Decapod command a user executes is `decapod init`",
+        "It must not manufacture approval",
+        "No agent trust row is promoted by recovery",
+        "never returns a self-authorizing approval step",
+    ] {
+        assert!(contract.contains(required), "missing boundary: {required}");
+    }
+    assert_eq!(
+        generated
+            .matches("## `todo handoff`: caller and ownership recovery")
+            .count(),
+        1
+    );
+    assert!(generated.contains("## Explicit claim file scopes"));
+}

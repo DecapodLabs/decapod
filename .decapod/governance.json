@@ -497,6 +497,16 @@
       "id": "precise-claims-v1237-task-binding",
       "summary": "Bind reconciled plan and trajectory to new owned reconciliation task without claiming recovery of lost custody",
       "input_digest": "sha256:10263f90fb3f1e72947a892f1deebc9fd6daa77127993b5729148511d4e829d5"
+    },
+    {
+      "id": "precise-claims-docs-handoff-generator",
+      "summary": "Restore canonical agent-only handoff contract during docs regeneration and add regression; runtime validation remains pending",
+      "input_digest": "sha256:d74fef9937269f30fb3b89c640adb9c32f2980de06e6ae344a05f507d836c31c"
+    },
+    {
+      "id": "precise-claims-docs-spec-reviews",
+      "summary": "Bind unchanged architecture and security reviews to documentation generator repair",
+      "input_digest": "sha256:0fa4f5a058c8fa5f399501100ad6cf303772ed6806d58ba50168a6db03aaf7b9"
     }
   ],
   "intents": {
@@ -535,24 +545,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed accepted upstream prose and retained precise file-claim semantics; no trust elevation; v0.123.7 reconciliation preserves required proof and carries fresh execution uncertainty.",
-          "reviewed_code_fingerprint": "6e409a4a2758ac6b845f6c58516136327907ced399db0ef4bc93cf4d2b8a2061",
+          "reason": "Reviewed after docs generator repair: existing bounded file claims and unchanged trust semantics remain accurate. The emitter restores already documented agent-only handoff guidance; it does not modify authorization or architecture.",
+          "reviewed_code_fingerprint": "93a53d007a413063a050f41e06cc6c4321db6cac2a9b593ecd0ef7a8cf0474d0",
           "spec_material_hash": "88e3da882fd0bd878853001fee259d23dc3541d0e816007f80de709b769754bc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed accepted upstream prose and retained precise file-claim semantics; no trust elevation; v0.123.7 reconciliation preserves required proof and carries fresh execution uncertainty.",
-          "reviewed_code_fingerprint": "6e409a4a2758ac6b845f6c58516136327907ced399db0ef4bc93cf4d2b8a2061",
-          "spec_material_hash": "ae87bf096b0f1e7075e4c961c065ed4723584cbd1cd9e73a6654999ed181c336"
+          "reason": "Documented canonical handoff generator restoration and focused regeneration regression; existing caller and approval boundaries unchanged, runtime test not yet executed.",
+          "reviewed_code_fingerprint": "93a53d007a413063a050f41e06cc6c4321db6cac2a9b593ecd0ef7a8cf0474d0",
+          "spec_material_hash": "2d4ee35bca698782139abca6b062ff3f6f958ad107d66882d5d841aa00c3bac7"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed accepted upstream prose and retained precise file-claim semantics; no trust elevation; v0.123.7 reconciliation preserves required proof and carries fresh execution uncertainty.",
-          "reviewed_code_fingerprint": "6e409a4a2758ac6b845f6c58516136327907ced399db0ef4bc93cf4d2b8a2061",
+          "reason": "Reviewed after docs generator repair: existing bounded file claims and unchanged trust semantics remain accurate. The emitter restores already documented agent-only handoff guidance; it does not modify authorization or architecture.",
+          "reviewed_code_fingerprint": "93a53d007a413063a050f41e06cc6c4321db6cac2a9b593ecd0ef7a8cf0474d0",
           "spec_material_hash": "8a04e0f3dc35561fd70d49844063031291f049e4b42ea2e99c1e7634db846a1b"
         }
       ],
@@ -566,14 +576,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793729719Z"
+      "updated_at": "1793731206Z"
     },
     "trajectory": {
       "active_boundaries": [
         "No trust elevation, no human CLI, no merge or release"
       ],
-      "artifact_hash": "sha256:3d3dd0d314b87da0ff06978993c5b8df1f1a3da8fcbd133b0e7306850933291e",
+      "artifact_hash": "sha256:c349e530b96f5a5e8c5c5069772f38f4577b9b6f02eb644f5b5612ee6918b0fe",
       "checks": [
+        {
+          "name": "docs-runtime-regression",
+          "status": "unavailable"
+        },
+        {
+          "name": "docs-static-parity",
+          "status": "passed"
+        },
         {
           "name": "inventory-review",
           "status": "passed"
@@ -599,10 +617,17 @@
             "intent_id": "intent:reconcile-1500-v1237",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:reconcile-1500-v1237",
+            "event_id": "event:5",
+            "intent_id": "intent:reconcile-1500-v1237",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "reconcile-1500-v1237": {
@@ -625,6 +650,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/docs_cli.rs",
+                  "tests/trajectory_docs.rs",
+                  "Canonical handoff body equals existing tracked documentation byte-for-byte; generator emits it between governance and explicit claim scopes. Rustfmt and git diff --check passed. Focused Rust regression added but not executed; prior public-upload denial remains in force and no push attempted."
+                ],
+                "proof_refs": [
+                  "docs-static-parity",
+                  "docs-runtime-regression"
+                ],
+                "scope": [
+                  "PR 1500 reconciliation"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -632,12 +675,16 @@
       },
       "declared_commands": [],
       "evidence": [
+        "Canonical handoff body equals existing tracked documentation byte-for-byte; generator emits it between governance and explicit claim scopes. Rustfmt and git diff --check passed. Focused Rust regression added but not executed; prior public-upload denial remains in force and no push attempted.",
         "Compared all 119 discovered inventory entries to pre-release accepted 0a900ba3: only Cargo.toml and Cargo.lock version 0.123.6 to 0.123.7 changed; measured digest 5dbe4d4d4b8031aaf334ccf4498f9437995c4a8354d6e83ea881e747d555e4d4. Existing proof settings unchanged.",
         "Original control-plane state unavailable after environment replacement. Distinct reconciliation task owns this workspace; no claim of recovered old custody. Public PR head and exact first-parent journal preserved; accepted master remains ordered second parent."
       ],
       "inspected_files": [],
       "intent_id": "intent:reconcile-1500-v1237",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/core/docs_cli.rs",
+        "tests/trajectory_docs.rs"
+      ],
       "repo_scope": [
         "PR 1500 reconciliation"
       ],

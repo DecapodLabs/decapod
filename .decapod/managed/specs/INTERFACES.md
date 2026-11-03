@@ -764,7 +764,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6e409a4a2758ac6b845f6c58516136327907ced399db0ef4bc93cf4d2b8a2061`
+- Repository signal fingerprint: `93a53d007a413063a050f41e06cc6c4321db6cac2a9b593ecd0ef7a8cf0474d0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1064,3 +1064,14 @@ dependency, lease, shared-claim trust or approval gates and do not establish
 verified isolated-worktree custody. Tests cover disjoint/intersecting/parent paths,
 malformed declarations, unchanged shared-claim trust and journaled scopes;
 source declarations are not a claim that tests have run.
+
+## Regenerated handoff guidance
+
+`docs_cli::todo_handoff_contract` is the canonical generator body for the existing
+agent-only caller and ownership recovery contract. `build_docs` emits it between
+governance artifacts and explicit claim scopes, preventing Docs Sync from deleting
+the tracked handoff section. The focused `trajectory_docs` regression regenerates
+command contracts and checks exact inclusion, single emission, required approval
+and unchanged trust boundaries. This repair changes documentation generation, not
+handoff authorization or task custody. Its runtime regression still requires
+execution through the configured validation workflow.
