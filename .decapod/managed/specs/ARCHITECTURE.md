@@ -625,7 +625,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c2f8a58e12fe4a532d748113dd75ac677e34e226358f2ff2d29863c59f1e03df`
+- Repository signal fingerprint: `b542a530203aa76d5bd8cd7fecf03f26d2de5343ba58594fb2d31642112f7fa6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -830,7 +830,9 @@ There is no new config trust mapping, elevation API, trust-row mutation or human
 CLI requirement. Existing caller names and local approvals remain cooperative
 assertions, not authenticated principals or independent proof of human consent.
 
-`fleet_coord::declared_paths` recognizes bounded literal JSON file-set scopes.
+`fleet_coord::declared_paths` recognizes bounded ASCII literal JSON file-set scopes.
+Explicit footprint matching conservatively folds ASCII case on every platform;
+Unicode scopes are rejected rather than assuming filesystem alias semantics.
 `todo::add_task` rejects traversal/symlink scopes and avoids fuzzy consolidation
 of explicitly scoped tasks. Claim/handoff overlap checks, fleet diagnostics and
 `work_claim::from_todo_with_lease` use the same footprints. Legacy/invalid scopes

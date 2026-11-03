@@ -408,3 +408,57 @@ fn explicit_paths_preserve_other_claim_gates_and_reject_aliases() {
         vec!["a", "b"]
     );
 }
+
+#[test]
+fn explicit_paths_fail_closed_on_case_and_unicode_aliases() {
+    let active = vec![claim(
+        "a",
+        "alice",
+        r#"paths:["src/Name.rs"]"#,
+        "",
+        "/repo",
+        Some("300Z"),
+    )];
+    assert!(
+        !detect_overlaps(
+            "b",
+            "bob",
+            r#"paths:["src/name.rs"]"#,
+            "",
+            "/repo",
+            &active,
+            "200Z"
+        )
+        .is_empty()
+    );
+    let mut fleet = active;
+    fleet.push(claim(
+        "b",
+        "bob",
+        r#"paths:["src/NAME.rs"]"#,
+        "",
+        "/repo",
+        Some("300Z"),
+    ));
+    assert!(!detect_fleet_overlaps(&fleet, "200Z").is_empty());
+    for scope in [r#"paths:["src/café.rs"]"#, "paths:[\"src/cafe\u{301}.rs\"]"] {
+        assert!(declared_paths(scope).is_err());
+        assert_eq!(claim_paths(scope, "/repo"), vec!["/repo"]);
+    }
+}
+
+#[test]
+fn file_scope_restrictions_do_not_change_legacy_paths() {
+    assert_eq!(declared_paths("café").unwrap(), None);
+    assert_eq!(claim_paths("café", "/repo/café"), vec!["/repo/café"]);
+    assert!(!paths_overlap("/repo/Name.rs", "/repo/name.rs"));
+    let active = vec![claim(
+        "a",
+        "alice",
+        "root",
+        "",
+        "/repo/Name.rs",
+        Some("300Z"),
+    )];
+    assert!(detect_overlaps("b", "bob", "root", "", "/repo/name.rs", &active, "200Z").is_empty());
+}

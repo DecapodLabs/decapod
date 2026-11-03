@@ -349,13 +349,19 @@ Agents can create a todo with `--scope 'paths:["src/a.rs","tests/a.rs"]'`
 and `--dir <repository-directory>`. This declares the intended literal file or
 directory footprint; it is coordination metadata, not proof of actual edits or
 an OS write sandbox. The existing task journal and transfer carry the scope.
-Use 1–256 bounded relative paths; traversal, absolute paths, glob syntax and
+Use 1–256 bounded ASCII relative paths; traversal, absolute paths, glob syntax and
 existing symlink traversal are rejected. Disjoint explicit footprints avoid the
 old repository-root path conflict. Equal paths and parent/child paths conflict.
+Explicit footprint comparison conservatively folds ASCII case on every platform
+to prevent case-only aliases on case-insensitive filesystems. Unicode paths are
+unsupported; retain a conservative directory claim instead. Case-only distinct
+Linux files may therefore serialize rather than risk an alias collision.
 A legacy or malformed scope retains conservative directory exclusion. Existing
 broad claims must be resolved rather than silently narrowed by another caller.
 Category/dependency/lease/approval gates remain independent and unchanged.
 File scopes do not create verified isolated-worktree custody or waive shared
 resource exclusion. Work-claim projections and fleet overlap diagnostics use
 the same footprint. Different explicit scopes are not fuzzy-merged as duplicate
-todos even when their titles are similar.
+todos even when their titles are similar. This is not a trust-grant API: shared
+claims retain their existing verified-trust requirement. Humans provide intent
+through the agent; the only human-executed Decapod command remains init.
