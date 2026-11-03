@@ -196,3 +196,6 @@ mod init_config_behavior;
 // the two real-process suites within their unchanged 300-second budgets.
 #[path = "support/cli_workunit_recovery.rs"]
 mod workunit_recovery;
+
+#[path = "support/documented_bootstrap.rs"]
+mod documented_bootstrap;

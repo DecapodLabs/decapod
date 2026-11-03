@@ -1,5 +1,25 @@
 # Validation
 
+## Documented agent bootstrap execution
+
+The required `cli_contracts` suite includes
+`tests/support/documented_bootstrap.rs`, which interprets the generated
+`AGENTS.md` initialization commands through real CLI subprocesses. Human
+provisioning creates a committed local-backend project with container workspaces
+disabled; installation, remote backends and Docker execution are outside this
+fixture's scope. The agent acquires its own session, initializes context, creates
+and claims a task, creates a governed workspace, enters the returned path, and
+orients before any implementation file is written.
+
+The fixture removes inherited Decapod and Git environment overrides and CI mode
+flags rather than setting Git-gate bypasses. Orientation must fail with the
+worktree-specific diagnostic from the main checkout both before and after
+workspace creation. Successful orientation must retain the created task's intent
+and governed-plan binding in the actual worktree. Implementation then changes
+only that worktree, with the main checkout's HEAD and tracked work unchanged.
+This runtime regression complements the four-entrypoint text-order checks in
+`src/decapod/core/assets.rs`; neither substitutes for exact-candidate validation.
+
 ## Native readiness receipt custody
 
 Decapod remains the proof-gated governor of accepted work, not a receipt-import
@@ -852,8 +872,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
+- Repository signal fingerprint: `8f7c834ac613255bdb770e0bbdf66b4b2c434e06ae5829c26b515e074dace65e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
