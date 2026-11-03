@@ -621,6 +621,15 @@
       "id": "final-bazel-source-spec-reviews",
       "summary": "Current-content reviews for all3 required publication specs after generated projections; preserve first full-validation GET timeout and actualCI formatter/strict-lock failures as failed evidence",
       "input_digest": "sha256:104fb2f494a7bcd65bc06659537f63704b5c35cfe824373a3d2f6e832c058c0c"
+    },
+    {
+      "id": "issue1474-target-01220",
+      "summary": "Merge accepted master8868a1ec as second parent, preserve first-parent journal with exact-byte custody, retain upstream recovery and source inventory plus atomic native receipts; reconcile release-only Cargo inventory, then regenerate official0.122.0 entrypoints and specs after final config. Independent source review passed; CI and native proof remain pending.",
+      "input_digest": "sha256:a892f2889c66a80032aa4c68e552077fb5a8a24acfb63a8a04c1e209ce1db337",
+      "proof_refs": [
+        "/tmp/1474-01220-inventory-review.diff",
+        "/workspace/shared/issue1474-01220-conflict-custody.json"
+      ]
     }
   ],
   "intents": {
@@ -666,22 +675,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed unchanged native atomic completion architecture against CI-formatted run/write_native_completion. Formatting is semantic-neutral; generated MODULE lock reflects existing pinned dependency generator rather than new architecture. Full proof remains required.",
-          "reviewed_code_fingerprint": "9f1faffa0307c5b124acf2bfc6a5517c578017d3dc00edbd51529dc123fe784f",
-          "spec_material_hash": "ab03a7602c5b9a31bf8593d5544a682cf2687da47a1f92778fb0fe12f8e69310"
+          "reason": "Reviewed merged target8868a1ec with issue1474: upstream exact path inventory and non-reopening recovery remain intact; native verdict and receipt atomic completion remain exact first-parent source. Full proof authority unchanged. Cargo release-only version drift reviewed before config digest and generated projection refresh with official0.122.0.",
+          "reviewed_code_fingerprint": "4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d",
+          "spec_material_hash": "c020c6b914efacf1408cd5a069c649bf9987f4acdcf792211d147591785bdab9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed actual completion/verdict.json and completion/native-readiness-receipt.json success pair, unchanged remote/nonready paths and schema digests against formatted source/tests. No artifact import or new API introduced by Tokio/Bazel metadata repair.",
-          "reviewed_code_fingerprint": "9f1faffa0307c5b124acf2bfc6a5517c578017d3dc00edbd51529dc123fe784f",
-          "spec_material_hash": "2173c5d00c369fd9fe3c48b303700f8064e035fbe67b269ef2520eebd71a6325"
+          "reason": "Reviewed merged target8868a1ec with issue1474: upstream exact path inventory and non-reopening recovery remain intact; native verdict and receipt atomic completion remain exact first-parent source. Full proof authority unchanged. Cargo release-only version drift reviewed before config digest and generated projection refresh with official0.122.0.",
+          "reviewed_code_fingerprint": "4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d",
+          "spec_material_hash": "9d098e129b4e66cd3afbf9a27cbde682f16338cd442e739301d789662ea4737f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed exact shared pinnedBazel9.3.0 generation provenance and independent byte equality under five permitted Tokio substitutions; normal systemJDK21 TLS unchanged. Cargo advisory repair and atomic native receipt trust boundaries accurately documented. No source or dependency-check failures waived.",
-          "reviewed_code_fingerprint": "9f1faffa0307c5b124acf2bfc6a5517c578017d3dc00edbd51529dc123fe784f",
+          "reason": "Reviewed merged target8868a1ec with issue1474: upstream exact path inventory and non-reopening recovery remain intact; native verdict and receipt atomic completion remain exact first-parent source. Full proof authority unchanged. Cargo release-only version drift reviewed before config digest and generated projection refresh with official0.122.0.",
+          "reviewed_code_fingerprint": "4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d",
           "spec_material_hash": "0eedf1f61b256408417dc024ba6cc0c9c50b0b87027fa7714138539d1cdd6677"
         }
       ],
@@ -693,7 +702,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793660257Z"
+      "updated_at": "1793672847Z"
     },
     "trajectory": {
       "active_boundaries": [

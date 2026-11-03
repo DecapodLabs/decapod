@@ -6191,7 +6191,7 @@ fn validate_plan_governed_execution_gate(
     if !unverified.is_empty() {
         fail(
             &format!(
-                "PROOF_HOOK_FAILED: {} done TODO(s) are CLAIMED but not VERIFIED: {}. Run `decapod qa verify` or `decapod qa verify todo <id>` to replay verification proofs and unblock.",
+                "PROOF_HOOK_FAILED: {} done TODO(s) are CLAIMED but not VERIFIED: {}. Agent: replay existing proof with `decapod qa verify` or `decapod qa verify todo <id>`. For stale or missing batch evidence, run `decapod qa verify recover`; if it requests current files, repeat `--artifact TODO_ID=FILE` using each reported task ID and an explicitly selected relevant current file. Recovery preserves completion history and still requires actual passing checks; do not prune or reopen tasks to bypass proof.",
                 unverified.len(),
                 output::preview_messages(&unverified, 4, 80)
             ),

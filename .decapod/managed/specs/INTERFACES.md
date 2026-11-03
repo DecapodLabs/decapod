@@ -219,6 +219,57 @@ unknown Decapod-namespaced directives invalidate the whole overlay. Empty
 retired generated directives remain upgrade-compatible. Partial application
 must not conceal ambiguous authority.
 
+## Current-evidence recovery for historical completion claims
+
+`plugins::verify::VerifyCommand::Recover` accepts repeated `--artifact TODO_ID=FILE`
+inputs when an unverified completed task lacks a usable file baseline. Inputs
+must name tasks in the recovery batch and readable current files; no implicit
+AGENTS.md substitute or historical CI receipt is imported by this batch path.
+`prepare_recovery_captures` collects file hashes and the active validation epoch
+before validation, rejecting missing per-task inputs and additional proof
+obligations that cannot be established by the validation-only capture contract.
+
+`refresh_batch_baselines_with_captures` requires a genuinely passing current
+snapshot, checks the original task and proof projection under the write
+transaction, and rechecks captured file bytes and epoch before inserting pending
+proof. It preserves completed task status, timestamp and revision, and records
+previous proof fields plus the explicit fresh-current-material provenance in the
+append-only recovery event. `finalize_recovered_batch` remains the sole batch
+promotion boundary after final validation and every task's artifact checks.
+A pending or failed capture is not verified completion; a newer task, baseline,
+file or epoch invalidates the attempt. Existing proof plans containing additional
+obligations are not downgraded by supplying new files.
+
+The required regression surface in `tests/unit/plugins/verify_completion_tests.rs`
+includes multiple completed tasks without proof rows, missing/foreign artifact
+inputs, extra proof obligations, failed snapshots, changed files, concurrent task
+revision changes, pending final failure, retained completion history and atomic
+successful promotion. These are authored tests until exact-candidate validation
+executes them; source review alone is not passing proof.
+
+The candidate-binary regression in `tests/verify_deadlock_regression.rs` also
+invokes the real recovery CLI for two completed tasks lacking proof rows. With
+explicit current artifacts, an independently unapproved plan still fails actual
+child validation; recovery must preserve task status, completion timestamp and
+revision without creating evidence or pruning either task. This failure-path
+coverage does not establish successful full-native CLI recovery or publication
+readiness. The Tokio lock repair changes only the runtime package version and
+checksum, not this interface or its evidence-admission obligations.
+
+Recovery guidance is an agent/harness error contract, not a human command
+checklist. Epoch drift and aggregate missing-proof errors direct the agent to
+non-reopening batch recovery with explicitly selected task-bound current files.
+A failed scoped child validation emits `VALIDATION_CHILD_FAILED` with only a
+fixed allowlist of blocker labels from at most 1 MiB per output stream, including
+`NEEDS_PLAN_APPROVAL`; this retains the actual unrelated blocker even when a
+separate ordinary validation encounters aggregate missing proof first.
+Unknown failures provide the supported `decapod validate --format json`
+diagnostic and original-command retry route. Raw child messages, paths, URLs,
+environment values and credentials are never forwarded by this diagnostic.
+Labels are diagnostic observations, never acceptance or proof. Initial/final
+recovery failures preserve historical/unverified or pending states respectively.
+Humans may initialize Decapod; execution and recovery instructions target agents.
+
 ## Sessions, tasks, and workspaces
 
 Most mutations require an active repository-local session. Local session
@@ -672,7 +723,7 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9f1faffa0307c5b124acf2bfc6a5517c578017d3dc00edbd51529dc123fe784f`
+- Repository signal fingerprint: `4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

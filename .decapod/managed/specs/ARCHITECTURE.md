@@ -18,6 +18,27 @@ structured RPC. It connects human intent, project authority, coordinated
 execution, and evidence in repository-owned state. Each invocation is finite;
 the repository carries the work between invocations.
 
+Source adoption inventory in `src/decapod/core/init_reconciliation/mod.rs` binds
+actual directory-entry paths, rather than successful filesystem probe spellings.
+The `source_entry_path` resolver checks source components and the existing
+reviewed symlink policy first, then resolves each existing discovery root to its
+exact entry spelling before `Discovery::visit` hashes it. This keeps a single
+`Justfile` from producing a phantom `justfile` on case-insensitive filesystems;
+distinct entries on case-sensitive filesystems remain separate even when their
+contents or underlying inode are identical. Discovery still includes untracked
+files and works before Git initialization, so a Git-only listing cannot hide new
+build inputs. Snapshot binding remains exact and does not forgive case-only
+working-tree drift from the tracked candidate.
+
+Spelling resolution reads at most 8,192 entries per containing directory and
+rejects ambiguous or unresolved aliases, while the existing source entry,
+depth, per-file and total-byte bounds remain in force. Failure returns an
+incomplete-discovery blocker rather than a partial accepted inventory. Tests in
+`init_reconciliation/tests.rs` cover both Justfile spellings without Git,
+same-content and hardlinked distinct names, nested spelling resolution and the
+lookup bound; their filesystem-sensitive branches exercise the host's actual
+case behavior and do not claim emulated APFS or Windows execution on Linux.
+
 `snapshot_provider::public_buildkite::CurlPublicReader` retains its typed,
 anonymous GET authorization and bounded redirect loop. Artifact redirects admit
 the exact documented `https://buildkiteartifacts.com/` origin and legacy owned
@@ -578,7 +599,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9f1faffa0307c5b124acf2bfc6a5517c578017d3dc00edbd51529dc123fe784f`
+- Repository signal fingerprint: `4e6cdce10b744e0d2650f6b00c041de38d38ae13d02573ae33ce0704385ef59d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

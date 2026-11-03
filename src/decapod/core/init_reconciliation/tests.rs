@@ -203,6 +203,118 @@ fn source_inventory_is_deterministic_and_excludes_its_own_declaration() {
 }
 
 #[test]
+fn justfile_inventory_uses_only_the_existing_spelling_without_git() {
+    for name in ["Justfile", "justfile"] {
+        let root = tempdir().unwrap();
+        write(root.path(), name, "check:\n    true\n");
+        let inventory = discover_source_inventory(root.path()).unwrap();
+        assert_eq!(inventory.files.len(), 1, "{name}: {:?}", inventory.files);
+        assert_eq!(
+            inventory
+                .files
+                .keys()
+                .map(String::as_str)
+                .collect::<Vec<_>>(),
+            vec![name]
+        );
+        assert_eq!(
+            inventory.files[name],
+            format!("sha256:{:x}", Sha256::digest(b"check:\n    true\n"))
+        );
+        // Adoption inventory must also see files before Git initialization or
+        // staging; Git-only discovery would incorrectly return an empty map.
+        assert!(!root.path().join(".git").exists());
+        let report = inspect(root.path(), &ProjectProofConfig::default(), None);
+        assert!(!report.merge_ready);
+        assert_eq!(report.proof_status, "not_run");
+    }
+}
+
+#[test]
+fn distinct_justfile_spellings_remain_distinct_even_with_identical_content() {
+    use std::io::Write;
+
+    let root = tempdir().unwrap();
+    write(root.path(), "Justfile", "same bytes\n");
+    match fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(root.path().join("justfile"))
+    {
+        Ok(mut file) => {
+            file.write_all(b"same bytes\n").unwrap();
+            let inventory = discover_source_inventory(root.path()).unwrap();
+            assert_eq!(inventory.files.len(), 2);
+            assert_eq!(inventory.files["Justfile"], inventory.files["justfile"]);
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+            // On case-insensitive APFS/NTFS, both probes resolve to the first
+            // entry; do not overwrite it to manufacture a two-file fixture.
+            let inventory = discover_source_inventory(root.path()).unwrap();
+            assert_eq!(inventory.files.len(), 1);
+            assert!(inventory.files.contains_key("Justfile"));
+            assert!(!inventory.files.contains_key("justfile"));
+        }
+        Err(error) => panic!("cannot create distinct-name fixture: {error}"),
+    }
+}
+
+#[test]
+fn source_spelling_resolution_uses_exact_directory_entries() {
+    let root = tempdir().unwrap();
+    write(root.path(), "scripts/Check.sh", "actual source\n");
+    assert_eq!(
+        source_entry_path(root.path(), "scripts/Check.sh").unwrap(),
+        Some("scripts/Check.sh".into())
+    );
+    let alias = "SCRIPTS/check.sh";
+    let expected = root
+        .path()
+        .join(alias)
+        .exists()
+        .then(|| "scripts/Check.sh".to_owned());
+    assert_eq!(source_entry_path(root.path(), alias).unwrap(), expected);
+    assert_eq!(source_entry_path(root.path(), "missing").unwrap(), None);
+    assert!(source_entry_path(root.path(), "../scripts/Check.sh").is_err());
+}
+
+#[cfg(unix)]
+#[test]
+fn distinct_hardlinked_source_names_are_not_collapsed_by_inode() {
+    let root = tempdir().unwrap();
+    write(root.path(), "Justfile", "shared inode\n");
+    match fs::hard_link(root.path().join("Justfile"), root.path().join("justfile")) {
+        Ok(()) => {
+            let inventory = discover_source_inventory(root.path()).unwrap();
+            assert_eq!(inventory.files.len(), 2);
+            assert_eq!(inventory.files["Justfile"], inventory.files["justfile"]);
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
+            assert_eq!(
+                discover_source_inventory(root.path()).unwrap().files.len(),
+                1
+            );
+        }
+        Err(error) => panic!("cannot create hardlink fixture: {error}"),
+    }
+}
+
+#[test]
+fn source_spelling_lookup_fails_closed_at_its_directory_bound() {
+    let root = tempdir().unwrap();
+    write(root.path(), "Justfile", "check:\n    true\n");
+    for index in 0..MAX_NAME_LOOKUP_ENTRIES {
+        fs::File::create(root.path().join(format!("unrelated-{index}"))).unwrap();
+    }
+    let error = discover_source_inventory(root.path()).unwrap_err();
+    assert!(error.to_string().contains("source spelling lookup"));
+    let report = inspect(root.path(), &ProjectProofConfig::default(), None);
+    assert!(has(&report, "DISCOVERY_BLOCKED"));
+    assert!(report.discovered_sources.is_empty());
+    assert!(!report.merge_ready);
+}
+
+#[test]
 fn provider_selection_does_not_weaken_reconciliation_obligations() {
     let root = tempdir().unwrap();
     write(root.path(), "Cargo.toml", "[package]\nname='service'\n");
