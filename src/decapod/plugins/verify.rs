@@ -350,7 +350,7 @@ fn safe_validation_failure_diagnostic(stdout: &[u8], stderr: &[u8]) -> String {
         "VALIDATION_CHILD_FAILED: no recognized safe blocker label; run `decapod validate --format json` for the current structured diagnostic, repair its blockers, then retry the original verification command. No child output was forwarded.".into()
     } else {
         format!(
-            "VALIDATION_CHILD_FAILED: scoped validation reported {}; run `decapod validate --format json` for current diagnostic detail, repair these blockers, then retry the original verification command. These labels are diagnostics, not proof; no child output was forwarded.",
+            "VALIDATION_CHILD_FAILED: recognized labels observed in scoped validation output: {}; run `decapod validate --format json` and inspect the current structured diagnostic to identify actual blockers, repair them, then retry the original verification command. Observed labels are not independently established causes or proof; no child output was forwarded.",
             found.join(", ")
         )
     }

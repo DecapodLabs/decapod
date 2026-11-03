@@ -574,6 +574,11 @@
       "id": "error-contract-spec-reviews",
       "summary": "Refresh generated projections and actual current semantic reviews; authored regressions unexecuted pending official CI",
       "input_digest": "sha256:007a0185f1021c0d1a957ea6d523926c845b4f52cebb10535aa2db8ecd02f84c"
+    },
+    {
+      "id": "diagnostic-observation-precision",
+      "summary": "Independent review: label substrings can appear in historical output; explicitly distinguish observed markers from established causal blockers or proof",
+      "input_digest": "sha256:684798442979a8bba30d1b8ee7d0c6739e2501cf94505cb31cf113ee2202e8c4"
     }
   ],
   "intents": {
