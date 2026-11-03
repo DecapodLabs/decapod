@@ -480,6 +480,11 @@
       "id": "reviewed-socket-inventory",
       "summary": "Record independently reviewed exact source inventory without changing any required profile or accepted authority",
       "input_digest": "sha256:00f4eb7a3d4c533bbb72f15da5f699b94933655107b2e91b1457320781e9a597"
+    },
+    {
+      "id": "reconcile-v01235",
+      "summary": "Reconcile accepted v0.123.5 with exact caller socket candidate, preserve first-parent custody, refresh reviewed inventory and generated specs",
+      "input_digest": "sha256:0be7ea94839169998f31748a02960943ef797b20873549672065f79deafe784a"
     }
   ],
   "intents": {
@@ -533,7 +538,7 @@
         "Current claimed task and isolated work branch",
         "No runtime identity, authorization, proof-policy weakening, merge or release"
       ],
-      "artifact_hash": "sha256:ac795a2cd5d0776e5bf56286ea3dfcaf00ce2bbfe871022f6110e61e5f233755",
+      "artifact_hash": "sha256:27c1be24718f05ff0bd1c8f89d279778d1bf8d6d8054e9649798df1eb63847d0",
       "checks": [
         {
           "name": "full_validation",
@@ -586,10 +591,17 @@
             "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9YWNKFC66JMBTMHWVQ782": {
@@ -675,12 +687,33 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "command": "GitHub object API, mapped git fetch, git merge, official v0.123.5 specs.refresh",
+                "custody_event_id": "event:8",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Published verified exact tree/message/ordered-parent API mapping, head c359ff17, in regular PR 1503 as explicitly requested; no socket test execution claimed. Earlier interrupted create_commit may remain an unreachable immutable object; no branch/ref was created by that operation.",
+                  "Merged accepted master 43d5ecda; inspected source-inventory delta from prior accepted b4a1374b: only Cargo version/lock changes to 0.123.5. Existing additive caller socket CI recipe remains only candidate inventory change. Official controller measured a16bd218 inventory; strict profile, carrier, provider and accepted authority unchanged.",
+                  "Retained first-parent governance journal through merge and used official specs.refresh for generated conflict regions while retaining accepted and candidate authored prose."
+                ],
+                "proof_refs": [
+                  "named_socket_acceptance"
+                ],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "GitHub object API, mapped git fetch, git merge, official v0.123.5 specs.refresh",
         "git branch -m agent/issue1476-caller-proof/bugs_01m6g9y7htjdyp30-socket-acceptance",
         "git merge --no-commit --no-ff origin/master",
         "official v0.123.4 docs ingest, agent.init, workspace ensure, specs.refresh",
@@ -691,7 +724,10 @@
         "Corrected inventory review declaration from accepted-worktree b2dad13c to measured f5cae6d0 after independently reviewed Cargo release metadata and additive recipe delta; previous edit did not execute because initial source-root pin differed from worktree accepted pin.",
         "Generated branch had extraneous todo_01m6g9 parsed as a second task; renamed governed worktree branch retaining actual task. Next validation requires inventory reconciliation; accepted target advanced to release v0.123.4.",
         "Issue 1476 latest comment requires named post-probe evidence rather than suite-only success",
+        "Merged accepted master 43d5ecda; inspected source-inventory delta from prior accepted b4a1374b: only Cargo version/lock changes to 0.123.5. Existing additive caller socket CI recipe remains only candidate inventory change. Official controller measured a16bd218 inventory; strict profile, carrier, provider and accepted authority unchanged.",
         "Official govern proof list resolves shared source-root config, not worktree config; no proof run or root mutation attempted. New recipe uses accepted-base executor and first-PR acceptance remains unproven.",
+        "Published verified exact tree/message/ordered-parent API mapping, head c359ff17, in regular PR 1503 as explicitly requested; no socket test execution claimed. Earlier interrupted create_commit may remain an unreachable immutable object; no branch/ref was created by that operation.",
+        "Retained first-parent governance journal through merge and used official specs.refresh for generated conflict regions while retaining accepted and candidate authored prose.",
         "Reviewed complete inventory delta from f89a9fa8: accepted release changes Cargo version/lock to 0.123.4; candidate only adds mandatory named caller socket command to Linux daemonless recipe. No existing check removed, no workflow/carrier/trust change."
       ],
       "inspected_files": [
