@@ -409,10 +409,6 @@ pub(crate) struct InitWithCli {
     /// Preserve the reviewed repository-local contract without approving its digest.
     #[clap(skip)]
     pub existing_repository_contract: Option<crate::core::repository_profile::RepositoryContract>,
-    /// Preserve dormant Dagger proposals without granting or activating authority.
-    #[clap(skip)]
-    pub existing_dagger_authorizations:
-        std::collections::BTreeMap<String, crate::core::repository_profile::RepositoryExecution>,
     #[clap(skip)]
     pub existing_rust_workers: Option<crate::core::validation_runtime::rust_worker::Configuration>,
     #[clap(skip)]

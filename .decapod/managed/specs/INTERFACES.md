@@ -764,8 +764,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `93a53d007a413063a050f41e06cc6c4321db6cac2a9b593ecd0ef7a8cf0474d0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
+- Repository signal fingerprint: `51dfca970f10238f1cb75b796712d2307f5339fd5fd641ef229d31037eef2410`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -908,53 +908,16 @@ pass/skip disposition. A valid immutable release emits
 a local early exit instead identifies its explicit skipped reason. Required
 CI context errors remain failures, never these local skip dispositions.
 
-## Optional local Dagger proof boundary
+## External engine tooling boundary
 
-`core::repository_profile::DaggerExecution` extends only the reviewed repository
-local proof contract. `repository_host::command_invocation` binds `dagger check`
-via the explicit `dagger-1.0-workspace-check.v1` argv contract to inventoried
-root workspace/module/lock sources inside the exact immutable native snapshot,
-measured Dagger/Docker installations, and an explicitly accepted full engine
-container ID, image configuration digest and local Unix Docker socket.
-`ProofConfiguration::dagger_authorizations` stages a typed dormant execution
-proposal under the unchanged existing proof path. After independent target
-acceptance, `preserve_accepted_dagger` permits only the exact matching execution
-from that accepted map, rejecting candidate self-authorization, changed engines
-and revoked authority. Dormant declarations themselves do not activate execution
-or grant external access. Rotation and revocation use the same reviewed two-stage
-boundary while complete source/command coverage remains enforced. Separate
-`dagger_proof_exec` and `dagger_engine_read` capabilities default to denied;
-Buildkite-required profiles and final Decapod readiness authority are unchanged.
-`repository_host::dagger::inspect_engines` checks running identity before/after
-bounded execution and retains observations, rejecting missing/changed engines.
-The local Docker service and existing engine are trusted executors, not an
-immutable-runtime attestation: writable engine state, module semantic coverage
-and transitive input pins remain reviewed assumptions. No engine lifecycle,
-installation, hosted GitHub status import or Dagger Cloud support is introduced.
-Tests in these modules exercise fixture-level contracts; live engine proof is a
-separate qualification and is not established by fixture success. See
-`docs/agent/config-schema.md` for configuration and adoption constraints.
-
-### Agent-owned Dagger recovery output
-
-`validation_runtime::ValidationReport::finish` retains Dagger failure causes and
-selects bounded recovery through the existing structured `ValidationGuidance`
-fields: agent owner, `decapod validate` entry command, next action, instruction,
-and conversational human-input boundary. `for_dagger_failure` distinguishes
-accepted-authorization reconciliation, contract repair, and restoration of the
-exact authorized local prerequisites. The policy error identifies the named
-execution and accepted dormant-authorization configuration paths. Socket, tool
-and inspection I/O errors retain their original cause/kind plus Dagger context.
-
-These instructions are emitted to the agent/harness, not delegated as user CLI
-work. Human decisions and missing access are requested conversationally; the
-agent remains the Decapod operator after user initialization. Recovery never
-grants engine lifecycle access, repins policy, drops checks, accepts a candidate's
-own proposal, or changes a failed verdict to ready. Intentional rotation still
-requires independently accepted dormant authority before activation. Restored
-prerequisites require fresh complete validation, not reuse of failed evidence.
-Fixture tests cover guidance fields, cause retention and rejection; actual
-Dagger engine execution remains unqualified.
+The former Dagger-specific core execution interface is removed. Configuration
+containing `proof.dagger_authorizations` or `repository_contract.executions.*.dagger`
+fails closed through strict parsing. The agent must reconcile the retired
+configuration without deleting required coverage or weakening proof gates.
+Direct Dagger commands do not qualify as repository-local checks. Dagger can
+remain in agent skills or project CI outside Decapod; there is no generic import
+of arbitrary CI check results. Generic native receipts, prerequisites, accepted
+source authority, and required Buildkite evidence retain their existing contracts.
 
 ## Handoff caller and recovery contract
 
@@ -1033,8 +996,8 @@ I/O classification and diagnostic broken-pipe behavior.
 The v0.123.1 accepted broker carries each request's established caller and working
 directory into its subprocess. Handoff reads that request identity independently
 of expected owner and receiver; merging the broker fix does not promote caller
-trust or remove exact recovery approval. Accepted Dagger/native-proof interfaces
-and their agent-directed recovery remain intact alongside this handoff contract.
+trust or remove exact recovery approval. Native-proof interfaces and their agent-directed recovery remain intact
+alongside this handoff contract.
 The earlier fixture-repair candidate `67b166d9` passed both push and PR GitHub
 plugin suites; this integrated candidate still requires fresh complete proof.
 

@@ -49,83 +49,6 @@ proof reports `scope = "repository_local_readiness"`; it makes no hosted-CI or
 release assurance claim. A provider job that itself invokes `decapod validate`
 still runs CI-local prerequisites, never recursively proves full publication.
 
-### Optional pre-provisioned local Dagger engine
-
-The repository-local profile has one explicit external-engine exception: a
-reviewed `dagger check` invocation. It does **not** satisfy Buildkite-required
-profiles or import GitHub check statuses. Add an optional `dagger` table beneath
-the corresponding `proof.repository_contract.executions.<name>`:
-
-```toml
-[proof.repository_contract.executions.dagger-check.dagger]
-cli_contract = "dagger-1.0-workspace-check.v1"
-engine_container = "<full 64 lowercase hex Docker container ID>"
-engine_image = "sha256:<64 lowercase hex Docker image configuration ID>"
-docker_socket = "/run/docker.sock"
-```
-
-This is illustrative, not a runnable identity. The execution program must be the
-canonical installed `dagger` binary, its command arguments exactly `["check"]`,
-and its working directory `.`. Declare the canonical `docker` executable under
-`toolchain_files.dagger-docker` and a dedicated reviewed PATH resolving that exact
-file. Both tools and the declared runtime closure are measured normally. The
-workspace root's `dagger.toml` and `dagger.lock` must be inventoried alongside all module,
-workflow and helper sources; `.dagger` is included in source discovery. Review
-module coverage and dependency pins: the adapter does not infer their semantic
-completeness from a lockfile's presence.
-
-Activation is a two-step reviewed transition. First, propose the complete future
-execution table under `proof.dagger_authorizations.<name>` (the same execution
-fields, including its nested `dagger` table), leaving the active profile, commands,
-coverage and execution contract unchanged. Validate and accept that proposal
-through the existing proof path. This dormant table executes nothing and grants
-no external access. In a subsequent candidate, add the required `dagger check`
-command and corresponding active `repository_contract.executions.<name>` table;
-the execution must exactly equal the accepted target's dormant authorization.
-Candidate-only authorizations never grant access. Review the complete coverage
-and command/source digests; existing required checks remain required unless an
-explicit reviewed contract change replaces them. Strict accepted profiles still
-cannot downgrade to repository-local proof.
-
-Engine/tool rotation follows the same sequence: accept a changed dormant entry
-while executing the old accepted contract, then activate the newly accepted entry.
-After that acceptance, the old engine no longer matches and fails closed until
-activation is updated. To revoke, remove active use and the dormant entry through
-an independently valid remaining proof contract; after acceptance, attempting to
-reactivate the revoked engine fails. An empty or incomplete proof catalog cannot
-substitute for the original checks during any transition.
-Explicit external-action policy must allow `dagger_proof_exec` for `dagger` and
-`dagger_engine_read` for `docker`, in addition to any repository-proof restrictions.
-Neither capability is enabled by default; initialization never grants them.
-
-The protocol explicitly targets Dagger 1.0 workspace/check syntax; other CLI
-protocols and legacy `dagger.json`/`--mod` invocations are unsupported. Select a
-reviewed compatible Dagger installation; its bytes are measured, not inferred
-from a version label. Decapod supplies fixed `--workspace . check` arguments, `DAGGER_ENGINE=container+docker://<id>`,
-the matching legacy runner URI and `DOCKER_HOST=unix://<socket>`; engine/context
-overrides in the declared environment reject. It executes against its immutable
-exact-candidate source snapshot, not the caller's checkout. Bounded Docker
-inspection before and after checks the full ID, image ID, running state and
-unchanged start time, rootfs mode and mount destinations, retaining observations
-in `dagger-engine-custody.json`. Missing or changed identity blocks proof. Normal
-native output, toolchain/source checks and exact accepted-target bindings remain
-mandatory; an engine observation alone is never successful check evidence.
-
-**Trust boundary:** the pre-provisioned local Docker service and engine are
-trusted executors, including their mutable filesystem, configuration and cache.
-The image ID identifies the configured base image; inspection is not runtime
-filesystem attestation. Writable engine rootfs is supported, as in Dagger's
-standard engine. The reviewed module must restrict work to the intended checks;
-Decapod does not sandbox engine network access or attest transitive remote inputs.
-No caller HOME/credentials are inherited. This adapter never provisions, starts,
-updates or stops an engine and does not install dependencies. Unavailable engines
-fail closed. Hosted GitHub/Dagger Cloud execution is not supported by this path.
-
-Connection semantics follow Dagger's [CLI engine reference](https://docs.dagger.io/reference/cli/)
-and [Docker container driver](https://github.com/dagger/dagger/blob/main/engine/client/drivers/container.go).
-Unit fixtures cover contract rejection, invocation binding and identity changes;
-they are not evidence that a live Dagger engine has executed successfully.
-
 For Nix projects, installing this profile is not evidence that daemon-backed
 builds, remote builders or deployment ran. A supported local contract can use
 preinstalled pinned formatters/test tools directly; unavailable build/deployment
@@ -377,3 +300,14 @@ ready controls; a third validly abstained and missed its expected-accept label.
 The original strict aggregate failed, and domain-level accuracy remains unestablished. See
 [the reference contract](../vega-reference-contract.md) for pins, unchanged
 tolerances, timings/memory scope, historical failures and current-candidate results.
+
+## External Dagger tooling
+
+Dagger engine integration is not part of Decapod core. Use agent skills or project
+CI to operate it outside Decapod. Retired `proof.dagger_authorizations` and
+`proof.repository_contract.executions.*.dagger` fields are rejected as retired or
+unknown configuration; reconcile them without discarding required coverage.
+Direct Dagger execution is not a repository-local proof command. External runs
+do not automatically become Decapod evidence: native receipt prerequisites and
+independently required Buildkite execution remain authoritative. No arbitrary
+CI-result import or engine lifecycle capability is provided.

@@ -430,8 +430,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `93a53d007a413063a050f41e06cc6c4321db6cac2a9b593ecd0ef7a8cf0474d0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
+- Repository signal fingerprint: `51dfca970f10238f1cb75b796712d2307f5339fd5fd641ef229d31037eef2410`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -484,31 +484,15 @@ permissions in a present policy and malformed policy fail closed. No policy
 file is rewritten as a repair, and generic callers cannot request the sealed
 capability without the reviewed contract and measured invocation.
 
-### Explicit Dagger executor exception
+### External engines remain outside local proof
 
-The optional `RepositoryDaggerCheck` capability is the bounded exception to
-local-only command assumptions above. `repository_profile::preserve_accepted_dagger`
-requires an exact execution declaration in the accepted target's dormant
-`dagger_authorizations`; writing candidate declarations does not grant authority.
-`external_action::authorize_repository_proof` additionally requires explicit
-`dagger_proof_exec`, and bounded engine inspection requires `dagger_engine_read`.
-Both are denied by default. Publishing implementation/configuration types is not
-permission to provision or access an engine, change external policy or activate
-any repository's dormant proposal.
-
-The declared local Docker service and existing Dagger engine are trusted
-executors, including writable runtime state and caches. Full container/image
-identity plus unchanged start time, rootfs mode and mount destinations are
-checked before/after execution; image inspection is not executable-filesystem
-attestation. Exact snapshot and measured tool/output custody still apply. The
-reviewed workspace owns semantic check coverage and remote dependency pins;
-the adapter does not sandbox engine network access or infer reproducibility.
-Fixed Dagger 1.0 workspace/check arguments, root configuration/lock inventory,
-cleared environment and a measured Docker PATH prevent ambient engine/context
-selection. Unsupported identities and candidate-only activation fail closed.
-No arbitrary GitHub green status, hosted assurance substitution, engine lifecycle
-operation or blanket external permission is introduced. Live engine integration
-has not been established by the authored fixture regressions.
+The native local-command boundary has no Dagger engine exception. Direct Dagger
+invocations are rejected; retired Dagger execution and authorization fields are
+unknown configuration errors, not silently ignored checks. This does not make
+the local runner an OS sandbox: reviewed commands remain subject to its existing
+external-access and non-daemon constraints. Agents own external engine tooling
+and its permissions separately; arbitrary external CI results are not imported
+as native proof. Buildkite custody and final readiness remain unchanged.
 
 The root Cargo lock remediation changes only Tokio 1.52.3 to 1.53.3 and its
 registry checksum. The derived Bazel lock must be regenerated under the pinned

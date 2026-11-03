@@ -183,7 +183,6 @@ impl Fixture {
             )]),
             directory: ".".into(),
             timeout_seconds: 10,
-            dagger: None,
         };
         let mut contract = RepositoryContract {
             reviewed_commands_digest: String::new(),
@@ -210,7 +209,6 @@ impl Fixture {
                 reviewed_sources_digest: sources.digest().unwrap(),
             }),
             repository_contract: Some(contract),
-            dagger_authorizations: BTreeMap::new(),
             rust_workers: None,
             ci_attested: None,
             commands,
@@ -775,4 +773,26 @@ fn configuration_change_after_successful_execution_invalidates_readiness() {
             ..
         }
     )));
+}
+
+#[test]
+fn retired_dagger_configuration_is_rejected_instead_of_dropping_checks() {
+    let authorization = toml::from_str::<ProjectProofConfig>(
+        "[dagger_authorizations.retired-check]\nprogram = '/opt/dagger'\n",
+    )
+    .unwrap_err();
+    assert!(authorization.to_string().contains("dagger_authorizations"));
+
+    let execution = toml::from_str::<RepositoryExecution>(
+        r#"
+program = "/opt/dagger"
+timeout_seconds = 30
+[toolchain_files]
+cli = "/opt/dagger"
+[dagger]
+cli_contract = "dagger-1.0-workspace-check.v1"
+"#,
+    )
+    .unwrap_err();
+    assert!(execution.to_string().contains("dagger"));
 }
