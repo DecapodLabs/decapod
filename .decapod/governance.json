@@ -671,6 +671,11 @@
       "id": "handoff-v1231-task-binding",
       "summary": "Bind preserved trajectory to currently claimed recovery task as required by publication-material verifier; no historical journal reset or claimed validation pass",
       "input_digest": "sha256:881618481d6619bf49aa2a7141e569dffff24bda0f9412f26f37b535f0a568cb"
+    },
+    {
+      "id": "handoff-v1231-architecture-review",
+      "summary": "Correct review disposition relative to accepted target: architecture prose unchanged, interfaces and security materially preserve handoff contract; no test pass claimed",
+      "input_digest": "sha256:cdb6baeb52b9ae4bb97ffca003a9f9afcb5278d70c247aedceba0d2750f995bf"
     }
   ],
   "intents": {
@@ -709,9 +714,9 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Retained accepted Dagger/native/broker architecture and reconciled handoff presentation/authority implementation; daemonless local-first agent-only usage intact",
+          "reason": "Accepted v0.123.1 architecture prose is retained unchanged; handoff caller/recovery changes fit existing broker/policy boundaries documented materially in INTERFACES and SECURITY, with no new service or authority subsystem",
           "reviewed_code_fingerprint": "ba730ee6761512edc91ae24ca59fa02d99b87dcbe1b5aef6c393cb28d06dd0af",
           "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
@@ -738,7 +743,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793688017Z"
+      "updated_at": "1793688073Z"
     },
     "trajectory": {
       "active_boundaries": [
