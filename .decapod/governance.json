@@ -549,6 +549,11 @@
       "id": "safe-scoped-child-blockers",
       "summary": "Return bounded fixed allowlisted blocker labels from actual scoped child validation; prevent aggregate deadlock from hiding unrelated blocker identity; never forward child-controlled text or paths",
       "input_digest": "sha256:1cd429f7b64bff303a716ab3a4330ab2fef953105f454924fd4053eab7726a78"
+    },
+    {
+      "id": "aggregate-recovery-instructions",
+      "summary": "Aggregate missing-proof error exposes agent-owned non-destructive recovery and explicit task-bound file selection while retaining actual required checks",
+      "input_digest": "sha256:7f4080b2e5eeb85dbd2022571fa31bb21ea44950f49ffb16da25035f3ef26e6a"
     }
   ],
   "intents": {
