@@ -204,11 +204,11 @@ fn epoch_secs(ts: &str) -> Option<i64> {
 fn validation_proof_reason(validate_ok: bool, hashes_match: bool, todo_id: &str) -> String {
     if !validate_ok && hashes_match {
         format!(
-            "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked. Next: fix the reported validation gate, then run `decapod qa verify todo {todo_id}`"
+            "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked. Agent: run `decapod validate --format json` to inspect the current blockers, fix the reported validation gate, then run `decapod qa verify todo {todo_id}`"
         )
     } else if !validate_ok {
         format!(
-            "decapod validate did not pass. Next: fix the reported validation gate, then run `decapod qa verify todo {todo_id}`"
+            "decapod validate did not pass. Agent: run `decapod validate --format json` to inspect the current blockers, fix the reported validation gate, then run `decapod qa verify todo {todo_id}`"
         )
     } else {
         format!(
@@ -223,7 +223,7 @@ fn validation_epoch_changed_reason(
     todo_id: &str,
 ) -> String {
     format!(
-        "validation epoch changed: captured {captured_epoch} but active {active_epoch}. To recover from an aggregate-proof deadlock, run `decapod qa verify prune {todo_id}`, obtain a passing `decapod validate` in the governed container workspace, run `decapod todo claim --id {todo_id}`, then run `decapod todo done --id {todo_id} --validated` there."
+        "validation epoch changed: captured {captured_epoch} but active {active_epoch}. Agent: review the material drift, then run `decapod qa verify recover` to revalidate the completed batch without reopening it. If current evidence is missing, supply `decapod qa verify recover --artifact {todo_id}=<current-file>` and repeat --artifact for each task requiring evidence. Recovery still requires actual passing validation; repair unrelated gates rather than pruning completion history."
     )
 }
 
@@ -1403,7 +1403,7 @@ fn refresh_batch_baselines_with_captures(
 ) -> Result<Vec<VerifyTarget>, error::DecapodError> {
     if !snapshot.passed {
         return Err(error::DecapodError::ValidationError(
-            "cannot recover verification baselines from a failing validation snapshot".to_string(),
+            "cannot recover verification baselines from a failing validation snapshot. Agent: run `decapod validate --format json` to inspect the current validation blockers, repair the reported gates, then retry `decapod qa verify recover` with the same explicit --artifact TODO_ID=FILE inputs where required. Historical completion remains unverified; do not prune or reopen tasks to bypass proof".to_string(),
         ));
     }
 
@@ -1654,7 +1654,7 @@ fn finalize_recovered_batch(
 ) -> Result<Vec<VerifyTodoResult>, error::DecapodError> {
     if !snapshot.passed {
         return Err(error::DecapodError::ValidationError(
-            "Final aggregate validation did not pass; recovered proof remains pending".into(),
+            "Final aggregate validation did not pass; recovered proof remains pending. Agent: run `decapod validate --format json` to inspect the current validation blockers, repair the reported gates, then retry `decapod qa verify recover`. If evidence must be recaptured, repeat --artifact TODO_ID=FILE for each affected task; pending proof is not acceptance".into(),
         ));
     }
     let ts = now_iso();

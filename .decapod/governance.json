@@ -539,6 +539,11 @@
       "id": "bazel-current-spec-reviews",
       "summary": "Refresh generated projections and current-content semantic reviews after independently verified Bazel lock repair; preserve proof gap",
       "input_digest": "sha256:1e516bac0c0db910834f999fa2bd9d4a5006653a6e792cead7fcfee8ce3b8da2"
+    },
+    {
+      "id": "agent-recovery-diagnostics",
+      "summary": "Replace destructive epoch guidance with non-reopening recovery and safe explicit diagnostic-plus-retry command; no raw child output exposed, validation failures remain blocked",
+      "input_digest": "sha256:854526f933914bdd16b82419ca67d82dfce002821c8d9e9fd40fbc5528a4d945"
     }
   ],
   "intents": {
