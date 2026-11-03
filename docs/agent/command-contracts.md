@@ -282,3 +282,63 @@ still rejects erased or rewritten records in authored commits.
 `inventory --claims-note "..."` records a current-PR checkpoint, not a fake claim
 or a policy-history append. `inventory --compact` performs lossless legacy
 normalization. Neither surface repairs malformed evidence by overwriting it.
+
+## `todo handoff`: caller and ownership recovery
+
+The acting caller is captured from the active `DECAPOD_AGENT_ID` request before
+broker execution. `--from` is an optional expected-current-owner precondition;
+it never selects the actor or supplies that owner's trust. `--to` selects only
+the receiver. Ordinary owner handoff can omit `--from`. A missing caller is a
+`HANDOFF_CALLER_MISSING` error rather than an assumed `unknown` owner.
+
+`govern policy eval --command todo.handoff --path <task-id>` reports the same
+handoff zone as mutation: verified trust and explicit approval by default,
+subject to the existing operator policy. Output also states the stronger
+cross-owner recovery conditions. Dependency, lease and overlap gates remain.
+
+Only the AI agent/harness interfaces with and executes Decapod after setup;
+the only Decapod command a user executes is `decapod init`. Humans provide
+intent and approval through the agent/harness, not through operator CLI sessions.
+When a recorded owner is unavailable or incorrect, the authorized agent/harness:
+
+1. Inspects `todo get --id <task-id>` and preserves its owner and history.
+2. Evaluates `govern policy eval --command todo.handoff --path <task-id>` under
+   its established request identity and presents the exact source owner,
+   intended receiver and reason to the human for a decision.
+3. After receiving the required explicit human approval, executes the diagnostic's
+   exact approval command with a bounded lifetime, recording the approving
+   decision separately from the executing caller. It must not manufacture approval.
+   A command-wide or different-task approval cannot authorize recovery.
+4. Under the same established authorized caller identity, executes
+   `todo handoff --id <task-id> --from <recorded-owner> --to <intended-receiver>
+   --summary <reason>` and reports the audited result.
+
+The actual caller must already satisfy the existing trust and ownership policy.
+An authorized harness may use its already established local operator role; a
+verified agent may recover under its own identity with the same exact approval.
+Neither may select a stronger role, promote its own trust, or impersonate the
+old owner merely to pass a denied gate. Missing authority remains a blocker to
+resolve through the authorized harness, not a request for a human CLI command.
+The reserved `operator`, `cli` and `decapod`
+roles retain the existing local cooperative policy semantics; environment labels
+are not OS authentication, credentials, or proof against a hostile local process.
+No agent trust row is promoted by recovery.
+
+Cross-owner recovery requires an exact task-bound live approval even when a
+broader operator policy suppresses ordinary handoff prompts. Successful recovery
+consumes its exact approval records in the same transaction as the ownership
+change. Failed preconditions preserve both custody and approval. The event and
+result record the actual actor, previous owner, receiver, recovery flag and
+consumed approval IDs. Repeating a transfer requires fresh authority; a stale
+`--from` fails rather than silently transferring changed custody. This operation
+never marks task work verified or waives proof gates.
+
+Recovery is discoverable in the failed invocation itself, not only in this
+reference: handoff validation errors retain their original reason and append
+`HANDOFF_RECOVERY:` with a `decapod.todo.handoff-recovery.v1` JSON diagnostic;
+non-success handoff JSON results include that diagnostic in `recovery`. It names
+the task, actual caller, expected owner and receiver, and supplies bounded
+`inspect_argv` and `evaluate_argv` arrays to the invoking agent/harness. Its
+`next_action` requires inspection before retry (reconciliation can fail after a
+committed transfer), established caller authority, and human decision through
+conversation when required. It never returns a self-authorizing approval step.

@@ -183,6 +183,7 @@ impl Fixture {
             )]),
             directory: ".".into(),
             timeout_seconds: 10,
+            dagger: None,
         };
         let mut contract = RepositoryContract {
             reviewed_commands_digest: String::new(),
@@ -209,6 +210,7 @@ impl Fixture {
                 reviewed_sources_digest: sources.digest().unwrap(),
             }),
             repository_contract: Some(contract),
+            dagger_authorizations: BTreeMap::new(),
             rust_workers: None,
             ci_attested: None,
             commands,
@@ -400,6 +402,45 @@ fn fresh_non_cargo_consumer_executes_every_required_source_check_in_snapshot() {
     let evidence: SuiteEvidence =
         serde_json::from_slice(&fs::read(directory.join("observations.json")).unwrap()).unwrap();
     assert_eq!(evidence.results.len(), 2);
+    let mut receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(directory.join("completion/native-readiness-receipt.json")).unwrap(),
+    )
+    .unwrap();
+    let verdict: serde_json::Value =
+        serde_json::from_slice(&fs::read(directory.join("completion/verdict.json")).unwrap())
+            .unwrap();
+    assert_eq!(verdict["ready"], true);
+    assert!(!directory.join("verdict.json").exists());
+    assert_eq!(receipt["kind"], "native_readiness_receipt");
+    assert_eq!(receipt["status"], "ok");
+    assert_eq!(receipt["scope"], report.scope);
+    assert_eq!(receipt["material"]["head_revision"], head);
+    assert_eq!(receipt["material"]["accepted_base_revision"], upstream);
+    assert_eq!(
+        receipt["evidence_digest"],
+        decapod::core::readiness_evidence::digest(&evidence).unwrap()
+    );
+    let governance = fs::read(fixture.options.root.join(".decapod/governance.json")).unwrap();
+    use sha2::{Digest, Sha256};
+    assert_eq!(
+        receipt["governance_digest"],
+        format!("sha256:{:x}", Sha256::digest(&governance))
+    );
+    let document: serde_json::Value = serde_json::from_slice(&governance).unwrap();
+    assert_eq!(
+        receipt["trajectory_digest"],
+        decapod::core::readiness_evidence::digest(&document["sections"]["trajectory"]).unwrap()
+    );
+    let receipt_hash = receipt
+        .as_object_mut()
+        .unwrap()
+        .remove("receipt_hash")
+        .unwrap();
+    assert_eq!(
+        receipt_hash,
+        decapod::core::readiness_evidence::digest(&receipt).unwrap()
+    );
+    assert!(!directory.starts_with(&fixture.options.root));
     for result in &evidence.results {
         assert_eq!(result.executor, Provider::Native);
         assert_eq!(result.key.profile, repository_profile::REQUIRED_PROFILE);
@@ -444,6 +485,11 @@ fn real_source_failure_is_not_ready_and_committed_repair_runs_new_proof() {
         "failure must come from real execution"
     );
     let failed_path = failed.evidence_path.as_ref().unwrap();
+    assert!(
+        !failed_path
+            .join("completion/native-readiness-receipt.json")
+            .exists()
+    );
     let stderr = fs::read_to_string(failed_path.join("native-1.stderr")).unwrap_or_default()
         + &fs::read_to_string(failed_path.join("native-0.stderr")).unwrap_or_default();
     assert!(
@@ -713,6 +759,11 @@ fn configuration_change_after_successful_execution_invalidates_readiness() {
     assert!(!report.ready, "{report:?}");
     assert_eq!(host.execution_attempts, 1);
     let directory = report.evidence_path.unwrap();
+    assert!(
+        !directory
+            .join("completion/native-readiness-receipt.json")
+            .exists()
+    );
     let evidence: SuiteEvidence =
         serde_json::from_slice(&fs::read(directory.join("observations.json")).unwrap()).unwrap();
     assert_eq!(evidence.results.len(), 2);

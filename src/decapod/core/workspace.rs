@@ -2612,21 +2612,20 @@ pub fn ensure_required_governance_artifacts_in_pr(
 
     let inventory =
         crate::core::governance_artifacts::inventory(repo_root, Some(base_branch), false)?;
-    // Provider mode proves project prerequisites through the mandatory remote
-    // source graph. A local legacy receipt is neither required nor authority.
-    // All other governance and checkpoint requirements remain unchanged.
-    let provider_prerequisites =
-        match std::fs::symlink_metadata(repo_root.join(".decapod/config.toml")) {
-            Ok(_) => {
-                crate::cli::DecapodProjectConfig::load(repo_root)?
-                    .proof
-                    .validation_buildkite_preflights
-            }
-            // Existing consumers without a config retain the native receipt gate.
-            // Malformed, unreadable, or dangling configurations never opt out.
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => false,
-            Err(error) => return Err(error.into()),
-        };
+    // Both native and provider publication execute the complete readiness
+    // boundary after these material prerequisites. A legacy project-check
+    // receipt is preparation evidence, not that boundary's result: requiring
+    // it here makes native validation depend on its own eventual success.
+    // Full readiness emits an immutable receipt outside the frozen candidate.
+    // Still reject malformed/unreadable configuration rather than treating it
+    // as permission to skip policy parsing.
+    match std::fs::symlink_metadata(repo_root.join(".decapod/config.toml")) {
+        Ok(_) => {
+            crate::cli::DecapodProjectConfig::load(repo_root)?;
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error.into()),
+    }
     let local_receipt_path = format!(
         "{}#/sections/validation",
         crate::core::governance_document::GOVERNANCE_PATH
@@ -2634,7 +2633,7 @@ pub fn ensure_required_governance_artifacts_in_pr(
     let incomplete: Vec<String> = inventory
         .artifacts
         .iter()
-        .filter(|artifact| !provider_prerequisites || artifact.path != local_receipt_path)
+        .filter(|artifact| artifact.path != local_receipt_path)
         .filter(|artifact| !artifact.present || !artifact.valid)
         .map(|artifact| {
             let reason = if !artifact.present {

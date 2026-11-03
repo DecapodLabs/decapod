@@ -67,21 +67,9 @@ pub fn run_policy_cli(store: &Store, cli: PolicyCli) -> Result<(), error::Decapo
             } else {
                 RiskMap { zones: vec![] }
             };
-            let (level, mut requirements) = eval_risk(&command, path.as_deref(), &risk_map);
-            let configured_categories = configured_approval_categories(&store.root)?;
-            let approval_required_by_policy = !configured_categories.is_empty()
-                && configured_approval_required(&configured_categories, &command);
-            if approval_required_by_policy
-                && !requirements
-                    .iter()
-                    .any(|requirement| requirement.contains("approval"))
-            {
-                requirements
-                    .push("Configured approval category requires human approval".to_string());
-            }
+            let (level, requirements, hitl_required) =
+                eval_effective_policy(store, &command, path.as_deref(), &risk_map)?;
             let fingerprint = derive_fingerprint(&command, path.as_deref(), "global");
-            let hitl_required =
-                human_in_loop_required(store, "global", level, approval_required_by_policy);
             println!("Risk Level: {level:?}");
             println!("Fingerprint: {fingerprint}");
             println!(
@@ -231,6 +219,50 @@ fn approval_fingerprint(command: &str, target_path: Option<&str>, scope: &str) -
         return command.to_ascii_lowercase();
     }
     derive_fingerprint(command, target_path, scope)
+}
+
+/// Describe the same TODO risk-zone requirements enforced by mutations.
+/// The diagnostic does not grant trust, approval, or ownership.
+pub fn eval_effective_policy(
+    store: &Store,
+    command: &str,
+    target_path: Option<&str>,
+    risk_map: &RiskMap,
+) -> Result<(RiskLevel, Vec<String>, bool), error::DecapodError> {
+    // Keep the same early boundary as broker mutation enforcement. A read
+    // diagnostic must neither seed mutation state nor imply mutation authority.
+    if is_read_only_operation(command) {
+        return Ok((RiskLevel::LOW, Vec::new(), false));
+    }
+    if command.starts_with("todo.") {
+        // Match mutation bootstrap so a fresh store cannot report no policy
+        // merely because the first TODO command has not seeded its zones yet.
+        crate::core::todo::initialize_todo_db(&store.root)?;
+    }
+    let (mut level, mut requirements) = eval_risk(command, target_path, risk_map);
+    let configured_categories = configured_approval_categories(&store.root)?;
+    let configured = configured_approval_required(&configured_categories, command);
+    let mut hitl = human_in_loop_required(store, "global", level, configured);
+    if configured {
+        requirements.push("Configured approval category requires human approval".to_string());
+    }
+    let zone = risk_zone_for_operation(command);
+    if let Some((trust, approval)) = zone_policy_from_todo(&store.root, zone)? {
+        requirements.push(format!("Operation zone '{zone}' requires trust '{trust}'"));
+        let operation_risk = risk_level_for_operation(command);
+        if (operation_risk as u8) > (level as u8) {
+            level = operation_risk;
+        }
+        if approval {
+            requirements.push(format!("Operation zone '{zone}' requires approval"));
+            hitl |=
+                human_in_loop_required(store, zone, operation_risk, is_high_risk(operation_risk));
+        }
+    }
+    if command == "todo.handoff" {
+        requirements.push("Recovery by a different caller requires --from and a one-use exact task-bound approval".to_string());
+    }
+    Ok((level, requirements, hitl))
 }
 
 pub fn eval_risk(
@@ -570,7 +602,8 @@ fn required_trust_for_operation(op_name: &str) -> &'static str {
 }
 
 fn risk_level_for_operation(op_name: &str) -> RiskLevel {
-    if op_name.contains("archive")
+    if op_name == "todo.handoff"
+        || op_name.contains("archive")
         || op_name.contains("delete")
         || op_name.contains("purge")
         || op_name.contains("rebuild")
@@ -584,6 +617,9 @@ fn risk_level_for_operation(op_name: &str) -> RiskLevel {
 }
 
 fn risk_zone_for_operation(op_name: &str) -> &'static str {
+    if op_name == "todo.handoff" {
+        return "todo.handoff";
+    }
     if op_name.starts_with("todo.") {
         return "todo.claim.exclusive";
     }
@@ -675,26 +711,67 @@ fn zone_policy_from_todo(
     })
 }
 
+/// Existing local cooperative identity policy, shared with transactional handoff.
+/// Reserved operator identities are not operating-system authentication.
+pub(crate) fn actor_trust_level_on_conn(
+    conn: &Connection,
+    actor: &str,
+) -> Result<String, error::DecapodError> {
+    if matches!(actor, "decapod" | "cli" | "operator") {
+        return Ok("core".to_string());
+    }
+    let level: Option<String> = conn
+        .query_row(
+            "SELECT trust_level FROM agents WHERE agent_id = ?1",
+            [actor],
+            |row| row.get(0),
+        )
+        .optional()?;
+    Ok(level.unwrap_or_else(|| "basic".to_string()))
+}
+
 fn actor_trust_level_raw(root: &Path, actor: &str) -> Result<String, error::DecapodError> {
-    if actor == "decapod" || actor == "cli" || actor == "operator" {
+    if matches!(actor, "decapod" | "cli" | "operator") {
         return Ok("core".to_string());
     }
     let todo_db = root.join(schemas::LOCAL_DB_NAME);
     if !todo_db.exists() {
         return Ok("basic".to_string());
     }
-    let broker = DbBroker::new(root);
-    broker.with_conn(&todo_db, "policy", None, "policy.trust.get", |conn| {
-        let level: Option<String> = conn
-            .query_row(
-                "SELECT trust_level FROM agents WHERE agent_id = ?1",
-                params![actor],
-                |row| row.get(0),
-            )
-            .optional()
-            .map_err(error::DecapodError::StorageError)?;
-        Ok(level.unwrap_or_else(|| "basic".to_string()))
+    DbBroker::new(root).with_conn(&todo_db, "policy", None, "policy.trust.get", |conn| {
+        actor_trust_level_on_conn(conn, actor)
     })
+}
+
+/// Find only live approvals bound to this exact target, without the legacy
+/// command-wide fallback. The caller consumes these IDs in its transaction.
+pub(crate) fn exact_target_approval_ids_on_conn(
+    conn: &Connection,
+    command: &str,
+    target: &str,
+) -> Result<Vec<String>, error::DecapodError> {
+    let fingerprint = derive_fingerprint(command, Some(target), "global");
+    let mut stmt = conn.prepare(
+        "SELECT approval_id, expires_at FROM approvals WHERE scope='global' AND action_fingerprint=?1 ORDER BY approval_id LIMIT 65",
+    )?;
+    let rows = stmt.query_map([fingerprint], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, Option<String>>(1)?))
+    })?;
+    let mut ids = Vec::new();
+    let mut count = 0;
+    for row in rows {
+        let (id, expiry) = row?;
+        count += 1;
+        if count > 64 {
+            return Err(error::DecapodError::ValidationError(
+                "HANDOFF_APPROVAL_LIMIT: too many target approvals".into(),
+            ));
+        }
+        if approval_expiry_is_live(expiry.as_deref()) {
+            ids.push(id);
+        }
+    }
+    Ok(ids)
 }
 
 pub fn enforce_broker_mutation_policy(

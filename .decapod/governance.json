@@ -631,6 +631,11 @@
       "id": "actual-rpc-bootstrap-diagnosis",
       "summary": "Record independently verified Buildkite RPC tool download failure, distinct from source Clippy finding; no probe weakening",
       "input_digest": "sha256:593510894040e39cbc10274e7a74a39841c5761410b4c600165ecb332b5a755d"
+    },
+    {
+      "id": "reconcile-pr1487-v01232",
+      "summary": "True merge of accepted master into original prompt candidate; exact first-parent journal preserved before CLI recovery binding; source protections and accepted semantics retained; final measured config before official0.123.2 projections, no full proof claimed",
+      "input_digest": "sha256:37b3bb3648c67f252d48ec0acc1e673aab0ce49fc09881fffab4b67fdb2506ee"
     }
   ],
   "intents": {
@@ -661,7 +666,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix diagnostic and historical read-only HTTP command false positives while retaining whole-prompt instruction, credential and dangerous execution checks; no quote or history label grants authority.",
+      "intent": "Preserve bounded prompt diagnostics and all unsafe execution/credential protections; merge accepted history, retain canonical journal custody, regenerate official0.123.2 projections and push only existing PR1487 branch",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -671,42 +676,42 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed d9a014cc: equivalent escaped-character condition only; deterministic side-effect-free gate architecture and dependencies unchanged.",
-          "reviewed_code_fingerprint": "53baf95015eb2149229b9959294bf1fcb35740dd61726bf4900cf171373ae1ab",
-          "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
+          "reason": "Retained accepted broker/native/Dagger/ownership architecture; original prompt evaluator and two tests preserved byte-identically. Deterministic side-effect-free pre-repository gate architecture unchanged.",
+          "reviewed_code_fingerprint": "b1a349fa5f19a41adf9f48e06cf10c03c0ddc8a506bb71dc7050fb34e0281764",
+          "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed d9a014cc exact Clippy repair: tokenizer nested-if becomes equivalent let-chain; eval stdin/status/fingerprint/no-echo and interfaces unchanged.",
-          "reviewed_code_fingerprint": "53baf95015eb2149229b9959294bf1fcb35740dd61726bf4900cf171373ae1ab",
-          "spec_material_hash": "a227ee81c08e687d9dfa5ec539625a29c86d32b8a80653fa08178a493494869e"
+          "reason": "Reviewed accepted master interface and agent_eval stdin/status/fingerprint/no-echo contract: all accepted agent-only operating rules retained; PR1487 changes bounded classification, not public CLI or RPC shape.",
+          "reviewed_code_fingerprint": "b1a349fa5f19a41adf9f48e06cf10c03c0ddc8a506bb71dc7050fb34e0281764",
+          "spec_material_hash": "111b63acca3b5b52d373a6ff7c57a81b4374b4af7348fb7a7770fb2370e62195"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current authored issue1478 security section remains materially updated versus accepted base and matches source. d9a014cc let-chain preserves consumption order, newline handling, all strict option/span/substitution defenses and tests; no new semantic contract change.",
-          "reviewed_code_fingerprint": "53baf95015eb2149229b9959294bf1fcb35740dd61726bf4900cf171373ae1ab",
-          "spec_material_hash": "9c6b4b970b52f68a91f13a611eb040b61742023dfbc3b61bdf214307e362c686"
+          "reason": "Semantically combined complete accepted master security body with original prompt-context/HTTP defenses and dependency repair account. No quote/history exemptions, unknown HTTP options remain review-gated, caller authority and agent-only recovery guidance retained.",
+          "reviewed_code_fingerprint": "b1a349fa5f19a41adf9f48e06cf10c03c0ddc8a506bb71dc7050fb34e0281764",
+          "spec_material_hash": "e2090e911112df35b36fb5845c7871be442f147bb1b3a723e04e3f17f76f56b9"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
         "Required governance gate or external authorization unavailable"
       ],
-      "title": "Fix quoted prompt context false positives for issue 1478",
+      "title": "Reconcile PR1487 prompt safety with accepted master",
       "todo_ids": [
-        "bugs_01m6f0kw6daz58af"
+        "bugs_01m6g5s0g43atvmz"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793662613Z"
+      "updated_at": "1793691943Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ea77ae9ba612aa1d2da9e09f75bce9dabe17b3bceffd5ed97ff010e2de3a4608",
+      "artifact_hash": "sha256:01afdd9841ccabdbb89422d4dbee67d023ab0c06be505a59d203568a1628f84b",
       "checks": [
         {
           "name": "candidate-1c29096b-buildkite-rpc-bootstrap",
@@ -804,10 +809,17 @@
             "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MBT4709VS1T8ZYG4Z85X",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M6F0MBSG66M6TZJHVQ8K6YPJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MBT4709VS1T8ZYG4Z85X": {
@@ -931,6 +943,19 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Recovered absent local datastore through new claimed recovery task; first-parent e6b9e3a3 canonical journal blob410a78b03cf1a1b21c5c39deee29f93b1a58c885 preserved byte-identically before CLI updates; master66d19018 retained as second parent; no history replacement or task impersonation"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1478-prompt-context"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -944,6 +969,7 @@
         "Exact GHA job125610878117 run41542697894 failed clippy::collapsible_if at agent_eval.rs465; old collector21010 terminal SNAPSHOT_NOT_READY HTTP403, log /tmp/1478-full-validation-public.log and /tmp/decapod-snapshot-a6mAJZ preserved. GHA RPC job125610878207 passed; separate reported Buildkite RPC failure not yet diagnosed.",
         "Independent reviewer /root/rereview_prompt_boundaries at 2026-11-02T21:23Z: no further blocking source finding at9954188c; safe fixtures logically compatible; source review only, no tests executed",
         "Prior GitTransport exit128 and snapshot blocker preserved in Git history; authenticated connector publication now independently fetched with all25 tree/message/parent mappings verified, public head e7a0ef04200b430629f983fc2faee276a34ab95c; runtime proof remains unavailable until fresh validation",
+        "Recovered absent local datastore through new claimed recovery task; first-parent e6b9e3a3 canonical journal blob410a78b03cf1a1b21c5c39deee29f93b1a58c885 preserved byte-identically before CLI updates; master66d19018 retained as second parent; no history replacement or task impersonation",
         "https://curl.se/docs/manpage.html#--url-query"
       ],
       "inspected_files": [
@@ -966,7 +992,7 @@
       "run_id": "branch_01M6F0MBT4709VS1T8ZYG4Z85X",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6f0kw6daz58af",
+      "task_id": "bugs_01m6g5s0g43atvmz",
       "tool_calls": [],
       "unresolved_assumptions": [
         "Compared last reviewed inventory commit213ed9ca to candidate: only Cargo package versions0.121.0 to0.121.2 changed among complete inventory paths; workflow graph/adapters and dependencies unchanged",

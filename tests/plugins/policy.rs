@@ -530,3 +530,111 @@ fn broker_zone_approvals_preserve_the_resource_target_and_trust_gate() {
     assert!(run("decapod", Some("alpha")).is_err());
     revoke_approval(&store, &legacy).unwrap();
 }
+
+#[test]
+fn handoff_diagnostic_uses_enforced_zone_on_fresh_store() {
+    use decapod::plugins::policy::{
+        enforce_broker_mutation_policy_for_target, eval_effective_policy,
+    };
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    initialize_policy_db(&store.root).unwrap();
+    let (risk, requirements, hitl) = eval_effective_policy(
+        &store,
+        "todo.handoff",
+        Some("task-a"),
+        &RiskMap { zones: vec![] },
+    )
+    .unwrap();
+    assert_eq!(risk, RiskLevel::HIGH);
+    assert!(hitl);
+    assert!(requirements.iter().any(|r| r.contains("verified")));
+    assert!(
+        requirements
+            .iter()
+            .any(|r| r.contains("exact task-bound approval"))
+    );
+    let denied = enforce_broker_mutation_policy_for_target(
+        &store.root,
+        "basic-caller",
+        "todo.handoff",
+        Some("task-a"),
+    )
+    .unwrap_err();
+    assert!(denied.to_string().contains("trust"));
+    assert!(
+        enforce_broker_mutation_policy_for_target(
+            &store.root,
+            "operator",
+            "todo.handoff",
+            Some("task-a")
+        )
+        .is_err()
+    );
+    approve_action(&store, "todo.handoff", Some("task-a"), "operator", "global").unwrap();
+    assert!(
+        enforce_broker_mutation_policy_for_target(
+            &store.root,
+            "operator",
+            "todo.handoff",
+            Some("task-a")
+        )
+        .is_ok()
+    );
+    assert!(
+        enforce_broker_mutation_policy_for_target(
+            &store.root,
+            "operator",
+            "todo.handoff",
+            Some("task-b")
+        )
+        .is_err()
+    );
+    assert!(
+        enforce_broker_mutation_policy_for_target(
+            &store.root,
+            "basic-caller",
+            "todo.handoff",
+            Some("task-a")
+        )
+        .is_err()
+    );
+}
+
+#[test]
+fn read_only_diagnostic_has_no_mutation_requirements_or_database_side_effects() {
+    use decapod::plugins::policy::eval_effective_policy;
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+    write_project_config(&store.root, "[\"policy_changes\"]");
+    let risk_map = RiskMap {
+        zones: vec![RiskZone {
+            path: ".decapod/".into(),
+            level: RiskLevel::CRITICAL,
+            rules: vec!["NO_AGENT_WRITE".into()],
+        }],
+    };
+    for command in ["todo.get", "todo.list", "todo.status", "policy.list"] {
+        let (risk, requirements, hitl) =
+            eval_effective_policy(&store, command, Some(".decapod/task"), &risk_map).unwrap();
+        assert_eq!(risk, RiskLevel::LOW, "{command}");
+        assert!(requirements.is_empty(), "{command}: {requirements:?}");
+        assert!(!hitl, "{command}");
+        enforce_broker_mutation_policy(&store.root, "basic-caller", command).unwrap();
+    }
+    // The config is the only pre-existing entry. No TODO/policy database,
+    // broker, journal, or auxiliary state may be created by these diagnostics.
+    let entries: Vec<_> = fs::read_dir(&store.root).unwrap().collect();
+    assert_eq!(entries.len(), 1);
+    let entries: Vec<_> = fs::read_dir(store.root.join(".decapod"))
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name())
+        .collect();
+    assert_eq!(entries, vec![std::ffi::OsString::from("config.toml")]);
+}
