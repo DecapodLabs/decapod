@@ -684,6 +684,14 @@
       "proof_refs": [
         "tests/group_broker.rs"
       ]
+    },
+    {
+      "id": "handoff-broker-fixture-contract",
+      "summary": "Document seeded-category fixture preconditions and observed failure without claiming corrected proof.",
+      "input_digest": "sha256:91cd822be9f04bab98cba23f2cb810eaba41c2c5b6d7add4485e65e476e531b4",
+      "proof_refs": [
+        "tests/group_broker.rs"
+      ]
     }
   ],
   "intents": {

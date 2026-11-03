@@ -1022,3 +1022,10 @@ trust or remove exact recovery approval. Accepted Dagger/native-proof interfaces
 and their agent-directed recovery remain intact alongside this handoff contract.
 The earlier fixture-repair candidate `67b166d9` passed both push and PR GitHub
 plugin suites; this integrated candidate still requires fresh complete proof.
+
+The concurrent caller regression uses distinct seeded `features` and `docs`
+categories while retaining independent caller identities, directories, scopes,
+leader traversal and response/persisted-owner assertions. Normal category
+validation remains enforced: caller names do not create categories. Buildkite
+build 2931 exposed the invalid-category fixture setup before either claim;
+the corrected fixture requires fresh official execution evidence.
