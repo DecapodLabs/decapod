@@ -826,10 +826,7 @@ fn accepted_dormant_dagger_authorization_does_not_touch_unavailable_engine() {
     );
 }
 
-#[test]
-fn candidate_only_dagger_authorization_is_rejected_before_adapter_selection() {
-    let mut fixture = Fixture::new();
-    let execution = dormant_dagger_execution();
+fn activate_dagger(fixture: &mut Fixture, execution: RepositoryExecution) {
     fs::write(
         fixture.options.root.join("dagger.toml"),
         "# fixture, never executed\n",
@@ -870,11 +867,61 @@ fn candidate_only_dagger_authorization_is_rejected_before_adapter_selection() {
             .digest()
             .unwrap();
     fixture.save_config();
-    fixture.commit("candidate attempts to authorize its own engine");
+    fixture.commit("activate reviewed Dagger execution contract");
+}
+
+#[test]
+fn candidate_only_dagger_authorization_is_rejected_before_adapter_selection() {
+    let mut fixture = Fixture::new();
+    let execution = dormant_dagger_execution();
+    activate_dagger(&mut fixture, execution);
     let mut host = fixture.host();
     blocked(&fixture.validate(&mut host), "DAGGER_POLICY_NOT_ACCEPTED");
     assert_eq!(host.selections, 0);
     assert_eq!(host.execution_attempts, 0);
+}
+
+#[test]
+fn accepted_dagger_activation_cannot_bypass_external_execution_denial() {
+    use std::os::unix::fs::PermissionsExt;
+    let tools = tempfile::tempdir().unwrap();
+    let tools = tools.path().canonicalize().unwrap();
+    for name in ["dagger", "docker"] {
+        let path = tools.join(name);
+        fs::write(&path, b"non-executable fixture content: must never run").unwrap();
+        fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    let mut execution = dormant_dagger_execution();
+    execution.program = tools.join("dagger").to_str().unwrap().into();
+    execution.toolchain_files.insert(
+        "dagger-docker".into(),
+        tools.join("docker").to_str().unwrap().into(),
+    );
+    execution
+        .environment
+        .insert("PATH".into(), tools.to_str().unwrap().into());
+    let accepted = toml::to_string(
+        &toml::Value::try_from(serde_json::json!({
+            "proof": {"dagger_authorizations": {"dagger-check": execution}}
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let mut fixture = Fixture::with_accepted_config(Some(&accepted));
+    activate_dagger(&mut fixture, execution);
+    let mut host = LocalHost::new(&fixture, true);
+    let report = fixture.validate(&mut host);
+    blocked(&report, "fixture denied proof execution");
+    assert_eq!(host.selections, 1);
+    let directory = report.evidence_path.unwrap();
+    assert!(!directory.join("dagger-engine-custody.json").exists());
+    assert!(!directory.join("observations.json").exists());
+    assert!(!directory.join("native-0.stdout").exists());
+    assert!(
+        !directory
+            .join("completion/native-readiness-receipt.json")
+            .exists()
+    );
 }
 
 /// Opt-in acceptance through the installed controller's public validation path.

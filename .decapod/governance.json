@@ -458,6 +458,13 @@
     "base_commit": "aab2ab8794496370ae99c26ce4e4e53fdcaaf706",
     "target_base": "origin/master"
   },
+  "checkpoints": [
+    {
+      "id": "issue-1475-test-recovery",
+      "summary": "Preserve generated projections and exact task binding; add accepted-activation denial regression",
+      "input_digest": "sha256:57a68fe1f9d543e6a905d937f14a93cb01cd9559460ff939e492b5c99fee3f24"
+    }
+  ],
   "intents": {
     "intent:change_01M6G9Z6RQJDV415HQJ6DG62FE": {
       "acceptance_criteria": [],
@@ -506,8 +513,15 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:87ce77d7ec125a3261e395409aae54fdec38e82706fa79c572d8e5aa098828ba",
+      "artifact_hash": "sha256:21c437a8b79d72540acc6caf8431c5981eebd6317c24397872348374a4e15369",
+      "blockers": [
+        "Real pre-provisioned pinned Dagger engine unavailable; live acceptance not run"
+      ],
       "checks": [
+        {
+          "name": "full_validation",
+          "status": "failed"
+        },
         {
           "name": "live_engine",
           "status": "unavailable"
@@ -538,10 +552,17 @@
             "intent_id": "intent:change_01M6G9Z6RQJDV415HQJ6DG62FE",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6G9Z6SZYA59VY400JM2RSSJ",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6G9Z6RQJDV415HQJ6DG62FE",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9Z6SZYA59VY400JM2RSSJ": {
@@ -565,6 +586,23 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "docs/agent/repository-readiness.md",
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [
+                  "full_validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -578,7 +616,11 @@
         "tests/consumer_readiness.rs"
       ],
       "intent_id": "intent:change_01M6G9Z6RQJDV415HQJ6DG62FE",
-      "modified_files": [],
+      "modified_files": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/agent/repository-readiness.md",
+        "tests/consumer_readiness.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
