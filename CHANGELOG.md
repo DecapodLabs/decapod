@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.122.0](https://github.com/DecapodLabs/decapod/compare/v0.121.3...v0.122.0) - 2026-11-03
+
+### Fixed
+
+- recover completion proof without rewriting task history ([#1482](https://github.com/DecapodLabs/decapod/pull/1482))
+
 ## [0.121.3](https://github.com/DecapodLabs/decapod/compare/v0.121.2...v0.121.3) - 2026-11-03
 
 ### Fixed
