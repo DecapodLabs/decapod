@@ -26,6 +26,20 @@ rejected arbitrary environment keys and removal of absent leader credentials.
 Current full publication proof remains required; these declarations are not a
 substitute for the controller's authenticated test result.
 
+## Native readiness completion artifacts
+
+Full native validation in `validation_runtime::run` returns an evidence directory.
+Successful native completion is an atomic `completion/` bundle containing
+`verdict.json` and `native-readiness-receipt.json`; consumers must not expect a
+standalone root verdict for that successful native route. Remote and non-ready
+verdict paths remain unchanged. Receipt schema1.0.0 binds scope, invocation,
+material identity, committed governance, trajectory, expected plan, execution
+evidence and Vega decision digests; `receipt_hash` covers its other fields.
+The bundle is inspection output, not an import/replay API or publication token.
+The legacy tracked `sections.validation` remains explicit project-check output,
+not a full-native prerequisite. Missing plan, claims, trajectory or malformed
+configuration still blocks publication.
+
 ## Interface Overview
 
 Decapod's interfaces connect human intent, agent work, repository state, and
@@ -230,6 +244,57 @@ preserves nested Markdown and examples, removes the outer wrapper, and exposes
 unknown Decapod-namespaced directives invalidate the whole overlay. Empty
 retired generated directives remain upgrade-compatible. Partial application
 must not conceal ambiguous authority.
+
+## Current-evidence recovery for historical completion claims
+
+`plugins::verify::VerifyCommand::Recover` accepts repeated `--artifact TODO_ID=FILE`
+inputs when an unverified completed task lacks a usable file baseline. Inputs
+must name tasks in the recovery batch and readable current files; no implicit
+AGENTS.md substitute or historical CI receipt is imported by this batch path.
+`prepare_recovery_captures` collects file hashes and the active validation epoch
+before validation, rejecting missing per-task inputs and additional proof
+obligations that cannot be established by the validation-only capture contract.
+
+`refresh_batch_baselines_with_captures` requires a genuinely passing current
+snapshot, checks the original task and proof projection under the write
+transaction, and rechecks captured file bytes and epoch before inserting pending
+proof. It preserves completed task status, timestamp and revision, and records
+previous proof fields plus the explicit fresh-current-material provenance in the
+append-only recovery event. `finalize_recovered_batch` remains the sole batch
+promotion boundary after final validation and every task's artifact checks.
+A pending or failed capture is not verified completion; a newer task, baseline,
+file or epoch invalidates the attempt. Existing proof plans containing additional
+obligations are not downgraded by supplying new files.
+
+The required regression surface in `tests/unit/plugins/verify_completion_tests.rs`
+includes multiple completed tasks without proof rows, missing/foreign artifact
+inputs, extra proof obligations, failed snapshots, changed files, concurrent task
+revision changes, pending final failure, retained completion history and atomic
+successful promotion. These are authored tests until exact-candidate validation
+executes them; source review alone is not passing proof.
+
+The candidate-binary regression in `tests/verify_deadlock_regression.rs` also
+invokes the real recovery CLI for two completed tasks lacking proof rows. With
+explicit current artifacts, an independently unapproved plan still fails actual
+child validation; recovery must preserve task status, completion timestamp and
+revision without creating evidence or pruning either task. This failure-path
+coverage does not establish successful full-native CLI recovery or publication
+readiness. The Tokio lock repair changes only the runtime package version and
+checksum, not this interface or its evidence-admission obligations.
+
+Recovery guidance is an agent/harness error contract, not a human command
+checklist. Epoch drift and aggregate missing-proof errors direct the agent to
+non-reopening batch recovery with explicitly selected task-bound current files.
+A failed scoped child validation emits `VALIDATION_CHILD_FAILED` with only a
+fixed allowlist of blocker labels from at most 1 MiB per output stream, including
+`NEEDS_PLAN_APPROVAL`; this retains the actual unrelated blocker even when a
+separate ordinary validation encounters aggregate missing proof first.
+Unknown failures provide the supported `decapod validate --format json`
+diagnostic and original-command retry route. Raw child messages, paths, URLs,
+environment values and credentials are never forwarded by this diagnostic.
+Labels are diagnostic observations, never acceptance or proof. Initial/final
+recovery failures preserve historical/unverified or pending states respectively.
+Humans may initialize Decapod; execution and recovery instructions target agents.
 
 ## Sessions, tasks, and workspaces
 
@@ -684,8 +749,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d9661d9feba61ab86b1d53b5bbb202f3ae582bcfb8a9fd4d4a1051351ab5b0bf`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -827,3 +892,51 @@ pass/skip disposition. A valid immutable release emits
 `material_specs: outcome=passed proof=version_only_exact_projections`;
 a local early exit instead identifies its explicit skipped reason. Required
 CI context errors remain failures, never these local skip dispositions.
+
+## Optional local Dagger proof boundary
+
+`core::repository_profile::DaggerExecution` extends only the reviewed repository
+local proof contract. `repository_host::command_invocation` binds `dagger check`
+via the explicit `dagger-1.0-workspace-check.v1` argv contract to inventoried
+root workspace/module/lock sources inside the exact immutable native snapshot,
+measured Dagger/Docker installations, and an explicitly accepted full engine
+container ID, image configuration digest and local Unix Docker socket.
+`ProofConfiguration::dagger_authorizations` stages a typed dormant execution
+proposal under the unchanged existing proof path. After independent target
+acceptance, `preserve_accepted_dagger` permits only the exact matching execution
+from that accepted map, rejecting candidate self-authorization, changed engines
+and revoked authority. Dormant declarations themselves do not activate execution
+or grant external access. Rotation and revocation use the same reviewed two-stage
+boundary while complete source/command coverage remains enforced. Separate
+`dagger_proof_exec` and `dagger_engine_read` capabilities default to denied;
+Buildkite-required profiles and final Decapod readiness authority are unchanged.
+`repository_host::dagger::inspect_engines` checks running identity before/after
+bounded execution and retains observations, rejecting missing/changed engines.
+The local Docker service and existing engine are trusted executors, not an
+immutable-runtime attestation: writable engine state, module semantic coverage
+and transitive input pins remain reviewed assumptions. No engine lifecycle,
+installation, hosted GitHub status import or Dagger Cloud support is introduced.
+Tests in these modules exercise fixture-level contracts; live engine proof is a
+separate qualification and is not established by fixture success. See
+`docs/agent/config-schema.md` for configuration and adoption constraints.
+
+### Agent-owned Dagger recovery output
+
+`validation_runtime::ValidationReport::finish` retains Dagger failure causes and
+selects bounded recovery through the existing structured `ValidationGuidance`
+fields: agent owner, `decapod validate` entry command, next action, instruction,
+and conversational human-input boundary. `for_dagger_failure` distinguishes
+accepted-authorization reconciliation, contract repair, and restoration of the
+exact authorized local prerequisites. The policy error identifies the named
+execution and accepted dormant-authorization configuration paths. Socket, tool
+and inspection I/O errors retain their original cause/kind plus Dagger context.
+
+These instructions are emitted to the agent/harness, not delegated as user CLI
+work. Human decisions and missing access are requested conversationally; the
+agent remains the Decapod operator after user initialization. Recovery never
+grants engine lifecycle access, repins policy, drops checks, accepts a candidate's
+own proposal, or changes a failed verdict to ready. Intentional rotation still
+requires independently accepted dormant authority before activation. Restored
+prerequisites require fresh complete validation, not reuse of failed evidence.
+Fixture tests cover guidance fields, cause retention and rejection; actual
+Dagger engine execution remains unqualified.

@@ -21,6 +21,22 @@ The required dependency check exposed RUSTSEC-2026-0386 in the accepted Tokio
 version and registry checksum without relaxing advisory policy or changing
 dependency edges. Fresh exact-candidate provider proof is still required.
 
+## Native receipt and dependency repair boundaries
+
+Native success receipts are produced only after the complete selected proof and
+required readiness decision, bound to exact candidate/target and governance.
+They cannot be imported to authorize publication or replace execution. Atomic
+private completion staging prevents partial receipt/verdict writes from exposing
+a successful pair; no tracked candidate bytes are changed by receipt output.
+The root Cargo.lock updates Tokio1.52.3 to1.53.3 for RUSTSEC-2026-0386, changing
+only that package's version and registry checksum. This addresses the actual
+required dependency-check failure without suppressing advisories or modifying
+other dependency edges. The pinned Bazel9.3.0 module dependency generator also
+refreshes `MODULE.bazel.lock` from that Cargo input; byte review permits only
+Tokio references/version/checksum and the Cargo input digest. Generation changes
+no trust configuration, proof profile, registry or unrelated dependency graph.
+It is not a claim that full validation has passed.
+
 Public Buildkite artifact redirects admit only the exact documented HTTPS
 `buildkiteartifacts.com` host and legacy `s3.amazonaws.com/buildkiteartifacts.com`
 bucket prefix, with unchanged four-UUID layout, exact producer-job binding,
@@ -414,8 +430,8 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d9661d9feba61ab86b1d53b5bbb202f3ae582bcfb8a9fd4d4a1051351ab5b0bf`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -467,6 +483,38 @@ authored proof policy continues to deny disallowed programs; missing relevant
 permissions in a present policy and malformed policy fail closed. No policy
 file is rewritten as a repair, and generic callers cannot request the sealed
 capability without the reviewed contract and measured invocation.
+
+### Explicit Dagger executor exception
+
+The optional `RepositoryDaggerCheck` capability is the bounded exception to
+local-only command assumptions above. `repository_profile::preserve_accepted_dagger`
+requires an exact execution declaration in the accepted target's dormant
+`dagger_authorizations`; writing candidate declarations does not grant authority.
+`external_action::authorize_repository_proof` additionally requires explicit
+`dagger_proof_exec`, and bounded engine inspection requires `dagger_engine_read`.
+Both are denied by default. Publishing implementation/configuration types is not
+permission to provision or access an engine, change external policy or activate
+any repository's dormant proposal.
+
+The declared local Docker service and existing Dagger engine are trusted
+executors, including writable runtime state and caches. Full container/image
+identity plus unchanged start time, rootfs mode and mount destinations are
+checked before/after execution; image inspection is not executable-filesystem
+attestation. Exact snapshot and measured tool/output custody still apply. The
+reviewed workspace owns semantic check coverage and remote dependency pins;
+the adapter does not sandbox engine network access or infer reproducibility.
+Fixed Dagger 1.0 workspace/check arguments, root configuration/lock inventory,
+cleared environment and a measured Docker PATH prevent ambient engine/context
+selection. Unsupported identities and candidate-only activation fail closed.
+No arbitrary GitHub green status, hosted assurance substitution, engine lifecycle
+operation or blanket external permission is introduced. Live engine integration
+has not been established by the authored fixture regressions.
+
+The root Cargo lock remediation changes only Tokio 1.52.3 to 1.53.3 and its
+registry checksum. The derived Bazel lock must be regenerated under the pinned
+Bazel toolchain before publication so dependency identities agree. Dependency
+resolution is not audit/test success; required hosted checks remain mandatory,
+with no ignored advisory or weakened validation requirement.
 
 ## CPU companion and pre-inference startup custody
 

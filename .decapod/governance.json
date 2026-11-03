@@ -544,6 +544,20 @@
       "id": "refresh-bazel-current-spec-reviews",
       "summary": "Refresh generated projections and current-content reviews after canonical build lock repair",
       "input_digest": "sha256:4ff87b9d13455e46dd69a31c97742b9b54812b8595f93ffb4e415b9a9ab29616"
+    },
+    {
+      "id": "issue1476-v0123-merge",
+      "summary": "Merge accepted master2893f1c0 into caller isolation PR with original journal custody, preserved identity source/tests, merged authored specs and official0.123.0 projections after inventory review",
+      "input_digest": "sha256:fe967ac64bb310ca5ecc3c3ad5a1bda10c56969331eb6a9a4a3ef721df187376",
+      "proof_refs": [
+        "independent-merge-source-review",
+        "inventory-byte-identity-master2893f1c0"
+      ]
+    },
+    {
+      "id": "issue1476-v0123-entrypoints",
+      "summary": "Official0.123.0 init regenerates four entrypoints and managed Dockerfile; final config unchanged and specs refreshed after regeneration",
+      "input_digest": "sha256:3da8aee6d3d7d3cadcb1a9ef1227ed85b1a3e0a3f45f854d0a6d86b913791d94"
     }
   ],
   "intents": {
@@ -576,7 +590,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Isolate each broker caller identity, session and cwd without broader trust or daemon changes; replay authored implementation under official 0.121.2.",
+      "intent": "Preserve request-scoped caller identity, session and cwd isolation while integrating accepted master2893f1c0 into PR1485 with official0.123.0 regeneration, reviewed inventory and unchanged trust boundaries.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -586,23 +600,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed authored broker caller custody against source; unchanged daemonless broker and session policy. Bazel lock only mirrors patched Tokio input, not architecture.",
-          "reviewed_code_fingerprint": "d9661d9feba61ab86b1d53b5bbb202f3ae582bcfb8a9fd4d4a1051351ab5b0bf",
-          "spec_material_hash": "3a60cbc52d3b7a2446aa3154a1504b3eda75ed1ae72e756d2012c738dea78990"
+          "reason": "Reviewed merged current source and preserved caller isolation section alongside accepted native receipt and recovery contracts. No broader trust, session, daemon or proof-policy change; independent semantic review confirms both authored contracts retained.",
+          "reviewed_code_fingerprint": "47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef",
+          "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed caller protocol2 implementation and authored interface section; canonical Tokio Bazel lock refresh changes no CLI/socket API or caller authority.",
-          "reviewed_code_fingerprint": "d9661d9feba61ab86b1d53b5bbb202f3ae582bcfb8a9fd4d4a1051351ab5b0bf",
-          "spec_material_hash": "9678edf13f5d76cf18af059e2798ea98667d61950396785b5a33b79547c4a7be"
+          "reason": "Reviewed merged current source and preserved caller isolation section alongside accepted native receipt and recovery contracts. No broader trust, session, daemon or proof-policy change; independent semantic review confirms both authored contracts retained.",
+          "reviewed_code_fingerprint": "47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef",
+          "spec_material_hash": "0f1daca8197c3ef728b03e0aa631532c3873d78137a567aa89256aac7008b20c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed caller allowlist, ephemeral credential transport, password-excluding dedupe and cooperative trust documentation. Generated Bazel lock retains same patched Tokio1.53.3 checksum; no advisory waiver, permission or trust change.",
-          "reviewed_code_fingerprint": "d9661d9feba61ab86b1d53b5bbb202f3ae582bcfb8a9fd4d4a1051351ab5b0bf",
-          "spec_material_hash": "450ac5f7759c01db3c63802e12515faef42e95b8748c0de52360b3232639a5e1"
+          "reason": "Reviewed merged current source and preserved caller isolation section alongside accepted native receipt and recovery contracts. No broader trust, session, daemon or proof-policy change; independent semantic review confirms both authored contracts retained.",
+          "reviewed_code_fingerprint": "47611baac242218ab3a8c4edc3b51ffe8fbb145a0dce63a4808b77fe70e324ef",
+          "spec_material_hash": "f6d0c3ead3b71de95a2c6fbd61a01a1ec2423bb57f0c070cdb60595778a5875c"
         }
       ],
       "state": "APPROVED",
@@ -611,17 +625,17 @@
       ],
       "title": "Fix issue 1476 caller isolation using release controller",
       "todo_ids": [
-        "bugs_01m6f0w2a9z511c3"
+        "code_01m6fzzj7qyqts21"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793662785Z"
+      "updated_at": "1793685899Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:dd71645f8bed6cd65a2938813fc8ae082650e06a4c3d0b67e38bcee69e09739b",
+      "artifact_hash": "sha256:a5ba36b355ee54bc9920c9e06892d01a3c605c3f22f1e42e715e8d257f9d0494",
       "checks": [
         {
           "name": "bazel-source-contract-review",
@@ -640,7 +654,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "v0.123.0 target reconciliation",
       "custody": {
         "events": [
           {
@@ -675,10 +689,17 @@
             "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6F0WQPZ3FHWQQ27NJM5V2K7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0WQQJ7DYQNBHW4GWPNDVG": {
@@ -747,6 +768,25 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "v0.123.0 target reconciliation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "First-parent governance blob d71c454b2790570a20e8e8e82c8aae871dee3412 preserved exactly before CLI updates; accepted master2893f1c075680f9649a8aaf836768ba9f5675b58 retained as second parent.",
+                  "All discovered inventory inputs byte-identical to accepted master; only Cargo.toml and Cargo.lock version0.121.2 to0.123.0 differ from first parent. No workflow, helper, required check or trust setting changes.",
+                  "Independent staged source/spec review passed; runtime tests remain unexecuted on merged candidate."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/core/group_broker.rs",
+                  "tests/group_broker.rs",
+                  "tests/unit/core/group_broker_tests.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Original workspace datastore absent after restored environment; new claimed task recovers coordination without reconstructing old records."
+                ]
               }
             ]
           }
@@ -755,7 +795,10 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "All discovered inventory inputs byte-identical to accepted master; only Cargo.toml and Cargo.lock version0.121.2 to0.123.0 differ from first parent. No workflow, helper, required check or trust setting changes.",
         "Buildkite2608 bb631897 required build/contracts/RPC failed stale MODULE.bazel.lock after Cargo.lock Tokio update. Prior local collector interrupted (session absent); no success. Canonical shared Bazel9.3 regeneration verified SHA6aaafae3 and exactly five Tokio/Cargo digest substitutions, no unrelated graph changes.",
+        "First-parent governance blob d71c454b2790570a20e8e8e82c8aae871dee3412 preserved exactly before CLI updates; accepted master2893f1c075680f9649a8aaf836768ba9f5675b58 retained as second parent.",
+        "Independent staged source/spec review passed; runtime tests remain unexecuted on merged candidate.",
         "Published candidate0ab800c7 Buildkite2553 deps-lint and governance-artifacts failed; other observed test checks successful, no readiness. Controller resume ended BuildEnvelope exit22. Remediation updates Tokio1.53.3 only and actual current-content spec review; original failures preserved /tmp/1476-validation-resumed.log",
         "git diff 213ed9ca 3216d717 -- Cargo.toml Cargo.lock: only package version 0.121.0 to 0.121.2; inventory intersection contains these two paths only; required source graph unchanged"
       ],
@@ -781,10 +824,11 @@
       "run_id": "branch_01M6F0WQQJ7DYQNBHW4GWPNDVG",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6f0w2a9z511c3",
+      "task_id": "code_01m6fzzj7qyqts21",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Independent security review pending; provider unavailable; no test execution claimed"
+        "Independent security review pending; provider unavailable; no test execution claimed",
+        "Original workspace datastore absent after restored environment; new claimed task recovers coordination without reconstructing old records."
       ]
     }
   },
