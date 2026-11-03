@@ -581,6 +581,11 @@
       "id": "handoff-bazel-specs",
       "summary": "Refresh source-bound spec projections and current-content reviews after module lock repair; old collector incomplete, new official proof pending",
       "input_digest": "sha256:32a3f96f1a12e98582f6e8a9c4fff8e10f34c1b8a47dcd5feaabc0194b5bdf63"
+    },
+    {
+      "id": "handoff-executed-fixtures",
+      "summary": "Repair three actual plugin CI fixture failures job125618302466: explicit actual caller across risk test session, deterministic CLI Git identity, separate source/receiver spoof rejection without invalid same-agent precondition; no production gates changed",
+      "input_digest": "sha256:13de4842e696ca1340f7884e363a71f96aa75d6983e2553e15b98ba70e851afb"
     }
   ],
   "intents": {

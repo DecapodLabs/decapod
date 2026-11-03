@@ -544,17 +544,11 @@ fn test_trust_level_hierarchy() {
 }
 
 fn run_cmd(repo_root: &Path, args: &[&str]) -> Value {
-    let output = Command::new(resolve_decapod_bin())
-        .current_dir(repo_root)
-        .args(args)
-        .stdin(std::process::Stdio::null())
-        .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
-        .env("GIT_AUTHOR_NAME", "Decapod Test")
-        .env("GIT_AUTHOR_EMAIL", "decapod-test@example.com")
-        .env("GIT_COMMITTER_NAME", "Decapod Test")
-        .env("GIT_COMMITTER_EMAIL", "decapod-test@example.com")
-        .output()
-        .expect("run decapod");
+    run_cmd_as(repo_root, args, "unknown")
+}
+
+fn run_cmd_as(repo_root: &Path, args: &[&str], actor: &str) -> Value {
+    let output = run_raw_as(repo_root, args, actor);
     assert!(
         output.status.success(),
         "command failed: {:?}\nstderr: {}",
@@ -567,9 +561,14 @@ fn run_cmd(repo_root: &Path, args: &[&str]) -> Value {
 }
 
 fn run_raw(repo_root: &Path, args: &[&str]) -> std::process::Output {
+    run_raw_as(repo_root, args, "unknown")
+}
+
+fn run_raw_as(repo_root: &Path, args: &[&str], actor: &str) -> std::process::Output {
     Command::new(resolve_decapod_bin())
         .current_dir(repo_root)
         .args(args)
+        .env("DECAPOD_AGENT_ID", actor)
         .stdin(std::process::Stdio::null())
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .env("GIT_AUTHOR_NAME", "Decapod Test")
@@ -697,7 +696,12 @@ fn test_claim_modes_and_owner_consolidation() {
 fn test_risk_zones_and_trust_tiers_enforced() {
     let tmp = tempdir().unwrap();
     let repo = tmp.path();
-    bootstrap_repo(repo);
+    // Keep one actual caller throughout this isolated CLI session, including
+    // bootstrap; --from is only the expected previous owner.
+    let run_raw = |repo: &Path, args: &[&str]| run_raw_as(repo, args, "agent-b");
+    let run_cmd = |repo: &Path, args: &[&str]| run_cmd_as(repo, args, "agent-b");
+    assert!(run_raw(repo, &["init", "--force"]).status.success());
+    assert!(run_raw(repo, &["session", "acquire"]).status.success());
 
     let added = run_cmd(
         repo,
@@ -1701,7 +1705,7 @@ fn operator_recovery_requires_exact_one_use_authority() {
     let spoof = handoff_task_as(
         &store,
         &id,
-        "operator",
+        "receiver",
         Some("operator"),
         "recover",
         None,
@@ -1709,6 +1713,21 @@ fn operator_recovery_requires_exact_one_use_authority() {
     )
     .unwrap_err();
     assert!(spoof.to_string().contains("trust"));
+    let receiver_spoof = handoff_task_as(
+        &store,
+        &id,
+        "operator",
+        Some("unavailable-owner"),
+        "recover",
+        None,
+        "basic-caller",
+    )
+    .unwrap_err();
+    assert!(receiver_spoof.to_string().contains("trust"));
+    assert_eq!(
+        get_task(root, &id).unwrap().unwrap().assigned_to,
+        "unavailable-owner"
+    );
     assert!(
         handoff_task_as(
             &store,
@@ -1850,6 +1869,10 @@ fn cli_handoff_without_from_uses_active_caller() {
         Command::new(resolve_decapod_bin())
             .current_dir(repo)
             .args(args)
+            .env("GIT_AUTHOR_NAME", "Decapod Test")
+            .env("GIT_AUTHOR_EMAIL", "decapod-test@example.com")
+            .env("GIT_COMMITTER_NAME", "Decapod Test")
+            .env("GIT_COMMITTER_EMAIL", "decapod-test@example.com")
             .env("DECAPOD_AGENT_ID", "active-owner")
             .env("DECAPOD_CLAIM_AUTORUN", "0")
             .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
