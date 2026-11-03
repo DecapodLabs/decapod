@@ -579,6 +579,11 @@
       "id": "diagnostic-observation-precision",
       "summary": "Independent review: label substrings can appear in historical output; explicitly distinguish observed markers from established causal blockers or proof",
       "input_digest": "sha256:684798442979a8bba30d1b8ee7d0c6739e2501cf94505cb31cf113ee2202e8c4"
+    },
+    {
+      "id": "reviewed-final-diagnostics",
+      "summary": "Bind final current-source semantic reviews after independent diagnostic wording correction; no executed test claims",
+      "input_digest": "sha256:f83fe022831375945e99f268f2a4b23e42e0c0ddd0117b0465c28cf024fa831a"
     }
   ],
   "intents": {
@@ -622,22 +627,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed error-contract change confined to existing verify plugin and aggregate validation: no new component, execution provider or persistence; scoped validation and atomic pending/final proof transitions unchanged.",
-          "reviewed_code_fingerprint": "794035cc60b4ae563194c67d3c0d82d5f1f4f20d4bb70de6b56604d2465d4025",
+          "reason": "Final wording precision changes only existing verify error projection; no subsystem, provider, persistence or proof transition changes.",
+          "reviewed_code_fingerprint": "c7fff2b0c5c8c81df45240348b9899d676be1adb84ec46cc1b106ac1f7d6750e",
           "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed actual epoch/aggregate recovery errors, safe_validation_failure_diagnostic and CLI regressions: exact task artifact syntax, fixed bounded unrelated blocker labels, supported diagnostic command and retry; no human execution checklist or raw child output.",
-          "reviewed_code_fingerprint": "794035cc60b4ae563194c67d3c0d82d5f1f4f20d4bb70de6b56604d2465d4025",
+          "reason": "Reviewed final nonreopening agent error contract and explicit artifact selection. Failed scoped child emits bounded allowlisted observed labels only, explicitly not established causes/proof; structured diagnostic identifies actual blockers. Existing authored interface describes diagnostic observations and no raw child output.",
+          "reviewed_code_fingerprint": "c7fff2b0c5c8c81df45240348b9899d676be1adb84ec46cc1b106ac1f7d6750e",
           "spec_material_hash": "60e288463c4a14d266867d505c026bd23dbf5578550662263e98b03c423e209b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed fixed diagnostic label allowlist and 1MiB per-stream scan; no raw child text, paths, URL, environment or secrets forwarded. Diagnostics cannot authorize proof; unrelated failures block, history and obligations preserved.",
-          "reviewed_code_fingerprint": "794035cc60b4ae563194c67d3c0d82d5f1f4f20d4bb70de6b56604d2465d4025",
+          "reason": "Final diagnostic reads at most1MiB per child stream and emits fixed allowlisted labels, never raw text/paths/URLs/secrets. Observed substrings cannot establish causal authority or waive real proof; recovery preserves history and obligations.",
+          "reviewed_code_fingerprint": "c7fff2b0c5c8c81df45240348b9899d676be1adb84ec46cc1b106ac1f7d6750e",
           "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
         }
       ],
@@ -649,7 +654,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793666937Z"
+      "updated_at": "1793667292Z"
     },
     "trajectory": {
       "active_boundaries": [
