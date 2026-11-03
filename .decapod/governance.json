@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "3216d7170b80a350c5a8417c38dda9c5c4d8bb23",
-    "release": "v0.121.2",
+    "accepted_commit": "55a83aa25035e2fc0dff9c46d47b663bdfe6403f",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -262,6 +261,11 @@
         "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
         "status": "open"
       },
+      "claim:safe-http-context": {
+        "falsifier": "A sanitized safe report blocks or a dangerous HTTP execution/adversarial quoted prompt is allowed",
+        "statement": "Read-only HTTP examples and history pass while unsafe command combinations and override/exfiltration markers remain blocked",
+        "status": "open"
+      },
       "claim:strict-protocol-rollout": {
         "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
         "proof_refs": [
@@ -417,6 +421,7 @@
       "trajectory:832c680f315def69": "Onlyimportandidentityconsistentfixturecorrected; retainfullfailurehistory, publicsource50ce data, baselineweights/upstreamcalibration andstrictv2criterion. Mainplanobligation testsactualpass1461, sixnewnativetestsnotyetexecuted. No sourceorcontrolstatechangeswhileactivevalidation. Pushsamebranch, allowactualsourceCIterminalcollection andnormalfullvalidate; publicCIreadingisnotshadowbuild/proofimport, allrequiredchecksremain.",
       "trajectory:844b15c92b3dbce1": "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change.",
       "trajectory:85ab507d85803a47": "Actual9a5source39passedandGitHubCIgreen, thenpublicGithubObjectscommitrecheck403quotareset1792469427before native. Preserve report, do not auth-fallback/newprerequisite. Usewaitforreversible27-line shared final-gate/refREADMEcorrection; current noindependentreadinesslabels, no modelclaims. Reviewedd6cb helperinventory with unchangedd6d98runrecipe. Existingpublicationregression exercisesextractedfunction; no modelgateweakening. Retryplainvalidateafter04:10:27UTCresetexactnewsource/target, no identicalexposedv2run.",
+      "trajectory:8825b7f6a1b7e7a2": "Compared last reviewed inventory commit213ed9ca to candidate: only Cargo package versions0.121.0 to0.121.2 changed among complete inventory paths; workflow graph/adapters and dependencies unchanged",
       "trajectory:89475bf5c998bfde": "The accepted source executor closure changed in merged PR1462; final publication requires an official controller independently supporting that accepted closure, not this candidate authorizing itself",
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
       "trajectory:8a7663240329d9ea": "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
@@ -439,6 +444,7 @@
       "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
       "trajectory:d9ace8c29a759626": "All six frozen v2 holdout shards completed: each backend executed102 cases with36 unsupported lengths,52 abstentions,29 acceptances and23 false-ready proxy outcomes. Preserve this failure and original corpus/criteria. Actual source1459 tests, native43 tests and138/314/4096-token fixed numerical comparisons passed. Public review corpus remains prospective and unverified; no fitting or heldout inference has used it. Inspection confirmed projection includes plan.intent only, omitting proof_hooks/deferred questions/stop conditions and phase gates. Add bounded obligation facts without whole-plan metadata, model changes, relaxed gates or fabricated rationale. Final source/material/governance identity checks remain authoritative.",
       "trajectory:da69bbaf7f07e535": "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody.",
+      "trajectory:e0832fa08225856e": "Deterministic common-marker detector is not a general shell or semantic intent parser; unavailable private historical fixture not reproduced",
       "trajectory:e0f0a51392feb190": "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
       "trajectory:e59eda56341d71a3": "New tests/MetalCPUproductiondiagnostics authored and require prescribed validate; no new pass claims. User rejects inactive stage; fitting source only inspected, no Python executed. Current official upstream has old base+two generic adapters and incompatible universal port/stats engine, none demonstrated readiness-qualified. Reviewed24source candidates still zero admissible complete final units. Preserve old study/failures and every required original criterion. Final admission stays missing rather than repeating exposed final data. No branch/custody/controller changes.",
       "trajectory:e6b0bb96ddfbd405": "Preserve040d sourceCI lock failure and separate officialvalidator publicGithubCommitChecks403/reset1792449991. Actual anonymous publicBuildkite setup log confirms MODULE.bazel.lock stale because Cargo.toml packagingexclusion changed; prescribed repair is bazel mod deps --lockfile_mode=update. Installed officialHomebrewBazelisk1.29 afterreading officialformula/installerdocs, restored Homebrew developer modeoff. Run batch metadata regeneration only underrepositorypinnedBazel9.3, notmanualbuild/test orshadowpreflight; preserve dependencies, scientificgates and failedholdout. No native execution on040d is claimed. Newfullvalidation mustwaitreportedpublicAPIreset and bindcorrectedexactcandidate.",
@@ -450,125 +456,43 @@
     }
   },
   "change": {
-    "id": "change_01M6F0HRRESZDFTY0563W7JK64",
-    "base_commit": "3216d7170b80a350c5a8417c38dda9c5c4d8bb23",
+    "id": "change_01M6G9W50AG2225457TK02BYYX",
+    "base_commit": "55a83aa25035e2fc0dff9c46d47b663bdfe6403f",
     "target_base": "origin/master"
   },
   "claims": {
-    "bootstrap-order": {
-      "statement": "Generated entrypoints enter claimed isolated worktree before orientation and preserve orientation before implementation.",
-      "falsifier": "Any generated initialization path or quickstart runs task orientation outside its governed worktree.",
-      "status": "open"
+    "recovery-acceptance": {
+      "statement": "Real CLI recovery preserves historical completion and passes full unscoped validation",
+      "falsifier": "Live harness fails or cannot execute against authorized proof-capable fixture",
+      "status": "blocked"
     }
   },
   "checkpoints": [
     {
-      "id": "official-bootstrap",
-      "summary": "Bootstrap issue1479 with official0.121.2 preserving rejected0.121.1 branch8b9a5799",
-      "input_digest": "sha256:fcdf41205b6551f82f7417542424ca298c761795797bf88304fba52d536648d1"
-    },
-    {
-      "id": "template-order",
-      "summary": "Replay authored src/decapod/core/assets.rs from preserved failed candidate with official controller",
-      "input_digest": "sha256:32132fd833e34ced35a5c8ae7d9c3e49a88bb8c06ecdd4d5412896c937ad24ed"
-    },
-    {
-      "id": "activation-order",
-      "summary": "Replay authored tests/activation_conformance.rs from preserved failed candidate with official controller",
-      "input_digest": "sha256:3bf14c0119bcb755f6d153fd3e6a3511d712f198a808d5a9753f66d75638409e"
-    },
-    {
-      "id": "quickstart-order",
-      "summary": "Replay authored docs/book/src/quickstart.md from preserved failed candidate with official controller",
-      "input_digest": "sha256:d06e2be2f754a1aae1e261336811ea3b034e65d95e9f3bee4b9a7b4ef673c3de"
-    },
-    {
-      "id": "operations-order",
-      "summary": "Replay authored .decapod/managed/specs/OPERATIONS.md from preserved failed candidate with official controller",
-      "input_digest": "sha256:8290548cb851278449e7e48a042667e64f9418788eca9153f25f24017e003dc9"
-    },
-    {
-      "id": "spec-refresh",
-      "summary": "Refresh CLI-owned projections after authored operations update",
-      "input_digest": "sha256:82d6202702fba28eb1ef8a510a6bf5cb26f732fc4e98b228421feccff6af9126"
-    },
-    {
-      "id": "source-inventory",
-      "summary": "Reconcile only accepted release version changes with unchanged complete source-CI graph",
-      "input_digest": "sha256:413aa037bc744bc16957ee92b83bdad37ad99b57d615c883ec472a9e2c609d07"
-    },
-    {
-      "id": "issue-1479-config-manifest-refresh",
-      "summary": "Refresh generated specs manifest after reviewed config reconciliation; runtime validation remains outstanding",
-      "input_digest": "sha256:efd06e7f443cd5c8c21d0521793f23c4993423bbfad8e95bd4212cb40d8a2718"
-    },
-    {
-      "id": "issue-1479-tokio-security",
-      "summary": "Update only Tokio lock version/checksum for shared dependency advisory",
-      "input_digest": "sha256:51bce0e9d38a4888e376f56be6e8403a813aaa0d1e93a8db112db9d10d4274cd"
-    },
-    {
-      "id": "issue-1479-bazel-tokio",
-      "summary": "Synchronize canonical generated Bazel lock with Tokio repair",
-      "input_digest": "sha256:0ead687bee1fc96a3b3c8998f103f67a755105afc889b502e92d091ca71992f5"
-    },
-    {
-      "id": "issue-1479-lock-inventory",
-      "summary": "Reconcile reviewed source inventory for exact Tokio lock repair",
-      "input_digest": "sha256:fdb7138863645a2e69e30b9fed035a78e740f8ebda57fa223e30a699deee1764"
-    },
-    {
-      "id": "issue-1479-inventory-correction",
-      "summary": "Correct evidence and apply independently verified inventory after symlink-aware review",
-      "input_digest": "sha256:f474ee324e20632213a24200168b89ee940a1920f9f4eccbd981ee26550423d1"
-    },
-    {
-      "id": "issue-1479-final-spec-reviews",
-      "summary": "Record source-bound publication spec reviews and refresh generated projections after final config",
-      "input_digest": "sha256:4216166d2ce3a90c226bbed403b6cf4c779291cd1eb7ba2bbd2247fe80e0615d"
-    },
-    {
-      "id": "issue-1479-ci-canonical-entrypoints",
-      "summary": "Regenerate canonical root entrypoints from exact CI-built candidate after observed template drift",
-      "input_digest": "sha256:1a95e24a6e77d3a85a8407006a5ea95c8c7d55432dd6a57e89402f3a14240045"
-    },
-    {
-      "id": "issue-1479-ci-projection-refresh",
-      "summary": "Refresh canonical projections and current-source spec reviews after entrypoint regeneration",
-      "input_digest": "sha256:2b324068d32e62496e087e778ba0922f18281908efcd8efc443813b0e75c46c2"
-    },
-    {
-      "id": "issue-1479-candidate-manifest",
-      "summary": "Generate source-template manifest identities with exact CI candidate generator",
-      "input_digest": "sha256:ad3843bc3b1907c82024ead390819c3b81d56b3971470a989be1aa03abbf0e5c"
-    },
-    {
-      "id": "pr1488-merge-01233",
-      "summary": "Merge accepted master, preserve both journals in history, regenerate official0.123.3 intermediate source candidate",
-      "input_digest": "sha256:8416076352ebd3c60bed092e534cea6ad6b8fc92b8a9fac58b391881a1b0cc8f"
-    },
-    {
-      "id": "pr1488-corrected-merge",
-      "summary": "Replace authorized interim merge with source-generated bootstrap entrypoints while preserving original ordered parents",
-      "input_digest": "sha256:83045ad1a36808ebcdc5b3fdcea2904f0ab9b7b1c6e1b8ede80345672c4db429"
+      "id": "recovery-live-harness-v1",
+      "summary": "Prepare fail-closed live recovery acceptance harness; actual success is still blocked by missing authorized fixture",
+      "input_digest": "sha256:b61b29225d6b02b7da3d75309248075a17d8d105955fa78ce83e243baf00bc9b",
+      "proof_refs": [
+        "rustfmt and git diff --check"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M6F0HRRESZDFTY0563W7JK64": {
+    "intent:change_01M6G9W50AG2225457TK02BYYX": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "issue-1479-bootstrap-order"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+      "id": "intent:change_01M6G9W50AG2225457TK02BYYX",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix initialization order for issue 1479 with official controller\n\nPreserve failed branch8b9a5799 as evidence; replay authored1479 fixes on accepted master under official0.121.2.",
-      "refined_intent": "Fix initialization order for issue 1479 with official controller\n\nPreserve failed branch8b9a5799 as evidence; replay authored1479 fixes on accepted master under official0.121.2.",
+      "raw_intent": "Prove successful non-destructive historical task recovery for issue 1473",
+      "refined_intent": "Prove successful non-destructive historical task recovery for issue 1473",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -581,7 +505,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Preserve bootstrap workspace-before-orientation source fix and all accepted upstream changes through a true two-parent merge. Regenerate with official0.123.3, push intermediate for exact source-built CI generator, then regenerate source-bound entrypoints and push final parity repair without weakening tests.",
+      "intent": "Demonstrate successful real CLI recovery of multiple historical done tasks missing evidence in otherwise valid governance; preserve task history, timestamps and status, retain failed snapshot and changed-material rejection, never weaken gates.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -589,85 +513,38 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Compared merged source with accepted master55a83aa2. All upstream broker concurrency, native receipt, verification recovery, handoff and prompt-context fixes preserved. PR1488 only corrects bootstrap execution order in existing templates and fixtures; architectural custody and proof boundaries remain as accepted. OPERATIONS preserves both upstream completion guidance and authored worktree-before-orientation lifecycle.",
-          "reviewed_code_fingerprint": "370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b",
-          "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
-        },
-        {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved accepted interfaces and agent-only operation model; corrected assets bootstrap uses existing task claim, workspace ensure and infer orientation surfaces. No user-facing manual operating requirement or weakened checks introduced. Official0.123.3 interim entrypoints still show released old order; exact candidate-CI artifact must regenerate final source projections after this push.",
-          "reviewed_code_fingerprint": "370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b",
-          "spec_material_hash": "111b63acca3b5b52d373a6ff7c57a81b4374b4af7348fb7a7770fb2370e62195"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved accepted security prose and all upstream security-relevant sources. Session/task/isolation gates unchanged, orientation remains required before implementation. Two-parent history retains accepted journal while first-parent canonical journal is preserved before supported custody update. Source generator artifact is never acceptance authority; official0.123.3 remains independent controller.",
-          "reviewed_code_fingerprint": "370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b",
-          "spec_material_hash": "e2090e911112df35b36fb5845c7871be442f147bb1b3a723e04e3f17f76f56b9"
+          "reason": "Describe live recovery acceptance, preservation invariants and explicit unproven outcome",
+          "reviewed_code_fingerprint": "2b909fed2b6504f80cd39aa05a52129077b28e7a66aa059cca3083b8b0971cc6",
+          "spec_material_hash": "f0ca488501b1f43d968dd78e1d45b1f08adbd046d1f824d0ebfad42e1c4e7f5c"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Reconcile PR1488 with accepted master using official0.123.3",
+      "title": "Prove successful non-destructive historical task recovery for issue 1473",
       "todo_ids": [
-        "cicd_01m6g7zayvpnrjye"
+        "bugs_01m6g9vjd2w91cw4"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793694215Z"
+      "updated_at": "1793696427Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:6d390decda504d7202ee86ab128b49c784ddacb07b67d2f3d28155471cee1221",
+      "artifact_hash": "sha256:42edffabb716c2a3123f5e508dc4b2d5e6f8868cf3617a240153f6919b52bf41",
+      "blockers": [
+        "No authorized already-governed fixture with multiple historical done tasks and real proof access is available; opt-in harness is not acceptance"
+      ],
       "checks": [
         {
-          "name": "accepted_source_inventory_review",
-          "status": "passed"
-        },
-        {
-          "name": "candidate_manifest_generation_review",
-          "status": "passed"
-        },
-        {
-          "name": "candidate_template_generation",
-          "status": "passed"
-        },
-        {
-          "name": "exact_93c80db3_core_ci",
-          "status": "failed"
-        },
-        {
-          "name": "inventory_review",
-          "status": "passed"
-        },
-        {
-          "name": "manifest_diff_review",
-          "status": "passed"
-        },
-        {
-          "name": "official_release_regeneration",
-          "status": "passed"
-        },
-        {
-          "name": "official_validation",
+          "name": "live recovery acceptance",
           "status": "unavailable"
         },
         {
-          "name": "required_profile_inventory_review",
-          "status": "passed"
-        },
-        {
-          "name": "shared_bazel_generated_hash_review",
-          "status": "passed"
-        },
-        {
-          "name": "shared_tokio_exact_hash_review",
+          "name": "rustfmt",
           "status": "passed"
         }
       ],
@@ -676,390 +553,51 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "detail": "trajectory:branch_01M6G9W51QAAFSNWD2E9D26EPW",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:13",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 13
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:14",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 14
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:15",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 15
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:16",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 16
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:17",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 17
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:18",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 18
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "event_id": "event:19",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
-            "kind": "trajectory_step_recorded",
-            "sequence": 19
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6F0HRS2HTMS019S8KA64YD7": {
+          "branch_01M6G9W51QAAFSNWD2E9D26EPW": {
             "evidence_only": true,
-            "id": "branch_01M6F0HRS2HTMS019S8KA64YD7",
-            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "id": "branch_01M6G9W51QAAFSNWD2E9D26EPW",
+            "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/assets.rs"
+                  "tests/verify_deadlock_regression.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/support/live_recovery.rs",
+                  "docs/verification-recovery-acceptance.md",
+                  "Issue 1473 latest decision requires real successful non-reopening recovery"
                 ],
                 "proof_refs": [
-                  "official_validation"
+                  "rustfmt",
+                  "live recovery acceptance"
                 ],
                 "scope": [
-                  "issue-1479-bootstrap-order"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "tests/activation_conformance.rs"
-                ],
-                "proof_refs": [
-                  "official_validation"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "docs/book/src/quickstart.md"
-                ],
-                "proof_refs": [
-                  "official_validation"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/managed/specs/OPERATIONS.md"
-                ],
-                "proof_refs": [
-                  "official_validation"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  ".decapod/config.toml",
-                  "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered."
-                ],
-                "proof_refs": [
-                  "inventory_review"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "decapod rpc --op specs.refresh",
-                "custody_event_id": "event:9",
-                "observations": [
-                  ".decapod/managed/specs/.manifest.json",
-                  "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed."
-                ],
-                "proof_refs": [
-                  "manifest_diff_review"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "Cargo.lock",
-                  "Adopted public 7780e0a29244f70e76d306e05d4f5b7c367cd4fc after independent tree/message/parent mapping verification. Applied shared minimal RUSTSEC-2026-0386 repair: Tokio 1.52.3 to 1.53.3 and registry checksum only. Cargo.lock SHA256 34babf48746441e1f8656fdc09b8ba2e38c0d9ab930cae92bd3770dfa10fd4e3 becomes 63b7542ae1758437da611cde4e896f2d98d6af659ef5c03ad8606f65b817694e. No test/build executed; prior upload failure and old checked-in release template order remain unverified concerns until official full validation."
-                ],
-                "proof_refs": [
-                  "shared_tokio_exact_hash_review"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "MODULE.bazel.lock",
-                  "Applied exact shared canonical Bazel 9.3.0 generated lock repair (mod deps --lockfile_mode=update, existing system JDK21 normal TLS, no tests). Verified patch SHA256 b5104712cbec54a84424e6e8feb36e91cc23a27ee3464bc3ce96d1b01a19981a and module lock before 236449b998d9b02d3d85bb36af541c331dae3a08cd3397a7cf2865d530531dbf / after 6aaafae31750c2a065d03f237bf330c5dcf5f09733c98d128f8914028c05e9c0. Scope is Tokio version/checksum/derived dependency digest references only. No required checks, tool pins or trust relaxed."
-                ],
-                "proof_refs": [
-                  "shared_bazel_generated_hash_review"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 11,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:12",
-                "observations": [
-                  ".decapod/config.toml",
-                  "Compared every agent.init discovered source hash with actual bytes and previously reviewed public 7780e0a2. Only Cargo.lock and MODULE.bazel.lock differ, exact reviewed Tokio repair hashes; workflows, required steps, worker recipes and accepted executor remain unchanged. Reviewed inventory sha256:80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985 updates declaration only, no check waiver."
-                ],
-                "proof_refs": [
-                  "required_profile_inventory_review"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 12,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:13",
-                "observations": [
-                  ".decapod/config.toml",
-                  "Correction to prior checkpoint: initial comparison followed rust-toolchain.toml symlink and aborted before config edit; shell then recorded intended inventory evidence prematurely. Rerun now explicitly hashes symlink target text and regular-file bytes, verifies all discovered hashes and confirms exactly Cargo.lock/MODULE.bazel.lock differ from public 7780e0a2. Config declaration now actually updated to reviewed 80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985. No runtime tests claimed."
-                ],
-                "proof_refs": [
-                  "required_profile_inventory_review"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 13,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:14",
-                "observations": [
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "Exact 93c80db3 GitHub CI run41542763408 Core job125611719308 failed test_root_entrypoints_match_scaffold_generators (31 passed, 1 failed, 4 ignored); health job125614915669 and companion run41542763292 job125610762963 reported four entrypoint integrity failures. Preserved failed head and full-controller SNAPSHOT_NOT_READY anonymous403 evidence. Downloaded exact CI debug artifact13186789964 from run41542763408/head93c80db3; archive SHA256 dbb6c76d6223d984d78f6207a6a881ddf89c377a8cc1d149ec9b35d25a5da71d, binary SHA256 0b0f7ae6dc3300539625e7089ddd41a23058b52588c5efd76e4510b2344c08a7. Used candidate init --all --no-specs --no-ci --proof only in disposable generator directory, copied four exact generated root Markdown artifacts. Diff is bootstrap reorder/explicit task branch plus canonical fingerprints only. Candidate is not an acceptance controller; official0.121.2 remains governance/full-validation authority. No manual build or shadow tests run."
-                ],
-                "proof_refs": [
-                  "exact_93c80db3_core_ci",
-                  "candidate_template_generation"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 14,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:15",
-                "observations": [
-                  ".decapod/managed/specs/.manifest.json",
-                  "Source inspection project_specs::entrypoint_manifest_entries derives template_hash/fingerprint from compiled template, while content_hash reads root file. Official released generator necessarily retained old template metadata after source template update; exact CI candidate rpc specs.refresh was therefore used solely as projection generator. Independently reviewed only generated_at and four template_hash/fingerprint pairs changed; all now align with canonical generated root files. No proof execution or candidate self-acceptance; official controller remains independent authority and must validate published head."
-                ],
-                "proof_refs": [
-                  "candidate_manifest_generation_review"
-                ],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 15,
-                "validation_findings": []
-              },
-              {
-                "action": "reconcile",
-                "custody_event_id": "event:16",
-                "observations": [
-                  "Recovered into fresh supported task/workspace after environment restore. True merge parents are public PR2349c6a7 and accepted master55a83aa2. Before any CLI journal mutation, first-parent and preserved canonical journal blob both2d9e8b47d49a82562784966f76deb99fea2b3e62, SHA256 feefc85252eae2c2c6a1a7f86045cc3a68b9a222af35ee2a06a5d212708eae7b. Accepted journal retained through second-parent history. Authored source auto-merged; operations combines native completion contract with workspace-before-orientation. Official0.123.3 regeneration first, then intermediate push to obtain exact candidate CI generator artifact for final source-bound entrypoints; no interim readiness claim."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 16,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:17",
-                "observations": [
-                  "Independently hashed every discovered regular-file/symlink source and compared bytes with accepted master55a83aa2; no proof/build/release source differs. Final reviewed inventory b2dad13cc7ab218b124a945e01fcb56b4bb9f5bbe044cb3785814cd07ef01b1a reconciles accepted release0.123.3. Config changed only reviewed digest, before all projection generation; required profile/checks unchanged."
-                ],
-                "proof_refs": [
-                  "accepted_source_inventory_review"
-                ],
-                "scope": [
-                  "PR1488-reconciliation",
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 17,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:18",
-                "observations": [
-                  "Official vendor0.123.3 archive SHA256 c8070eba6bf4ec4f2ff52029b71148d78773ff87c4eba462b65c1ec973e15109 and binary4572b3598268786bfe2ba0b1030e382046270725e70a52627c50f6dd911829a1 verified. init --proof regenerated all four0.123.3 entrypoints and managed Dockerfile version/image. Final config finalized before regeneration and specs.refresh; byte hash unchanged afterward. This interim released template still orients before workspace while authored source fixes order, so Core parity/health expected red until exact candidate CI artifact generation. Push is staging, not completion."
-                ],
-                "proof_refs": [
-                  "official_release_regeneration"
-                ],
-                "scope": [
-                  "PR1488-reconciliation",
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 18,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:19",
-                "observations": [
-                  "User explicitly authorized replacing the single interim merge while retaining a backup, and requested Actions handle tests/validation/verification without local suites. Interim1e42360e retained in backup ref and bundle. Exact source-CI push run41603515544 artifact13214794736 binds head1e42360e; archive SHA2562aeacd690bbdfb97b133f0939b4787e0e9338a00898fcefcf40a097c0df287e0, binary60721c6e3b310f630a88a14d186952fb437af7aa194874457c52b32f5586f28e. Candidate CLI only generated four root entrypoints and source-template manifest identities; official0.123.3 still owns governance/acceptance. Corrected replacement retains original ordered parents2349c6a7 and55a83aa2, avoiding the interim historical template mismatch. No local test/validation or additional review executed. Actions determine result."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "PR1488-reconciliation",
-                  "issue-1479-bootstrap-order"
-                ],
-                "sequence": 19,
                 "validation_findings": []
               }
             ]
@@ -1071,49 +609,27 @@
       ],
       "destination": "pull request",
       "evidence": [
-        "Adopted public 7780e0a29244f70e76d306e05d4f5b7c367cd4fc after independent tree/message/parent mapping verification. Applied shared minimal RUSTSEC-2026-0386 repair: Tokio 1.52.3 to 1.53.3 and registry checksum only. Cargo.lock SHA256 34babf48746441e1f8656fdc09b8ba2e38c0d9ab930cae92bd3770dfa10fd4e3 becomes 63b7542ae1758437da611cde4e896f2d98d6af659ef5c03ad8606f65b817694e. No test/build executed; prior upload failure and old checked-in release template order remain unverified concerns until official full validation.",
-        "Applied exact shared canonical Bazel 9.3.0 generated lock repair (mod deps --lockfile_mode=update, existing system JDK21 normal TLS, no tests). Verified patch SHA256 b5104712cbec54a84424e6e8feb36e91cc23a27ee3464bc3ce96d1b01a19981a and module lock before 236449b998d9b02d3d85bb36af541c331dae3a08cd3397a7cf2865d530531dbf / after 6aaafae31750c2a065d03f237bf330c5dcf5f09733c98d128f8914028c05e9c0. Scope is Tokio version/checksum/derived dependency digest references only. No required checks, tool pins or trust relaxed.",
-        "Compared every agent.init discovered source hash with actual bytes and previously reviewed public 7780e0a2. Only Cargo.lock and MODULE.bazel.lock differ, exact reviewed Tokio repair hashes; workflows, required steps, worker recipes and accepted executor remain unchanged. Reviewed inventory sha256:80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985 updates declaration only, no check waiver.",
-        "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered.",
-        "Correction to prior checkpoint: initial comparison followed rust-toolchain.toml symlink and aborted before config edit; shell then recorded intended inventory evidence prematurely. Rerun now explicitly hashes symlink target text and regular-file bytes, verifies all discovered hashes and confirms exactly Cargo.lock/MODULE.bazel.lock differ from public 7780e0a2. Config declaration now actually updated to reviewed 80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985. No runtime tests claimed.",
-        "Exact 93c80db3 GitHub CI run41542763408 Core job125611719308 failed test_root_entrypoints_match_scaffold_generators (31 passed, 1 failed, 4 ignored); health job125614915669 and companion run41542763292 job125610762963 reported four entrypoint integrity failures. Preserved failed head and full-controller SNAPSHOT_NOT_READY anonymous403 evidence. Downloaded exact CI debug artifact13186789964 from run41542763408/head93c80db3; archive SHA256 dbb6c76d6223d984d78f6207a6a881ddf89c377a8cc1d149ec9b35d25a5da71d, binary SHA256 0b0f7ae6dc3300539625e7089ddd41a23058b52588c5efd76e4510b2344c08a7. Used candidate init --all --no-specs --no-ci --proof only in disposable generator directory, copied four exact generated root Markdown artifacts. Diff is bootstrap reorder/explicit task branch plus canonical fingerprints only. Candidate is not an acceptance controller; official0.121.2 remains governance/full-validation authority. No manual build or shadow tests run.",
-        "Independently hashed every discovered regular-file/symlink source and compared bytes with accepted master55a83aa2; no proof/build/release source differs. Final reviewed inventory b2dad13cc7ab218b124a945e01fcb56b4bb9f5bbe044cb3785814cd07ef01b1a reconciles accepted release0.123.3. Config changed only reviewed digest, before all projection generation; required profile/checks unchanged.",
-        "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed.",
-        "Official vendor0.123.3 archive SHA256 c8070eba6bf4ec4f2ff52029b71148d78773ff87c4eba462b65c1ec973e15109 and binary4572b3598268786bfe2ba0b1030e382046270725e70a52627c50f6dd911829a1 verified. init --proof regenerated all four0.123.3 entrypoints and managed Dockerfile version/image. Final config finalized before regeneration and specs.refresh; byte hash unchanged afterward. This interim released template still orients before workspace while authored source fixes order, so Core parity/health expected red until exact candidate CI artifact generation. Push is staging, not completion.",
-        "Recovered into fresh supported task/workspace after environment restore. True merge parents are public PR2349c6a7 and accepted master55a83aa2. Before any CLI journal mutation, first-parent and preserved canonical journal blob both2d9e8b47d49a82562784966f76deb99fea2b3e62, SHA256 feefc85252eae2c2c6a1a7f86045cc3a68b9a222af35ee2a06a5d212708eae7b. Accepted journal retained through second-parent history. Authored source auto-merged; operations combines native completion contract with workspace-before-orientation. Official0.123.3 regeneration first, then intermediate push to obtain exact candidate CI generator artifact for final source-bound entrypoints; no interim readiness claim.",
-        "Source inspection project_specs::entrypoint_manifest_entries derives template_hash/fingerprint from compiled template, while content_hash reads root file. Official released generator necessarily retained old template metadata after source template update; exact CI candidate rpc specs.refresh was therefore used solely as projection generator. Independently reviewed only generated_at and four template_hash/fingerprint pairs changed; all now align with canonical generated root files. No proof execution or candidate self-acceptance; official controller remains independent authority and must validate published head.",
-        "User explicitly authorized replacing the single interim merge while retaining a backup, and requested Actions handle tests/validation/verification without local suites. Interim1e42360e retained in backup ref and bundle. Exact source-CI push run41603515544 artifact13214794736 binds head1e42360e; archive SHA2562aeacd690bbdfb97b133f0939b4787e0e9338a00898fcefcf40a097c0df287e0, binary60721c6e3b310f630a88a14d186952fb437af7aa194874457c52b32f5586f28e. Candidate CLI only generated four root entrypoints and source-template manifest identities; official0.123.3 still owns governance/acceptance. Corrected replacement retains original ordered parents2349c6a7 and55a83aa2, avoiding the interim historical template mismatch. No local test/validation or additional review executed. Actions determine result."
+        "Issue 1473 latest decision requires real successful non-reopening recovery"
       ],
       "inspected_files": [
-        "Cargo.lock",
-        "Cargo.toml"
+        "tests/consumer_readiness.rs",
+        "tests/verify_deadlock_regression.rs"
       ],
-      "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+      "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/specs/OPERATIONS.md",
-        "AGENTS.md",
-        "CLAUDE.md",
-        "CODEX.md",
-        "Cargo.lock",
-        "GEMINI.md",
-        "MODULE.bazel.lock",
-        "docs/book/src/quickstart.md",
-        "src/decapod/core/assets.rs",
-        "tests/activation_conformance.rs"
+        "docs/verification-recovery-acceptance.md",
+        "tests/support/live_recovery.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "PR1488-reconciliation",
-        "issue-1479-bootstrap-order"
+        "root"
       ],
-      "run_id": "branch_01M6F0HRS2HTMS019S8KA64YD7",
+      "run_id": "branch_01M6G9W51QAAFSNWD2E9D26EPW",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m6g7zayvpnrjye",
+      "task_id": "bugs_01m6g9vjd2w91cw4",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

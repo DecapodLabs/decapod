@@ -1,5 +1,20 @@
 # Interfaces
 
+## Historical verification recovery acceptance
+
+`qa verify recover --artifact TODO_ID=FILE` captures current task-bound evidence
+and promotes the completed batch only after real validation. The opt-in live
+acceptance harness in `tests/support/live_recovery.rs` exercises the candidate
+CLI against an explicitly authorized, already governed fixture. It compares
+original task fields and complete historical events, verifies every recovered
+task, and requires full unscoped validation. It neither reopens tasks nor
+substitutes CI-local success for publication readiness. Failed snapshots and
+changed material remain rejection cases in the existing independent regressions.
+`docs/verification-recovery-acceptance.md` defines the required fixture and agent
+execution contract. Compiling or ignoring the harness does not establish the
+successful recovery required by #1473; that remains unproven until the complete
+live run succeeds with real configured proof access.
+
 ## Local broker caller protocol
 
 The internal Unix-socket broker request in
@@ -749,8 +764,8 @@ contract, rather than by an agent's chosen provider or harness:
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
+- Repository signal fingerprint: `2b909fed2b6504f80cd39aa05a52129077b28e7a66aa059cca3083b8b0971cc6`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (195 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
