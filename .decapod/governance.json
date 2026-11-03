@@ -661,6 +661,11 @@
       "id": "handoff-reviewed-recovery-projections",
       "summary": "Bind independently reviewed recovery context correction and authored regressions; exact CI remains required",
       "input_digest": "sha256:e03dca4bbe8104da369f15ca16f873221217ee2247712c9f756c6003ae14a60f"
+    },
+    {
+      "id": "handoff-v1231-accepted-merge",
+      "summary": "True two-parent reconciliation of PR53454e6a with accepted cc72bd54; preserved first-parent journal blob f836dd2bf2ff81c7ed131036bdb76dfc273ad804 before CLI updates, accepted history remains second parent. Reviewed all119 source inventory paths and only version delta from prior declaration; finalized config before official0.123.1 init/spec refresh; preserved actual actor and agent-only recovery; full validation pending",
+      "input_digest": "sha256:1e8aac5346a143dbda3ccccbc9536cace5580f3beb5c8b4f5dfe0627e04e5882"
     }
   ],
   "intents": {
@@ -691,7 +696,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Issue1477: actual caller identity distinct from expected owner and receiver, accurate enforced policy diagnostics, explicit approved auditable recovery preserving trust and proof",
+      "intent": "Resolve PR1486 conflicts by true merge of accepted v0.123.1, preserve actual caller ownership/recovery authority, agent-only execution and canonical first-parent history; regenerate measured release projections and prove exact candidate without weakening gates",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -699,43 +704,47 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Failure presentation only, same original typed error and local governance architecture; no new service or authority system",
-          "reviewed_code_fingerprint": "b473bcfd5b548f9d0c574c6cb29fe771ab4f8167bb4197b8ab7eaa16915b7b36",
-          "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
+          "reason": "Retained accepted Dagger/native/broker architecture and reconciled handoff presentation/authority implementation; daemonless local-first agent-only usage intact",
+          "reviewed_code_fingerprint": "ba730ee6761512edc91ae24ca59fa02d99b87dcbe1b5aef6c393cb28d06dd0af",
+          "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Independent review gap fixed: non-validation failures preserve original type/cause and emit same bounded context best effort, broken stderr cannot replace original; plain JSON reason normalized; human init-only and agent-directed recovery remain",
-          "reviewed_code_fingerprint": "b473bcfd5b548f9d0c574c6cb29fe771ab4f8167bb4197b8ab7eaa16915b7b36",
-          "spec_material_hash": "78e1a61fff95a0fa3e78f3d10cefe3d8b04a43fc80a317c8b9fb213de9b8b7e9"
+          "reason": "Semantically merged accepted native/Dagger/request-broker interfaces with handoff actual-caller and exact approval recovery; user only init, agent/harness receives actionable errors; added integration boundary, no lost accepted contract",
+          "reviewed_code_fingerprint": "ba730ee6761512edc91ae24ca59fa02d99b87dcbe1b5aef6c393cb28d06dd0af",
+          "spec_material_hash": "e93de85d30637fde2ccd15d47027525d417bfb20ad6bf05968dc04990e9ec274"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed best-effort diagnostic writer does not mutate authority, issue approvals, expose raw IO cause in context or hide original failures; inspect-before-retry remains required",
-          "reviewed_code_fingerprint": "b473bcfd5b548f9d0c574c6cb29fe771ab4f8167bb4197b8ab7eaa16915b7b36",
-          "spec_material_hash": "f1e26e3ca47df22b893d3d11513bfee28307d6f2b91a6a75408ba76c7a081e99"
+          "reason": "Preserved both accepted security contracts and handoff actor separation, exact one-use approval, established trust and no self-promotion; no runtime gate changed in merge",
+          "reviewed_code_fingerprint": "ba730ee6761512edc91ae24ca59fa02d99b87dcbe1b5aef6c393cb28d06dd0af",
+          "spec_material_hash": "07b7773a883249690b14ce85ba9b982a06480204057ae59caebc2062a932b7ed"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Fix handoff actor and enforced policy diagnostics issue 1477",
       "todo_ids": [
-        "bugs_01m6f06f1rknvc3w"
+        "bugs_01m6g21pc4qththw"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793667240Z"
+      "updated_at": "1793688017Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:75bf2cc222c6cf786fb36d9662d6c9c9751505f3633159280c2f948d7a22bcd7",
+      "artifact_hash": "sha256:047fc58c4d8e50a0cda32051a4464bb8302dc32a2974de0ee3ec8cd538ea8985",
       "checks": [
+        {
+          "name": "full-validation",
+          "status": "unavailable"
+        },
         {
           "name": "required-tests",
           "status": "unavailable"
@@ -769,10 +778,17 @@
             "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MQZZ75W5PEXHA7QVY3FQ",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6F0MQZC0RPBJ0MMR9D6H77D",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MQZZ75W5PEXHA7QVY3FQ": {
@@ -819,6 +835,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/group_broker.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "docs/agent/command-contracts.md"
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "issue-1477-handoff"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -830,6 +864,8 @@
         "Source review confirms prior caller-from conflation and handoff policy diagnostic mismatch"
       ],
       "inspected_files": [
+        "docs/agent/command-contracts.md",
+        "src/decapod/core/group_broker.rs",
         "src/decapod/core/todo.rs",
         "src/decapod/plugins/policy.rs",
         "tests/plugins/policy.rs"

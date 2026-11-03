@@ -980,7 +980,7 @@ fn staged_publication_requires_fresh_checkpoint_before_creating_history() {
 }
 
 #[test]
-fn buildkite_publication_inventory_does_not_require_local_validation_receipt() {
+fn native_and_buildkite_publication_inventory_do_not_require_legacy_receipt() {
     let dir = repo();
     crate::core::governance_document::begin_pr(dir.path(), "provider-owned-proof", "master")
         .unwrap();
@@ -1022,7 +1022,7 @@ fn buildkite_publication_inventory_does_not_require_local_validation_receipt() {
         ".decapod/config.toml",
         &toml::to_string(&config).unwrap(),
     );
-    assert!(ensure_required_governance_artifacts_in_pr(dir.path(), "master").is_err());
+    ensure_required_governance_artifacts_in_pr(dir.path(), "master").unwrap();
 
     config.proof.validation_buildkite_preflights = true;
     write(
@@ -1072,10 +1072,8 @@ fn publication_inventory_absent_config_is_native_but_malformed_config_fails() {
     let mut stale = current_receipt_fixture(dir.path());
     stale.trajectory_artifact_hash = Some("0".repeat(64));
     save_receipt(dir.path(), &stale.with_recomputed_hash().unwrap());
-    let error = ensure_required_governance_artifacts_in_pr(dir.path(), "master")
-        .unwrap_err()
-        .to_string();
-    assert!(error.contains("#/sections/validation"), "{error}");
+    ensure_required_governance_artifacts_in_pr(dir.path(), "master").unwrap();
+    assert!(verify_validation_artifacts_for_publish(dir.path()).is_err());
 }
 
 fn provider_material_fixture() -> TempDir {

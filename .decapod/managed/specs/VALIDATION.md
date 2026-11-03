@@ -1,5 +1,43 @@
 # Validation
 
+## Native readiness receipt custody
+
+Decapod remains the proof-gated governor of accepted work, not a receipt-import
+service. Native publication readiness in
+`src/decapod/core/validation_runtime.rs::run` executes the complete selected
+deterministic proof and configured Vega decision before producing
+`completion/native-readiness-receipt.json` in the invocation's external evidence
+directory, alongside `completion/verdict.json`.
+The receipt binds the exact material identity (including accepted target),
+committed governance and trajectory digest, expected proof plan, measured
+execution evidence, decision, scope and invocation. Its hash covers every other
+receipt field. It is an output for inspection, never reusable authority to open
+a PR or waive a subsequent exact-candidate validation.
+
+`workspace::ensure_required_governance_artifacts_in_pr` requires current plan,
+claims and trajectory material but not the legacy tracked
+`sections.validation` preparation receipt. Requiring that output before native
+proof is circular, and writing it into the candidate after proof would stale
+the proof itself. `decapod govern project-check` retains the explicit legacy
+preparation writer; inventory continues to report its actual integrity and
+freshness rather than laundering absent or stale receipts into success.
+Malformed configuration and missing required governance still fail.
+
+Native success is published as one atomic completion directory only after both
+receipt and verdict have been written and synced in private staging. No fallible
+operation follows that publication point. Failed execution, stale candidate/target
+or blocked decision produces no success receipt; receipt or verdict creation,
+partial-write or sync failure leaves no published success bundle and revokes
+returned readiness. Pending staging files are never completion evidence. No checkout or
+Git metadata is changed by receipt production. Regression coverage in
+`tests/consumer_readiness.rs` uses actual native source execution to assert
+binding, candidate immutability and absence on failed/stale proof;
+`tests/unit/core/workspace_publication_tests.rs` preserves material gates and
+legacy integrity diagnostics. Runtime unit regressions inject creation,
+partial-write and sync failures for each completion artifact and assert absence
+of a successful verdict/receipt pair, plus preservation of an existing bundle. These new regressions await the official
+configured validation of this candidate; their presence is not a passing result.
+
 ## Validation Overview
 
 The artifact-origin controller prerequisite uses the accepted source-bound CI API
@@ -814,8 +852,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b473bcfd5b548f9d0c574c6cb29fe771ab4f8167bb4197b8ab7eaa16915b7b36`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `ba730ee6761512edc91ae24ca59fa02d99b87dcbe1b5aef6c393cb28d06dd0af`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

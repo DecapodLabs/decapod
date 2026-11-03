@@ -171,3 +171,85 @@ fn socket_directory_is_confined_even_under_permissive_umask() {
         0o755
     );
 }
+
+fn caller_context(agent: &str) -> super::CallerContext {
+    super::CallerContext {
+        cwd: std::path::PathBuf::from("/workspace/repo"),
+        environment: std::collections::BTreeMap::from([
+            ("DECAPOD_AGENT_ID".into(), agent.into()),
+            ("DECAPOD_SESSION_PASSWORD".into(), "ephemeral-secret".into()),
+        ]),
+    }
+}
+
+#[test]
+fn broker_replay_binds_actor_workspace_and_execution_context() {
+    let args = vec![
+        "todo".into(),
+        "claim".into(),
+        "--id".into(),
+        "task-a".into(),
+    ];
+    let caller = caller_context("agent-a");
+    let original = super::hash_payload(&args, &caller);
+    assert_ne!(
+        original,
+        super::hash_payload(&args, &caller_context("agent-b"))
+    );
+    let mut other = caller.clone();
+    other.cwd = "/workspace/another-worktree".into();
+    assert_ne!(original, super::hash_payload(&args, &other));
+    other = caller.clone();
+    other
+        .environment
+        .insert("DECAPOD_CLAIM_AUTORUN".into(), "0".into());
+    assert_ne!(original, super::hash_payload(&args, &other));
+    other = caller;
+    other
+        .environment
+        .insert("DECAPOD_SESSION_PASSWORD".into(), "rotated-secret".into());
+    assert_eq!(original, super::hash_payload(&args, &other));
+}
+
+#[test]
+fn caller_context_cannot_forward_arbitrary_environment_or_broker_controls() {
+    let mut caller = caller_context("agent-a");
+    assert!(caller.validate().is_ok());
+    for key in [
+        "PATH",
+        "DECAPOD_GROUP_BROKER_INTERNAL",
+        "DECAPOD_VALIDATE_SKIP_GIT_GATES",
+    ] {
+        caller.environment.insert(key.into(), "1".into());
+        assert!(caller.validate().is_err(), "accepted unscoped key {key}");
+        caller.environment.remove(key);
+    }
+    caller.cwd = "relative-path".into();
+    assert!(caller.validate().is_err());
+}
+
+#[test]
+fn caller_context_clears_absent_leader_credentials_and_metadata() {
+    let mut caller = caller_context("agent-a");
+    caller.environment.remove("DECAPOD_SESSION_PASSWORD");
+    let mut command = std::process::Command::new("unused");
+    for key in super::CALLER_ENV_KEYS {
+        command.env(key, "leader-value");
+    }
+    caller.apply(&mut command);
+    let overrides: std::collections::BTreeMap<_, _> = command.get_envs().collect();
+    assert_eq!(command.get_current_dir(), Some(caller.cwd.as_path()));
+    assert_eq!(
+        overrides[std::ffi::OsStr::new("DECAPOD_AGENT_ID")],
+        Some(std::ffi::OsStr::new("agent-a"))
+    );
+    for key in super::CALLER_ENV_KEYS {
+        if *key != "DECAPOD_AGENT_ID" {
+            assert_eq!(
+                overrides[std::ffi::OsStr::new(key)],
+                None,
+                "inherited {key}"
+            );
+        }
+    }
+}

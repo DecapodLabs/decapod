@@ -7,6 +7,148 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.1](https://github.com/DecapodLabs/decapod/compare/v0.123.0...v0.123.1) - 2026-11-03
+
+### Fixed
+
+- reconcile caller isolation with v0.123.0
+- *(build)* synchronize Bazel lock with patched Tokio
+- *(deps)* update Tokio past AsyncFd advisory
+- *(broker)* resolve executable independently of caller cwd
+- *(broker)* restore caller isolation group_broker_tests.rs
+- *(broker)* restore caller isolation group_broker.rs
+
+### Other
+
+- *(governance)* refresh build repair spec bindings
+- *(proof)* reconcile synchronized Bazel inventory
+- *(governance)* bind caller publication spec reviews
+- *(proof)* reconcile patched dependency inventory
+- *(specs)* clarify caller context security custody
+- *(specs)* define internal caller protocol boundary
+- *(specs)* refresh shared leader regression attestations
+- *(broker)* require shared leader claim routing
+- *(specs)* refresh caller custody attestations
+- *(proof)* reconcile reviewed release inventory
+- *(specs)* define broker caller custody
+- *(broker)* retain concurrent request identity
+- *(governance)* initialize release controller workspace
+
+## [0.123.0](https://github.com/DecapodLabs/decapod/compare/v0.122.1...v0.123.0) - 2026-11-03
+
+### Added
+
+- *(proof)* add Dagger boundary in dagger.rs
+- *(proof)* add Dagger boundary in consumer_readiness.rs
+- *(proof)* add Dagger boundary in lib.rs
+- *(proof)* add Dagger boundary in repository_host.rs
+- *(proof)* add Dagger boundary in validation_runtime.rs
+- *(proof)* add Dagger boundary in native_proof.rs
+- *(proof)* add Dagger boundary in mod.rs
+- *(proof)* add Dagger boundary in external_action.rs
+- *(proof)* add Dagger boundary in config-schema.md
+- *(proof)* add Dagger boundary in INTERFACES.md
+- *(proof)* declare accepted local Dagger engine contract
+
+### Fixed
+
+- *(proof)* retain Dagger prerequisite recovery context
+- *(proof)* bind Dagger authorization errors to named config entry
+- *(proof)* identify rejected Dagger authorization entry
+- *(proof)* return actionable agent-owned Dagger recovery
+- *(proof)* remove needless borrow in Dagger policy error
+- *(proof)* import Dagger repository authority module
+- *(deps)* synchronize generated Bazel Tokio lock
+- *(deps)* update Tokio to 1.53.3
+- *(proof)* preserve dormant Dagger policy in consumer_readiness.rs
+- *(proof)* preserve dormant Dagger policy in lib.rs
+- *(proof)* preserve dormant Dagger policy in cli.rs
+- *(proof)* preserve dormant Dagger policy in proof.rs
+- *(proof)* bind Dagger activation to accepted dormant policy
+- *(proof)* permit staged Dagger executor authorization
+- *(proof)* reconcile Dagger workspace contract in config.toml
+- *(proof)* reconcile Dagger workspace contract in INTERFACES.md
+- *(proof)* reconcile Dagger workspace contract in config-schema.md
+- *(proof)* reconcile Dagger workspace contract in dagger.rs
+- *(proof)* bind root workspace argument literals
+- *(proof)* execute Dagger workspace check at snapshot root
+- *(proof)* declare Dagger workspace check protocol
+
+### Other
+
+- reconcile Dagger proof with accepted v0.122.1
+- *(governance)* bind Dagger recovery review evidence
+- *(specs)* define agent-owned Dagger recovery output
+- *(governance)* bind CI lint and docs input repair reviews
+- *(proof)* retain Dagger guidance in canonical generator input
+- *(governance)* bind Dagger CI repair reviews
+- *(proof)* format fixed Dagger workspace arguments
+- *(governance)* record source-grounded Dagger spec reviews
+- *(proof)* reconcile reviewed dependency inventory
+- *(specs)* define Dagger executor security limits
+- *(specs)* describe optional Dagger executor architecture
+- refresh Dagger authorization integration evidence
+- *(proof)* cover dormant Dagger config and init roundtrip
+- refresh staged Dagger contract projections
+- *(specs)* define staged Dagger authorization boundary
+- *(proof)* explain two-stage Dagger executor activation
+- *(proof)* preserve empty Dagger authorization for local proof
+- refresh governed Dagger adapter evidence
+- initialize governed Dagger adapter workspace
+
+## [0.122.1](https://github.com/DecapodLabs/decapod/compare/v0.122.0...v0.122.1) - 2026-11-03
+
+### Fixed
+
+- reconcile native receipt branch with release 0.122.0
+- *(governance)* reconcile generated Bazel source inventory
+- *(build)* synchronize Bazel lock for Tokio security update
+- *(governance)* reconcile Tokio source inventory
+- *(deps)* update Tokio for RUSTSEC-2026-0386
+- *(validation)* atomically publish native completion bundle
+- *(governance)* reconcile reviewed release source inventory
+- *(issue1474)* replay governance_artifacts.rs receipt custody repair
+- *(issue1474)* replay consumer_readiness.rs receipt custody repair
+- *(issue1474)* replay workspace_publication_tests.rs receipt custody repair
+- *(issue1474)* replay validation_runtime.rs receipt custody repair
+- *(issue1474)* replay workspace.rs receipt custody repair
+
+### Other
+
+- *(governance)* review final native receipt repair material
+- *(governance)* refresh repaired proof input projections
+- *(spec)* record bounded Tokio module lock repair
+- *(validation)* apply CI formatting for consumer_readiness.rs
+- *(validation)* apply CI formatting for tests.rs
+- *(validation)* apply CI formatting for validation_runtime.rs
+- *(governance)* record source-bound receipt spec reviews
+- *(governance)* refresh reviewed receipt specifications
+- *(spec)* reconcile native receipt SECURITY contract
+- *(spec)* reconcile native receipt OPERATIONS contract
+- *(spec)* reconcile native receipt ARCHITECTURE contract
+- *(spec)* reconcile native receipt INTERFACES contract
+- *(governance)* refresh atomic completion projections
+- *(validation)* clarify completion overwrite assertion
+- *(spec)* require atomic native success publication
+- *(governance)* locate atomic native receipt bundle
+- *(validation)* require paired native completion artifacts
+- *(validation)* cover failed native completion writes
+- *(governance)* refresh canonical receipt specs
+- *(spec)* define native full-proof receipt custody
+- *(governance)* initialize canonical native receipt repair
+
+## [0.122.0](https://github.com/DecapodLabs/decapod/compare/v0.121.3...v0.122.0) - 2026-11-03
+
+### Fixed
+
+- recover completion proof without rewriting task history ([#1482](https://github.com/DecapodLabs/decapod/pull/1482))
+
+## [0.121.3](https://github.com/DecapodLabs/decapod/compare/v0.121.2...v0.121.3) - 2026-11-03
+
+### Fixed
+
+- preserve distinct paths in source inventory ([#1481](https://github.com/DecapodLabs/decapod/pull/1481))
+
 ## [0.121.2](https://github.com/DecapodLabs/decapod/compare/v0.121.1...v0.121.2) - 2026-11-01
 
 ### Other

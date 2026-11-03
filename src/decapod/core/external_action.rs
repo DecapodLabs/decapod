@@ -12,6 +12,8 @@ pub enum ExternalCapability {
     VcsWrite,
     ProofExec,
     RepositoryProofExec,
+    DaggerProofExec,
+    DaggerEngineRead,
     VerificationExec,
     SystemInspect,
     PreflightProbe,
@@ -25,6 +27,8 @@ impl ExternalCapability {
             ExternalCapability::VcsWrite => "vcs_write",
             ExternalCapability::ProofExec => "proof_exec",
             ExternalCapability::RepositoryProofExec => "repository_proof_exec",
+            ExternalCapability::DaggerProofExec => "dagger_proof_exec",
+            ExternalCapability::DaggerEngineRead => "dagger_engine_read",
             ExternalCapability::VerificationExec => "verification_exec",
             ExternalCapability::SystemInspect => "system_inspect",
             ExternalCapability::PreflightProbe => "preflight_probe",
@@ -211,6 +215,16 @@ pub fn authorize_repository_proof(
     seal.verify(invocation).map_err(|error| {
         error::DecapodError::ValidationError(format!("REPOSITORY_PROOF_REJECTED: {error}"))
     })?;
+    if invocation.capabilities
+        == crate::core::native_proof::ReviewedCapabilities::RepositoryDaggerCheck
+    {
+        authorize_checked(
+            store_root,
+            ExternalCapability::DaggerProofExec,
+            "readiness.dagger-check",
+            &invocation.program.to_string_lossy(),
+        )?;
+    }
     repository_proof_policy(store_root, &invocation.program.to_string_lossy())
 }
 
