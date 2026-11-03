@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.124.2](https://github.com/DecapodLabs/decapod/compare/v0.124.1...v0.124.2) - 2026-11-03
+
+### Fixed
+
+- refresh v0.124.1 readiness projections
+- preserve native readiness recovery diagnostics
+
+### Other
+
+- reconcile native diagnostics with v0.124.1
+
 ## [0.124.1](https://github.com/DecapodLabs/decapod/compare/v0.124.0...v0.124.1) - 2026-11-03
 
 ### Fixed
