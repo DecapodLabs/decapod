@@ -586,6 +586,11 @@
       "id": "handoff-executed-fixtures",
       "summary": "Repair three actual plugin CI fixture failures job125618302466: explicit actual caller across risk test session, deterministic CLI Git identity, separate source/receiver spoof rejection without invalid same-agent precondition; no production gates changed",
       "input_digest": "sha256:13de4842e696ca1340f7884e363a71f96aa75d6983e2553e15b98ba70e851afb"
+    },
+    {
+      "id": "handoff-ci-fixture-evidence",
+      "summary": "Record actual prior plugin results and bounded fixture repairs without claiming repaired candidate passes",
+      "input_digest": "sha256:8bf0f5e41f074c3c2d370791e0213384992c3b52b6c6abfe4c2f8ecf2860ceae"
     }
   ],
   "intents": {

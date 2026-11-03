@@ -834,3 +834,12 @@ whose write-risk classification is critical. The read-only side-effect regressio
 in `tests/plugins/policy.rs` remains authored and unexecuted pending validation.
 This helper-level guarantee does not make the entire CLI side-effect-free:
 preexisting policy CLI initialization can still initialize policy storage.
+
+The first executed plugin suite on `fe0b7b77` passed policy tests and 24 of
+27 TODO tests, but three TODO fixtures failed before exercising their intended
+assertions: missing subprocess Git author identity, identical source/recipient
+input, and a legacy CLI fixture omitting actual caller identity. The fixtures
+now supply explicit caller context and deterministic local test Git identity,
+and separately check source-owner and recipient spoof rejection. These repairs
+remain unverified until the exact new candidate executes; no runtime policy
+requirements were relaxed to accommodate the fixtures.
