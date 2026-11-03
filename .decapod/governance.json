@@ -692,6 +692,14 @@
       "proof_refs": [
         "tests/group_broker.rs"
       ]
+    },
+    {
+      "id": "handoff-broker-fixture-projections",
+      "summary": "Refresh current-source spec reviews and generated fingerprints for the seeded-category fixture repair; configuration unchanged.",
+      "input_digest": "sha256:fbc2f755caf5ec1e441e7562169139b9342ff824442505c1599d7b04441f13c5",
+      "proof_refs": [
+        "tests/group_broker.rs"
+      ]
     }
   ],
   "intents": {
@@ -732,22 +740,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted v0.123.1 architecture prose is retained unchanged; handoff caller/recovery changes fit existing broker/policy boundaries documented materially in INTERFACES and SECURITY, with no new service or authority subsystem",
-          "reviewed_code_fingerprint": "ba730ee6761512edc91ae24ca59fa02d99b87dcbe1b5aef6c393cb28d06dd0af",
+          "reason": "Reviewed current fixture and runtime category validation; no production architecture changed, accepted broker and handoff authority boundaries remain intact.",
+          "reviewed_code_fingerprint": "9b2d8b291b2e9774becdc5a8281b12553f67fbeb7999fc5543c31c1c06b77d92",
           "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Semantically merged accepted native/Dagger/request-broker interfaces with handoff actual-caller and exact approval recovery; user only init, agent/harness receives actionable errors; added integration boundary, no lost accepted contract",
-          "reviewed_code_fingerprint": "ba730ee6761512edc91ae24ca59fa02d99b87dcbe1b5aef6c393cb28d06dd0af",
-          "spec_material_hash": "e93de85d30637fde2ccd15d47027525d417bfb20ad6bf05968dc04990e9ec274"
+          "reason": "Current source review documents valid seeded categories for concurrent caller fixture, retaining all identity assertions and recording observed failure without claiming proof.",
+          "reviewed_code_fingerprint": "9b2d8b291b2e9774becdc5a8281b12553f67fbeb7999fc5543c31c1c06b77d92",
+          "spec_material_hash": "111b63acca3b5b52d373a6ff7c57a81b4374b4af7348fb7a7770fb2370e62195"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved both accepted security contracts and handoff actor separation, exact one-use approval, established trust and no self-promotion; no runtime gate changed in merge",
-          "reviewed_code_fingerprint": "ba730ee6761512edc91ae24ca59fa02d99b87dcbe1b5aef6c393cb28d06dd0af",
+          "reason": "Security handoff prose remains the material approved recovery addition against accepted master; current test-only category repair does not alter trust, approval, or caller authority.",
+          "reviewed_code_fingerprint": "9b2d8b291b2e9774becdc5a8281b12553f67fbeb7999fc5543c31c1c06b77d92",
           "spec_material_hash": "07b7773a883249690b14ce85ba9b982a06480204057ae59caebc2062a932b7ed"
         }
       ],
@@ -759,7 +767,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793688073Z"
+      "updated_at": "1793689269Z"
     },
     "trajectory": {
       "active_boundaries": [
