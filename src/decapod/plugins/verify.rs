@@ -65,7 +65,12 @@ pub enum VerifyCommand {
         id: String,
     },
     /// Recover a batch of done TODOs from the aggregate-proof deadlock.
-    Recover,
+    Recover {
+        /// Fresh evidence for a completed TODO, as TODO_ID=FILE; repeat per file/task.
+        /// Required for tasks without a usable baseline; never imports an old CI pass.
+        #[clap(long = "artifact", value_name = "TODO_ID=FILE")]
+        artifact: Vec<String>,
+    },
     /// Generate or independently verify a completion evidence record.
     Completion {
         #[clap(value_name = "ID")]
@@ -199,11 +204,11 @@ fn epoch_secs(ts: &str) -> Option<i64> {
 fn validation_proof_reason(validate_ok: bool, hashes_match: bool, todo_id: &str) -> String {
     if !validate_ok && hashes_match {
         format!(
-            "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked. Next: fix the reported validation gate, then run `decapod qa verify todo {todo_id}`"
+            "decapod validate did not pass; output hash is unchanged from the baseline, so verification remains blocked. Agent: run `decapod validate --format json` to inspect the current blockers, fix the reported validation gate, then run `decapod qa verify todo {todo_id}`"
         )
     } else if !validate_ok {
         format!(
-            "decapod validate did not pass. Next: fix the reported validation gate, then run `decapod qa verify todo {todo_id}`"
+            "decapod validate did not pass. Agent: run `decapod validate --format json` to inspect the current blockers, fix the reported validation gate, then run `decapod qa verify todo {todo_id}`"
         )
     } else {
         format!(
@@ -218,7 +223,7 @@ fn validation_epoch_changed_reason(
     todo_id: &str,
 ) -> String {
     format!(
-        "validation epoch changed: captured {captured_epoch} but active {active_epoch}. To recover from an aggregate-proof deadlock, run `decapod qa verify prune {todo_id}`, obtain a passing `decapod validate` in the governed container workspace, run `decapod todo claim --id {todo_id}`, then run `decapod todo done --id {todo_id} --validated` there."
+        "validation epoch changed: captured {captured_epoch} but active {active_epoch}. Agent: review the material drift, then run `decapod qa verify recover` to revalidate the completed batch without reopening it. If current evidence is missing, supply `decapod qa verify recover --artifact {todo_id}=<current-file>` and repeat --artifact for each task requiring evidence. Recovery still requires actual passing validation; repair unrelated gates rather than pruning completion history."
     )
 }
 
@@ -316,6 +321,41 @@ fn hash_file(path: &Path) -> Result<(String, u64, Option<u64>), error::DecapodEr
     Ok((sha256_hex(&bytes), meta.len(), mtime))
 }
 
+// Return only fixed diagnostic labels, never child-controlled text, paths,
+// environment values or provider URLs. These labels survive the scoped recovery
+// validation, even when a separate ordinary validate would hit aggregate proof.
+fn safe_validation_failure_diagnostic(stdout: &[u8], stderr: &[u8]) -> String {
+    const MARKERS: &[&str] = &[
+        "NEEDS_PLAN_APPROVAL",
+        "PROOF_HOOK_FAILED",
+        "READINESS_BLOCKED",
+        "SNAPSHOT_NOT_READY",
+        "REQUIRED_PROOF_NOT_AUTHENTICATED",
+        "CONTROLLER_CONTRACT_UNSUPPORTED",
+        "SPEC_REVIEW_REQUIRED",
+        "STALE_SOURCE_INVENTORY",
+        "SNAPSHOT_UPLOAD_PENDING",
+    ];
+    let contains = |bytes: &[u8], marker: &str| {
+        bytes[..bytes.len().min(1024 * 1024)]
+            .windows(marker.len())
+            .any(|window| window == marker.as_bytes())
+    };
+    let found: Vec<_> = MARKERS
+        .iter()
+        .copied()
+        .filter(|marker| contains(stdout, marker) || contains(stderr, marker))
+        .collect();
+    if found.is_empty() {
+        "VALIDATION_CHILD_FAILED: no recognized safe blocker label; run `decapod validate --format json` for the current structured diagnostic, repair its blockers, then retry the original verification command. No child output was forwarded.".into()
+    } else {
+        format!(
+            "VALIDATION_CHILD_FAILED: recognized labels observed in scoped validation output: {}; run `decapod validate --format json` and inspect the current structured diagnostic to identify actual blockers, repair them, then retry the original verification command. Observed labels are not independently established causes or proof; no child output was forwarded.",
+            found.join(", ")
+        )
+    }
+}
+
 fn run_validate_and_hash(
     store_root: &Path,
     repo_root: &Path,
@@ -359,6 +399,12 @@ fn run_validate_and_hash(
     } else {
         output
     };
+    if !output.status.success() {
+        eprintln!(
+            "{}",
+            safe_validation_failure_diagnostic(&output.stdout, &output.stderr)
+        );
+    }
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(&stdout) {
         let normalized = normalize_json_value(&value);
@@ -1280,59 +1326,198 @@ pub fn capture_baseline_for_todo(
     )
 }
 
+/// Explicitly selected current material for recovery, captured before validation.
+/// It is not proof until the real validation snapshot and final batch checks pass.
+#[derive(Debug)]
+struct RecoveryCapture {
+    files: Vec<FileArtifact>,
+    paths: Vec<PathBuf>,
+    epoch: ValidationEpochMetadata,
+}
+
+impl RecoveryCapture {
+    fn check_material(&self, repo_root: &Path) -> Result<(), error::DecapodError> {
+        if active_validation_epoch(repo_root)? != self.epoch {
+            return Err(error::DecapodError::ValidationError(
+                "Recovery validation material changed; recapture current evidence".into(),
+            ));
+        }
+        for (path, expected) in self.paths.iter().zip(&self.files) {
+            let (hash, size, _) = hash_file(path)?;
+            if hash != expected.hash || size != expected.size {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "Recovery artifact changed during validation: {}",
+                    path.display()
+                )));
+            }
+        }
+        Ok(())
+    }
+}
+
+fn prepare_recovery_captures(
+    repo_root: &Path,
+    targets: &[VerifyTarget],
+    inputs: &[String],
+) -> Result<std::collections::BTreeMap<String, RecoveryCapture>, error::DecapodError> {
+    let mut captures = std::collections::BTreeMap::<String, RecoveryCapture>::new();
+    for input in inputs {
+        let (id, path) = input
+            .split_once('=')
+            .filter(|(id, path)| !id.is_empty() && !path.is_empty())
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "Recovery --artifact requires TODO_ID=FILE".into(),
+                )
+            })?;
+        let target = targets
+            .iter()
+            .find(|target| target.todo_id == id)
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(format!(
+                    "Recovery artifact names a task outside the unverified completed batch: {id}"
+                ))
+            })?;
+        // Capture may establish the existing validate_passes contract, but must
+        // not replace a different or malformed task proof contract.
+        if let Some(raw) = target.proof_plan.as_deref() {
+            let plan: Vec<String> = serde_json::from_str(raw).map_err(|_| {
+                error::DecapodError::ValidationError(format!("TODO {id} has malformed proof_plan"))
+            })?;
+            if plan.iter().any(|gate| gate != "validate_passes") {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "TODO {id} has additional proof obligations; recovery cannot replace them"
+                )));
+            }
+        }
+        let disk_path = resolve_artifact_path_for_todo(repo_root, Some(id), path);
+        let (hash, size, mtime) = hash_file(&disk_path)?;
+        let capture = captures.entry(id.to_owned()).or_insert(RecoveryCapture {
+            files: Vec::new(),
+            paths: Vec::new(),
+            epoch: active_validation_epoch(repo_root)?,
+        });
+        if !capture.paths.contains(&disk_path) {
+            capture.paths.push(disk_path);
+            capture.files.push(FileArtifact {
+                path: path.to_owned(),
+                hash,
+                size,
+                mtime,
+            });
+        }
+    }
+    // Discover all missing inputs before executing validation or writing state.
+    for target in targets {
+        if !captures.contains_key(&target.todo_id) {
+            let usable = target
+                .artifacts
+                .as_deref()
+                .and_then(|raw| serde_json::from_str::<VerificationArtifacts>(raw).ok())
+                .is_some_and(|artifacts| !artifacts.file_artifacts.is_empty());
+            if !usable {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "TODO {} requires fresh evidence: rerun `decapod qa verify recover --artifact {}=FILE` with a current relevant file for each incomplete baseline; historical completion remains unverified",
+                    target.todo_id, target.todo_id
+                )));
+            }
+        }
+    }
+    Ok(captures)
+}
+
 fn refresh_batch_baselines(
     store: &Store,
     targets: &[VerifyTarget],
     snapshot: &ValidationSnapshot,
     validation_epoch: &ValidationEpochMetadata,
 ) -> Result<Vec<VerifyTarget>, error::DecapodError> {
+    refresh_batch_baselines_with_captures(store, targets, snapshot, validation_epoch, None)
+}
+
+fn refresh_batch_baselines_with_captures(
+    store: &Store,
+    targets: &[VerifyTarget],
+    snapshot: &ValidationSnapshot,
+    validation_epoch: &ValidationEpochMetadata,
+    fresh: Option<(&Path, &std::collections::BTreeMap<String, RecoveryCapture>)>,
+) -> Result<Vec<VerifyTarget>, error::DecapodError> {
     if !snapshot.passed {
         return Err(error::DecapodError::ValidationError(
-            "cannot recover verification baselines from a failing validation snapshot".to_string(),
+            "cannot recover verification baselines from a failing validation snapshot. Agent: run `decapod validate --format json` to inspect the current validation blockers, repair the reported gates, then retry `decapod qa verify recover` with the same explicit --artifact TODO_ID=FILE inputs where required. Historical completion remains unverified; do not prune or reopen tasks to bypass proof".to_string(),
         ));
     }
 
     let completed_at = now_iso();
     let mut updates = Vec::new();
     for target in targets {
-        let proof_plan_raw = target.proof_plan.as_deref().ok_or_else(|| {
-            error::DecapodError::ValidationError(format!(
-                "TODO {} has no proof plan; it must be reopened or completed with --validated before recovery",
-                target.todo_id
-            ))
-        })?;
-        let proof_plan: Vec<String> = serde_json::from_str(proof_plan_raw).map_err(|_| {
-            error::DecapodError::ValidationError(format!(
-                "TODO {} has malformed proof_plan; it must be recaptured before recovery",
-                target.todo_id
-            ))
-        })?;
-        if !proof_plan.iter().any(|gate| gate == "validate_passes") {
-            return Err(error::DecapodError::ValidationError(format!(
-                "TODO {} has no validate_passes proof gate; recovery refuses to invent proof",
-                target.todo_id
-            )));
-        }
-
-        let artifacts_raw = target.artifacts.as_deref().ok_or_else(|| {
-            error::DecapodError::ValidationError(format!(
-                "TODO {} has no verification artifacts; reopen it or capture artifacts before recovery",
-                target.todo_id
-            ))
-        })?;
-        let mut artifacts: VerificationArtifacts =
-            serde_json::from_str(artifacts_raw).map_err(|_| {
+        let capture = fresh.and_then(|(_, captures)| captures.get(&target.todo_id));
+        let (proof_plan, mut artifacts) = if let Some(capture) = capture {
+            capture.check_material(fresh.unwrap().0)?;
+            if &capture.epoch != validation_epoch {
+                return Err(error::DecapodError::ValidationError(
+                    "Recovery epoch changed after evidence capture".into(),
+                ));
+            }
+            (
+                vec!["validate_passes".to_string()],
+                VerificationArtifacts {
+                    completed_at: completed_at.clone(),
+                    task_id: Some(target.todo_id.clone()),
+                    task_revision: Some(target.revision),
+                    evaluator_epoch: Some(validation_epoch.epoch_id.clone()),
+                    validation_epoch: Some(validation_epoch.clone()),
+                    file_artifacts: capture.files.clone(),
+                    proof_plan_results: vec![ProofPlanResult {
+                        proof_gate: "validate_passes".into(),
+                        status: "pass".into(),
+                        command: "decapod validate --format json".into(),
+                        output_hash: snapshot.output_hash.clone(),
+                        evaluator_epoch: Some(validation_epoch.epoch_id.clone()),
+                        validation_epoch: Some(validation_epoch.clone()),
+                    }],
+                },
+            )
+        } else {
+            let proof_plan_raw = target.proof_plan.as_deref().ok_or_else(|| {
                 error::DecapodError::ValidationError(format!(
-                    "TODO {} has malformed verification artifacts; recapture before recovery",
+                    "TODO {} has no proof plan; supply explicit recovery --artifact {}=FILE",
+                    target.todo_id, target.todo_id
+                ))
+            })?;
+            let proof_plan: Vec<String> = serde_json::from_str(proof_plan_raw).map_err(|_| {
+                error::DecapodError::ValidationError(format!(
+                    "TODO {} has malformed proof_plan; it must be recaptured before recovery",
                     target.todo_id
                 ))
             })?;
-        if artifacts.file_artifacts.is_empty() {
-            return Err(error::DecapodError::ValidationError(format!(
-                "TODO {} has no file artifacts; recovery refuses to accept unverifiable evidence",
-                target.todo_id
-            )));
-        }
+            if !proof_plan.iter().any(|gate| gate == "validate_passes") {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "TODO {} has no validate_passes proof gate; recovery refuses to invent proof",
+                    target.todo_id
+                )));
+            }
+            let artifacts_raw = target.artifacts.as_deref().ok_or_else(|| {
+                error::DecapodError::ValidationError(format!(
+                    "TODO {} has no verification artifacts; supply explicit recovery --artifact {}=FILE",
+                    target.todo_id, target.todo_id
+                ))
+            })?;
+            let artifacts: VerificationArtifacts =
+                serde_json::from_str(artifacts_raw).map_err(|_| {
+                    error::DecapodError::ValidationError(format!(
+                        "TODO {} has malformed verification artifacts; recapture before recovery",
+                        target.todo_id
+                    ))
+                })?;
+            if artifacts.file_artifacts.is_empty() {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "TODO {} has no file artifacts; recovery refuses to accept unverifiable evidence",
+                    target.todo_id
+                )));
+            }
+            (proof_plan, artifacts)
+        };
 
         let proof = artifacts
             .proof_plan_results
@@ -1380,6 +1565,11 @@ fn refresh_batch_baselines(
         |conn| {
             for (target, _, _, _) in &updates {
                 ensure_target_unchanged(conn, target)?;
+                if let Some((repo_root, captures)) = fresh
+                    && let Some(capture) = captures.get(&target.todo_id)
+                {
+                    capture.check_material(repo_root)?;
+                }
                 if target.status != "done" || target.revision < 0 {
                     return Err(error::DecapodError::ValidationError(
                         "Recovery requires a current completed task revision".into(),
@@ -1388,13 +1578,16 @@ fn refresh_batch_baselines(
             }
             for (target, artifacts_json, proof_plan_json, artifacts) in &updates {
                 conn.execute(
-                "UPDATE task_verification
-                 SET proof_plan = ?1,
-                     verification_artifacts = ?2,
-                     last_verified_status = 'CLAIMED',
-                     last_verified_notes = 'baseline recovered from stable batch validation snapshot; awaiting final aggregate verification',
-                     updated_at = ?3
-                 WHERE todo_id = ?4",
+                "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts,
+                     last_verified_status, last_verified_notes, verification_policy_days, updated_at)
+                 VALUES(?4, ?1, ?2, 'CLAIMED',
+                     'current recovery evidence captured; awaiting final aggregate verification', 90, ?3)
+                 ON CONFLICT(todo_id) DO UPDATE SET
+                     proof_plan = excluded.proof_plan,
+                     verification_artifacts = excluded.verification_artifacts,
+                     last_verified_status = excluded.last_verified_status,
+                     last_verified_notes = excluded.last_verified_notes,
+                     updated_at = excluded.updated_at",
                 crate::core::db::params![proof_plan_json, artifacts_json, completed_at, target.todo_id],
             )?;
                 append_verification_event_on_connection(
@@ -1403,6 +1596,9 @@ fn refresh_batch_baselines(
                     "task.verify.recover",
                     &completed_at,
                     serde_json::json!({
+                        "previous_proof_plan": target.proof_plan,
+                        "previous_verification_artifacts": target.artifacts,
+                        "capture_kind": if fresh.is_some_and(|(_, captures)| captures.contains_key(&target.todo_id)) { "fresh_current_material" } else { "existing_material_revalidation" },
                         "proof_plan": serde_json::from_str::<serde_json::Value>(proof_plan_json).map_err(|err| error::DecapodError::ValidationError(err.to_string()))?,
                         "verification_artifacts": artifacts,
                         "validation_epoch": validation_epoch,
@@ -1499,7 +1695,7 @@ fn finalize_recovered_batch(
 ) -> Result<Vec<VerifyTodoResult>, error::DecapodError> {
     if !snapshot.passed {
         return Err(error::DecapodError::ValidationError(
-            "Final aggregate validation did not pass; recovered proof remains pending".into(),
+            "Final aggregate validation did not pass; recovered proof remains pending. Agent: run `decapod validate --format json` to inspect the current validation blockers, repair the reported gates, then retry `decapod qa verify recover`. If evidence must be recaptured, repeat --artifact TODO_ID=FILE for each affected task; pending proof is not acceptance".into(),
         ));
     }
     let ts = now_iso();
@@ -1546,7 +1742,12 @@ fn finalize_recovered_batch(
     )
 }
 
-fn run_recover_cli(store: &Store, repo_root: &Path, json: bool) -> Result<(), error::DecapodError> {
+fn run_recover_cli(
+    store: &Store,
+    repo_root: &Path,
+    json: bool,
+    artifact_inputs: &[String],
+) -> Result<(), error::DecapodError> {
     let targets = load_targets(store, None)?;
     if targets.is_empty() {
         return Err(error::DecapodError::ValidationError(
@@ -1554,6 +1755,7 @@ fn run_recover_cli(store: &Store, repo_root: &Path, json: bool) -> Result<(), er
         ));
     }
 
+    let captures = prepare_recovery_captures(repo_root, &targets, artifact_inputs)?;
     let target_ids = targets
         .iter()
         .map(|target| target.todo_id.as_str())
@@ -1567,7 +1769,17 @@ fn run_recover_cli(store: &Store, repo_root: &Path, json: bool) -> Result<(), er
         output_hash,
     };
     let validation_epoch = active_validation_epoch(repo_root)?;
-    let recovered_targets = refresh_batch_baselines(store, &targets, &snapshot, &validation_epoch)?;
+    let recovered_targets = if captures.is_empty() {
+        refresh_batch_baselines(store, &targets, &snapshot, &validation_epoch)?
+    } else {
+        refresh_batch_baselines_with_captures(
+            store,
+            &targets,
+            &snapshot,
+            &validation_epoch,
+            Some((repo_root, &captures)),
+        )?
+    };
 
     // These exact tasks remain CLAIMED while their own aggregate admission
     // check is scoped out. All other final validation gates still execute.
@@ -1630,8 +1842,8 @@ pub fn run_verify_cli(
                 }
                 return Ok(());
             }
-            VerifyCommand::Recover => {
-                return run_recover_cli(store, repo_root, cli.json);
+            VerifyCommand::Recover { artifact } => {
+                return run_recover_cli(store, repo_root, cli.json, artifact);
             }
             VerifyCommand::Completion {
                 id,

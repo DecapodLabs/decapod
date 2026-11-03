@@ -450,100 +450,176 @@
     }
   },
   "change": {
-    "id": "change_01M6F0HEWT8PN3DR4WBMAVJCBC",
+    "id": "change_01M6F0WT45WFWYNARKEXRWX6GH",
     "base_commit": "3216d7170b80a350c5a8417c38dda9c5c4d8bb23",
     "target_base": "origin/master"
   },
-  "claims": {
-    "issue1470-source-identity": {
-      "statement": "Source inventory retains each actual source path once without phantom case aliases or loss of distinct case-sensitive paths.",
-      "falsifier": "Regression fixtures produce an alias absent from the directory, drop a distinct same-content path, or omit untracked/non-Git inputs.",
-      "status": "open"
-    }
-  },
   "checkpoints": [
     {
-      "id": "bootstrap",
-      "summary": "Official 0.121.2 generated workspace bootstrap; preserved failed older-controller candidate 03b63f55 separately",
-      "input_digest": "sha256:1639995a597a07fcea0e713d77113e4284b8fa8e4398ac784816f9a781faa661"
+      "id": "controller-bootstrap",
+      "summary": "Fresh supported 0.121.2 generated workspace; prior failed branch preserved; no checks claimed",
+      "input_digest": "sha256:90e0bb1b57786033083d6af1e7c75cdf32399d83755bef1fbc0f688ba736544c"
     },
     {
-      "id": "source-spelling",
-      "summary": "Replay and format actual directory-entry resolution without source identity collapse",
-      "input_digest": "sha256:7afd1fc3054bf2a6b2540fdb2dc96985d728c3c5755f7b013acf51623236cfb4"
+      "id": "replay-verify-rs",
+      "summary": "Replay authored issue 1473 material only; tests not yet run",
+      "input_digest": "sha256:d47280f0cf14606c57f71d8b0dce551acfa9a7db0dfda046d2de0518ebaf861e"
     },
     {
-      "id": "source-spelling-tests",
-      "summary": "Replay five regression cases preserving host filesystem behavior and non-Git coverage",
-      "input_digest": "sha256:f742e00282ed82c55ab1f85822cd609d7300549955ae3d24bf483759bdcc07b3"
+      "id": "replay-verify_completion_tests-rs",
+      "summary": "Replay authored issue 1473 material only; tests not yet run",
+      "input_digest": "sha256:9cd95121020dcb1830bc50d888c2f0a75a63df471fb8aec5c144d308b18ce6c4"
     },
     {
-      "id": "source-spelling-spec",
-      "summary": "Replay authored source identity specification without replacing generated boundaries",
-      "input_digest": "sha256:4ebac2e155e61afcf6a200e90782852696ea5478dc99da242860cb16136917ac"
+      "id": "replay-error-recovery-md",
+      "summary": "Replay authored issue 1473 material only; tests not yet run",
+      "input_digest": "sha256:a6d15e65c88af725bb0421b0b5347060f54c441baa1fb40da0f75334f489fe76"
     },
     {
-      "id": "refresh-specs",
-      "summary": "Refresh generated spec fingerprints after semantic architecture change",
-      "input_digest": "sha256:0358eab4267a878bc35e1ad08edf4dc8cebdcbb3656f2220c46ed4f65cae8c5c"
+      "id": "replay-semantic-spec",
+      "summary": "Replay only authored recovery semantics preserving current generated attestations",
+      "input_digest": "sha256:9fa29e526457aec8777071a8cd7f0d888484f3829ac16188f8ef8a782aca14e2"
     },
     {
-      "id": "review-release-inventory",
-      "summary": "Review unchanged source execution graph with released package version 0.121.2 inventory",
-      "input_digest": "sha256:51d72800ac8a337b1f3fa2da669838da4048895c6e1431de0f31cf432d7e8c2d"
+      "id": "refresh-supported-spec",
+      "summary": "Refresh generated spec projections using supported release",
+      "input_digest": "sha256:b1bb5ec4a1b30f901d4dfb99ac8eb776a68ce05330d62c18e39ada0d15e8f883"
     },
     {
-      "id": "issue1470-config-projection",
-      "summary": "Regenerate config-bound manifest after reviewed source inventory update; retain exact published validation failure and publication custody",
-      "input_digest": "sha256:6f1e0231ff61f63dc9094f7891014ff6113b29f208cacabe55fc596d0ebafbb3"
+      "id": "reconcile-reviewed-inventory",
+      "summary": "Independently compared discovered inventory vs213ed9ca: only Cargo.toml and Cargo.lock package release0.121.0 to0.121.2; no workflow checks changed; update user-editable review declaration only",
+      "input_digest": "sha256:cc10090b222368904f5d2e76623acd2d4831a276bc5697fd6cb985f0591351da"
     },
     {
-      "id": "issue1470-tokio-advisory",
-      "summary": "Resolve required CI advisory with minimal registry-verified Tokio 1.53.3 lock update only",
-      "input_digest": "sha256:a0083e65ed54d62884743645d7e892140cc8d49477236e8f0e930e4a9c7a66ea"
+      "id": "cli-recovery-failclosed",
+      "summary": "Add candidate-binary multi-TODO CLI recovery regression: missing inputs actionable; actual child validation rejects unrelated unapproved plan; task dates revisions and absent evidence preserved without prune. Authored not executed.",
+      "input_digest": "sha256:05b13f401d4a7e9a931c03cd7f4fd561749c0771c4525ab8c6f7050a0962abf4"
     },
     {
-      "id": "issue1470-reviewed-patched-inventory",
-      "summary": "Review inventory delta confined to minimal Tokio lock update; adopt official agent.init inventory digest with required graph unchanged",
-      "input_digest": "sha256:480005bf4c4366def60c9a7d1428757cff19696d0d6dcd12b87c51cb9abf32e8"
+      "id": "cli-recovery-projections",
+      "summary": "Refresh supported generated projections after CLI regression; tests remain unexecuted",
+      "input_digest": "sha256:3077ff24009b13eb6168948f01a71dcdefd89938fd631aaa269f232d86477ba0"
     },
     {
-      "id": "issue1470-reviewed-projections",
-      "summary": "Refresh config/code-bound generated projections and explicitly review current interfaces architecture security after CI repairs",
-      "input_digest": "sha256:29042f65589358a38075ea9a456b6242bae08230f4d497f7f80feeb8cf5e9d49"
+      "id": "tokio-advisory-repair",
+      "summary": "Apply independently hash-verified minimal Tokio1.52.3 to1.53.3 lock version/checksum patch for observed RUSTSEC-2026-0386; no other dependency edges changed, no tests claimed",
+      "input_digest": "sha256:1400430b7f78820e8b327a7841f035a22b7f93cd9a1cd346f248b904cd74efa1"
     },
     {
-      "id": "issue1470-bazel-lock",
-      "summary": "Synchronize pinned Bazel derived lock with reviewed Tokio patch; exact canonical artifact hashes verified",
-      "input_digest": "sha256:cb14e504dab349ea8649d955ced19836d77bde73fbcf6d2155bdf2dd54273c1c"
+      "id": "reviewed-tokio-inventory",
+      "summary": "Reviewed inventory delta is only Cargo.lock Tokio version/checksum; retain entire required profile and workflow graph, update user-editable review digest",
+      "input_digest": "sha256:5d1eec8921a83b95240e9f542a0ec0412f895f652dc137acb08a39b187c3b180"
     },
     {
-      "id": "issue1470-bazel-inventory",
-      "summary": "Review sole MODULE.bazel.lock inventory change for pinned Tokio-derived metadata; required graph and adapters unchanged",
-      "input_digest": "sha256:5c35d6c874a62c50f39e5cca66f2ffb5581252552a20943eb69a46f227631234"
+      "id": "reviewed-cli-recovery-contract",
+      "summary": "Describe actual CLI failure-path regression and its unproven success boundary; preserve product-wide interface identity",
+      "input_digest": "sha256:cce75364076dd2a68a8a21f260709ddd8db92304fce09f5a15e349991f6e1643"
     },
     {
-      "id": "issue1470-bazel-reviewed-projections",
-      "summary": "Refresh generated inventory-bound projections and honest current-content publication reviews",
-      "input_digest": "sha256:05778d1e3dea8f3bf6afe3e4f3054c53713fe23e20cc939a769efc9286ca3978"
+      "id": "supported-reviewed-spec-projections",
+      "summary": "Record actual current-content INTENT ARCHITECTURE INTERFACES reviews and refreshed generated projections; no validation success claimed",
+      "input_digest": "sha256:91841d04670d611720ec76c2542d9199a5a838695f08685908d3244b5441aa8d"
+    },
+    {
+      "id": "security-recovery-review",
+      "summary": "Record current-content security review: recovery preserves historical custody and requires real exact-material proof, no authority or audit exemptions",
+      "input_digest": "sha256:b0d4ba0a2449f9d845d050f7a7ac145ded26d6b7a07f4e688a3c0f7768f1d84c"
+    },
+    {
+      "id": "generated-bazel-tokio-lock",
+      "summary": "Prior collector session vanished while waiting; retained old handoff and immutable a99 source failure. Adopt hash-verified pinned Bazel9.3.0 generated lock, exactly five Tokio-related substitutions, no other graph or trust changes; not passing proof.",
+      "input_digest": "sha256:5a112175f8175e1a7365a7217e97fec1f135d2dc19c80271b8e429e2a42938e2"
+    },
+    {
+      "id": "reviewed-bazel-inventory",
+      "summary": "Review discovered source delta only generated MODULE.bazel.lock Tokio checksum version and Cargo-input digest; required commands providers and policy unchanged",
+      "input_digest": "sha256:ee9219bc90350d71b301deae525268afbb2b5bc537461574d0eb96527aa4a1e1"
+    },
+    {
+      "id": "bazel-current-spec-reviews",
+      "summary": "Refresh generated projections and current-content semantic reviews after independently verified Bazel lock repair; preserve proof gap",
+      "input_digest": "sha256:1e516bac0c0db910834f999fa2bd9d4a5006653a6e792cead7fcfee8ce3b8da2"
+    },
+    {
+      "id": "agent-recovery-diagnostics",
+      "summary": "Replace destructive epoch guidance with non-reopening recovery and safe explicit diagnostic-plus-retry command; no raw child output exposed, validation failures remain blocked",
+      "input_digest": "sha256:854526f933914bdd16b82419ca67d82dfce002821c8d9e9fd40fbc5528a4d945"
+    },
+    {
+      "id": "safe-scoped-child-blockers",
+      "summary": "Return bounded fixed allowlisted blocker labels from actual scoped child validation; prevent aggregate deadlock from hiding unrelated blocker identity; never forward child-controlled text or paths",
+      "input_digest": "sha256:1cd429f7b64bff303a716ab3a4330ab2fef953105f454924fd4053eab7726a78"
+    },
+    {
+      "id": "aggregate-recovery-instructions",
+      "summary": "Aggregate missing-proof error exposes agent-owned non-destructive recovery and explicit task-bound file selection while retaining actual required checks",
+      "input_digest": "sha256:7f4080b2e5eeb85dbd2022571fa31bb21ea44950f49ffb16da25035f3ef26e6a"
+    },
+    {
+      "id": "agent-diagnostic-regressions",
+      "summary": "Assert non-reopening exact task recovery advice, safe fixed child blocker labels, diagnostic command, no secret/provider content forwarding and bounded scan",
+      "input_digest": "sha256:d160ea6c126f942529b278e1a42312e038da179e03d43088f09702bb88e5b079"
+    },
+    {
+      "id": "real-cli-diagnostic-contract",
+      "summary": "Actual candidate CLI regression asserts aggregate recovery instructions and unrelated plan blocker survives scoped child hashing without raw output or prune advice; not executed locally",
+      "input_digest": "sha256:c939f842c3673050c6f9903e71c757646f20bd873a43c0c4eab1b0832222eba0"
+    },
+    {
+      "id": "agent-error-interface",
+      "summary": "Specify agent-only recovery error contract, safe bounded fixed labels from actual scoped child, explicit diagnostics/retry and unchanged proof boundaries",
+      "input_digest": "sha256:55c3a22edeffea93bf54371c9a3177c7933e41eb900ad4497790e97817315e44"
+    },
+    {
+      "id": "error-contract-spec-reviews",
+      "summary": "Refresh generated projections and actual current semantic reviews; authored regressions unexecuted pending official CI",
+      "input_digest": "sha256:007a0185f1021c0d1a957ea6d523926c845b4f52cebb10535aa2db8ecd02f84c"
+    },
+    {
+      "id": "diagnostic-observation-precision",
+      "summary": "Independent review: label substrings can appear in historical output; explicitly distinguish observed markers from established causal blockers or proof",
+      "input_digest": "sha256:684798442979a8bba30d1b8ee7d0c6739e2501cf94505cb31cf113ee2202e8c4"
+    },
+    {
+      "id": "reviewed-final-diagnostics",
+      "summary": "Bind final current-source semantic reviews after independent diagnostic wording correction; no executed test claims",
+      "input_digest": "sha256:f83fe022831375945e99f268f2a4b23e42e0c0ddd0117b0465c28cf024fa831a"
+    },
+    {
+      "id": "accepted-master-01213-merge",
+      "summary": "Merge accepted5a477a5c as secondparent with b1 firstparent; exact prior machine bytes preserved during conflict resolution then official0.121.3 regenerated projections. Retain imported history and semantic inventory architecture. Review Cargo packageversion only source delta; all prior CI/proof invalidated by accepted-target move.",
+      "input_digest": "sha256:35c4851db237d641ddaa505fc9958c4baddfa1779983831aac7b64bcd35c14fb"
+    },
+    {
+      "id": "accepted-target-review-correction",
+      "summary": "Publication verifier identified architecture unchanged versus new accepted target; correct review disposition while preserving imported semantic prose and all existing checkpoints",
+      "input_digest": "sha256:a473d352b0c01ea293f1ac42119ace00de4d47046a439f96fc88b335ef46e3e0"
+    },
+    {
+      "id": "fix-1473-final-config-projection",
+      "summary": "Regenerate the living-spec manifest with official v0.121.3 after final reviewed inventory configuration; matches exact CI expected config hash without changing gates.",
+      "input_digest": "sha256:fc3523ec74d8846d88e520a4dddc5632de1fa8ac23ef3ef7475f861a24c4c140"
     }
   ],
   "intents": {
-    "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC": {
+    "intent:change_01M6F0WT45WFWYNARKEXRWX6GH": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "issue1470-source-inventory-recovery"
+        "src/decapod/plugins/verify.rs",
+        "tests/unit/plugins/verify_completion_tests.rs",
+        "docs/agent/error-recovery.md",
+        ".decapod/managed/specs/INTERFACES.md"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
+      "id": "intent:change_01M6F0WT45WFWYNARKEXRWX6GH",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix issue 1470 source inventory with official 0.121.2 bootstrap\n\nContinue preserved bugs_01m6f0637fdwbpvz candidate 03b63f55; correct filesystem source spelling, preserve distinct case-sensitive and untracked sources; full exact-candidate validation before separate PR.",
-      "refined_intent": "Fix issue 1470 source inventory with official 0.121.2 bootstrap\n\nContinue preserved bugs_01m6f0637fdwbpvz candidate 03b63f55; correct filesystem source spelling, preserve distinct case-sensitive and untracked sources; full exact-candidate validation before separate PR.",
+      "raw_intent": "Fix issue 1473 fresh proof recovery under 0.121.2\n\nPreserve failed candidate and replay authored current evidence recovery; completed history remains unverified until real required checks pass",
+      "refined_intent": "Fix issue 1473 fresh proof recovery under 0.121.2\n\nPreserve failed candidate and replay authored current evidence recovery; completed history remains unverified until real required checks pass",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -556,7 +632,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix issue 1470 source inventory with official 0.121.2 bootstrap\n\nContinue preserved bugs_01m6f0637fdwbpvz candidate 03b63f55; correct filesystem source spelling, preserve distinct case-sensitive and untracked sources; full exact-candidate validation before separate PR.",
+      "intent": "Preserve completed historical claims and evidence; capture explicit current task artifacts and require genuine passing validation before final verification; replay authored work under supported controller without importing old governance.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -564,244 +640,85 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current authored source identity section matches source_entry_path/metadata/Discovery and tests: distinct actual entries, non-Git coverage,8192 bound and host caveats. Minimal Tokio1.53.3 plus canonical derived Bazel lock retain architecture and required proof graph; no package graph expansion.",
-          "reviewed_code_fingerprint": "7afb594f658f759d37693125e280085d3c081cbaf98ac0a982c7b10d7821db5f",
+          "reason": "Against the newly accepted5a477a5c target, architecture prose is unchanged: its21line inventory explanation was preserved exactly in the merge. Recovery remains existing verify plugin and transaction boundaries without architectural change; prior updated disposition compared firstparent rather than actual accepted target and is corrected honestly.",
+          "reviewed_code_fingerprint": "595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3",
           "spec_material_hash": "e778b434665a97ee71dbd9c6efd495f23f6996a72ebf7e6a52ee51a4afe51431"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed source_entry_path/discovery callers and regenerated Tokio Bazel lock: existing CLI/RPC signatures, inventory schemas and exact-source interfaces unchanged. New filename behavior is internal correctness; derived lock only synchronizes existing dependency identity. No platform execution claim added.",
-          "reviewed_code_fingerprint": "7afb594f658f759d37693125e280085d3c081cbaf98ac0a982c7b10d7821db5f",
-          "spec_material_hash": "a227ee81c08e687d9dfa5ec539625a29c86d32b8a80653fa08178a493494869e"
+          "reason": "Reviewed merged source against recovery interface: new accepted inventory implementation does not change explicit task artifacts, observed-label diagnostic boundaries or atomic pending/final proof; current authored interface and regressions retained unchanged from reviewed recovery candidate.",
+          "reviewed_code_fingerprint": "595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3",
+          "spec_material_hash": "60e288463c4a14d266867d505c026bd23dbf5578550662263e98b03c423e209b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed component symlink rejection before bounded resolution and unchanged snapshot binding. Patched Tokio safety version and generated Bazel identity are synchronized with exact checksum, without advisory exemption, TLS/auth change or new authority. Existing threat model and proof boundaries remain accurate.",
-          "reviewed_code_fingerprint": "7afb594f658f759d37693125e280085d3c081cbaf98ac0a982c7b10d7821db5f",
+          "reason": "Reviewed merged inventory path canonicalization and non-destructive proof recovery: original obligations current material checks and safe observed diagnostics remain; preserving exact first-parent journal and accepted second-parent history does not import readiness. New release and dependency pins do not change trust policy.",
+          "reviewed_code_fingerprint": "595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3",
           "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix issue 1470 source inventory with official 0.121.2 bootstrap",
+      "title": "Issue 1473 explicit fresh proof recovery",
       "todo_ids": [
-        "bugs_01m6f0gxvn6gcm1z"
+        "bugs_01m6f0w8qgs9twzy"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793661530Z"
+      "updated_at": "1793669996Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "No merge, release, credential changes or proof bypass; preserve failed earlier candidate."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d00e87b8863982b9bc3d7f6fc21e29ce257868909617ffc02824a15c0965bb71",
-      "checks": [
-        {
-          "name": "full_validation",
-          "status": "failed"
-        },
-        {
-          "name": "published_exact_validation",
-          "status": "failed"
-        }
-      ],
-      "current_phase": "validation",
+      "artifact_hash": "sha256:ae91463be6f92d823d1dc91c9608ac699ce35e49e67238f3d6942f9cec60bf5e",
+      "checks": [],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
+            "intent_id": "intent:change_01M6F0WT45WFWYNARKEXRWX6GH",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
+            "intent_id": "intent:change_01M6F0WT45WFWYNARKEXRWX6GH",
             "kind": "refined",
             "sequence": 3
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
-            "event_id": "event:4",
-            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 3,
         "schema_version": "1.0.0",
-        "trajectories": {
-          "branch_01M6F0HEXJCDCCEJTEY5JSGT8A": {
-            "evidence_only": true,
-            "id": "branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
-            "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
-            "steps": [
-              {
-                "action": "implementation",
-                "command": "rustfmt --config skip_children=true --edition 2024 src/decapod/core/init_reconciliation/mod.rs",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "src/decapod/core/init_reconciliation/mod.rs",
-                  "src/decapod/core/init_reconciliation/mod.rs",
-                  "Previous candidate 03b63f55 failed entrypoint commit discipline before source tests; retained on original branch."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "issue1470-source-inventory-recovery"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:5",
-                "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/config.toml",
-                  "Current candidate passes entrypoint-history stage. Inventory drift since last config review 213ed9ca is exclusively package version 0.121.0 to 0.121.2 in Cargo.toml/Cargo.lock; workflows, helpers, dependencies and execution graph unchanged."
-                ],
-                "proof_refs": [
-                  "full_validation"
-                ],
-                "scope": [
-                  "issue1470-source-inventory-recovery"
-                ],
-                "sequence": 5,
-                "validation_findings": [
-                  "Real APFS/NTFS tests await configured provider execution; no source tests have run locally."
-                ]
-              },
-              {
-                "action": "validation",
-                "command": "decapod validate",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "User authorized public tracked governance/spec metadata. Connector publication preserved all six ordered trees and messages modulo terminal LF from original 9753d64b to published 172317acea8d7327ea42aab6f671d79b8102ec0c; independently fetched and checkpoint-verified, original backup retained. Historical source-review refs remain historical, no old pass reused. Buildkite 2545 exact published head failed standalone-validation on stale manifest config_input_hash after reviewed inventory config update; 189 prerequisite gates passed but full readiness failed. Official 0.121.2 specs.refresh regenerates matching config hash; revalidate exact uploaded repair candidate."
-                ],
-                "proof_refs": [
-                  "published_exact_validation"
-                ],
-                "scope": [
-                  "issue1470-source-inventory-recovery"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "cargo update -p tokio --precise 1.53.3",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Cargo.lock",
-                  "Buildkite 2548 on exact 4c0ee3bf failed required dependencies-deny for Tokio 1.52.3 RUSTSEC-2026-0386 and required publication spec review. Official RustSec lists >=1.53.3 patched; existing manifest version 1 accepts it. Normal cargo update --precise 1.53.3 succeeded; restored six unrelated accepted windows-sys edges, cargo metadata --locked succeeded without builds/tests. Only Tokio version and registry checksum change; no advisory waiver, new dependencies, graph change, or old proof reuse. Maintenance interrupted first resume; supported same-handoff resume retained terminal failure before source edits."
-                ],
-                "proof_refs": [
-                  "published_exact_validation"
-                ],
-                "scope": [
-                  "issue1470-source-inventory-recovery"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "MODULE.bazel.lock",
-                  "Published 5d2d7699 remains historical failed/incomplete provider attempt2578; collector absent after interruption, no pass claimed. Independent exact-head GitHub setup125596011876 diagnoses stale MODULE.bazel.lock after Tokio update; GitHub is diagnostic not required-provider proof. Apply independently generated pinnedBazel9.3.0 normal-TLS/system-JDK lock patch, verifying exact original/patched hashes and Tokio-only refs/checksum/Cargo.lock digest. No build/test or policy waiver. New revision requires fresh full exact proof."
-                ],
-                "proof_refs": [
-                  "published_exact_validation"
-                ],
-                "scope": [
-                  "issue1470-source-inventory-recovery",
-                  "issue1470-source-inventory-recovery; minimal baseline Tokio advisory CI repair"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
+        "trajectories": {}
       },
-      "declared_commands": [
-        "cargo metadata --locked --format-version 1",
-        "cargo update -p tokio --precise 1.53.3",
-        "decapod rpc --op specs.refresh",
-        "decapod validate",
-        "rustfmt --config skip_children=true --edition 2024 src/decapod/core/init_reconciliation/mod.rs"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "Buildkite 2548 on exact 4c0ee3bf failed required dependencies-deny for Tokio 1.52.3 RUSTSEC-2026-0386 and required publication spec review. Official RustSec lists >=1.53.3 patched; existing manifest version 1 accepts it. Normal cargo update --precise 1.53.3 succeeded; restored six unrelated accepted windows-sys edges, cargo metadata --locked succeeded without builds/tests. Only Tokio version and registry checksum change; no advisory waiver, new dependencies, graph change, or old proof reuse. Maintenance interrupted first resume; supported same-handoff resume retained terminal failure before source edits.",
-        "Current candidate passes entrypoint-history stage. Inventory drift since last config review 213ed9ca is exclusively package version 0.121.0 to 0.121.2 in Cargo.toml/Cargo.lock; workflows, helpers, dependencies and execution graph unchanged.",
-        "Previous candidate 03b63f55 failed entrypoint commit discipline before source tests; retained on original branch.",
-        "Published 5d2d7699 remains historical failed/incomplete provider attempt2578; collector absent after interruption, no pass claimed. Independent exact-head GitHub setup125596011876 diagnoses stale MODULE.bazel.lock after Tokio update; GitHub is diagnostic not required-provider proof. Apply independently generated pinnedBazel9.3.0 normal-TLS/system-JDK lock patch, verifying exact original/patched hashes and Tokio-only refs/checksum/Cargo.lock digest. No build/test or policy waiver. New revision requires fresh full exact proof.",
-        "User authorized public tracked governance/spec metadata. Connector publication preserved all six ordered trees and messages modulo terminal LF from original 9753d64b to published 172317acea8d7327ea42aab6f671d79b8102ec0c; independently fetched and checkpoint-verified, original backup retained. Historical source-review refs remain historical, no old pass reused. Buildkite 2545 exact published head failed standalone-validation on stale manifest config_input_hash after reviewed inventory config update; 189 prerequisite gates passed but full readiness failed. Official 0.121.2 specs.refresh regenerates matching config hash; revalidate exact uploaded repair candidate."
-      ],
-      "inspected_files": [
-        ".decapod/config.toml",
-        "src/decapod/core/init_reconciliation/mod.rs"
-      ],
-      "intent_id": "intent:change_01M6F0HEWT8PN3DR4WBMAVJCBC",
-      "modified_files": [
-        ".decapod/config.toml",
-        "Cargo.lock",
-        "MODULE.bazel.lock",
-        "src/decapod/core/init_reconciliation/mod.rs"
-      ],
+      "evidence": [],
+      "inspected_files": [],
+      "intent_id": "intent:change_01M6F0WT45WFWYNARKEXRWX6GH",
+      "modified_files": [],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "issue1470-source-inventory-recovery",
-        "issue1470-source-inventory-recovery; minimal baseline Tokio advisory CI repair",
-        "issue1470-source-inventory-recovery; minimal baseline Tokio advisory and derived Bazel lock CI repair"
+        ".decapod/managed/specs/INTERFACES.md",
+        "docs/agent/error-recovery.md",
+        "src/decapod/plugins/verify.rs",
+        "tests/unit/plugins/verify_completion_tests.rs"
       ],
-      "run_id": "branch_01M6F0HEXJCDCCEJTEY5JSGT8A",
+      "run_id": "branch_01M6F0WT4TAJ6ZMZ8Q8RYDRRSG",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6f0gxvn6gcm1z",
+      "task_id": "bugs_01m6f0w8qgs9twzy",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Real APFS/NTFS tests await configured provider execution; no source tests have run locally."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
