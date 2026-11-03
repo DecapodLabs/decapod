@@ -5157,7 +5157,9 @@ pub fn handoff_task_as(
                     to,
                     from,
                     acting_agent,
-                    &output["result"]["message"].to_string(),
+                    output["result"]["message"]
+                        .as_str()
+                        .unwrap_or("handoff did not complete"),
                 );
             }
             Ok(output)
@@ -5168,7 +5170,93 @@ pub fn handoff_task_as(
                 "{reason}\nHANDOFF_RECOVERY: {recovery}"
             )))
         }
-        Err(other) => Err(other),
+        Err(other) => {
+            let recovery = handoff_recovery_diagnostic(
+                id,
+                to,
+                from,
+                acting_agent,
+                "handoff execution failed; preserve the original error below",
+            );
+            Err(emit_handoff_failure_context(
+                other,
+                &recovery,
+                &mut std::io::stderr(),
+            ))
+        }
+    }
+}
+
+fn emit_handoff_failure_context(
+    original: error::DecapodError,
+    recovery: &serde_json::Value,
+    output: &mut impl std::io::Write,
+) -> error::DecapodError {
+    // Diagnostic delivery is best effort; never replace the original failure
+    // kind/cause (even if stderr itself is unavailable).
+    let _ = writeln!(output, "HANDOFF_RECOVERY: {recovery}");
+    original
+}
+
+#[cfg(test)]
+mod handoff_failure_context_tests {
+    use super::*;
+
+    #[test]
+    fn io_failure_keeps_its_type_and_emits_inspect_before_retry() {
+        let recovery = handoff_recovery_diagnostic(
+            "task",
+            "receiver",
+            Some("owner"),
+            "caller",
+            "execution failed",
+        );
+        let mut output = Vec::new();
+        let original = error::DecapodError::IoError(std::io::Error::new(
+            std::io::ErrorKind::PermissionDenied,
+            "original IO failure",
+        ));
+        let returned = emit_handoff_failure_context(original, &recovery, &mut output);
+        let error::DecapodError::IoError(cause) = returned else {
+            panic!("original error classification changed")
+        };
+        assert_eq!(cause.kind(), std::io::ErrorKind::PermissionDenied);
+        assert_eq!(cause.to_string(), "original IO failure");
+        let text = String::from_utf8(output).unwrap();
+        let value: serde_json::Value =
+            serde_json::from_str(text.strip_prefix("HANDOFF_RECOVERY: ").unwrap().trim()).unwrap();
+        assert!(
+            value["next_action"]
+                .as_str()
+                .unwrap()
+                .contains("before any retry")
+        );
+        assert!(
+            value["next_action"]
+                .as_str()
+                .unwrap()
+                .contains("committed transfer")
+        );
+        assert!(value.get("approve_argv").is_none());
+    }
+
+    #[test]
+    fn diagnostic_write_failure_preserves_original_error() {
+        struct Broken;
+        impl std::io::Write for Broken {
+            fn write(&mut self, _: &[u8]) -> std::io::Result<usize> {
+                Err(std::io::ErrorKind::BrokenPipe.into())
+            }
+            fn flush(&mut self) -> std::io::Result<()> {
+                Ok(())
+            }
+        }
+        let original = error::DecapodError::IoError(std::io::ErrorKind::PermissionDenied.into());
+        let returned = emit_handoff_failure_context(original, &serde_json::json!({}), &mut Broken);
+        let error::DecapodError::IoError(cause) = returned else {
+            panic!("original error classification changed")
+        };
+        assert_eq!(cause.kind(), std::io::ErrorKind::PermissionDenied);
     }
 }
 

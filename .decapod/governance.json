@@ -641,6 +641,11 @@
       "id": "handoff-runtime-recovery-projections",
       "summary": "Bind runtime recovery contract code/tests/specs to exact candidate; source CI pending, no local shadow tests",
       "input_digest": "sha256:9b64211f9eb3a693fabb4a4f29206b7199551ed3d264eb0e38268276546ea7f6"
+    },
+    {
+      "id": "handoff-io-recovery-context",
+      "summary": "Independent review repair: emit best-effort recovery context for non-validation errors while returning original typed cause; stderr failure cannot replace it; unit regressions for IO type and broken pipe; normalize JSON reason",
+      "input_digest": "sha256:c26273fc184a51e3d23d57de23b515c67a8550ea61c543603eb9517980816452"
     }
   ],
   "intents": {
