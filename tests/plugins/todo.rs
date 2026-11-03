@@ -1995,6 +1995,10 @@ fn handoff_failure_returns_agent_recovery_without_authorizing_or_mutating() {
     .unwrap();
     assert_eq!(invalid["status"], "error");
     assert_eq!(invalid["recovery"]["actor"], "actual-caller");
+    assert_eq!(
+        invalid["recovery"]["reason"],
+        "handoff requires a non-empty --to agent id"
+    );
     assert!(
         invalid["recovery"]["reason"]
             .as_str()

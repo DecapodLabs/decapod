@@ -646,6 +646,11 @@
       "id": "handoff-io-recovery-context",
       "summary": "Independent review repair: emit best-effort recovery context for non-validation errors while returning original typed cause; stderr failure cannot replace it; unit regressions for IO type and broken pipe; normalize JSON reason",
       "input_digest": "sha256:c26273fc184a51e3d23d57de23b515c67a8550ea61c543603eb9517980816452"
+    },
+    {
+      "id": "handoff-reason-normalization",
+      "summary": "Assert recovery reason remains plain original message rather than serialized quoted JSON string",
+      "input_digest": "sha256:8f96f3770e7839ee131c342e597f0714da28f1a6bf859406fd8bc9500da38a74"
     }
   ],
   "intents": {
