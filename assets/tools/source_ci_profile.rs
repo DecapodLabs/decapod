@@ -653,7 +653,10 @@ pub fn commands(check: &Check, paths: &[String]) -> io::Result<Vec<Invocation>> 
         "setup-bazel" => vec![bazel(&["test", "//:cargo_inputs_policy"]), bazel(&["build", "//:decapod", "//:release_projection_drift"])],
         "rpc-suite" => vec![bazel(&["test", "//:agent_rpc_suite", "--test_arg=--test-threads=1"])],
         "chaos-replay" => vec![bazel(&["test", "//:chaos_replay", "--test_arg=--test-threads=1"])],
-        "daemonless-lifecycle" => vec![bazel(&["test", "//:daemonless_lifecycle", "--test_arg=--test-threads=1"])],
+        "daemonless-lifecycle" => vec![
+            bazel(&["test", "//:daemonless_lifecycle", "--test_arg=--test-threads=1"]),
+            bazel(&["test", "//:group_broker", "--test_arg=concurrent_claims_preserve_caller_in_response_and_persisted_owner", "--test_arg=--exact", "--test_arg=--nocapture", "--test_env=DECAPOD_REQUIRE_CALLER_SOCKET=1", "--nocache_test_results", "--test_output=all"]),
+        ],
         "contracts" => vec![bazel(&["test", "//:contract_conformance", "--test_arg=--test-threads=1"]), bazel(&["test", "//:constitution_claims", "--test_arg=--test-threads=1"])],
         "cli-contracts" => vec![bazel(&["test", "//:cli_contract_enforcement", "--test_arg=--test-threads=1"])],
         "migration-tests" => vec![bazel(&["test", "//:core_tests", "--test_arg=migration_", "--test_arg=--ignored", "--test_arg=--test-threads=1"])],

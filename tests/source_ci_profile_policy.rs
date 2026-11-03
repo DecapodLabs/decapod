@@ -2165,3 +2165,40 @@ fn provider_carrier_rejects_mismatched_mutable_or_nested_executor_inputs_before_
         assert!(!fixture.scratch.join("compiles").exists(), "{mode}");
     }
 }
+
+#[test]
+fn caller_socket_acceptance_is_required_visible_and_not_cached_in_linux_ci() {
+    let check = find_check("daemonless-lifecycle").unwrap();
+    assert_eq!(check.platform, Platform::LinuxX86_64);
+    // This acceptance must not depend on which source paths changed.
+    for changed in [vec![], paths(&["tests/group_broker.rs"])] {
+        let invocations = commands(check, &changed).unwrap();
+        let acceptance: Vec<_> = invocations
+            .iter()
+            .filter(|invocation| {
+                invocation.args.contains(
+                    &"--test_arg=concurrent_claims_preserve_caller_in_response_and_persisted_owner",
+                )
+            })
+            .collect();
+        assert_eq!(acceptance.len(), 1);
+        let acceptance = acceptance[0];
+        assert_eq!(acceptance.program, "bazelisk");
+        for arg in [
+            "test",
+            "//:group_broker",
+            "--test_arg=--exact",
+            "--test_arg=--nocapture",
+            "--test_env=DECAPOD_REQUIRE_CALLER_SOCKET=1",
+            "--nocache_test_results",
+            "--test_output=all",
+        ] {
+            assert!(acceptance.args.contains(&arg), "missing {arg}");
+        }
+        assert!(
+            invocations
+                .iter()
+                .any(|invocation| { invocation.args.contains(&"//:daemonless_lifecycle") })
+        );
+    }
+}

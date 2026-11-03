@@ -927,14 +927,44 @@ fn run_contention_command(
         .unwrap_or_else(|error| panic!("{label}: {error}"))
 }
 
+// Required acceptance is opt-in so restricted development sandboxes retain their
+// ordinary skip. CI passes this flag to the exact test, never to runtime policy.
+fn caller_socket_probe_allows_execution(supported: bool, required: bool) -> bool {
+    assert!(
+        supported || !required,
+        "required caller socket acceptance blocked: broker probe did not queue over its Unix socket"
+    );
+    supported
+}
+
+#[test]
+fn caller_socket_acceptance_preserves_optional_skip_and_rejects_required_skip() {
+    assert!(!caller_socket_probe_allows_execution(false, false));
+    assert!(caller_socket_probe_allows_execution(true, false));
+    assert!(caller_socket_probe_allows_execution(true, true));
+    assert!(
+        std::panic::catch_unwind(|| caller_socket_probe_allows_execution(false, true)).is_err()
+    );
+}
+
 #[cfg(unix)]
 #[test]
 fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
+    let required = match std::env::var("DECAPOD_REQUIRE_CALLER_SOCKET") {
+        Err(std::env::VarError::NotPresent) => false,
+        Ok(value) if value == "0" => false,
+        Ok(value) if value == "1" => true,
+        _ => panic!("DECAPOD_REQUIRE_CALLER_SOCKET must be unset, 0 or 1"),
+    };
     let (_tmp, dir, password) = setup_repo_with(run_contention_setup);
-    if !broker_socket_supported_with(&dir, &password, run_contention_setup) {
-        eprintln!("skipping: unix socket transport not permitted in this sandbox");
+    if !caller_socket_probe_allows_execution(
+        broker_socket_supported_with(&dir, &password, run_contention_setup),
+        required,
+    ) {
+        eprintln!("caller socket acceptance: SKIPPED (optional Unix socket probe unavailable)");
         return;
     }
+    eprintln!("caller socket acceptance: probe passed; executing concurrent ownership assertions");
     let mut tasks = Vec::new();
     // Keep category ownership disjoint using categories seeded by normal init.
     // Caller identities are not category names and must not bypass validation.
@@ -1061,5 +1091,7 @@ fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
         assert!(fetched.status.success());
         let persisted: serde_json::Value = serde_json::from_slice(&fetched.stdout).unwrap();
         assert_eq!(persisted["item"]["assigned_to"], agent, "{persisted}");
+        eprintln!("caller socket acceptance: {agent} returned and persisted ownership passed");
     }
+    eprintln!("caller socket acceptance: PASSED (both callers traversed the shared broker)");
 }

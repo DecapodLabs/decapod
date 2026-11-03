@@ -1,5 +1,22 @@
 # Validation
 
+## Concurrent caller socket acceptance
+
+The Linux `daemonless-lifecycle` source-CI recipe in `assets/tools/source_ci_profile.rs`
+runs `concurrent_claims_preserve_caller_in_response_and_persisted_owner` from
+`tests/group_broker.rs` separately with exact selection, uncaptured output,
+Bazel output enabled, test caching disabled and `DECAPOD_REQUIRE_CALLER_SOCKET=1`.
+The socket probe must succeed before the two callers submit claims through a
+third caller's live broker. Both returned ownership and ownership fetched from
+persistence must match each caller, and the leader hook must contain each claim.
+Only after these assertions does the test print its final acceptance marker.
+A failed probe in this required invocation fails rather than returning success.
+Unset or zero preserves an explicit optional skip in restricted local sandboxes;
+invalid flag values fail. This test-only switch does not alter runtime policy or
+caller identity. A green unfiltered suite without these post-probe markers is not
+evidence of this acceptance path. Actual execution remains unproven until the
+exact candidate validation supplies the named test output.
+
 ## Native readiness receipt custody
 
 Decapod remains the proof-gated governor of accepted work, not a receipt-import
@@ -852,7 +869,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b`
+- Repository signal fingerprint: `08ab070c2fb60250e21da15829e43c0b0d77e91cba7b7bf86f6d74a8f23be6cd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
