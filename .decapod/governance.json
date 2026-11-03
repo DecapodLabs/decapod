@@ -656,6 +656,11 @@
       "id": "handoff-typed-failure-contract",
       "summary": "Document best-effort stderr recovery for original typed failures without replacing cause or embedding sensitive raw cause in context",
       "input_digest": "sha256:0b4a5d396ee26b897b81816e1eaad8e5242bc3a61585059c23952bdcb97b0636"
+    },
+    {
+      "id": "handoff-reviewed-recovery-projections",
+      "summary": "Bind independently reviewed recovery context correction and authored regressions; exact CI remains required",
+      "input_digest": "sha256:e03dca4bbe8104da369f15ca16f873221217ee2247712c9f756c6003ae14a60f"
     }
   ],
   "intents": {
@@ -696,22 +701,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Thin failure presentation wrapper reuses existing ValidationError/JSON surfaces; no new authority subsystem, storage or service; agent-only governance architecture unchanged",
-          "reviewed_code_fingerprint": "e256c0253d42eb72553e590e8944e822b074505abc114472775415cc2043ad28",
+          "reason": "Failure presentation only, same original typed error and local governance architecture; no new service or authority system",
+          "reviewed_code_fingerprint": "b473bcfd5b548f9d0c574c6cb29fe771ab4f8167bb4197b8ab7eaa16915b7b36",
           "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed wrapper preserving original ValidationError and non-success JSON with versioned agent-directed recovery reason/context/inspect+eval argv; no automatic approval, explicit uncertain custody inspection, user init-only",
-          "reviewed_code_fingerprint": "e256c0253d42eb72553e590e8944e822b074505abc114472775415cc2043ad28",
-          "spec_material_hash": "ec516bc71e68bdff91e211eea9a459901ddb1b75a2f51382a1160ee35c72f105"
+          "reason": "Independent review gap fixed: non-validation failures preserve original type/cause and emit same bounded context best effort, broken stderr cannot replace original; plain JSON reason normalized; human init-only and agent-directed recovery remain",
+          "reviewed_code_fingerprint": "b473bcfd5b548f9d0c574c6cb29fe771ab4f8167bb4197b8ab7eaa16915b7b36",
+          "spec_material_hash": "78e1a61fff95a0fa3e78f3d10cefe3d8b04a43fc80a317c8b9fb213de9b8b7e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Runtime recovery output preserves original denial and production trust/approval checks; describes obtaining human decision through agent, never self-promotion or blind retry. Diagnostic construction creates no storage and approves nothing",
-          "reviewed_code_fingerprint": "e256c0253d42eb72553e590e8944e822b074505abc114472775415cc2043ad28",
+          "reason": "Reviewed best-effort diagnostic writer does not mutate authority, issue approvals, expose raw IO cause in context or hide original failures; inspect-before-retry remains required",
+          "reviewed_code_fingerprint": "b473bcfd5b548f9d0c574c6cb29fe771ab4f8167bb4197b8ab7eaa16915b7b36",
           "spec_material_hash": "f1e26e3ca47df22b893d3d11513bfee28307d6f2b91a6a75408ba76c7a081e99"
         }
       ],
@@ -723,7 +728,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793666902Z"
+      "updated_at": "1793667240Z"
     },
     "trajectory": {
       "active_boundaries": [
