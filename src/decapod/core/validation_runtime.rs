@@ -630,7 +630,7 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         configuration.repository_contract.as_ref(),
         &accepted.dagger_authorizations,
     )
-    .map_err(|e| invalid(&format!("{e:?}")))?;
+    .map_err(|e| invalid(format!("{e:?}")))?;
     rust_worker::preserve_accepted(
         configuration.rust_workers.as_ref(),
         accepted.rust_workers.as_ref(),

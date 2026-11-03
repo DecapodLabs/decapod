@@ -670,6 +670,11 @@
       "id": "dagger-ci-repair-projections",
       "summary": "Refresh generated specs and content-bound reviews after narrow observed CI root repairs; preserve failed evidence and no-live-proof limits",
       "input_digest": "sha256:273d80a5741fd49463e39fa2c291e28af2d37f626adbaa772a2f03901a385c43"
+    },
+    {
+      "id": "issue1475-clippy-borrow",
+      "summary": "Remove CI-reported needless borrow in accepted Dagger authorization error propagation",
+      "input_digest": "sha256:1562884f084e96eed94718b17f015e585b6e68b3fc6660e8e03387d479c1fed7"
     }
   ],
   "intents": {
@@ -743,7 +748,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ea95b18e31fc9840279a817a6ac36d2ef26028bd320c63154b8d19f116225dbc",
+      "artifact_hash": "sha256:28c943763fb3d7426ebde9f47f803db56a3aed656bfeb06a538bdaad7435ce39",
       "checks": [
         {
           "name": "ci-source-compile",
@@ -754,8 +759,16 @@
           "status": "failed"
         },
         {
+          "name": "clippy-13201",
+          "status": "failed"
+        },
+        {
           "name": "configured-buildkite-proof",
           "status": "unavailable"
+        },
+        {
+          "name": "docs-sync-13201",
+          "status": "failed"
         },
         {
           "name": "live-dagger",
@@ -797,10 +810,17 @@
             "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MSA6NJNNFSAD36MDNVNK": {
@@ -860,6 +880,24 @@
                 "validation_findings": [
                   "Exact published a2b8e499 source CI run41542321861 failed E0433 repository_profile import at validation_runtime.rs628 in clippy125609503788 and setup125609503827; fmt125609503901 reported only fixed workspace argv vector layout. Source repair adds import and formatter output, preserving accepted-only authority and capabilities. Earlier local collector session is unavailable; no full readiness or live engine execution claimed."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "GitHub source CI job 125627507466 at 13201 reports needless_borrows_for_generic_args at validation_runtime.rs633; job 125626769890 source-build succeeds but generated docs drift. Remove unnecessary format borrow without changing failure semantics; checks remain required."
+                ],
+                "proof_refs": [
+                  "clippy-13201",
+                  "docs-sync-13201"
+                ],
+                "scope": [
+                  "issue-1475-dagger"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -867,14 +905,18 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "GitHub source CI job 125627507466 at 13201 reports needless_borrows_for_generic_args at validation_runtime.rs633; job 125626769890 source-build succeeds but generated docs drift. Remove unnecessary format borrow without changing failure semantics; checks remain required."
+      ],
       "inspected_files": [
+        "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/repository_host.rs"
       ],
       "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
       "modified_files": [
         "src/decapod/core/proof.rs",
         "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/repository_host/dagger.rs",
         "tests/unit/lib_init_prompt_tests.rs"
       ],
