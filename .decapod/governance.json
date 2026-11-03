@@ -606,6 +606,11 @@
       "id": "handoff-agent-only-interface",
       "summary": "Specify user init-only boundary and agent/harness execution of all recovery interfaces, with human decisions communicated through agent",
       "input_digest": "sha256:7d395536192a4185438e565819c8cee7c49e00849e20b50c3abd85e5197f05d1"
+    },
+    {
+      "id": "handoff-agent-only-security",
+      "summary": "Preserve no-self-promotion and independent approval attribution under AI-only execution; no new authority or production policy changes",
+      "input_digest": "sha256:9302f2fce05c495520f16a72484f236764d9ffbe76767e5c5e60a2a314c719b7"
     }
   ],
   "intents": {

@@ -545,3 +545,11 @@ expired, broad and already-consumed grants cannot authorize this recovery, and
 failed preconditions do not consume authority. Dependency, lease, overlap and
 completion-proof gates remain independently required. The new regressions are
 unexecuted until official candidate validation succeeds.
+
+Recovery never requires a human to execute Decapod beyond `decapod init`.
+The AI agent/harness obtains the human decision and records its exact bounded
+approval before acting under its already established authorized request identity.
+Approval attribution does not elevate the executing caller; a harness must not
+self-select a reserved role, promote its trust, or impersonate the previous owner
+to evade a denial. Existing trust, exact-target single-use approval and custody
+checks remain unchanged; this is an execution-contract correction, not new authority.
