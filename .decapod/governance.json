@@ -636,6 +636,11 @@
       "id": "handoff-runtime-recovery-spec",
       "summary": "Specify actual failure output recovery contract and diagnostic no-side-effect boundary; human decision via agent only, no granted authority or blind replay",
       "input_digest": "sha256:4ddc983934a40f19029d7e097bd2d6e46364deeca6304ebb2b29911faa2e6ba2"
+    },
+    {
+      "id": "handoff-runtime-recovery-projections",
+      "summary": "Bind runtime recovery contract code/tests/specs to exact candidate; source CI pending, no local shadow tests",
+      "input_digest": "sha256:9b64211f9eb3a693fabb4a4f29206b7199551ed3d264eb0e38268276546ea7f6"
     }
   ],
   "intents": {
@@ -676,22 +681,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documentation-only correction preserves daemonless agent-governance kernel and existing transactional policy architecture; no runtime subsystem or human CLI requirement introduced",
-          "reviewed_code_fingerprint": "38f276a1f87e465e8dc745d4ece60cce2bddb81f83a2a66876863ea82a1f4aa7",
+          "reason": "Thin failure presentation wrapper reuses existing ValidationError/JSON surfaces; no new authority subsystem, storage or service; agent-only governance architecture unchanged",
+          "reviewed_code_fingerprint": "e256c0253d42eb72553e590e8944e822b074505abc114472775415cc2043ad28",
           "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Corrected canonical recovery procedure and semantic interface: users only init; established authorized AI agent/harness executes all other commands after human decision; actor remains independent of approving human",
-          "reviewed_code_fingerprint": "38f276a1f87e465e8dc745d4ece60cce2bddb81f83a2a66876863ea82a1f4aa7",
-          "spec_material_hash": "d3b091f4ce348d890061e84c1a207384e95df9895ec77b7b55d29231fe53e47b"
+          "reason": "Reviewed wrapper preserving original ValidationError and non-success JSON with versioned agent-directed recovery reason/context/inspect+eval argv; no automatic approval, explicit uncertain custody inspection, user init-only",
+          "reviewed_code_fingerprint": "e256c0253d42eb72553e590e8944e822b074505abc114472775415cc2043ad28",
+          "spec_material_hash": "ec516bc71e68bdff91e211eea9a459901ddb1b75a2f51382a1160ee35c72f105"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed unchanged handoff/policy code against corrected agent-only execution contract: existing trust required, human explicit target-bound decision recorded by authorized harness, no role promotion or approval attribution as caller identity",
-          "reviewed_code_fingerprint": "38f276a1f87e465e8dc745d4ece60cce2bddb81f83a2a66876863ea82a1f4aa7",
+          "reason": "Runtime recovery output preserves original denial and production trust/approval checks; describes obtaining human decision through agent, never self-promotion or blind retry. Diagnostic construction creates no storage and approves nothing",
+          "reviewed_code_fingerprint": "e256c0253d42eb72553e590e8944e822b074505abc114472775415cc2043ad28",
           "spec_material_hash": "f1e26e3ca47df22b893d3d11513bfee28307d6f2b91a6a75408ba76c7a081e99"
         }
       ],
@@ -703,7 +708,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793666692Z"
+      "updated_at": "1793666902Z"
     },
     "trajectory": {
       "active_boundaries": [
