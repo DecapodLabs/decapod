@@ -676,6 +676,14 @@
       "id": "handoff-v1231-architecture-review",
       "summary": "Correct review disposition relative to accepted target: architecture prose unchanged, interfaces and security materially preserve handoff contract; no test pass claimed",
       "input_digest": "sha256:cdb6baeb52b9ae4bb97ffca003a9f9afcb5278d70c247aedceba0d2750f995bf"
+    },
+    {
+      "id": "handoff-broker-seeded-categories",
+      "summary": "Repair observed Buildkite core fixture failure by using distinct seeded categories; retain real caller identities, scoped directories, concurrent leader routing and persisted owner assertions.",
+      "input_digest": "sha256:6350c98b88318c5aa11c85ef8bf04313666a224265ac96b9128f52059a7b5540",
+      "proof_refs": [
+        "tests/group_broker.rs"
+      ]
     }
   ],
   "intents": {

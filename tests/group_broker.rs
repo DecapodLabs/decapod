@@ -936,7 +936,9 @@ fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
         return;
     }
     let mut tasks = Vec::new();
-    for agent in ["caller-a", "caller-b"] {
+    // Keep category ownership disjoint using categories seeded by normal init.
+    // Caller identities are not category names and must not bypass validation.
+    for (agent, category) in [("caller-a", "features"), ("caller-b", "docs")] {
         let task_dir = dir.join(agent);
         std::fs::create_dir(&task_dir).unwrap();
         let added = run_contention_setup(
@@ -964,7 +966,7 @@ fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
         let id = value["id"].as_str().unwrap().to_owned();
         let edited = run_contention_setup(
             &dir,
-            &["todo", "edit", "--id", &id, "--category", agent],
+            &["todo", "edit", "--id", &id, "--category", category],
             &[
                 ("DECAPOD_AGENT_ID", "unknown"),
                 ("DECAPOD_SESSION_PASSWORD", &password),
