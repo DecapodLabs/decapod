@@ -490,6 +490,11 @@
       "id": "release-bound-v01235",
       "summary": "Refresh official v0.123.5 entrypoints and managed Dockerfile without modifying authored config or proof authority",
       "input_digest": "sha256:1ed93dcfb409bd6017c8c461b15b91b424968ddfb73636d18f668f7c7f2a6411"
+    },
+    {
+      "id": "remove-init-backups",
+      "summary": "Exclude generated init backup files from the published source change",
+      "input_digest": "sha256:5d805c27e28e96c29f52b4f647acb444db4304fe728f1c91f322f50bf3f6d047"
     }
   ],
   "intents": {
@@ -543,7 +548,7 @@
         "Current claimed task and isolated work branch",
         "No runtime identity, authorization, proof-policy weakening, merge or release"
       ],
-      "artifact_hash": "sha256:e9cc06ac6583c8056c936e2560e473336fecbde7ea6ade3802a7f2c73a976f6b",
+      "artifact_hash": "sha256:4af582a52c15965c0ac42e782b0fa7572d82b3eeb2641167c4df96d159152d78",
       "checks": [
         {
           "name": "full_validation",
@@ -610,10 +615,17 @@
             "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9YWNKFC66JMBTMHWVQ782": {
@@ -734,6 +746,20 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Official init emitted transient entrypoint .bak files; remove these generated backups from final source diff, retaining original entrypoints in Git history."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -755,6 +781,7 @@
         "Merged accepted master 43d5ecda; inspected source-inventory delta from prior accepted b4a1374b: only Cargo version/lock changes to 0.123.5. Existing additive caller socket CI recipe remains only candidate inventory change. Official controller measured a16bd218 inventory; strict profile, carrier, provider and accepted authority unchanged.",
         "Official govern proof list resolves shared source-root config, not worktree config; no proof run or root mutation attempted. New recipe uses accepted-base executor and first-PR acceptance remains unproven.",
         "Official init --proof refreshed release-bound entrypoints and managed Dockerfile; finalized config remained byte-identical before init and after specs.refresh.",
+        "Official init emitted transient entrypoint .bak files; remove these generated backups from final source diff, retaining original entrypoints in Git history.",
         "Published verified exact tree/message/ordered-parent API mapping, head c359ff17, in regular PR 1503 as explicitly requested; no socket test execution claimed. Earlier interrupted create_commit may remain an unreachable immutable object; no branch/ref was created by that operation.",
         "Retained first-parent governance journal through merge and used official specs.refresh for generated conflict regions while retaining accepted and candidate authored prose.",
         "Reviewed complete inventory delta from f89a9fa8: accepted release changes Cargo version/lock to 0.123.4; candidate only adds mandatory named caller socket command to Linux daemonless recipe. No existing check removed, no workflow/carrier/trust change."
