@@ -129,3 +129,13 @@ fn decapod_has_no_lingering_background_process() {
         "daemonless contract violated: unexpected lingering decapod process(es)"
     );
 }
+
+#[path = "support/caller_identity.rs"]
+mod caller_identity;
+
+// This target is always run unfiltered by the independently accepted Linux
+// source-CI executor. No cfg, ignore, environment opt-out or skip is permitted.
+#[test]
+fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
+    caller_identity::required();
+}

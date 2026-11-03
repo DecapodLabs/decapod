@@ -500,6 +500,16 @@
       "id": "canonical-v01235-merge",
       "summary": "Combine only v0.123.5 reconciliation into one canonical release-bound merge while preserving full prior journal and reachable public backup",
       "input_digest": "sha256:9554f28f478dfb2a5205df8b7d28d0d409354c93b93539906313099cc4aa6760"
+    },
+    {
+      "id": "required-existing-target",
+      "summary": "Run the exact shared caller ownership scenario unconditionally through the accepted unfiltered daemonless target, with socket failure fatal and test cache disabled",
+      "input_digest": "sha256:8ac8371b57d4af3ae4c2453cd72cdf44e60550e2f76b1ce58f24dbb9c6045189"
+    },
+    {
+      "id": "clarify-validator-observation",
+      "summary": "Correct cancellation observation: no matching live validator was found or signalled; preserve unavailable proof status",
+      "input_digest": "sha256:b73e3b9ae3fca28652b49a7684b07537f76f180337c28e399f0107b3631e0298"
     }
   ],
   "intents": {
@@ -553,18 +563,18 @@
         "Current claimed task and isolated work branch",
         "No runtime identity, authorization, proof-policy weakening, merge or release"
       ],
-      "artifact_hash": "sha256:277a8b3d6a7be1587062082ac5b6407f9bd7d2896105ffb6912e0cdd64376649",
+      "artifact_hash": "sha256:70c279ff2f9fc0fd2f6a7d7109189a25b037e0966ac8797263c57e44c23e104c",
       "checks": [
         {
           "name": "full_validation",
-          "status": "failed"
+          "status": "unavailable"
         },
         {
           "name": "named_socket_acceptance",
           "status": "unavailable"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -634,10 +644,31 @@
             "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9YWNKFC66JMBTMHWVQ782": {
@@ -789,6 +820,57 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "tests/support/caller_identity.rs",
+                  "tests/daemonless_lifecycle.rs",
+                  "tests/group_broker.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "tests/source_ci_profile_policy.rs",
+                  "Use accepted always-run unfiltered daemonless_lifecycle target for shared required caller scenario. Unconditional unignored test calls strict entrypoint: unavailable socket or non-Unix fails; no env opt-out. External Bazel tag disables cached passes without changing global logging or accepted executor authority. Optional group_broker test retains sandbox skip."
+                ],
+                "proof_refs": [
+                  "named_socket_acceptance"
+                ],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Reviewed inventory adds only shared test-support build inputs and uncached daemonless target tag to prior additive exact recipe; final config digest 00d8f641 before specs.refresh. Cancelled stale-head read-only validation wait because new acceptance test changes exact candidate."
+                ],
+                "proof_refs": [
+                  "full_validation"
+                ],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 13,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "Correction to prior cancellation note: exact PID/cwd probe found no live matching validator, so no signal was sent. Earlier provider wait is not treated as completed or passed; inspect its retained output separately."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 14,
+                "validation_findings": []
               }
             ]
           }
@@ -806,6 +888,7 @@
       "destination": "pull request",
       "evidence": [
         "Corrected inventory review declaration from accepted-worktree b2dad13c to measured f5cae6d0 after independently reviewed Cargo release metadata and additive recipe delta; previous edit did not execute because initial source-root pin differed from worktree accepted pin.",
+        "Correction to prior cancellation note: exact PID/cwd probe found no live matching validator, so no signal was sent. Earlier provider wait is not treated as completed or passed; inspect its retained output separately.",
         "Generated branch had extraneous todo_01m6g9 parsed as a second task; renamed governed worktree branch retaining actual task. Next validation requires inventory reconciliation; accepted target advanced to release v0.123.4.",
         "Issue 1476 latest comment requires named post-probe evidence rather than suite-only success",
         "Merged accepted master 43d5ecda; inspected source-inventory delta from prior accepted b4a1374b: only Cargo version/lock changes to 0.123.5. Existing additive caller socket CI recipe remains only candidate inventory change. Official controller measured a16bd218 inventory; strict profile, carrier, provider and accepted authority unchanged.",
@@ -815,7 +898,9 @@
         "Official init emitted transient entrypoint .bak files; remove these generated backups from final source diff, retaining original entrypoints in Git history.",
         "Published verified exact tree/message/ordered-parent API mapping, head c359ff17, in regular PR 1503 as explicitly requested; no socket test execution claimed. Earlier interrupted create_commit may remain an unreachable immutable object; no branch/ref was created by that operation.",
         "Retained first-parent governance journal through merge and used official specs.refresh for generated conflict regions while retaining accepted and candidate authored prose.",
-        "Reviewed complete inventory delta from f89a9fa8: accepted release changes Cargo version/lock to 0.123.4; candidate only adds mandatory named caller socket command to Linux daemonless recipe. No existing check removed, no workflow/carrier/trust change."
+        "Reviewed complete inventory delta from f89a9fa8: accepted release changes Cargo version/lock to 0.123.4; candidate only adds mandatory named caller socket command to Linux daemonless recipe. No existing check removed, no workflow/carrier/trust change.",
+        "Reviewed inventory adds only shared test-support build inputs and uncached daemonless target tag to prior additive exact recipe; final config digest 00d8f641 before specs.refresh. Cancelled stale-head read-only validation wait because new acceptance test changes exact candidate.",
+        "Use accepted always-run unfiltered daemonless_lifecycle target for shared required caller scenario. Unconditional unignored test calls strict entrypoint: unavailable socket or non-Unix fails; no env opt-out. External Bazel tag disables cached passes without changing global logging or accepted executor authority. Optional group_broker test retains sandbox skip."
       ],
       "inspected_files": [
         "assets/tools/source_ci_profile.rs",
@@ -825,11 +910,14 @@
       ],
       "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
       "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
         ".decapod/managed/specs/VALIDATION.md",
         "assets/tools/source_ci_profile.rs",
+        "tests/daemonless_lifecycle.rs",
         "tests/group_broker.rs",
-        "tests/source_ci_profile_policy.rs"
+        "tests/source_ci_profile_policy.rs",
+        "tests/support/caller_identity.rs"
       ],
       "next_transitions": [
         "Full validation of checkpointed candidate; no readiness from supplemental or suite-only proof",

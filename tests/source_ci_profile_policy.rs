@@ -2205,3 +2205,27 @@ fn caller_socket_acceptance_is_required_visible_and_not_cached_in_linux_ci() {
         );
     }
 }
+
+#[test]
+fn accepted_daemonless_target_runs_required_caller_scenario_unfiltered() {
+    let recipe = commands(find_check("daemonless-lifecycle").unwrap(), &[]).unwrap();
+    let target = recipe
+        .iter()
+        .find(|entry| entry.args.contains(&"//:daemonless_lifecycle"))
+        .unwrap();
+    assert_eq!(
+        target.args,
+        [
+            "test",
+            "//:daemonless_lifecycle",
+            "--test_arg=--test-threads=1"
+        ]
+    );
+    let source = include_str!("daemonless_lifecycle.rs");
+    assert!(source.contains("#[test]\nfn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {\n    caller_identity::required();\n}"));
+    let support = include_str!("support/caller_identity.rs");
+    assert!(support.contains("required caller socket acceptance needs a Unix socket executor"));
+    assert!(support.contains("super::require_socket(broker_socket_supported_with("));
+    let build = include_str!("../.config/build/decapod.BUILD.bzl");
+    assert!(build.contains("[\"external\"] if path == \"tests/daemonless_lifecycle.rs\""));
+}

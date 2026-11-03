@@ -241,8 +241,8 @@ def decapod_targets():
             tags = ["exclusive"] if path in [
                 "tests/validate_termination.rs",
                 "tests/cli_contract_enforcement.rs",
-            ] else [],
-            srcs = [path] + [
+            ] else (["external"] if path == "tests/daemonless_lifecycle.rs" else []),
+            srcs = [path, "tests/support/caller_identity.rs"] if path in ["tests/group_broker.rs", "tests/daemonless_lifecycle.rs"] else [path] + [
                 "tests/consumer_readiness.rs",
                 "tests/init_ci_scaffolding.rs",
                 "tests/init_config_behavior.rs",
@@ -338,6 +338,9 @@ def decapod_targets():
                 ".github/actions/source-ci-profile/action.yml",
                 "tests/fixtures/derived-release/Cargo.toml.fixture",
                 "src/decapod/core/derived_release_profile_tests.rs",
+                "tests/daemonless_lifecycle.rs",
+                "tests/support/caller_identity.rs",
+                ".config/build/decapod.BUILD.bzl",
             ] + native.glob([".github/workflows/*.yml"]) if path == "tests/source_ci_profile_policy.rs" else []),
             edition = "2024",
             crate_features = ["supabase-cloud"],

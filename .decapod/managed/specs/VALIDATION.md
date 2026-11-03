@@ -18,10 +18,23 @@ evidence of this acceptance path. Actual execution remains unproven until the
 exact candidate execution supplies the named test output.
 
 Because the source-CI carrier executes the independently accepted base recipe,
-this additive CI recipe does not become authority in its first candidate PR.
-First-PR full validation alone cannot establish that this new recipe ran. Until
-an independent supported execution captures the named test's post-probe markers,
-the socket acceptance remains unproven even if the older accepted suite passes.
+the additive exact recipe does not become authority in its first candidate PR.
+The same ownership scenario is therefore shared through
+`tests/support/caller_identity.rs` with an unconditional, unignored test of the
+same name in `tests/daemonless_lifecycle.rs`. The accepted Linux executor already
+runs that target unfiltered. Its required entrypoint asserts the socket probe,
+then executes both callers' shared-broker, returned-owner and persisted-owner
+assertions; it has no environment opt-out. Non-Unix execution explicitly fails
+rather than excluding the test. The optional broker-suite entrypoint remains
+available for restricted development sandboxes.
+
+The Bazel daemonless target is tagged `external` to prevent cached passes.
+An actual successful execution of this unfiltered target against the candidate
+therefore establishes this mandatory scenario ran; a prior target result or the
+optional broker suite alone does not. The exact recipe additionally exposes the
+post-probe markers once accepted. Global logging and accepted executor authority
+are unchanged. Current-candidate execution must still be observed before claiming
+acceptance, and this test evidence never substitutes for complete validation.
 
 ## Native readiness receipt custody
 
@@ -875,8 +888,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f0e47cd256231ab0a93bfde6754d6a2e9536907ec155462fc984735343ac5a4a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (195 files)
+- Repository signal fingerprint: `a52339f401aabf46d92edcac0b44fa5816232a03dbd9b7337f2583df53bba194`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
