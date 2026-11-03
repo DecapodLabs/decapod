@@ -377,3 +377,46 @@ ready controls; a third validly abstained and missed its expected-accept label.
 The original strict aggregate failed, and domain-level accuracy remains unestablished. See
 [the reference contract](../vega-reference-contract.md) for pins, unchanged
 tolerances, timings/memory scope, historical failures and current-candidate results.
+
+### Agent-operated live Dagger acceptance
+
+`tests/consumer_readiness.rs::live_dagger_acceptance_preserves_candidate_target_and_custody`
+is an ignored, opt-in acceptance test, not a fixture success or a default CI
+requirement. The agent/harness runs it only after a trusted local engine and a
+separate consumer workspace have been independently provisioned and authorized.
+The human-facing entrypoint remains `decapod init`; no new human command, router,
+daemon, engine lifecycle operation, or permission grant is introduced.
+
+The harness supplies `DECAPOD_DAGGER_ACCEPTANCE_ROOT` (the consumer workspace),
+`DECAPOD_DAGGER_ACCEPTANCE_CONTROLLER` (an independently trusted installed
+controller outside that workspace), `DECAPOD_DAGGER_ACCEPTANCE_CONTROLLER_DIGEST`
+(`sha256:` plus its independently verified digest),
+`DECAPOD_DAGGER_ACCEPTANCE_CANDIDATE` and `DECAPOD_DAGGER_ACCEPTANCE_TARGET`
+(exact commit IDs). Missing inputs fail when explicitly invoked; the test never
+substitutes mocks. The accepted target must contain the complete dormant
+execution authorization, without that active execution. The candidate activates
+exactly that authorization. The existing public `validate --format json` path
+performs real checks and authorization, resolves the remote accepted target, and
+must return repository-local readiness. Candidate-only policy, denied access,
+unavailable tools/engine, stale source, and changed/restarted engine remain
+failures, not skipped success. The harness does not restart a shared engine to
+manufacture a negative case.
+
+On success, the harness checks actual executed Dagger rows, exact candidate and
+accepted-target receipt bindings, frozen invocation/toolchain digests, matching
+before/after material, and engine custody. It records independently measured
+controller/tool/declared-runtime, config, root module/lock and tracked `.dagger`
+file digests before and after validation in `live-dagger-acceptance.json` beside
+the controller evidence. This supplementary record does not grant readiness or
+replace the controller's receipt. Retain the complete evidence directory and test
+output, not only a green test name. Review module sources located outside
+`.dagger` in the controller's complete source inventory as well.
+
+The ordinary regression tests separately prove dormant authorization makes no
+engine calls and candidate-only authorization rejects before adapter selection.
+Engine observation unit tests cover changed ID/image and restarted start time;
+these are expressly not live negative-case evidence. A complete acceptance
+report must distinguish those unit results from actual live success and from
+separately authorized live failure scenarios. No live execution is established
+by adding or compiling this test. This consumer acceptance cannot satisfy or
+weaken Decapod's required Buildkite source-PR proof.

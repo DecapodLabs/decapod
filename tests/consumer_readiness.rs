@@ -776,3 +776,297 @@ fn configuration_change_after_successful_execution_invalidates_readiness() {
         }
     )));
 }
+
+fn dormant_dagger_execution() -> RepositoryExecution {
+    RepositoryExecution {
+        program: "/opt/reviewed/bin/dagger".into(),
+        toolchain_files: BTreeMap::from([(
+            "dagger-docker".into(),
+            "/opt/reviewed/bin/docker".into(),
+        )]),
+        environment: BTreeMap::from([("PATH".into(), "/opt/reviewed/bin".into())]),
+        directory: ".".into(),
+        timeout_seconds: 30,
+        dagger: Some(repository_profile::DaggerExecution {
+            cli_contract: "dagger-1.0-workspace-check.v1".into(),
+            engine_container: "a".repeat(64),
+            engine_image: format!("sha256:{}", "b".repeat(64)),
+            docker_socket: "/run/docker.sock".into(),
+        }),
+    }
+}
+
+#[test]
+fn accepted_dormant_dagger_authorization_does_not_touch_unavailable_engine() {
+    let execution = dormant_dagger_execution();
+    let accepted = toml::to_string(
+        &toml::Value::try_from(serde_json::json!({
+            "proof": {"dagger_authorizations": {"dagger-check": execution}}
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    let mut fixture = Fixture::with_accepted_config(Some(&accepted));
+    fixture
+        .proof
+        .dagger_authorizations
+        .insert("dagger-check".into(), execution);
+    fixture.save_config();
+    fixture.commit("retain accepted dormant engine authorization");
+    // The host rejects every non-repository action. These unavailable tool and
+    // socket paths therefore prove dormancy, not any live-engine behavior.
+    let report = fixture.validate(&mut fixture.host());
+    assert!(report.ready, "{report:?}");
+    assert!(
+        !report
+            .evidence_path
+            .unwrap()
+            .join("dagger-engine-custody.json")
+            .exists()
+    );
+}
+
+#[test]
+fn candidate_only_dagger_authorization_is_rejected_before_adapter_selection() {
+    let mut fixture = Fixture::new();
+    let execution = dormant_dagger_execution();
+    fs::write(
+        fixture.options.root.join("dagger.toml"),
+        "# fixture, never executed\n",
+    )
+    .unwrap();
+    fs::write(
+        fixture.options.root.join("dagger.lock"),
+        "# fixture, never executed\n",
+    )
+    .unwrap();
+    fixture
+        .proof
+        .dagger_authorizations
+        .insert("dagger-check".into(), execution.clone());
+    fixture.proof.commands.push(ProofDef {
+        name: "dagger-check".into(),
+        command: "dagger".into(),
+        args: vec!["check".into()],
+        description: "Must never execute without accepted authorization".into(),
+        required: true,
+    });
+    fixture.proof.commands.sort_by(|a, b| a.name.cmp(&b.name));
+    let contract = fixture.proof.repository_contract.as_mut().unwrap();
+    contract.executions.insert("dagger-check".into(), execution);
+    contract.source_coverage[0]
+        .commands
+        .push("dagger-check".into());
+    contract.source_coverage[0].commands.sort();
+    fixture.review_commands();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture.save_config();
+    fixture.commit("candidate attempts to authorize its own engine");
+    let mut host = fixture.host();
+    blocked(&fixture.validate(&mut host), "DAGGER_POLICY_NOT_ACCEPTED");
+    assert_eq!(host.selections, 0);
+    assert_eq!(host.execution_attempts, 0);
+}
+
+/// Opt-in acceptance through the installed controller's public validation path.
+/// The harness must supply an independently accepted, configured consumer repo
+/// and trusted pre-provisioned engine. This test never creates either authority.
+#[test]
+#[ignore = "requires approved live Dagger consumer, trusted controller and pre-provisioned local engine"]
+fn live_dagger_acceptance_preserves_candidate_target_and_custody() {
+    fn required(name: &str) -> String {
+        std::env::var(name)
+            .unwrap_or_else(|_| panic!("live acceptance requires {name}; no fixture fallback"))
+    }
+    fn read_json(path: &Path) -> serde_json::Value {
+        serde_json::from_slice(&fs::read(path).unwrap()).unwrap()
+    }
+    let root = PathBuf::from(required("DECAPOD_DAGGER_ACCEPTANCE_ROOT"))
+        .canonicalize()
+        .unwrap();
+    let controller = PathBuf::from(required("DECAPOD_DAGGER_ACCEPTANCE_CONTROLLER"))
+        .canonicalize()
+        .unwrap();
+    assert!(
+        !controller.starts_with(&root),
+        "controller must not be candidate-produced"
+    );
+    fn file_digest(path: &Path) -> String {
+        use sha2::{Digest, Sha256};
+        format!("sha256:{:x}", Sha256::digest(fs::read(path).unwrap()))
+    }
+    assert_eq!(
+        file_digest(&controller),
+        required("DECAPOD_DAGGER_ACCEPTANCE_CONTROLLER_DIGEST")
+    );
+    let candidate = required("DECAPOD_DAGGER_ACCEPTANCE_CANDIDATE");
+    let accepted = required("DECAPOD_DAGGER_ACCEPTANCE_TARGET");
+    assert_ne!(
+        candidate, accepted,
+        "activation must follow dormant acceptance"
+    );
+    assert_eq!(git(&root, &["rev-parse", "HEAD"]), candidate);
+    let config: toml::Value =
+        toml::from_str(&fs::read_to_string(root.join(CONFIG)).unwrap()).unwrap();
+    let accepted_config: toml::Value =
+        toml::from_str(&git(&root, &["show", &format!("{accepted}:{CONFIG}")])).unwrap();
+    let active = config["proof"]["repository_contract"]["executions"]
+        .as_table()
+        .unwrap();
+    let dagger: Vec<_> = active
+        .iter()
+        .filter(|(_, value)| value.get("dagger").is_some())
+        .collect();
+    assert!(
+        !dagger.is_empty(),
+        "live acceptance requires active Dagger checks"
+    );
+    for (name, execution) in &dagger {
+        assert_eq!(
+            accepted_config["proof"]["dagger_authorizations"].get(name.as_str()),
+            Some(*execution)
+        );
+        assert!(
+            accepted_config["proof"]
+                .get("repository_contract")
+                .and_then(|c| c.get("executions"))
+                .and_then(|e| e.get(name.as_str()))
+                .is_none(),
+            "accepted authorization must be dormant for this first-activation acceptance"
+        );
+    }
+    let mut measured_files = BTreeMap::new();
+    measured_files.insert(controller.clone(), file_digest(&controller));
+    for (_, execution) in &dagger {
+        for path in std::iter::once(execution["program"].as_str().unwrap()).chain(
+            execution["toolchain_files"]
+                .as_table()
+                .unwrap()
+                .values()
+                .map(|v| v.as_str().unwrap()),
+        ) {
+            let path = PathBuf::from(path);
+            measured_files.insert(path.clone(), file_digest(&path));
+        }
+    }
+    for path in git(
+        &root,
+        &[
+            "ls-tree",
+            "-r",
+            "--name-only",
+            "HEAD",
+            "--",
+            CONFIG,
+            "dagger.toml",
+            "dagger.lock",
+            ".dagger",
+        ],
+    )
+    .lines()
+    {
+        let path = root.join(path);
+        measured_files.insert(path.clone(), file_digest(&path));
+    }
+    assert!(measured_files.contains_key(&root.join("dagger.toml")));
+    assert!(measured_files.contains_key(&root.join("dagger.lock")));
+    // Do not strip policy/session settings or set CI flags to bypass full proof.
+    assert_ne!(std::env::var("CI").as_deref(), Ok("true"));
+    assert_ne!(std::env::var("GITHUB_ACTIONS").as_deref(), Ok("true"));
+    assert_ne!(std::env::var("BUILDKITE").as_deref(), Ok("true"));
+    let output = Command::new(&controller)
+        .current_dir(&root)
+        .args(["validate", "--format", "json"])
+        .bounded_output(Duration::from_secs(1800))
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "live validation failed: {}\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["publication_ready"], true);
+    assert_eq!(report["readiness"]["scope"], "repository_local_readiness");
+    let evidence = PathBuf::from(report["readiness"]["evidence_path"].as_str().unwrap());
+    let receipt = read_json(&evidence.join("completion/native-readiness-receipt.json"));
+    assert_eq!(receipt["material"]["head_revision"], candidate);
+    assert_eq!(receipt["material"]["accepted_base_revision"], accepted);
+    let observations: SuiteEvidence =
+        serde_json::from_value(read_json(&evidence.join("observations.json"))).unwrap();
+    let plan: ExpectedPlan =
+        serde_json::from_value(read_json(&evidence.join("expected-plan.json"))).unwrap();
+    assert_eq!(observations.before, observations.after);
+    assert_eq!(observations.expected_plan_digest, plan.digest().unwrap());
+    assert_eq!(
+        receipt["evidence_digest"],
+        decapod::core::readiness_evidence::digest(&observations).unwrap()
+    );
+    let custody = read_json(&evidence.join("dagger-engine-custody.json"));
+    for (name, execution) in dagger {
+        let observed = &custody[name];
+        assert_eq!(
+            observed["id"].as_str(),
+            execution["dagger"]["engine_container"].as_str()
+        );
+        assert_eq!(
+            observed["image"].as_str(),
+            execution["dagger"]["engine_image"].as_str()
+        );
+        assert_eq!(observed["running"], true);
+        assert!(!observed["started_at"].as_str().unwrap().is_empty());
+        let row = observations
+            .results
+            .iter()
+            .find(|r| r.key.job == *name)
+            .expect("Dagger result missing");
+        assert_eq!(row.identity.head_revision, candidate);
+        assert_eq!(row.identity.accepted_base_revision, accepted);
+        assert_eq!(row.executor, Provider::Native);
+        assert!(matches!(
+            row.observation,
+            Observation::Executed {
+                conclusion: Conclusion::Success,
+                exit_code: Some(0),
+                ..
+            }
+        ));
+        let expected = plan.checks.iter().find(|c| c.key == row.key).unwrap();
+        assert_eq!(row.invocation_digest, expected.invocation_digest);
+        assert_eq!(row.toolchain_digest, expected.toolchain_digest);
+    }
+    assert_eq!(git(&root, &["rev-parse", "HEAD"]), candidate);
+    assert!(git(&root, &["status", "--porcelain"]).is_empty());
+    for (path, digest) in &measured_files {
+        assert_eq!(
+            &file_digest(path),
+            digest,
+            "live acceptance input changed: {}",
+            path.display()
+        );
+    }
+    // Supplemental harness record, not a substitute for the controller receipt.
+    fs::write(
+        evidence.join("live-dagger-acceptance.json"),
+        serde_json::to_vec_pretty(&serde_json::json!({
+            "kind": "live_dagger_acceptance_harness_record",
+            "candidate": candidate, "accepted_target": accepted,
+            "measured_files": measured_files, "engine_custody": custody,
+            "expected_plan_digest": plan.digest().unwrap(),
+            "evidence_digest": receipt["evidence_digest"],
+            "scope": "repository_local_readiness", "hosted_ci_assurance": false
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    println!("live Dagger acceptance evidence: {}", evidence.display());
+}

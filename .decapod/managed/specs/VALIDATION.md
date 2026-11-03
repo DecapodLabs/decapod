@@ -852,7 +852,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b`
+- Repository signal fingerprint: `9fdd093471ac63ab0221947709ae136b154cd5be00415459f24e1163a561d268`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1120,3 +1120,23 @@ local `outcome=skipped` reasons. These notes report the executed gate branch;
 they do not promote a project-check result into publication readiness. The
 whole-command regression inspects this JSON record and the non-ready scope rather
 than guessing proof execution from an aggregate green count or absent failure text.
+
+## Optional local Dagger acceptance custody
+
+The repository-local adapter in
+`src/decapod/core/validation_runtime/repository_host/dagger.rs` requires an
+independently provisioned trusted engine and an execution exactly matching the
+accepted target's dormant authorization. The opt-in live test in
+`tests/consumer_readiness.rs` exercises the installed controller's public
+validation boundary against a separately authorized consumer workspace; it
+never creates policy, an engine, or a successful receipt itself. It checks exact
+candidate/target bindings, actual native execution, frozen plan/toolchain
+identity, engine custody and stable controller/config/module bytes. Its
+supplemental acceptance record is diagnostic evidence, not publication authority.
+
+Default regression coverage proves dormant authorization does not contact an
+engine and candidate-only authorization rejects before selection. Changed and
+restarted engine unit observations remain fixture coverage. A live engine run
+and live adverse scenarios require separate retained evidence and must never be
+inferred from ignored test compilation. The consumer-local acceptance scope
+cannot replace the required Buildkite suite for this repository.
