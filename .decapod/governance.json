@@ -584,6 +584,11 @@
       "id": "reviewed-final-diagnostics",
       "summary": "Bind final current-source semantic reviews after independent diagnostic wording correction; no executed test claims",
       "input_digest": "sha256:f83fe022831375945e99f268f2a4b23e42e0c0ddd0117b0465c28cf024fa831a"
+    },
+    {
+      "id": "accepted-master-01213-merge",
+      "summary": "Merge accepted5a477a5c as secondparent with b1 firstparent; exact prior machine bytes preserved during conflict resolution then official0.121.3 regenerated projections. Retain imported history and semantic inventory architecture. Review Cargo packageversion only source delta; all prior CI/proof invalidated by accepted-target move.",
+      "input_digest": "sha256:35c4851db237d641ddaa505fc9958c4baddfa1779983831aac7b64bcd35c14fb"
     }
   ],
   "intents": {
@@ -625,24 +630,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final wording precision changes only existing verify error projection; no subsystem, provider, persistence or proof transition changes.",
-          "reviewed_code_fingerprint": "c7fff2b0c5c8c81df45240348b9899d676be1adb84ec46cc1b106ac1f7d6750e",
-          "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
+          "reason": "Preserved accepted master source_entry_path inventory implementation and its21line architecture explanation alongside existing recovery plugin boundaries. Newcontroller0.121.3 regenerates projections only; no authority/gate weakening or new subsystem.",
+          "reviewed_code_fingerprint": "595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3",
+          "spec_material_hash": "e778b434665a97ee71dbd9c6efd495f23f6996a72ebf7e6a52ee51a4afe51431"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final nonreopening agent error contract and explicit artifact selection. Failed scoped child emits bounded allowlisted observed labels only, explicitly not established causes/proof; structured diagnostic identifies actual blockers. Existing authored interface describes diagnostic observations and no raw child output.",
-          "reviewed_code_fingerprint": "c7fff2b0c5c8c81df45240348b9899d676be1adb84ec46cc1b106ac1f7d6750e",
+          "reason": "Reviewed merged source against recovery interface: new accepted inventory implementation does not change explicit task artifacts, observed-label diagnostic boundaries or atomic pending/final proof; current authored interface and regressions retained unchanged from reviewed recovery candidate.",
+          "reviewed_code_fingerprint": "595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3",
           "spec_material_hash": "60e288463c4a14d266867d505c026bd23dbf5578550662263e98b03c423e209b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final diagnostic reads at most1MiB per child stream and emits fixed allowlisted labels, never raw text/paths/URLs/secrets. Observed substrings cannot establish causal authority or waive real proof; recovery preserves history and obligations.",
-          "reviewed_code_fingerprint": "c7fff2b0c5c8c81df45240348b9899d676be1adb84ec46cc1b106ac1f7d6750e",
+          "reason": "Reviewed merged inventory path canonicalization and non-destructive proof recovery: original obligations current material checks and safe observed diagnostics remain; preserving exact first-parent journal and accepted second-parent history does not import readiness. New release and dependency pins do not change trust policy.",
+          "reviewed_code_fingerprint": "595529e7488ec5fbae66a7c1d9ca3f7975080e47688b39d93125f580118bbfb3",
           "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
         }
       ],
@@ -654,7 +659,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793667292Z"
+      "updated_at": "1793669980Z"
     },
     "trajectory": {
       "active_boundaries": [
