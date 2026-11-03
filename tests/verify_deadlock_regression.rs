@@ -223,6 +223,108 @@ fn test_verify_deadlock_prevention() {
         val_normal_combined
     );
 
+    assert!(val_normal_combined.contains("decapod qa verify recover"));
+    assert!(val_normal_combined.contains("--artifact TODO_ID=FILE"));
+
+    // Exercise the real recovery CLI and its child validation, not an injected
+    // passing snapshot. Model historical completion whose proof rows are lost.
+    conn.execute("DELETE FROM task_verification", []).unwrap();
+    let completed_state = |id: &str| {
+        conn.query_row(
+            "SELECT status, completed_at, revision FROM tasks WHERE id = ?1",
+            [id],
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, Option<String>>(1)?,
+                    row.get::<_, i64>(2)?,
+                ))
+            },
+        )
+        .unwrap()
+    };
+    let before = [completed_state(&todo_id_1), completed_state(&todo_id_2)];
+    assert!(before.iter().all(|state| state.0 == "done"));
+    std::fs::write(
+        wt_path.join("recovery-proof.txt"),
+        "current task material\n",
+    )
+    .unwrap();
+
+    let missing = run_cmd(&wt_path, &["qa", "verify", "recover"], &[]);
+    assert!(!missing.status.success());
+    assert!(
+        String::from_utf8_lossy(&missing.stderr).contains("requires fresh evidence"),
+        "missing-artifact diagnostic: {missing:?}"
+    );
+
+    // An unrelated genuine governance failure must survive the narrowly scoped
+    // completed-task exemption. The candidate executable runs actual validation.
+    let mut unapproved = plan.clone();
+    unapproved["state"] = serde_json::json!("DRAFT");
+    decapod::core::governance_document::write_section(&wt_path, "plan", &unapproved).unwrap();
+    decapod::core::governance_document::write_section(&main_repo, "plan", &unapproved).unwrap();
+    let ids = format!("{todo_id_1},{todo_id_2}");
+    let blocked = run_cmd(&wt_path, &["validate"], &[("DECAPOD_VERIFYING_TODO", &ids)]);
+    let diagnostic = format!(
+        "{}\n{}",
+        String::from_utf8_lossy(&blocked.stdout),
+        String::from_utf8_lossy(&blocked.stderr)
+    );
+    assert!(!blocked.status.success(), "{diagnostic}");
+    assert!(diagnostic.contains("NEEDS_PLAN_APPROVAL"), "{diagnostic}");
+
+    let first = format!("{todo_id_1}=recovery-proof.txt");
+    let second = format!("{todo_id_2}=recovery-proof.txt");
+    let recover = run_cmd(
+        &wt_path,
+        &[
+            "qa",
+            "verify",
+            "recover",
+            "--artifact",
+            &first,
+            "--artifact",
+            &second,
+        ],
+        &[],
+    );
+    assert!(!recover.status.success(), "{recover:?}");
+    assert!(
+        String::from_utf8_lossy(&recover.stderr).contains("failing validation snapshot"),
+        "recovery must reach real child validation and reject its failure: {recover:?}"
+    );
+    let recovery_diagnostic = String::from_utf8_lossy(&recover.stderr);
+    assert!(recovery_diagnostic.contains("VALIDATION_CHILD_FAILED"));
+    assert!(recovery_diagnostic.contains("NEEDS_PLAN_APPROVAL"));
+    assert!(recovery_diagnostic.contains("decapod validate --format json"));
+    assert!(recovery_diagnostic.contains("decapod qa verify recover"));
+    assert!(!recovery_diagnostic.contains("qa verify prune"));
+    assert_eq!(completed_state(&todo_id_1), before[0]);
+    assert_eq!(completed_state(&todo_id_2), before[1]);
+    let proof_rows: i64 = conn
+        .query_row("SELECT COUNT(*) FROM task_verification", [], |row| {
+            row.get(0)
+        })
+        .unwrap();
+    assert_eq!(
+        proof_rows, 0,
+        "failed real validation must not manufacture evidence"
+    );
+    let unverified: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM tasks t LEFT JOIN task_verification v ON v.todo_id = t.id WHERE t.status = 'done' AND v.todo_id IS NULL",
+        [], |row| row.get(0),
+    ).unwrap();
+    assert_eq!(
+        unverified, 2,
+        "both historical completions remain unverified without pruning"
+    );
+
+    // Restore the independent fixture prerequisite for the existing prune
+    // regression below. Recovery itself neither approved it nor reopened tasks.
+    decapod::core::governance_document::write_section(&wt_path, "plan", &plan).unwrap();
+    decapod::core::governance_document::write_section(&main_repo, "plan", &plan).unwrap();
+
     // 2. Prune verification of task 1 (reverts status to 'open' and deletes verification record)
     let prune_1 = run_cmd(&wt_path, &["qa", "verify", "prune", &todo_id_1], &[]);
     assert!(

@@ -1,11 +1,69 @@
 # Architecture
 
+## Broker caller custody
+
+The finite group broker in `src/decapod/core/group_broker.rs` serializes local
+mutations without adopting the elected leader's identity. Protocol version 2
+requires an explicit caller context: canonical working directory and a closed
+allowlist of agent, session, task, correlation, idempotency and claim-autorun
+fields. Each child command clears those inherited fields before installing the
+request values; absent caller metadata cannot fall back to the leader's values.
+The ordinary session and operation-policy checks still run in that child.
+Context conveys the caller's execution inputs, not a grant of trust or approval.
+
+The active session password is transported only on the existing restricted local
+socket, without a debug representation, response echo or durable request storage.
+Dedupe stores only the result and a structured digest of arguments and non-secret
+caller context. That digest binds identity and worktree while permitting password
+rotation for an already authenticated same-caller retry. Unknown context fields
+and inconsistent payload hashes fail closed; old context-free broker clients
+cannot silently execute under a leader's identity. Broker election, bounded
+execution and idle shutdown remain unchanged: this adds no daemon or service.
+
+`tests/group_broker.rs` exercises two callers claiming distinct tasks through a
+third caller's live broker and checks returned and persisted ownership; the
+unit suite covers actor/workspace replay separation, credential rotation,
+rejected context keys and removal of absent leader metadata. These are required
+regressions, not a claim that unexecuted candidate tests have passed.
+
+## Native completion custody
+
+`validation_runtime::write_native_completion` writes and syncs native receipt
+and verdict into a private temporary directory outside the frozen checkout and
+Git metadata, then publishes the pair with one directory rename. No fallible
+operation follows that publication point. Creation, partial-write or sync
+failure leaves no published successful pair and the returned report fails closed.
+`workspace::ensure_required_governance_artifacts_in_pr` checks required intent
+and trajectory material independently of legacy preparation receipts; the full
+readiness boundary remains responsible for all selected proof and final custody.
+
 ## Architecture Overview
 
 Decapod is a Rust governance kernel invoked by coding agents through a CLI and
 structured RPC. It connects human intent, project authority, coordinated
 execution, and evidence in repository-owned state. Each invocation is finite;
 the repository carries the work between invocations.
+
+Source adoption inventory in `src/decapod/core/init_reconciliation/mod.rs` binds
+actual directory-entry paths, rather than successful filesystem probe spellings.
+The `source_entry_path` resolver checks source components and the existing
+reviewed symlink policy first, then resolves each existing discovery root to its
+exact entry spelling before `Discovery::visit` hashes it. This keeps a single
+`Justfile` from producing a phantom `justfile` on case-insensitive filesystems;
+distinct entries on case-sensitive filesystems remain separate even when their
+contents or underlying inode are identical. Discovery still includes untracked
+files and works before Git initialization, so a Git-only listing cannot hide new
+build inputs. Snapshot binding remains exact and does not forgive case-only
+working-tree drift from the tracked candidate.
+
+Spelling resolution reads at most 8,192 entries per containing directory and
+rejects ambiguous or unresolved aliases, while the existing source entry,
+depth, per-file and total-byte bounds remain in force. Failure returns an
+incomplete-discovery blocker rather than a partial accepted inventory. Tests in
+`init_reconciliation/tests.rs` cover both Justfile spellings without Git,
+same-content and hardlinked distinct names, nested spelling resolution and the
+lookup bound; their filesystem-sensitive branches exercise the host's actual
+case behavior and do not claim emulated APFS or Windows execution on Linux.
 
 `snapshot_provider::public_buildkite::CurlPublicReader` retains its typed,
 anonymous GET authorization and bounded redirect loop. Artifact redirects admit
@@ -567,8 +625,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `08e13f1fdc4e6fc67b09a990bd48526e645951dcc5b47aa85d052a1c7fc57321`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -622,6 +680,27 @@ the kernel enforces freshness, execution and custody mechanically. Existing
 Decapod source-CI adapters retain their stricter authority and cannot be downgraded
 by a candidate switching to local proof. Unsupported remote/daemon operations
 remain explicit limitations, rather than fabricated native evidence.
+
+### Optional existing-engine Dagger execution
+
+`core::repository_profile::DaggerExecution` is an opt-in extension of the
+repository-local contract, not a new controller or resident service.
+`validation_runtime::ProofConfiguration` and `proof::ProjectProofConfig` retain
+`dagger_authorizations` as dormant typed proposals; `cli::InitWithCli` and guided
+init roundtrips preserve them without activation. The old proof path can validate
+a proposal first. Only after target acceptance may an active execution match it;
+`preserve_accepted_dagger` reads accepted authority rather than candidate grants.
+
+`repository_host::command_invocation` emits only the declared Dagger 1.0 protocol
+`--workspace . check` against the immutable exact-candidate snapshot, requiring
+root `dagger.toml`/`dagger.lock`, reviewed module sources and measured installed
+Dagger/Docker tools. `repository_host::dagger::inspect_engines` performs bounded
+identity observations around execution of the full local command catalog. The
+explicit local socket, full container ID and image configuration digest select a
+pre-existing trusted engine. Neither Decapod nor this adapter creates, starts,
+updates or stops an engine. Independent hosted/Buildkite requirements and the
+kernel's final verdict remain authoritative. Contract fixtures are not proof
+that a live Dagger engine has executed; that qualification remains unavailable.
 
 ### Optional CI-attested validation boundary
 

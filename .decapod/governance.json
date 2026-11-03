@@ -541,6 +541,16 @@
       "id": "issue-1479-candidate-manifest",
       "summary": "Generate source-template manifest identities with exact CI candidate generator",
       "input_digest": "sha256:ad3843bc3b1907c82024ead390819c3b81d56b3971470a989be1aa03abbf0e5c"
+    },
+    {
+      "id": "pr1488-merge-01233",
+      "summary": "Merge accepted master, preserve both journals in history, regenerate official0.123.3 intermediate source candidate",
+      "input_digest": "sha256:8416076352ebd3c60bed092e534cea6ad6b8fc92b8a9fac58b391881a1b0cc8f"
+    },
+    {
+      "id": "pr1488-corrected-merge",
+      "summary": "Replace authorized interim merge with source-generated bootstrap entrypoints while preserving original ordered parents",
+      "input_digest": "sha256:83045ad1a36808ebcdc5b3fdcea2904f0ab9b7b1c6e1b8ede80345672c4db429"
     }
   ],
   "intents": {
@@ -571,7 +581,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix1479 bootstrap ordering: claim, create and enter governed workspace, then orient before implementation; preserve isolation, proof and pre-inference governance.",
+      "intent": "Preserve bootstrap workspace-before-orientation source fix and all accepted upstream changes through a true two-parent merge. Regenerate with official0.123.3, push intermediate for exact source-built CI generator, then regenerate source-bound entrypoints and push final parity repair without weakening tests.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -581,41 +591,45 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed actual CI failure and candidate source-generated root entrypoints: only workspace-before-orientation example and canonical fingerprint now align with assets.rs. Architectural constraints retain session, custody, isolation and pre-implementation orientation. Generation uses exact CI artifact solely for four source projections, never as acceptance controller; no topology change.",
-          "reviewed_code_fingerprint": "08e13f1fdc4e6fc67b09a990bd48526e645951dcc5b47aa85d052a1c7fc57321",
-          "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
+          "reason": "Compared merged source with accepted master55a83aa2. All upstream broker concurrency, native receipt, verification recovery, handoff and prompt-context fixes preserved. PR1488 only corrects bootstrap execution order in existing templates and fixtures; architectural custody and proof boundaries remain as accepted. OPERATIONS preserves both upstream completion guidance and authored worktree-before-orientation lifecycle.",
+          "reviewed_code_fingerprint": "370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b",
+          "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Root AGENTS/CLAUDE/CODEX/GEMINI now match candidate assets.rs bootstrap sequence through canonical CLI generation from exact CI artifact. Existing workspace ensure --branch and infer orientation --task-id commands unchanged; only execution order corrected. OPERATIONS and quickstart already document this contract. Actual Core failure preserved; new exact CI must establish repair, no result inferred from generation.",
-          "reviewed_code_fingerprint": "08e13f1fdc4e6fc67b09a990bd48526e645951dcc5b47aa85d052a1c7fc57321",
-          "spec_material_hash": "a227ee81c08e687d9dfa5ec539625a29c86d32b8a80653fa08178a493494869e"
+          "reason": "Preserved accepted interfaces and agent-only operation model; corrected assets bootstrap uses existing task claim, workspace ensure and infer orientation surfaces. No user-facing manual operating requirement or weakened checks introduced. Official0.123.3 interim entrypoints still show released old order; exact candidate-CI artifact must regenerate final source projections after this push.",
+          "reviewed_code_fingerprint": "370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b",
+          "spec_material_hash": "111b63acca3b5b52d373a6ff7c57a81b4374b4af7348fb7a7770fb2370e62195"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed regenerated root entrypoint diff: task ownership and workspace isolation precede orientation, which still precedes implementation. No gates removed or trust/policy weakened. CI artifact provenance and byte hash bound generation only; independent official controller still determines acceptance. Existing security and proof boundaries remain accurate.",
-          "reviewed_code_fingerprint": "08e13f1fdc4e6fc67b09a990bd48526e645951dcc5b47aa85d052a1c7fc57321",
-          "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
+          "reason": "Preserved accepted security prose and all upstream security-relevant sources. Session/task/isolation gates unchanged, orientation remains required before implementation. Two-parent history retains accepted journal while first-parent canonical journal is preserved before supported custody update. Source generator artifact is never acceptance authority; official0.123.3 remains independent controller.",
+          "reviewed_code_fingerprint": "370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b",
+          "spec_material_hash": "e2090e911112df35b36fb5845c7871be442f147bb1b3a723e04e3f17f76f56b9"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix initialization order for issue 1479 with official controller",
+      "title": "Reconcile PR1488 with accepted master using official0.123.3",
       "todo_ids": [
-        "bugs_01m6f0h5re05es2d"
+        "cicd_01m6g7zayvpnrjye"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793663334Z"
+      "updated_at": "1793694215Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:87035861e98af17c0b581a30dfd80a2e7313c28772fae389765ac8f4c3b9df7d",
+      "artifact_hash": "sha256:6d390decda504d7202ee86ab128b49c784ddacb07b67d2f3d28155471cee1221",
       "checks": [
+        {
+          "name": "accepted_source_inventory_review",
+          "status": "passed"
+        },
         {
           "name": "candidate_manifest_generation_review",
           "status": "passed"
@@ -637,6 +651,10 @@
           "status": "passed"
         },
         {
+          "name": "official_release_regeneration",
+          "status": "passed"
+        },
+        {
           "name": "official_validation",
           "status": "unavailable"
         },
@@ -653,7 +671,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "reconcile",
       "custody": {
         "events": [
           {
@@ -751,10 +769,38 @@
             "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
+          },
+          {
+            "detail": "trajectory:branch_01M6F0HRS2HTMS019S8KA64YD7",
+            "event_id": "event:19",
+            "intent_id": "intent:change_01M6F0HRRESZDFTY0563W7JK64",
+            "kind": "trajectory_step_recorded",
+            "sequence": 19
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 19,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0HRS2HTMS019S8KA64YD7": {
@@ -956,6 +1002,65 @@
                 ],
                 "sequence": 15,
                 "validation_findings": []
+              },
+              {
+                "action": "reconcile",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "Recovered into fresh supported task/workspace after environment restore. True merge parents are public PR2349c6a7 and accepted master55a83aa2. Before any CLI journal mutation, first-parent and preserved canonical journal blob both2d9e8b47d49a82562784966f76deb99fea2b3e62, SHA256 feefc85252eae2c2c6a1a7f86045cc3a68b9a222af35ee2a06a5d212708eae7b. Accepted journal retained through second-parent history. Authored source auto-merged; operations combines native completion contract with workspace-before-orientation. Official0.123.3 regeneration first, then intermediate push to obtain exact candidate CI generator artifact for final source-bound entrypoints; no interim readiness claim."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 16,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "Independently hashed every discovered regular-file/symlink source and compared bytes with accepted master55a83aa2; no proof/build/release source differs. Final reviewed inventory b2dad13cc7ab218b124a945e01fcb56b4bb9f5bbe044cb3785814cd07ef01b1a reconciles accepted release0.123.3. Config changed only reviewed digest, before all projection generation; required profile/checks unchanged."
+                ],
+                "proof_refs": [
+                  "accepted_source_inventory_review"
+                ],
+                "scope": [
+                  "PR1488-reconciliation",
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 17,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "Official vendor0.123.3 archive SHA256 c8070eba6bf4ec4f2ff52029b71148d78773ff87c4eba462b65c1ec973e15109 and binary4572b3598268786bfe2ba0b1030e382046270725e70a52627c50f6dd911829a1 verified. init --proof regenerated all four0.123.3 entrypoints and managed Dockerfile version/image. Final config finalized before regeneration and specs.refresh; byte hash unchanged afterward. This interim released template still orients before workspace while authored source fixes order, so Core parity/health expected red until exact candidate CI artifact generation. Push is staging, not completion."
+                ],
+                "proof_refs": [
+                  "official_release_regeneration"
+                ],
+                "scope": [
+                  "PR1488-reconciliation",
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 18,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:19",
+                "observations": [
+                  "User explicitly authorized replacing the single interim merge while retaining a backup, and requested Actions handle tests/validation/verification without local suites. Interim1e42360e retained in backup ref and bundle. Exact source-CI push run41603515544 artifact13214794736 binds head1e42360e; archive SHA2562aeacd690bbdfb97b133f0939b4787e0e9338a00898fcefcf40a097c0df287e0, binary60721c6e3b310f630a88a14d186952fb437af7aa194874457c52b32f5586f28e. Candidate CLI only generated four root entrypoints and source-template manifest identities; official0.123.3 still owns governance/acceptance. Corrected replacement retains original ordered parents2349c6a7 and55a83aa2, avoiding the interim historical template mismatch. No local test/validation or additional review executed. Actions determine result."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "PR1488-reconciliation",
+                  "issue-1479-bootstrap-order"
+                ],
+                "sequence": 19,
+                "validation_findings": []
               }
             ]
           }
@@ -972,8 +1077,12 @@
         "Compared every discovered source against213ed9ca: only Cargo.toml and Cargo.lock decapod version0.121.0 to0.121.2 changed; no recipes/workflows/required checks altered.",
         "Correction to prior checkpoint: initial comparison followed rust-toolchain.toml symlink and aborted before config edit; shell then recorded intended inventory evidence prematurely. Rerun now explicitly hashes symlink target text and regular-file bytes, verifies all discovered hashes and confirms exactly Cargo.lock/MODULE.bazel.lock differ from public 7780e0a2. Config declaration now actually updated to reviewed 80f5a722fcfd4394f246f5934c36d1a504604f02f94eb712d88014c18ccca985. No runtime tests claimed.",
         "Exact 93c80db3 GitHub CI run41542763408 Core job125611719308 failed test_root_entrypoints_match_scaffold_generators (31 passed, 1 failed, 4 ignored); health job125614915669 and companion run41542763292 job125610762963 reported four entrypoint integrity failures. Preserved failed head and full-controller SNAPSHOT_NOT_READY anonymous403 evidence. Downloaded exact CI debug artifact13186789964 from run41542763408/head93c80db3; archive SHA256 dbb6c76d6223d984d78f6207a6a881ddf89c377a8cc1d149ec9b35d25a5da71d, binary SHA256 0b0f7ae6dc3300539625e7089ddd41a23058b52588c5efd76e4510b2344c08a7. Used candidate init --all --no-specs --no-ci --proof only in disposable generator directory, copied four exact generated root Markdown artifacts. Diff is bootstrap reorder/explicit task branch plus canonical fingerprints only. Candidate is not an acceptance controller; official0.121.2 remains governance/full-validation authority. No manual build or shadow tests run.",
+        "Independently hashed every discovered regular-file/symlink source and compared bytes with accepted master55a83aa2; no proof/build/release source differs. Final reviewed inventory b2dad13cc7ab218b124a945e01fcb56b4bb9f5bbe044cb3785814cd07ef01b1a reconciles accepted release0.123.3. Config changed only reviewed digest, before all projection generation; required profile/checks unchanged.",
         "Official 0.121.2 specs.refresh after reviewed config reconciliation changes only generated_at and config_input_hash from eba6298031e7711f25707c2fa89f551f18b4734e6b773898bee9cd48f3b9103b to 7bee6519c9c571beb5f07ba7406015847f78699b3f99b474441bcbb69351551f. No authored material or required proof policy changed; runtime checks not executed. Parent owns publication and exact candidate full validation; no PR readiness claimed.",
-        "Source inspection project_specs::entrypoint_manifest_entries derives template_hash/fingerprint from compiled template, while content_hash reads root file. Official released generator necessarily retained old template metadata after source template update; exact CI candidate rpc specs.refresh was therefore used solely as projection generator. Independently reviewed only generated_at and four template_hash/fingerprint pairs changed; all now align with canonical generated root files. No proof execution or candidate self-acceptance; official controller remains independent authority and must validate published head."
+        "Official vendor0.123.3 archive SHA256 c8070eba6bf4ec4f2ff52029b71148d78773ff87c4eba462b65c1ec973e15109 and binary4572b3598268786bfe2ba0b1030e382046270725e70a52627c50f6dd911829a1 verified. init --proof regenerated all four0.123.3 entrypoints and managed Dockerfile version/image. Final config finalized before regeneration and specs.refresh; byte hash unchanged afterward. This interim released template still orients before workspace while authored source fixes order, so Core parity/health expected red until exact candidate CI artifact generation. Push is staging, not completion.",
+        "Recovered into fresh supported task/workspace after environment restore. True merge parents are public PR2349c6a7 and accepted master55a83aa2. Before any CLI journal mutation, first-parent and preserved canonical journal blob both2d9e8b47d49a82562784966f76deb99fea2b3e62, SHA256 feefc85252eae2c2c6a1a7f86045cc3a68b9a222af35ee2a06a5d212708eae7b. Accepted journal retained through second-parent history. Authored source auto-merged; operations combines native completion contract with workspace-before-orientation. Official0.123.3 regeneration first, then intermediate push to obtain exact candidate CI generator artifact for final source-bound entrypoints; no interim readiness claim.",
+        "Source inspection project_specs::entrypoint_manifest_entries derives template_hash/fingerprint from compiled template, while content_hash reads root file. Official released generator necessarily retained old template metadata after source template update; exact CI candidate rpc specs.refresh was therefore used solely as projection generator. Independently reviewed only generated_at and four template_hash/fingerprint pairs changed; all now align with canonical generated root files. No proof execution or candidate self-acceptance; official controller remains independent authority and must validate published head.",
+        "User explicitly authorized replacing the single interim merge while retaining a backup, and requested Actions handle tests/validation/verification without local suites. Interim1e42360e retained in backup ref and bundle. Exact source-CI push run41603515544 artifact13214794736 binds head1e42360e; archive SHA2562aeacd690bbdfb97b133f0939b4787e0e9338a00898fcefcf40a097c0df287e0, binary60721c6e3b310f630a88a14d186952fb437af7aa194874457c52b32f5586f28e. Candidate CLI only generated four root entrypoints and source-template manifest identities; official0.123.3 still owns governance/acceptance. Corrected replacement retains original ordered parents2349c6a7 and55a83aa2, avoiding the interim historical template mismatch. No local test/validation or additional review executed. Actions determine result."
       ],
       "inspected_files": [
         "Cargo.lock",
@@ -998,12 +1107,13 @@
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
+        "PR1488-reconciliation",
         "issue-1479-bootstrap-order"
       ],
       "run_id": "branch_01M6F0HRS2HTMS019S8KA64YD7",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6f0h5re05es2d",
+      "task_id": "cicd_01m6g7zayvpnrjye",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

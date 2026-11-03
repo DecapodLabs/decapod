@@ -1,5 +1,15 @@
 # Operations
 
+## Inspecting native validation completion
+
+After full native validation, inspect the returned evidence directory's
+`completion/verdict.json` and `completion/native-readiness-receipt.json` together.
+Pending completion staging is not success. A failed write, missing proof, stale
+candidate/target or rejected required Vega decision must be repaired and validated
+again; never manufacture a tracked receipt to unlock the native boundary.
+`decapod govern project-check` may produce the legacy preparation receipt but
+does not establish publication permission. Full validation remains the entrypoint.
+
 ## Operations Overview
 
 Decapod runs on demand as a versioned CLI or structured RPC process. The agent
@@ -365,8 +375,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `08e13f1fdc4e6fc67b09a990bd48526e645951dcc5b47aa85d052a1c7fc57321`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (194 files)
+- Repository signal fingerprint: `370a9c69439b98a441a33a0436c8e597416ccde482c139897c72ce640cb11e2b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

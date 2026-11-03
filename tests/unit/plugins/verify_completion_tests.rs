@@ -1144,3 +1144,183 @@ fn verifying_todos_guard_restores_exact_exemption_after_all_exits() {
     );
     assert_eq!(std::env::var_os(VERIFYING), previous);
 }
+
+fn artifactless_completed_batch() -> (TempDir, Store, Vec<VerifyTarget>, Vec<String>) {
+    let (dir, store, _) = batch_fixture();
+    with_conn(&store, |conn| {
+        conn.execute("DELETE FROM task_verification", []).unwrap();
+    });
+    let targets = load_targets(&store, None).unwrap();
+    let inputs = targets
+        .iter()
+        .map(|target| format!("{}=proof.txt", target.todo_id))
+        .collect();
+    (dir, store, targets, inputs)
+}
+
+#[test]
+fn explicit_batch_capture_preserves_completed_history_and_waits_for_final_proof() {
+    let (dir, store, targets, inputs) = artifactless_completed_batch();
+    let old_events = verification_events(&store, "task.verify.capture");
+    let captures = prepare_recovery_captures(dir.path(), &targets, &inputs).unwrap();
+    assert!(
+        baseline_rows(&store).is_empty(),
+        "capturing material must not invent passing proof"
+    );
+    let epoch = active_validation_epoch(dir.path()).unwrap();
+    let pending = refresh_batch_baselines_with_captures(
+        &store,
+        &targets,
+        &passing_snapshot(),
+        &epoch,
+        Some((dir.path(), &captures)),
+    )
+    .unwrap();
+    assert_eq!(pending.len(), 2);
+    for original in &targets {
+        let task = todo::get_task(&store.root, &original.todo_id)
+            .unwrap()
+            .unwrap();
+        assert_eq!(task.status, "done");
+        assert_eq!(task.completed_at.as_deref(), Some("2Z"));
+        assert_eq!(task.revision, original.revision);
+        assert_eq!(
+            target(&store, &original.todo_id)
+                .last_verified_status
+                .as_deref(),
+            Some("CLAIMED")
+        );
+    }
+    assert_eq!(
+        verification_events(&store, "task.verify.capture").len(),
+        old_events.len()
+    );
+    assert!(verification_events(&store, "task.verify.prune").is_empty());
+    assert_eq!(
+        crate::plan_governance::collect_unverified_done_todos(&store.root)
+            .unwrap()
+            .len(),
+        2
+    );
+    let failed = ValidationSnapshot {
+        passed: false,
+        output_hash: "sha256:unrelated-failure".into(),
+    };
+    assert!(finalize_recovered_batch(&store, dir.path(), &pending, &failed).is_err());
+    assert_batch_pending_without_result_events(&store, &pending);
+    finalize_recovered_batch(&store, dir.path(), &pending, &passing_snapshot()).unwrap();
+    assert!(load_targets(&store, None).unwrap().is_empty());
+    for event in verification_events(&store, "task.verify.recover") {
+        assert_eq!(
+            event.payload["payload"]["capture_kind"],
+            "fresh_current_material"
+        );
+        assert!(event.payload["payload"]["previous_verification_artifacts"].is_null());
+        assert_eq!(event.payload["payload"]["last_verified_status"], "CLAIMED");
+    }
+}
+
+#[test]
+fn missing_batch_inputs_are_actionable_and_never_mutate_completion() {
+    let (dir, store, targets, inputs) = artifactless_completed_batch();
+    for inputs in [vec![], vec![inputs[0].clone()]] {
+        let error = prepare_recovery_captures(dir.path(), &targets, &inputs).unwrap_err();
+        assert!(error.to_string().contains("requires fresh evidence"));
+        assert!(error.to_string().contains("--artifact"));
+        assert!(baseline_rows(&store).is_empty());
+        for original in &targets {
+            assert_eq!(
+                target_snapshot(&target(&store, &original.todo_id)),
+                target_snapshot(original)
+            );
+        }
+    }
+}
+
+#[test]
+fn recovery_capture_rejects_unknown_tasks_bad_inputs_and_additional_obligations() {
+    let (dir, store, targets, _) = artifactless_completed_batch();
+    for input in ["proof.txt", "=proof.txt", "missing=proof.txt"] {
+        assert!(prepare_recovery_captures(dir.path(), &targets, &[input.into()]).is_err());
+    }
+    let mut additional = targets.clone();
+    additional[0].proof_plan = Some("[\"validate_passes\",\"state_commit\"]".into());
+    let input = format!("{}=proof.txt", additional[0].todo_id);
+    let error = prepare_recovery_captures(dir.path(), &additional, &[input]).unwrap_err();
+    assert!(error.to_string().contains("additional proof obligations"));
+    assert!(baseline_rows(&store).is_empty());
+}
+
+#[test]
+fn fresh_recovery_requires_real_passing_snapshot_and_unchanged_material() {
+    for mutate in [false, true] {
+        let (dir, store, targets, inputs) = artifactless_completed_batch();
+        let captures = prepare_recovery_captures(dir.path(), &targets, &inputs).unwrap();
+        let epoch = active_validation_epoch(dir.path()).unwrap();
+        if mutate {
+            fs::write(dir.path().join("proof.txt"), "changed during validation").unwrap();
+        }
+        let snapshot = ValidationSnapshot {
+            passed: mutate,
+            output_hash: "sha256:unrelated-failure-or-stale-material".into(),
+        };
+        let error = refresh_batch_baselines_with_captures(
+            &store,
+            &targets,
+            &snapshot,
+            &epoch,
+            Some((dir.path(), &captures)),
+        )
+        .unwrap_err();
+        assert!(error.to_string().contains(if mutate {
+            "changed"
+        } else {
+            "failing validation snapshot"
+        }));
+        assert!(baseline_rows(&store).is_empty());
+        assert!(verification_events(&store, "task.verify.recover").is_empty());
+    }
+}
+
+#[test]
+fn fresh_recovery_checks_every_original_task_before_writing_a_new_baseline() {
+    let (dir, store, targets, inputs) = artifactless_completed_batch();
+    let captures = prepare_recovery_captures(dir.path(), &targets, &inputs).unwrap();
+    with_conn(&store, |conn| {
+        conn.execute(
+            "UPDATE tasks SET revision = revision + 1 WHERE id = ?1",
+            [&targets[1].todo_id],
+        )
+        .unwrap();
+    });
+    let error = refresh_batch_baselines_with_captures(
+        &store,
+        &targets,
+        &passing_snapshot(),
+        &active_validation_epoch(dir.path()).unwrap(),
+        Some((dir.path(), &captures)),
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("STALE_TASK_VERIFICATION"));
+    assert!(baseline_rows(&store).is_empty());
+    assert!(verification_events(&store, "task.verify.recover").is_empty());
+}
+
+#[test]
+fn recover_cli_accepts_explicit_per_task_artifact_inputs() {
+    let cli = VerifyCli::try_parse_from([
+        "verify",
+        "recover",
+        "--artifact",
+        "task-one=proof.txt",
+        "--artifact",
+        "task-two=proof.txt",
+    ])
+    .unwrap();
+    match cli.command.unwrap() {
+        VerifyCommand::Recover { artifact } => {
+            assert_eq!(artifact, vec!["task-one=proof.txt", "task-two=proof.txt"])
+        }
+        _ => panic!("wrong recovery command"),
+    }
+}
