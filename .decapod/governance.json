@@ -554,6 +554,11 @@
       "id": "aggregate-recovery-instructions",
       "summary": "Aggregate missing-proof error exposes agent-owned non-destructive recovery and explicit task-bound file selection while retaining actual required checks",
       "input_digest": "sha256:7f4080b2e5eeb85dbd2022571fa31bb21ea44950f49ffb16da25035f3ef26e6a"
+    },
+    {
+      "id": "agent-diagnostic-regressions",
+      "summary": "Assert non-reopening exact task recovery advice, safe fixed child blocker labels, diagnostic command, no secret/provider content forwarding and bounded scan",
+      "input_digest": "sha256:d160ea6c126f942529b278e1a42312e038da179e03d43088f09702bb88e5b079"
     }
   ],
   "intents": {
