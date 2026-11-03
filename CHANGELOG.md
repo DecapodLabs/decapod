@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.2](https://github.com/DecapodLabs/decapod/compare/v0.123.1...v0.123.2) - 2026-11-03
+
+### Fixed
+
+- reconcile handoff recovery with v0.123.1
+- *(todo)* preserve IO causes with recovery context
+- *(todo)* return agent-directed handoff recovery diagnostics
+- *(build)* align Bazel lock with Tokio security update
+- *(deps)* update Tokio for RUSTSEC-2026-0386
+- *(policy)* preserve read-only diagnostic boundary
+- *(handoff)* update docs/agent/command-contracts.md
+- *(handoff)* update tests/plugins/policy.rs
+- *(handoff)* update tests/plugins/todo.rs
+- *(handoff)* update src/decapod/plugins/policy.rs
+- *(handoff)* update src/decapod/core/todo.rs
+
+### Other
+
+- refresh caller fixture review projections
+- clarify caller regression category preconditions
+- use seeded categories for concurrent caller fixture
+- clarify accepted architecture review disposition
+- bind handoff recovery trajectory task
+- bind reviewed recovery context projections
+- *(specs)* preserve typed failures in recovery output
+- *(todo)* assert normalized recovery reason
+- bind runtime recovery diagnostic projections
+- *(specs)* define runtime handoff recovery diagnostics
+- describe handoff runtime recovery output
+- *(todo)* enforce agent recovery output contract
+- bind agent-only recovery contract projections
+- *(specs)* preserve authority in harness-mediated approval
+- *(specs)* define agent-only recovery execution
+- keep ownership recovery agent-executed
+- bind handoff CI fixture repair projections
+- *(specs)* record executed handoff fixture findings
+- *(todo)* repair executed handoff identity fixtures
+- bind reviewed Bazel repair publication material
+- *(validation)* review Tokio Bazel source inventory
+- bind reviewed handoff publication material
+- *(specs)* bound read-only diagnostic guarantee
+- *(validation)* review Tokio security inventory
+- bind read-only diagnostic repair projections
+- *(specs)* preserve read-only policy diagnostic contract
+- *(policy)* exercise configured read-only approval boundary
+- *(policy)* keep read diagnostics free of mutation side effects
+- *(validation)* reconcile accepted release source inventory
+- bind reviewed specs to handoff candidate
+- *(specs)* preserve security boundaries in ownership recovery
+- refresh handoff proof projections
+- *(todo)* reject expired recovery approvals
+- *(specs)* define handoff caller and recovery authority
+- initialize handoff repair with release-bound governance
+
 ## [0.123.1](https://github.com/DecapodLabs/decapod/compare/v0.123.0...v0.123.1) - 2026-11-03
 
 ### Fixed
