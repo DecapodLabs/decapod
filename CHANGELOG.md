@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.4](https://github.com/DecapodLabs/decapod/compare/v0.123.3...v0.123.4) - 2026-11-03
+
+### Fixed
+
+- reconcile bootstrap ordering branch with accepted master
+- *(init)* regenerate canonical entrypoints from CI-built template
+- *(deps)* update Tokio for shared security advisory
+- *(init)* orient-after-workspace
+
+### Other
+
+- *(specs)* align manifest with source-generated entrypoints
+- *(specs)* refresh provenance after canonical entrypoint repair
+- *(specs)* record publication reviews and refresh projections
+- *(proof)* apply symlink-aware reviewed lock inventory
+- *(proof)* reconcile reviewed Tokio lock inventory
+- *(deps)* sync generated Bazel lock for Tokio
+- *(specs)* refresh manifest after config reconciliation
+- *(proof)* reconcile accepted release source inventory
+- *(specs)* refresh issue 1479 projections
+- *(specs)* define-initialization-order
+- *(init)* align-quickstart-order
+- *(init)* exercise-governed-order
+- *(governance)* initialize issue 1479 with official release
+
 ## [0.123.3](https://github.com/DecapodLabs/decapod/compare/v0.123.2...v0.123.3) - 2026-11-03
 
 ### Fixed

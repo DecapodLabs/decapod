@@ -695,7 +695,10 @@ fn grouped_runtime_checks_keep_each_recipe_receipt_and_applicability() {
         assert!(selected(check, &[], false));
         assert!(!selected(check, &full_paths(), true));
         let recipe = commands(check, &[]).unwrap();
-        assert_eq!(recipe.len(), 1);
+        assert_eq!(
+            recipe.len(),
+            if id == "daemonless-lifecycle" { 2 } else { 1 }
+        );
         assert_eq!(recipe[0].program, "bazelisk");
         assert_eq!(
             recipe[0].args,

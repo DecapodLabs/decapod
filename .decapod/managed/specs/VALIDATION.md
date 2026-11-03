@@ -15,7 +15,13 @@ Unset or zero preserves an explicit optional skip in restricted local sandboxes;
 invalid flag values fail. This test-only switch does not alter runtime policy or
 caller identity. A green unfiltered suite without these post-probe markers is not
 evidence of this acceptance path. Actual execution remains unproven until the
-exact candidate validation supplies the named test output.
+exact candidate execution supplies the named test output.
+
+Because the source-CI carrier executes the independently accepted base recipe,
+this additive CI recipe does not become authority in its first candidate PR.
+First-PR full validation alone cannot establish that this new recipe ran. Until
+an independent supported execution captures the named test's post-probe markers,
+the socket acceptance remains unproven even if the older accepted suite passes.
 
 ## Native readiness receipt custody
 
@@ -869,7 +875,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `08ab070c2fb60250e21da15829e43c0b0d77e91cba7b7bf86f6d74a8f23be6cd`
+- Repository signal fingerprint: `49317e9fd431c482ed8c92b085ba25284a42bad9703354dce7e77b465ca55de5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (194 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -470,6 +470,11 @@
       "id": "caller-socket-acceptance",
       "summary": "Require visible uncached concurrent caller socket ownership acceptance in Linux CI; retain optional sandbox skip and add policy regressions",
       "input_digest": "sha256:dfccd5687e3721e72f9de1d8ad8e23e10ced5348b7c7d38832c7e184cea76abf"
+    },
+    {
+      "id": "reconcile-v01234",
+      "summary": "Merge accepted v0.123.4, reconcile reviewed additive source recipe, retain first-PR proof limitation and refresh official projections",
+      "input_digest": "sha256:92ffffc52f9c9cb4613627a6a860b98b5b3c8a1928444fd4171797b9c6cedd74"
     }
   ],
   "intents": {
@@ -523,14 +528,18 @@
         "Current claimed task and isolated work branch",
         "No runtime identity, authorization, proof-policy weakening, merge or release"
       ],
-      "artifact_hash": "sha256:b5351a3c4b9581a742c5da5b1c245cc96f319286b32ade887dbed57ca3fb1f86",
+      "artifact_hash": "sha256:2aafedb6bbae587367bdeab74c23609f932dd4ea691d87a6a78647775f0a95cf",
       "checks": [
+        {
+          "name": "full_validation",
+          "status": "failed"
+        },
         {
           "name": "named_socket_acceptance",
           "status": "unavailable"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -551,10 +560,24 @@
             "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9YWNKFC66JMBTMHWVQ782": {
@@ -585,30 +608,78 @@
                 "validation_findings": [
                   "Socket acceptance remains unproven until configured validation executes exact test"
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "command": "git branch -m agent/issue1476-caller-proof/bugs_01m6g9y7htjdyp30-socket-acceptance",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/workspace.rs",
+                  "Generated branch had extraneous todo_01m6g9 parsed as a second task; renamed governed worktree branch retaining actual task. Next validation requires inventory reconciliation; accepted target advanced to release v0.123.4."
+                ],
+                "proof_refs": [
+                  "full_validation"
+                ],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "command": "official v0.123.4 docs ingest, agent.init, workspace ensure, specs.refresh",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Reviewed complete inventory delta from f89a9fa8: accepted release changes Cargo version/lock to 0.123.4; candidate only adds mandatory named caller socket command to Linux daemonless recipe. No existing check removed, no workflow/carrier/trust change.",
+                  "Official govern proof list resolves shared source-root config, not worktree config; no proof run or root mutation attempted. New recipe uses accepted-base executor and first-PR acceptance remains unproven."
+                ],
+                "proof_refs": [
+                  "named_socket_acceptance"
+                ],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "git branch -m agent/issue1476-caller-proof/bugs_01m6g9y7htjdyp30-socket-acceptance",
+        "git merge --no-commit --no-ff origin/master",
+        "official v0.123.4 docs ingest, agent.init, workspace ensure, specs.refresh",
         "rustfmt --edition 2024 tests/group_broker.rs tests/source_ci_profile_policy.rs assets/tools/source_ci_profile.rs"
       ],
       "destination": "pull request",
       "evidence": [
-        "Issue 1476 latest comment requires named post-probe evidence rather than suite-only success"
+        "Generated branch had extraneous todo_01m6g9 parsed as a second task; renamed governed worktree branch retaining actual task. Next validation requires inventory reconciliation; accepted target advanced to release v0.123.4.",
+        "Issue 1476 latest comment requires named post-probe evidence rather than suite-only success",
+        "Official govern proof list resolves shared source-root config, not worktree config; no proof run or root mutation attempted. New recipe uses accepted-base executor and first-PR acceptance remains unproven.",
+        "Reviewed complete inventory delta from f89a9fa8: accepted release changes Cargo version/lock to 0.123.4; candidate only adds mandatory named caller socket command to Linux daemonless recipe. No existing check removed, no workflow/carrier/trust change."
       ],
       "inspected_files": [
         "assets/tools/source_ci_profile.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/workspace.rs",
         "tests/group_broker.rs"
       ],
       "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/VALIDATION.md",
         "assets/tools/source_ci_profile.rs",
         "tests/group_broker.rs",
         "tests/source_ci_profile_policy.rs"
       ],
       "next_transitions": [
+        "Full validation of checkpointed candidate; no readiness from supplemental or suite-only proof",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
