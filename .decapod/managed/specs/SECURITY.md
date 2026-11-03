@@ -430,7 +430,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d7cf9c144b1b8caac86f5e0f7376398bc7405b4402c22696892decac4c2b2bb8`
+- Repository signal fingerprint: `93a53d007a413063a050f41e06cc6c4321db6cac2a9b593ecd0ef7a8cf0474d0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -681,3 +681,23 @@ were reviewed and their exact before/after hashes verified locally; pinned Bazel
 No required graph, trust, model, or execution policy changes. This dependency
 repair is not runtime proof: the prompt-gate candidate still requires fresh full
 validation against its exact published commit.
+
+## Precise claim paths and unchanged trust
+
+The bounded file-scope change addresses the disjoint-work portion of issue 1480.
+Trust-grant administration remains unresolved and is not added by this change.
+There is no new config trust mapping, elevation API, trust-row mutation or human
+CLI requirement. Existing caller names and local approvals remain cooperative
+assertions, not authenticated principals or independent proof of human consent.
+
+`fleet_coord::declared_paths` recognizes bounded ASCII literal JSON file-set scopes.
+Explicit footprint matching conservatively folds ASCII case on every platform;
+Unicode scopes are rejected rather than assuming filesystem alias semantics.
+`todo::add_task` rejects traversal/symlink scopes and avoids fuzzy consolidation
+of explicitly scoped tasks. Claim/handoff overlap checks, fleet diagnostics and
+`work_claim::from_todo_with_lease` use the same footprints. Legacy/invalid scopes
+remain conservative. File sets do not bypass independent category ownership,
+dependency, lease, shared-claim trust or approval gates and do not establish
+verified isolated-worktree custody. Tests cover disjoint/intersecting/parent paths,
+malformed declarations, unchanged shared-claim trust and journaled scopes;
+source declarations are not a claim that tests have run.

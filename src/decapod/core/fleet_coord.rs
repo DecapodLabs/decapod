@@ -509,6 +509,59 @@ pub fn paths_overlap(a: &str, b: &str) -> bool {
     b.starts_with(&a_prefix) || a.starts_with(&b_prefix)
 }
 
+/// Explicit logical repository paths carried by the existing journaled scope.
+/// A malformed declaration never means an empty/non-conflicting claim.
+pub fn declared_paths(scope: &str) -> Result<Option<Vec<String>>, String> {
+    let Some(raw) = scope.strip_prefix("paths:") else {
+        return Ok(None);
+    };
+    if raw.len() > 32 * 1024 {
+        return Err("claim paths exceed 32 KiB".into());
+    }
+    let mut paths: Vec<String> =
+        serde_json::from_str(raw).map_err(|_| "claim paths require a JSON string array")?;
+    if paths.is_empty() || paths.len() > 256 {
+        return Err("claim paths require 1..256 paths".into());
+    }
+    for path in &paths {
+        if !path.is_ascii()
+            || path.len() > 1024
+            || path.contains(['\\', ':', '*', '?', '[', ']'])
+            || path.chars().any(char::is_control)
+            || path
+                .split('/')
+                .any(|p| p.is_empty() || p == "." || p == "..")
+        {
+            return Err("claim paths must be bounded ASCII repository-relative literal paths without traversal or glob syntax. Agent: omit the paths: scope and retain a conservative broad-directory claim for unsupported names".into());
+        }
+    }
+    paths.sort();
+    paths.dedup();
+    Ok(Some(paths))
+}
+
+/// Map explicit paths into the claim's repository location. Legacy/invalid
+/// declarations retain the conservative directory footprint.
+pub fn claim_paths(scope: &str, dir: &str) -> Vec<String> {
+    match declared_paths(scope) {
+        Ok(Some(paths)) => paths
+            .into_iter()
+            .map(|p| format!("{}/{p}", dir.trim_end_matches('/')))
+            .collect(),
+        _ => vec![dir.to_owned()],
+    }
+}
+
+/// Explicit scopes use conservative ASCII case folding on every platform.
+/// Unicode declarations are unsupported rather than guessing filesystem aliases.
+fn footprint_overlap(a: &str, b: &str, explicit: bool) -> bool {
+    if explicit {
+        paths_overlap(&a.to_ascii_lowercase(), &b.to_ascii_lowercase())
+    } else {
+        paths_overlap(a, b)
+    }
+}
+
 /// True when two non-root scopes collide (domain claim conflict).
 pub fn scopes_overlap(a: &str, b: &str) -> bool {
     let a = a.trim();
@@ -584,7 +637,17 @@ pub fn detect_overlaps(
                 observed: claim.scope.clone(),
             });
         }
-        if paths_overlap(candidate_dir, &claim.dir_path) {
+        let candidate_paths = claim_paths(candidate_scope, candidate_dir);
+        let existing_paths = claim_paths(&claim.scope, &claim.dir_path);
+        if candidate_paths.iter().any(|a| {
+            existing_paths.iter().any(|b| {
+                footprint_overlap(
+                    a,
+                    b,
+                    candidate_scope.starts_with("paths:") || claim.scope.starts_with("paths:"),
+                )
+            })
+        }) {
             out.push(ClaimOverlap {
                 task_id: claim.task_id.clone(),
                 agent_id: claim.agent_id.clone(),
@@ -651,7 +714,15 @@ pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<Cl
                     observed: right.scope.clone(),
                 });
             }
-            if paths_overlap(&left.dir_path, &right.dir_path) {
+            if claim_paths(&left.scope, &left.dir_path).iter().any(|a| {
+                claim_paths(&right.scope, &right.dir_path).iter().any(|b| {
+                    footprint_overlap(
+                        a,
+                        b,
+                        left.scope.starts_with("paths:") || right.scope.starts_with("paths:"),
+                    )
+                })
+            }) {
                 out.push(ClaimOverlap {
                     task_id: right.task_id.clone(),
                     agent_id: right.agent_id.clone(),

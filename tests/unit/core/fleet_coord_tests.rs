@@ -316,3 +316,149 @@ fn fleet_projection_surfaces_dependency_and_proof_blockers() {
     assert_eq!(health.proof_blocked_count, 1);
     assert_eq!(health.dependency_blocked_claims[0].task_id, "task-blocked");
 }
+
+#[test]
+fn explicit_disjoint_paths_do_not_require_shared_trust() {
+    let active = vec![claim(
+        "a",
+        "alice",
+        r#"paths:["src/a.rs","tests/a.rs"]"#,
+        "",
+        "/repo",
+        Some("300Z"),
+    )];
+    assert!(
+        detect_overlaps(
+            "b",
+            "bob",
+            r#"paths:["src/b.rs"]"#,
+            "",
+            "/repo",
+            &active,
+            "200Z"
+        )
+        .is_empty()
+    );
+    assert!(
+        !detect_overlaps(
+            "b",
+            "bob",
+            r#"paths:["src/a.rs"]"#,
+            "",
+            "/repo",
+            &active,
+            "200Z"
+        )
+        .is_empty()
+    );
+    assert!(
+        !detect_overlaps("b", "bob", r#"paths:["src"]"#, "", "/repo", &active, "200Z").is_empty()
+    );
+    assert!(!detect_overlaps("b", "bob", "root", "", "/repo", &active, "200Z").is_empty());
+    assert!(!detect_overlaps("b", "bob", "paths:invalid", "", "/repo", &active, "200Z").is_empty());
+    let mut fleet = active;
+    fleet.push(claim(
+        "b",
+        "bob",
+        r#"paths:["src/b.rs"]"#,
+        "",
+        "/repo",
+        Some("300Z"),
+    ));
+    assert!(detect_fleet_overlaps(&fleet, "200Z").is_empty());
+}
+
+#[test]
+fn explicit_paths_preserve_other_claim_gates_and_reject_aliases() {
+    let active = vec![claim(
+        "a",
+        "alice",
+        r#"paths:["a"]"#,
+        "security",
+        "/repo",
+        Some("300Z"),
+    )];
+    assert!(
+        detect_overlaps(
+            "b",
+            "bob",
+            r#"paths:["b"]"#,
+            "security",
+            "/repo",
+            &active,
+            "200Z"
+        )
+        .iter()
+        .any(|o| o.reason == "category_overlap")
+    );
+    for scope in [
+        "paths:[]",
+        r#"paths:["../a"]"#,
+        r#"paths:["/a"]"#,
+        r#"paths:["a//b"]"#,
+        r#"paths:["a/./b"]"#,
+        r#"paths:["a*"]"#,
+        r#"paths:["a\\b"]"#,
+    ] {
+        assert!(declared_paths(scope).is_err(), "{scope}");
+        assert_eq!(claim_paths(scope, "/repo"), vec!["/repo"]);
+    }
+    assert_eq!(
+        declared_paths(r#"paths:["b","a","a"]"#).unwrap().unwrap(),
+        vec!["a", "b"]
+    );
+}
+
+#[test]
+fn explicit_paths_fail_closed_on_case_and_unicode_aliases() {
+    let active = vec![claim(
+        "a",
+        "alice",
+        r#"paths:["src/Name.rs"]"#,
+        "",
+        "/repo",
+        Some("300Z"),
+    )];
+    assert!(
+        !detect_overlaps(
+            "b",
+            "bob",
+            r#"paths:["src/name.rs"]"#,
+            "",
+            "/repo",
+            &active,
+            "200Z"
+        )
+        .is_empty()
+    );
+    let mut fleet = active;
+    fleet.push(claim(
+        "b",
+        "bob",
+        r#"paths:["src/NAME.rs"]"#,
+        "",
+        "/repo",
+        Some("300Z"),
+    ));
+    assert!(!detect_fleet_overlaps(&fleet, "200Z").is_empty());
+    for scope in [r#"paths:["src/café.rs"]"#, "paths:[\"src/cafe\u{301}.rs\"]"] {
+        assert!(declared_paths(scope).is_err());
+        assert_eq!(claim_paths(scope, "/repo"), vec!["/repo"]);
+    }
+}
+
+#[test]
+fn file_scope_restrictions_do_not_change_legacy_paths() {
+    assert_eq!(declared_paths("café").unwrap(), None);
+    assert_eq!(claim_paths("café", "/repo/café"), vec!["/repo/café"]);
+    assert!(!paths_overlap("/repo/Name.rs", "/repo/name.rs"));
+    let active = vec![claim(
+        "a",
+        "alice",
+        "root",
+        "",
+        "/repo/Name.rs",
+        Some("300Z"),
+    )];
+    assert!(detect_overlaps("b", "bob", "root", "", "/repo/name.rs", &active, "200Z").is_empty());
+}

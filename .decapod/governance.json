@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "55a83aa25035e2fc0dff9c46d47b663bdfe6403f",
+    "accepted_commit": "b4a1374b78857cc8816844fb812101783ae864d0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -25,6 +25,11 @@
       "claim:atomic-completion": {
         "falsifier": "An unresolved dependency or unproven exclusive task can commit done through a direct mutation",
         "statement": "Every task done mutation enforces dependency and lease proof within its transaction",
+        "status": "open"
+      },
+      "claim:bootstrap-order": {
+        "falsifier": "Any generated initialization path or quickstart runs task orientation outside its governed worktree.",
+        "statement": "Generated entrypoints enter claimed isolated worktree before orientation and preserve orientation before implementation.",
         "status": "open"
       },
       "claim:bounded-integration-matrix": {
@@ -261,11 +266,6 @@
         "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
         "status": "open"
       },
-      "claim:safe-http-context": {
-        "falsifier": "A sanitized safe report blocks or a dangerous HTTP execution/adversarial quoted prompt is allowed",
-        "statement": "Read-only HTTP examples and history pass while unsafe command combinations and override/exfiltration markers remain blocked",
-        "status": "open"
-      },
       "claim:strict-protocol-rollout": {
         "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
         "proof_refs": [
@@ -421,7 +421,6 @@
       "trajectory:832c680f315def69": "Onlyimportandidentityconsistentfixturecorrected; retainfullfailurehistory, publicsource50ce data, baselineweights/upstreamcalibration andstrictv2criterion. Mainplanobligation testsactualpass1461, sixnewnativetestsnotyetexecuted. No sourceorcontrolstatechangeswhileactivevalidation. Pushsamebranch, allowactualsourceCIterminalcollection andnormalfullvalidate; publicCIreadingisnotshadowbuild/proofimport, allrequiredchecksremain.",
       "trajectory:844b15c92b3dbce1": "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change.",
       "trajectory:85ab507d85803a47": "Actual9a5source39passedandGitHubCIgreen, thenpublicGithubObjectscommitrecheck403quotareset1792469427before native. Preserve report, do not auth-fallback/newprerequisite. Usewaitforreversible27-line shared final-gate/refREADMEcorrection; current noindependentreadinesslabels, no modelclaims. Reviewedd6cb helperinventory with unchangedd6d98runrecipe. Existingpublicationregression exercisesextractedfunction; no modelgateweakening. Retryplainvalidateafter04:10:27UTCresetexactnewsource/target, no identicalexposedv2run.",
-      "trajectory:8825b7f6a1b7e7a2": "Compared last reviewed inventory commit213ed9ca to candidate: only Cargo package versions0.121.0 to0.121.2 changed among complete inventory paths; workflow graph/adapters and dependencies unchanged",
       "trajectory:89475bf5c998bfde": "The accepted source executor closure changed in merged PR1462; final publication requires an official controller independently supporting that accepted closure, not this candidate authorizing itself",
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
       "trajectory:8a7663240329d9ea": "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
@@ -444,7 +443,6 @@
       "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
       "trajectory:d9ace8c29a759626": "All six frozen v2 holdout shards completed: each backend executed102 cases with36 unsupported lengths,52 abstentions,29 acceptances and23 false-ready proxy outcomes. Preserve this failure and original corpus/criteria. Actual source1459 tests, native43 tests and138/314/4096-token fixed numerical comparisons passed. Public review corpus remains prospective and unverified; no fitting or heldout inference has used it. Inspection confirmed projection includes plan.intent only, omitting proof_hooks/deferred questions/stop conditions and phase gates. Add bounded obligation facts without whole-plan metadata, model changes, relaxed gates or fabricated rationale. Final source/material/governance identity checks remain authoritative.",
       "trajectory:da69bbaf7f07e535": "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody.",
-      "trajectory:e0832fa08225856e": "Deterministic common-marker detector is not a general shell or semantic intent parser; unavailable private historical fixture not reproduced",
       "trajectory:e0f0a51392feb190": "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
       "trajectory:e59eda56341d71a3": "New tests/MetalCPUproductiondiagnostics authored and require prescribed validate; no new pass claims. User rejects inactive stage; fitting source only inspected, no Python executed. Current official upstream has old base+two generic adapters and incompatible universal port/stats engine, none demonstrated readiness-qualified. Reviewed24source candidates still zero admissible complete final units. Preserve old study/failures and every required original criterion. Final admission stays missing rather than repeating exposed final data. No branch/custody/controller changes.",
       "trajectory:e6b0bb96ddfbd405": "Preserve040d sourceCI lock failure and separate officialvalidator publicGithubCommitChecks403/reset1792449991. Actual anonymous publicBuildkite setup log confirms MODULE.bazel.lock stale because Cargo.toml packagingexclusion changed; prescribed repair is bazel mod deps --lockfile_mode=update. Installed officialHomebrewBazelisk1.29 afterreading officialformula/installerdocs, restored Homebrew developer modeoff. Run batch metadata regeneration only underrepositorypinnedBazel9.3, notmanualbuild/test orshadowpreflight; preserve dependencies, scientificgates and failedholdout. No native execution on040d is claimed. Newfullvalidation mustwaitreportedpublicAPIreset and bindcorrectedexactcandidate.",
@@ -456,72 +454,77 @@
     }
   },
   "change": {
-    "id": "change_01M6G9WW26WHBE9D1VN7XAEXKN",
-    "base_commit": "55a83aa25035e2fc0dff9c46d47b663bdfe6403f",
+    "id": "change_01M6GA9HMF9NCDPPHD32FX3BG7",
+    "base_commit": "b4a1374b78857cc8816844fb812101783ae864d0",
     "target_base": "origin/master"
   },
   "claims": {
-    "native-cli-acceptance": {
-      "statement": "Released native CLI acceptance must prove actual prerequisites, unchanged candidate paired receipts, failed execution and stale candidate rejection",
-      "falsifier": "Missing real invocation evidence, changed candidate, successful failure verdict or reused prerequisite stub",
-      "status": "blocked",
+    "precise-file-claims": {
+      "statement": "Explicit bounded file-set scopes allow disjoint exclusive claims without promoting trust while retaining real path and independent policy conflicts",
+      "falsifier": "Disjoint basic-trust claims conflict solely on root directory, real file overlaps pass, or shared trust/policy gates weaken",
+      "status": "open",
       "proof_refs": [
-        "docs/native-readiness-acceptance.md"
+        "tests/plugins/todo.rs",
+        "tests/unit/core/fleet_coord_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "native-acceptance-observer",
-      "summary": "Prepare real released CLI acceptance observer; live execution remains unavailable and is not claimed",
-      "input_digest": "sha256:0c65786b00ac7476eed3baccc090139f260338db962010b6ecf13058a7fd144c",
+      "id": "precise-claims-01",
+      "summary": "Bound explicit file scopes while preserving current trust and independent policy gates; runtime verification pending",
+      "input_digest": "sha256:a5863212e8d8fe086f632fb12951addc485a25a299341d6afe4fe8c95f6005ed",
       "proof_refs": [
-        "docs/native-readiness-acceptance.md"
+        "tests/plugins/todo.rs",
+        "tests/unit/core/fleet_coord_tests.rs"
       ]
     },
     {
-      "id": "reconcile-01234",
-      "summary": "Rebase accepted b4a1374, preserve original PR journal, refresh official0.123.4 projections, reconcile unchanged accepted119-input source inventory without changing required proof or provider",
-      "input_digest": "sha256:db62519210af3c8664b59e9fdf2be6ef5d01ecede5654c769292535a197682cd"
-    },
-    {
-      "id": "native-acceptance-01234-final",
-      "summary": "Assemble accepted-master rebased native acceptance observer and release0.123.4 projections as one candidate; preserve failed checks and outstanding live acceptance",
-      "input_digest": "sha256:5948d1423fdbc8bdc19ecad257e2334301427ecb017ee1dbadc9ea7826188aa7"
-    },
-    {
-      "id": "native-acceptance-release01236",
-      "summary": "Reconcile PR1499 with accepted release0.123.6 using ordered merge history; preserve authored acceptance and accepted agent bootstrap specs. Review all119 accepted proof sources, regenerate official projections, and retain blocked negative/stale and full-source proof limits.",
-      "input_digest": "sha256:90155d8bc3bba6755a149d5e24bcc24f40489542013de203ba8600460bf70d19",
+      "id": "precise-claims-02",
+      "summary": "Reconcile accepted release-only inventory drift and conservatively exclude explicit path aliases; existing trust remains unchanged",
+      "input_digest": "sha256:d7d47d3b7d7f11b538913ae351c023bd4148b3b1c0b6ece6a222b8290675e150",
       "proof_refs": [
-        "tests/acceptance/native_readiness.py"
+        "tests/plugins/todo.rs",
+        "tests/unit/core/fleet_coord_tests.rs"
       ]
     },
     {
-      "id": "native-acceptance-release01236-final",
-      "summary": "Bind release0.123.6 merge to exact final source and honestly unchanged accepted interfaces; preserve all native and full-source proof limits.",
-      "input_digest": "sha256:f94724f5725b95497b6e6b8e306c8dd143ba35d5d1f510c44ef8ff28beb272cb",
-      "proof_refs": [
-        "tests/acceptance/native_readiness.py"
-      ]
+      "id": "precise-claims-v1237-reconcile",
+      "summary": "Merge accepted 0.123.7 with bounded file claims; preserve original journal and regenerate official publication surfaces",
+      "input_digest": "sha256:8f08d279104979d4303f2ba37b58c4180fdd6149c9d3083378fcdcdd65a25524"
+    },
+    {
+      "id": "precise-claims-v1237-task-binding",
+      "summary": "Bind reconciled plan and trajectory to new owned reconciliation task without claiming recovery of lost custody",
+      "input_digest": "sha256:10263f90fb3f1e72947a892f1deebc9fd6daa77127993b5729148511d4e829d5"
+    },
+    {
+      "id": "precise-claims-docs-handoff-generator",
+      "summary": "Restore canonical agent-only handoff contract during docs regeneration and add regression; runtime validation remains pending",
+      "input_digest": "sha256:d74fef9937269f30fb3b89c640adb9c32f2980de06e6ae344a05f507d836c31c"
+    },
+    {
+      "id": "precise-claims-docs-spec-reviews",
+      "summary": "Bind unchanged architecture and security reviews to documentation generator repair",
+      "input_digest": "sha256:0fa4f5a058c8fa5f399501100ad6cf303772ed6806d58ba50168a6db03aaf7b9"
     }
   ],
   "intents": {
-    "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN": {
+    "intent:reconcile-1500-v1237": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "No trust elevation, no human CLI, no merge or release"
       ],
       "constraints": [
-        "root"
+        "PR 1500 reconciliation"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
+      "id": "intent:reconcile-1500-v1237",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Prove real native readiness for issue 1474",
-      "refined_intent": "Prove real native readiness for issue 1474",
+      "raw_intent": "Update PR 1500 after accepted PR 1499 and official release 0.123.7",
+      "refined_intent": "Preserve bounded file claims and unchanged trust while merging accepted master and regenerating release-bound publication material",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -534,7 +537,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Prove real native readiness for issue 1474",
+      "intent": "Address issue 1480 disjoint-file claims only; trust-grant portion remains unresolved; preserve existing trust and agent-only execution",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -544,131 +547,106 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Release reconciliation preserves accepted architecture; the opt-in observer changes no provider or production architecture.",
-          "reviewed_code_fingerprint": "d7cf9c144b1b8caac86f5e0f7376398bc7405b4402c22696892decac4c2b2bb8",
-          "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
+          "reason": "Reviewed after docs generator repair: existing bounded file claims and unchanged trust semantics remain accurate. The emitter restores already documented agent-only handoff guidance; it does not modify authorization or architecture.",
+          "reviewed_code_fingerprint": "93a53d007a413063a050f41e06cc6c4321db6cac2a9b593ecd0ef7a8cf0474d0",
+          "spec_material_hash": "88e3da882fd0bd878853001fee259d23dc3541d0e816007f80de709b769754bc"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Accepted target already contains the recovery interface contract. This reconciliation preserves it unchanged and adds no production interface beyond the existing opt-in observer.",
-          "reviewed_code_fingerprint": "d7cf9c144b1b8caac86f5e0f7376398bc7405b4402c22696892decac4c2b2bb8",
-          "spec_material_hash": "f0ca488501b1f43d968dd78e1d45b1f08adbd046d1f824d0ebfad42e1c4e7f5c"
+          "reason": "Documented canonical handoff generator restoration and focused regeneration regression; existing caller and approval boundaries unchanged, runtime test not yet executed.",
+          "reviewed_code_fingerprint": "93a53d007a413063a050f41e06cc6c4321db6cac2a9b593ecd0ef7a8cf0474d0",
+          "spec_material_hash": "2d4ee35bca698782139abca6b062ff3f6f958ad107d66882d5d841aa00c3bac7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Release reconciliation preserves accepted security authority. The native observer remains agent-operated and cannot authorize publication, fake evidence, or bypass denied execution.",
-          "reviewed_code_fingerprint": "d7cf9c144b1b8caac86f5e0f7376398bc7405b4402c22696892decac4c2b2bb8",
-          "spec_material_hash": "e2090e911112df35b36fb5845c7871be442f147bb1b3a723e04e3f17f76f56b9"
+          "reason": "Reviewed after docs generator repair: existing bounded file claims and unchanged trust semantics remain accurate. The emitter restores already documented agent-only handoff guidance; it does not modify authorization or architecture.",
+          "reviewed_code_fingerprint": "93a53d007a413063a050f41e06cc6c4321db6cac2a9b593ecd0ef7a8cf0474d0",
+          "spec_material_hash": "8a04e0f3dc35561fd70d49844063031291f049e4b42ea2e99c1e7634db846a1b"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Prove real native readiness for issue 1474",
+      "stop_conditions": [
+        "Do not publish before independent file-scope review and full exact-candidate validation"
+      ],
+      "title": "Resolve issue 1480 bounded disjoint-file claims",
       "todo_ids": [
-        "bugs_01m6g9w9k64r3qkx",
-        "cicd_01m6h7mmyp5t0p15"
+        "cicd_01m6h97wxf8an58p"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793727513Z"
+      "updated_at": "1793731206Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "No trust elevation, no human CLI, no merge or release"
       ],
-      "artifact_hash": "sha256:3d790a5fc47bf7c94f7f2f57b26951c7cda903fe364297e8d82167e127a22784",
+      "artifact_hash": "sha256:c349e530b96f5a5e8c5c5069772f38f4577b9b6f02eb644f5b5612ee6918b0fe",
       "checks": [
         {
-          "name": "acceptance_help",
-          "status": "passed"
-        },
-        {
-          "name": "all_119_proof_inputs_match_accepted_b4a1374",
-          "status": "passed"
-        },
-        {
-          "name": "full_native_acceptance",
+          "name": "docs-runtime-regression",
           "status": "unavailable"
         },
         {
-          "name": "initial_validation",
-          "status": "failed"
-        },
-        {
-          "name": "native_live_acceptance",
-          "status": "unavailable"
-        },
-        {
-          "name": "python_syntax",
+          "name": "docs-static-parity",
           "status": "passed"
         },
         {
-          "name": "released_controller_orientation",
+          "name": "inventory-review",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
+            "intent_id": "intent:reconcile-1500-v1237",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
+            "intent_id": "intent:reconcile-1500-v1237",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6G9WW35AGTDZ5JKXCWFV5YB",
+            "detail": "trajectory:reconcile-1500-v1237",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
+            "intent_id": "intent:reconcile-1500-v1237",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6G9WW35AGTDZ5JKXCWFV5YB",
+            "detail": "trajectory:reconcile-1500-v1237",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
+            "intent_id": "intent:reconcile-1500-v1237",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M6G9WW35AGTDZ5JKXCWFV5YB",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6G9WW35AGTDZ5JKXCWFV5YB": {
+          "reconcile-1500-v1237": {
             "evidence_only": true,
-            "id": "branch_01M6G9WW35AGTDZ5JKXCWFV5YB",
-            "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
+            "id": "reconcile-1500-v1237",
+            "intent_id": "intent:reconcile-1500-v1237",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "tests/consumer_readiness.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/validation_runtime/repository_host.rs"
+                  "Compared all 119 discovered inventory entries to pre-release accepted 0a900ba3: only Cargo.toml and Cargo.lock version 0.123.6 to 0.123.7 changed; measured digest 5dbe4d4d4b8031aaf334ccf4498f9437995c4a8354d6e83ea881e747d555e4d4. Existing proof settings unchanged.",
+                  "Original control-plane state unavailable after environment replacement. Distinct reconciliation task owns this workspace; no claim of recovered old custody. Public PR head and exact first-parent journal preserved; accepted master remains ordered second parent."
                 ],
                 "proof_refs": [
-                  "released_controller_orientation",
-                  "full_native_acceptance"
+                  "inventory-review"
                 ],
                 "scope": [
-                  "root"
+                  "PR 1500 reconciliation"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -677,40 +655,18 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "tests/acceptance/native_readiness.py",
-                  "docs/native-readiness-acceptance.md",
-                  ".decapod/managed/specs/VALIDATION.md"
+                  "src/decapod/core/docs_cli.rs",
+                  "tests/trajectory_docs.rs",
+                  "Canonical handoff body equals existing tracked documentation byte-for-byte; generator emits it between governance and explicit claim scopes. Rustfmt and git diff --check passed. Focused Rust regression added but not executed; prior public-upload denial remains in force and no push attempted."
                 ],
                 "proof_refs": [
-                  "python_syntax",
-                  "acceptance_help",
-                  "native_live_acceptance"
+                  "docs-static-parity",
+                  "docs-runtime-regression"
                 ],
                 "scope": [
-                  "root"
+                  "PR 1500 reconciliation"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "assets/tools/source_ci_profile.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  ".github/actions/source-ci-profile/action.yml",
-                  ".github/workflows/ci.yml",
-                  ".decapod/config.toml"
-                ],
-                "proof_refs": [
-                  "all_119_proof_inputs_match_accepted_b4a1374",
-                  "initial_validation",
-                  "native_live_acceptance"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -718,34 +674,24 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [
-        ".github/actions/source-ci-profile/action.yml",
-        ".github/workflows/ci.yml",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/validation_runtime/repository_host.rs",
-        "tests/consumer_readiness.rs"
+      "evidence": [
+        "Canonical handoff body equals existing tracked documentation byte-for-byte; generator emits it between governance and explicit claim scopes. Rustfmt and git diff --check passed. Focused Rust regression added but not executed; prior public-upload denial remains in force and no push attempted.",
+        "Compared all 119 discovered inventory entries to pre-release accepted 0a900ba3: only Cargo.toml and Cargo.lock version 0.123.6 to 0.123.7 changed; measured digest 5dbe4d4d4b8031aaf334ccf4498f9437995c4a8354d6e83ea881e747d555e4d4. Existing proof settings unchanged.",
+        "Original control-plane state unavailable after environment replacement. Distinct reconciliation task owns this workspace; no claim of recovered old custody. Public PR head and exact first-parent journal preserved; accepted master remains ordered second parent."
       ],
-      "intent_id": "intent:change_01M6G9WW26WHBE9D1VN7XAEXKN",
+      "inspected_files": [],
+      "intent_id": "intent:reconcile-1500-v1237",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/native-readiness-acceptance.md",
-        "tests/acceptance/native_readiness.py"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "src/decapod/core/docs_cli.rs",
+        "tests/trajectory_docs.rs"
       ],
       "repo_scope": [
-        "root"
+        "PR 1500 reconciliation"
       ],
-      "run_id": "branch_01M6G9WW35AGTDZ5JKXCWFV5YB",
+      "run_id": "reconcile-1500-v1237",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6g9w9k64r3qkx",
+      "task_id": "cicd_01m6h97wxf8an58p",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

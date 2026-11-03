@@ -113,10 +113,11 @@ pub fn from_todo_with_lease(
         _ => WorkClaimStatus::Active,
     };
 
-    let mut paths = Vec::new();
-    if !task.dir_path.trim().is_empty() {
-        paths.push(task.dir_path.clone());
-    }
+    let paths = if task.dir_path.trim().is_empty() {
+        Vec::new()
+    } else {
+        crate::core::fleet_coord::claim_paths(&task.scope, &task.dir_path)
+    };
 
     let lease_state = now_ts.map(|now| {
         match crate::core::fleet_coord::lease_state(lease_expires_at.as_deref(), now) {
