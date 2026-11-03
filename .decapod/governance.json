@@ -564,6 +564,11 @@
       "id": "real-cli-diagnostic-contract",
       "summary": "Actual candidate CLI regression asserts aggregate recovery instructions and unrelated plan blocker survives scoped child hashing without raw output or prune advice; not executed locally",
       "input_digest": "sha256:c939f842c3673050c6f9903e71c757646f20bd873a43c0c4eab1b0832222eba0"
+    },
+    {
+      "id": "agent-error-interface",
+      "summary": "Specify agent-only recovery error contract, safe bounded fixed labels from actual scoped child, explicit diagnostics/retry and unchanged proof boundaries",
+      "input_digest": "sha256:55c3a22edeffea93bf54371c9a3177c7933e41eb900ad4497790e97817315e44"
     }
   ],
   "intents": {

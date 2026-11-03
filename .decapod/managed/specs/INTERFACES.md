@@ -242,6 +242,20 @@ coverage does not establish successful full-native CLI recovery or publication
 readiness. The Tokio lock repair changes only the runtime package version and
 checksum, not this interface or its evidence-admission obligations.
 
+Recovery guidance is an agent/harness error contract, not a human command
+checklist. Epoch drift and aggregate missing-proof errors direct the agent to
+non-reopening batch recovery with explicitly selected task-bound current files.
+A failed scoped child validation emits `VALIDATION_CHILD_FAILED` with only a
+fixed allowlist of blocker labels from at most 1 MiB per output stream, including
+`NEEDS_PLAN_APPROVAL`; this retains the actual unrelated blocker even when a
+separate ordinary validation encounters aggregate missing proof first.
+Unknown failures provide the supported `decapod validate --format json`
+diagnostic and original-command retry route. Raw child messages, paths, URLs,
+environment values and credentials are never forwarded by this diagnostic.
+Labels are diagnostic observations, never acceptance or proof. Initial/final
+recovery failures preserve historical/unverified or pending states respectively.
+Humans may initialize Decapod; execution and recovery instructions target agents.
+
 ## Sessions, tasks, and workspaces
 
 Most mutations require an active repository-local session. Local session
