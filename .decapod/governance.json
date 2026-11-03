@@ -471,11 +471,19 @@
     }
   },
   "change": {
-    "id": "change_01M6HNX5PAMC1RJSPY0N6CJZSR",
+    "id": "native-diagnostics-1474",
     "base_commit": "304934c0d6632449bcd87d53f3882519185f876e",
-    "target_base": "origin/master"
+    "target_base": "master"
   },
   "claims": {
+    "native-diagnostic-recovery": {
+      "statement": "Executed native checks preserve machine-readable diagnostic identity, termination and check-level errors alongside existing private output without granting readiness",
+      "falsifier": "A diagnostic cannot identify its check and capture files, or it changes proof or readiness authority",
+      "status": "open",
+      "proof_refs": [
+        "tests/consumer_readiness.rs"
+      ]
+    },
     "recovery-workspace-artifact-lookup": {
       "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
       "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
@@ -484,32 +492,46 @@
   },
   "checkpoints": [
     {
-      "id": "recovery-workspace-artifact-lookup",
-      "summary": "Resolve replay artifacts through the task workspace used at capture; retain content hash checks and historical recovery acceptance boundary",
-      "input_digest": "sha256:9e27e1788d466daed1485b51e7a21322a8bc406bcd0ea99e0e1771eed85c16a9"
+      "id": "native-diagnostics-01",
+      "summary": "Persist native execution diagnostics for agent recovery without changing readiness or proof authority",
+      "input_digest": "sha256:d3a2072fd9a3233aad651a1acbfda26ff1d1ff84eb544cc1811d222ab52fd3da",
+      "proof_refs": [
+        "Source inspection and git diff --check; tests and full validation not run"
+      ]
     },
     {
-      "id": "release-drift-repair-124",
-      "summary": "Refresh release-bound entrypoints and managed Dockerfile using v0.124.0 to repair failed CI drift gate",
-      "input_digest": "sha256:c26b6aedfbbec3ed86e205492577af76e2bc75f18d2e3c624c2f8b411478f451"
+      "id": "reconcile-1241-source",
+      "summary": "Preserve original journal and accepted v0.124.1 source while awaiting matching controller refresh",
+      "input_digest": "sha256:6052a44129c698c92b15771e48d3c16eb8c164b485444411a0b8131b480c9726",
+      "proof_refs": [
+        "Git merge source audit; no tests or final readiness run"
+      ]
+    },
+    {
+      "id": "native-diagnostics-release-1241",
+      "summary": "Refresh official v0.124.1 release and specification projections after CI drift finding",
+      "input_digest": "sha256:5428c3057b3c191a431c9c7ef3c005600cb845d3de8185df79764f7da14c2e07",
+      "proof_refs": [
+        "Verified official release archive checksum; CI drift comparison; no local tests or full validation"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR": {
+    "intent:native-diagnostics-1474": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Preserve existing readiness gates, receipts, config, and accepted authority; no local tests"
       ],
       "constraints": [
-        "root"
+        "native validation recovery"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
+      "id": "intent:native-diagnostics-1474",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix task workspace artifact verification in recovery",
-      "refined_intent": "Fix task workspace artifact verification in recovery",
+      "raw_intent": "Address open issue 1474 in a dedicated PR",
+      "refined_intent": "Persist native check recovery diagnostics without changing proof or publication readiness",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -522,187 +544,196 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix task workspace artifact verification in recovery",
+      "intent": "Preserve actionable native check diagnostics for agents without changing proof or readiness",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Configured remote CI; local tests not run by user instruction"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current transaction, task binding, epoch and file verification architecture remains unchanged; this fix makes path lookup consistent with existing capture.",
-          "reviewed_code_fingerprint": "6a223d952a5de1649b1d0f09695dcbc892114ae86550ab429959633ee768b310",
+          "reason": "Release refresh changes projection only; proof custody and publication architecture remain unchanged",
+          "reviewed_code_fingerprint": "0d78ea5999c0deecee438b655d04e5a2accbbeddbfc75c7df87da9e0a15164ff",
           "spec_material_hash": "98a2637b868afbe10ae3540caf6eb64900616211fe9da6db499fe3bb157c8711"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Describe the same task-aware path lookup used for capture and replay, and retain content-hash enforcement.",
-          "reviewed_code_fingerprint": "6a223d952a5de1649b1d0f09695dcbc892114ae86550ab429959633ee768b310",
-          "spec_material_hash": "cbb61e531b9b7fc240317e25bb4df8a6cc1f56fc68955d825e7cc3e93869acf6"
+          "reason": "Reviewed native check diagnostic contract after v0.124.1 refresh; diagnostics do not grant readiness",
+          "reviewed_code_fingerprint": "0d78ea5999c0deecee438b655d04e5a2accbbeddbfc75c7df87da9e0a15164ff",
+          "spec_material_hash": "d72555a17bec50bccc837c63040ae6a372aac35120f2eea503e7d75276137506"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Task and revision binding, content hash validation, and non-promotion of missing or changed proof remain in force.",
-          "reviewed_code_fingerprint": "6a223d952a5de1649b1d0f09695dcbc892114ae86550ab429959633ee768b310",
+          "reason": "Release refresh changes projection only; no readiness, authorization or security gates are weakened",
+          "reviewed_code_fingerprint": "0d78ea5999c0deecee438b655d04e5a2accbbeddbfc75c7df87da9e0a15164ff",
           "spec_material_hash": "f94e47ab37cc50c85daa5c1821caadb20cc3646f9aecdcf1b7b81a12210a73fa"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Fix task workspace artifact verification in recovery",
+      "stop_conditions": [
+        "Unavailable authorization or publication denial"
+      ],
+      "title": "Improve native failure recovery",
       "todo_ids": [
-        "bugs_01m6hnw9mgw6jpb4"
+        "code_01m6hr11kvsaf4d5"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793742819Z"
+      "updated_at": "1793746560Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Preserve existing readiness gates, receipts, config, and accepted authority; no local tests"
       ],
-      "artifact_hash": "sha256:8b4d5e5239ef2f922e66fa5435ac4833750ac8f38451868fa301a187a1a95f8b",
+      "artifact_hash": "sha256:016bd449ec7babe2112431d98967e4ac09c89f9ed34f10605341764dc8c566e6",
       "checks": [
+        {
+          "name": "diff_whitespace",
+          "status": "passed"
+        },
         {
           "name": "local_tests",
           "status": "unavailable"
-        },
-        {
-          "name": "release_drift_ci",
-          "status": "failed"
         }
       ],
-      "current_phase": "repair",
+      "current_phase": "ci-repair",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
+            "intent_id": "intent:native-diagnostics-1474",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
+            "intent_id": "intent:native-diagnostics-1474",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2",
+            "detail": "trajectory:native-diagnostics-1474",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
+            "intent_id": "intent:native-diagnostics-1474",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2",
+            "detail": "trajectory:native-diagnostics-1474",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
+            "intent_id": "intent:native-diagnostics-1474",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:native-diagnostics-1474",
+            "event_id": "event:6",
+            "intent_id": "intent:native-diagnostics-1474",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2": {
+          "native-diagnostics-1474": {
             "evidence_only": true,
-            "id": "branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2",
-            "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
+            "id": "native-diagnostics-1474",
+            "intent_id": "intent:native-diagnostics-1474",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "publication",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plugins/verify.rs",
+                  "src/decapod/core/native_proof.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "tests/consumer_readiness.rs",
+                  "docs/native-readiness-acceptance.md",
                   ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "src/decapod/plugins/verify.rs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "User directed PR action verification rather than local tests; live historical recovery acceptance remains unproven."
+                  "Source inspection found native runner retained check key, termination and error in memory but persisted only numbered output and step files. Added private non-authoritative per-check recovery metadata and focused assertions. No local tests or full readiness run by user instruction; remote checks are pending."
+                ],
+                "proof_refs": [
+                  "local_tests",
+                  "diff_whitespace"
+                ],
+                "scope": [
+                  "native validation recovery"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "reconciliation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Accepted v0.124.1 release fd6d8daba0af03905b23e71e38530757b7baa574 merged as second parent; preserve accepted workspace-recovery claim and specs. The original checkpoint and task journal are retained. No tests or validation run; matching released controller unavailable, so projections remain pending."
                 ],
                 "proof_refs": [
                   "local_tests"
                 ],
                 "scope": [
-                  "root"
-                ],
-                "sequence": 4,
-                "validation_findings": [
-                  "Task workspace discovery identifies the same owning workspace; artifact hash checks remain authoritative."
-                ]
-              },
-              {
-                "action": "repair",
-                "command": "Run v0.124.0 init --proof to regenerate release-bound files",
-                "custody_event_id": "event:5",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/.manifest.json",
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "GitHub Decapod Validate run 41726637713 failed because v0.124.0 entrypoints and managed Dockerfile were stale; generated content repaired with release CLI. No local tests run."
-                ],
-                "proof_refs": [
-                  "release_drift_ci"
-                ],
-                "scope": [
-                  "root"
+                  "native validation recovery"
                 ],
                 "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "PR head b66096c GitHub Decapod Validate reported 189 passed, zero failed in CI-local gates before rejecting stale release and living-spec projections. Official v0.124.1 archive and checksum were verified against release metadata; supported workspace refresh regenerated release pins and specs. Source and spec fingerprints match the failed CI generated diff. No local tests or full validation were run."
+                ],
+                "proof_refs": [
+                  "local_tests"
+                ],
+                "scope": [
+                  "native validation recovery"
+                ],
+                "sequence": 6,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "Run v0.124.0 init --proof to regenerate release-bound files"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "GitHub Decapod Validate run 41726637713 failed because v0.124.0 entrypoints and managed Dockerfile were stale; generated content repaired with release CLI. No local tests run.",
-        "User directed PR action verification rather than local tests; live historical recovery acceptance remains unproven."
+        "Accepted v0.124.1 release fd6d8daba0af03905b23e71e38530757b7baa574 merged as second parent; preserve accepted workspace-recovery claim and specs. The original checkpoint and task journal are retained. No tests or validation run; matching released controller unavailable, so projections remain pending.",
+        "PR head b66096c GitHub Decapod Validate reported 189 passed, zero failed in CI-local gates before rejecting stale release and living-spec projections. Official v0.124.1 archive and checksum were verified against release metadata; supported workspace refresh regenerated release pins and specs. Source and spec fingerprints match the failed CI generated diff. No local tests or full validation were run.",
+        "Source inspection found native runner retained check key, termination and error in memory but persisted only numbered output and step files. Added private non-authoritative per-check recovery metadata and focused assertions. No local tests or full readiness run by user instruction; remote checks are pending."
       ],
       "inspected_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "src/decapod/plugins/verify.rs"
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/validation_runtime.rs"
       ],
-      "intent_id": "intent:change_01M6HNX5PAMC1RJSPY0N6CJZSR",
+      "intent_id": "intent:native-diagnostics-1474",
       "modified_files": [
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/INTERFACES.md",
-        "AGENTS.md",
-        "CLAUDE.md",
-        "CODEX.md",
-        "GEMINI.md",
-        "src/decapod/plugins/verify.rs"
+        "docs/native-readiness-acceptance.md",
+        "src/decapod/core/validation_runtime.rs",
+        "tests/consumer_readiness.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Publish dedicated PR and observe exact-head CI",
+        "Push refreshed checkpoint and observe exact-head CI",
+        "Refresh and review release-bound specs with official v0.124.1 controller when available, then publish"
       ],
       "repo_scope": [
-        "root"
+        "native validation recovery"
       ],
-      "run_id": "branch_01M6HNX5Q9WM6JFCZKSKK5CVJ2",
+      "run_id": "native-diagnostics-1474",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6hnw9mgw6jpb4",
+      "task_id": "code_01m6hr11kvsaf4d5",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Task workspace discovery identifies the same owning workspace; artifact hash checks remain authoritative."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

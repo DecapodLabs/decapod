@@ -1375,6 +1375,29 @@ pub fn execute_native(
             &evidence_directory.join(format!("native-{number}.steps.json")),
             &serde_json::to_vec_pretty(&diagnostic.steps).map_err(io::Error::other)?,
         )?;
+        // Diagnostic files are private recovery aids, not proof authority. Bind
+        // each numbered capture to its actual check and preserve failures that
+        // are not present in either process stream (for example cleanup errors).
+        let termination = match diagnostic.termination {
+            Termination::Exited => "exited",
+            Termination::TimedOut => "timed_out",
+            Termination::Cancelled => "cancelled",
+            Termination::OutputLimit => "output_limit",
+        };
+        let metadata = serde_json::json!({
+            "schema_version": "1.0.0",
+            "check": diagnostic.key,
+            "duration_ms": diagnostic.duration.as_millis(),
+            "termination": termination,
+            "error": diagnostic.error,
+            "stdout": format!("native-{number}.stdout"),
+            "stderr": format!("native-{number}.stderr"),
+            "steps": format!("native-{number}.steps.json"),
+        });
+        write_new(
+            &evidence_directory.join(format!("native-{number}.diagnostic.json")),
+            &serde_json::to_vec_pretty(&metadata).map_err(io::Error::other)?,
+        )?;
     }
     Ok(ExecutedSuite {
         evidence: run.evidence,

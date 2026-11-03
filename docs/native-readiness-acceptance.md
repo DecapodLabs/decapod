@@ -49,6 +49,12 @@ for each run and the controller's byte hash, and checks:
 5. Rejection of the dirty candidate, without publishing another success bundle,
    followed by exact restoration of the original source/candidate.
 
+For a failed native check, the external evidence directory also contains
+`native-N.diagnostic.json` records identifying the check and relating its
+stdout, stderr and step files. A diagnostic may contain a cleanup or capture
+error absent from either stream. These files aid agent recovery; they do not
+establish readiness or replace a full validation.
+
 Only after every assertion passes does it write `acceptance.json`. A partial
 transcript, an exception, timeout, a missing fixture, or `--help` is not a pass.
 The original successful bundle may remain as historical evidence after the stale
