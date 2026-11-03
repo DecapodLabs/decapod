@@ -690,6 +690,11 @@
       "id": "issue1475-agent-recovery-guidance",
       "summary": "Emit Dagger-specific structured agent-owned recovery in failed validation reports without granting authority or readiness; add regression fixtures",
       "input_digest": "sha256:ed759f1bc656038b04eb15b44e3a037029857a43c0554d6121d00970f4594ddd"
+    },
+    {
+      "id": "issue1475-policy-recovery-context",
+      "summary": "Identify rejected Dagger execution and accepted authorization paths in error output; preserve fail-closed predicate and add diagnostic assertions",
+      "input_digest": "sha256:ed759f1bc656038b04eb15b44e3a037029857a43c0554d6121d00970f4594ddd"
     }
   ],
   "intents": {
