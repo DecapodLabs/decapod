@@ -685,6 +685,11 @@
       "id": "issue1475-ci2-projections",
       "summary": "Refresh generated specs and source-grounded reviews after actual Clippy and canonical documentation input repairs; exact CI generator verification remains pending",
       "input_digest": "sha256:3295b3dc5506ae7e4af748b6443c443abde118c4ec7ad8d8d707cd855177e633"
+    },
+    {
+      "id": "issue1475-agent-recovery-guidance",
+      "summary": "Emit Dagger-specific structured agent-owned recovery in failed validation reports without granting authority or readiness; add regression fixtures",
+      "input_digest": "sha256:ed759f1bc656038b04eb15b44e3a037029857a43c0554d6121d00970f4594ddd"
     }
   ],
   "intents": {
