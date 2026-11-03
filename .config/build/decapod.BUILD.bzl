@@ -340,7 +340,7 @@ def decapod_targets():
                 "src/decapod/core/derived_release_profile_tests.rs",
                 "tests/daemonless_lifecycle.rs",
                 "tests/support/caller_identity.rs",
-                ".config/build/decapod.BUILD.bzl",
+                "//.config/build:decapod.BUILD.bzl",
             ] + native.glob([".github/workflows/*.yml"]) if path == "tests/source_ci_profile_policy.rs" else []),
             edition = "2024",
             crate_features = ["supabase-cloud"],

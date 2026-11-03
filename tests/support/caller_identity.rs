@@ -332,7 +332,7 @@ mod unix {
                 "{}",
                 String::from_utf8_lossy(&edited.stderr)
             );
-            let credential = acquire_session_password_with(&dir, agent, run_contention_setup);
+            let credential = acquire_session_password_with(dir, agent, run_contention_setup);
             tasks.push((agent.to_owned(), credential, id));
         }
 

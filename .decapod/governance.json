@@ -510,6 +510,16 @@
       "id": "clarify-validator-observation",
       "summary": "Correct cancellation observation: no matching live validator was found or signalled; preserve unavailable proof status",
       "input_digest": "sha256:b73e3b9ae3fca28652b49a7684b07537f76f180337c28e399f0107b3631e0298"
+    },
+    {
+      "id": "caller-socket-label-fix",
+      "summary": "Fix exported Bazel compile_data label; preserve required socket acceptance and executor authority",
+      "input_digest": "sha256:530451899a188e7d37c7686d952209ecae5d43adb80d00ea20db648b74de5634"
+    },
+    {
+      "id": "caller-socket-build-fix",
+      "summary": "Fix Bazel exported label and extracted needless borrow found by public CI",
+      "input_digest": "sha256:0e37770ea19dd2981ac35d287e2cf7608b7be2a392fad96907f6fc40cfff9171"
     }
   ],
   "intents": {
@@ -563,8 +573,12 @@
         "Current claimed task and isolated work branch",
         "No runtime identity, authorization, proof-policy weakening, merge or release"
       ],
-      "artifact_hash": "sha256:70c279ff2f9fc0fd2f6a7d7109189a25b037e0966ac8797263c57e44c23e104c",
+      "artifact_hash": "sha256:e5b6d6f9c908eb4b0f027cd280badab763f7fa7dc3c674303c6bb66a0b37bf32",
       "checks": [
+        {
+          "name": "caller_socket_acceptance",
+          "status": "unavailable"
+        },
         {
           "name": "full_validation",
           "status": "unavailable"
@@ -665,10 +679,24 @@
             "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M6G9YWNKFC66JMBTMHWVQ782",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M6G9YWKWRNT4H3CPZ9KHJGBS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 16,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9YWNKFC66JMBTMHWVQ782": {
@@ -871,6 +899,37 @@
                 ],
                 "sequence": 14,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:15",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  "Public PR CI41625644241 job125883063234 invoked accepted unfiltered daemonless target on candidate tree c90902d but Bazel rejected my new compile_data package label before any test ran. Corrected only that entry to existing exported subpackage label; inventory reviewed b04b3b6e, config finalized before specs.refresh and unchanged afterward. No socket success claimed. Denied full validation session remains unknown and is not retried or inspected."
+                ],
+                "proof_refs": [
+                  "caller_socket_acceptance"
+                ],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 15,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "Public clippy job125883063358 identified one newly extracted needless borrow at caller_identity.rs:335; removed the extra reference without changing behavior. This correction and the Bazel label repair are in the same unpublished checkpoint."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "Concurrent caller regression and mandatory observable Linux CI acceptance",
+                  "root"
+                ],
+                "sequence": 16,
+                "validation_findings": []
               }
             ]
           }
@@ -896,6 +955,8 @@
         "Official govern proof list resolves shared source-root config, not worktree config; no proof run or root mutation attempted. New recipe uses accepted-base executor and first-PR acceptance remains unproven.",
         "Official init --proof refreshed release-bound entrypoints and managed Dockerfile; finalized config remained byte-identical before init and after specs.refresh.",
         "Official init emitted transient entrypoint .bak files; remove these generated backups from final source diff, retaining original entrypoints in Git history.",
+        "Public PR CI41625644241 job125883063234 invoked accepted unfiltered daemonless target on candidate tree c90902d but Bazel rejected my new compile_data package label before any test ran. Corrected only that entry to existing exported subpackage label; inventory reviewed b04b3b6e, config finalized before specs.refresh and unchanged afterward. No socket success claimed. Denied full validation session remains unknown and is not retried or inspected.",
+        "Public clippy job125883063358 identified one newly extracted needless borrow at caller_identity.rs:335; removed the extra reference without changing behavior. This correction and the Bazel label repair are in the same unpublished checkpoint.",
         "Published verified exact tree/message/ordered-parent API mapping, head c359ff17, in regular PR 1503 as explicitly requested; no socket test execution claimed. Earlier interrupted create_commit may remain an unreachable immutable object; no branch/ref was created by that operation.",
         "Retained first-parent governance journal through merge and used official specs.refresh for generated conflict regions while retaining accepted and candidate authored prose.",
         "Reviewed complete inventory delta from f89a9fa8: accepted release changes Cargo version/lock to 0.123.4; candidate only adds mandatory named caller socket command to Linux daemonless recipe. No existing check removed, no workflow/carrier/trust change.",
@@ -903,6 +964,7 @@
         "Use accepted always-run unfiltered daemonless_lifecycle target for shared required caller scenario. Unconditional unignored test calls strict entrypoint: unavailable socket or non-Unix fails; no env opt-out. External Bazel tag disables cached passes without changing global logging or accepted executor authority. Optional group_broker test retains sandbox skip."
       ],
       "inspected_files": [
+        ".config/build/decapod.BUILD.bzl",
         "assets/tools/source_ci_profile.rs",
         "src/decapod/core/readiness_profile.rs",
         "src/decapod/core/workspace.rs",
