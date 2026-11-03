@@ -115,7 +115,7 @@ fn live_recovery_children_cannot_inherit_scoped_or_ci_local_validation() {
         assert_eq!(
             child
                 .get_envs()
-                .find(|(key, _)| key == name)
+                .find(|(key, _)| *key == std::ffi::OsStr::new(name))
                 .and_then(|(_, value)| value),
             None
         );

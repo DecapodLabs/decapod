@@ -491,6 +491,11 @@
       "proof_refs": [
         "official v0.123.4 checksum verification"
       ]
+    },
+    {
+      "id": "recovery-clippy-osstr",
+      "summary": "Correct live recovery environment assertion OsStr predicate type; retain live acceptance limitation",
+      "input_digest": "sha256:69db5338d88817b8843cd8eb755f9acc2a75446036b089f92d64bf1545adf130"
     }
   ],
   "intents": {
@@ -550,11 +555,15 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:1ee096cb315eeda0071d7b1fcdd66126d275dcb2891b4cb578aefa8ec3b1b0bd",
+      "artifact_hash": "sha256:4f7a48052ac83ae66373065f9d62e593d631c7e697c78774d8b20bd9b117797b",
       "blockers": [
         "No authorized already-governed fixture with multiple historical done tasks and real proof access is available; opt-in harness is not acceptance"
       ],
       "checks": [
+        {
+          "name": "current-head-clippy",
+          "status": "failed"
+        },
         {
           "name": "live recovery acceptance",
           "status": "unavailable"
@@ -599,10 +608,17 @@
             "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6G9W51QAAFSNWD2E9D26EPW",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6G9W50AG2225457TK02BYYX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6G9W51QAAFSNWD2E9D26EPW": {
@@ -657,6 +673,23 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/support/live_recovery.rs",
+                  "GitHub Actions job 125829118700 reports E0277 at tests/support/live_recovery.rs:118; corrected iterator predicate dereference and OsStr comparison. New-head CI pending; successful live recovery remains unavailable."
+                ],
+                "proof_refs": [
+                  "rustfmt",
+                  "current-head-clippy"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -668,6 +701,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "GitHub Actions job 125829118700 reports E0277 at tests/support/live_recovery.rs:118; corrected iterator predicate dereference and OsStr comparison. New-head CI pending; successful live recovery remains unavailable.",
         "Issue 1473 latest decision requires real successful non-reopening recovery"
       ],
       "inspected_files": [
