@@ -223,6 +223,9 @@ fn test_verify_deadlock_prevention() {
         val_normal_combined
     );
 
+    assert!(val_normal_combined.contains("decapod qa verify recover"));
+    assert!(val_normal_combined.contains("--artifact TODO_ID=FILE"));
+
     // Exercise the real recovery CLI and its child validation, not an injected
     // passing snapshot. Model historical completion whose proof rows are lost.
     conn.execute("DELETE FROM task_verification", []).unwrap();
@@ -291,6 +294,12 @@ fn test_verify_deadlock_prevention() {
         String::from_utf8_lossy(&recover.stderr).contains("failing validation snapshot"),
         "recovery must reach real child validation and reject its failure: {recover:?}"
     );
+    let recovery_diagnostic = String::from_utf8_lossy(&recover.stderr);
+    assert!(recovery_diagnostic.contains("VALIDATION_CHILD_FAILED"));
+    assert!(recovery_diagnostic.contains("NEEDS_PLAN_APPROVAL"));
+    assert!(recovery_diagnostic.contains("decapod validate --format json"));
+    assert!(recovery_diagnostic.contains("decapod qa verify recover"));
+    assert!(!recovery_diagnostic.contains("qa verify prune"));
     assert_eq!(completed_state(&todo_id_1), before[0]);
     assert_eq!(completed_state(&todo_id_2), before[1]);
     let proof_rows: i64 = conn

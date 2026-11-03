@@ -559,6 +559,11 @@
       "id": "agent-diagnostic-regressions",
       "summary": "Assert non-reopening exact task recovery advice, safe fixed child blocker labels, diagnostic command, no secret/provider content forwarding and bounded scan",
       "input_digest": "sha256:d160ea6c126f942529b278e1a42312e038da179e03d43088f09702bb88e5b079"
+    },
+    {
+      "id": "real-cli-diagnostic-contract",
+      "summary": "Actual candidate CLI regression asserts aggregate recovery instructions and unrelated plan blocker survives scoped child hashing without raw output or prune advice; not executed locally",
+      "input_digest": "sha256:c939f842c3673050c6f9903e71c757646f20bd873a43c0c4eab1b0832222eba0"
     }
   ],
   "intents": {
