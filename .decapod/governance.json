@@ -680,6 +680,11 @@
       "id": "issue1475-canonical-dagger-doc",
       "summary": "Preserve Dagger contract in canonical repository-readiness input included by docs generator",
       "input_digest": "sha256:3a1ef801cbb548363e966385af2731a09e912456c7322dd70dd4612af811a5d2"
+    },
+    {
+      "id": "issue1475-ci2-projections",
+      "summary": "Refresh generated specs and source-grounded reviews after actual Clippy and canonical documentation input repairs; exact CI generator verification remains pending",
+      "input_digest": "sha256:3295b3dc5506ae7e4af748b6443c443abde118c4ec7ad8d8d707cd855177e633"
     }
   ],
   "intents": {
@@ -720,22 +725,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed CI repair diff: explicit repository_profile import and rustfmt argv layout only. Existing authored descriptions of accepted-only dormant activation, Dagger1.0 root workspace protocol, trusted preexisting mutable engine, default-denied permissions and no hosted substitution remain accurate; failed a2b8 source CI and live-engine gap are not passing proof.",
-          "reviewed_code_fingerprint": "32146b0703d890387c12ab8c5fd31db59c4b7d25cd6a7c0a0b3656117594b25e",
+          "reason": "Inspected load_project accepted-only Dagger policy, command_invocation fixed workspace argv, and inspect_engines trust boundary. Removing a needless formatting borrow and relocating existing guidance into the docs generator canonical input changes no architecture or executor authority.",
+          "reviewed_code_fingerprint": "4a2d6af44973d7c4a2fc57bc022995e1eda86e966f4003ca32e5cba959aaba7d",
           "spec_material_hash": "8e3ceeeac52762000d0cb2d831bdcc16ba288b7959c5d23eb9a5031eedbd0218"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed CI repair diff: explicit repository_profile import and rustfmt argv layout only. Existing authored descriptions of accepted-only dormant activation, Dagger1.0 root workspace protocol, trusted preexisting mutable engine, default-denied permissions and no hosted substitution remain accurate; failed a2b8 source CI and live-engine gap are not passing proof.",
-          "reviewed_code_fingerprint": "32146b0703d890387c12ab8c5fd31db59c4b7d25cd6a7c0a0b3656117594b25e",
+          "reason": "Existing Dagger section accurately describes typed dormant proposals, two-step accepted authorization, fixed Dagger 1.0 workspace syntax and missing live qualification. Canonical documentation input now retains exactly the same guidance on regeneration; no CLI or proof contract change.",
+          "reviewed_code_fingerprint": "4a2d6af44973d7c4a2fc57bc022995e1eda86e966f4003ca32e5cba959aaba7d",
           "spec_material_hash": "134ec8c87c34d93107e6e3532ff036fe2e9e479fd2f2eb3ce2957eb62d0372c9"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed CI repair diff: explicit repository_profile import and rustfmt argv layout only. Existing authored descriptions of accepted-only dormant activation, Dagger1.0 root workspace protocol, trusted preexisting mutable engine, default-denied permissions and no hosted substitution remain accurate; failed a2b8 source CI and live-engine gap are not passing proof.",
-          "reviewed_code_fingerprint": "32146b0703d890387c12ab8c5fd31db59c4b7d25cd6a7c0a0b3656117594b25e",
+          "reason": "Reviewed error propagation and canonical prose move: accepted-only authority, default-denied Dagger capabilities, trusted pre-existing local engine and unchanged Buildkite requirements remain intact. No live execution grant, policy weakening or additional identity claim.",
+          "reviewed_code_fingerprint": "4a2d6af44973d7c4a2fc57bc022995e1eda86e966f4003ca32e5cba959aaba7d",
           "spec_material_hash": "eb8a12e853f7459ab9cda70be86dd24f6388fa50a198063d70eb06335700d8b8"
         }
       ],
@@ -747,13 +752,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793662610Z"
+      "updated_at": "1793665870Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:28c943763fb3d7426ebde9f47f803db56a3aed656bfeb06a538bdaad7435ce39",
+      "artifact_hash": "sha256:75b5990258ab4c1bffb67ccb990713ed853ce74dd33e20e90edd405c582f6592",
       "checks": [
         {
           "name": "ci-source-compile",
@@ -822,10 +827,17 @@
             "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6F0MSA6NJNNFSAD36MDNVNK",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6F0MSA6NJNNFSAD36MDNVNK": {
@@ -903,22 +915,43 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "decapod docs build using official 0.121.2 then restore unchanged tracked projection pending exact source-built CI generator",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/docs_cli.rs",
+                  "docs/agent/repository-readiness.md",
+                  "Generator embeds repository-readiness.md at compile time. Existing generated config-schema already carries exact Dagger text, now copied to canonical authored input. Official release generation removed that text only; restored tracked projection. Exact source-built CI generator verification remains required, no local source build performed."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "issue-1475-dagger"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod docs build using official 0.121.2 then restore unchanged tracked projection pending exact source-built CI generator"
+      ],
       "destination": "pull request",
       "evidence": [
+        "Generator embeds repository-readiness.md at compile time. Existing generated config-schema already carries exact Dagger text, now copied to canonical authored input. Official release generation removed that text only; restored tracked projection. Exact source-built CI generator verification remains required, no local source build performed.",
         "GitHub source CI job 125627507466 at 13201 reports needless_borrows_for_generic_args at validation_runtime.rs633; job 125626769890 source-build succeeds but generated docs drift. Remove unnecessary format borrow without changing failure semantics; checks remain required."
       ],
       "inspected_files": [
+        "src/decapod/core/docs_cli.rs",
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/repository_host.rs"
       ],
       "intent_id": "intent:change_01M6F0MS9K712GC9H7KZ3FCYMQ",
       "modified_files": [
+        "docs/agent/repository-readiness.md",
         "src/decapod/core/proof.rs",
         "src/decapod/core/repository_profile.rs",
         "src/decapod/core/validation_runtime.rs",
