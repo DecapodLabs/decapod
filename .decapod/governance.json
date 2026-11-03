@@ -601,6 +601,11 @@
       "id": "handoff-agent-only-recovery",
       "summary": "Correct user interface contract: only agent/harness executes after human init; human decisions through harness, existing actual actor trust and exact approval retained, no self-promotion",
       "input_digest": "sha256:6b16a953b958da6167a72ecabb7ae4b1bf5824e7843b0a63f3be32775ad05ab4"
+    },
+    {
+      "id": "handoff-agent-only-interface",
+      "summary": "Specify user init-only boundary and agent/harness execution of all recovery interfaces, with human decisions communicated through agent",
+      "input_digest": "sha256:7d395536192a4185438e565819c8cee7c49e00849e20b50c3abd85e5197f05d1"
     }
   ],
   "intents": {

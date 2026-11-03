@@ -843,3 +843,13 @@ now supply explicit caller context and deterministic local test Git identity,
 and separately check source-owner and recipient spoof rejection. These repairs
 remain unverified until the exact new candidate executes; no runtime policy
 requirements were relaxed to accommodate the fixtures.
+
+### Agent/harness execution boundary
+
+Users execute only `decapod init`. All other Decapod interfaces, including
+handoff evaluation, approval recording and recovery execution, are invoked by
+the AI agent/harness. A human provides intent and explicit approval through
+that agent/harness, never a required human operator CLI session. The harness
+preserves the actual established caller independently of approval attribution,
+expected owner and recipient, and reports the resulting audit. Missing caller
+authority remains a blocker; the execution boundary grants no role elevation.
