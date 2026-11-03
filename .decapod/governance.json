@@ -569,6 +569,11 @@
       "id": "agent-error-interface",
       "summary": "Specify agent-only recovery error contract, safe bounded fixed labels from actual scoped child, explicit diagnostics/retry and unchanged proof boundaries",
       "input_digest": "sha256:55c3a22edeffea93bf54371c9a3177c7933e41eb900ad4497790e97817315e44"
+    },
+    {
+      "id": "error-contract-spec-reviews",
+      "summary": "Refresh generated projections and actual current semantic reviews; authored regressions unexecuted pending official CI",
+      "input_digest": "sha256:007a0185f1021c0d1a957ea6d523926c845b4f52cebb10535aa2db8ecd02f84c"
     }
   ],
   "intents": {
@@ -612,22 +617,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current source review: generated Bazel lock changes exactly Tokio version, checksum and Cargo input digest, preserving architecture and executor boundaries. Recovery remains existing verify plugin with current-material capture and transactional pending/final promotion; no new subsystem.",
-          "reviewed_code_fingerprint": "f5520ee143c53cea83f0824ba06a465324cbafd5ca215e659f790a4b33ba4d07",
+          "reason": "Reviewed error-contract change confined to existing verify plugin and aggregate validation: no new component, execution provider or persistence; scoped validation and atomic pending/final proof transitions unchanged.",
+          "reviewed_code_fingerprint": "794035cc60b4ae563194c67d3c0d82d5f1f4f20d4bb70de6b56604d2465d4025",
           "spec_material_hash": "9ac7bcb16f9585c21260afc0af839db50ecabfb633d2e09f9eaea038ca4aebd2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed authored repeated recover --artifact TODO_ID=FILE interface against current verify.rs and CLI failure regression. Explicit current files, epoch checks, original task CAS and genuine two-stage validation preserve historical claims; Bazel lock repair changes no CLI contract. Successful full-native recovery remains unproven.",
-          "reviewed_code_fingerprint": "f5520ee143c53cea83f0824ba06a465324cbafd5ca215e659f790a4b33ba4d07",
-          "spec_material_hash": "89fa666e232a4665ab990ac230d86ccac9e775da185634e94b27f2ebd7f1af5b"
+          "reason": "Reviewed actual epoch/aggregate recovery errors, safe_validation_failure_diagnostic and CLI regressions: exact task artifact syntax, fixed bounded unrelated blocker labels, supported diagnostic command and retry; no human execution checklist or raw child output.",
+          "reviewed_code_fingerprint": "794035cc60b4ae563194c67d3c0d82d5f1f4f20d4bb70de6b56604d2465d4025",
+          "spec_material_hash": "60e288463c4a14d266867d505c026bd23dbf5578550662263e98b03c423e209b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current source review preserves recovery-cannot-grant-authority boundary: old proof retained, extra obligations rejected, current file hashes/epochs and task revisions checked, real validation required. Generated Tokio lock repair alters no credentials, registries, command authorization or proof gates; prior failure is not accepted evidence.",
-          "reviewed_code_fingerprint": "f5520ee143c53cea83f0824ba06a465324cbafd5ca215e659f790a4b33ba4d07",
+          "reason": "Reviewed fixed diagnostic label allowlist and 1MiB per-stream scan; no raw child text, paths, URL, environment or secrets forwarded. Diagnostics cannot authorize proof; unrelated failures block, history and obligations preserved.",
+          "reviewed_code_fingerprint": "794035cc60b4ae563194c67d3c0d82d5f1f4f20d4bb70de6b56604d2465d4025",
           "spec_material_hash": "063a8a58eeb54499a5e6c7af4a36eecb8578ebbea5f8a58e193f8a62395fa810"
         }
       ],
@@ -639,7 +644,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793661552Z"
+      "updated_at": "1793666937Z"
     },
     "trajectory": {
       "active_boundaries": [
