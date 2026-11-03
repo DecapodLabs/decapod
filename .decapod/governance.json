@@ -501,6 +501,11 @@
       "id": "recovery-current-spec-review",
       "summary": "Bind substantive recovery interface review and refreshed projections to the current OsStr-corrected source",
       "input_digest": "sha256:29c1575a5d68a364df0e16462571ad3af3819314ea5811ec422405f17250c205"
+    },
+    {
+      "id": "recovery-related-spec-review",
+      "summary": "Record source-grounded review of unchanged architecture and security publication contracts",
+      "input_digest": "sha256:11b9e45df9bde3a3fbd5b88af8fbf6de22e488de6528c01c3ace00d37c8b656b"
     }
   ],
   "intents": {
@@ -539,11 +544,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Compared recovery and storage architecture to the added live harness: it invokes the existing candidate CLI, observes history through the read-only Dactyl facade, and leaves batch transaction and proof-admission implementation unchanged. No new runtime, provider or state store is introduced.",
+          "reviewed_code_fingerprint": "e37a50609e2664d6e7d281d06874881b12ca63c545b31f91c3d3795772ce35ca",
+          "spec_material_hash": "75e92dfdf3439003b1d61a4e141b56060a655f8a83fbc628a2c08106a31c8f9d"
+        },
+        {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Reviewed the current historical-recovery interface section against live_recovery.rs after the OsStr correction: CLI recovery is task-bound, complete task records and original event fields are preserved, final validation is unscoped with real readiness, inherited CI exemptions are removed, and absent authorized live fixtures still prevent acceptance. The OsStr predicate changes only the environment-isolation assertion and does not change the interface contract.",
           "reviewed_code_fingerprint": "e37a50609e2664d6e7d281d06874881b12ca63c545b31f91c3d3795772ce35ca",
           "spec_material_hash": "f0ca488501b1f43d968dd78e1d45b1f08adbd046d1f824d0ebfad42e1c4e7f5c"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Compared current harness with recovery-cannot-grant-authority and provider trust boundaries: it adds no provider mocks, receipt import, credentials, policy changes or bypass flags. It removes inherited CI/task exemptions, reads history without writes, and requires an authorized existing fixture plus real full readiness. The OsStr correction only fixes the isolation assertion.",
+          "reviewed_code_fingerprint": "e37a50609e2664d6e7d281d06874881b12ca63c545b31f91c3d3795772ce35ca",
+          "spec_material_hash": "e2090e911112df35b36fb5845c7871be442f147bb1b3a723e04e3f17f76f56b9"
         }
       ],
       "state": "APPROVED",
@@ -554,7 +573,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793698854Z"
+      "updated_at": "1793698923Z"
     },
     "trajectory": {
       "active_boundaries": [
