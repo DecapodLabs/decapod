@@ -865,3 +865,11 @@ warns that reconciliation can fail after custody commits, requiring inspection
 before retry. Diagnostic construction itself does not read or write state.
 Regression assertions cover both early validation errors and JSON precondition
 failures without creating storage; these new assertions await exact CI execution.
+
+Other typed failures, including post-transfer reconciliation I/O, emit the same
+versioned recovery context to stderr on a best-effort basis before returning the
+original typed error unchanged. Failure to write diagnostic output cannot mask
+the original error. The context uses a bounded generic reason for these failures
+and does not duplicate their potentially sensitive raw cause into recovery JSON;
+the ordinary error retains its original cause. Unit regressions cover preserved
+I/O classification and diagnostic broken-pipe behavior.

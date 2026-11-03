@@ -651,6 +651,11 @@
       "id": "handoff-reason-normalization",
       "summary": "Assert recovery reason remains plain original message rather than serialized quoted JSON string",
       "input_digest": "sha256:8f96f3770e7839ee131c342e597f0714da28f1a6bf859406fd8bc9500da38a74"
+    },
+    {
+      "id": "handoff-typed-failure-contract",
+      "summary": "Document best-effort stderr recovery for original typed failures without replacing cause or embedding sensitive raw cause in context",
+      "input_digest": "sha256:0b4a5d396ee26b897b81816e1eaad8e5242bc3a61585059c23952bdcb97b0636"
     }
   ],
   "intents": {
