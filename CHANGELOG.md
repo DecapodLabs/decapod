@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.1](https://github.com/DecapodLabs/decapod/compare/v0.123.0...v0.123.1) - 2026-11-03
+
+### Fixed
+
+- reconcile caller isolation with v0.123.0
+- *(build)* synchronize Bazel lock with patched Tokio
+- *(deps)* update Tokio past AsyncFd advisory
+- *(broker)* resolve executable independently of caller cwd
+- *(broker)* restore caller isolation group_broker_tests.rs
+- *(broker)* restore caller isolation group_broker.rs
+
+### Other
+
+- *(governance)* refresh build repair spec bindings
+- *(proof)* reconcile synchronized Bazel inventory
+- *(governance)* bind caller publication spec reviews
+- *(proof)* reconcile patched dependency inventory
+- *(specs)* clarify caller context security custody
+- *(specs)* define internal caller protocol boundary
+- *(specs)* refresh shared leader regression attestations
+- *(broker)* require shared leader claim routing
+- *(specs)* refresh caller custody attestations
+- *(proof)* reconcile reviewed release inventory
+- *(specs)* define broker caller custody
+- *(broker)* retain concurrent request identity
+- *(governance)* initialize release controller workspace
+
 ## [0.123.0](https://github.com/DecapodLabs/decapod/compare/v0.122.1...v0.123.0) - 2026-11-03
 
 ### Added
