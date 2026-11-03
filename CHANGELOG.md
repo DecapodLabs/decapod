@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.3](https://github.com/DecapodLabs/decapod/compare/v0.123.2...v0.123.3) - 2026-11-03
+
+### Fixed
+
+- reconcile prompt context branch with accepted master
+- satisfy prompt tokenizer Clippy lint
+- synchronize derived Bazel Tokio lock
+- update Tokio lock for reviewed security advisory
+- preserve client-specific HTTP option semantics
+- bound read-only HTTP option classification
+- gate dynamic HTTP request arguments
+- retain nested HTTP substitution context
+- bound HTTP markers to command context
+- retain HTTP credential and mutation markers
+- distinguish HTTP diagnostics from unsafe execution
+
+### Other
+
+- preserve independent RPC bootstrap failure
+- refresh prompt gate reviews after Clippy repair
+- record current prompt gate spec reviews
+- record prompt candidate security dependency repair
+- reconcile reviewed Tokio source inventory
+- record verified public prompt gate candidate
+- record bounded prompt gate source review
+- refresh HTTP option spec projections
+- bound HTTP option classification contract
+- cover opaque HTTP option review
+- refresh dynamic HTTP spec projections
+- specify dynamic request argument review
+- cover dynamic HTTP argument boundaries
+- cover nested remote fetch substitution
+- refresh bounded HTTP spec projections
+- define bounded HTTP diagnostic context
+- cover bounded HTTP context regressions
+- reconcile released source inventory
+- refresh prompt context spec projections
+- specify prompt context safety boundaries
+- cover HTTP auth and request method variants
+- verify prompt context gate through stdin CLI
+- cover quoted HTTP and historical prompt contexts
+- bootstrap governed prompt context repair
+
 ## [0.123.2](https://github.com/DecapodLabs/decapod/compare/v0.123.1...v0.123.2) - 2026-11-03
 
 ### Fixed
