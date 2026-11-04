@@ -1,5 +1,15 @@
 # Security
 
+## Execution identity and replay safety
+
+Only three exact JSON pointers are normalized for repeated proof comparison:
+`/readiness/evidence_path`, `/readiness/vega_readiness/request_id`, and
+`/readiness/vega_readiness/binding/evidence_digest`. Fields with those names
+elsewhere and non-string malformed values remain bound. Receipt verification
+and actual validation success remain prerequisites; this projection neither
+imports evidence nor authorizes replay from a failed snapshot. Regression
+coverage requires policy, material, scope and failure changes to remain visible.
+
 ## Rust source-spelling fixture isolation
 
 The new inventory regression uses a private disposable repository, isolated
@@ -473,7 +483,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dc4de50fd0aed2662d884f233f706d3fa5f460748f78adf3f59c91800ddd530f`
+- Repository signal fingerprint: `14e8a83116c8afa633cc892684223faca64541212cf2157427f3cba1bc8ce738`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

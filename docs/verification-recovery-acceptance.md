@@ -36,6 +36,25 @@ Through the configured validation runner, select the ignored integration test:
 --test verify_deadlock_regression live_recovery::live_recovery_preserves_multiple_historical_completions -- --ignored --exact
 ```
 
+If a genuine recovery attempt has already captured artifacts but failed before
+atomic promotion, preserve that pending batch. Do not delete its proof to repeat
+the missing-artifact setup. After repairing the reported cause, the separate
+`live_recovery::live_recovery_retries_pending_batch_without_rewriting_history`
+test requires captured artifacts, `last_verified_status=CLAIMED`, and a previous
+`task.verify.recover` event for every task. It enforces the same initial
+proof-hook rejection, full real recovery,
+task/history preservation, individual replay and final unscoped readiness.
+Record the first failed attempt together with this retry; passing the retry
+alone does not demonstrate the original missing-artifact precondition.
+
+Verification replay excludes only three execution-instance fields from its JSON
+comparison: `readiness.evidence_path`, the Vega receipt `request_id`, and its
+`binding.evidence_digest`. Actual validation still verifies and retains complete
+execution receipts. Material, accepted target, toolchain, policy, scope,
+decisions, blockers and epoch remain bound; unrelated fields with the same names
+are not excluded. Old baselines may need the supported recovery operation once
+to capture the corrected comparison hash.
+
 Do not run a shadow build outside the repository's configured validation flow.
 The ordinary integration target compiles this harness and runs its environment
 isolation assertion, but does not provision or mutate a live fixture.

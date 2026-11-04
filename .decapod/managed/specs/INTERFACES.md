@@ -1,5 +1,14 @@
 # Interfaces
 
+## Recovery replay comparison
+
+`qa verify recover` and per-task verification use the same normalized validation
+report. Fresh execution paths and receipt IDs do not constitute material drift;
+changed scope, policy, artifact content, epoch, target or verdict still does.
+Persisted output hashes remain SHA-256 values. Baselines captured with the old
+comparison can require one explicit supported recovery to refresh them. No
+command flag bypasses proof, and atomic batch finalization is unchanged.
+
 ## Exact consumer source spelling
 
 The `agent.init` reconciliation result must contain only `Justfile` when that
@@ -834,7 +843,7 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dc4de50fd0aed2662d884f233f706d3fa5f460748f78adf3f59c91800ddd530f`
+- Repository signal fingerprint: `14e8a83116c8afa633cc892684223faca64541212cf2157427f3cba1bc8ce738`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

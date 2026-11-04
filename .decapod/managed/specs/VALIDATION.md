@@ -1,5 +1,16 @@
 # Validation
 
+## Real recovery regression
+
+The authorized private Rust fixture reproduced #1473 with two completed tasks:
+full scoped validation passed, but fresh per-execution evidence identities made
+the second snapshot hash differ. Unit tests in `verify_tests.rs` compare repeated
+report identities while rejecting material/policy/verdict drift. The separate
+opt-in pending-batch test in `tests/support/live_recovery.rs` preserves the real
+failed attempt and retries without deleting evidence, pruning or reopening.
+It requires per-task verification and final unscoped publication readiness;
+compilation or an ignored test remains insufficient acceptance.
+
 ## Documented agent bootstrap execution
 
 The always-selected `cli-contracts` proof executes the inline
@@ -879,7 +890,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dc4de50fd0aed2662d884f233f706d3fa5f460748f78adf3f59c91800ddd530f`
+- Repository signal fingerprint: `14e8a83116c8afa633cc892684223faca64541212cf2157427f3cba1bc8ce738`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
