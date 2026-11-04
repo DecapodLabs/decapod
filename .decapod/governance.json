@@ -526,6 +526,11 @@
       "id": "broker-clippy-result",
       "summary": "Return schema inspection Result directly; fix exact-head Clippy without weakening checks",
       "input_digest": "sha256:09808ff754c69ffe52212765f01dd8abfb7a548a2206a1e3cc4d2512320b7476"
+    },
+    {
+      "id": "broker-first-open-parent",
+      "summary": "Preserve secure first-open creation before owner discovery with missing parent; add canonical and named database regression",
+      "input_digest": "sha256:0efdf7b32bc56ffd3406d112beb4f1927b22c749f95087155a514ed150ca7fe6"
     }
   ],
   "intents": {
@@ -564,24 +569,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Clippy-only direct Result return; owner protocol, lifetime and identity semantics unchanged.",
-          "reviewed_code_fingerprint": "b8872bd4e696626aa0732b53e7e01ae735ddbc1fd8a08b67b18bbd396ddce5c9",
-          "spec_material_hash": "d47020cbda5eb66519ccf10dfeec72e8feb9e85ff440b477bb8ada513b1e9a67"
+          "reason": "Review first-open owner discovery boundary: absent parent goes to ordinary secure factory; existing storage permission checks and identity isolation unchanged.",
+          "reviewed_code_fingerprint": "caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b",
+          "spec_material_hash": "dce10938c2facacb7aa15426365dd6e6c6ae5209b5af80c5d4f4940382d0cdf1"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Clippy-only direct Result return; owner protocol, lifetime and identity semantics unchanged.",
-          "reviewed_code_fingerprint": "b8872bd4e696626aa0732b53e7e01ae735ddbc1fd8a08b67b18bbd396ddce5c9",
+          "reason": "Review first-open owner discovery boundary: absent parent goes to ordinary secure factory; existing storage permission checks and identity isolation unchanged.",
+          "reviewed_code_fingerprint": "caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b",
           "spec_material_hash": "9ca5de6b2bb8c07a10acbddb873a75748c9684a5d9512f67bcf83abed3a75510"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Clippy-only direct Result return; owner protocol, lifetime and identity semantics unchanged.",
-          "reviewed_code_fingerprint": "b8872bd4e696626aa0732b53e7e01ae735ddbc1fd8a08b67b18bbd396ddce5c9",
+          "reason": "Review first-open owner discovery boundary: absent parent goes to ordinary secure factory; existing storage permission checks and identity isolation unchanged.",
+          "reviewed_code_fingerprint": "caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b",
           "spec_material_hash": "fa32257ae4eac923396d32b59741b7f4890ecc4565f0a4db594f3dd064659f20"
         }
       ],
@@ -595,13 +600,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793758373Z"
+      "updated_at": "1793758603Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:086b27ecf34dc735f20d51c3cfcacfcb938497835a4897a73d9680db4fb3fcc7",
+      "artifact_hash": "sha256:9fc6724c1dd79e186b67a1b32e5f68e91814f05ecb4415db5174e4374b54b66b",
       "blockers": [
         "Official validation source upload cannot authenticate GitTransport; gh auth status reports no logged-in hosts and supported environment catalog is empty."
       ],
@@ -624,6 +629,10 @@
         },
         {
           "name": "remote_clippy",
+          "status": "failed"
+        },
+        {
+          "name": "remote_library_tests",
           "status": "failed"
         },
         {
@@ -685,10 +694,17 @@
             "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6J380RNBY4BZDQX2KT7240J": {
@@ -767,6 +783,22 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/db.rs",
+                  "PR1515 original head f6f3e5de job126339253257:1510 library tests passed,3 failed,4 ignored. All three failures are NotFound from first database open with missing parent. Owner discovery checked storage before normal secure parent creation. Return no-owner only for missing parent; preserve all other errors and permissions. Added canonical and named database first-open regression."
+                ],
+                "proof_refs": [
+                  "remote_library_tests"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -778,6 +810,7 @@
         "Authored source replayed cleanly from preserved checkpoint 0738841e onto accepted base 7062f870; prior governance history preserved on original branch; runtime tests not yet executed",
         "Compared every discovered source hash to reviewed-config commit 33be9736: only Cargo.toml and Cargo.lock differ, solely decapod package version 0.123.7 to accepted 0.124.3; adapters, workflows, recipes, graph and dependency edges unchanged",
         "PR1515 head f6f3e5de CI job126339253271 rejects needless_question_mark at dactyl_db.rs544; directly return driver Result without lint waiver. Shared binary job126339253295 and native musl build126339253139 passed. User requests fix and push, PR CI supplies validation.",
+        "PR1515 original head f6f3e5de job126339253257:1510 library tests passed,3 failed,4 ignored. All three failures are NotFound from first database open with missing parent. Owner discovery checked storage before normal secure parent creation. Return no-owner only for missing parent; preserve all other errors and permissions. Added canonical and named database first-open regression.",
         "Source review plus rustfmt and git diff --check passed. Added active transaction drain regression; no compilation or runtime tests executed. Normal drop drains up to five seconds; parent EOF still terminates immediately."
       ],
       "inspected_files": [
@@ -790,6 +823,7 @@
       "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
       "modified_files": [
         "src/decapod/core/dactyl_db.rs",
+        "src/decapod/core/db.rs",
         "src/decapod/core/storage_owner.rs"
       ],
       "next_transitions": [

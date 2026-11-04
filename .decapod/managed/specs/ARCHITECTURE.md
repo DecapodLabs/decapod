@@ -621,7 +621,10 @@ Its lifetime is the current broker election, including the configured idle
 period; it is not the lifetime of an agent authentication session.
 
 All four canonical `db` factories discover the owner before acquiring a physical
-sidecar lock. An isolated child retains its caller context and executes the
+sidecar lock. When the storage parent does not exist, discovery leaves secure
+first-open directory creation to the normal factory rather than rejecting a new
+database. Existing parents and storage files still undergo permission checks.
+An isolated child retains its caller context and executes the
 normal policy and audit code, while its facade forwards storage operations.
 Reads of task backlog/status can use that same physical connection. One logical
 stream lease owns transaction affinity until its last facade handle closes.
@@ -670,7 +673,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b8872bd4e696626aa0732b53e7e01ae735ddbc1fd8a08b67b18bbd396ddce5c9`
+- Repository signal fingerprint: `caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

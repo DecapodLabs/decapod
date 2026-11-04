@@ -808,7 +808,7 @@ remain required before default activation or publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b8872bd4e696626aa0732b53e7e01ae735ddbc1fd8a08b67b18bbd396ddce5c9`
+- Repository signal fingerprint: `caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

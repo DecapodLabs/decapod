@@ -179,6 +179,19 @@ fn owner_connection(
 ) -> Result<Option<Connection>, error::DecapodError> {
     #[cfg(unix)]
     {
+        // A missing parent cannot contain a live owner endpoint. Leave first-open
+        // directory creation to the ordinary factory, which applies the storage
+        // permission policy before creating the database. Do not mask other errors.
+        if let Some(parent) = path
+            .parent()
+            .filter(|parent| !parent.as_os_str().is_empty())
+        {
+            match std::fs::symlink_metadata(parent) {
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+                Err(error) => return Err(error::DecapodError::IoError(error)),
+                Ok(_) => {}
+            }
+        }
         crate::core::fs_permissions::check_storage(path).map_err(error::DecapodError::IoError)?;
         crate::core::storage_owner::Proxy::try_connect(
             path,
@@ -584,6 +597,29 @@ pub fn initialize_decide_db(root: &Path) -> Result<(), error::DecapodError> {
 mod storage_filesystem_tests {
     use super::{UNSUPPORTED_FS_TYPES, fs_type_from_mountinfo};
     use std::path::Path;
+
+    #[test]
+    fn owner_discovery_preserves_first_open_with_missing_parent() {
+        for filename in [crate::core::schemas::LOCAL_DB_NAME, "shared.db"] {
+            let root = tempfile::tempdir().unwrap();
+            let database = root.path().join("new/data").join(filename);
+            assert!(
+                super::owner_connection(
+                    &database,
+                    dactyl_db::AccessMode::ReadWrite,
+                    std::time::Duration::from_secs(1),
+                )
+                .unwrap()
+                .is_none()
+            );
+            assert!(!database.parent().unwrap().exists());
+            let connection = super::db_connect(database.to_str().unwrap()).unwrap();
+            connection
+                .execute("CREATE TABLE first_open (id INTEGER)", [])
+                .unwrap();
+            assert!(database.exists());
+        }
+    }
 
     #[test]
     fn intentional_shared_filesystems_remain_outside_the_existing_denylist() {
