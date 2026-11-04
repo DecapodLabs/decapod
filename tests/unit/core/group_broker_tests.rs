@@ -1,18 +1,5 @@
 // Moved from src/decapod/core/group_broker.rs
 #[test]
-fn broker_falls_back_for_socket_unavailable_errors() {
-    assert!(super::broker_io_error_allows_direct_fallback(
-        std::io::ErrorKind::PermissionDenied
-    ));
-    assert!(super::broker_io_error_allows_direct_fallback(
-        std::io::ErrorKind::InvalidInput
-    ));
-    assert!(!super::broker_io_error_allows_direct_fallback(
-        std::io::ErrorKind::Other
-    ));
-}
-
-#[test]
 fn stale_pid_marker_does_not_block_or_signal_unrelated_process() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path().join("broker.lock");
@@ -127,7 +114,7 @@ fn socket_directory_is_confined_even_under_permissive_umask() {
     std::fs::set_permissions(temp.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
     let store = temp.path().join("data");
     crate::core::fs_permissions::ensure_storage_dir(&store).unwrap();
-    let socket = super::broker_socket_path(&store);
+    let socket = super::broker_socket_path(&store).unwrap();
     super::ensure_socket_directory(socket.parent().unwrap()).unwrap();
     let expected = if crate::core::fs_permissions::shared_storage() {
         0o770
@@ -252,4 +239,123 @@ fn caller_context_clears_absent_leader_credentials_and_metadata() {
             );
         }
     }
+}
+
+#[test]
+fn lost_acknowledgement_is_unknown_and_does_not_elect_or_replay() {
+    use std::io::BufRead;
+    let dir = tempfile::tempdir().unwrap();
+    let socket = super::broker_socket_path(dir.path()).unwrap();
+    crate::core::local_socket::ensure_directory(&socket, dir.path()).unwrap();
+    let listener = std::os::unix::net::UnixListener::bind(&socket).unwrap();
+    let peer = std::thread::spawn(move || {
+        let (stream, _) = listener.accept().unwrap();
+        let mut line = String::new();
+        std::io::BufReader::new(stream)
+            .read_line(&mut line)
+            .unwrap();
+        assert!(line.contains("request_id"));
+        // Peer drops after receiving the complete request. It could have committed.
+    });
+    let err = super::run_unix_broker(dir.path(), &["unused".into()], &mut |_, _| {
+        panic!("unexpected execution")
+    })
+    .unwrap_err();
+    peer.join().unwrap();
+    assert!(err.to_string().contains("BROKER_UNKNOWN"));
+    assert!(
+        !dir.path().join("broker.election").exists(),
+        "re-elected after uncertain send"
+    );
+}
+
+#[test]
+fn durable_started_receipt_prevents_reexecution_and_binds_caller() {
+    let dir = tempfile::tempdir().unwrap();
+    let caller = caller_context("caller-a");
+    let argv = vec!["must-never-spawn".into()];
+    let mut request = super::BrokerRequest {
+        protocol_version: super::BROKER_PROTOCOL_DEFAULT,
+        request_id: "uncertain-request".into(),
+        payload_hash: super::hash_payload(&argv, &caller),
+        argv,
+        caller,
+        deadline_ms: super::epoch_ms() + 30_000,
+    };
+    super::dedupe_store(
+        dir.path(),
+        &request,
+        &super::BrokerResponse {
+            protocol_version: super::BROKER_PROTOCOL_DEFAULT,
+            status: "UNKNOWN".into(),
+            commit_marker: None,
+            retry_after_ms_hint: None,
+            result_envelope: serde_json::json!({"error":"interrupted"}),
+        },
+    )
+    .unwrap();
+    let result = super::execute_request(dir.path(), &request, false).unwrap();
+    assert_eq!(result.status, "UNKNOWN");
+    request.caller = caller_context("caller-b");
+    request.payload_hash = super::hash_payload(&request.argv, &request.caller);
+    let mismatch = super::execute_request(dir.path(), &request, false).unwrap();
+    assert_eq!(
+        mismatch.result_envelope["error"],
+        "BROKER_DEDUPE_PAYLOAD_MISMATCH"
+    );
+}
+
+#[test]
+fn queued_request_deadline_prevents_execution_without_a_receipt() {
+    let dir = tempfile::tempdir().unwrap();
+    let caller = caller_context("caller-a");
+    let argv = vec!["must-never-spawn".into()];
+    let request = super::BrokerRequest {
+        protocol_version: super::BROKER_PROTOCOL_DEFAULT,
+        request_id: "expired".into(),
+        payload_hash: super::hash_payload(&argv, &caller),
+        argv,
+        caller,
+        deadline_ms: 1,
+    };
+    let result = super::execute_request(dir.path(), &request, false).unwrap();
+    assert_eq!(
+        result.result_envelope["error"],
+        "BROKER_DEADLINE_BEFORE_EXECUTION"
+    );
+    assert!(
+        super::dedupe_lookup(dir.path(), &request)
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[test]
+fn slow_unframed_client_has_a_bounded_read_deadline() {
+    let (server, _slow_client) = std::os::unix::net::UnixStream::pair().unwrap();
+    let start = std::time::Instant::now();
+    assert!(super::read_request_line(&server).is_err());
+    assert!(start.elapsed() < std::time::Duration::from_secs(3));
+}
+
+#[test]
+fn trickling_reply_cannot_extend_the_absolute_deadline() {
+    use std::io::Write;
+    let (server, mut peer) = std::os::unix::net::UnixStream::pair().unwrap();
+    let writer = std::thread::spawn(move || {
+        for _ in 0..100 {
+            if peer.write_all(b"x").is_err() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+    });
+    let start = std::time::Instant::now();
+    assert!(
+        super::read_line_until(&server, start + std::time::Duration::from_millis(100), 1024,)
+            .is_err()
+    );
+    assert!(start.elapsed() < std::time::Duration::from_millis(500));
+    drop(server);
+    writer.join().unwrap();
 }

@@ -467,6 +467,11 @@ impl Connection {
                 lock_timeout,
             },
         )?;
+        #[cfg(unix)]
+        if std::env::var("DECAPOD_STORAGE_OWNER_WORKER").as_deref() == Ok("1") {
+            // Count actual Dactyl opens, not proxy/facade construction.
+            crate::core::storage_owner::emit_open_hook();
+        }
         Ok(Self {
             driver: Rc::new(Driver::Local(driver)),
             transaction_state: Rc::new(Cell::new(false)),

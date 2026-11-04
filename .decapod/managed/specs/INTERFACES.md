@@ -27,8 +27,8 @@ live run succeeds with real configured proof access.
 ## Local broker caller protocol
 
 The internal Unix-socket broker request in
-`src/decapod/core/group_broker.rs` advances to protocol version 2. Alongside
-request ID and arguments, each request carries a canonical absolute working
+`src/decapod/core/group_broker.rs` uses protocol version 3. Alongside
+request ID, arguments and an absolute queue/execution deadline, each request carries a canonical absolute working
 directory and an explicitly allowlisted caller context. Agent identity, session,
 task, correlation, causation, idempotency and claim-autorun inputs replace—not
 merge with—the elected leader's corresponding environment. The child executable
@@ -495,8 +495,10 @@ Read-only callers do not perform schema writes or migration repair.
 
 The local backend uses the canonical `.decapod/data/decapod.db`. Shared workspace
 lookup resolves its owning control plane rather than creating a divergent task
-store. Local connection factories hold a bounded exclusive sidecar coordination
-lock; contention reports `STORAGE_LOCK_TIMEOUT`. Locks are descriptor-owned and
+store. Local physical connection factories hold shared lifecycle guards;
+maintenance takes exclusive access, and contention reports `STORAGE_LOCK_TIMEOUT`.
+An attempted shared-to-exclusive upgrade reports `STORAGE_LOCK_UPGRADE_BLOCKED`.
+Locks are descriptor-owned and
 released by the operating system, never deleted based on age. This coordinates
 cooperating Decapod processes, not arbitrary external SQLite clients.
 
@@ -777,8 +779,9 @@ contract, rather than by an agent's chosen provider or harness:
 
 `DECAPOD_STORAGE_OWNER=1` enables the foreground owner for an elected group
 broker. Default routing remains unchanged while this transition is validated.
-The owner uses a private local Unix socket adjacent to the canonical datastore,
-with a versioned, bounded-frame protocol. This is an internal cooperative-local
+The owner uses a confined local Unix socket derived from the canonical datastore,
+with a versioned, bounded-frame protocol. Long paths use a hashed private UID or
+explicit shared GID directory under /tmp; the same endpoint serves all worktrees. This is an internal cooperative-local
 interface, not a new remote database service or authentication boundary.
 
 An Open frame binds the canonical database path, access mode, and immutable
@@ -787,6 +790,8 @@ retain their original types, including integer versus real and blob values.
 The owner serializes leases, not individual statements, so BEGIN through
 COMMIT/ROLLBACK cannot interleave across callers. Read-only leases are enforced
 by the server and cannot use Read messages to disable query-only protection.
+Temporary objects are removed at lease release, and connection configuration,
+attachment, connection-local result counters and unsupported controls are rejected.
 
 No operation is replayed after an uncertain transport outcome. Failure before
 any owner connection exists may use the existing local path; accepted but
@@ -801,15 +806,28 @@ The #1476 regression retains the original two-agent legacy case and adds eight
 owner-path agents in distinct Git worktrees. It must assert each caller's returned
 and persisted assignee and traversal through one elected leader with one physical
 owner opening. Additional fixtures cover twenty concurrent mutations, eight-way
-exclusive-claim collision, and parent loss during SQL with rollback recovery. Tests and full configured validation
-remain required before default activation or publication readiness.
+exclusive-claim collision, disconnect after execution with another queued request,
+unknown outcomes without replay, long paths, and parent loss during SQL with
+rollback recovery. Socket-probe skips cannot pass owner acceptance. These tests
+and required configured validation remain evidence obligations, not assertions
+of completed platform qualification.
+
+Group-broker protocol 3 persists an UNKNOWN receipt before command launch.
+Same-ID retrieval is bound to the original caller and never relaunches a started
+request; missing acknowledgement requires inspection, not a new request ID.
+A command exit failure does not prove that no partial mutation committed.
+Broker audit envelope 1.1.0 adds caller_agent_id while retaining actor/actor_id
+as subsystem labels. request_id uses the originating broker request when present;
+event_id stays unique. Historical 1.0 events deserialize with an empty caller
+field rather than inventing prior attribution. Policy continues to run in each
+isolated caller subprocess, with task-specific checks using the actual claimant.
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
+- Repository signal fingerprint: `440495916b114cd2bf4ccb0143a0042462235388f271cf4d293ad4272d51c2d6`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

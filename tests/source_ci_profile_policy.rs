@@ -2165,3 +2165,27 @@ fn provider_carrier_rejects_mismatched_mutable_or_nested_executor_inputs_before_
         assert!(!fixture.scratch.join("compiles").exists(), "{mode}");
     }
 }
+
+#[test]
+fn storage_and_broker_changes_select_unfiltered_runtime_regressions() {
+    for area in [
+        "group_broker",
+        "storage_owner",
+        "storage_lock",
+        "local_socket",
+        "db",
+        "dactyl_db",
+        "broker",
+        "pool",
+    ] {
+        let changed = vec![format!("src/decapod/core/{area}.rs")];
+        assert!(
+            profile::core_full(&changed),
+            "missing core regression selection for {area}"
+        );
+        let recipe = commands(find_check("selective-core").unwrap(), &changed).unwrap();
+        let serialized = format!("{recipe:?}");
+        assert!(serialized.contains("//:group_broker"));
+        assert!(serialized.contains("//:validate_termination"));
+    }
+}

@@ -52,3 +52,41 @@ fn external_descriptor_contention_is_reported_without_stale_cleanup() {
 
     FileExt::unlock(&external).expect("release external descriptor");
 }
+
+#[test]
+fn shared_lifecycle_guards_allow_other_handles_but_exclude_replacement() {
+    let directory = tempdir().unwrap();
+    let db_path = directory.path().join("decapod.db");
+    let held = StorageLock::acquire(&db_path, StorageLockMode::Shared, Duration::ZERO).unwrap();
+    let external = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(held.path())
+        .unwrap();
+    FileExt::try_lock_shared(&external).unwrap();
+    assert!(
+        StorageLock::acquire(&db_path, StorageLockMode::Exclusive, Duration::ZERO)
+            .unwrap_err()
+            .to_string()
+            .contains("STORAGE_LOCK_UPGRADE_BLOCKED")
+    );
+    FileExt::unlock(&external).unwrap();
+    assert!(FileExt::try_lock_exclusive(&external).is_err());
+    drop(held);
+    FileExt::try_lock_exclusive(&external).unwrap();
+    assert!(lock_path(&db_path).exists());
+}
+
+#[test]
+fn maintenance_guard_is_not_inherited_by_an_unrelated_thread() {
+    let directory = tempdir().unwrap();
+    let path = directory.path().join("decapod.db");
+    let guard = StorageLock::acquire(&path, StorageLockMode::Exclusive, Duration::ZERO).unwrap();
+    let error = std::thread::spawn(move || {
+        StorageLock::acquire(&path, StorageLockMode::Shared, Duration::ZERO).unwrap_err()
+    })
+    .join()
+    .unwrap();
+    assert!(error.to_string().contains("STORAGE_LOCK_TIMEOUT"));
+    drop(guard);
+}

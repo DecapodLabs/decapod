@@ -19,9 +19,9 @@ use std::time::{Duration, Instant};
 /// The lock mode used for a local datastore operation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StorageLockMode {
-    /// Multiple read-only Decapod operations may share the lock.
+    /// Physical connections share file-lifetime protection; SQLite locks transactions.
     Shared,
-    /// A write or schema-changing operation owns the lock exclusively.
+    /// Maintenance or file replacement excludes every physical connection.
     Exclusive,
 }
 
@@ -38,6 +38,8 @@ pub struct StorageLock {
 struct HeldStorageLock {
     file: File,
     path: PathBuf,
+    mode: StorageLockMode,
+    thread: std::thread::ThreadId,
 }
 
 impl Drop for HeldStorageLock {
@@ -58,14 +60,29 @@ impl StorageLock {
         mode: StorageLockMode,
         timeout: Duration,
     ) -> Result<Self, DecapodError> {
-        let path = lock_path(db_path);
+        // Canonicalize the parent even before the database exists, so aliases
+        // and creation/replacement retain the same stable lock inode.
+        let parent = db_path.parent().unwrap_or(Path::new(".")).canonicalize()?;
+        let path = lock_path(&parent.join(db_path.file_name().ok_or_else(|| {
+            DecapodError::ValidationError("STORAGE_LOCK_DATABASE_NAME_MISSING".into())
+        })?));
         crate::core::fs_permissions::check_storage(db_path)
             .map_err(|error| lock_io_error(&path, error))?;
         let mut registry = process_locks().lock().map_err(|_| {
             DecapodError::ValidationError("local storage lock registry poisoned".to_string())
         })?;
         if let Some(existing) = registry.get(&path).and_then(Weak::upgrade) {
-            return Ok(Self { state: existing });
+            if mode == StorageLockMode::Exclusive && existing.mode == StorageLockMode::Shared {
+                return Err(DecapodError::ValidationError(
+                    "STORAGE_LOCK_UPGRADE_BLOCKED: close physical connections before maintenance"
+                        .into(),
+                ));
+            }
+            if existing.mode == StorageLockMode::Shared
+                || existing.thread == std::thread::current().id()
+            {
+                return Ok(Self { state: existing });
+            }
         }
 
         let file = crate::core::fs_permissions::open_storage_file(
@@ -80,17 +97,19 @@ impl StorageLock {
 
         let started = Instant::now();
         loop {
-            // Use an exclusive OS lock for both logical modes. This is a
-            // deliberate conservative choice for host-mounted filesystems:
-            // it prevents a reader holding SQLite sidecars open while a
-            // writer in another process changes the database. Same-process
-            // readers still share the already-held descriptor through the
-            // registry above.
-            match FileExt::try_lock_exclusive(&file) {
+            // Shared locks protect file lifetime, not SQL transactions. Only
+            // migration/restore/maintenance owns exclusive lifecycle access.
+            let acquired = match mode {
+                StorageLockMode::Shared => FileExt::try_lock_shared(&file),
+                StorageLockMode::Exclusive => FileExt::try_lock_exclusive(&file),
+            };
+            match acquired {
                 Ok(()) => {
                     let state = Arc::new(HeldStorageLock {
                         file,
                         path: path.clone(),
+                        mode,
+                        thread: std::thread::current().id(),
                     });
                     registry.insert(path, Arc::downgrade(&state));
                     return Ok(Self { state });
@@ -106,7 +125,25 @@ impl StorageLock {
                     }
 
                     let remaining = timeout.saturating_sub(started.elapsed());
+                    // Contention on one datastore must not hold the registry
+                    // mutex across waits for unrelated datastores.
+                    drop(registry);
                     thread::sleep(Duration::from_millis(25).min(remaining));
+                    registry = process_locks().lock().map_err(|_| {
+                        DecapodError::ValidationError("local storage lock registry poisoned".into())
+                    })?;
+                    if let Some(existing) = registry.get(&path).and_then(Weak::upgrade) {
+                        if mode == StorageLockMode::Exclusive
+                            && existing.mode == StorageLockMode::Shared
+                        {
+                            return Err(DecapodError::ValidationError("STORAGE_LOCK_UPGRADE_BLOCKED: close physical connections before maintenance".into()));
+                        }
+                        if existing.mode == StorageLockMode::Shared
+                            || existing.thread == std::thread::current().id()
+                        {
+                            return Ok(Self { state: existing });
+                        }
+                    }
                 }
                 Err(error) => return Err(lock_io_error(&path, error)),
             }

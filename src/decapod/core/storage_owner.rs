@@ -283,12 +283,11 @@ fn canonical_database(path: &Path) -> Result<PathBuf> {
     path.canonicalize().map_err(Error::Io)
 }
 
-fn socket_path(database: &Path) -> PathBuf {
-    database
-        .parent()
-        .expect("canonical database has parent")
-        .join("broker-runtime")
-        .join("storage.sock")
+fn socket_path(database: &Path) -> std::io::Result<PathBuf> {
+    crate::core::local_socket::path(
+        database.parent().expect("canonical database parent"),
+        "storage.sock",
+    )
 }
 
 /// Probe without SQL. An accepted-but-unanswered handshake is an error, not
@@ -312,7 +311,7 @@ impl Owner {
     pub(crate) fn start(db_path: &Path) -> std::result::Result<Self, DecapodError> {
         use std::process::{Command, Stdio};
         let database = canonical_database(db_path).map_err(DecapodError::StorageError)?;
-        let socket = socket_path(&database);
+        let socket = socket_path(&database)?;
         let mut command = Command::new(std::env::current_exe().map_err(DecapodError::IoError)?);
         command
             .arg("__storage-owner-worker")
@@ -447,47 +446,11 @@ impl Drop for Owner {
 fn bind_listener(
     database: &Path,
 ) -> std::result::Result<std::os::unix::net::UnixListener, DecapodError> {
-    use std::os::unix::net::{UnixListener, UnixStream};
-    let socket = socket_path(database);
-    let parent = socket.parent().expect("socket has parent");
-    crate::core::fs_permissions::ensure_storage_dir(parent).map_err(DecapodError::IoError)?;
-    crate::core::fs_permissions::check_directory(
-        parent,
-        crate::core::fs_permissions::shared_storage(),
-    )
-    .map_err(DecapodError::IoError)?;
-    use std::os::unix::fs::PermissionsExt;
-    let forbidden = if crate::core::fs_permissions::shared_storage() {
-        0o007
-    } else {
-        0o077
-    };
-    if std::fs::metadata(parent)
-        .map_err(DecapodError::IoError)?
-        .permissions()
-        .mode()
-        & forbidden
-        != 0
-    {
-        return Err(DecapodError::ValidationError(
-            "STORAGE_OWNER_UNSAFE_SOCKET_DIRECTORY".into(),
-        ));
-    }
-    // The physical datastore lock is already held. Only a refused old endpoint
-    // may be removed; an unexpectedly live peer is never displaced.
-    if socket.exists() {
-        match UnixStream::connect(&socket) {
-            Ok(_) => {
-                return Err(DecapodError::ValidationError(
-                    "STORAGE_OWNER_ALREADY_RUNNING".into(),
-                ));
-            }
-            Err(error) if error.kind() == std::io::ErrorKind::ConnectionRefused => {
-                std::fs::remove_file(&socket).map_err(DecapodError::IoError)?;
-            }
-            Err(error) => return Err(DecapodError::IoError(error)),
-        }
-    }
+    use std::os::unix::net::UnixListener;
+    let socket = socket_path(database)?;
+    crate::core::local_socket::ensure_directory(&socket, database.parent().unwrap())?;
+    // Election ownership and the lifecycle lock protect concurrent startup.
+    crate::core::local_socket::remove_stale(&socket)?;
     let listener = UnixListener::bind(&socket).map_err(DecapodError::IoError)?;
     listener
         .set_nonblocking(true)
@@ -535,17 +498,16 @@ pub(crate) fn run_worker(path: &Path) -> std::result::Result<(), DecapodError> {
     let database = canonical_database(path).map_err(DecapodError::StorageError)?;
     let conn = crate::core::db::db_connect_owner(&database)?;
     let listener = bind_listener(&database)?;
-    emit_open_hook();
+    let _endpoint = crate::core::local_socket::Endpoint::capture(&socket_path(&database)?)?;
     std::io::stdout()
         .write_all(b"R")
         .map_err(DecapodError::IoError)?;
     std::io::stdout().flush().map_err(DecapodError::IoError)?;
     let result = serve_connections(&conn, &database, listener, &stop);
-    let _ = std::fs::remove_file(socket_path(&database));
     result.map_err(DecapodError::StorageError)
 }
 
-fn emit_open_hook() {
+pub(crate) fn emit_open_hook() {
     emit_phase_hook("storage_owner_open");
 }
 
@@ -574,13 +536,18 @@ fn serve_connections(
                 if stop.load(Ordering::Acquire) {
                     break;
                 }
-                let _ = serve_lease(conn, database, stream);
+                let result = serve_lease(conn, database, stream);
+                #[cfg(test)]
+                if let Err(error) = &result {
+                    eprintln!("storage lease ended: {error}");
+                }
+                let _ = result;
                 // Always attempt physical rollback: facade bookkeeping is not
                 // authority to expose an unfinished transaction to the next lease.
                 reset_connection(conn)?;
             }
             Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
-                std::thread::sleep(Duration::from_millis(10));
+                std::thread::sleep(Duration::from_millis(1));
             }
             Err(error) => return Err(Error::Io(error)),
         }
@@ -599,6 +566,20 @@ fn reset_connection(conn: &crate::core::db::Connection) -> Result<()> {
         }
     }
     conn.owner_write("PRAGMA query_only=OFF", &[])?;
+    // Explicit temp-schema qualification can create temporary objects even
+    // without the TEMP keyword. Remove every connection-local object before
+    // granting the next caller a lease. Failure retires the worker.
+    let objects = conn.owner_read("SELECT type, name FROM sqlite_temp_master WHERE name NOT LIKE 'sqlite_%' AND type IN ('table','view','trigger') ORDER BY CASE type WHEN 'trigger' THEN 0 WHEN 'view' THEN 1 ELSE 2 END", &[])?;
+    for object in objects.0 {
+        let kind = object.values[0]
+            .as_str()
+            .ok_or_else(|| failure("STORAGE_OWNER_RESET_SCHEMA"))?;
+        let name = object.values[1]
+            .as_str()
+            .ok_or_else(|| failure("STORAGE_OWNER_RESET_SCHEMA"))?
+            .replace('"', r#""""#);
+        conn.owner_write(&format!("DROP {kind} IF EXISTS temp.\"{name}\""), &[])?;
+    }
     Ok(())
 }
 
@@ -606,6 +587,9 @@ fn reset_connection(conn: &crate::core::db::Connection) -> Result<()> {
 /// savepoints and rollback-to rather than approximating physical transaction
 /// state. Reject leading comments and multi-statements for an unambiguous gate.
 fn permitted_write(sql: &str) -> bool {
+    if uses_connection_local_state(sql) {
+        return false;
+    }
     let trimmed = sql.trim();
     let statement = trimmed.strip_suffix(';').unwrap_or(trimmed);
     if statement.contains(';') {
@@ -619,14 +603,42 @@ fn permitted_write(sql: &str) -> bool {
     match words.first().map(String::as_str) {
         Some("SAVEPOINT" | "RELEASE") | None => false,
         Some("ROLLBACK") => words.len() == 1 || (words.len() == 2 && words[1] == "TRANSACTION"),
-        Some(first) => first.chars().all(|c| c.is_ascii_alphabetic()),
+        // Only statements without connection-local configuration are supported.
+        // In particular TEMP, ATTACH, PRAGMA and virtual tables would leak state
+        // between agents; they need an explicit future protocol, not SQL passthrough.
+        Some("INSERT" | "UPDATE" | "DELETE" | "REPLACE" | "BEGIN" | "COMMIT" | "END") => true,
+        Some("CREATE") => matches!(
+            words.get(1).map(String::as_str),
+            Some("TABLE" | "INDEX" | "UNIQUE" | "VIEW" | "TRIGGER")
+        ),
+        Some("ALTER" | "DROP") => matches!(
+            words.get(1).map(String::as_str),
+            Some("TABLE" | "INDEX" | "VIEW" | "TRIGGER")
+        ),
+        _ => false,
     }
 }
 
-/// SQL in a Read frame must not turn off the server's query-only protection or
-/// change connection ownership. SQLite itself rejects writes in CTEs under
-/// query_only. Disallow control statements rather than guessing PRAGMA safety.
+/// Counters also leak through write expressions and stored view definitions.
+/// Apply the same conservative SQL restriction to both read and write frames.
+fn uses_connection_local_state(sql: &str) -> bool {
+    let lower = sql.to_ascii_lowercase();
+    [
+        "last_insert_rowid",
+        "total_changes",
+        "changes",
+        "load_extension",
+    ]
+    .iter()
+    .any(|name| lower.contains(name))
+}
+
+/// SQLite rejects writes in CTEs under query_only. Reject control statements
+/// rather than attempting to classify the safety of individual PRAGMAs.
 fn permitted_read(sql: &str) -> bool {
+    if uses_connection_local_state(sql) {
+        return false;
+    }
     let keyword: String = sql
         .trim_start()
         .chars()
@@ -644,6 +656,9 @@ fn serve_lease(
     database: &Path,
     mut stream: std::os::unix::net::UnixStream,
 ) -> Result<()> {
+    // Darwin may inherit O_NONBLOCK from the listening descriptor. Timeouts
+    // only bound blocking I/O; normalize accepted streams on every Unix target.
+    stream.set_nonblocking(false).map_err(Error::Io)?;
     stream
         .set_read_timeout(Some(LEASE_IDLE_TIMEOUT))
         .map_err(Error::Io)?;
@@ -765,7 +780,7 @@ impl Proxy {
             }
             return Ok(Some(Self { lease }));
         }
-        let endpoint = socket_path(&database);
+        let endpoint = socket_path(&database).map_err(Error::Io)?;
         let mut stream = match UnixStream::connect(&endpoint) {
             Ok(stream) => stream,
             Err(error)
@@ -897,8 +912,8 @@ mod tests {
     }
     impl TestOwner {
         fn start(path: &Path) -> Self {
-            let database = path.to_owned();
-            let socket = socket_path(path);
+            let database = path.canonicalize().unwrap();
+            let socket = socket_path(&database).unwrap();
             let stop = Arc::new(AtomicBool::new(false));
             let thread_stop = Arc::clone(&stop);
             let (tx, rx) = std::sync::mpsc::sync_channel(1);
@@ -941,25 +956,34 @@ mod tests {
     }
 
     #[test]
-    fn connection_local_state_survives_separate_proxy_leases() {
+    fn connection_local_state_cannot_leak_between_leases() {
         let (_dir, path, _owner) = setup();
         {
             let first = proxy(&path, AccessMode::ReadWrite);
             first
-                .write("CREATE TEMP TABLE connection_identity(value TEXT)", &[])
+                .write("CREATE TABLE temp.explicit_temp(value TEXT)", &[])
                 .unwrap();
-            first
-                .write(
-                    "INSERT INTO connection_identity VALUES(?1)",
-                    &[Parameter::Text("same-physical-connection".into())],
-                )
-                .unwrap();
+            for sql in [
+                "CREATE TEMP TABLE leaked(value TEXT)",
+                "PRAGMA foreign_keys=OFF",
+                "ATTACH ':memory:' AS other",
+                "SAVEPOINT nested",
+                "INSERT INTO temp.explicit_temp VALUES (last_insert_rowid())",
+                "INSERT INTO temp.explicit_temp SELECT total_changes()",
+                "CREATE VIEW persisted_counter AS SELECT changes()",
+            ] {
+                assert!(first.write(sql, &[]).is_err(), "accepted {sql}");
+            }
         }
-        let second = proxy(&path, AccessMode::ReadWrite);
-        let rows = second
-            .read("SELECT value FROM connection_identity", &[])
-            .unwrap();
-        assert_eq!(rows.0[0].values[0], "same-physical-connection");
+        let second = proxy(&path, AccessMode::ReadOnly);
+        assert!(second.read("SELECT * FROM temp.leaked", &[]).is_err());
+        assert!(
+            second
+                .read("SELECT * FROM temp.explicit_temp", &[])
+                .is_err()
+        );
+        assert!(second.read("SELECT last_insert_rowid()", &[]).is_err());
+        assert_eq!(second.read("SELECT 1", &[]).unwrap().0[0].values[0], 1);
     }
 
     #[test]
@@ -1084,9 +1108,9 @@ mod tests {
     #[test]
     fn owner_exit_removes_endpoint() {
         let (_dir, path, owner) = setup();
-        assert!(socket_path(&path).exists());
+        assert!(socket_path(&path).unwrap().exists());
         drop(owner);
-        assert!(!socket_path(&path).exists());
+        assert!(!socket_path(&path).unwrap().exists());
         assert!(
             Proxy::try_connect(&path, AccessMode::ReadWrite, Duration::from_secs(1))
                 .unwrap()

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "7062f87097e52a0743dcff526214ce4cfb7aa417",
+    "accepted_commit": "db66e137b49c0d3ffab59985dae381ae7d570da0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -45,6 +45,15 @@
       "claim:bounded-preflight-latency": {
         "falsifier": "A stale, missing, malformed, denied, cancelled, failed or mismatched input yields readiness; any applicable source obligation is dropped; bounded resource use is exceeded; or comparable measured collection has no material improvement.",
         "statement": "The collector removes repeated exact-request reads and overlaps bounded independent metadata retrieval, while preserving all exact-source and terminal custody checks; CI optimizations reduce measured critical-path overhead without skipping applicable execution.",
+        "status": "open"
+      },
+      "claim:broker-identity-reuse": {
+        "falsifier": "Any of eight callers receives or persists another caller identity, storage opens per caller, uncommitted data leaks across leases, or a worker survives parent loss",
+        "proof_refs": [
+          "src/decapod/core/storage_owner.rs",
+          "tests/group_broker.rs"
+        ],
+        "statement": "Opt-in supervised physical connection reuse preserves each queued callers returned and persisted task identity",
         "status": "open"
       },
       "claim:build-layout-compatibility:question:bazel-root-marker-policy": {
@@ -446,6 +455,7 @@
       "trajectory:672a93d99366b57c": "Metadata-onlycommandcompletedexit0; identicaldependencygraph andlocksize, one generatedinputhash repaired. Currentlibrary/native scientifictests mustexecute through freshdecapodvalidate, previous30015measurements remain scoped. PublicGithubreader403reset22:46:31UTCmustbehonored without automaticauthswitch/artifactimport. Pushcorrectedsamebranch so realCI canexecute; rerunnormalvalidateafterreset. Frozenv2calibrationfailure remains mandatoryunresolvedacceptance, no PRuntilgenuinelygreen.",
       "trajectory:67bb86b5fbf52859": "24c706f5 executed1445 library tests with0 failures and3 ignored; CLI enforcement160.3s/contracts107.1s/entrypoints111.8s passed, including init refresh and portable parent retry policy. All CI jobs except dependency lint passed. Scope parking_lot to GPU targets/features, no lint waiver. Reviewed inventory d39eff26f37bdb8e49140867f78e116c4a9b93698ba5e20da8a486c2cca65f78. Native worker still uncompiled/unexecuted.",
       "trajectory:6ae1a28b7236a4ce": "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain.",
+      "trajectory:70205730dee26930": "Official validation source upload cannot authenticate GitTransport; gh auth status reports no logged-in hosts and supported environment catalog is empty.",
       "trajectory:754f2eaee0aa202d": "Successful clean-run ignored outputs and extra refs/stashes remain outside worktree preservation scope",
       "trajectory:760c8a45e61249ac": "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority.",
       "trajectory:77ee70aff183fb2e": "ConcretefixtureIncompletePlan failurepreserved. Sourceandcandidate-build requiredkinds unchanged; actualnativeexecutable suppliesbuildartifact hash, notafakeartifact orverifierwaiver. Newregressionmustreject removal. Functionalcasebytes/labels frozenbeforefirstinference unchanged; nofit/tuning ormodel/calibration/tolerance change. Newtestsauthorednotpassed; normalvalidateownsallverification. Originaltask/branch/custody unchanged.",
@@ -491,64 +501,115 @@
     }
   },
   "change": {
-    "id": "change_01M6J380QW7TMH9D8GMXTBG62J",
-    "base_commit": "7062f87097e52a0743dcff526214ce4cfb7aa417",
+    "id": "change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
+    "base_commit": "db66e137b49c0d3ffab59985dae381ae7d570da0",
     "target_base": "origin/master"
   },
   "claims": {
-    "broker-identity-reuse": {
-      "statement": "Opt-in supervised physical connection reuse preserves each queued callers returned and persisted task identity",
-      "falsifier": "Any of eight callers receives or persists another caller identity, storage opens per caller, uncommitted data leaks across leases, or a worker survives parent loss",
+    "broker-caller-custody": {
+      "statement": "Concurrent broker requests retain originating caller context and make bounded progress through a foreground reusable connection.",
+      "falsifier": "Required two/eight caller returned, persisted or audit identities differ; twenty concurrent mutators fail progress; physical opens recur per request.",
+      "status": "open",
+      "proof_refs": [
+        "tests/group_broker.rs"
+      ]
+    },
+    "broker-uncertain-lifecycle": {
+      "statement": "Lost acknowledgements never authorize mutation replay; owner loss rolls back unfinished work and releases lifecycle resources.",
+      "falsifier": "A post-start same-ID retry executes again, a disconnected reply ends a leader with queued work, or later callers inherit transaction/configuration state.",
       "status": "open",
       "proof_refs": [
         "src/decapod/core/storage_owner.rs",
-        "tests/group_broker.rs"
+        "tests/unit/core/group_broker_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "broker-owner-current-base",
-      "summary": "Replay independently authored owner implementation and regressions from preserved 0738841e onto accepted 7062f870; retain current shared-claim behavior, no tests yet executed",
-      "input_digest": "sha256:eed5dd279b4fda1aa1e57946f916ea74a5b188ff9013db5af48c1a8a03024234"
+      "id": "broker-reuse-implementation",
+      "summary": "Bound foreground broker ownership, preserve caller custody, prevent uncertain replay, confine long Unix endpoints, and exercise reusable storage in CI",
+      "input_digest": "sha256:b88bc2dedaa31009ef124d429c3a224570f8280839b284794c63420c08ce0062",
+      "proof_refs": [
+        "src/decapod/core/storage_owner.rs",
+        "tests/group_broker.rs",
+        "tests/unit/core/group_broker_tests.rs",
+        "tests/validate_termination.rs"
+      ]
     },
     {
-      "id": "reconcile-owner-release-inventory",
-      "summary": "Reconcile only reviewed accepted package-version changes in Cargo manifests; preserve complete required graph and source adapter, tests still pending",
-      "input_digest": "sha256:7e0223134427063d337b3a72d2c5fd052476e1875aa8d4f888e606dd197d9e52"
+      "id": "broker-reuse-candidate",
+      "summary": "Broker and reusable storage implementation with regression evidence and final formatting",
+      "input_digest": "sha256:fae6826bb9c91b408b5ca44c5e708d075e9f39dc46c71e10d058d322c3af505d",
+      "proof_refs": [
+        "tests/group_broker.rs",
+        "tests/unit/core/group_broker_tests.rs",
+        "tests/validate_termination.rs"
+      ]
     },
     {
-      "id": "broker-graceful-drain",
-      "summary": "Preserve established storage lease during normal bounded foreground shutdown; record unavailable authenticated execution proof",
-      "input_digest": "sha256:5531e581aaf755a37187271198a40d233659bd53adcda6099d230359b31c607f"
+      "id": "broker-counter-isolation",
+      "summary": "Reject connection-local counters through write expressions and stored definitions as well as reads",
+      "input_digest": "sha256:5fb90cf58a3f9e6f133f338413eb359f7bd5404a0c45cb9c1a9e085a354f86e6",
+      "proof_refs": [
+        "src/decapod/core/storage_owner.rs"
+      ]
     },
     {
-      "id": "broker-clippy-result",
-      "summary": "Return schema inspection Result directly; fix exact-head Clippy without weakening checks",
-      "input_digest": "sha256:09808ff754c69ffe52212765f01dd8abfb7a548a2206a1e3cc4d2512320b7476"
+      "id": "broker-ci-lint",
+      "summary": "Correct CI test lints without changing regression assertions; record final local verification and latest-origin base",
+      "input_digest": "sha256:1ff8eac2768850ada702ce3b9dac5b41e6cf1bba4539941625898068880049c7",
+      "proof_refs": [
+        "tests/group_broker.rs"
+      ]
     },
     {
-      "id": "broker-first-open-parent",
-      "summary": "Preserve secure first-open creation before owner discovery with missing parent; add canonical and named database regression",
-      "input_digest": "sha256:0efdf7b32bc56ffd3406d112beb4f1927b22c749f95087155a514ed150ca7fe6"
+      "id": "broker-final-spec-review",
+      "summary": "Refresh projections and bind publication spec reviews to the final CI-linted source bytes",
+      "input_digest": "sha256:be914c5bd581006afa8709c0b370691a94c3bfb4aec6404c5347917812477e83",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "broker-review-serialized",
+      "summary": "Bind final reviewed material after completed trajectory writes",
+      "input_digest": "sha256:a1067100802ca939ea50e4b0c9ce1e8e0e041ab4d00e97d8cdb704924e21d137",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "broker-master-readme-merge",
+      "summary": "Merge accepted origin/master README update and refresh exact-content publication reviews",
+      "input_digest": "sha256:4a42c157ed2d2e7bb823e70c01fc0a73fda48633be4fb551b7a2e4ac4dd1098d",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        "README.md"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M6J380QW7TMH9D8GMXTBG62J": {
+    "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "src/decapod/core",
+        "tests",
+        "assets/tools/source_ci",
+        ".github/workflows",
+        ".decapod/managed/specs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+      "id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Reuse broker-owned SQLite connection with caller context",
-      "refined_intent": "Reuse broker-owned SQLite connection with caller context",
+      "raw_intent": "Fix daemonless broker reusable connection lifecycle and concurrent callers\n\nInvestigate #1476 and #1515 CI; preserve caller isolation; fix bounded foreground storage reuse, locks, unknown writes, long socket paths; add required regressions and draft PR to master with exact-head PR CI evidence. User directs PR CI to run configured validation.",
+      "refined_intent": "Fix daemonless broker reusable connection lifecycle and concurrent callers\n\nInvestigate #1476 and #1515 CI; preserve caller isolation; fix bounded foreground storage reuse, locks, unknown writes, long socket paths; add required regressions and draft PR to master with exact-head PR CI evidence. User directs PR CI to run configured validation.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -561,243 +622,375 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Preserve issue 1476 caller identity through queued writes while reusing one supervised foreground SQLite owner across simultaneous calls. Keep legacy default until owner-path identity, lifecycle, maintenance and contention proof passes.",
+      "intent": "Fix daemonless broker reusable connection lifecycle and concurrent callers\n\nInvestigate #1476 and #1515 CI; preserve caller isolation; fix bounded foreground storage reuse, locks, unknown writes, long socket paths; add required regressions and draft PR to master with exact-head PR CI evidence. User directs PR CI to run configured validation.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Required unfiltered core group_broker and validate_termination CI, owner and broker unit tests, formatting and exact published head evidence"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review first-open owner discovery boundary: absent parent goes to ordinary secure factory; existing storage permission checks and identity isolation unchanged.",
-          "reviewed_code_fingerprint": "caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b",
-          "spec_material_hash": "dce10938c2facacb7aa15426365dd6e6c6ae5209b5af80c5d4f4940382d0cdf1"
+          "reason": "Re-reviewed after merging accepted GitHub master a8fe5380 README update. Product intent remains repo-native daemonless governance; broker ownership, caller and storage guarantees still match the implementation, and security boundaries are unchanged.",
+          "reviewed_code_fingerprint": "440495916b114cd2bf4ccb0143a0042462235388f271cf4d293ad4272d51c2d6",
+          "spec_material_hash": "47a6882fff7d07808780f43b452b3921124018274438d1e48f0f734e2df249cc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review first-open owner discovery boundary: absent parent goes to ordinary secure factory; existing storage permission checks and identity isolation unchanged.",
-          "reviewed_code_fingerprint": "caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b",
-          "spec_material_hash": "9ca5de6b2bb8c07a10acbddb873a75748c9684a5d9512f67bcf83abed3a75510"
+          "reason": "Re-reviewed after merging accepted GitHub master a8fe5380 README update. Product intent remains repo-native daemonless governance; broker ownership, caller and storage guarantees still match the implementation, and security boundaries are unchanged.",
+          "reviewed_code_fingerprint": "440495916b114cd2bf4ccb0143a0042462235388f271cf4d293ad4272d51c2d6",
+          "spec_material_hash": "96817f5f96e39a10ea664a15a65fdcff9f8630a57cf2d4db3a373674ec592754"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review first-open owner discovery boundary: absent parent goes to ordinary secure factory; existing storage permission checks and identity isolation unchanged.",
-          "reviewed_code_fingerprint": "caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b",
+          "reason": "Re-reviewed after merging accepted GitHub master a8fe5380 README update. Product intent remains repo-native daemonless governance; broker ownership, caller and storage guarantees still match the implementation, and security boundaries are unchanged.",
+          "reviewed_code_fingerprint": "440495916b114cd2bf4ccb0143a0042462235388f271cf4d293ad4272d51c2d6",
           "spec_material_hash": "fa32257ae4eac923396d32b59741b7f4890ecc4565f0a4db594f3dd064659f20"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
-        "No readiness claim or PR publication before required exact-candidate validation"
+        "Unresolved access denial or caller authority conflict"
       ],
-      "title": "Reuse broker-owned SQLite connection with caller context",
+      "title": "Fix daemonless broker reusable connection lifecycle and concurrent callers",
       "todo_ids": [
-        "data_01m6j1amqxqmffzn"
+        "bugs_01m6js6pqm12jsdx"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793758603Z"
+      "updated_at": "1793783980Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Draft PR publication with configured PR CI explicitly requested; no full prepublication readiness claim.",
+        "User explicitly directs draft publication and PR-CI validation; no merge, release or issue closure."
       ],
-      "artifact_hash": "sha256:9fc6724c1dd79e186b67a1b32e5f68e91814f05ecb4415db5174e4374b54b66b",
-      "blockers": [
-        "Official validation source upload cannot authenticate GitTransport; gh auth status reports no logged-in hosts and supported environment catalog is empty."
-      ],
+      "artifact_hash": "sha256:6a4d948056d522a3de3f7e3d0fc8a9c19444df995283fb68916607b82309476a",
       "checks": [
         {
-          "name": "graceful_drain_runtime",
-          "status": "unavailable"
-        },
-        {
-          "name": "graceful_drain_source_review",
-          "status": "passed"
-        },
-        {
-          "name": "local_format",
-          "status": "passed"
-        },
-        {
-          "name": "proof-inventory-review",
-          "status": "passed"
-        },
-        {
-          "name": "remote_clippy",
+          "name": "ci_spec_review",
           "status": "failed"
         },
         {
-          "name": "remote_library_tests",
+          "name": "initial_broker_suite",
           "status": "failed"
         },
         {
-          "name": "remote_shared_binary",
+          "name": "linux_clippy",
           "status": "passed"
         },
         {
-          "name": "required-validation",
-          "status": "unavailable"
-        },
-        {
-          "name": "rustfmt",
+          "name": "macos_broker_integration",
           "status": "passed"
         },
         {
-          "name": "source-replay",
+          "name": "macos_clippy_broker_test",
           "status": "passed"
+        },
+        {
+          "name": "macos_clippy_lib",
+          "status": "passed"
+        },
+        {
+          "name": "macos_final_broker_units",
+          "status": "passed"
+        },
+        {
+          "name": "macos_final_storage_units",
+          "status": "passed"
+        },
+        {
+          "name": "macos_group_broker_units",
+          "status": "passed"
+        },
+        {
+          "name": "macos_migration_units",
+          "status": "passed"
+        },
+        {
+          "name": "macos_socket_lifecycle",
+          "status": "passed"
+        },
+        {
+          "name": "macos_source_ci_policy",
+          "status": "partial"
+        },
+        {
+          "name": "macos_storage_unit_tests",
+          "status": "passed"
+        },
+        {
+          "name": "macos_storage_units",
+          "status": "passed"
+        },
+        {
+          "name": "macos_validation_smoke_retry",
+          "status": "passed"
+        },
+        {
+          "name": "macos_validation_termination",
+          "status": "partial"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6J380RNBY4BZDQX2KT7240J": {
+          "branch_01M6JSA5F8WXYK8YY19XAXMWTM": {
             "evidence_only": true,
-            "id": "branch_01M6J380RNBY4BZDQX2KT7240J",
-            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "id": "branch_01M6JSA5F8WXYK8YY19XAXMWTM",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "investigation",
                 "custody_event_id": "event:4",
                 "observations": [
+                  "src/decapod/core/group_broker.rs",
                   "src/decapod/core/storage_owner.rs",
+                  "src/decapod/core/db.rs",
+                  "src/decapod/core/storage_lock.rs",
                   "tests/group_broker.rs",
-                  "tests/unit/core/migration_tests.rs",
-                  "Authored source replayed cleanly from preserved checkpoint 0738841e onto accepted base 7062f870; prior governance history preserved on original branch; runtime tests not yet executed"
+                  "Base db66e137; CI 41759874771 core logs show serialized completions before 120s timeouts, not total deadlock; 15s transport retries and failed-delivery idle accounting confirmed in source. Long socket discovery errors reproduced by existing validate_termination CI."
                 ],
-                "proof_refs": [
-                  "source-replay",
-                  "rustfmt",
-                  "required-validation"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod/core",
+                  "tests"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "Compared every discovered source hash to reviewed-config commit 33be9736: only Cargo.toml and Cargo.lock differ, solely decapod package version 0.123.7 to accepted 0.124.3; adapters, workflows, recipes, graph and dependency edges unchanged"
+                  "src/decapod/core/group_broker.rs",
+                  "src/decapod/core/storage_owner.rs",
+                  "src/decapod/core/local_socket.rs",
+                  "src/decapod/core/storage_lock.rs",
+                  "src/decapod/core/broker.rs",
+                  "tests/group_broker.rs",
+                  "macOS storage owner/lifecycle unit tests: 15 passed, zero ignored. Initial full broker suite: 11 passed, 4 failed; all queued owner claims finished in 5.1s. Three new audit assertions used a binary without caller_agent_id; current rebuild pending. Shared test assumed adjacent runtime directory and was corrected to inspect actual hashed GID path. Twenty-mutator, long-path, post-commit-disconnect, uncertain-crash and preparation scenarios passed."
                 ],
                 "proof_refs": [
-                  "proof-inventory-review"
+                  "macos_storage_unit_tests",
+                  "initial_broker_suite"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod/core",
+                  "tests"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "verification",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "src/decapod/core/storage_owner.rs",
-                  "Source review plus rustfmt and git diff --check passed. Added active transaction drain regression; no compilation or runtime tests executed. Normal drop drains up to five seconds; parent EOF still terminates immediately."
+                  "Full macOS broker integration: 15 passed, 0 ignored (448.62s); storage owner/lock units: 15 passed; group broker units: 13 passed. Validation termination: 11 passed including long-path artifact cleanup, 1 timeout in existing 10s smoke while compiling, isolated rerun pending. Source-CI policy: 50 passed including new unfiltered selection, 4 failed platform fixtures (three require linux-x86_64; one canonical /var alias assertion). Added absolute per-read reply deadline after these runs; final unit/CI evidence pending."
                 ],
                 "proof_refs": [
-                  "graceful_drain_source_review",
-                  "graceful_drain_runtime"
+                  "macos_broker_integration",
+                  "macos_storage_units",
+                  "macos_group_broker_units",
+                  "macos_validation_termination",
+                  "macos_source_ci_policy"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod,tests,assets/tools,managed specs and release projections",
+                  "src/decapod/core",
+                  "tests"
                 ],
                 "sequence": 6,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "verification",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "src/decapod/core/dactyl_db.rs",
-                  "PR1515 head f6f3e5de CI job126339253271 rejects needless_question_mark at dactyl_db.rs544; directly return driver Result without lint waiver. Shared binary job126339253295 and native musl build126339253139 passed. User requests fix and push, PR CI supplies validation."
+                  "src/decapod/core/storage_owner.rs",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "Draft PR 1517 published at 3a2f2778; exact-head PR CI 41802813138 started. Review extended connection-local counter rejection to write expressions and persisted view definitions; added regression assertions, local compilation pending. No readiness verdict asserted."
                 ],
-                "proof_refs": [
-                  "remote_clippy",
-                  "remote_shared_binary",
-                  "local_format"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod,tests,assets/tools,managed specs and release projections",
+                  "src/decapod/core",
+                  "tests"
                 ],
                 "sequence": 7,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "verification",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "src/decapod/core/db.rs",
-                  "PR1515 original head f6f3e5de job126339253257:1510 library tests passed,3 failed,4 ignored. All three failures are NotFound from first database open with missing parent. Owner discovery checked storage before normal secure parent creation. Return no-owner only for missing parent; preserve all other errors and permissions. Added canonical and named database first-open regression."
+                  "Latest official Decapod 0.125.0 installed and binary matched release archive. GitHub origin/master refreshed: db66e137 remains branch ancestor. Final local broker units 14 passed; storage/lock units 15 passed including counter writes; socket unit 1 passed; migration units 5 passed. Isolated unchanged validation smoke passed 3 runs at 4641/4549/4722ms. Library and group_broker Clippy passed. Linux CI found two test-only Clippy style issues; corrected without altering assertions. Exact-head CI remains pending."
                 ],
                 "proof_refs": [
-                  "remote_library_tests"
+                  "macos_final_broker_units",
+                  "macos_final_storage_units",
+                  "macos_socket_lifecycle",
+                  "macos_migration_units",
+                  "macos_validation_smoke_retry",
+                  "macos_clippy_lib",
+                  "macos_clippy_broker_test"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod,tests,assets/tools,managed specs and release projections",
+                  "src/decapod/core",
+                  "tests"
                 ],
                 "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Exact-head 93da0ef6 CI passed Clippy and standalone validation. Governance publication material correctly rejected STALE_SPEC_REVIEW after test lint edits. Refreshed supported projections and re-reviewed all publication specs against final implementation; checkpoint/publication-material verification follows. No gate or assertion weakened."
+                ],
+                "proof_refs": [
+                  "linux_clippy",
+                  "ci_spec_review"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod,tests,assets/tools,managed specs and release projections",
+                  "src/decapod/core",
+                  "tests"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Local exact-commit publication-material verification caught an unpushed checkpoint binding mismatch after overlapping trajectory and checkpoint invocations. Regenerating the checkpoint sequentially after all governance writes and amending only the unpushed repair commit; prior published checkpoints remain intact."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod,tests,assets/tools,managed specs and release projections",
+                  "src/decapod/core",
+                  "tests"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "README.md",
+                  "User reported README update on master. Fetched GitHub origin/master a8fe53803b30774ec8b0fb2a88078a5ff50800eb; merged without conflicts, README matches origin/master exactly. Prior local repair 4087a03e passed exact-commit publication-material verification after granting Git temporary-object access. Refreshed projections and reviews for new accepted target; no published history rewritten."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod,tests,assets/tools,managed specs and release projections",
+                  "src/decapod/core",
+                  "tests"
+                ],
+                "sequence": 11,
                 "validation_findings": []
               }
             ]
@@ -807,35 +1000,48 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Authored source replayed cleanly from preserved checkpoint 0738841e onto accepted base 7062f870; prior governance history preserved on original branch; runtime tests not yet executed",
-        "Compared every discovered source hash to reviewed-config commit 33be9736: only Cargo.toml and Cargo.lock differ, solely decapod package version 0.123.7 to accepted 0.124.3; adapters, workflows, recipes, graph and dependency edges unchanged",
-        "PR1515 head f6f3e5de CI job126339253271 rejects needless_question_mark at dactyl_db.rs544; directly return driver Result without lint waiver. Shared binary job126339253295 and native musl build126339253139 passed. User requests fix and push, PR CI supplies validation.",
-        "PR1515 original head f6f3e5de job126339253257:1510 library tests passed,3 failed,4 ignored. All three failures are NotFound from first database open with missing parent. Owner discovery checked storage before normal secure parent creation. Return no-owner only for missing parent; preserve all other errors and permissions. Added canonical and named database first-open regression.",
-        "Source review plus rustfmt and git diff --check passed. Added active transaction drain regression; no compilation or runtime tests executed. Normal drop drains up to five seconds; parent EOF still terminates immediately."
+        "Base db66e137; CI 41759874771 core logs show serialized completions before 120s timeouts, not total deadlock; 15s transport retries and failed-delivery idle accounting confirmed in source. Long socket discovery errors reproduced by existing validate_termination CI.",
+        "Draft PR 1517 published at 3a2f2778; exact-head PR CI 41802813138 started. Review extended connection-local counter rejection to write expressions and persisted view definitions; added regression assertions, local compilation pending. No readiness verdict asserted.",
+        "Exact-head 93da0ef6 CI passed Clippy and standalone validation. Governance publication material correctly rejected STALE_SPEC_REVIEW after test lint edits. Refreshed supported projections and re-reviewed all publication specs against final implementation; checkpoint/publication-material verification follows. No gate or assertion weakened.",
+        "Full macOS broker integration: 15 passed, 0 ignored (448.62s); storage owner/lock units: 15 passed; group broker units: 13 passed. Validation termination: 11 passed including long-path artifact cleanup, 1 timeout in existing 10s smoke while compiling, isolated rerun pending. Source-CI policy: 50 passed including new unfiltered selection, 4 failed platform fixtures (three require linux-x86_64; one canonical /var alias assertion). Added absolute per-read reply deadline after these runs; final unit/CI evidence pending.",
+        "Latest official Decapod 0.125.0 installed and binary matched release archive. GitHub origin/master refreshed: db66e137 remains branch ancestor. Final local broker units 14 passed; storage/lock units 15 passed including counter writes; socket unit 1 passed; migration units 5 passed. Isolated unchanged validation smoke passed 3 runs at 4641/4549/4722ms. Library and group_broker Clippy passed. Linux CI found two test-only Clippy style issues; corrected without altering assertions. Exact-head CI remains pending.",
+        "Local exact-commit publication-material verification caught an unpushed checkpoint binding mismatch after overlapping trajectory and checkpoint invocations. Regenerating the checkpoint sequentially after all governance writes and amending only the unpushed repair commit; prior published checkpoints remain intact.",
+        "User reported README update on master. Fetched GitHub origin/master a8fe53803b30774ec8b0fb2a88078a5ff50800eb; merged without conflicts, README matches origin/master exactly. Prior local repair 4087a03e passed exact-commit publication-material verification after granting Git temporary-object access. Refreshed projections and reviews for new accepted target; no published history rewritten.",
+        "macOS storage owner/lifecycle unit tests: 15 passed, zero ignored. Initial full broker suite: 11 passed, 4 failed; all queued owner claims finished in 5.1s. Three new audit assertions used a binary without caller_agent_id; current rebuild pending. Shared test assumed adjacent runtime directory and was corrected to inspect actual hashed GID path. Twenty-mutator, long-path, post-commit-disconnect, uncertain-crash and preparation scenarios passed."
       ],
       "inspected_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "src/decapod/core/storage_owner.rs",
-        "tests/group_broker.rs",
-        "tests/unit/core/migration_tests.rs"
-      ],
-      "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
-      "modified_files": [
-        "src/decapod/core/dactyl_db.rs",
+        "README.md",
         "src/decapod/core/db.rs",
-        "src/decapod/core/storage_owner.rs"
+        "src/decapod/core/group_broker.rs",
+        "src/decapod/core/storage_lock.rs",
+        "src/decapod/core/storage_owner.rs",
+        "tests/group_broker.rs"
+      ],
+      "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
+      "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        "src/decapod/core/broker.rs",
+        "src/decapod/core/group_broker.rs",
+        "src/decapod/core/local_socket.rs",
+        "src/decapod/core/storage_lock.rs",
+        "src/decapod/core/storage_owner.rs",
+        "tests/group_broker.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        ".decapod/managed/specs",
+        ".github/workflows",
+        "assets/tools/source_ci",
+        "src/decapod,tests,assets/tools,managed specs and release projections",
+        "src/decapod/core",
+        "tests"
       ],
-      "run_id": "branch_01M6J380RNBY4BZDQX2KT7240J",
+      "run_id": "branch_01M6JSA5F8WXYK8YY19XAXMWTM",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "data_01m6j1amqxqmffzn",
+      "task_id": "bugs_01m6js6pqm12jsdx",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
