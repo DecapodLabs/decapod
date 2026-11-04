@@ -1,0 +1,2 @@
+check:
+    cargo test --locked

@@ -1,5 +1,16 @@
 # Architecture
 
+## Consumer inventory test boundary
+
+`tests/support/justfile_inventory.rs` copies the Rust fixture under
+`tests/fixtures/justfile_consumer/` into an isolated Git repository and runs the
+actual initialization CLI. It compares the inventory's `Justfile` digest with
+exact index bytes. The macOS test checks APFS and inode aliasing before exercising
+the same path, failing instead of skipping incompatible filesystems. Fixture
+module tests are compiled into `cli_contracts`, avoiding nested builds.
+`source_ci_profile::commands` runs that module in the existing required macOS
+job as well as the Linux CLI target; normal custody and candidate binding apply.
+
 ## Broker caller custody
 
 The finite group broker in `src/decapod/core/group_broker.rs` serializes local
@@ -706,8 +717,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `440495916b114cd2bf4ccb0143a0042462235388f271cf4d293ad4272d51c2d6`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (196 files)
+- Repository signal fingerprint: `dc4de50fd0aed2662d884f233f706d3fa5f460748f78adf3f59c91800ddd530f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
