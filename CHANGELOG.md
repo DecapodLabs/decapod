@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.126.1](https://github.com/DecapodLabs/decapod/compare/v0.126.0...v0.126.1) - 2026-11-04
+
+### Other
+
+- cover Justfile inventory on APFS with Rust fixture
+
 ## [0.126.0](https://github.com/DecapodLabs/decapod/compare/v0.125.0...v0.126.0) - 2026-11-04
 
 ### Fixed
