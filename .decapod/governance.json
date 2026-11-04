@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "b4e62216a7f5d7031ce116d2a289f98b6c31a44b",
+    "accepted_commit": "7062f87097e52a0743dcff526214ce4cfb7aa417",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -25,6 +25,11 @@
       "claim:atomic-completion": {
         "falsifier": "An unresolved dependency or unproven exclusive task can commit done through a direct mutation",
         "statement": "Every task done mutation enforces dependency and lease proof within its transaction",
+        "status": "open"
+      },
+      "claim:basic-shared-optin": {
+        "falsifier": "The default permits such claims, the switch permits an untrusted or primary claim, stronger trust or approvals are bypassed, or success lacks a transactional use record.",
+        "statement": "The default-off main-config switch allows basic agents only as secondary owners of a task with an existing different primary owner, records a policy-use event atomically, and leaves stored trust and independent policy gates unchanged.",
         "status": "open"
       },
       "claim:bootstrap-order": {
@@ -436,6 +441,7 @@
       "trajectory:5fe8315a1e8b30f0": "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
       "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
       "trajectory:6279504af9ea3fac": "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
+      "trajectory:629235671bebf582": "The explicit opt-in operates under a cooperative local filesystem boundary; same-user edits and caller labels are not authenticated.",
       "trajectory:63e29ae0c70a9499": "All failure history and scientific criteria remain. New4.5MiBpublic fixture initiallyplaced underexecutable-discoveryroot triggeredDISCOVERY_BLOCKED; movedunchanged into existingtests/fixtures data boundary, hash50ce9421unchanged; executableauditor remains discovered. Reviewed allchanged authored sources/coverage and explicit user-configbf95 pin withoutchanging workflow/executor/requiredness/recipe/model/calibration. No newprerequisite/manualtest or candidatecontrollerauthority. Newcorpus sourceaudit is provisional, not independentlyadjudicated labels or risk proof; no newinference/fitting/holdoutselection basedon model results.",
       "trajectory:672a93d99366b57c": "Metadata-onlycommandcompletedexit0; identicaldependencygraph andlocksize, one generatedinputhash repaired. Currentlibrary/native scientifictests mustexecute through freshdecapodvalidate, previous30015measurements remain scoped. PublicGithubreader403reset22:46:31UTCmustbehonored without automaticauthswitch/artifactimport. Pushcorrectedsamebranch so realCI canexecute; rerunnormalvalidateafterreset. Frozenv2calibrationfailure remains mandatoryunresolvedacceptance, no PRuntilgenuinelygreen.",
       "trajectory:67bb86b5fbf52859": "24c706f5 executed1445 library tests with0 failures and3 ignored; CLI enforcement160.3s/contracts107.1s/entrypoints111.8s passed, including init refresh and portable parent retry policy. All CI jobs except dependency lint passed. Scope parking_lot to GPU targets/features, no lint waiver. Reviewed inventory d39eff26f37bdb8e49140867f78e116c4a9b93698ba5e20da8a486c2cca65f78. Native worker still uncompiled/unexecuted.",
@@ -478,48 +484,57 @@
       "trajectory:e6b0bb96ddfbd405": "Preserve040d sourceCI lock failure and separate officialvalidator publicGithubCommitChecks403/reset1792449991. Actual anonymous publicBuildkite setup log confirms MODULE.bazel.lock stale because Cargo.toml packagingexclusion changed; prescribed repair is bazel mod deps --lockfile_mode=update. Installed officialHomebrewBazelisk1.29 afterreading officialformula/installerdocs, restored Homebrew developer modeoff. Run batch metadata regeneration only underrepositorypinnedBazel9.3, notmanualbuild/test orshadowpreflight; preserve dependencies, scientificgates and failedholdout. No native execution on040d is claimed. Newfullvalidation mustwaitreportedpublicAPIreset and bindcorrectedexactcandidate.",
       "trajectory:e765d893d1533fc1": "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
       "trajectory:e99e15278c8de6ad": "User explicitly authorizes functional acceptance replacingresearchqualification, not fabricatedsuccess/accuracy. Fixedcasebytes97b4667e frozen before firstmodelrun, nofitting/threshold/model/calibration/tolerancechange. Actualcontractchecksrun beforeobservationconstruction; three meaningful positives, negative/uncertain/manipulated/declared-proof and failed/stale controls. Sharedproduction code andstrictfinalreducer rederiveoutcomes; oldstudiesfailures preserved. Issue1445andbroader1052/1069/1070/1398/1024updated; closeonlyfullyresolved1445. Sourceconfigreview0e9afdd8 unchanged8runargs; no newprereq/task/branch. Preserve originaltask/branch andfullfinalvalidationgates.",
+      "trajectory:ec49216a39e5bf93": "The config decision is cooperative; its author and agent labels are not authenticated.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
   },
   "change": {
-    "id": "change_01M6HXDDZJJH33CSZXABT0TFAF",
-    "base_commit": "b4e62216a7f5d7031ce116d2a289f98b6c31a44b",
+    "id": "change_01M6J380QW7TMH9D8GMXTBG62J",
+    "base_commit": "7062f87097e52a0743dcff526214ce4cfb7aa417",
     "target_base": "origin/master"
   },
   "claims": {
-    "basic-shared-optin": {
-      "statement": "The default-off main-config switch allows basic agents only as secondary owners of a task with an existing different primary owner, records a policy-use event atomically, and leaves stored trust and independent policy gates unchanged.",
-      "falsifier": "The default permits such claims, the switch permits an untrusted or primary claim, stronger trust or approvals are bypassed, or success lacks a transactional use record.",
-      "status": "open"
+    "broker-identity-reuse": {
+      "statement": "Opt-in supervised physical connection reuse preserves each queued callers returned and persisted task identity",
+      "falsifier": "Any of eight callers receives or persists another caller identity, storage opens per caller, uncommitted data leaks across leases, or a worker survives parent loss",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/storage_owner.rs",
+        "tests/group_broker.rs"
+      ]
     }
   },
   "checkpoints": [
     {
-      "id": "optional-basic-shared-claims",
-      "summary": "Add a default-off cooperative config option for basic-trust secondary claims, with atomic use auditing and explicit identity limitations.",
-      "input_digest": "sha256:3c1f2ceaf4a2eb26a00cff1e6b4dfcfdf37f46ee204d3637647a3ffaed7228d4"
+      "id": "broker-owner-current-base",
+      "summary": "Replay independently authored owner implementation and regressions from preserved 0738841e onto accepted 7062f870; retain current shared-claim behavior, no tests yet executed",
+      "input_digest": "sha256:eed5dd279b4fda1aa1e57946f916ea74a5b188ff9013db5af48c1a8a03024234"
     },
     {
-      "id": "shared-claims-ci-repair",
-      "summary": "Fix Clippy return style and exact generated configuration documentation spacing; preserve pending shared-claim policy decision.",
-      "input_digest": "sha256:fae05902e52d461024354c718eb65a3cac9ce872ebc3a9572827f1565f29da1e",
-      "proof_refs": [
-        "CI jobs 126301126741 and 126300920130; static generator output comparison and git diff --check; runtime rerun pending"
-      ]
+      "id": "reconcile-owner-release-inventory",
+      "summary": "Reconcile only reviewed accepted package-version changes in Cargo manifests; preserve complete required graph and source adapter, tests still pending",
+      "input_digest": "sha256:7e0223134427063d337b3a72d2c5fd052476e1875aa8d4f888e606dd197d9e52"
     },
     {
-      "id": "shared-claim-fixture-repair",
-      "summary": "Make plugin fixtures independent of active-task dedup and preserve the single-statement audit rejection trigger.",
-      "input_digest": "sha256:08f2fab18126ba5b48b255626682bcf97ed0ab01c530438368e6b422e5340f76",
-      "proof_refs": [
-        "Exact-head job 126306715943; source-grounded fixture review, rustfmt and diff check; remote runtime pending"
-      ]
+      "id": "broker-graceful-drain",
+      "summary": "Preserve established storage lease during normal bounded foreground shutdown; record unavailable authenticated execution proof",
+      "input_digest": "sha256:5531e581aaf755a37187271198a40d233659bd53adcda6099d230359b31c607f"
+    },
+    {
+      "id": "broker-clippy-result",
+      "summary": "Return schema inspection Result directly; fix exact-head Clippy without weakening checks",
+      "input_digest": "sha256:09808ff754c69ffe52212765f01dd8abfb7a548a2206a1e3cc4d2512320b7476"
+    },
+    {
+      "id": "broker-first-open-parent",
+      "summary": "Preserve secure first-open creation before owner discovery with missing parent; add canonical and named database regression",
+      "input_digest": "sha256:0efdf7b32bc56ffd3406d112beb4f1927b22c749f95087155a514ed150ca7fe6"
     }
   ],
   "intents": {
-    "intent:change_01M6HXDDZJJH33CSZXABT0TFAF": {
+    "intent:change_01M6J380QW7TMH9D8GMXTBG62J": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -529,11 +544,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+      "id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Add optional shared claim policy\n\nAdd a default-off cooperative config policy permitting basic agents to join existing tasks as secondary owners, with audited use and explicit identity limits.",
-      "refined_intent": "Add optional shared claim policy\n\nAdd a default-off cooperative config policy permitting basic agents to join existing tasks as secondary owners, with audited use and explicit identity limits.",
+      "raw_intent": "Reuse broker-owned SQLite connection with caller context",
+      "refined_intent": "Reuse broker-owned SQLite connection with caller context",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -546,7 +561,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement a false-by-default config switch for cooperative basic-trust secondary shared claims on the local backend. Preserve unrelated trust and approval gates, record an atomic use event and explicitly document that same-user config and caller labels are not authenticated.",
+      "intent": "Preserve issue 1476 caller identity through queued writes while reusing one supervised foreground SQLite owner across simultaneous calls. Keep legacy default until owner-path identity, lifecycle, maintenance and contention proof passes.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -554,57 +569,78 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed fixture-only repair for task dedup and Dactyl trigger construction; production claim policy and broker semantics unchanged.",
-          "reviewed_code_fingerprint": "aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd",
-          "spec_material_hash": "98a2637b868afbe10ae3540caf6eb64900616211fe9da6db499fe3bb157c8711"
+          "reason": "Review first-open owner discovery boundary: absent parent goes to ordinary secure factory; existing storage permission checks and identity isolation unchanged.",
+          "reviewed_code_fingerprint": "caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b",
+          "spec_material_hash": "dce10938c2facacb7aa15426365dd6e6c6ae5209b5af80c5d4f4940382d0cdf1"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed fixture-only repair for task dedup and Dactyl trigger construction; production claim policy and broker semantics unchanged.",
-          "reviewed_code_fingerprint": "aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd",
-          "spec_material_hash": "4959ed92de7fe5c9c5e81d6d9369cd060de4f084d4b87735d978c2cd44f69c5f"
+          "reason": "Review first-open owner discovery boundary: absent parent goes to ordinary secure factory; existing storage permission checks and identity isolation unchanged.",
+          "reviewed_code_fingerprint": "caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b",
+          "spec_material_hash": "9ca5de6b2bb8c07a10acbddb873a75748c9684a5d9512f67bcf83abed3a75510"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed fixture-only repair for task dedup and Dactyl trigger construction; production claim policy and broker semantics unchanged.",
-          "reviewed_code_fingerprint": "aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd",
-          "spec_material_hash": "a811e042ee4b3061bfb57f0f921a774fb87ced4546104ff893688626b6e0e9b6"
+          "reason": "Review first-open owner discovery boundary: absent parent goes to ordinary secure factory; existing storage permission checks and identity isolation unchanged.",
+          "reviewed_code_fingerprint": "caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b",
+          "spec_material_hash": "fa32257ae4eac923396d32b59741b7f4890ecc4565f0a4db594f3dd064659f20"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Optional basic shared claims",
+      "stop_conditions": [
+        "No readiness claim or PR publication before required exact-candidate validation"
+      ],
+      "title": "Reuse broker-owned SQLite connection with caller context",
       "todo_ids": [
-        "feat_01m6hxcrm976b6w1"
+        "data_01m6j1amqxqmffzn"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793753532Z"
+      "updated_at": "1793758603Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:db1c0c70d2ec55fda6df25be2003d90c4345c7ab81d46646c4ed02ac9b0e39b9",
+      "artifact_hash": "sha256:9fc6724c1dd79e186b67a1b32e5f68e91814f05ecb4415db5174e4374b54b66b",
+      "blockers": [
+        "Official validation source upload cannot authenticate GitTransport; gh auth status reports no logged-in hosts and supported environment catalog is empty."
+      ],
       "checks": [
         {
-          "name": "embedded_docs_parity",
-          "status": "passed"
-        },
-        {
-          "name": "generator_text_comparison",
-          "status": "passed"
-        },
-        {
-          "name": "local_runtime",
+          "name": "graceful_drain_runtime",
           "status": "unavailable"
         },
         {
-          "name": "local_tests",
+          "name": "graceful_drain_source_review",
+          "status": "passed"
+        },
+        {
+          "name": "local_format",
+          "status": "passed"
+        },
+        {
+          "name": "proof-inventory-review",
+          "status": "passed"
+        },
+        {
+          "name": "remote_clippy",
+          "status": "failed"
+        },
+        {
+          "name": "remote_library_tests",
+          "status": "failed"
+        },
+        {
+          "name": "remote_shared_binary",
+          "status": "passed"
+        },
+        {
+          "name": "required-validation",
           "status": "unavailable"
         },
         {
@@ -612,132 +648,117 @@
           "status": "passed"
         },
         {
-          "name": "static_diff",
+          "name": "source-replay",
           "status": "passed"
-        },
-        {
-          "name": "static_review",
-          "status": "partial"
         }
       ],
-      "current_phase": "ci-repair",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6HXDE1490SY92MEY7D9E493",
+            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6HXDE1490SY92MEY7D9E493",
+            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M6HXDE1490SY92MEY7D9E493",
+            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M6HXDE1490SY92MEY7D9E493",
+            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6HXDE1490SY92MEY7D9E493": {
+          "branch_01M6J380RNBY4BZDQX2KT7240J": {
             "evidence_only": true,
-            "id": "branch_01M6HXDE1490SY92MEY7D9E493",
-            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+            "id": "branch_01M6J380RNBY4BZDQX2KT7240J",
+            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/task_transfer.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "docs/agent/config-schema.md",
-                  "tests/plugins/todo.rs",
-                  "tests/todo_rebuild_compat.rs",
-                  "tests/unit/lib_init_prompt_tests.rs"
+                  "src/decapod/core/storage_owner.rs",
+                  "tests/group_broker.rs",
+                  "tests/unit/core/migration_tests.rs",
+                  "Authored source replayed cleanly from preserved checkpoint 0738841e onto accepted base 7062f870; prior governance history preserved on original branch; runtime tests not yet executed"
                 ],
                 "proof_refs": [
-                  "static_diff",
-                  "embedded_docs_parity",
-                  "local_tests"
+                  "source-replay",
+                  "rustfmt",
+                  "required-validation"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "The explicit opt-in operates under a cooperative local filesystem boundary; same-user edits and caller labels are not authenticated."
-                ]
+                "validation_findings": []
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/task_transfer.rs",
-                  "tests/todo_rebuild_compat.rs",
-                  ".decapod/managed/specs/SECURITY.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "Independent review found and prompted repair of transfer call sites, reducer handling, default serialization and config custody cases."
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "Compared every discovered source hash to reviewed-config commit 33be9736: only Cargo.toml and Cargo.lock differ, solely decapod package version 0.123.7 to accepted 0.124.3; adapters, workflows, recipes, graph and dependency edges unchanged"
                 ],
                 "proof_refs": [
-                  "static_review",
-                  "local_tests"
+                  "proof-inventory-review"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": [
-                  "The config decision is cooperative; its author and agent labels are not authenticated."
-                ]
+                "validation_findings": []
               },
               {
-                "action": "ci-repair",
+                "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "docs/agent/config-schema.md",
-                  "Exact public head 5797dda6 CI: Clippy let-and-return at policy.rs 655; Docs Sync config-schema drift. Removed redundant binding and matched literal generator newline output. No policy behavior changes or runtime test pass claimed."
+                  "src/decapod/core/storage_owner.rs",
+                  "Source review plus rustfmt and git diff --check passed. Added active transaction drain regression; no compilation or runtime tests executed. Normal drop drains up to five seconds; parent EOF still terminates immediately."
                 ],
                 "proof_refs": [
-                  "static_diff",
-                  "generator_text_comparison",
-                  "local_runtime"
+                  "graceful_drain_source_review",
+                  "graceful_drain_runtime"
                 ],
                 "scope": [
                   "root"
@@ -746,24 +767,37 @@
                 "validation_findings": []
               },
               {
-                "action": "ci-repair",
+                "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "tests/plugins/todo.rs",
-                  "src/decapod/core/todo.rs",
-                  "tests/unit/core/task_journal_tests.rs",
-                  "tests/plugins/todo.rs",
-                  "Exact-head push job 126306715943 failed two fixtures: active task dedup reused already-owned task, and execute_batch split trigger body. Prepare independent unowned fixture before claims, assert distinct identity and unowned state, execute trigger as one statement. Policy and broker unchanged; runtime rerun pending."
+                  "src/decapod/core/dactyl_db.rs",
+                  "PR1515 head f6f3e5de CI job126339253271 rejects needless_question_mark at dactyl_db.rs544; directly return driver Result without lint waiver. Shared binary job126339253295 and native musl build126339253139 passed. User requests fix and push, PR CI supplies validation."
                 ],
                 "proof_refs": [
-                  "rustfmt",
-                  "static_diff",
-                  "local_runtime"
+                  "remote_clippy",
+                  "remote_shared_binary",
+                  "local_format"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/db.rs",
+                  "PR1515 original head f6f3e5de job126339253257:1510 library tests passed,3 failed,4 ignored. All three failures are NotFound from first database open with missing parent. Owner discovery checked storage before normal secure parent creation. Return no-owner only for missing parent; preserve all other errors and permissions. Added canonical and named database first-open regression."
+                ],
+                "proof_refs": [
+                  "remote_library_tests"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -773,30 +807,24 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Exact public head 5797dda6 CI: Clippy let-and-return at policy.rs 655; Docs Sync config-schema drift. Removed redundant binding and matched literal generator newline output. No policy behavior changes or runtime test pass claimed.",
-        "Exact-head push job 126306715943 failed two fixtures: active task dedup reused already-owned task, and execute_batch split trigger body. Prepare independent unowned fixture before claims, assert distinct identity and unowned state, execute trigger as one statement. Policy and broker unchanged; runtime rerun pending.",
-        "Independent review found and prompted repair of transfer call sites, reducer handling, default serialization and config custody cases."
+        "Authored source replayed cleanly from preserved checkpoint 0738841e onto accepted base 7062f870; prior governance history preserved on original branch; runtime tests not yet executed",
+        "Compared every discovered source hash to reviewed-config commit 33be9736: only Cargo.toml and Cargo.lock differ, solely decapod package version 0.123.7 to accepted 0.124.3; adapters, workflows, recipes, graph and dependency edges unchanged",
+        "PR1515 head f6f3e5de CI job126339253271 rejects needless_question_mark at dactyl_db.rs544; directly return driver Result without lint waiver. Shared binary job126339253295 and native musl build126339253139 passed. User requests fix and push, PR CI supplies validation.",
+        "PR1515 original head f6f3e5de job126339253257:1510 library tests passed,3 failed,4 ignored. All three failures are NotFound from first database open with missing parent. Owner discovery checked storage before normal secure parent creation. Return no-owner only for missing parent; preserve all other errors and permissions. Added canonical and named database first-open regression.",
+        "Source review plus rustfmt and git diff --check passed. Added active transaction drain regression; no compilation or runtime tests executed. Normal drop drains up to five seconds; parent EOF still terminates immediately."
       ],
       "inspected_files": [
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/plugins/policy.rs",
-        "tests/plugins/todo.rs",
-        "tests/unit/core/task_journal_tests.rs"
+        "Cargo.lock",
+        "Cargo.toml",
+        "src/decapod/core/storage_owner.rs",
+        "tests/group_broker.rs",
+        "tests/unit/core/migration_tests.rs"
       ],
-      "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+      "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
       "modified_files": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "docs/agent/config-schema.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/task_transfer.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/policy.rs",
-        "tests/plugins/todo.rs",
-        "tests/todo_rebuild_compat.rs",
-        "tests/unit/lib_init_prompt_tests.rs"
+        "src/decapod/core/dactyl_db.rs",
+        "src/decapod/core/db.rs",
+        "src/decapod/core/storage_owner.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -804,15 +832,12 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M6HXDE1490SY92MEY7D9E493",
+      "run_id": "branch_01M6J380RNBY4BZDQX2KT7240J",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m6hxcrm976b6w1",
+      "task_id": "data_01m6j1amqxqmffzn",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "The config decision is cooperative; its author and agent labels are not authenticated.",
-        "The explicit opt-in operates under a cooperative local filesystem boundary; same-user edits and caller labels are not authenticated."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

@@ -2335,6 +2335,23 @@ fn run_init_apply(
 }
 
 pub fn run() -> Result<(), error::DecapodError> {
+    #[cfg(unix)]
+    {
+        // Internal supervised storage worker. It deliberately does not acquire
+        // an agent session or run migrations while holding the physical store.
+        let args: Vec<_> = std::env::args_os().collect();
+        if args
+            .get(1)
+            .is_some_and(|arg| arg == "__storage-owner-worker")
+        {
+            if args.len() != 3 {
+                return Err(error::DecapodError::ValidationError(
+                    "STORAGE_OWNER_WORKER_ARGUMENTS".into(),
+                ));
+            }
+            return core::storage_owner::run_worker(std::path::Path::new(&args[2]));
+        }
+    }
     let command_line = Cli::command().get_matches();
     let parsed_cli = Cli::from_arg_matches(&command_line).unwrap_or_else(|error| error.exit());
     let command = match parsed_cli.command {

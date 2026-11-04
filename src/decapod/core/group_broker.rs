@@ -263,6 +263,25 @@ fn run_as_leader(
         .set_nonblocking(true)
         .map_err(error::DecapodError::IoError)?;
 
+    // The owner thread serves storage while isolated command children run.
+    // Its RAII lifetime is the foreground election, never a detached daemon.
+    // Keep rollout explicit until migration/file-replacement and every nested
+    // connection lifetime have been covered by the owner protocol regressions.
+    let _storage_owner = if std::env::var("DECAPOD_STORAGE_OWNER").as_deref() == Ok("1") {
+        let decapod_root = broker_root.parent().ok_or_else(|| {
+            error::DecapodError::ValidationError("STORAGE_OWNER_ROOT_MISSING".into())
+        })?;
+        // Complete file-replacing migration recovery before retaining the file.
+        crate::core::migration::check_and_migrate_with_backup_report(
+            decapod_root,
+            crate::subsystems::initialize_all_dbs,
+        )?;
+        Some(crate::core::storage_owner::Owner::start(&dedupe_db_path(
+            broker_root,
+        ))?)
+    } else {
+        None
+    };
     emit_phase_hook("queued", &local_request.request_id);
     let local_response = execute_request(broker_root, &local_request)?;
     // A claim's client-side preparation must not wait for an idle period under

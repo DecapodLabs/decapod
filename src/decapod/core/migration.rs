@@ -304,8 +304,22 @@ where
     F: FnOnce(&Path) -> Result<(), error::DecapodError>,
 {
     let data_root = decapod_root.join("data");
+    let upgrade_pending = schema_upgrade_pending(&data_root)?;
+    // Hold the SAME physical-owner lock across the complete replacement scope,
+    // including rollback restore. A probe alone races owner startup. The owner
+    // runs in a separate supervised process, so the OS lock excludes it even
+    // though ordinary migration connections share this process's lock guard.
+    let _maintenance_lock = if upgrade_pending && data_root.exists() {
+        Some(crate::core::storage_lock::StorageLock::acquire(
+            &data_root.join(schemas::LOCAL_DB_NAME),
+            crate::core::storage_lock::StorageLockMode::Exclusive,
+            std::time::Duration::from_secs(5),
+        )?)
+    } else {
+        None
+    };
     reconcile_post_consolidation_artifacts(decapod_root)?;
-    if !schema_upgrade_pending(&data_root)? {
+    if !upgrade_pending {
         let report = run_migrations(decapod_root)?;
         verify(&data_root)?;
         return Ok(report);
@@ -440,7 +454,7 @@ fn create_data_backup(data_root: &Path) -> Result<Option<std::path::PathBuf>, er
         for entry in fs::read_dir(data_root).map_err(error::DecapodError::IoError)? {
             let entry = entry.map_err(error::DecapodError::IoError)?;
             let path = entry.path();
-            if path == backup_dir {
+            if path == backup_dir || is_runtime_coordination_entry(&path) {
                 continue;
             }
             let name = entry.file_name().to_string_lossy().to_string();
@@ -456,9 +470,10 @@ fn create_data_backup(data_root: &Path) -> Result<Option<std::path::PathBuf>, er
 }
 
 fn restore_data_backup(data_root: &Path, backup_dir: &Path) -> Result<(), error::DecapodError> {
+    // The caller retains _maintenance_lock until this restore completes.
     for entry in fs::read_dir(data_root).map_err(error::DecapodError::IoError)? {
         let entry = entry.map_err(error::DecapodError::IoError)?;
-        if entry.path() == backup_dir {
+        if entry.path() == backup_dir || is_runtime_coordination_entry(&entry.path()) {
             continue;
         }
         remove_data_entry(&entry.path())?;
@@ -466,9 +481,24 @@ fn restore_data_backup(data_root: &Path, backup_dir: &Path) -> Result<(), error:
     for entry in fs::read_dir(backup_dir).map_err(error::DecapodError::IoError)? {
         let entry = entry.map_err(error::DecapodError::IoError)?;
         let name = entry.file_name();
+        // Older backups may contain copied lock markers. Never replace the
+        // live exclusion inode with a historical copy.
+        if is_runtime_coordination_entry(&entry.path()) {
+            continue;
+        }
         copy_data_entry(&entry.path(), &data_root.join(name))?;
     }
     Ok(())
+}
+
+fn is_runtime_coordination_entry(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| {
+            name.ends_with(".lock")
+                || name.ends_with(".election")
+                || matches!(name, "broker-runtime" | "workspace-leases")
+        })
 }
 
 fn copy_data_entry(source: &Path, target: &Path) -> Result<(), error::DecapodError> {

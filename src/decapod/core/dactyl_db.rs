@@ -35,6 +35,8 @@ pub enum Error {
     InvalidColumnType(usize, String, Type),
     InvalidParameterName(String),
     InvalidQuery,
+    /// Owner transport failures are outcome-unknown and must not be replayed automatically.
+    StorageOwner(String),
     Io(std::io::Error),
 }
 
@@ -55,6 +57,7 @@ impl fmt::Display for Error {
             Self::InvalidParameterName(name) => write!(f, "invalid parameter name: {name}"),
             Self::Io(error) => write!(f, "{error}"),
             Self::InvalidQuery => f.write_str("invalid query"),
+            Self::StorageOwner(message) => f.write_str(message),
         }
     }
 }
@@ -343,8 +346,48 @@ impl std::ops::BitOr for OpenFlags {
     }
 }
 
+enum Driver {
+    Local(dactyl_db::Connection),
+    #[cfg(unix)]
+    Owner(crate::core::storage_owner::Proxy),
+}
+
+impl Driver {
+    fn access_mode(&self) -> AccessMode {
+        match self {
+            Self::Local(driver) => driver.access_mode(),
+            #[cfg(unix)]
+            Self::Owner(proxy) => proxy.access_mode(),
+        }
+    }
+
+    fn read(&self, sql: &str, params: &[Parameter]) -> Result<dactyl_db::Rows> {
+        match self {
+            Self::Local(driver) => Ok(driver.read(sql, params)?),
+            #[cfg(unix)]
+            Self::Owner(proxy) => proxy.read(sql, params),
+        }
+    }
+
+    fn write(&self, sql: &str, params: &[Parameter]) -> Result<u64> {
+        match self {
+            Self::Local(driver) => Ok(driver.write(sql, params)?),
+            #[cfg(unix)]
+            Self::Owner(proxy) => proxy.write(sql, params),
+        }
+    }
+
+    fn inspect_schema(&self) -> Result<dactyl_db::StoreSchema> {
+        match self {
+            Self::Local(driver) => Ok(driver.inspect_schema()?),
+            #[cfg(unix)]
+            Self::Owner(proxy) => proxy.inspect_schema(),
+        }
+    }
+}
+
 pub struct Connection {
-    driver: Rc<dactyl_db::Connection>,
+    driver: Rc<Driver>,
     transaction_state: Rc<Cell<bool>>,
     // The optional guard is supplied by canonical Decapod connection
     // factories. Raw facade opens remain available for compatibility tests
@@ -359,6 +402,32 @@ impl fmt::Debug for Connection {
 }
 
 impl Connection {
+    #[cfg(unix)]
+    pub(crate) fn from_owner(proxy: crate::core::storage_owner::Proxy) -> Self {
+        let transaction_state = proxy.transaction_state();
+        Self {
+            driver: Rc::new(Driver::Owner(proxy)),
+            transaction_state,
+            _storage_lock: None,
+        }
+    }
+
+    #[cfg(unix)]
+    pub(crate) fn owner_read(&self, sql: &str, params: &[Parameter]) -> Result<dactyl_db::Rows> {
+        self.driver.read(sql, params)
+    }
+
+    #[cfg(unix)]
+    pub(crate) fn owner_write(&self, sql: &str, params: &[Parameter]) -> Result<u64> {
+        let changed = self.driver.write(sql, params)?;
+        match first_keyword(sql).as_deref() {
+            Some("begin") => self.set_transaction_state(true),
+            Some("commit") | Some("rollback") | Some("end") => self.set_transaction_state(false),
+            _ => {}
+        }
+        Ok(changed)
+    }
+
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         Self::open_with_options(path, AccessMode::ReadWrite, Duration::from_secs(5))
     }
@@ -399,7 +468,7 @@ impl Connection {
             },
         )?;
         Ok(Self {
-            driver: Rc::new(driver),
+            driver: Rc::new(Driver::Local(driver)),
             transaction_state: Rc::new(Cell::new(false)),
             _storage_lock: storage_lock,
         })
@@ -472,7 +541,7 @@ impl Connection {
     }
 
     pub fn inspect_schema(&self) -> Result<dactyl_db::StoreSchema> {
-        Ok(self.driver.inspect_schema()?)
+        self.driver.inspect_schema()
     }
 
     pub fn has_table(&self, table: &str) -> Result<bool> {

@@ -437,12 +437,35 @@ relaxing source permissions. Reviewed build/test recipes must not execute arbitr
 imported YAML, inherit publication credentials or silently install missing tools.
 Release and deployment authority remains separate.
 
+## Reusable local connection custody
+
+The opt-in storage owner retains the existing cooperative private/shared-group
+socket boundary; caller metadata is attribution and is not an authenticated
+claim of OS isolation. The existing #1476/#1485 command-child context replacement
+continues to determine actor/session values used by policy and task writes.
+The physical worker receives no session password or inherited actor identity.
+Its protocol accepts only the canonical datastore path and bounded frames.
+Read-only leases are enforced on the server, unsupported savepoint controls
+are rejected, and every lease boundary attempts physical rollback. Known SQL
+errors preserve their category; transport ambiguity poisons the proxy instead
+of authorizing replay or another local execution path.
+
+A mandatory parent-owned lifetime pipe and supervised worker shutdown bound
+ownership; parent loss ends the worker even during SQL. Normal shutdown drains
+an established lease for at most five seconds without admitting new leases,
+then kills/reaps a worker that has not exited. Migration/restore and
+physical ownership use the same stable sidecar lock inode. Backups must neither
+copy nor replace runtime lock/election files or broker runtime directories.
+No credential, daemon registration, new external audience, or remote service
+is introduced. These are candidate invariants with regression coverage authored;
+execution evidence remains required before publication readiness.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (196 files)
+- Repository signal fingerprint: `caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -259,6 +259,7 @@ fn classify_storage_error(err: &crate::core::db::Error) -> StorageFailureKind {
     match err {
         crate::core::db::Error::Dactyl(error) => classify_dactyl_error(error),
         crate::core::db::Error::Io(_) => StorageFailureKind::Io,
+        crate::core::db::Error::StorageOwner(_) => StorageFailureKind::Unknown,
         crate::core::db::Error::QueryReturnedNoRows => StorageFailureKind::Query,
         crate::core::db::Error::FromSqlConversionFailure(_, _, _)
         | crate::core::db::Error::ToSqlConversionFailure(_)
