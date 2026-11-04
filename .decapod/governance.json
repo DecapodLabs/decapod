@@ -526,7 +526,11 @@
     "stable-validation-replay": {
       "statement": "Repeated successful native validation of unchanged material compares equal despite fresh evidence directories and execution identities; real recovery preserves completion history and finishes unscoped readiness.",
       "falsifier": "A semantic field change compares equal, or the authorized pending-batch retry fails per-task replay or unscoped readiness.",
-      "status": "open"
+      "status": "supported",
+      "proof_refs": [
+        "tests/support/live_recovery.rs",
+        "tests/unit/plugins/verify_tests.rs"
+      ]
     }
   },
   "checkpoints": [
@@ -534,6 +538,11 @@
       "id": "stable-recovery-proof",
       "summary": "Compare stable validation semantics while preserving execution receipts and full recovery proof gates",
       "input_digest": "sha256:0512f4230841ab0ad81d2a2af76038d7cb5bcf649692f7788d580e5daad518d7"
+    },
+    {
+      "id": "real-recovery-acceptance",
+      "summary": "Record successful real two-task recovery, individual replay and full unscoped readiness with preserved history",
+      "input_digest": "sha256:abec8af11fc4caf0a30e86f2bd569ab1c90c051baee186ba3356a280036057c0"
     }
   ],
   "intents": {
@@ -605,13 +614,14 @@
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Live acceptance proves macOS ARM64 native profile with Vega disabled; enabled inference and other platforms untested in this live run"
       ],
-      "artifact_hash": "sha256:34b147393fedb016d80937b5c4db1faa0b19f1f20f0996dda7f310d43710d925",
+      "artifact_hash": "sha256:ea4d8159adf9510fc61e1cc79627e1333c98c912fdec3d76ca07c5b3a945d354",
       "checks": [
         {
           "name": "live_recovery",
-          "status": "failed"
+          "status": "passed"
         },
         {
           "name": "verification_units",
@@ -646,10 +656,17 @@
             "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ME6GPG834YVYDXV0WYV9RM": {
@@ -694,6 +711,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Actual pending-batch live test: 1 passed, 0 failed, 0 ignored in 345.76 seconds; /private/tmp/1473-live-recovery-retry-2.log",
+                  "Fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 and accepted GitHub main 2d8e8abbfdcfc8a5e334ac011228beff697172b9; both historical completed tasks preserved all fields and original events; each replay passed and final full unscoped publication_ready/ready/proof_ready were true",
+                  "No evidence deletion, direct datastore mutation, prune, reopen, injected successful snapshot, provider mock or CI-local substitution; supported backup retained before recovery"
+                ],
+                "proof_refs": [
+                  "live_recovery"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -702,7 +736,10 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Actual pending-batch live test: 1 passed, 0 failed, 0 ignored in 345.76 seconds; /private/tmp/1473-live-recovery-retry-2.log",
         "All 42 plugins::verify unit tests ran: 42 passed, 0 failed, 0 ignored, including failed snapshots, material drift, transaction rollback, batch atomicity and new execution-identity normalization",
+        "Fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 and accepted GitHub main 2d8e8abbfdcfc8a5e334ac011228beff697172b9; both historical completed tasks preserved all fields and original events; each replay passed and final full unscoped publication_ready/ready/proof_ready were true",
+        "No evidence deletion, direct datastore mutation, prune, reopen, injected successful snapshot, provider mock or CI-local substitution; supported backup retained before recovery",
         "Original failed-run log /private/tmp/1473-live-recovery-exact.log; bounded retry now requires already captured pending state and preserves original absent-artifact test unchanged",
         "Real missing-artifact recovery on private fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 failed after passing scoped validation; batch remained pending; historical state preservation assertion passed",
         "Retry harness corrected its state spelling to actual persisted CLAIMED and additionally requires original task.verify.recover event; no fixture proof was deleted or rewritten to satisfy preconditions",

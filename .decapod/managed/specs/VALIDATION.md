@@ -11,6 +11,12 @@ failed attempt and retries without deleting evidence, pruning or reopening.
 It requires per-task verification and final unscoped publication readiness;
 compilation or an ignored test remains insufficient acceptance.
 
+The macOS ARM64 live retry subsequently executed against the same preserved
+two-task batch and passed (1 executed, 0 failed, 0 ignored). It checked every
+original task field and historical event, replayed each task, and required
+full unscoped publication readiness. This is measured native fixture evidence
+with Vega disabled, not evidence for enabled inference or other platforms.
+
 ## Documented agent bootstrap execution
 
 The always-selected `cli-contracts` proof executes the inline
