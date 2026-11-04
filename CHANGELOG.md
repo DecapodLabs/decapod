@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.124.3](https://github.com/DecapodLabs/decapod/compare/v0.124.2...v0.124.3) - 2026-11-04
+
+### Added
+
+- *(todo)* allow opt-in basic shared claims
+
+### Fixed
+
+- repair shared claim lint and docs drift
+
+### Other
+
+- repair shared claim isolation and rollback fixtures
+
 ## [0.124.2](https://github.com/DecapodLabs/decapod/compare/v0.124.1...v0.124.2) - 2026-11-03
 
 ### Fixed
