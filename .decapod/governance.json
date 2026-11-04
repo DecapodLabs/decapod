@@ -553,6 +553,14 @@
       "proof_refs": [
         "src/decapod/core/storage_owner.rs"
       ]
+    },
+    {
+      "id": "broker-ci-lint",
+      "summary": "Correct CI test lints without changing regression assertions; record final local verification and latest-origin base",
+      "input_digest": "sha256:1ff8eac2768850ada702ce3b9dac5b41e6cf1bba4539941625898068880049c7",
+      "proof_refs": [
+        "tests/group_broker.rs"
+      ]
     }
   ],
   "intents": {
@@ -634,7 +642,7 @@
         "Draft PR publication with configured PR CI explicitly requested; no full prepublication readiness claim.",
         "User explicitly directs draft publication and PR-CI validation; no merge, release or issue closure."
       ],
-      "artifact_hash": "sha256:dc9bd8c7de01edfafa63b535f1a7faf1e9dd427e3b195d843e859d1844d96640",
+      "artifact_hash": "sha256:1fbf7284c6af9c622ec2e6660a536bc99cc37c5ded3f9d6d3e54b2cba2be5f59",
       "checks": [
         {
           "name": "initial_broker_suite",
@@ -645,7 +653,31 @@
           "status": "passed"
         },
         {
+          "name": "macos_clippy_broker_test",
+          "status": "passed"
+        },
+        {
+          "name": "macos_clippy_lib",
+          "status": "passed"
+        },
+        {
+          "name": "macos_final_broker_units",
+          "status": "passed"
+        },
+        {
+          "name": "macos_final_storage_units",
+          "status": "passed"
+        },
+        {
           "name": "macos_group_broker_units",
+          "status": "passed"
+        },
+        {
+          "name": "macos_migration_units",
+          "status": "passed"
+        },
+        {
+          "name": "macos_socket_lifecycle",
           "status": "passed"
         },
         {
@@ -658,6 +690,10 @@
         },
         {
           "name": "macos_storage_units",
+          "status": "passed"
+        },
+        {
+          "name": "macos_validation_smoke_retry",
           "status": "passed"
         },
         {
@@ -707,10 +743,17 @@
             "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6JSA5F8WXYK8YY19XAXMWTM": {
@@ -809,6 +852,32 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Latest official Decapod 0.125.0 installed and binary matched release archive. GitHub origin/master refreshed: db66e137 remains branch ancestor. Final local broker units 14 passed; storage/lock units 15 passed including counter writes; socket unit 1 passed; migration units 5 passed. Isolated unchanged validation smoke passed 3 runs at 4641/4549/4722ms. Library and group_broker Clippy passed. Linux CI found two test-only Clippy style issues; corrected without altering assertions. Exact-head CI remains pending."
+                ],
+                "proof_refs": [
+                  "macos_final_broker_units",
+                  "macos_final_storage_units",
+                  "macos_socket_lifecycle",
+                  "macos_migration_units",
+                  "macos_validation_smoke_retry",
+                  "macos_clippy_lib",
+                  "macos_clippy_broker_test"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod,tests,assets/tools,managed specs and release projections",
+                  "src/decapod/core",
+                  "tests"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -820,6 +889,7 @@
         "Base db66e137; CI 41759874771 core logs show serialized completions before 120s timeouts, not total deadlock; 15s transport retries and failed-delivery idle accounting confirmed in source. Long socket discovery errors reproduced by existing validate_termination CI.",
         "Draft PR 1517 published at 3a2f2778; exact-head PR CI 41802813138 started. Review extended connection-local counter rejection to write expressions and persisted view definitions; added regression assertions, local compilation pending. No readiness verdict asserted.",
         "Full macOS broker integration: 15 passed, 0 ignored (448.62s); storage owner/lock units: 15 passed; group broker units: 13 passed. Validation termination: 11 passed including long-path artifact cleanup, 1 timeout in existing 10s smoke while compiling, isolated rerun pending. Source-CI policy: 50 passed including new unfiltered selection, 4 failed platform fixtures (three require linux-x86_64; one canonical /var alias assertion). Added absolute per-read reply deadline after these runs; final unit/CI evidence pending.",
+        "Latest official Decapod 0.125.0 installed and binary matched release archive. GitHub origin/master refreshed: db66e137 remains branch ancestor. Final local broker units 14 passed; storage/lock units 15 passed including counter writes; socket unit 1 passed; migration units 5 passed. Isolated unchanged validation smoke passed 3 runs at 4641/4549/4722ms. Library and group_broker Clippy passed. Linux CI found two test-only Clippy style issues; corrected without altering assertions. Exact-head CI remains pending.",
         "macOS storage owner/lifecycle unit tests: 15 passed, zero ignored. Initial full broker suite: 11 passed, 4 failed; all queued owner claims finished in 5.1s. Three new audit assertions used a binary without caller_agent_id; current rebuild pending. Shared test assumed adjacent runtime directory and was corrected to inspect actual hashed GID path. Twenty-mutator, long-path, post-commit-disconnect, uncertain-crash and preparation scenarios passed."
       ],
       "inspected_files": [

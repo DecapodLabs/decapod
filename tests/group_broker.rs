@@ -195,7 +195,7 @@ fn wait_for_lock_pid(lock_path: &Path, timeout: Duration) -> Option<u32> {
 
 fn wait_for_no_broker_artifacts(dir: &Path, timeout: Duration) -> bool {
     let lock_path = dir.join(".decapod").join("data").join("broker.lock");
-    let sock_path = broker_endpoint(&dir);
+    let sock_path = broker_endpoint(dir);
     let start = Instant::now();
     while start.elapsed() < timeout {
         if !lock_path.exists() && !sock_path.exists() {
@@ -271,14 +271,13 @@ fn assert_concurrent_mutators(reuse_connection: bool) {
             ];
             let env_pairs: Vec<(&str, &str)> =
                 envs.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
-            let first = run_contention_command(
+            run_contention_command(
                 &dir_cl,
                 &["todo", "add", &task],
                 &env_pairs,
                 Duration::from_secs(120),
                 &format!("client {i:02} first attempt"),
-            );
-            first
+            )
         }));
     }
 
