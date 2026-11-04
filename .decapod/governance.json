@@ -579,6 +579,15 @@
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "broker-master-readme-merge",
+      "summary": "Merge accepted origin/master README update and refresh exact-content publication reviews",
+      "input_digest": "sha256:4a42c157ed2d2e7bb823e70c01fc0a73fda48633be4fb551b7a2e4ac4dd1098d",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        "README.md"
+      ]
     }
   ],
   "intents": {
@@ -623,22 +632,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final implementation after CI lint corrections: foreground owner, caller and audit isolation, transaction and maintenance boundaries, uncertain outcomes, and long-path endpoint guarantees match the authored contracts. No authority or authentication boundary is expanded.",
-          "reviewed_code_fingerprint": "82ac6a3f30b88eb0d76f4c90e8475e2847c20ba1b1eef1ddb8614683b7a6e477",
+          "reason": "Re-reviewed after merging accepted GitHub master a8fe5380 README update. Product intent remains repo-native daemonless governance; broker ownership, caller and storage guarantees still match the implementation, and security boundaries are unchanged.",
+          "reviewed_code_fingerprint": "440495916b114cd2bf4ccb0143a0042462235388f271cf4d293ad4272d51c2d6",
           "spec_material_hash": "47a6882fff7d07808780f43b452b3921124018274438d1e48f0f734e2df249cc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final implementation after CI lint corrections: foreground owner, caller and audit isolation, transaction and maintenance boundaries, uncertain outcomes, and long-path endpoint guarantees match the authored contracts. No authority or authentication boundary is expanded.",
-          "reviewed_code_fingerprint": "82ac6a3f30b88eb0d76f4c90e8475e2847c20ba1b1eef1ddb8614683b7a6e477",
+          "reason": "Re-reviewed after merging accepted GitHub master a8fe5380 README update. Product intent remains repo-native daemonless governance; broker ownership, caller and storage guarantees still match the implementation, and security boundaries are unchanged.",
+          "reviewed_code_fingerprint": "440495916b114cd2bf4ccb0143a0042462235388f271cf4d293ad4272d51c2d6",
           "spec_material_hash": "96817f5f96e39a10ea664a15a65fdcff9f8630a57cf2d4db3a373674ec592754"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final implementation after CI lint corrections: foreground owner, caller and audit isolation, transaction and maintenance boundaries, uncertain outcomes, and long-path endpoint guarantees match the authored contracts. No authority or authentication boundary is expanded.",
-          "reviewed_code_fingerprint": "82ac6a3f30b88eb0d76f4c90e8475e2847c20ba1b1eef1ddb8614683b7a6e477",
+          "reason": "Re-reviewed after merging accepted GitHub master a8fe5380 README update. Product intent remains repo-native daemonless governance; broker ownership, caller and storage guarantees still match the implementation, and security boundaries are unchanged.",
+          "reviewed_code_fingerprint": "440495916b114cd2bf4ccb0143a0042462235388f271cf4d293ad4272d51c2d6",
           "spec_material_hash": "fa32257ae4eac923396d32b59741b7f4890ecc4565f0a4db594f3dd064659f20"
         }
       ],
@@ -652,7 +661,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793783632Z"
+      "updated_at": "1793783980Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -660,7 +669,7 @@
         "Draft PR publication with configured PR CI explicitly requested; no full prepublication readiness claim.",
         "User explicitly directs draft publication and PR-CI validation; no merge, release or issue closure."
       ],
-      "artifact_hash": "sha256:e8fa0c509a8adcaa4b3e1aa3f2edb58b8d99b2afd6e93f6a0529e2f7ddb3bea0",
+      "artifact_hash": "sha256:6a4d948056d522a3de3f7e3d0fc8a9c19444df995283fb68916607b82309476a",
       "checks": [
         {
           "name": "ci_spec_review",
@@ -790,10 +799,17 @@
             "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6JSA5F8WXYK8YY19XAXMWTM": {
@@ -957,6 +973,25 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "README.md",
+                  "User reported README update on master. Fetched GitHub origin/master a8fe53803b30774ec8b0fb2a88078a5ff50800eb; merged without conflicts, README matches origin/master exactly. Prior local repair 4087a03e passed exact-commit publication-material verification after granting Git temporary-object access. Refreshed projections and reviews for new accepted target; no published history rewritten."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod,tests,assets/tools,managed specs and release projections",
+                  "src/decapod/core",
+                  "tests"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -971,9 +1006,11 @@
         "Full macOS broker integration: 15 passed, 0 ignored (448.62s); storage owner/lock units: 15 passed; group broker units: 13 passed. Validation termination: 11 passed including long-path artifact cleanup, 1 timeout in existing 10s smoke while compiling, isolated rerun pending. Source-CI policy: 50 passed including new unfiltered selection, 4 failed platform fixtures (three require linux-x86_64; one canonical /var alias assertion). Added absolute per-read reply deadline after these runs; final unit/CI evidence pending.",
         "Latest official Decapod 0.125.0 installed and binary matched release archive. GitHub origin/master refreshed: db66e137 remains branch ancestor. Final local broker units 14 passed; storage/lock units 15 passed including counter writes; socket unit 1 passed; migration units 5 passed. Isolated unchanged validation smoke passed 3 runs at 4641/4549/4722ms. Library and group_broker Clippy passed. Linux CI found two test-only Clippy style issues; corrected without altering assertions. Exact-head CI remains pending.",
         "Local exact-commit publication-material verification caught an unpushed checkpoint binding mismatch after overlapping trajectory and checkpoint invocations. Regenerating the checkpoint sequentially after all governance writes and amending only the unpushed repair commit; prior published checkpoints remain intact.",
+        "User reported README update on master. Fetched GitHub origin/master a8fe53803b30774ec8b0fb2a88078a5ff50800eb; merged without conflicts, README matches origin/master exactly. Prior local repair 4087a03e passed exact-commit publication-material verification after granting Git temporary-object access. Refreshed projections and reviews for new accepted target; no published history rewritten.",
         "macOS storage owner/lifecycle unit tests: 15 passed, zero ignored. Initial full broker suite: 11 passed, 4 failed; all queued owner claims finished in 5.1s. Three new audit assertions used a binary without caller_agent_id; current rebuild pending. Shared test assumed adjacent runtime directory and was corrected to inspect actual hashed GID path. Twenty-mutator, long-path, post-commit-disconnect, uncertain-crash and preparation scenarios passed."
       ],
       "inspected_files": [
+        "README.md",
         "src/decapod/core/db.rs",
         "src/decapod/core/group_broker.rs",
         "src/decapod/core/storage_lock.rs",
