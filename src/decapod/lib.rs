@@ -1637,6 +1637,7 @@ fn init_with_from_config(
         existing_repository_contract: config.proof.repository_contract.clone(),
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
+        existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
         vega_decisions: Some(config.vega.mode == core::vega_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
         backend: if config.repo.effective_backend().is_cloud() {
@@ -1745,6 +1746,7 @@ fn preserve_unspecified_init_options(
     init.existing_rust_workers = existing.existing_rust_workers;
     init.existing_repository_contract = existing.existing_repository_contract;
     init.existing_ci_attested = existing.existing_ci_attested;
+    init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
 }
 
 fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjectConfig {
@@ -1827,6 +1829,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         governance: GovernanceConfig {
             protected_paths,
             approval_categories,
+            allow_basic_shared_claims: init.existing_allow_basic_shared_claims,
         },
         proof: proof::ProjectProofConfig {
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
@@ -2497,6 +2500,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_repository_contract: None,
                             existing_rust_workers: None,
                             existing_ci_attested: None,
+                            existing_allow_basic_shared_claims: false,
                             vega_decisions: init_group.vega_decisions,
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,

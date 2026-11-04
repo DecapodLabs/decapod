@@ -23,6 +23,35 @@ pub struct DecapodProjectConfig {
 }
 ```
 
+## Cooperative shared-claim policy
+
+`[governance].allow_basic_shared_claims` defaults to `false`. A project may set
+it to `true` in the main repository's `.decapod/config.toml` to allow a
+basic-trust agent to join an existing task with a different primary owner as a
+secondary owner. This setting affects the local backend's `todo.claim.shared`
+verified-trust threshold only. It does not raise the stored trust level, allow
+untrusted agents, create a primary claim, weaken a stronger trust requirement,
+or bypass approval, dependency or other gates. Cloud-backed claims do not use
+this policy. The false default is omitted when Decapod serializes config;
+older versions may reject a config that explicitly contains the new field.
+
+This is a cooperative local policy, not authentication. An agent that can edit
+the main config can enable the switch, and agent labels can be impersonated. The
+config fingerprint in an audit record shows the bytes used, not who edited them
+or who invoked the claim. The main repository config is read rather than the
+candidate workspace config; if the main root cannot be resolved or the config
+is malformed, oversized, a symlink or not a regular file, the opt-in fails
+closed. This feature does not defend against hostile processes with the same
+filesystem or datastore access.
+
+A successful use records the asserted agent and primary owner labels, task and
+config SHA-256 in a `policy.basic_shared_claim.used` event in the ownership
+transaction. Each operation snapshots config before acquiring the write lock;
+a change after that snapshot may not stop an in-flight claim. Turning the flag
+off prevents later uses but does not remove existing secondary owners. This is
+not an audited grant of verified trust or proof of human approval.
+
+
 ## Required proof and execution provider
 
 `[proof].validation_buildkite_preflights` is a boolean, default false. False runs

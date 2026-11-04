@@ -126,3 +126,60 @@ fn legacy_replay_retains_proof_history_without_inventing_revision_custody() {
         "canonical historical event remains intact"
     );
 }
+
+#[test]
+fn legacy_replay_retains_basic_shared_claim_audit_without_new_ownership() {
+    let tmp = TempDir::new().unwrap();
+    let events_path = tmp.path().join("todo.events.jsonl");
+    let event = |event_id: &str, event_type: &str, payload: serde_json::Value| {
+        json!({
+            "ts": "1770000001Z", "event_id": event_id, "event_type": event_type,
+            "status": "success", "task_id": "T_SHARED", "payload": payload, "actor": "member"
+        })
+    };
+    let records = [
+        event("S_ADD", "task.add", json!({"title": "Shared task"})),
+        event(
+            "S_OWNER",
+            "ownership.claim",
+            json!({"agent_id": "owner", "claim_type": "primary", "claim_id": "OWNER"}),
+        ),
+        event(
+            "S_MEMBER",
+            "ownership.claim",
+            json!({"agent_id": "member", "claim_type": "secondary", "claim_id": "MEMBER"}),
+        ),
+        event(
+            "S_AUDIT",
+            "policy.basic_shared_claim.used",
+            json!({"policy": "governance.allow_basic_shared_claims", "config_digest": "sha256:example", "agent_label": "member", "primary_owner_label": "owner", "identity_assurance": "cooperative_not_authenticated"}),
+        ),
+    ];
+    std::fs::write(
+        &events_path,
+        records
+            .iter()
+            .map(|event| format!("{event}\n"))
+            .collect::<String>(),
+    )
+    .unwrap();
+    let db = tmp.path().join("decapod.db");
+    assert_eq!(todo::rebuild_db_from_events(&events_path, &db).unwrap(), 4);
+    let conn = Connection::open(db).unwrap();
+    let owners: i64 = conn
+        .query_row(
+            "SELECT count(*) FROM task_owners WHERE task_id='T_SHARED'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    let audits: i64 = conn
+        .query_row(
+            "SELECT count(*) FROM events WHERE event_type='policy.basic_shared_claim.used'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(owners, 2);
+    assert_eq!(audits, 1);
+}

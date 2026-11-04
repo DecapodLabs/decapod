@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "304934c0d6632449bcd87d53f3882519185f876e",
+    "accepted_commit": "b4e62216a7f5d7031ce116d2a289f98b6c31a44b",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -175,6 +175,14 @@
         "question": "How does custody scale when tasks intentionally share an interface or require coordinated changes across workspaces?",
         "status": "open"
       },
+      "claim:native-diagnostic-recovery": {
+        "falsifier": "A diagnostic cannot identify its check and capture files, or it changes proof or readiness authority",
+        "proof_refs": [
+          "tests/consumer_readiness.rs"
+        ],
+        "statement": "Executed native checks preserve machine-readable diagnostic identity, termination and check-level errors alongside existing private output without granting readiness",
+        "status": "open"
+      },
       "claim:native-discovery-deadline": {
         "falsifier": "A near-expired real Rust slow probe obtains a fresh discovery budget or launches after expiry.",
         "statement": "Supplemental Rust discovery shares the original absolute validation deadline.",
@@ -228,6 +236,11 @@
           "Targeted Rust importer identity tests and full decapod validate required"
         ],
         "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
+        "status": "open"
+      },
+      "claim:recovery-workspace-artifact-lookup": {
+        "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
+        "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
         "status": "open"
       },
       "claim:regular-release-artifact": {
@@ -471,67 +484,56 @@
     }
   },
   "change": {
-    "id": "native-diagnostics-1474",
-    "base_commit": "304934c0d6632449bcd87d53f3882519185f876e",
-    "target_base": "master"
+    "id": "change_01M6HXDDZJJH33CSZXABT0TFAF",
+    "base_commit": "b4e62216a7f5d7031ce116d2a289f98b6c31a44b",
+    "target_base": "origin/master"
   },
   "claims": {
-    "native-diagnostic-recovery": {
-      "statement": "Executed native checks preserve machine-readable diagnostic identity, termination and check-level errors alongside existing private output without granting readiness",
-      "falsifier": "A diagnostic cannot identify its check and capture files, or it changes proof or readiness authority",
-      "status": "open",
-      "proof_refs": [
-        "tests/consumer_readiness.rs"
-      ]
-    },
-    "recovery-workspace-artifact-lookup": {
-      "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
-      "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
+    "basic-shared-optin": {
+      "statement": "The default-off main-config switch allows basic agents only as secondary owners of a task with an existing different primary owner, records a policy-use event atomically, and leaves stored trust and independent policy gates unchanged.",
+      "falsifier": "The default permits such claims, the switch permits an untrusted or primary claim, stronger trust or approvals are bypassed, or success lacks a transactional use record.",
       "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "native-diagnostics-01",
-      "summary": "Persist native execution diagnostics for agent recovery without changing readiness or proof authority",
-      "input_digest": "sha256:d3a2072fd9a3233aad651a1acbfda26ff1d1ff84eb544cc1811d222ab52fd3da",
+      "id": "optional-basic-shared-claims",
+      "summary": "Add a default-off cooperative config option for basic-trust secondary claims, with atomic use auditing and explicit identity limitations.",
+      "input_digest": "sha256:3c1f2ceaf4a2eb26a00cff1e6b4dfcfdf37f46ee204d3637647a3ffaed7228d4"
+    },
+    {
+      "id": "shared-claims-ci-repair",
+      "summary": "Fix Clippy return style and exact generated configuration documentation spacing; preserve pending shared-claim policy decision.",
+      "input_digest": "sha256:fae05902e52d461024354c718eb65a3cac9ce872ebc3a9572827f1565f29da1e",
       "proof_refs": [
-        "Source inspection and git diff --check; tests and full validation not run"
+        "CI jobs 126301126741 and 126300920130; static generator output comparison and git diff --check; runtime rerun pending"
       ]
     },
     {
-      "id": "reconcile-1241-source",
-      "summary": "Preserve original journal and accepted v0.124.1 source while awaiting matching controller refresh",
-      "input_digest": "sha256:6052a44129c698c92b15771e48d3c16eb8c164b485444411a0b8131b480c9726",
+      "id": "shared-claim-fixture-repair",
+      "summary": "Make plugin fixtures independent of active-task dedup and preserve the single-statement audit rejection trigger.",
+      "input_digest": "sha256:08f2fab18126ba5b48b255626682bcf97ed0ab01c530438368e6b422e5340f76",
       "proof_refs": [
-        "Git merge source audit; no tests or final readiness run"
-      ]
-    },
-    {
-      "id": "native-diagnostics-release-1241",
-      "summary": "Refresh official v0.124.1 release and specification projections after CI drift finding",
-      "input_digest": "sha256:5428c3057b3c191a431c9c7ef3c005600cb845d3de8185df79764f7da14c2e07",
-      "proof_refs": [
-        "Verified official release archive checksum; CI drift comparison; no local tests or full validation"
+        "Exact-head job 126306715943; source-grounded fixture review, rustfmt and diff check; remote runtime pending"
       ]
     }
   ],
   "intents": {
-    "intent:native-diagnostics-1474": {
+    "intent:change_01M6HXDDZJJH33CSZXABT0TFAF": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Preserve existing readiness gates, receipts, config, and accepted authority; no local tests"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "native validation recovery"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:native-diagnostics-1474",
+      "id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Address open issue 1474 in a dedicated PR",
-      "refined_intent": "Persist native check recovery diagnostics without changing proof or publication readiness",
+      "raw_intent": "Add optional shared claim policy\n\nAdd a default-off cooperative config policy permitting basic agents to join existing tasks as secondary owners, with audited use and explicit identity limits.",
+      "refined_intent": "Add optional shared claim policy\n\nAdd a default-off cooperative config policy permitting basic agents to join existing tasks as secondary owners, with audited use and explicit identity limits.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -544,60 +546,78 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Preserve actionable native check diagnostics for agents without changing proof or readiness",
+      "intent": "Implement a false-by-default config switch for cooperative basic-trust secondary shared claims on the local backend. Preserve unrelated trust and approval gates, record an atomic use event and explicitly document that same-user config and caller labels are not authenticated.",
       "phases": [],
       "proof_hooks": [
-        "Configured remote CI; local tests not run by user instruction"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Release refresh changes projection only; proof custody and publication architecture remain unchanged",
-          "reviewed_code_fingerprint": "0d78ea5999c0deecee438b655d04e5a2accbbeddbfc75c7df87da9e0a15164ff",
+          "reason": "Reviewed fixture-only repair for task dedup and Dactyl trigger construction; production claim policy and broker semantics unchanged.",
+          "reviewed_code_fingerprint": "aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd",
           "spec_material_hash": "98a2637b868afbe10ae3540caf6eb64900616211fe9da6db499fe3bb157c8711"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed native check diagnostic contract after v0.124.1 refresh; diagnostics do not grant readiness",
-          "reviewed_code_fingerprint": "0d78ea5999c0deecee438b655d04e5a2accbbeddbfc75c7df87da9e0a15164ff",
-          "spec_material_hash": "d72555a17bec50bccc837c63040ae6a372aac35120f2eea503e7d75276137506"
+          "reason": "Reviewed fixture-only repair for task dedup and Dactyl trigger construction; production claim policy and broker semantics unchanged.",
+          "reviewed_code_fingerprint": "aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd",
+          "spec_material_hash": "4959ed92de7fe5c9c5e81d6d9369cd060de4f084d4b87735d978c2cd44f69c5f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Release refresh changes projection only; no readiness, authorization or security gates are weakened",
-          "reviewed_code_fingerprint": "0d78ea5999c0deecee438b655d04e5a2accbbeddbfc75c7df87da9e0a15164ff",
-          "spec_material_hash": "f94e47ab37cc50c85daa5c1821caadb20cc3646f9aecdcf1b7b81a12210a73fa"
+          "reason": "Reviewed fixture-only repair for task dedup and Dactyl trigger construction; production claim policy and broker semantics unchanged.",
+          "reviewed_code_fingerprint": "aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd",
+          "spec_material_hash": "a811e042ee4b3061bfb57f0f921a774fb87ced4546104ff893688626b6e0e9b6"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Unavailable authorization or publication denial"
-      ],
-      "title": "Improve native failure recovery",
+      "stop_conditions": [],
+      "title": "Optional basic shared claims",
       "todo_ids": [
-        "code_01m6hr11kvsaf4d5"
+        "feat_01m6hxcrm976b6w1"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793746560Z"
+      "updated_at": "1793753532Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Preserve existing readiness gates, receipts, config, and accepted authority; no local tests"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:016bd449ec7babe2112431d98967e4ac09c89f9ed34f10605341764dc8c566e6",
+      "artifact_hash": "sha256:db1c0c70d2ec55fda6df25be2003d90c4345c7ab81d46646c4ed02ac9b0e39b9",
       "checks": [
         {
-          "name": "diff_whitespace",
+          "name": "embedded_docs_parity",
           "status": "passed"
+        },
+        {
+          "name": "generator_text_comparison",
+          "status": "passed"
+        },
+        {
+          "name": "local_runtime",
+          "status": "unavailable"
         },
         {
           "name": "local_tests",
           "status": "unavailable"
+        },
+        {
+          "name": "rustfmt",
+          "status": "passed"
+        },
+        {
+          "name": "static_diff",
+          "status": "passed"
+        },
+        {
+          "name": "static_review",
+          "status": "partial"
         }
       ],
       "current_phase": "ci-repair",
@@ -605,97 +625,145 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:native-diagnostics-1474",
+            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:native-diagnostics-1474",
+            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:native-diagnostics-1474",
+            "detail": "trajectory:branch_01M6HXDE1490SY92MEY7D9E493",
             "event_id": "event:4",
-            "intent_id": "intent:native-diagnostics-1474",
+            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:native-diagnostics-1474",
+            "detail": "trajectory:branch_01M6HXDE1490SY92MEY7D9E493",
             "event_id": "event:5",
-            "intent_id": "intent:native-diagnostics-1474",
+            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:native-diagnostics-1474",
+            "detail": "trajectory:branch_01M6HXDE1490SY92MEY7D9E493",
             "event_id": "event:6",
-            "intent_id": "intent:native-diagnostics-1474",
+            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6HXDE1490SY92MEY7D9E493",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "native-diagnostics-1474": {
+          "branch_01M6HXDE1490SY92MEY7D9E493": {
             "evidence_only": true,
-            "id": "native-diagnostics-1474",
-            "intent_id": "intent:native-diagnostics-1474",
+            "id": "branch_01M6HXDE1490SY92MEY7D9E493",
+            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
             "steps": [
               {
-                "action": "publication",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/native_proof.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "tests/consumer_readiness.rs",
-                  "docs/native-readiness-acceptance.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "Source inspection found native runner retained check key, termination and error in memory but persisted only numbered output and step files. Added private non-authoritative per-check recovery metadata and focused assertions. No local tests or full readiness run by user instruction; remote checks are pending."
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/task_transfer.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "docs/agent/config-schema.md",
+                  "tests/plugins/todo.rs",
+                  "tests/todo_rebuild_compat.rs",
+                  "tests/unit/lib_init_prompt_tests.rs"
                 ],
                 "proof_refs": [
-                  "local_tests",
-                  "diff_whitespace"
-                ],
-                "scope": [
-                  "native validation recovery"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "reconciliation",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Accepted v0.124.1 release fd6d8daba0af03905b23e71e38530757b7baa574 merged as second parent; preserve accepted workspace-recovery claim and specs. The original checkpoint and task journal are retained. No tests or validation run; matching released controller unavailable, so projections remain pending."
-                ],
-                "proof_refs": [
+                  "static_diff",
+                  "embedded_docs_parity",
                   "local_tests"
                 ],
                 "scope": [
-                  "native validation recovery"
+                  "root"
+                ],
+                "sequence": 4,
+                "validation_findings": [
+                  "The explicit opt-in operates under a cooperative local filesystem boundary; same-user edits and caller labels are not authenticated."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/task_transfer.rs",
+                  "tests/todo_rebuild_compat.rs",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Independent review found and prompted repair of transfer call sites, reducer handling, default serialization and config custody cases."
+                ],
+                "proof_refs": [
+                  "static_review",
+                  "local_tests"
+                ],
+                "scope": [
+                  "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
+                "validation_findings": [
+                  "The config decision is cooperative; its author and agent labels are not authenticated."
+                ]
               },
               {
                 "action": "ci-repair",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "PR head b66096c GitHub Decapod Validate reported 189 passed, zero failed in CI-local gates before rejecting stale release and living-spec projections. Official v0.124.1 archive and checksum were verified against release metadata; supported workspace refresh regenerated release pins and specs. Source and spec fingerprints match the failed CI generated diff. No local tests or full validation were run."
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "docs/agent/config-schema.md",
+                  "Exact public head 5797dda6 CI: Clippy let-and-return at policy.rs 655; Docs Sync config-schema drift. Removed redundant binding and matched literal generator newline output. No policy behavior changes or runtime test pass claimed."
                 ],
                 "proof_refs": [
-                  "local_tests"
+                  "static_diff",
+                  "generator_text_comparison",
+                  "local_runtime"
                 ],
                 "scope": [
-                  "native validation recovery"
+                  "root"
                 ],
                 "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/plugins/todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/unit/core/task_journal_tests.rs",
+                  "tests/plugins/todo.rs",
+                  "Exact-head push job 126306715943 failed two fixtures: active task dedup reused already-owned task, and execute_batch split trigger body. Prepare independent unowned fixture before claims, assert distinct identity and unowned state, execute trigger as one statement. Policy and broker unchanged; runtime rerun pending."
+                ],
+                "proof_refs": [
+                  "rustfmt",
+                  "static_diff",
+                  "local_runtime"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
                 "validation_findings": []
               }
             ]
@@ -705,35 +773,46 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Accepted v0.124.1 release fd6d8daba0af03905b23e71e38530757b7baa574 merged as second parent; preserve accepted workspace-recovery claim and specs. The original checkpoint and task journal are retained. No tests or validation run; matching released controller unavailable, so projections remain pending.",
-        "PR head b66096c GitHub Decapod Validate reported 189 passed, zero failed in CI-local gates before rejecting stale release and living-spec projections. Official v0.124.1 archive and checksum were verified against release metadata; supported workspace refresh regenerated release pins and specs. Source and spec fingerprints match the failed CI generated diff. No local tests or full validation were run.",
-        "Source inspection found native runner retained check key, termination and error in memory but persisted only numbered output and step files. Added private non-authoritative per-check recovery metadata and focused assertions. No local tests or full readiness run by user instruction; remote checks are pending."
+        "Exact public head 5797dda6 CI: Clippy let-and-return at policy.rs 655; Docs Sync config-schema drift. Removed redundant binding and matched literal generator newline output. No policy behavior changes or runtime test pass claimed.",
+        "Exact-head push job 126306715943 failed two fixtures: active task dedup reused already-owned task, and execute_batch split trigger body. Prepare independent unowned fixture before claims, assert distinct identity and unowned state, execute trigger as one statement. Policy and broker unchanged; runtime rerun pending.",
+        "Independent review found and prompted repair of transfer call sites, reducer handling, default serialization and config custody cases."
       ],
       "inspected_files": [
-        "src/decapod/core/native_proof.rs",
-        "src/decapod/core/validation_runtime.rs"
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/plugins/policy.rs",
+        "tests/plugins/todo.rs",
+        "tests/unit/core/task_journal_tests.rs"
       ],
-      "intent_id": "intent:native-diagnostics-1474",
+      "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
       "modified_files": [
         ".decapod/managed/specs/INTERFACES.md",
-        "docs/native-readiness-acceptance.md",
-        "src/decapod/core/validation_runtime.rs",
-        "tests/consumer_readiness.rs"
+        ".decapod/managed/specs/SECURITY.md",
+        "docs/agent/config-schema.md",
+        "src/decapod/cli.rs",
+        "src/decapod/core/task_transfer.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/plugins/policy.rs",
+        "tests/plugins/todo.rs",
+        "tests/todo_rebuild_compat.rs",
+        "tests/unit/lib_init_prompt_tests.rs"
       ],
       "next_transitions": [
-        "Publish dedicated PR and observe exact-head CI",
-        "Push refreshed checkpoint and observe exact-head CI",
-        "Refresh and review release-bound specs with official v0.124.1 controller when available, then publish"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "native validation recovery"
+        "root"
       ],
-      "run_id": "native-diagnostics-1474",
+      "run_id": "branch_01M6HXDE1490SY92MEY7D9E493",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m6hr11kvsaf4d5",
+      "task_id": "feat_01m6hxcrm976b6w1",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "The config decision is cooperative; its author and agent labels are not authenticated.",
+        "The explicit opt-in operates under a cooperative local filesystem boundary; same-user edits and caller labels are not authenticated."
+      ]
     }
   },
   "legacy_digests": {
