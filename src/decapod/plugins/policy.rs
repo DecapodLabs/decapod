@@ -650,9 +650,8 @@ fn configured_policy_project_root(root: &Path) -> PathBuf {
         })
         .and_then(Path::parent)
         .unwrap_or(root);
-    let main_root = crate::core::workspace::get_main_repo_root(project_root)
-        .unwrap_or_else(|_| project_root.to_path_buf());
-    main_root
+    crate::core::workspace::get_main_repo_root(project_root)
+        .unwrap_or_else(|_| project_root.to_path_buf())
 }
 
 fn configured_approval_categories(root: &Path) -> Result<Vec<String>, error::DecapodError> {

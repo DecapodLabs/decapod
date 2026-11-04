@@ -500,6 +500,14 @@
       "id": "optional-basic-shared-claims",
       "summary": "Add a default-off cooperative config option for basic-trust secondary claims, with atomic use auditing and explicit identity limitations.",
       "input_digest": "sha256:3c1f2ceaf4a2eb26a00cff1e6b4dfcfdf37f46ee204d3637647a3ffaed7228d4"
+    },
+    {
+      "id": "shared-claims-ci-repair",
+      "summary": "Fix Clippy return style and exact generated configuration documentation spacing; preserve pending shared-claim policy decision.",
+      "input_digest": "sha256:fae05902e52d461024354c718eb65a3cac9ce872ebc3a9572827f1565f29da1e",
+      "proof_refs": [
+        "CI jobs 126301126741 and 126300920130; static generator output comparison and git diff --check; runtime rerun pending"
+      ]
     }
   ],
   "intents": {
@@ -536,6 +544,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed mechanical CI repair: redundant return binding and generated schema whitespace only; shared-claim policy behavior unchanged pending user decision.",
+          "reviewed_code_fingerprint": "bd7e5f053d2c2b08ea6ef3eed8042ec5b232a1499cd97c23d564963372343a51",
+          "spec_material_hash": "98a2637b868afbe10ae3540caf6eb64900616211fe9da6db499fe3bb157c8711"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed mechanical CI repair: redundant return binding and generated schema whitespace only; shared-claim policy behavior unchanged pending user decision.",
+          "reviewed_code_fingerprint": "bd7e5f053d2c2b08ea6ef3eed8042ec5b232a1499cd97c23d564963372343a51",
+          "spec_material_hash": "4959ed92de7fe5c9c5e81d6d9369cd060de4f084d4b87735d978c2cd44f69c5f"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed mechanical CI repair: redundant return binding and generated schema whitespace only; shared-claim policy behavior unchanged pending user decision.",
+          "reviewed_code_fingerprint": "bd7e5f053d2c2b08ea6ef3eed8042ec5b232a1499cd97c23d564963372343a51",
+          "spec_material_hash": "a811e042ee4b3061bfb57f0f921a774fb87ced4546104ff893688626b6e0e9b6"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Optional basic shared claims",
@@ -544,17 +575,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793750658Z"
+      "updated_at": "1793752283Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e3d3683adf070e46be64cbbadcdb21910d3aee04f4842cf8aa4de55ba936fb7d",
+      "artifact_hash": "sha256:7b4918e6a566b4415bda113a62dad052b633f9453ec9adeda6bee581be4ee662",
       "checks": [
         {
           "name": "embedded_docs_parity",
           "status": "passed"
+        },
+        {
+          "name": "generator_text_comparison",
+          "status": "passed"
+        },
+        {
+          "name": "local_runtime",
+          "status": "unavailable"
         },
         {
           "name": "local_tests",
@@ -569,7 +608,7 @@
           "status": "partial"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "ci-repair",
       "custody": {
         "events": [
           {
@@ -597,10 +636,17 @@
             "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6HXDE1490SY92MEY7D9E493",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6HXDE1490SY92MEY7D9E493": {
@@ -658,6 +704,27 @@
                 "validation_findings": [
                   "The config decision is cooperative; its author and agent labels are not authenticated."
                 ]
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "docs/agent/config-schema.md",
+                  "Exact public head 5797dda6 CI: Clippy let-and-return at policy.rs 655; Docs Sync config-schema drift. Removed redundant binding and matched literal generator newline output. No policy behavior changes or runtime test pass claimed."
+                ],
+                "proof_refs": [
+                  "static_diff",
+                  "generator_text_comparison",
+                  "local_runtime"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -666,9 +733,11 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Exact public head 5797dda6 CI: Clippy let-and-return at policy.rs 655; Docs Sync config-schema drift. Removed redundant binding and matched literal generator newline output. No policy behavior changes or runtime test pass claimed.",
         "Independent review found and prompted repair of transfer call sites, reducer handling, default serialization and config custody cases."
       ],
       "inspected_files": [
+        "src/decapod/core/docs_cli.rs",
         "src/decapod/core/todo.rs",
         "src/decapod/plugins/policy.rs"
       ],
