@@ -1,5 +1,16 @@
 # Security
 
+## Cooperative shared-claim opt-in
+
+The optional basic-trust shared-claim setting is a cooperative policy, not an
+authenticated trust grant. Same-user agents that can edit main config can
+enable it, and caller labels can be impersonated. The runtime refuses the
+opt-in if main-root resolution fails and does not use the candidate config for
+the shared datastore. A bounded regular-file config snapshot is taken before
+the write transaction; an in-flight operation can use its earlier snapshot.
+Its transactional audit records the consumed config fingerprint, not proof of
+human editing or verified identity. All other trust and approval gates remain.
+
 ## Broker caller context custody
 
 `group_broker::CallerContext` transports only a fixed set of request-scoped
@@ -430,7 +441,7 @@ Release and deployment authority remains separate.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0d78ea5999c0deecee438b655d04e5a2accbbeddbfc75c7df87da9e0a15164ff`
+- Repository signal fingerprint: `08856822d05590d9214e0af50393a5c161b46577e4c566687c9e404979188f07`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

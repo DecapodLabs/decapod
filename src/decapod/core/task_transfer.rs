@@ -259,7 +259,7 @@ fn export_bundle(root: &Path, id: &str, to: &str, actor: &str) -> Result<Bundle,
         |conn| {
             // No active lease is handed off: yield already relinquished it. Keep
             // ordinary exclusive-claim trust; receiver acceptance is explicit.
-            enforce_operation_policy(root, conn, "todo.claim.exclusive", actor, id)?;
+            enforce_operation_policy(root, conn, "todo.claim.exclusive", actor, id, None)?;
             let ids = vec![id.to_owned()];
             let current = capture_selected(conn, &ids)?;
             let projection = current
@@ -403,7 +403,7 @@ fn import_bundle(root: &Path, bundle: &Bundle, actor: &str) -> Result<Value, Dec
         "todo.transfer.import",
         TaskJournalSelection::Ids(vec![id.clone()]),
         |conn| {
-            enforce_operation_policy(root, conn, "todo.claim.exclusive", actor, id)?;
+            enforce_operation_policy(root, conn, "todo.claim.exclusive", actor, id, None)?;
             // Any earlier local record for this subject is conflicting authority,
             // even if somebody removed its current projection. Never merge histories.
             let exists: bool = conn.query_row(

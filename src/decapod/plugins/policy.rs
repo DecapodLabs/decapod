@@ -638,8 +638,8 @@ fn risk_zone_for_operation(op_name: &str) -> &'static str {
     "control.mutate"
 }
 
-fn configured_approval_categories(root: &Path) -> Result<Vec<String>, error::DecapodError> {
-    // The shared datastore identifies its accepted project policy even when a
+fn configured_policy_project_root(root: &Path) -> PathBuf {
+    // The shared datastore identifies its project policy even when a
     // container mounts the host config without the host Git metadata. Do not
     // substitute the workspace clone's config or search arbitrary ancestors.
     let project_root = root
@@ -652,7 +652,91 @@ fn configured_approval_categories(root: &Path) -> Result<Vec<String>, error::Dec
         .unwrap_or(root);
     let main_root = crate::core::workspace::get_main_repo_root(project_root)
         .unwrap_or_else(|_| project_root.to_path_buf());
-    configured_approval_categories_at_project(&main_root)
+    main_root
+}
+
+fn configured_approval_categories(root: &Path) -> Result<Vec<String>, error::DecapodError> {
+    configured_approval_categories_at_project(&configured_policy_project_root(root))
+}
+
+/// Resolve only the shared datastore's main-repository config. The digest is
+/// evidence of the bytes used, not evidence of who edited them.
+pub(crate) fn basic_shared_claim_policy_digest(
+    root: &Path,
+) -> Result<Option<String>, error::DecapodError> {
+    use sha2::{Digest, Sha256};
+    use std::io::Read;
+
+    const MAX_CONFIG_BYTES: u64 = 1024 * 1024;
+    // Unlike the legacy approval-category lookup, this opt-in must never fall
+    // back to a candidate workspace when the main repository cannot be located.
+    let project_root = root
+        .parent()
+        .filter(|parent| {
+            root.file_name().is_some_and(|name| name == "data")
+                && parent.file_name().is_some_and(|name| name == ".decapod")
+        })
+        .and_then(Path::parent)
+        .unwrap_or(root);
+    let main_root = crate::core::workspace::get_main_repo_root(project_root).map_err(|_| {
+        error::DecapodError::Config(
+            "SHARED_CLAIM_POLICY_ROOT_UNAVAILABLE: cannot resolve the main repository".into(),
+        )
+    })?;
+    // The workspace-path shortcut alone is not enough: verify the identified
+    // host itself resolves to a main Git root rather than a guessed ancestor.
+    let verified_root = crate::core::workspace::get_main_repo_root(&main_root).map_err(|_| {
+        error::DecapodError::Config(
+            "SHARED_CLAIM_POLICY_ROOT_UNAVAILABLE: cannot verify the main repository".into(),
+        )
+    })?;
+    if main_root.canonicalize()? != verified_root.canonicalize()? {
+        return Err(error::DecapodError::Config(
+            "SHARED_CLAIM_POLICY_ROOT_UNAVAILABLE: inconsistent main repository".into(),
+        ));
+    }
+    let path = main_root.join(".decapod/config.toml");
+    let metadata = match std::fs::symlink_metadata(&path) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error::DecapodError::IoError(error)),
+    };
+    if !metadata.is_file() {
+        return Err(error::DecapodError::Config(
+            "Shared-claim policy config must be a regular file, not a symlink or special file"
+                .into(),
+        ));
+    }
+    let mut options = std::fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+    }
+    let file = options.open(&path)?;
+    if !file.metadata()?.is_file() {
+        return Err(error::DecapodError::Config(
+            "Shared-claim policy config must be a regular file".into(),
+        ));
+    }
+    let mut bytes = Vec::new();
+    file.take(MAX_CONFIG_BYTES + 1).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > MAX_CONFIG_BYTES {
+        return Err(error::DecapodError::Config(
+            "Shared-claim policy config exceeds 1 MiB".into(),
+        ));
+    }
+    let text = std::str::from_utf8(&bytes).map_err(|_| {
+        error::DecapodError::Config("Shared-claim policy config is not UTF-8".into())
+    })?;
+    let config: crate::cli::DecapodProjectConfig = toml::from_str(text).map_err(|e| {
+        error::DecapodError::Config(format!("Unable to load shared-claim policy: {e}"))
+    })?;
+    Ok(config
+        .governance
+        .allow_basic_shared_claims
+        .then(|| format!("sha256:{:x}", Sha256::digest(&bytes))))
 }
 
 fn configured_approval_categories_at_project(
@@ -1313,5 +1397,95 @@ mod tests {
             "{error}"
         );
         assert_eq!(fs::read(path).unwrap(), malformed);
+    }
+
+    fn write_shared_policy(root: &Path, enabled: bool) {
+        fs::create_dir_all(root.join(".decapod")).unwrap();
+        let mut config = crate::cli::DecapodProjectConfig::default();
+        config.governance.allow_basic_shared_claims = enabled;
+        fs::write(
+            root.join(".decapod/config.toml"),
+            toml::to_string(&config).unwrap(),
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn basic_shared_policy_reads_main_config_not_candidate() {
+        let host = tempfile::tempdir().unwrap();
+        assert!(
+            std::process::Command::new("git")
+                .args(["init", "-q"])
+                .current_dir(host.path())
+                .status()
+                .unwrap()
+                .success()
+        );
+        write_shared_policy(host.path(), false);
+        let workspace = host.path().join(".decapod/workspaces/candidate");
+        fs::create_dir_all(&workspace).unwrap();
+        assert!(
+            std::process::Command::new("git")
+                .args(["init", "-q"])
+                .current_dir(&workspace)
+                .status()
+                .unwrap()
+                .success()
+        );
+        write_shared_policy(&workspace, true);
+        let store = workspace.join(".decapod/data");
+        fs::create_dir_all(&store).unwrap();
+        assert!(basic_shared_claim_policy_digest(&store).unwrap().is_none());
+        write_shared_policy(host.path(), true);
+        write_shared_policy(&workspace, false);
+        assert!(basic_shared_claim_policy_digest(&store).unwrap().is_some());
+    }
+
+    #[test]
+    fn basic_shared_policy_fails_closed_for_unresolved_and_bad_config() {
+        let host = tempfile::tempdir().unwrap();
+        let store = host.path().join(".decapod/data");
+        fs::create_dir_all(&store).unwrap();
+        write_shared_policy(host.path(), true);
+        assert!(basic_shared_claim_policy_digest(&store).is_err());
+        assert!(
+            std::process::Command::new("git")
+                .args(["init", "-q"])
+                .current_dir(host.path())
+                .status()
+                .unwrap()
+                .success()
+        );
+        let path = host.path().join(".decapod/config.toml");
+        fs::remove_file(&path).unwrap();
+        assert!(basic_shared_claim_policy_digest(&store).unwrap().is_none());
+        fs::write(&path, "[governance\n").unwrap();
+        assert!(basic_shared_claim_policy_digest(&store).is_err());
+        fs::write(&path, vec![b'x'; 1024 * 1024 + 1]).unwrap();
+        assert!(basic_shared_claim_policy_digest(&store).is_err());
+        fs::remove_file(&path).unwrap();
+        fs::create_dir(&path).unwrap();
+        assert!(basic_shared_claim_policy_digest(&store).is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn basic_shared_policy_rejects_symlink() {
+        use std::os::unix::fs::symlink;
+        let host = tempfile::tempdir().unwrap();
+        assert!(
+            std::process::Command::new("git")
+                .args(["init", "-q"])
+                .current_dir(host.path())
+                .status()
+                .unwrap()
+                .success()
+        );
+        let store = host.path().join(".decapod/data");
+        fs::create_dir_all(&store).unwrap();
+        let target = host.path().join("policy.toml");
+        fs::write(&target, "not read").unwrap();
+        symlink(&target, host.path().join(".decapod/config.toml")).unwrap();
+        assert!(basic_shared_claim_policy_digest(&store).is_err());
     }
 }

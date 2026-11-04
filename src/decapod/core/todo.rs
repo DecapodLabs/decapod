@@ -2578,9 +2578,10 @@ fn enforce_operation_policy(
     zone_name: &str,
     agent_id: &str,
     target_id: &str,
-) -> Result<(), error::DecapodError> {
+    prepared_basic_shared_policy: Option<&str>,
+) -> Result<bool, error::DecapodError> {
     let Some((required_trust, requires_approval)) = get_risk_zone_policy(conn, zone_name)? else {
-        return Ok(());
+        return Ok(false);
     };
 
     let current_level = if zone_name == "todo.handoff" {
@@ -2589,7 +2590,13 @@ fn enforce_operation_policy(
     } else {
         get_agent_trust_level(conn, agent_id)?
     };
-    if trust_level_to_int(&current_level) < trust_level_to_int(&required_trust) {
+    let basic_shared_policy_used = zone_name == "todo.claim.shared"
+        && current_level == "basic"
+        && required_trust == "verified"
+        && prepared_basic_shared_policy.is_some();
+    if trust_level_to_int(&current_level) < trust_level_to_int(&required_trust)
+        && !basic_shared_policy_used
+    {
         return Err(error::DecapodError::ValidationError(format!(
             "Policy gate denied for {zone_name}: agent '{agent_id}' trust '{current_level}' < required '{required_trust}'"
         )));
@@ -2602,7 +2609,7 @@ fn enforce_operation_policy(
         };
         let level = policy::RiskLevel::HIGH;
         if !policy::human_in_loop_required(&store, zone_name, level, true) {
-            return Ok(());
+            return Ok(basic_shared_policy_used);
         }
         if !policy::check_approval_on_conn(conn, zone_name, Some(target_id), "global")? {
             return Err(error::DecapodError::ValidationError(format!(
@@ -2610,7 +2617,35 @@ fn enforce_operation_policy(
             )));
         }
     }
-    Ok(())
+    Ok(basic_shared_policy_used)
+}
+
+fn record_basic_shared_claim_policy_use(
+    conn: &Connection,
+    task_id: &str,
+    agent_id: &str,
+    primary_owner: &str,
+    config_digest: &str,
+    ts: &str,
+) -> Result<(), error::DecapodError> {
+    append_event(
+        conn,
+        &TodoEvent {
+            ts: ts.to_owned(),
+            event_id: crate::core::ulid::new_ulid(),
+            event_type: "policy.basic_shared_claim.used".into(),
+            status: "success".into(),
+            task_id: Some(task_id.to_owned()),
+            actor: agent_id.to_owned(),
+            payload: serde_json::json!({
+                "policy": "governance.allow_basic_shared_claims",
+                "config_digest": config_digest,
+                "agent_label": agent_id,
+                "primary_owner_label": primary_owner,
+                "identity_assurance": "cooperative_not_authenticated"
+            }),
+        },
+    )
 }
 
 pub fn check_trust_level(
@@ -4230,6 +4265,25 @@ pub fn claim_task_with_lease(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
+    // Snapshot the opt-in before the ownership write transaction so a slow or
+    // unavailable config cannot hold its lock. The gate is checked again in
+    // the transaction; a later trust-level change can only deny, not widen it.
+    let basic_shared_policy = if mode == ClaimMode::Shared {
+        let eligible = broker.with_conn(&db_path, "decapod", None, "todo.trust.check", |conn| {
+            ensure_schema(conn)?;
+            Ok(get_agent_trust_level(conn, agent_id)? == "basic"
+                && get_risk_zone_policy(conn, "todo.claim.shared")?
+                    .is_some_and(|(level, _)| level == "verified"))
+        })?;
+        if eligible {
+            policy::basic_shared_claim_policy_digest(root)?
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     // Do not short-circuit exclusive conflicts from cache: lease expiry must hit the DB
     // so another agent can reclaim an expired ownership lease.
 
@@ -4248,7 +4302,14 @@ pub fn claim_task_with_lease(
             } else {
                 "todo.claim.exclusive"
             };
-            enforce_operation_policy(root, conn, claim_zone, agent_id, id)?;
+            let basic_shared_policy_used = enforce_operation_policy(
+                root,
+                conn,
+                claim_zone,
+                agent_id,
+                id,
+                basic_shared_policy.as_deref(),
+            )?;
 
             // status, assigned_to, category, scope, dir_path, lease_expires_at, lease_generation
             struct ClaimLeaseRow {
@@ -4305,6 +4366,14 @@ pub fn claim_task_with_lease(
                         existing_lease,
                         lease_generation: _,
                     } = row;
+                    if basic_shared_policy_used
+                        && (assigned_to.is_empty() || assigned_to == agent_id)
+                    {
+                        return Err(error::DecapodError::ValidationError(
+                            "Basic-trust shared claims require an existing different primary owner"
+                                .into(),
+                        ));
+                    }
                     if status == "done" || status == "archived" {
                         return Ok(serde_json::json!({
                             "status": "error",
@@ -4346,6 +4415,18 @@ pub fn claim_task_with_lease(
                                 },
                             )?;
                             sync_legacy_owner_column(conn, id)?;
+                            if basic_shared_policy_used {
+                                let config_digest =
+                                    basic_shared_policy.as_deref().expect("policy was checked");
+                                record_basic_shared_claim_policy_use(
+                                    conn,
+                                    id,
+                                    agent_id,
+                                    &assigned_to,
+                                    config_digest,
+                                    &ts,
+                                )?;
+                            }
                             conn.execute("UPDATE tasks SET revision = revision + 1, updated_at = ?1 WHERE id = ?2", crate::core::db::params![ts, id])?;
                             return Ok(serde_json::json!({
                                 "status": "ok",
@@ -4750,7 +4831,7 @@ pub fn renew_claim_lease(
         |conn| {
             ensure_schema(conn)?;
             touch_agent_presence(conn, agent_id, &ts)?;
-            enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id)?;
+            enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id, None)?;
 
             let current: Option<(String, String, Option<String>, u32, String)> = conn
                 .query_row(
@@ -4898,7 +4979,7 @@ pub fn yield_claim_lease(
         |conn| {
             ensure_schema(conn)?;
             touch_agent_presence(conn, agent_id, &ts)?;
-            enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id)?;
+            enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id, None)?;
 
             let current: Option<(String, String, u32, String, String)> = conn
                 .query_row(
@@ -5368,7 +5449,7 @@ fn handoff_task_impl(
         TaskJournalSelection::Ids(vec![id.to_owned()]),
         |conn| {
             ensure_schema(conn)?;
-            enforce_operation_policy(root, conn, "todo.handoff", acting_agent, id)?;
+            enforce_operation_policy(root, conn, "todo.handoff", acting_agent, id, None)?;
             touch_agent_presence(conn, to, &ts)?;
 
             struct HandoffRow {
@@ -6693,8 +6774,8 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
 
                     touch_agent_presence(conn, agent_id, &ev.ts)?;
                 }
-                "agent.session.cleanup" => {
-                    // No-op for rebuild - session cleanup is audit-only
+                "agent.session.cleanup" | "policy.basic_shared_claim.used" => {
+                    // Audit-only records do not independently mutate the projection.
                 }
                 "ownership.claim" => {
                     let task_id = ev.task_id.clone().unwrap_or_default();

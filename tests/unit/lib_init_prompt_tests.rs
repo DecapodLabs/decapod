@@ -583,3 +583,18 @@ fn init_config_preserves_reviewed_proof_order_and_contract_digest() {
         "re-init must not reorder reviewed commands or silently invalidate their contract"
     );
 }
+
+#[test]
+fn init_roundtrip_preserves_basic_shared_claim_opt_in() {
+    let mut config = DecapodProjectConfig::default();
+    assert!(!config.governance.allow_basic_shared_claims);
+    assert!(
+        !toml::to_string(&config)
+            .unwrap()
+            .contains("allow_basic_shared_claims")
+    );
+    config.governance.allow_basic_shared_claims = true;
+    let init = init_with_from_config(&config, PathBuf::from("."), false, false);
+    let roundtrip = config_from_init_with(&init, config.repo.clone());
+    assert!(roundtrip.governance.allow_basic_shared_claims);
+}

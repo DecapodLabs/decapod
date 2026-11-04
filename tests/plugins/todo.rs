@@ -2132,3 +2132,141 @@ fn explicit_scope_handoff_preserves_real_overlap_exclusion() {
         r#"paths:["b.rs"]"#
     );
 }
+
+fn write_basic_shared_config(repo: &Path, enabled: bool) {
+    let config = format!(
+        "schema_version = \"1.0.0\"\n[init]\ndiagram_style = \"ascii\"\nentrypoints = []\n[repo]\n[governance]\nallow_basic_shared_claims = {enabled}\n"
+    );
+    std::fs::write(repo.join(".decapod/config.toml"), config).unwrap();
+}
+
+#[test]
+fn basic_shared_claim_opt_in_is_bounded_and_audited() {
+    let temp = tempdir().unwrap();
+    let repo = temp.path();
+    assert!(
+        Command::new("git")
+            .args(["init", "-q"])
+            .current_dir(repo)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let root = repo.join(".decapod/data");
+    std::fs::create_dir_all(&root).unwrap();
+    initialize_todo_db(&root).unwrap();
+    let id = add_scoped_task(&root, "Owned shared work", "", repo.to_str().unwrap());
+    assert_eq!(
+        claim_task(&root, &id, "owner", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+    write_basic_shared_config(repo, false);
+    assert!(claim_task(&root, &id, "member", ClaimMode::Shared).is_err());
+    write_basic_shared_config(repo, true);
+    assert_eq!(
+        claim_task(&root, &id, "member", ClaimMode::Shared).unwrap()["status"],
+        "ok"
+    );
+    assert!(!check_trust_level(&root, "member", "verified").unwrap());
+    let task = get_task(&root, &id).unwrap().unwrap();
+    assert!(
+        task.owners
+            .iter()
+            .any(|owner| owner.agent_id == "member" && owner.claim_type == "secondary")
+    );
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let raw: String = db.query_row(
+        "SELECT payload FROM events WHERE stream='todo' AND subject_id=?1 AND event_type='policy.basic_shared_claim.used' ORDER BY seq DESC LIMIT 1",
+        [&id], |row| row.get(0),
+    ).unwrap();
+    let event: Value = serde_json::from_str(&raw).unwrap();
+    assert_eq!(event["actor"], "member");
+    assert_eq!(event["payload"]["primary_owner_label"], "owner");
+    assert_eq!(
+        event["payload"]["identity_assurance"],
+        "cooperative_not_authenticated"
+    );
+    assert!(
+        event["payload"]["config_digest"]
+            .as_str()
+            .unwrap()
+            .starts_with("sha256:")
+    );
+    set_agent_trust(&db, "untrusted", "untrusted", "1793750000Z");
+    drop(db);
+    assert!(claim_task(&root, &id, "untrusted", ClaimMode::Shared).is_err());
+    assert!(claim_task(&root, &id, "owner", ClaimMode::Shared).is_err());
+    let unowned = add_scoped_task(&root, "Unowned shared work", "", repo.to_str().unwrap());
+    assert!(claim_task(&root, &unowned, "other", ClaimMode::Shared).is_err());
+    write_basic_shared_config(repo, false);
+    assert!(claim_task(&root, &id, "later", ClaimMode::Shared).is_err());
+    assert!(
+        get_task(&root, &id)
+            .unwrap()
+            .unwrap()
+            .owners
+            .iter()
+            .any(|owner| owner.agent_id == "member")
+    );
+}
+
+#[test]
+fn basic_shared_claim_does_not_override_stronger_or_approval_gates() {
+    let temp = tempdir().unwrap();
+    let repo = temp.path();
+    assert!(
+        Command::new("git")
+            .args(["init", "-q"])
+            .current_dir(repo)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let root = repo.join(".decapod/data");
+    std::fs::create_dir_all(&root).unwrap();
+    initialize_todo_db(&root).unwrap();
+    let id = add_scoped_task(&root, "Guarded shared work", "", repo.to_str().unwrap());
+    claim_task(&root, &id, "owner", ClaimMode::Exclusive).unwrap();
+    write_basic_shared_config(repo, true);
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    db.execute(
+        "UPDATE risk_zones SET required_trust_level='core' WHERE zone_name='todo.claim.shared'",
+        [],
+    )
+    .unwrap();
+    drop(db);
+    assert!(claim_task(&root, &id, "member", ClaimMode::Shared).is_err());
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    db.execute("UPDATE risk_zones SET required_trust_level='verified', requires_approval=1 WHERE zone_name='todo.claim.shared'", []).unwrap();
+    drop(db);
+    assert!(claim_task(&root, &id, "member", ClaimMode::Shared).is_err());
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let count: i64 = db.query_row("SELECT count(*) FROM events WHERE stream='todo' AND event_type='policy.basic_shared_claim.used'", [], |row| row.get(0)).unwrap();
+    assert_eq!(count, 0);
+}
+
+#[test]
+fn basic_shared_claim_rolls_back_if_audit_append_fails() {
+    let temp = tempdir().unwrap();
+    let repo = temp.path();
+    assert!(
+        Command::new("git")
+            .args(["init", "-q"])
+            .current_dir(repo)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let root = repo.join(".decapod/data");
+    std::fs::create_dir_all(&root).unwrap();
+    initialize_todo_db(&root).unwrap();
+    let id = add_scoped_task(&root, "Audit rollback", "", repo.to_str().unwrap());
+    claim_task(&root, &id, "owner", ClaimMode::Exclusive).unwrap();
+    write_basic_shared_config(repo, true);
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    db.execute_batch("CREATE TRIGGER reject_shared_audit BEFORE INSERT ON events WHEN NEW.event_type='policy.basic_shared_claim.used' BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END;").unwrap();
+    drop(db);
+    assert!(claim_task(&root, &id, "member", ClaimMode::Shared).is_err());
+    let task = get_task(&root, &id).unwrap().unwrap();
+    assert!(!task.owners.iter().any(|owner| owner.agent_id == "member"));
+}

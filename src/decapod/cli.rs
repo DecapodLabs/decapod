@@ -413,6 +413,9 @@ pub(crate) struct InitWithCli {
     pub existing_rust_workers: Option<crate::core::validation_runtime::rust_worker::Configuration>,
     #[clap(skip)]
     pub existing_ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
+    /// Preserve the configured shared-claim policy during reinitialization.
+    #[clap(skip)]
+    pub existing_allow_basic_shared_claims: bool,
     /// Require Vega readiness decisions after deterministic validation passes.
     /// Omission preserves the existing setting; runtime/model setup is separate.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
@@ -500,6 +503,10 @@ pub enum IsolationMode {
     Container,
 }
 
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 pub struct GovernanceConfig {
@@ -507,6 +514,9 @@ pub struct GovernanceConfig {
     pub protected_paths: Vec<String>,
     #[serde(default)]
     pub approval_categories: Vec<String>,
+    /// Cooperative opt-in for basic-trust secondary shared claims. False by default.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub allow_basic_shared_claims: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
