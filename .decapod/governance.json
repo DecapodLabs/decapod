@@ -508,6 +508,14 @@
       "proof_refs": [
         "CI jobs 126301126741 and 126300920130; static generator output comparison and git diff --check; runtime rerun pending"
       ]
+    },
+    {
+      "id": "shared-claim-fixture-repair",
+      "summary": "Make plugin fixtures independent of active-task dedup and preserve the single-statement audit rejection trigger.",
+      "input_digest": "sha256:08f2fab18126ba5b48b255626682bcf97ed0ab01c530438368e6b422e5340f76",
+      "proof_refs": [
+        "Exact-head job 126306715943; source-grounded fixture review, rustfmt and diff check; remote runtime pending"
+      ]
     }
   ],
   "intents": {
@@ -548,22 +556,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed mechanical CI repair: redundant return binding and generated schema whitespace only; shared-claim policy behavior unchanged pending user decision.",
-          "reviewed_code_fingerprint": "bd7e5f053d2c2b08ea6ef3eed8042ec5b232a1499cd97c23d564963372343a51",
+          "reason": "Reviewed fixture-only repair for task dedup and Dactyl trigger construction; production claim policy and broker semantics unchanged.",
+          "reviewed_code_fingerprint": "aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd",
           "spec_material_hash": "98a2637b868afbe10ae3540caf6eb64900616211fe9da6db499fe3bb157c8711"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed mechanical CI repair: redundant return binding and generated schema whitespace only; shared-claim policy behavior unchanged pending user decision.",
-          "reviewed_code_fingerprint": "bd7e5f053d2c2b08ea6ef3eed8042ec5b232a1499cd97c23d564963372343a51",
+          "reason": "Reviewed fixture-only repair for task dedup and Dactyl trigger construction; production claim policy and broker semantics unchanged.",
+          "reviewed_code_fingerprint": "aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd",
           "spec_material_hash": "4959ed92de7fe5c9c5e81d6d9369cd060de4f084d4b87735d978c2cd44f69c5f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed mechanical CI repair: redundant return binding and generated schema whitespace only; shared-claim policy behavior unchanged pending user decision.",
-          "reviewed_code_fingerprint": "bd7e5f053d2c2b08ea6ef3eed8042ec5b232a1499cd97c23d564963372343a51",
+          "reason": "Reviewed fixture-only repair for task dedup and Dactyl trigger construction; production claim policy and broker semantics unchanged.",
+          "reviewed_code_fingerprint": "aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd",
           "spec_material_hash": "a811e042ee4b3061bfb57f0f921a774fb87ced4546104ff893688626b6e0e9b6"
         }
       ],
@@ -575,13 +583,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793752283Z"
+      "updated_at": "1793753532Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7b4918e6a566b4415bda113a62dad052b633f9453ec9adeda6bee581be4ee662",
+      "artifact_hash": "sha256:db1c0c70d2ec55fda6df25be2003d90c4345c7ab81d46646c4ed02ac9b0e39b9",
       "checks": [
         {
           "name": "embedded_docs_parity",
@@ -598,6 +606,10 @@
         {
           "name": "local_tests",
           "status": "unavailable"
+        },
+        {
+          "name": "rustfmt",
+          "status": "passed"
         },
         {
           "name": "static_diff",
@@ -643,10 +655,17 @@
             "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6HXDE1490SY92MEY7D9E493",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6HXDE1490SY92MEY7D9E493": {
@@ -725,6 +744,27 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/plugins/todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/unit/core/task_journal_tests.rs",
+                  "tests/plugins/todo.rs",
+                  "Exact-head push job 126306715943 failed two fixtures: active task dedup reused already-owned task, and execute_batch split trigger body. Prepare independent unowned fixture before claims, assert distinct identity and unowned state, execute trigger as one statement. Policy and broker unchanged; runtime rerun pending."
+                ],
+                "proof_refs": [
+                  "rustfmt",
+                  "static_diff",
+                  "local_runtime"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -734,12 +774,15 @@
       "destination": "pull request",
       "evidence": [
         "Exact public head 5797dda6 CI: Clippy let-and-return at policy.rs 655; Docs Sync config-schema drift. Removed redundant binding and matched literal generator newline output. No policy behavior changes or runtime test pass claimed.",
+        "Exact-head push job 126306715943 failed two fixtures: active task dedup reused already-owned task, and execute_batch split trigger body. Prepare independent unowned fixture before claims, assert distinct identity and unowned state, execute trigger as one statement. Policy and broker unchanged; runtime rerun pending.",
         "Independent review found and prompted repair of transfer call sites, reducer handling, default serialization and config custody cases."
       ],
       "inspected_files": [
         "src/decapod/core/docs_cli.rs",
         "src/decapod/core/todo.rs",
-        "src/decapod/plugins/policy.rs"
+        "src/decapod/plugins/policy.rs",
+        "tests/plugins/todo.rs",
+        "tests/unit/core/task_journal_tests.rs"
       ],
       "intent_id": "intent:change_01M6HXDDZJJH33CSZXABT0TFAF",
       "modified_files": [

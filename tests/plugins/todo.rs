@@ -2156,6 +2156,17 @@ fn basic_shared_claim_opt_in_is_bounded_and_audited() {
     std::fs::create_dir_all(&root).unwrap();
     initialize_todo_db(&root).unwrap();
     let id = add_scoped_task(&root, "Owned shared work", "", repo.to_str().unwrap());
+    // Create both fixtures before claiming: active-task deduplication can reuse
+    // a similar already-owned task instead of creating an unowned task.
+    let unowned = add_scoped_task(&root, "Unowned shared work", "", repo.to_str().unwrap());
+    assert_ne!(id, unowned);
+    assert!(
+        get_task(&root, &unowned)
+            .unwrap()
+            .unwrap()
+            .assigned_to
+            .is_empty()
+    );
     assert_eq!(
         claim_task(&root, &id, "owner", ClaimMode::Exclusive).unwrap()["status"],
         "ok"
@@ -2196,7 +2207,6 @@ fn basic_shared_claim_opt_in_is_bounded_and_audited() {
     drop(db);
     assert!(claim_task(&root, &id, "untrusted", ClaimMode::Shared).is_err());
     assert!(claim_task(&root, &id, "owner", ClaimMode::Shared).is_err());
-    let unowned = add_scoped_task(&root, "Unowned shared work", "", repo.to_str().unwrap());
     assert!(claim_task(&root, &unowned, "other", ClaimMode::Shared).is_err());
     write_basic_shared_config(repo, false);
     assert!(claim_task(&root, &id, "later", ClaimMode::Shared).is_err());
@@ -2264,7 +2274,8 @@ fn basic_shared_claim_rolls_back_if_audit_append_fails() {
     claim_task(&root, &id, "owner", ClaimMode::Exclusive).unwrap();
     write_basic_shared_config(repo, true);
     let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
-    db.execute_batch("CREATE TRIGGER reject_shared_audit BEFORE INSERT ON events WHEN NEW.event_type='policy.basic_shared_claim.used' BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END;").unwrap();
+    // A trigger is one statement; execute_batch splits its body semicolon.
+    db.execute("CREATE TRIGGER reject_shared_audit BEFORE INSERT ON events WHEN NEW.event_type='policy.basic_shared_claim.used' BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END;", []).unwrap();
     drop(db);
     assert!(claim_task(&root, &id, "member", ClaimMode::Shared).is_err());
     let task = get_task(&root, &id).unwrap().unwrap();
