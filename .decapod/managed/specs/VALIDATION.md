@@ -1,5 +1,13 @@
 # Validation
 
+## Claim boundary delivery checks
+
+The required CLI target runs the two `claim_boundaries` regressions with
+independent caller environments and a shared worktree datastore. Their results
+do not replace standalone validation: the tracked agent entrypoints and managed
+Dockerfile must also match the evaluating release. A release refresh must use
+the CLI and be committed, so CI does not repair those inputs during proof.
+
 ## Documented agent bootstrap execution
 
 The always-selected `cli-contracts` proof executes the inline
@@ -879,7 +887,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dc4de50fd0aed2662d884f233f706d3fa5f460748f78adf3f59c91800ddd530f`
+- Repository signal fingerprint: `d00e1a72d5229fdd6838f5122ebec89cd6ca4d50f67eb3d864dac69db5807f95`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
