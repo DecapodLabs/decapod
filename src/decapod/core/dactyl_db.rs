@@ -541,7 +541,7 @@ impl Connection {
     }
 
     pub fn inspect_schema(&self) -> Result<dactyl_db::StoreSchema> {
-        Ok(self.driver.inspect_schema()?)
+        self.driver.inspect_schema()
     }
 
     pub fn has_table(&self, table: &str) -> Result<bool> {

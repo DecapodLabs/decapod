@@ -521,6 +521,11 @@
       "id": "broker-graceful-drain",
       "summary": "Preserve established storage lease during normal bounded foreground shutdown; record unavailable authenticated execution proof",
       "input_digest": "sha256:5531e581aaf755a37187271198a40d233659bd53adcda6099d230359b31c607f"
+    },
+    {
+      "id": "broker-clippy-result",
+      "summary": "Return schema inspection Result directly; fix exact-head Clippy without weakening checks",
+      "input_digest": "sha256:09808ff754c69ffe52212765f01dd8abfb7a548a2206a1e3cc4d2512320b7476"
     }
   ],
   "intents": {
@@ -559,24 +564,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document bounded graceful active-lease drain separately from immediate parent-loss termination; execution remains unverified.",
-          "reviewed_code_fingerprint": "c32d3631a11de58167cef1acdd39891ae7faafed65cf55eeee0c6f78341a9e14",
+          "reason": "Clippy-only direct Result return; owner protocol, lifetime and identity semantics unchanged.",
+          "reviewed_code_fingerprint": "b8872bd4e696626aa0732b53e7e01ae735ddbc1fd8a08b67b18bbd396ddce5c9",
           "spec_material_hash": "d47020cbda5eb66519ccf10dfeec72e8feb9e85ff440b477bb8ada513b1e9a67"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document bounded graceful active-lease drain separately from immediate parent-loss termination; execution remains unverified.",
-          "reviewed_code_fingerprint": "c32d3631a11de58167cef1acdd39891ae7faafed65cf55eeee0c6f78341a9e14",
+          "reason": "Clippy-only direct Result return; owner protocol, lifetime and identity semantics unchanged.",
+          "reviewed_code_fingerprint": "b8872bd4e696626aa0732b53e7e01ae735ddbc1fd8a08b67b18bbd396ddce5c9",
           "spec_material_hash": "9ca5de6b2bb8c07a10acbddb873a75748c9684a5d9512f67bcf83abed3a75510"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document bounded graceful active-lease drain separately from immediate parent-loss termination; execution remains unverified.",
-          "reviewed_code_fingerprint": "c32d3631a11de58167cef1acdd39891ae7faafed65cf55eeee0c6f78341a9e14",
+          "reason": "Clippy-only direct Result return; owner protocol, lifetime and identity semantics unchanged.",
+          "reviewed_code_fingerprint": "b8872bd4e696626aa0732b53e7e01ae735ddbc1fd8a08b67b18bbd396ddce5c9",
           "spec_material_hash": "fa32257ae4eac923396d32b59741b7f4890ecc4565f0a4db594f3dd064659f20"
         }
       ],
@@ -590,13 +595,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793756754Z"
+      "updated_at": "1793758373Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7c381e606beac00c0b5d62325d1deef7016cfcbad76729b525c9c27a68dae7c2",
+      "artifact_hash": "sha256:086b27ecf34dc735f20d51c3cfcacfcb938497835a4897a73d9680db4fb3fcc7",
       "blockers": [
         "Official validation source upload cannot authenticate GitTransport; gh auth status reports no logged-in hosts and supported environment catalog is empty."
       ],
@@ -610,7 +615,19 @@
           "status": "passed"
         },
         {
+          "name": "local_format",
+          "status": "passed"
+        },
+        {
           "name": "proof-inventory-review",
+          "status": "passed"
+        },
+        {
+          "name": "remote_clippy",
+          "status": "failed"
+        },
+        {
+          "name": "remote_shared_binary",
           "status": "passed"
         },
         {
@@ -661,10 +678,17 @@
             "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6J380RNBY4BZDQX2KT7240J",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6J380RNBY4BZDQX2KT7240J": {
@@ -725,6 +749,24 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/decapod/core/dactyl_db.rs",
+                  "PR1515 head f6f3e5de CI job126339253271 rejects needless_question_mark at dactyl_db.rs544; directly return driver Result without lint waiver. Shared binary job126339253295 and native musl build126339253139 passed. User requests fix and push, PR CI supplies validation."
+                ],
+                "proof_refs": [
+                  "remote_clippy",
+                  "remote_shared_binary",
+                  "local_format"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -735,6 +777,7 @@
       "evidence": [
         "Authored source replayed cleanly from preserved checkpoint 0738841e onto accepted base 7062f870; prior governance history preserved on original branch; runtime tests not yet executed",
         "Compared every discovered source hash to reviewed-config commit 33be9736: only Cargo.toml and Cargo.lock differ, solely decapod package version 0.123.7 to accepted 0.124.3; adapters, workflows, recipes, graph and dependency edges unchanged",
+        "PR1515 head f6f3e5de CI job126339253271 rejects needless_question_mark at dactyl_db.rs544; directly return driver Result without lint waiver. Shared binary job126339253295 and native musl build126339253139 passed. User requests fix and push, PR CI supplies validation.",
         "Source review plus rustfmt and git diff --check passed. Added active transaction drain regression; no compilation or runtime tests executed. Normal drop drains up to five seconds; parent EOF still terminates immediately."
       ],
       "inspected_files": [
@@ -746,6 +789,7 @@
       ],
       "intent_id": "intent:change_01M6J380QW7TMH9D8GMXTBG62J",
       "modified_files": [
+        "src/decapod/core/dactyl_db.rs",
         "src/decapod/core/storage_owner.rs"
       ],
       "next_transitions": [
