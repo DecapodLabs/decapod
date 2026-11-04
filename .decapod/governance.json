@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "1c063bb9d3fe9db516c8ffc61da9f9cba5409791",
+    "accepted_commit": "1d2bf8d6957df65f3f4d24208729766f5e366fe8",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -518,40 +518,26 @@
     }
   },
   "change": {
-    "id": "change_01M6M0XZ9GV6RVCB22FFHE03W7",
-    "base_commit": "1c063bb9d3fe9db516c8ffc61da9f9cba5409791",
+    "id": "change_01M6M71PVFBMV1ESJPRV7G6KYS",
+    "base_commit": "1d2bf8d6957df65f3f4d24208729766f5e366fe8",
     "target_base": "origin/master"
   },
   "claims": {
-    "issue1470-rust-cli-inventory": {
-      "statement": "The Rust consumer fixture has one tracked Justfile and real CLI reconciliation binds only that spelling; macOS acceptance requires case-insensitive APFS",
-      "falsifier": "CLI inventories lowercase alias or digest differs from exact Git index bytes; macOS test skips incompatible filesystem",
-      "status": "supported",
-      "proof_refs": [
-        "tests/support/justfile_inventory.rs: four targeted Rust tests passed on case-insensitive APFS; full native readiness remains unproven"
-      ]
+    "cli-claim-boundaries": {
+      "statement": "Distinct basic callers can claim disjoint files while overlapping exclusive claims remain denied; opt-in shared membership preserves the primary owner and basic trust.",
+      "falsifier": "Real CLI regression observes incorrect ownership, overlap admission, default shared admission or trust elevation.",
+      "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "issue1470-rust-apfs",
-      "summary": "Add Rust consumer fixture, exact-index CLI inventory regression, required APFS execution, CI selection checks and material specs",
-      "input_digest": "sha256:f80fd6c570183afd08ff0d0290e71a80243f250c1af7568cea6dbb8688e1dca1",
-      "proof_refs": [
-        "Local cli_contracts justfile_inventory: 4 passed, 0 failed, 0 ignored on case-insensitive APFS; formatting passed; full native consumer readiness remains unproven"
-      ]
-    },
-    {
-      "id": "issue1470-rust-apfs-reviewed",
-      "summary": "Complete passing Rust APFS and CI-selection regressions; preserve immutable-vector recipe; refresh current-content spec reviews",
-      "input_digest": "sha256:d6c13e173f8a1ea494f43201eb5474b031ff902904397aec4e81c44e4fc3dd37",
-      "proof_refs": [
-        "4 CLI/APFS tests, CI-selection regression and existing golden recipe regression passed; full live consumer readiness remains unproven"
-      ]
+      "id": "claim-boundaries-cli",
+      "summary": "Exercise concurrent disjoint worktree claims and canonical shared-claim policy through real Rust CLI regressions",
+      "input_digest": "sha256:121d25e7f6b4256006a2a9f15d7dedca700789c452b3004033c6c1f03fd506ae"
     }
   ],
   "intents": {
-    "intent:change_01M6M0XZ9GV6RVCB22FFHE03W7": {
+    "intent:change_01M6M71PVFBMV1ESJPRV7G6KYS": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -561,11 +547,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6M0XZ9GV6RVCB22FFHE03W7",
+      "id": "intent:change_01M6M71PVFBMV1ESJPRV7G6KYS",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Complete case-insensitive APFS acceptance for issue 1470 without phantom Justfile bindings",
-      "refined_intent": "Complete case-insensitive APFS acceptance for issue 1470 without phantom Justfile bindings",
+      "raw_intent": "Verify released explicit path scopes and basic shared-claim policy for issue 1480",
+      "refined_intent": "Verify released explicit path scopes and basic shared-claim policy for issue 1480",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -578,145 +564,110 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Publish an issue-specific PR containing a dependency-free Rust consumer fixture and actual CLI inventory regression for tracked Justfile spelling; keep full live native readiness explicitly unproven",
+      "intent": "Protect issue 1480 resolution with real Rust CLI coverage: disjoint explicit file scopes, overlap exclusion, default-deny shared claims and canonical opt-in policy without trust elevation",
       "phases": [],
       "proof_hooks": [
-        "PR CI selective-cli runs cli_contracts including Rust fixture and required macOS APFS inventory regression"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rechecked current source including CI scheduling regression correction; exact-index CLI and required macOS APFS tests remain unchanged",
-          "reviewed_code_fingerprint": "dc4de50fd0aed2662d884f233f706d3fa5f460748f78adf3f59c91800ddd530f",
-          "spec_material_hash": "ed471a4965254798934e779e33f94104769c00307a7470f6e11d0c984ece3e86"
+          "reason": "Document real CLI process and worktree coverage and independent persisted ownership observations",
+          "reviewed_code_fingerprint": "d00e1a72d5229fdd6838f5122ebec89cd6ca4d50f67eb3d864dac69db5807f95",
+          "spec_material_hash": "b6030116703ef8449aad11be2295c523d820b60603acd18953f518bad5bdd062"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rechecked current reconciliation contract and non-readiness result against corrected test source",
-          "reviewed_code_fingerprint": "dc4de50fd0aed2662d884f233f706d3fa5f460748f78adf3f59c91800ddd530f",
-          "spec_material_hash": "7436434064a2c8c55475adc4a6c677f8aa83783d609069e134d63d459245b3b8"
+          "reason": "Document scope conflicts, secondary acknowledgement and canonical policy lookup contracts",
+          "reviewed_code_fingerprint": "d00e1a72d5229fdd6838f5122ebec89cd6ca4d50f67eb3d864dac69db5807f95",
+          "spec_material_hash": "4f8fe066da9a38843798e9d3d45b184567728217f829469fce8ea488989dfe33"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Rechecked private bounded fixture and fail-closed APFS preconditions; corrected CI test adds no authority",
-          "reviewed_code_fingerprint": "dc4de50fd0aed2662d884f233f706d3fa5f460748f78adf3f59c91800ddd530f",
-          "spec_material_hash": "dfcd0c4a5b01bb236385e15ca1aa3cbe99dc1abcf96c284ff365bfbde248924c"
+          "reason": "Document real command evidence for policy and audit boundaries without elevating cooperative identity",
+          "reviewed_code_fingerprint": "d00e1a72d5229fdd6838f5122ebec89cd6ca4d50f67eb3d864dac69db5807f95",
+          "spec_material_hash": "8d9802d4e0e1938136e6043b0b4ea9fdb6f93e419837e4b9e301b3f87d88aa1b"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Rust consumer fixture and required APFS source-spelling regression for issue 1470",
+      "title": "Verify released explicit path scopes and basic shared-claim policy for issue 1480",
       "todo_ids": [
-        "bugs_01m6m0w3e0qr1csf"
+        "bugs_01m6m0zdqetb3v1b"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793825394Z"
+      "updated_at": "1793830365Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "User authorized draft PR and PR CI validation; no merge or release; Rust-only new tooling; no claim of full live native readiness"
+        "User delegated issue 1480 resolution: retain explicit scopes and opt-in shared membership; no new trust-grant API"
       ],
-      "artifact_hash": "sha256:4be98fc520ba5caadcaf14f7af2054cbdd064696ea1d2ac33f5353ad27ab6cce",
+      "artifact_hash": "sha256:2ec6a780fcde50d95de96a2a4eab4af32399c8f85709c26bdbba27067c79d10a",
       "checks": [
         {
-          "name": "ci_selection_initial_compile",
-          "status": "failed"
-        },
-        {
-          "name": "ci_selection_regression",
-          "status": "passed"
-        },
-        {
-          "name": "existing_golden_recipe_regression",
-          "status": "passed"
-        },
-        {
-          "name": "formatting",
-          "status": "passed"
-        },
-        {
-          "name": "full_repo_readiness",
-          "status": "unavailable"
-        },
-        {
-          "name": "released_apfs_inventory",
-          "status": "passed"
-        },
-        {
-          "name": "rust_cli_apfs_regressions",
+          "name": "claim_cli",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6M0XZ9GV6RVCB22FFHE03W7",
+            "intent_id": "intent:change_01M6M71PVFBMV1ESJPRV7G6KYS",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6M0XZ9GV6RVCB22FFHE03W7",
+            "intent_id": "intent:change_01M6M71PVFBMV1ESJPRV7G6KYS",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6M0XZCGRGG38X2GKJ9QY5N5",
+            "detail": "trajectory:branch_01M6M71PYDYWZ9CFXGWPC8RZVR",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6M0XZ9GV6RVCB22FFHE03W7",
+            "intent_id": "intent:change_01M6M71PVFBMV1ESJPRV7G6KYS",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6M0XZCGRGG38X2GKJ9QY5N5",
+            "detail": "trajectory:branch_01M6M71PYDYWZ9CFXGWPC8RZVR",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6M0XZ9GV6RVCB22FFHE03W7",
+            "intent_id": "intent:change_01M6M71PVFBMV1ESJPRV7G6KYS",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M6M0XZCGRGG38X2GKJ9QY5N5",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M6M0XZ9GV6RVCB22FFHE03W7",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M6M0XZCGRGG38X2GKJ9QY5N5",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M6M0XZ9GV6RVCB22FFHE03W7",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6M0XZCGRGG38X2GKJ9QY5N5": {
+          "branch_01M6M71PYDYWZ9CFXGWPC8RZVR": {
             "evidence_only": true,
-            "id": "branch_01M6M0XZCGRGG38X2GKJ9QY5N5",
-            "intent_id": "intent:change_01M6M0XZ9GV6RVCB22FFHE03W7",
+            "id": "branch_01M6M71PYDYWZ9CFXGWPC8RZVR",
+            "intent_id": "intent:change_01M6M71PVFBMV1ESJPRV7G6KYS",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/init_reconciliation/mod.rs",
-                  "tests/consumer_readiness.rs",
-                  "/private/tmp/decapod-release-1470-inventory.json: official v0.126.0; confirmed APFS and same-file case alias; exactly tracked Justfile inventoried"
+                  "src/decapod/core/todo.rs",
+                  "assets/tools/source_ci_profile.rs",
+                  "tests/cli_contracts.rs",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "First targeted run passed concurrent disjoint worktree ownership and overlap exclusion; shared scenario hit fixture TOML missing-key indexing, corrected via explicit table insert; rerun pending"
                 ],
                 "proof_refs": [
-                  "released_apfs_inventory",
-                  "full_repo_readiness"
+                  "claim_cli"
                 ],
                 "scope": [
                   "root"
@@ -728,57 +679,16 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "CONTRIBUTING.md",
-                  ".github/workflows/ci.yml",
-                  "tests/support/justfile_inventory.rs",
-                  "tests/cli_contracts.rs",
-                  ".config/build/decapod.BUILD.bzl",
-                  "User requested Rust-only fixtures and publication of this work as a PR; issue1470 scoped independently from historical recovery and trust-policy decisions"
+                  "cargo test --locked --test cli_contracts claim_boundaries: 2 passed, 0 failed, 0 ignored; both real process scenarios ran in 82 seconds on macOS; /private/tmp/1480-cli-tests-2.log",
+                  "Accepted source-CI selective-cli already selects tests/cli_contracts.rs and executes //:cli_contracts; no selection or executor changes are needed"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "claim_cli"
+                ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "assets/tools/source_ci_profile.rs",
-                  "tests/source_ci_profile_policy.rs",
-                  "tests/fixtures/justfile_consumer/Justfile",
-                  "tests/fixtures/justfile_consumer/src/lib.rs",
-                  "cargo test --locked --test cli_contracts justfile_inventory: 4 passed, 0 failed, 0 ignored; actual APFS and inode alias assertions executed; local log /private/tmp/decapod-1470-rust-regression.log",
-                  "Rust-only new fixture and harness; normal source-CI macOS recipe executes APFS module and Linux CLI selector includes fixture changes; full live repo.pr-readiness.v1 not established"
-                ],
-                "proof_refs": [
-                  "rust_cli_apfs_regressions",
-                  "formatting"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Initial CI-selection assertion compared an extra reference level; corrected to slice contains without changing required command assertion",
-                  "source_ci_profile_policy rust_justfile_regressions: 1 passed, 0 failed, 0 ignored; existing golden recipe preservation assertion passed"
-                ],
-                "proof_refs": [
-                  "ci_selection_initial_compile",
-                  "ci_selection_regression",
-                  "existing_golden_recipe_regression"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
                 "validation_findings": []
               }
             ]
@@ -788,28 +698,20 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/decapod-release-1470-inventory.json: official v0.126.0; confirmed APFS and same-file case alias; exactly tracked Justfile inventoried",
-        "Initial CI-selection assertion compared an extra reference level; corrected to slice contains without changing required command assertion",
-        "Rust-only new fixture and harness; normal source-CI macOS recipe executes APFS module and Linux CLI selector includes fixture changes; full live repo.pr-readiness.v1 not established",
-        "User requested Rust-only fixtures and publication of this work as a PR; issue1470 scoped independently from historical recovery and trust-policy decisions",
-        "cargo test --locked --test cli_contracts justfile_inventory: 4 passed, 0 failed, 0 ignored; actual APFS and inode alias assertions executed; local log /private/tmp/decapod-1470-rust-regression.log",
-        "source_ci_profile_policy rust_justfile_regressions: 1 passed, 0 failed, 0 ignored; existing golden recipe preservation assertion passed"
+        "Accepted source-CI selective-cli already selects tests/cli_contracts.rs and executes //:cli_contracts; no selection or executor changes are needed",
+        "First targeted run passed concurrent disjoint worktree ownership and overlap exclusion; shared scenario hit fixture TOML missing-key indexing, corrected via explicit table insert; rerun pending",
+        "cargo test --locked --test cli_contracts claim_boundaries: 2 passed, 0 failed, 0 ignored; both real process scenarios ran in 82 seconds on macOS; /private/tmp/1480-cli-tests-2.log"
       ],
       "inspected_files": [
-        ".github/workflows/ci.yml",
-        "CONTRIBUTING.md",
-        "src/decapod/core/init_reconciliation/mod.rs",
-        "tests/consumer_readiness.rs"
-      ],
-      "intent_id": "intent:change_01M6M0XZ9GV6RVCB22FFHE03W7",
-      "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
         "assets/tools/source_ci_profile.rs",
-        "tests/cli_contracts.rs",
-        "tests/fixtures/justfile_consumer/Justfile",
-        "tests/fixtures/justfile_consumer/src/lib.rs",
-        "tests/source_ci_profile_policy.rs",
-        "tests/support/justfile_inventory.rs"
+        "src/decapod/core/todo.rs"
+      ],
+      "intent_id": "intent:change_01M6M71PVFBMV1ESJPRV7G6KYS",
+      "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        "tests/cli_contracts.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -817,10 +719,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M6M0XZCGRGG38X2GKJ9QY5N5",
+      "run_id": "branch_01M6M71PYDYWZ9CFXGWPC8RZVR",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6m0w3e0qr1csf",
+      "task_id": "bugs_01m6m0zdqetb3v1b",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
