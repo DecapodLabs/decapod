@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::fs::{self, File, OpenOptions};
-use std::io::{BufRead, BufReader, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -21,7 +21,17 @@ const BROKER_PROTOCOL_CLIENT_OVERRIDE_ENV: &str = "DECAPOD_GROUP_BROKER_PROTOCOL
 const BROKER_PROTOCOL_SERVER_OVERRIDE_ENV: &str = "DECAPOD_GROUP_BROKER_PROTOCOL_SERVER_OVERRIDE";
 const BROKER_PHASE_HOOK_FILE_ENV: &str = "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE";
 const BROKER_HALT_PHASE_ENV: &str = "DECAPOD_GROUP_BROKER_TEST_HALT_PHASE";
-const BROKER_PROTOCOL_DEFAULT: u32 = 2;
+const BROKER_PROTOCOL_DEFAULT: u32 = 3;
+const REQUEST_BUDGET: Duration = Duration::from_secs(120);
+const MAX_SESSION: Duration = Duration::from_secs(120);
+const MAX_REQUEST_BYTES: u64 = 1024 * 1024;
+
+fn epoch_ms() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64
+}
 
 // Only request-scoped context crosses the existing private socket. In particular,
 // never inherit another caller's identity, session credential or claim behavior.
@@ -98,6 +108,8 @@ struct BrokerRequest {
     argv: Vec<String>,
     caller: CallerContext,
     payload_hash: String,
+    #[serde(default)]
+    deadline_ms: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -124,6 +136,17 @@ pub fn is_internal_invocation() -> bool {
         .unwrap_or(false)
 }
 
+/// An isolated child may use the schema initialized by its foreground owner.
+/// Bind this startup optimization to the exact canonical database, never cwd.
+pub(crate) fn has_initialized_owner(root: &Path) -> bool {
+    is_internal_invocation()
+        && std::env::var_os("DECAPOD_STORAGE_OWNER_READY").is_some_and(|expected| {
+            dedupe_db_path(root)
+                .canonicalize()
+                .is_ok_and(|path| path.as_os_str() == expected)
+        })
+}
+
 pub fn maybe_route_mutation(
     broker_root: &Path,
     argv: &[String],
@@ -141,18 +164,7 @@ pub fn maybe_route_mutation(
 
     #[cfg(unix)]
     {
-        match run_unix_broker(broker_root, argv, finish) {
-            Ok(()) => Ok(true),
-            // Some constrained sandboxes disallow AF_UNIX sockets, and deeply nested
-            // Decapod worktrees can exceed platform socket path limits. Fall back to
-            // direct execution instead of surfacing a scary broker implementation error.
-            Err(error::DecapodError::IoError(io_err))
-                if broker_io_error_allows_direct_fallback(io_err.kind()) =>
-            {
-                Ok(false)
-            }
-            Err(e) => Err(e),
-        }
+        run_unix_broker(broker_root, argv, finish).map(|()| true)
     }
 
     #[cfg(not(unix))]
@@ -164,14 +176,6 @@ pub fn maybe_route_mutation(
 }
 
 #[cfg(unix)]
-fn broker_io_error_allows_direct_fallback(kind: std::io::ErrorKind) -> bool {
-    matches!(
-        kind,
-        std::io::ErrorKind::PermissionDenied | std::io::ErrorKind::InvalidInput
-    )
-}
-
-#[cfg(unix)]
 fn run_unix_broker(
     broker_root: &Path,
     argv: &[String],
@@ -179,8 +183,8 @@ fn run_unix_broker(
 ) -> Result<(), error::DecapodError> {
     crate::core::fs_permissions::ensure_storage_dir(broker_root)
         .map_err(error::DecapodError::IoError)?;
-    let socket_path = broker_socket_path(broker_root);
-    ensure_socket_directory(socket_path.parent().expect("socket parent"))?;
+    let socket_path = broker_socket_path(broker_root)?;
+    crate::core::local_socket::ensure_directory(&socket_path, broker_root)?;
     let lock_path = broker_lock_path(broker_root);
 
     let caller = CallerContext::capture()?;
@@ -191,52 +195,34 @@ fn run_unix_broker(
         argv: argv.to_vec(),
         payload_hash: hash_payload(argv, &caller),
         caller,
+        deadline_ms: epoch_ms() + REQUEST_BUDGET.as_millis() as u64,
     };
 
-    match send_request(&socket_path, &request) {
-        Ok(resp) => return apply_response(resp, &request.request_id, finish),
-        Err(error::DecapodError::ValidationError(msg))
-            if msg.contains("BROKER_PROTOCOL_MISMATCH") =>
-        {
-            return Err(error::DecapodError::ValidationError(msg));
+    // Retry only a connection that was never established. After sending any
+    // bytes, loss of acknowledgement is UNKNOWN and must not trigger execution.
+    loop {
+        match send_request(&socket_path, &request) {
+            Ok(resp) => return apply_response(resp, &request.request_id, finish),
+            Err(error::DecapodError::IoError(e))
+                if matches!(
+                    e.kind(),
+                    std::io::ErrorKind::NotFound
+                        | std::io::ErrorKind::ConnectionRefused
+                        | std::io::ErrorKind::WouldBlock
+                ) => {}
+            Err(e) => return Err(e),
         }
-        Err(_) => {}
+        if epoch_ms() >= request.deadline_ms {
+            return Err(error::DecapodError::ValidationError(
+                "BROKER_NOT_ADMITTED: election deadline elapsed".into(),
+            ));
+        }
+        if let Some(lease) = try_acquire_lock(&lock_path)? {
+            let resp = run_as_leader(lease, broker_root, &socket_path, request.clone())?;
+            return apply_response(resp, &request.request_id, finish);
+        }
+        std::thread::sleep(Duration::from_millis(10 + jitter_ms(30)));
     }
-
-    for phase in 0..2u8 {
-        let mut attempts = 0u32;
-        loop {
-            attempts += 1;
-            match try_acquire_lock(&lock_path)? {
-                Some(lease) => {
-                    let resp = run_as_leader(lease, broker_root, &socket_path, request.clone())?;
-                    return apply_response(resp, &request.request_id, finish);
-                }
-                None => {
-                    match send_request(&socket_path, &request) {
-                        Ok(resp) => return apply_response(resp, &request.request_id, finish),
-                        Err(error::DecapodError::ValidationError(msg))
-                            if msg.contains("BROKER_PROTOCOL_MISMATCH") =>
-                        {
-                            return Err(error::DecapodError::ValidationError(msg));
-                        }
-                        Err(_) => {}
-                    }
-                    if attempts >= 40 {
-                        break;
-                    }
-                    std::thread::sleep(Duration::from_millis(10 + jitter_ms(30)));
-                }
-            }
-        }
-        if phase == 0 {
-            std::thread::sleep(Duration::from_millis(4000 + jitter_ms(2000)));
-        }
-    }
-    Err(error::DecapodError::ValidationError(
-        "BROKER_UNKNOWN: no final confirmation; retry with same request_id after backoff"
-            .to_string(),
-    ))
 }
 
 #[cfg(unix)]
@@ -248,17 +234,15 @@ fn run_as_leader(
 ) -> Result<BrokerResponse, error::DecapodError> {
     use std::os::unix::net::UnixListener;
 
-    if socket_path.exists() {
-        let _ = fs::remove_file(socket_path);
+    crate::core::local_socket::remove_stale(socket_path)?;
+    let listener = UnixListener::bind(socket_path)?;
+    let _endpoint = crate::core::local_socket::Endpoint::capture(socket_path)?;
+    // Bound the kernel admission queue, including while a command executes.
+    use std::os::fd::AsRawFd;
+    if unsafe { libc::listen(listener.as_raw_fd(), 64) } != 0 {
+        return Err(std::io::Error::last_os_error().into());
     }
-    let listener = match UnixListener::bind(socket_path) {
-        Ok(listener) => listener,
-        Err(err) if err.kind() == std::io::ErrorKind::AddrInUse => {
-            let _ = fs::remove_file(socket_path);
-            UnixListener::bind(socket_path).map_err(error::DecapodError::IoError)?
-        }
-        Err(err) => return Err(error::DecapodError::IoError(err)),
-    };
+    let session_started = Instant::now();
     listener
         .set_nonblocking(true)
         .map_err(error::DecapodError::IoError)?;
@@ -267,7 +251,7 @@ fn run_as_leader(
     // Its RAII lifetime is the foreground election, never a detached daemon.
     // Keep rollout explicit until migration/file-replacement and every nested
     // connection lifetime have been covered by the owner protocol regressions.
-    let _storage_owner = if std::env::var("DECAPOD_STORAGE_OWNER").as_deref() == Ok("1") {
+    let storage_owner = if std::env::var("DECAPOD_STORAGE_OWNER").as_deref() == Ok("1") {
         let decapod_root = broker_root.parent().ok_or_else(|| {
             error::DecapodError::ValidationError("STORAGE_OWNER_ROOT_MISSING".into())
         })?;
@@ -283,12 +267,11 @@ fn run_as_leader(
         None
     };
     emit_phase_hook("queued", &local_request.request_id);
-    let local_response = execute_request(broker_root, &local_request)?;
+    let local_response = execute_request(broker_root, &local_request, storage_owner.is_some())?;
     // A claim's client-side preparation must not wait for an idle period under
     // sustained traffic. Release this election immediately after its durable ack.
     if response_has_claim_followup(&local_response) {
         drop(listener);
-        let _ = fs::remove_file(socket_path);
         return Ok(local_response);
     }
 
@@ -302,15 +285,16 @@ fn run_as_leader(
     let mut last_activity = Instant::now();
 
     loop {
-        if last_activity.elapsed() >= idle_timeout {
+        if last_activity.elapsed() >= idle_timeout || session_started.elapsed() >= MAX_SESSION {
             break;
         }
 
         match listener.accept() {
             Ok((stream, _)) => {
-                if handle_client(broker_root, stream).is_ok() {
-                    last_activity = Instant::now();
-                }
+                // A committed request is activity even if its caller disconnected
+                // before the acknowledgement. Delivery does not own this election.
+                let _ = handle_client(broker_root, stream, storage_owner.is_some());
+                last_activity = Instant::now();
             }
             Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => {
                 std::thread::sleep(Duration::from_millis(25));
@@ -321,7 +305,6 @@ fn run_as_leader(
         }
     }
 
-    let _ = fs::remove_file(socket_path);
     Ok(local_response)
 }
 
@@ -329,18 +312,16 @@ fn run_as_leader(
 fn handle_client(
     broker_root: &Path,
     stream: std::os::unix::net::UnixStream,
+    owner_ready: bool,
 ) -> Result<(), error::DecapodError> {
+    stream.set_nonblocking(false)?;
     stream
-        .set_read_timeout(Some(Duration::from_secs(15)))
+        .set_read_timeout(Some(Duration::from_secs(1)))
         .map_err(error::DecapodError::IoError)?;
     stream
-        .set_write_timeout(Some(Duration::from_secs(15)))
+        .set_write_timeout(Some(Duration::from_secs(1)))
         .map_err(error::DecapodError::IoError)?;
-    let mut reader = BufReader::new(stream.try_clone().map_err(error::DecapodError::IoError)?);
-    let mut line = String::new();
-    reader
-        .read_line(&mut line)
-        .map_err(error::DecapodError::IoError)?;
+    let line = read_request_line(&stream)?;
     let req: BrokerRequest = serde_json::from_str(line.trim()).map_err(|e| {
         error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_INVALID_REQUEST: {e}"))
     })?;
@@ -363,9 +344,55 @@ fn handle_client(
     }
     emit_phase_hook("queued", &req.request_id);
 
-    let resp = execute_request(broker_root, &req)?;
+    let resp = execute_request(broker_root, &req, owner_ready)?;
     write_response(stream, &resp)?;
     Ok(())
+}
+
+#[cfg(unix)]
+fn read_request_line(
+    stream: &std::os::unix::net::UnixStream,
+) -> Result<String, error::DecapodError> {
+    read_line_until(
+        stream,
+        Instant::now() + Duration::from_secs(1),
+        MAX_REQUEST_BYTES,
+    )
+}
+
+#[cfg(unix)]
+fn read_line_until(
+    mut stream: &std::os::unix::net::UnixStream,
+    deadline: Instant,
+    max_bytes: u64,
+) -> Result<String, error::DecapodError> {
+    use std::io::Read;
+    let mut bytes = Vec::new();
+    let mut buffer = [0u8; 4096];
+    loop {
+        let remaining = deadline
+            .checked_duration_since(Instant::now())
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError("BROKER_FRAME_READ_DEADLINE".into())
+            })?;
+        stream.set_read_timeout(Some(remaining))?;
+        let n = stream.read(&mut buffer)?;
+        if n == 0 {
+            return Err(std::io::Error::from(std::io::ErrorKind::UnexpectedEof).into());
+        }
+        let previous = bytes.len();
+        bytes.extend_from_slice(&buffer[..n]);
+        if bytes.len() as u64 > max_bytes {
+            return Err(error::DecapodError::ValidationError(
+                "BROKER_REQUEST_TOO_LARGE".into(),
+            ));
+        }
+        if let Some(end) = buffer[..n].iter().position(|b| *b == b'\n') {
+            bytes.truncate(previous + end);
+            return String::from_utf8(bytes)
+                .map_err(|_| error::DecapodError::ValidationError("BROKER_REQUEST_UTF8".into()));
+        }
+    }
 }
 
 #[cfg(unix)]
@@ -373,35 +400,33 @@ fn send_request(
     socket_path: &Path,
     request: &BrokerRequest,
 ) -> Result<BrokerResponse, error::DecapodError> {
-    use std::os::unix::net::UnixStream;
-
-    let mut stream = UnixStream::connect(socket_path).map_err(error::DecapodError::IoError)?;
-    stream
-        .set_read_timeout(Some(Duration::from_secs(15)))
-        .map_err(error::DecapodError::IoError)?;
-    stream
-        .set_write_timeout(Some(Duration::from_secs(15)))
-        .map_err(error::DecapodError::IoError)?;
+    let mut stream = crate::core::local_socket::connect(socket_path)?;
+    let remaining = Duration::from_millis(request.deadline_ms.saturating_sub(epoch_ms()).max(1));
+    stream.set_read_timeout(Some(remaining))?;
+    stream.set_write_timeout(Some(remaining))?;
+    let unknown = |_| {
+        error::DecapodError::ValidationError(format!(
+            "BROKER_UNKNOWN: acknowledgement lost for request_id={}; inspect state or retrieve the same request ID; never replay under a new ID",
+            request.request_id
+        ))
+    };
 
     let payload = serde_json::to_string(request).map_err(|e| {
         error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_ENCODE_ERROR: {e}"))
     })?;
-    stream
-        .write_all(payload.as_bytes())
-        .map_err(error::DecapodError::IoError)?;
-    stream
-        .write_all(b"\n")
-        .map_err(error::DecapodError::IoError)?;
-    stream.flush().map_err(error::DecapodError::IoError)?;
-
-    let mut reader = BufReader::new(stream);
-    let mut line = String::new();
-    reader
-        .read_line(&mut line)
-        .map_err(error::DecapodError::IoError)?;
-    let resp: BrokerResponse = serde_json::from_str(line.trim()).map_err(|e| {
-        error::DecapodError::ValidationError(format!("BROKER_PROTOCOL_INVALID_RESPONSE: {e}"))
-    })?;
+    stream.write_all(payload.as_bytes()).map_err(unknown)?;
+    stream.write_all(b"\n").map_err(unknown)?;
+    stream.flush().map_err(unknown)?;
+    emit_phase_hook("sent", &request.request_id);
+    // One budget covers queueing and execution; retries never reset it.
+    let deadline =
+        Instant::now() + Duration::from_millis(request.deadline_ms.saturating_sub(epoch_ms()));
+    // Recompute the remaining budget for every read, including a trickling peer.
+    // The ceiling accommodates JSON escaping of bounded stdout and stderr.
+    let line = read_line_until(&stream, deadline, 1024 * 1024 * 1024)
+        .map_err(|_| unknown(std::io::Error::other("reply deadline or frame")))?;
+    let resp: BrokerResponse = serde_json::from_str(line.trim())
+        .map_err(|_| unknown(std::io::Error::other("invalid reply")))?;
     if resp.protocol_version != client_protocol_version() {
         return Err(error::DecapodError::ValidationError(format!(
             "BROKER_PROTOCOL_MISMATCH: client={} broker={}",
@@ -415,6 +440,7 @@ fn send_request(
 fn execute_request(
     broker_root: &Path,
     request: &BrokerRequest,
+    owner_ready: bool,
 ) -> Result<BrokerResponse, error::DecapodError> {
     request.caller.validate()?;
     if request.payload_hash != hash_payload(&request.argv, &request.caller) {
@@ -445,6 +471,29 @@ fn execute_request(
         });
     }
 
+    if epoch_ms() >= request.deadline_ms {
+        return Ok(BrokerResponse {
+            protocol_version: server_protocol_version(),
+            status: "NOT_COMMITTED".into(),
+            commit_marker: None,
+            retry_after_ms_hint: None,
+            result_envelope: serde_json::json!({"error": "BROKER_DEADLINE_BEFORE_EXECUTION", "request_id": request.request_id}),
+        });
+    }
+    // Persist uncertainty BEFORE execution. A crash between the mutation and
+    // final receipt must never turn a same-ID retry into a second execution.
+    dedupe_store(
+        broker_root,
+        request,
+        &BrokerResponse {
+            protocol_version: server_protocol_version(),
+            status: "UNKNOWN".into(),
+            commit_marker: None,
+            retry_after_ms_hint: None,
+            result_envelope: serde_json::json!({"error": "BROKER_EXECUTION_STARTED_OUTCOME_UNKNOWN", "request_id": request.request_id}),
+        },
+    )?;
+
     // Resolve the running binary independently of either caller's working directory.
     let exe = std::env::current_exe()?;
     emit_phase_hook("pre_exec", &request.request_id);
@@ -459,7 +508,17 @@ fn execute_request(
     } else {
         BUILD_TIMEOUT
     };
+    let timeout = timeout.min(Duration::from_millis(
+        request.deadline_ms.saturating_sub(epoch_ms()).max(1),
+    ));
     let mut command = Command::new(exe);
+    command.env_remove("DECAPOD_STORAGE_OWNER_READY");
+    if owner_ready {
+        command.env(
+            "DECAPOD_STORAGE_OWNER_READY",
+            dedupe_db_path(broker_root).canonicalize()?,
+        );
+    }
     request.caller.apply(&mut command);
     let output = match command
         .args(&request.argv)
@@ -500,7 +559,8 @@ fn execute_request(
     } else if code == 0 {
         "COMMITTED"
     } else {
-        "NOT_COMMITTED"
+        // A failing command can have committed part of a multi-step operation.
+        "UNKNOWN"
     };
 
     emit_phase_hook("post_exec_pre_ack", &request.request_id);
@@ -575,7 +635,7 @@ fn apply_response(
             )))
         }
         _ => Err(error::DecapodError::ValidationError(format!(
-            "BROKER_UNKNOWN: no final confirmation (retry_after_ms_hint={})",
+            "BROKER_UNKNOWN: no final confirmation for request_id={request_id}; inspect persisted state; same-ID retrieval will not re-execute (retry_after_ms_hint={})",
             resp.retry_after_ms_hint.unwrap_or(5000)
         ))),
     }
@@ -601,11 +661,13 @@ fn broker_lock_path(broker_root: &Path) -> PathBuf {
     broker_root.join("broker.lock")
 }
 
-fn broker_socket_path(broker_root: &Path) -> PathBuf {
-    broker_root.join("broker-runtime").join("broker.sock")
+#[cfg(unix)]
+#[doc(hidden)]
+pub fn broker_socket_path(broker_root: &Path) -> std::io::Result<PathBuf> {
+    crate::core::local_socket::path(broker_root, "broker.sock")
 }
 
-#[cfg(unix)]
+#[cfg(all(test, unix))]
 fn ensure_socket_directory(path: &Path) -> Result<(), error::DecapodError> {
     use std::os::unix::fs::PermissionsExt;
     crate::core::fs_permissions::ensure_storage_dir(path).map_err(error::DecapodError::IoError)?;
@@ -756,9 +818,18 @@ fn emit_phase_hook(phase: &str, request_id: &str) {
     {
         let _ = writeln!(file, "{phase}|{request_id}");
     }
-    if std::env::var(BROKER_HALT_PHASE_ENV).ok().as_deref() == Some(phase) {
+    if std::env::var(BROKER_HALT_PHASE_ENV).ok().as_deref() == Some(phase)
+        && std::env::var("DECAPOD_GROUP_BROKER_TEST_HALT_REQUEST")
+            .ok()
+            .is_none_or(|id| id == request_id)
+    {
         loop {
-            std::thread::sleep(Duration::from_millis(100));
+            if std::env::var_os("DECAPOD_GROUP_BROKER_TEST_RELEASE")
+                .is_some_and(|path| Path::new(&path).exists())
+            {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
         }
     }
 }

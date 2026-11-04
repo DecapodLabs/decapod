@@ -528,11 +528,9 @@ fn local_storage_lock(
         .map_err(DecapodError::IoError)?;
     }
     crate::core::fs_permissions::check_storage(path).map_err(DecapodError::IoError)?;
-    let mode = if access_mode == AccessMode::ReadOnly {
-        StorageLockMode::Shared
-    } else {
-        StorageLockMode::Exclusive
-    };
+    // Maintenance may snapshot or replace files; require exclusion from all
+    // physical connection lifetimes, including read-only ones.
+    let mode = StorageLockMode::Exclusive;
     let timeout = if std::env::var_os("DECAPOD_VALIDATE_WORKER").is_some() {
         Duration::from_millis(250)
     } else {

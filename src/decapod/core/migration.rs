@@ -305,10 +305,11 @@ where
 {
     let data_root = decapod_root.join("data");
     let upgrade_pending = schema_upgrade_pending(&data_root)?;
-    // Hold the SAME physical-owner lock across the complete replacement scope,
-    // including rollback restore. A probe alone races owner startup. The owner
-    // runs in a separate supervised process, so the OS lock excludes it even
-    // though ordinary migration connections share this process's lock guard.
+    // Exclusive lifecycle access excludes every shared physical-connection
+    // guard across backup, migration and rollback replacement. This is not a
+    // transaction lock: the foreground owner retains only shared file-lifetime
+    // protection while idle. A probe alone would race owner startup. Nested
+    // migration connections join this process's exclusive maintenance guard.
     let _maintenance_lock = if upgrade_pending && data_root.exists() {
         Some(crate::core::storage_lock::StorageLock::acquire(
             &data_root.join(schemas::LOCAL_DB_NAME),

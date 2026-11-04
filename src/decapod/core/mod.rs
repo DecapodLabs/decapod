@@ -99,3 +99,6 @@ pub mod vega_prompt;
 pub mod vega_readiness;
 pub mod vega_runtime;
 pub mod vega_setup;
+
+#[cfg(unix)]
+pub(crate) mod local_socket;

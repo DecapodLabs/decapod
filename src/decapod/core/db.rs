@@ -29,8 +29,8 @@ const UNSUPPORTED_FS_TYPES: &[&str] = &["nfs", "nfs4", "cifs", "smbfs", "9p", "v
 ///
 /// The path, access policy, and retry policy remain Decapod-owned. Physical
 /// opening and execution are delegated to Dactyl; Decapod retains a bounded
-/// sidecar lock around canonical local connection lifetimes so cooperating
-/// processes do not overlap access to the same file.
+/// shared lifecycle lock while a physical file is open, excluding replacement
+/// by maintenance. SQLite owns transaction locking; idle handles hold no write lock.
 pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
     if let Some(conn) = owner_connection(
@@ -53,7 +53,7 @@ pub(crate) fn db_connect_owner(db_path: &Path) -> Result<Connection, error::Deca
         || {
             let storage_lock = StorageLock::acquire(
                 db_path,
-                StorageLockMode::Exclusive,
+                StorageLockMode::Shared,
                 connection_lock_timeout(Duration::from_secs(5)),
             )?;
             Connection::open_with_options_and_storage_lock(
@@ -121,7 +121,7 @@ pub fn db_connect_pooled(
         || {
             let storage_lock = StorageLock::acquire(
                 db_path,
-                StorageLockMode::Exclusive,
+                StorageLockMode::Shared,
                 connection_lock_timeout(Duration::from_secs(busy_timeout_secs as u64)),
             )?;
             Connection::open_with_options_and_storage_lock(
@@ -198,7 +198,18 @@ fn owner_connection(
             access_mode,
             connection_lock_timeout(timeout),
         )
-        .map(|proxy| proxy.map(Connection::from_owner))
+        .and_then(|proxy| {
+            if proxy.is_none()
+                && std::env::var_os("DECAPOD_STORAGE_OWNER_READY").is_some_and(|expected| {
+                    path.canonicalize().is_ok_and(|p| p.as_os_str() == expected)
+                })
+            {
+                return Err(Error::StorageOwner(
+                    "STORAGE_OWNER_LOST_OUTCOME_UNKNOWN".into(),
+                ));
+            }
+            Ok(proxy.map(Connection::from_owner))
+        })
         .map_err(error::DecapodError::StorageError)
     }
     #[cfg(not(unix))]

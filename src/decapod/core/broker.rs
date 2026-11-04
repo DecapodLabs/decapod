@@ -55,6 +55,10 @@ pub struct BrokerEvent {
     /// Canonical actor identifier (same as actor for now; explicit for envelope stability).
     #[serde(default)]
     pub actor_id: String,
+    /// Originating agent, distinct from a subsystem's service actor label.
+    /// Empty on historical v1.0 events; never infer historical caller custody.
+    #[serde(default)]
+    pub caller_agent_id: String,
     /// Optional runtime session identifier for multi-call workflows.
     #[serde(default)]
     pub session_id: Option<String>,
@@ -289,7 +293,8 @@ impl DbBroker {
         status: &str,
     ) -> Result<BrokerEvent, error::DecapodError> {
         let ts = time::now_epoch_z();
-        let request_id = time::new_event_id();
+        let request_id =
+            env::var("DECAPOD_GROUP_BROKER_REQUEST_ID").unwrap_or_else(|_| time::new_event_id());
         let event_id = time::new_event_id();
         let session_id = env::var("DECAPOD_SESSION_ID").ok();
         let correlation_id = env::var("DECAPOD_CORRELATION_ID")
@@ -299,12 +304,13 @@ impl DbBroker {
         let idempotency_key = env::var("DECAPOD_IDEMPOTENCY_KEY").ok();
 
         Ok(BrokerEvent {
-            schema_version: default_broker_schema_version(),
+            schema_version: "1.1.0".into(),
             request_id,
             ts,
             event_id,
             actor: actor.to_string(),
             actor_id: actor.to_string(),
+            caller_agent_id: crate::current_agent_id(),
             session_id,
             correlation_id,
             causation_id,
@@ -414,12 +420,13 @@ impl DbBroker {
                 .find(|event| event.event_id == event_id)
                 .expect("prepare_repair checked the pending event");
             let acknowledgment = BrokerEvent {
-                schema_version: default_broker_schema_version(),
+                schema_version: "1.1.0".into(),
                 request_id: time::new_event_id(),
                 event_id: time::new_event_id(),
                 ts: time::now_epoch_z(),
                 actor: actor.to_string(),
                 actor_id: actor.to_string(),
+                caller_agent_id: crate::current_agent_id(),
                 session_id: env::var("DECAPOD_SESSION_ID").ok(),
                 correlation_id: pending.correlation_id.clone(),
                 causation_id: Some(event_id.to_string()),
@@ -618,7 +625,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "repair", "description": "Preview or append an exact-event abandonment acknowledgment; original data outcome remains unknown", "parameters": ["event_id", "reason", "apply"] }
         ],
         "envelope": {
-            "schema_version": "1.0.0",
+            "schema_version": "1.1.0",
             "fields": [
                 "schema_version",
                 "request_id",
@@ -626,6 +633,7 @@ pub fn schema() -> serde_json::Value {
                 "ts",
                 "actor",
                 "actor_id",
+                "caller_agent_id",
                 "session_id",
                 "correlation_id",
                 "causation_id",

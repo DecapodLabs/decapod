@@ -26,6 +26,17 @@ fn resolve_decapod_bin() -> PathBuf {
     PathBuf::from(cargo_bin)
 }
 
+fn broker_endpoint(dir: &Path) -> PathBuf {
+    #[cfg(unix)]
+    {
+        decapod::core::group_broker::broker_socket_path(&dir.join(".decapod/data")).unwrap()
+    }
+    #[cfg(not(unix))]
+    {
+        dir.join(".decapod/data/broker-runtime/broker.sock")
+    }
+}
+
 fn run_decapod(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
     let mut cmd = Command::new(resolve_decapod_bin());
     cmd.current_dir(dir).args(args);
@@ -42,8 +53,17 @@ fn setup_repo() -> (TempDir, PathBuf, String) {
 type DecapodRunner = fn(&Path, &[&str], &[(&str, &str)]) -> std::process::Output;
 
 fn setup_repo_with(run: DecapodRunner) -> (TempDir, PathBuf, String) {
+    setup_repo_at_depth(run, false)
+}
+
+fn setup_repo_at_depth(run: DecapodRunner, long: bool) -> (TempDir, PathBuf, String) {
     let tmp = TempDir::new().expect("tmpdir");
-    let dir = tmp.path().to_path_buf();
+    let dir = if long {
+        tmp.path().join("canonical-datastore-".repeat(10))
+    } else {
+        tmp.path().to_path_buf()
+    };
+    std::fs::create_dir_all(&dir).unwrap();
 
     let init = Command::new("git")
         .current_dir(&dir)
@@ -175,11 +195,7 @@ fn wait_for_lock_pid(lock_path: &Path, timeout: Duration) -> Option<u32> {
 
 fn wait_for_no_broker_artifacts(dir: &Path, timeout: Duration) -> bool {
     let lock_path = dir.join(".decapod").join("data").join("broker.lock");
-    let sock_path = dir
-        .join(".decapod")
-        .join("data")
-        .join("broker-runtime")
-        .join("broker.sock");
+    let sock_path = broker_endpoint(&dir);
     let start = Instant::now();
     while start.elapsed() < timeout {
         if !lock_path.exists() && !sock_path.exists() {
@@ -205,10 +221,10 @@ fn assert_concurrent_mutators(reuse_connection: bool) {
     let _timing =
         BrokerTestTiming::start("broker_no_sqlite_busy_surfaced_under_concurrent_mutators");
     let (_tmp, dir, password) = setup_repo_with(run_contention_setup);
-    if !broker_socket_supported_with(&dir, &password, run_contention_setup) {
-        eprintln!("skipping: unix socket transport not permitted in this sandbox");
-        return;
-    }
+    assert!(
+        broker_socket_supported_with(&dir, &password, run_contention_setup),
+        "required broker socket acceptance did not run"
+    );
 
     let creds: Vec<(String, String)> = (0..20)
         .map(|i| {
@@ -245,6 +261,13 @@ fn assert_concurrent_mutators(reuse_connection: bool) {
                     "3".to_string(),
                 ),
                 ("DECAPOD_GROUP_BROKER_REQUEST_ID".to_string(), req_id),
+                (
+                    "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE".to_string(),
+                    dir_cl
+                        .join(format!("contention-{i}-hooks"))
+                        .to_string_lossy()
+                        .into_owned(),
+                ),
             ];
             let env_pairs: Vec<(&str, &str)> =
                 envs.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
@@ -255,22 +278,6 @@ fn assert_concurrent_mutators(reuse_connection: bool) {
                 Duration::from_secs(120),
                 &format!("client {i:02} first attempt"),
             );
-            if first.status.success() {
-                return first;
-            }
-            let stderr = String::from_utf8_lossy(&first.stderr).to_string();
-            let stdout = String::from_utf8_lossy(&first.stdout).to_string();
-            if stderr.contains("BROKER_UNKNOWN") || stdout.contains("BROKER_UNKNOWN") {
-                let _retry_timing = BrokerTestTiming::start(format!("contention retry {i:02}"));
-                std::thread::sleep(Duration::from_millis(250));
-                return run_contention_command(
-                    &dir_cl,
-                    &["todo", "add", &task],
-                    &env_pairs,
-                    Duration::from_secs(120),
-                    &format!("client {i:02} same-ID retry"),
-                );
-            }
             first
         }));
     }
@@ -296,12 +303,41 @@ fn assert_concurrent_mutators(reuse_connection: bool) {
         );
     }
 
+    let conn = decapod::core::db::Connection::open(dir.join(".decapod/data/decapod.db")).unwrap();
+    for i in 0..20 {
+        let count: i64 = conn
+            .query_row(
+                "SELECT count(*) FROM tasks WHERE title=?1",
+                [format!("concurrent-task-{i}")],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(count, 1, "persisted result for caller {i}");
+    }
+    if reuse_connection {
+        let opens: usize = std::fs::read_dir(&dir)
+            .unwrap()
+            .filter_map(Result::ok)
+            .filter(|entry| {
+                entry.file_name().to_string_lossy().contains("contention")
+                    && entry.file_name().to_string_lossy().contains("hooks")
+            })
+            .map(|entry| {
+                std::fs::read_to_string(entry.path())
+                    .unwrap_or_default()
+                    .lines()
+                    .filter(|line| line.starts_with("storage_owner_open|"))
+                    .count()
+            })
+            .sum();
+        assert!(
+            opens > 0,
+            "twenty-caller acceptance did not open a physical owner"
+        );
+    }
+
     let lock_path = dir.join(".decapod").join("data").join("broker.lock");
-    let sock_path = dir
-        .join(".decapod")
-        .join("data")
-        .join("broker-runtime")
-        .join("broker.sock");
+    let sock_path = broker_endpoint(&dir);
     assert!(
         !lock_path.exists() && !sock_path.exists(),
         "ephemeral broker artifacts should be cleaned up"
@@ -309,8 +345,9 @@ fn assert_concurrent_mutators(reuse_connection: bool) {
 }
 
 #[test]
-fn broker_dedupe_returns_exactly_once_per_request_id() {
-    let _timing = BrokerTestTiming::start("broker_dedupe_returns_exactly_once_per_request_id");
+fn broker_completed_receipt_retrieval_does_not_repeat_request() {
+    let _timing =
+        BrokerTestTiming::start("broker_completed_receipt_retrieval_does_not_repeat_request");
     let (_tmp, dir, password) = setup_repo();
     if !broker_socket_supported(&dir, &password) {
         eprintln!("skipping: unix socket transport not permitted in this sandbox");
@@ -410,11 +447,7 @@ fn broker_election_uniqueness_no_residual_lock_after_burst() {
     }
 
     let lock_path = dir.join(".decapod").join("data").join("broker.lock");
-    let sock_path = dir
-        .join(".decapod")
-        .join("data")
-        .join("broker-runtime")
-        .join("broker.sock");
+    let sock_path = broker_endpoint(&dir);
     assert!(
         !lock_path.exists() && !sock_path.exists(),
         "broker lease/socket should expire and disappear"
@@ -479,8 +512,9 @@ fn broker_protocol_mismatch_returns_typed_failure() {
 }
 
 #[test]
-fn broker_crash_injection_phases_retry_to_exactly_once() {
-    let _timing = BrokerTestTiming::start("broker_crash_injection_phases_retry_to_exactly_once");
+fn broker_crash_preserves_unknown_outcomes_without_reexecution() {
+    let _timing =
+        BrokerTestTiming::start("broker_crash_preserves_unknown_outcomes_without_reexecution");
     let (_tmp, dir, password) = setup_repo();
     if !broker_socket_supported(&dir, &password) {
         eprintln!("skipping: unix socket transport not permitted in this sandbox");
@@ -516,7 +550,8 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
             ],
         );
 
-        let hook_ok = wait_for_hook_line(&hook, &req_id, Duration::from_secs(8));
+        let hook_ok =
+            wait_for_hook_line(&hook, &format!("{phase}|{req_id}"), Duration::from_secs(15));
         assert!(hook_ok, "phase hook never emitted for {phase}");
         let lock_path = dir.join(".decapod").join("data").join("broker.lock");
         let pid = wait_for_lock_pid(&lock_path, Duration::from_secs(3)).expect("broker pid");
@@ -533,10 +568,29 @@ fn broker_crash_injection_phases_retry_to_exactly_once() {
                 ("DECAPOD_GROUP_BROKER_REQUEST_ID", &req_id),
             ],
         );
-        assert!(
-            retry.status.success(),
-            "retry after crash must converge to committed: {}",
-            String::from_utf8_lossy(&retry.stderr)
+        if phase == "queued" {
+            assert!(
+                retry.status.success(),
+                "{}",
+                String::from_utf8_lossy(&retry.stderr)
+            );
+        } else {
+            assert!(!retry.status.success());
+            assert!(String::from_utf8_lossy(&retry.stderr).contains("BROKER_UNKNOWN"));
+        }
+        let conn =
+            decapod::core::db::Connection::open(dir.join(".decapod/data/decapod.db")).unwrap();
+        let persisted: i64 = conn
+            .query_row(
+                "SELECT count(*) FROM tasks WHERE title=?1",
+                [format!("crash-phase-{phase}")],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(
+            persisted,
+            if phase == "pre_exec" { 0 } else { 1 },
+            "unsafe replay at {phase}"
         );
     }
 
@@ -599,12 +653,31 @@ fn explicit_shared_storage_uses_broker_route_without_private_fallback() {
         std::fs::metadata(&data).unwrap().permissions().mode() & 0o777,
         0o770
     );
+    // The product routes long paths through the shared GID namespace. Check
+    // that actual directory, rather than assuming the old adjacent address.
+    let mut runtime = data.canonicalize().unwrap().join("broker-runtime");
+    if runtime
+        .join("broker.sock")
+        .as_os_str()
+        .as_encoded_bytes()
+        .len()
+        >= 104
+    {
+        use sha2::{Digest, Sha256};
+        use std::os::unix::fs::MetadataExt;
+        let canonical = data.canonicalize().unwrap();
+        let hash = format!(
+            "{:x}",
+            Sha256::digest(canonical.as_os_str().as_encoded_bytes())
+        );
+        runtime = Path::new("/tmp").join(format!(
+            "decapod-g{}-{}",
+            std::fs::metadata(&data).unwrap().gid(),
+            &hash[..32]
+        ));
+    }
     assert_eq!(
-        std::fs::metadata(data.join("broker-runtime"))
-            .unwrap()
-            .permissions()
-            .mode()
-            & 0o007,
+        std::fs::metadata(runtime).unwrap().permissions().mode() & 0o007,
         0
     );
 }
@@ -694,6 +767,7 @@ fn claim_preparation_probe(broker: bool) {
         .args(args)
         .envs(envs)
         .env("PATH", &path)
+        .env("DECAPOD_STORAGE_OWNER", "1")
         .env("DECAPOD_CLAIM_AUTORUN", "1")
         .env("DECAPOD_CONTAINER", "0")
         .env("DECAPOD_GROUP_BROKER_REQUEST_ID", "followup-once")
@@ -965,10 +1039,10 @@ fn reusable_connection_preserves_one_winner_among_eight_colliding_claims() {
 #[cfg(unix)]
 fn assert_concurrent_claim_identity(reuse_connection: bool, collide: bool) {
     let (_tmp, dir, password) = setup_repo_with(run_contention_setup);
-    if !broker_socket_supported_with(&dir, &password, run_contention_setup) {
-        eprintln!("skipping: unix socket transport not permitted in this sandbox");
-        return;
-    }
+    assert!(
+        broker_socket_supported_with(&dir, &password, run_contention_setup),
+        "required broker socket acceptance did not run"
+    );
     let categories = [
         "features",
         "docs",
@@ -1106,6 +1180,8 @@ fn assert_concurrent_claim_identity(reuse_connection: bool, collide: bool) {
                     &[
                         ("DECAPOD_AGENT_ID", &agent),
                         ("DECAPOD_SESSION_PASSWORD", &credential),
+                        ("DECAPOD_SESSION_ID", &agent),
+                        ("DECAPOD_CORRELATION_ID", &agent),
                         ("DECAPOD_CLAIM_AUTORUN", "0"),
                         ("DECAPOD_GROUP_BROKER_REQUEST_ID", &agent),
                     ],
@@ -1140,6 +1216,12 @@ fn assert_concurrent_claim_identity(reuse_connection: bool, collide: bool) {
             "claim did not traverse the elected leader: {agent}"
         );
     }
+    let audit = decapod::core::db::Connection::open(dir.join(".decapod/data/decapod.db")).unwrap();
+    for (agent, _, _, _) in &tasks {
+        let count: i64 = audit.query_row("SELECT count(*) FROM events WHERE stream='broker' AND json_extract(payload, '$.op')='todo.claim' AND json_extract(payload, '$.request_id')=?1 AND json_extract(payload, '$.session_id')=?1 AND json_extract(payload, '$.correlation_id')=?1 AND json_extract(payload, '$.caller_agent_id')=?1", [agent], |r| r.get(0)).unwrap();
+        assert!(count > 0, "claim audit lost caller context for {agent}");
+    }
+    drop(audit);
     let mut winners = Vec::new();
     for result in results {
         let (agent, id, output) = result.unwrap();
@@ -1209,10 +1291,10 @@ fn storage_worker_parent_loss_interrupts_sql_and_releases_transaction_lock() {
     use std::process::Stdio;
 
     let (_tmp, dir, password) = setup_repo_with(run_contention_setup);
-    if !broker_socket_supported_with(&dir, &password, run_contention_setup) {
-        eprintln!("skipping: unix socket transport not permitted in this sandbox");
-        return;
-    }
+    assert!(
+        broker_socket_supported_with(&dir, &password, run_contention_setup),
+        "required broker socket acceptance did not run"
+    );
     assert!(wait_for_no_broker_artifacts(&dir, Duration::from_secs(6)));
     let database = dir.join(".decapod/data/decapod.db").canonicalize().unwrap();
     {
@@ -1250,13 +1332,8 @@ fn storage_worker_parent_loss_interrupts_sql_and_releases_transaction_lock() {
         );
         std::thread::sleep(Duration::from_millis(10));
     }
-    let mut stream = UnixStream::connect(
-        database
-            .parent()
-            .unwrap()
-            .join("broker-runtime/storage.sock"),
-    )
-    .unwrap();
+    let mut stream =
+        UnixStream::connect(broker_endpoint(&dir).with_file_name("storage.sock")).unwrap();
     stream
         .set_read_timeout(Some(Duration::from_secs(2)))
         .unwrap();
@@ -1352,4 +1429,171 @@ fn read_storage_frame(stream: &mut std::os::unix::net::UnixStream) -> serde_json
     let mut bytes = vec![0; length];
     stream.read_exact(&mut bytes).unwrap();
     serde_json::from_slice(&bytes).unwrap()
+}
+
+#[cfg(unix)]
+#[test]
+fn disconnected_completed_caller_does_not_end_leader_with_a_queued_request() {
+    use std::os::unix::process::CommandExt;
+    let (_tmp, dir, password) = setup_repo_with(run_contention_setup);
+    let hooks = dir.join("disconnect-leader-hooks");
+    let release = dir.join("disconnect-release");
+    let stdout = dir.join("disconnect-leader-stdout");
+    let stderr = dir.join("disconnect-leader-stderr");
+    let child = Command::new(resolve_decapod_bin())
+        .current_dir(&dir)
+        .args(["todo", "add", "disconnect-leader"])
+        .env("DECAPOD_AGENT_ID", "unknown")
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("DECAPOD_STORAGE_OWNER", "1")
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
+        .env("DECAPOD_GROUP_BROKER_REQUEST_ID", "DISCONNECT_LEADER")
+        .env("DECAPOD_GROUP_BROKER_TEST_HOOK_FILE", &hooks)
+        .env("DECAPOD_GROUP_BROKER_TEST_HALT_PHASE", "post_exec_pre_ack")
+        .env("DECAPOD_GROUP_BROKER_TEST_HALT_REQUEST", "DISCONNECTED")
+        .env("DECAPOD_GROUP_BROKER_TEST_RELEASE", &release)
+        .stdout(std::fs::File::create(&stdout).unwrap())
+        .stderr(std::fs::File::create(&stderr).unwrap())
+        .process_group(0)
+        .spawn()
+        .unwrap();
+    let mut leader = ClaimProbeChild(Some(child));
+    assert!(wait_for_hook_line(
+        &hooks,
+        "post_exec_pre_ack|DISCONNECT_LEADER",
+        Duration::from_secs(15)
+    ));
+    let child = Command::new(resolve_decapod_bin())
+        .current_dir(&dir)
+        .args(["todo", "add", "committed-but-disconnected"])
+        .env("DECAPOD_AGENT_ID", "unknown")
+        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("DECAPOD_GROUP_BROKER_REQUEST_ID", "DISCONNECTED")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .process_group(0)
+        .spawn()
+        .unwrap();
+    let mut disconnected = ClaimProbeChild(Some(child));
+    assert!(wait_for_hook_line(
+        &hooks,
+        "post_exec_pre_ack|DISCONNECTED",
+        Duration::from_secs(15)
+    ));
+    disconnected.terminate();
+    let next_hooks = dir.join("next-client-hooks");
+    let next_dir = dir.clone();
+    let next_password = password.clone();
+    let next_hook = next_hooks.clone();
+    let next = std::thread::spawn(move || {
+        run_contention_command(
+            &next_dir,
+            &["todo", "add", "after-disconnect"],
+            &[
+                ("DECAPOD_AGENT_ID", "unknown"),
+                ("DECAPOD_SESSION_PASSWORD", &next_password),
+                ("DECAPOD_GROUP_BROKER_REQUEST_ID", "AFTER_DISCONNECT"),
+                (
+                    "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE",
+                    next_hook.to_str().unwrap(),
+                ),
+            ],
+            Duration::from_secs(30),
+            "queued after disconnect",
+        )
+    });
+    assert!(wait_for_hook_line(
+        &next_hooks,
+        "sent|AFTER_DISCONNECT",
+        Duration::from_secs(5)
+    ));
+    // Advance past the configured idle period while execution is deliberately
+    // paused. The pre-fix leader mistakes failed reply delivery for inactivity.
+    std::thread::sleep(Duration::from_millis(1100));
+    std::fs::write(&release, "continue").unwrap();
+    let next = next.join().unwrap();
+    assert!(
+        next.status.success(),
+        "{}",
+        String::from_utf8_lossy(&next.stderr)
+    );
+    assert!(wait_for_hook_line(
+        &hooks,
+        "queued|AFTER_DISCONNECT",
+        Duration::from_secs(2)
+    ));
+    let completed = leader.output_timeout(
+        &stdout,
+        &stderr,
+        &hooks,
+        "disconnect leader",
+        Duration::from_secs(10),
+    );
+    assert!(
+        completed.status.success(),
+        "{}",
+        String::from_utf8_lossy(&completed.stderr)
+    );
+    let conn = decapod::core::db::Connection::open(dir.join(".decapod/data/decapod.db")).unwrap();
+    for title in ["committed-but-disconnected", "after-disconnect"] {
+        let count: i64 = conn
+            .query_row("SELECT count(*) FROM tasks WHERE title=?1", [title], |r| {
+                r.get(0)
+            })
+            .unwrap();
+        assert_eq!(count, 1);
+    }
+    assert!(!broker_endpoint(&dir).exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn long_datastore_path_runs_the_owner_and_cleans_both_endpoints() {
+    let (_temp, dir, password) = setup_repo_at_depth(run_contention_setup, true);
+    let hooks = dir.join("long-path-hooks");
+    let output = run_contention_command(
+        &dir,
+        &["todo", "add", "long canonical store"],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_STORAGE_OWNER", "1"),
+            ("DECAPOD_GROUP_BROKER_REQUEST_ID", "LONG_PATH"),
+            (
+                "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE",
+                hooks.to_str().unwrap(),
+            ),
+        ],
+        Duration::from_secs(30),
+        "long canonical path",
+    );
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let evidence = std::fs::read_to_string(&hooks).unwrap();
+    assert!(evidence.contains("queued|LONG_PATH"));
+    assert_eq!(
+        evidence
+            .lines()
+            .filter(|line| line.starts_with("storage_owner_open|"))
+            .count(),
+        1
+    );
+    let endpoint = broker_endpoint(&dir);
+    assert!(endpoint.as_os_str().as_encoded_bytes().len() < 104);
+    assert!(!endpoint.exists());
+    assert!(!endpoint.with_file_name("storage.sock").exists());
+    let conn =
+        decapod::core::db::db_connect(dir.join(".decapod/data/decapod.db").to_str().unwrap())
+            .unwrap();
+    let count: i64 = conn
+        .query_row(
+            "SELECT count(*) FROM tasks WHERE title='long canonical store'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(count, 1);
 }

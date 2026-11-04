@@ -2836,6 +2836,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             if !cloud_todo_command
                 && !is_validate_cmd
                 && !is_storage_independent_command(&cli.command)
+                && !core::group_broker::has_initialized_owner(&store_root)
             {
                 let migration_result = migration::check_and_migrate_with_backup_report(
                     &decapod_root_path,

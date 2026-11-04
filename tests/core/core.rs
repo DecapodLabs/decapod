@@ -161,16 +161,14 @@ fn db_and_broker_round_trip_and_audit() {
         .collect();
     assert!(events.iter().any(|ev| ev.status == "success"));
     assert!(events.iter().any(|ev| ev.status == "error"));
-    assert!(
-        events
-            .iter()
-            .all(|ev| ev.schema_version == "1.0.0" && !ev.request_id.is_empty())
-    );
+    assert!(events.iter().all(|ev| ev.schema_version == "1.1.0"
+        && !ev.request_id.is_empty()
+        && !ev.caller_agent_id.is_empty()));
     assert!(events.iter().all(|ev| ev.actor == ev.actor_id));
 
     let schema = broker::schema();
     assert_eq!(schema["name"], "broker");
-    assert_eq!(schema["envelope"]["schema_version"], "1.0.0");
+    assert_eq!(schema["envelope"]["schema_version"], "1.1.0");
 }
 
 #[test]

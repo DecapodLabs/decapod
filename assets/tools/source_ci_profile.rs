@@ -453,6 +453,14 @@ pub fn core_full(paths: &[String]) -> bool {
         "rpc",
         "migration",
         "gateway",
+        "group_broker",
+        "storage_owner",
+        "storage_lock",
+        "local_socket",
+        "db",
+        "dactyl",
+        "broker",
+        "pool",
     ];
     paths.iter().any(|path| {
         AREAS

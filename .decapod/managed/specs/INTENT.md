@@ -7,6 +7,17 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
+Concurrent local agents and worktrees must retain their own caller identity in
+results, task ownership and audit evidence while sharing canonical storage.
+The foreground broker's optional reusable connection must make bounded progress,
+end with its owning foreground invocation, and hold transaction locks only for
+actual database work. Migration and restore retain exclusive file-lifecycle
+protection. An uncertain acknowledgement must never silently repeat a mutation.
+Long repository paths must route through a real confined endpoint on Linux and
+macOS; unavailable transport is an explicit error. Required broker acceptance
+checks returned and persisted ownership, physical opens, lifecycle failures and
+normal CI execution. This work does not merge, release, or close #1476.
+
 The current follow-up repairs a demonstrated public Buildkite artifact-origin
 compatibility defect in the released v0.121.0 controller. Accept the documented
 exact HTTPS artifact host alongside the legacy bucket, preserving producer,
@@ -241,8 +252,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
+- Repository signal fingerprint: `6be29d798bee7e3cd4cda3981ce6a5bec2262c911661e750af6e9195fc3b4cd1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

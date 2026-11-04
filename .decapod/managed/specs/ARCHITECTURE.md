@@ -3,7 +3,7 @@
 ## Broker caller custody
 
 The finite group broker in `src/decapod/core/group_broker.rs` serializes local
-mutations without adopting the elected leader's identity. Protocol version 2
+mutations without adopting the elected leader's identity. Protocol version 3
 requires an explicit caller context: canonical working directory and a closed
 allowlist of agent, session, task, correlation, idempotency and claim-autorun
 fields. Each child command clears those inherited fields before installing the
@@ -17,8 +17,8 @@ Dedupe stores only the result and a structured digest of arguments and non-secre
 caller context. That digest binds identity and worktree while permitting password
 rotation for an already authenticated same-caller retry. Unknown context fields
 and inconsistent payload hashes fail closed; old context-free broker clients
-cannot silently execute under a leader's identity. Broker election, bounded
-execution and idle shutdown remain unchanged: this adds no daemon or service.
+cannot silently execute under a leader's identity. Caller isolation remains process-based. Election and storage ownership have finite
+foreground lifetimes; this adds no daemon or service.
 
 `tests/group_broker.rs` exercises two callers claiming distinct tasks through a
 third caller's live broker and checks returned and persisted ownership; the
@@ -324,10 +324,12 @@ the Dactyl facade in `core::dactyl_db`. Dactyl owns physical execution, access
 mode, atomicity, normalized results, and its supported integrity and recovery
 operations.
 
-Local connections use a bounded advisory sidecar lock. Cooperating Decapod
-processes conservatively serialize connection lifetimes across host and
-container access. The lock is released by the operating system; a persistent
-lock filename is not a stale lease to delete.
+Local physical connections hold shared advisory lifecycle guards, preventing
+file replacement while SQLite owns transaction locking. Maintenance takes an
+exclusive guard on the same canonical, stable sidecar inode. Same-thread
+maintenance connections can nest; unrelated threads cannot inherit exclusive
+access, and shared-to-exclusive upgrades fail until handles close. No persistent
+lock filename is a stale lease to delete.
 
 Material task and agent-state mutations commit with required event evidence.
 Task revisions and conditional updates reject stale transitions. Canonical
@@ -617,8 +619,13 @@ parent loss, even during SQL. Normal shutdown stops new leases and gives an
 established lease up to five seconds to finish before killing/reaping a
 nonresponsive worker.
 There is no detached process or independently managed daemon.
-Its lifetime is the current broker election, including the configured idle
-period; it is not the lifetime of an agent authentication session.
+Its lifetime is the current foreground election, not an authentication session.
+The broker stops admission after 120 seconds or the configured idle period,
+finishes the bounded active request, and drains storage for at most five seconds.
+Callers in every worktree discover the canonical datastore's endpoint. An
+initialized owner lets its isolated children omit redundant startup migrations;
+the optimization is bound to the exact canonical database, and a lost required
+owner is an error rather than permission to reopen locally.
 
 All four canonical `db` factories discover the owner before acquiring a physical
 sidecar lock. When the storage parent does not exist, discovery leaves secure
@@ -632,20 +639,45 @@ Same-thread, same-context nested handles reuse that lease; differing context or
 access mode is rejected rather than silently inherited. Other callers queue.
 Abandoned transactions are rolled back before another caller is admitted.
 
-The sidecar lock coordinates physical ownership; it is not a lock on agent
-coding work. Transaction leases must be released before external Git, container,
-or build activity. Validation's known nested canonical reads reuse one handle,
-and its repair path drops a read lease before opening a writer. Maintenance
-bridges retain the same physical sidecar lock as the owner. File-replacing
-migration recovery holds that lock across its complete backup/restore scope,
-so it cannot race owner startup. Initial migrations precede owner creation.
+The shared sidecar guard protects file lifetime even while the owner is idle;
+it holds no SQLite write lock. Election uses the separate stable broker.election
+inode. SQLite transactions and the active stream lease provide mutation isolation.
+Claim completion releases its lease before optional container preparation; a
+claiming leader also releases its election before preparation. Maintenance bridges
+and migration rollback hold exclusive lifecycle access across backup/restore.
+Initial migrations precede owner creation. Unfinished transactions roll back and
+temporary schema objects are removed before the next lease. SQL configuration,
+attachment and unsupported transaction controls are rejected; read-only leases
+cannot disable query-only mode. Typed SQL failures survive transport unchanged.
 
-This remains an opt-in candidate, not a default production guarantee. Required
-proof includes the original #1476 concurrent response-and-persisted-owner test
-on both paths, retained connection identity, transaction isolation and rollback,
-read-only enforcement, shutdown and maintenance exclusion. A reused physical
-connection alone does not make command mutation and broker dedupe storage one
-atomic commit; no new exactly-once guarantee is claimed.
+Group requests have one 120-second queue/execution budget, a bounded kernel
+admission backlog, bounded frame size, and a one-second request-read deadline.
+Execution is serial in accepted order, without FIFO guarantees across concurrent
+connectors or elections. A failed acknowledgement is activity, not an idle timeout.
+Connection failure before any request bytes may retry admission; after send,
+transport loss is UNKNOWN and does not automatically elect, fall back or replay.
+Before launch, a durable UNKNOWN receipt binds request ID to arguments and caller.
+A final receipt replaces it after completion. Same-ID retrieval returns a saved
+result or uncertainty; a crash in the commit/receipt gap never causes replay.
+This is conservative at-most-one launch per recorded request, not exactly-once
+mutation. Operators must inspect uncertain persisted state before deciding on
+new work. Command failure may follow partial commit and is also uncertain.
+
+The owner remains opt-in through DECAPOD_STORAGE_OWNER=1 because its deliberately
+restricted SQL facade and cooperative local scope should not silently change all
+consumers. Normal CI exercises this path unconditionally in owner unit tests and
+the eight-worktree, twenty-mutator and exclusive-claim broker regressions. Socket
+probe failure is failure in these regressions. Physical-open instrumentation sits
+at the underlying Dactyl open, not logical proxy creation. Both Linux and Darwin
+normalize accepted sockets to blocking I/O before applying bounded timeouts.
+
+core/local_socket.rs preserves short historical addresses and maps overlong
+canonical paths to a SHA-256-derived directory under sticky /tmp. Private UID or
+explicit shared datastore GID scopes that directory. It rejects unsafe existing
+permissions, symlink/non-socket endpoints and live peers; cleanup checks endpoint
+inode identity. Lock files remain beside canonical storage and are never unlinked.
+This avoids both Linux and Darwin sun_path limits without shortening test roots
+or masking permission/protocol failures. Empty runtime directories are reusable.
 
 <!-- decapod:capability-overlay:persistent-state:start -->
 
@@ -673,8 +705,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `caf04eb31669fbfc2869cd10cf71eecb301af8d9cc36b87682c046f8fb2c590b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
+- Repository signal fingerprint: `6be29d798bee7e3cd4cda3981ce6a5bec2262c911661e750af6e9195fc3b4cd1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
