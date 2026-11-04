@@ -1,8 +1,8 @@
 {
   "schema_version": "1.1.0",
   "template_version": "scaffold-v4",
-  "generated_at": "1793783946Z",
-  "repo_signal_fingerprint": "440495916b114cd2bf4ccb0143a0042462235388f271cf4d293ad4272d51c2d6",
+  "generated_at": "1793825382Z",
+  "repo_signal_fingerprint": "dc4de50fd0aed2662d884f233f706d3fa5f460748f78adf3f59c91800ddd530f",
   "declared_capabilities": [
     "agent-helper",
     "authentication",
@@ -17,81 +17,81 @@
   ],
   "capability_definition_version": "1.0.0",
   "config_input_hash": "35bd3b09bbfb984258d210574cc27d10c52e96b5182bfc6e71a81369956567a0",
-  "spec_input_hash": "8af7f9d8b28ca2de27b2ab632eda69c47aa0b9d3d71f6a35a0481966261c2903",
-  "decapod_release": "0.125.0",
+  "spec_input_hash": "93eb0e53ab2f2884a12fdc3acc87763f161eeb41e27025a84d9bd576b3e9e354",
+  "decapod_release": "0.126.0",
   "entrypoints": [
     {
       "path": "AGENTS.md",
-      "template_hash": "153713362a5d78e31ba7bd56c96e946da45cb20e2d3ff9dd5ad746787edad728",
-      "content_hash": "153713362a5d78e31ba7bd56c96e946da45cb20e2d3ff9dd5ad746787edad728",
-      "fingerprint": "b8820663798e55f508ba003c4bb20461c3c03e92ee6ce3329cc81adc9ad75093"
+      "template_hash": "1cb68c1654249ecfd5b756b18497e4b0157d32ccd8d144eaa88875a982789a18",
+      "content_hash": "1cb68c1654249ecfd5b756b18497e4b0157d32ccd8d144eaa88875a982789a18",
+      "fingerprint": "db7fd08446e8e725cdb9712ba444543b82e72addbde886bd600cd476d6f32d0c"
     },
     {
       "path": "CLAUDE.md",
-      "template_hash": "6ecd7ff8d82ed53163a3a4c2ac1a0d04d606d9806d4ec1005104af9c007575c9",
-      "content_hash": "6ecd7ff8d82ed53163a3a4c2ac1a0d04d606d9806d4ec1005104af9c007575c9",
-      "fingerprint": "f1e116f88177173e22c997f665f2c5bfda749ca52c2838ac096bdeee0c6aa6b4"
+      "template_hash": "87e714c8321f4a6ae251bb8dd5329bbc95c4193893fe827b8529a87afe7d5760",
+      "content_hash": "87e714c8321f4a6ae251bb8dd5329bbc95c4193893fe827b8529a87afe7d5760",
+      "fingerprint": "6c8e62041a3304836f0eb8479ef852db151703591ff952ae6516d9bf5ab8cf52"
     },
     {
       "path": "GEMINI.md",
-      "template_hash": "fa34aa21cdb442fd1444ca6f80801d48abc4f25625a0fb94839a1b3da5ee8324",
-      "content_hash": "fa34aa21cdb442fd1444ca6f80801d48abc4f25625a0fb94839a1b3da5ee8324",
-      "fingerprint": "fa7c7dbae85b7b7d030a4682e1daa5a11815fb4a365e66d831a1e03e3234b6e6"
+      "template_hash": "af6fb36e6f73ad256e03389b484d582814f4a926f165ca9723ece277312f55b9",
+      "content_hash": "af6fb36e6f73ad256e03389b484d582814f4a926f165ca9723ece277312f55b9",
+      "fingerprint": "92b4e091c1f2b911090bf4b09e1cf010f3a9169bc19d1673d56f3c63e914da0b"
     },
     {
       "path": "CODEX.md",
-      "template_hash": "31a61eb0862619300a6ad27f00eb92fb10027c752764c4671790a73baade64d5",
-      "content_hash": "31a61eb0862619300a6ad27f00eb92fb10027c752764c4671790a73baade64d5",
-      "fingerprint": "3cff171e3b8faf4a9d5eca0da120b4644058fd0534f38e2fd706ad192a7d7588"
+      "template_hash": "af24dbfad45f1297a75275defda4256356a229a33453c028f803bb753a9c8c43",
+      "content_hash": "af24dbfad45f1297a75275defda4256356a229a33453c028f803bb753a9c8c43",
+      "fingerprint": "65151826f2f2954030e84ab2fd0af595fbccafd6f072537fd7bd31859c710fd4"
     }
   ],
   "files": [
     {
       "path": ".decapod/managed/specs/README.md",
       "template_hash": "02625ac2fa4e54265e89da47f12456b24346a5c13cfe1de52ce41ad1c864c497",
-      "content_hash": "1fe821f27315be70b721b0eea403c30bd179565a9d122ffbe5cbd1b02b2fd405",
+      "content_hash": "ead265f6123a81267de83fb37b2102f1d93b1d7dd0241a463ac3114844530fc6",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/INTENT.md",
       "template_hash": "2627369573dd814dcf187b14dba49b37e4f8641f1106fbfde5e89e319141ee6c",
-      "content_hash": "61f5146e819eea31487807d58dd161b8608357eaf9743ba7e8613d5e971b49f8",
+      "content_hash": "ea68012b285d144e31b51784ed543b77f51f868e6f0b15969a5efcb33653f827",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/ARCHITECTURE.md",
       "template_hash": "2b28b729b2515295b98cdc7e1d69a6b2d9698151e9bf2c5f2b86191fbebc91df",
-      "content_hash": "80fe3d1b494d82a9daf90bc682f09b09bc441d8f0da122bb4d86cb738e59b791",
+      "content_hash": "9dcae22f96ddab9cd813211835a7321ccf104cfb830f22d0fdfcec273fd11e07",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/INTERFACES.md",
       "template_hash": "6dd3c2a4490dc32996dbf9dc1510d8b11aa01ac518f0a0c553100aff7c19a19d",
-      "content_hash": "8fdf3be07ceea229a8c2eee8ad75269dade38d0f2cd2ec019bc7c549e1f704b5",
+      "content_hash": "fd9b13c5980beb8b741925e69c69cb575e1ffb1c6daf5699029f1762d66619b2",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/VALIDATION.md",
       "template_hash": "c2883ed632c25ad60a8e6fceebf5394052e263e149c1d24948776aa68fc5883b",
-      "content_hash": "58135dcf4bcf050f1c94af1dc2f709470d180f2157d614ecc44101e12e4307a2",
+      "content_hash": "e798c2a0dd5130e16d27c7a817af5cb671cec4dd16e04cfb7288c29cc87d995c",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/SEMANTICS.md",
       "template_hash": "c96df961831c8fbbcf87609051c8b8e340bbb5e51ef5391714246cb94dbbd305",
-      "content_hash": "ad2718f9667f018b3e2e4fdf1dae1f69ff10eea01767f136fd86aff22899f110",
+      "content_hash": "72b82bcdb72ec5d00ec61fd54bb93a5dc39d4d78f1de261afada545b1175fa33",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/OPERATIONS.md",
       "template_hash": "0636ac7163dd3a9369fbe46b80df87ecfd43f3f6215c0b761876d9e57236956c",
-      "content_hash": "b5fcbc47bc7c32afdcd6d39175c1995e99d1784618cc7a2fd7db501018700bec",
+      "content_hash": "673b0925b9036ee8e422b1bbc3191a7701e3d3bb54d70c0db4bd9a581ae07ed8",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/SECURITY.md",
       "template_hash": "8fb631ecae9f794c52d9e2360461d40fd83eec40476ce293d1f423d1135de681",
-      "content_hash": "07989c27e685811802415ed635fdce0c119147891929f9ae6602cb4dbd602382",
+      "content_hash": "a56274ec90e7c600c38752aac9c417c2680569cfce3740d3f4bb4bde591f71c9",
       "fingerprint": ""
     }
   ]

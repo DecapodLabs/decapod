@@ -481,6 +481,9 @@ pub fn selected(check: &Check, paths: &[String], release_only: bool) -> bool {
             ["src/decapod/cli", "src/decapod/lib", "src/main"]
                 .iter()
                 .any(|part| p.contains(part))
+                || p == "tests/cli_contracts.rs"
+                || p == "tests/support/justfile_inventory.rs"
+                || p.starts_with("tests/fixtures/justfile_consumer/")
         }),
         Selection::Migration => migration_changed(paths),
         Selection::Docs => docs_sync_changed(paths),
@@ -705,6 +708,23 @@ pub fn commands(check: &Check, paths: &[String]) -> io::Result<Vec<Invocation>> 
         _ => return Err(io::Error::other("check lacks an implementation")),
     }
     };
+    if check.id == "golden-vectors-macos" {
+        // The required platform job must actually exercise the APFS regression.
+        // Linux's CLI target cannot prove case-insensitive filesystem behavior.
+        result.insert(
+            0,
+            cargo(&[
+                "test",
+                "--locked",
+                "--test",
+                "cli_contracts",
+                "justfile_inventory",
+                "--",
+                "--test-threads=1",
+                "--nocapture",
+            ]),
+        );
+    }
     for command in &mut result {
         if check.workflow == "ci.yml" {
             command.env.push(("RUST_BACKTRACE", Some("1")));

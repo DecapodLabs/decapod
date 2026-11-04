@@ -1300,6 +1300,39 @@ fn golden_recipes_check_immutable_vectors_and_run_their_regressions() {
     }
 }
 
+#[test]
+fn rust_justfile_regressions_are_selected_on_linux_and_required_on_macos() {
+    let cli = find_check("selective-cli").unwrap();
+    for path in [
+        "tests/cli_contracts.rs",
+        "tests/support/justfile_inventory.rs",
+        "tests/fixtures/justfile_consumer/Justfile",
+        "tests/fixtures/justfile_consumer/src/distance.rs",
+    ] {
+        let changed = paths(&[path]);
+        assert!(selected(cli, &changed, false), "{path}");
+        assert!(
+            commands(cli, &changed)
+                .unwrap()
+                .iter()
+                .any(|command| command.args.contains(&"//:cli_contracts"))
+        );
+    }
+    let macos = commands(find_check("golden-vectors-macos").unwrap(), &[]).unwrap();
+    assert!(macos.iter().any(|command| command.program == "cargo"
+        && command.args
+            == [
+                "test",
+                "--locked",
+                "--test",
+                "cli_contracts",
+                "justfile_inventory",
+                "--",
+                "--test-threads=1",
+                "--nocapture",
+            ]));
+}
+
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 fn execute_setup_fixture(root: &Path, failure: &str, include_tool: bool) -> std::process::Output {
     let bin = root.join("bin");

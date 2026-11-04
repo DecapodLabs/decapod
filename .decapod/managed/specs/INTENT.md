@@ -1,5 +1,13 @@
 # Intent
 
+## Rust consumer source-spelling coverage
+
+Consumer initialization must bind discovered build inputs to their actual
+tracked spelling. Issue #1470 coverage includes a dependency-free Rust consumer,
+real CLI inventory/index checks, and a required macOS case-insensitive APFS test.
+These tests establish filename binding; full live native readiness and historical
+recovery remain separate acceptance obligations, not inferred from fixture tests.
+
 ## Product Outcome
 
 Decapod keeps AI coding work tied to the human request, the repository's rules,
@@ -252,8 +260,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `440495916b114cd2bf4ccb0143a0042462235388f271cf4d293ad4272d51c2d6`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (196 files)
+- Repository signal fingerprint: `dc4de50fd0aed2662d884f233f706d3fa5f460748f78adf3f59c91800ddd530f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
