@@ -543,6 +543,11 @@
       "id": "real-recovery-acceptance",
       "summary": "Record successful real two-task recovery, individual replay and full unscoped readiness with preserved history",
       "input_digest": "sha256:abec8af11fc4caf0a30e86f2bd569ab1c90c051baee186ba3356a280036057c0"
+    },
+    {
+      "id": "accept-merged-claim-coverage",
+      "summary": "Reconcile latest origin/master while preserving recovery work and accepted claim regression contracts",
+      "input_digest": "sha256:35190716021a124f4de5838626b55d2e9324eea837436e12faead5f6a12adc5c"
     }
   ],
   "intents": {
@@ -583,23 +588,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Stable report comparison and actual retry fixture contract reviewed against final code",
-          "reviewed_code_fingerprint": "14e8a83116c8afa633cc892684223faca64541212cf2157427f3cba1bc8ce738",
-          "spec_material_hash": "a93d4d05566e653088ea8548a1cf1ecbd9f552365d6632696224d4ec9478eb82"
+          "reason": "Preserve accepted scoped-claim architecture alongside historical proof replay behavior after master merge",
+          "reviewed_code_fingerprint": "d53c08411e156d5b9434bb3e2295668b5b326683cddf5e59b21bd107909d12e6",
+          "spec_material_hash": "a5709c5961c9f7ab793d5a43c158280bd3d4dd1a8c0baeecb7ee0f2b05731144"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Output-hash compatibility and exact CLAIMED recovery retry preconditions reviewed",
-          "reviewed_code_fingerprint": "14e8a83116c8afa633cc892684223faca64541212cf2157427f3cba1bc8ce738",
-          "spec_material_hash": "78c3fc348ad938fbd2fc2fc001e4dfbeac874b46b78e4baa2ed0edc1ef3baff5"
+          "reason": "Retain both accepted claim interface and recovery comparison contracts",
+          "reviewed_code_fingerprint": "d53c08411e156d5b9434bb3e2295668b5b326683cddf5e59b21bd107909d12e6",
+          "spec_material_hash": "d1eefcd2ad771d29f0d69a16cad20e4b357a904dc3e52fb1765c00bc4d02d08b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Exact normalization pointers and preserved semantic rejection coverage reviewed",
-          "reviewed_code_fingerprint": "14e8a83116c8afa633cc892684223faca64541212cf2157427f3cba1bc8ce738",
-          "spec_material_hash": "d703707ae79b0db2748f6e787641eb7dff4dc1bb28fe9a2a07323b06e5378c7a"
+          "reason": "Preserve canonical shared-claim policy and execution-identity replay boundaries",
+          "reviewed_code_fingerprint": "d53c08411e156d5b9434bb3e2295668b5b326683cddf5e59b21bd107909d12e6",
+          "spec_material_hash": "ac3454022a988396df331360d847f7971f65d5d99806022c6b85e2c4309abc2c"
         }
       ],
       "state": "APPROVED",
@@ -610,15 +615,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793835239Z"
+      "updated_at": "1793836445Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Live acceptance proves macOS ARM64 native profile with Vega disabled; enabled inference and other platforms untested in this live run"
       ],
-      "artifact_hash": "sha256:ea4d8159adf9510fc61e1cc79627e1333c98c912fdec3d76ca07c5b3a945d354",
+      "artifact_hash": "sha256:fa47c925cc13f8a985f2a00d861684e3419bb3b295f2b89b133afbf0deafe56a",
       "checks": [
+        {
+          "name": "accepted_target_reconciliation",
+          "status": "passed"
+        },
         {
           "name": "live_recovery",
           "status": "passed"
@@ -663,10 +672,17 @@
             "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ME6GPG834YVYDXV0WYV9RM": {
@@ -728,6 +744,22 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "PR1522 was merged externally as 558d2ac11280d53b326270208d207d5c1164d579; merged origin/master into this existing dedicated branch; retained exact active journal, all incoming CLI tests and both authored spec sections, then refreshed generated projections via CLI",
+                  "Early d1ce61f push CI rejected Git merge-base context after target advance; no guard was bypassed; new merge candidate will rerun configured CI"
+                ],
+                "proof_refs": [
+                  "accepted_target_reconciliation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -738,9 +770,11 @@
       "evidence": [
         "Actual pending-batch live test: 1 passed, 0 failed, 0 ignored in 345.76 seconds; /private/tmp/1473-live-recovery-retry-2.log",
         "All 42 plugins::verify unit tests ran: 42 passed, 0 failed, 0 ignored, including failed snapshots, material drift, transaction rollback, batch atomicity and new execution-identity normalization",
+        "Early d1ce61f push CI rejected Git merge-base context after target advance; no guard was bypassed; new merge candidate will rerun configured CI",
         "Fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 and accepted GitHub main 2d8e8abbfdcfc8a5e334ac011228beff697172b9; both historical completed tasks preserved all fields and original events; each replay passed and final full unscoped publication_ready/ready/proof_ready were true",
         "No evidence deletion, direct datastore mutation, prune, reopen, injected successful snapshot, provider mock or CI-local substitution; supported backup retained before recovery",
         "Original failed-run log /private/tmp/1473-live-recovery-exact.log; bounded retry now requires already captured pending state and preserves original absent-artifact test unchanged",
+        "PR1522 was merged externally as 558d2ac11280d53b326270208d207d5c1164d579; merged origin/master into this existing dedicated branch; retained exact active journal, all incoming CLI tests and both authored spec sections, then refreshed generated projections via CLI",
         "Real missing-artifact recovery on private fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 failed after passing scoped validation; batch remained pending; historical state preservation assertion passed",
         "Retry harness corrected its state spelling to actual persisted CLAIMED and additionally requires original task.verify.recover event; no fixture proof was deleted or rewritten to satisfy preconditions",
         "Two further full scoped validations passed with identical material and epoch; report diff isolated random readiness evidence_path, Vega request_id and binding evidence_digest beyond existing timing/order normalization"

@@ -1,5 +1,15 @@
 # Security
 
+## Shared policy command regression
+
+`tests/cli_contracts.rs::claim_boundaries` verifies that candidate-only policy
+changes cannot enable shared claims, canonical opt-in preserves basic trust,
+and the actual policy audit records the secondary caller, primary label and
+config digest. Read-only datastore observation checks the stored trust and
+audit event. Disabling canonical policy prevents new shared members without
+changing primary ownership. These tests do not turn cooperative caller labels
+into authenticated principals or authorize a trust-grant API.
+
 ## Execution identity and replay safety
 
 Only three exact JSON pointers are normalized for repeated proof comparison:
@@ -483,7 +493,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `14e8a83116c8afa633cc892684223faca64541212cf2157427f3cba1bc8ce738`
+- Repository signal fingerprint: `d53c08411e156d5b9434bb3e2295668b5b326683cddf5e59b21bd107909d12e6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

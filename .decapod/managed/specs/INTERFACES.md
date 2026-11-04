@@ -1,5 +1,15 @@
 # Interfaces
 
+## Claim scope acceptance
+
+`todo add --scope 'paths:["src/a.rs"]'` declares the files an exclusive claim
+coordinates. Distinct callers can claim disjoint files in the same canonical
+repository; overlapping scopes retain typed conflict results. The real CLI
+regressions check both claim acknowledgements and subsequent `todo get` data.
+Shared-claim acknowledgement preserves the existing primary assignment and
+adds only secondary membership. Enabling the option solely in a worktree
+must not affect the canonical datastore policy.
+
 ## Recovery replay comparison
 
 `qa verify recover` and per-task verification use the same normalized validation
@@ -843,7 +853,7 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `14e8a83116c8afa633cc892684223faca64541212cf2157427f3cba1bc8ce738`
+- Repository signal fingerprint: `d53c08411e156d5b9434bb3e2295668b5b326683cddf5e59b21bd107909d12e6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
