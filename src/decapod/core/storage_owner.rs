@@ -587,6 +587,9 @@ fn reset_connection(conn: &crate::core::db::Connection) -> Result<()> {
 /// savepoints and rollback-to rather than approximating physical transaction
 /// state. Reject leading comments and multi-statements for an unambiguous gate.
 fn permitted_write(sql: &str) -> bool {
+    if uses_connection_local_state(sql) {
+        return false;
+    }
     let trimmed = sql.trim();
     let statement = trimmed.strip_suffix(';').unwrap_or(trimmed);
     if statement.contains(';') {
@@ -616,12 +619,11 @@ fn permitted_write(sql: &str) -> bool {
     }
 }
 
-/// SQL in a Read frame must not turn off the server's query-only protection or
-/// change connection ownership. SQLite itself rejects writes in CTEs under
-/// query_only. Disallow control statements rather than guessing PRAGMA safety.
-fn permitted_read(sql: &str) -> bool {
+/// Counters also leak through write expressions and stored view definitions.
+/// Apply the same conservative SQL restriction to both read and write frames.
+fn uses_connection_local_state(sql: &str) -> bool {
     let lower = sql.to_ascii_lowercase();
-    if [
+    [
         "last_insert_rowid",
         "total_changes",
         "changes",
@@ -629,7 +631,12 @@ fn permitted_read(sql: &str) -> bool {
     ]
     .iter()
     .any(|name| lower.contains(name))
-    {
+}
+
+/// SQLite rejects writes in CTEs under query_only. Reject control statements
+/// rather than attempting to classify the safety of individual PRAGMAs.
+fn permitted_read(sql: &str) -> bool {
+    if uses_connection_local_state(sql) {
         return false;
     }
     let keyword: String = sql
@@ -961,6 +968,9 @@ mod tests {
                 "PRAGMA foreign_keys=OFF",
                 "ATTACH ':memory:' AS other",
                 "SAVEPOINT nested",
+                "INSERT INTO temp.explicit_temp VALUES (last_insert_rowid())",
+                "INSERT INTO temp.explicit_temp SELECT total_changes()",
+                "CREATE VIEW persisted_counter AS SELECT changes()",
             ] {
                 assert!(first.write(sql, &[]).is_err(), "accepted {sql}");
             }

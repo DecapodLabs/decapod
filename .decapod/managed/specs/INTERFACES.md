@@ -826,7 +826,7 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6be29d798bee7e3cd4cda3981ce6a5bec2262c911661e750af6e9195fc3b4cd1`
+- Repository signal fingerprint: `008294c0254d782abb359a1ef9b41b66094bf9a6cfba3d7923d0da3580f025e1`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
