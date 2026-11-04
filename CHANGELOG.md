@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.125.0](https://github.com/DecapodLabs/decapod/compare/v0.124.3...v0.125.0) - 2026-11-04
+
+### Added
+
+- reuse supervised broker storage with caller isolation
+
+### Fixed
+
+- preserve first database open during owner discovery
+- return broker schema inspection result directly
+
 ## [0.124.3](https://github.com/DecapodLabs/decapod/compare/v0.124.2...v0.124.3) - 2026-11-04
 
 ### Added
