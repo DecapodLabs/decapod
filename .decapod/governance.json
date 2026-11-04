@@ -561,6 +561,24 @@
       "proof_refs": [
         "tests/group_broker.rs"
       ]
+    },
+    {
+      "id": "broker-final-spec-review",
+      "summary": "Refresh projections and bind publication spec reviews to the final CI-linted source bytes",
+      "input_digest": "sha256:be914c5bd581006afa8709c0b370691a94c3bfb4aec6404c5347917812477e83",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "broker-review-serialized",
+      "summary": "Bind final reviewed material after completed trajectory writes",
+      "input_digest": "sha256:a1067100802ca939ea50e4b0c9ce1e8e0e041ab4d00e97d8cdb704924e21d137",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
@@ -605,22 +623,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Connection-local counter restrictions also cover write expressions and view definitions; regression rejects both paths.",
-          "reviewed_code_fingerprint": "008294c0254d782abb359a1ef9b41b66094bf9a6cfba3d7923d0da3580f025e1",
+          "reason": "Reviewed final implementation after CI lint corrections: foreground owner, caller and audit isolation, transaction and maintenance boundaries, uncertain outcomes, and long-path endpoint guarantees match the authored contracts. No authority or authentication boundary is expanded.",
+          "reviewed_code_fingerprint": "82ac6a3f30b88eb0d76f4c90e8475e2847c20ba1b1eef1ddb8614683b7a6e477",
           "spec_material_hash": "47a6882fff7d07808780f43b452b3921124018274438d1e48f0f734e2df249cc"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed after projection refresh: existing caller, authorization and transport boundary semantics remain accurate; architecture records counter-expression exclusion.",
-          "reviewed_code_fingerprint": "008294c0254d782abb359a1ef9b41b66094bf9a6cfba3d7923d0da3580f025e1",
+          "reason": "Reviewed final implementation after CI lint corrections: foreground owner, caller and audit isolation, transaction and maintenance boundaries, uncertain outcomes, and long-path endpoint guarantees match the authored contracts. No authority or authentication boundary is expanded.",
+          "reviewed_code_fingerprint": "82ac6a3f30b88eb0d76f4c90e8475e2847c20ba1b1eef1ddb8614683b7a6e477",
           "spec_material_hash": "96817f5f96e39a10ea664a15a65fdcff9f8630a57cf2d4db3a373674ec592754"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed after projection refresh: existing caller, authorization and transport boundary semantics remain accurate; architecture records counter-expression exclusion.",
-          "reviewed_code_fingerprint": "008294c0254d782abb359a1ef9b41b66094bf9a6cfba3d7923d0da3580f025e1",
+          "reason": "Reviewed final implementation after CI lint corrections: foreground owner, caller and audit isolation, transaction and maintenance boundaries, uncertain outcomes, and long-path endpoint guarantees match the authored contracts. No authority or authentication boundary is expanded.",
+          "reviewed_code_fingerprint": "82ac6a3f30b88eb0d76f4c90e8475e2847c20ba1b1eef1ddb8614683b7a6e477",
           "spec_material_hash": "fa32257ae4eac923396d32b59741b7f4890ecc4565f0a4db594f3dd064659f20"
         }
       ],
@@ -634,7 +652,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793782588Z"
+      "updated_at": "1793783632Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -642,11 +660,19 @@
         "Draft PR publication with configured PR CI explicitly requested; no full prepublication readiness claim.",
         "User explicitly directs draft publication and PR-CI validation; no merge, release or issue closure."
       ],
-      "artifact_hash": "sha256:1fbf7284c6af9c622ec2e6660a536bc99cc37c5ded3f9d6d3e54b2cba2be5f59",
+      "artifact_hash": "sha256:e8fa0c509a8adcaa4b3e1aa3f2edb58b8d99b2afd6e93f6a0529e2f7ddb3bea0",
       "checks": [
+        {
+          "name": "ci_spec_review",
+          "status": "failed"
+        },
         {
           "name": "initial_broker_suite",
           "status": "failed"
+        },
+        {
+          "name": "linux_clippy",
+          "status": "passed"
         },
         {
           "name": "macos_broker_integration",
@@ -750,10 +776,24 @@
             "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6JSA5F8WXYK8YY19XAXMWTM",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6JSA5B9C3QVY8NQ9JWVZD1F",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6JSA5F8WXYK8YY19XAXMWTM": {
@@ -878,6 +918,45 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Exact-head 93da0ef6 CI passed Clippy and standalone validation. Governance publication material correctly rejected STALE_SPEC_REVIEW after test lint edits. Refreshed supported projections and re-reviewed all publication specs against final implementation; checkpoint/publication-material verification follows. No gate or assertion weakened."
+                ],
+                "proof_refs": [
+                  "linux_clippy",
+                  "ci_spec_review"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod,tests,assets/tools,managed specs and release projections",
+                  "src/decapod/core",
+                  "tests"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Local exact-commit publication-material verification caught an unpushed checkpoint binding mismatch after overlapping trajectory and checkpoint invocations. Regenerating the checkpoint sequentially after all governance writes and amending only the unpushed repair commit; prior published checkpoints remain intact."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs",
+                  ".github/workflows",
+                  "assets/tools/source_ci",
+                  "src/decapod,tests,assets/tools,managed specs and release projections",
+                  "src/decapod/core",
+                  "tests"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -888,8 +967,10 @@
       "evidence": [
         "Base db66e137; CI 41759874771 core logs show serialized completions before 120s timeouts, not total deadlock; 15s transport retries and failed-delivery idle accounting confirmed in source. Long socket discovery errors reproduced by existing validate_termination CI.",
         "Draft PR 1517 published at 3a2f2778; exact-head PR CI 41802813138 started. Review extended connection-local counter rejection to write expressions and persisted view definitions; added regression assertions, local compilation pending. No readiness verdict asserted.",
+        "Exact-head 93da0ef6 CI passed Clippy and standalone validation. Governance publication material correctly rejected STALE_SPEC_REVIEW after test lint edits. Refreshed supported projections and re-reviewed all publication specs against final implementation; checkpoint/publication-material verification follows. No gate or assertion weakened.",
         "Full macOS broker integration: 15 passed, 0 ignored (448.62s); storage owner/lock units: 15 passed; group broker units: 13 passed. Validation termination: 11 passed including long-path artifact cleanup, 1 timeout in existing 10s smoke while compiling, isolated rerun pending. Source-CI policy: 50 passed including new unfiltered selection, 4 failed platform fixtures (three require linux-x86_64; one canonical /var alias assertion). Added absolute per-read reply deadline after these runs; final unit/CI evidence pending.",
         "Latest official Decapod 0.125.0 installed and binary matched release archive. GitHub origin/master refreshed: db66e137 remains branch ancestor. Final local broker units 14 passed; storage/lock units 15 passed including counter writes; socket unit 1 passed; migration units 5 passed. Isolated unchanged validation smoke passed 3 runs at 4641/4549/4722ms. Library and group_broker Clippy passed. Linux CI found two test-only Clippy style issues; corrected without altering assertions. Exact-head CI remains pending.",
+        "Local exact-commit publication-material verification caught an unpushed checkpoint binding mismatch after overlapping trajectory and checkpoint invocations. Regenerating the checkpoint sequentially after all governance writes and amending only the unpushed repair commit; prior published checkpoints remain intact.",
         "macOS storage owner/lifecycle unit tests: 15 passed, zero ignored. Initial full broker suite: 11 passed, 4 failed; all queued owner claims finished in 5.1s. Three new audit assertions used a binary without caller_agent_id; current rebuild pending. Shared test assumed adjacent runtime directory and was corrected to inspect actual hashed GID path. Twenty-mutator, long-path, post-commit-disconnect, uncertain-crash and preparation scenarios passed."
       ],
       "inspected_files": [
