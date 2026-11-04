@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.126.0](https://github.com/DecapodLabs/decapod/compare/v0.125.0...v0.126.0) - 2026-11-04
+
+### Fixed
+
+- reject connection counters in owner write expressions
+- bound daemonless broker connection reuse
+
+### Other
+
+- merge latest origin/master README update
+- Update README.md
+- bind spec reviews to final broker implementation
+- resolve broker regression lint findings
+
 ## [0.125.0](https://github.com/DecapodLabs/decapod/compare/v0.124.3...v0.125.0) - 2026-11-04
 
 ### Added
