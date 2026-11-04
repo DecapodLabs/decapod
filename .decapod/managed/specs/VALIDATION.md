@@ -1,5 +1,13 @@
 # Validation
 
+## Claim boundary delivery checks
+
+The required CLI target runs the two `claim_boundaries` regressions with
+independent caller environments and a shared worktree datastore. Their results
+do not replace standalone validation: the tracked agent entrypoints and managed
+Dockerfile must also match the evaluating release. A release refresh must use
+the CLI and be committed, so CI does not repair those inputs during proof.
+
 ## Documented agent bootstrap execution
 
 The always-selected `cli-contracts` proof executes the inline

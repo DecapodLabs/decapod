@@ -534,6 +534,11 @@
       "id": "claim-boundaries-cli",
       "summary": "Exercise concurrent disjoint worktree claims and canonical shared-claim policy through real Rust CLI regressions",
       "input_digest": "sha256:121d25e7f6b4256006a2a9f15d7dedca700789c452b3004033c6c1f03fd506ae"
+    },
+    {
+      "id": "release-1261-projections",
+      "summary": "Refresh release-bound entrypoints and managed container pin required by standalone validation",
+      "input_digest": "sha256:211ca4deee96d5dad656a36ae038d094f9e83913e8a91b6885cd9a5c8e6321f1"
     }
   ],
   "intents": {
@@ -608,10 +613,18 @@
         "Current claimed task and isolated work branch",
         "User delegated issue 1480 resolution: retain explicit scopes and opt-in shared membership; no new trust-grant API"
       ],
-      "artifact_hash": "sha256:2ec6a780fcde50d95de96a2a4eab4af32399c8f85709c26bdbba27067c79d10a",
+      "artifact_hash": "sha256:98182ea706fff98ba8e0358f1b11419950a73833bf6f090ddc72ad55bc612cc4",
       "checks": [
         {
           "name": "claim_cli",
+          "status": "passed"
+        },
+        {
+          "name": "pr_ci",
+          "status": "failed"
+        },
+        {
+          "name": "source_ci_selection",
           "status": "passed"
         }
       ],
@@ -643,10 +656,17 @@
             "intent_id": "intent:change_01M6M71PVFBMV1ESJPRV7G6KYS",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6M71PYDYWZ9CFXGWPC8RZVR",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6M71PVFBMV1ESJPRV7G6KYS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6M71PYDYWZ9CFXGWPC8RZVR": {
@@ -690,6 +710,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "PR 1522 head 2072eb7: standalone validation actually passed checks but rejected 0.126.0 entrypoint and Dockerfile drift under 0.126.1; decapod init --proof refreshed release projections without config changes",
+                  "Required selector regression ran: 1 passed, 0 failed, 0 ignored; tests/cli_contracts.rs schedules selective-cli"
+                ],
+                "proof_refs": [
+                  "pr_ci",
+                  "source_ci_selection"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -700,6 +737,8 @@
       "evidence": [
         "Accepted source-CI selective-cli already selects tests/cli_contracts.rs and executes //:cli_contracts; no selection or executor changes are needed",
         "First targeted run passed concurrent disjoint worktree ownership and overlap exclusion; shared scenario hit fixture TOML missing-key indexing, corrected via explicit table insert; rerun pending",
+        "PR 1522 head 2072eb7: standalone validation actually passed checks but rejected 0.126.0 entrypoint and Dockerfile drift under 0.126.1; decapod init --proof refreshed release projections without config changes",
+        "Required selector regression ran: 1 passed, 0 failed, 0 ignored; tests/cli_contracts.rs schedules selective-cli",
         "cargo test --locked --test cli_contracts claim_boundaries: 2 passed, 0 failed, 0 ignored; both real process scenarios ran in 82 seconds on macOS; /private/tmp/1480-cli-tests-2.log"
       ],
       "inspected_files": [
