@@ -154,7 +154,24 @@ fn backup_restore_and_ledgers_keep_safe_modes_under_permissive_umask() {
     )
     .unwrap();
     drop(conn);
+    // Replacement must preserve the physical-owner exclusion inode. Removing
+    // it while held would let another process elect an owner on a new inode.
+    let maintenance = crate::core::storage_lock::StorageLock::acquire(
+        &database,
+        crate::core::storage_lock::StorageLockMode::Exclusive,
+        std::time::Duration::from_secs(1),
+    )
+    .unwrap();
+    use std::os::unix::fs::MetadataExt;
+    let lock_inode = fs::metadata(maintenance.path()).unwrap().ino();
+    let runtime = data.join("broker-runtime");
+    crate::core::fs_permissions::ensure_storage_dir(&runtime).unwrap();
+    let runtime_inode = fs::metadata(&runtime).unwrap().ino();
     let backup = create_data_backup(&data).unwrap().unwrap();
+    assert!(!backup.join("decapod.db.lock").exists());
+    assert!(!backup.join("broker-runtime").exists());
+    // A historical backup from an older binary must not replace the lock.
+    fs::write(backup.join("decapod.db.lock"), b"historical marker").unwrap();
     assert_eq!(
         fs::metadata(&backup).unwrap().permissions().mode() & 0o777,
         0o700
@@ -168,6 +185,9 @@ fn backup_restore_and_ledgers_keep_safe_modes_under_permissive_umask() {
         0o600
     );
     restore_data_backup(&data, &backup).unwrap();
+    assert_eq!(fs::metadata(maintenance.path()).unwrap().ino(), lock_inode);
+    assert_eq!(fs::metadata(&runtime).unwrap().ino(), runtime_inode);
+    drop(maintenance);
     assert_eq!(
         fs::metadata(&database).unwrap().permissions().mode() & 0o777,
         0o600

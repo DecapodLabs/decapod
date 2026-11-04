@@ -4698,6 +4698,8 @@ fn validate_knowledge_integrity(
         Ok(v) => v,
         Err(e) if e.to_string().contains("no such table: knowledge") => {
             // Self-heal schema drift/partial bootstrap before validating integrity.
+            // Release this read lease before initialization requests a write lease.
+            drop(conn);
             db::initialize_knowledge_db(&store.root)?;
             conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
             query_missing_provenance(&conn).map_err(error::DecapodError::StorageError)?
@@ -4740,7 +4742,7 @@ fn validate_knowledge_integrity(
         );
     }
 
-    let event_ids = load_knowledge_promotion_event_ids(&store.root)?;
+    let event_ids = load_knowledge_promotion_event_ids(&conn)?;
     let mut stmt = conn
         .prepare(
             "SELECT provenance FROM knowledge
@@ -4791,14 +4793,8 @@ fn validate_knowledge_integrity(
 }
 
 fn load_knowledge_promotion_event_ids(
-    store_root: &Path,
+    conn: &crate::core::db::Connection,
 ) -> Result<HashSet<String>, error::DecapodError> {
-    let db_path = store_root.join(crate::core::schemas::LOCAL_DB_NAME);
-    if !db_path.exists() {
-        return Ok(HashSet::new());
-    }
-
-    let conn = db::db_connect_for_validate(&db_path.to_string_lossy())?;
     let mut stmt = conn
         .prepare("SELECT payload FROM events WHERE stream = 'knowledge'")
         .map_err(error::DecapodError::StorageError)?;
@@ -4874,12 +4870,13 @@ fn validate_lineage_hard_gate(
         return Ok(());
     }
 
+    // Both projections live in the canonical datastore. Reuse its read lease
+    // rather than waiting for a second lease while retaining the first.
     let conn = db::db_connect_for_validate(&federation_db.to_string_lossy())?;
-    let todo_conn = db::db_connect_for_validate(&todo_db.to_string_lossy())?;
     let mut violations = Vec::new();
 
     for task_id in add_candidates {
-        let exists: i64 = todo_conn
+        let exists: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM tasks WHERE id = ?1",
                 crate::core::db::params![task_id.clone()],
@@ -4905,7 +4902,7 @@ fn validate_lineage_hard_gate(
     }
 
     for task_id in done_candidates {
-        let exists: i64 = todo_conn
+        let exists: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM tasks WHERE id = ?1",
                 crate::core::db::params![task_id.clone()],

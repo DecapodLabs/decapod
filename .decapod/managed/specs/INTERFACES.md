@@ -773,12 +773,43 @@ contract, rather than by an agent's chosen provider or harness:
 - Cloud task completion and local verified completion remain distinct while the
   cloud contract lacks proof-capture support
 
+## Local storage-owner transport (opt-in)
+
+`DECAPOD_STORAGE_OWNER=1` enables the foreground owner for an elected group
+broker. Default routing remains unchanged while this transition is validated.
+The owner uses a private local Unix socket adjacent to the canonical datastore,
+with a versioned, bounded-frame protocol. This is an internal cooperative-local
+interface, not a new remote database service or authentication boundary.
+
+An Open frame binds the canonical database path, access mode, and immutable
+caller metadata to one lease. Session passwords are excluded. SQL parameters
+retain their original types, including integer versus real and blob values.
+The owner serializes leases, not individual statements, so BEGIN through
+COMMIT/ROLLBACK cannot interleave across callers. Read-only leases are enforced
+by the server and cannot use Read messages to disable query-only protection.
+
+No operation is replayed after an uncertain transport outcome. Failure before
+any owner connection exists may use the existing local path; accepted but
+unanswered protocol traffic does not authorize local fallback. Closing or
+losing a lease rolls back unfinished work. Normal foreground shutdown sends a
+drain signal while retaining its lifetime pipe, stops new leases, and allows an
+established lease up to five seconds to finish. It then reaps or kills/reaps the
+supervised worker. Actual pipe EOF terminates the worker immediately, including
+during SQL. The endpoint is removed after worker exit.
+
+The #1476 regression retains the original two-agent legacy case and adds eight
+owner-path agents in distinct Git worktrees. It must assert each caller's returned
+and persisted assignee and traversal through one elected leader with one physical
+owner opening. Additional fixtures cover twenty concurrent mutations, eight-way
+exclusive-claim collision, and parent loss during SQL with rollback recovery. Tests and full configured validation
+remain required before default activation or publication readiness.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (196 files)
+- Repository signal fingerprint: `c32d3631a11de58167cef1acdd39891ae7faafed65cf55eeee0c6f78341a9e14`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

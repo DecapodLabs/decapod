@@ -265,6 +265,12 @@ impl DactylBridge {
         access_mode: AccessMode,
     ) -> Result<Self, DecapodError> {
         let path = path.as_ref();
+        #[cfg(unix)]
+        if crate::core::storage_owner::owner_is_active(path)? {
+            return Err(DecapodError::ValidationError(
+                "STORAGE_OWNER_MAINTENANCE_BLOCKED: integrity, backup and recovery require the foreground broker session to close before opening a physical maintenance connection".into(),
+            ));
+        }
         let storage_lock = local_storage_lock(path, access_mode)?;
         Self::open_route(
             dactyl_db::DatastoreRoute::sqlite(path.to_string_lossy().into_owned()),

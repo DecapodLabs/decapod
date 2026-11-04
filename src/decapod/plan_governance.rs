@@ -642,6 +642,9 @@ pub fn ensure_execute_ready(
             break;
         }
     }
+    // The task probe is complete; do not retain its storage lease while
+    // checking plan artifacts and invoking Git for scope evidence.
+    drop(conn);
     if !found {
         // A task lookup cannot determine whether the agent still holds the
         // user's request. Keep the coordination gate closed, but do not turn

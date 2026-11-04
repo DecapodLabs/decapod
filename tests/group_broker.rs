@@ -192,6 +192,16 @@ fn wait_for_no_broker_artifacts(dir: &Path, timeout: Duration) -> bool {
 
 #[test]
 fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
+    assert_concurrent_mutators(false);
+}
+
+#[cfg(unix)]
+#[test]
+fn reusable_connection_handles_twenty_concurrent_mutators() {
+    assert_concurrent_mutators(true);
+}
+
+fn assert_concurrent_mutators(reuse_connection: bool) {
     let _timing =
         BrokerTestTiming::start("broker_no_sqlite_busy_surfaced_under_concurrent_mutators");
     let (_tmp, dir, password) = setup_repo_with(run_contention_setup);
@@ -209,14 +219,21 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
         })
         .collect();
 
+    let barrier = std::sync::Arc::new(std::sync::Barrier::new(creds.len()));
     let mut workers = Vec::new();
     for (i, (agent_id, agent_pw)) in creds.into_iter().enumerate() {
         let dir_cl = dir.clone();
+        let barrier = barrier.clone();
         workers.push(std::thread::spawn(move || {
+            barrier.wait();
             let _timing = BrokerTestTiming::start(format!("contention client {i:02}"));
             let task = format!("concurrent-task-{i}");
             let req_id = format!("BROKER_BUSY_REQ_{i:02}");
             let envs = [
+                (
+                    "DECAPOD_STORAGE_OWNER".to_string(),
+                    if reuse_connection { "1" } else { "0" }.to_string(),
+                ),
                 ("DECAPOD_AGENT_ID".to_string(), agent_id),
                 ("DECAPOD_SESSION_PASSWORD".to_string(), agent_pw),
                 (
@@ -930,25 +947,88 @@ fn run_contention_command(
 #[cfg(unix)]
 #[test]
 fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
+    assert_concurrent_claim_identity(false, false);
+}
+
+#[cfg(unix)]
+#[test]
+fn reusable_connection_preserves_caller_in_response_and_persisted_owner() {
+    assert_concurrent_claim_identity(true, false);
+}
+
+#[cfg(unix)]
+#[test]
+fn reusable_connection_preserves_one_winner_among_eight_colliding_claims() {
+    assert_concurrent_claim_identity(true, true);
+}
+
+#[cfg(unix)]
+fn assert_concurrent_claim_identity(reuse_connection: bool, collide: bool) {
     let (_tmp, dir, password) = setup_repo_with(run_contention_setup);
     if !broker_socket_supported_with(&dir, &password, run_contention_setup) {
         eprintln!("skipping: unix socket transport not permitted in this sandbox");
         return;
     }
+    let categories = [
+        "features",
+        "docs",
+        "bugs",
+        "ci",
+        "refactor",
+        "tests",
+        "security",
+        "performance",
+    ];
+    let count = if reuse_connection { 8 } else { 2 };
     let mut tasks = Vec::new();
-    // Keep category ownership disjoint using categories seeded by normal init.
-    // Caller identities are not category names and must not bypass validation.
-    for (agent, category) in [("caller-a", "features"), ("caller-b", "docs")] {
-        let task_dir = dir.join(agent);
-        std::fs::create_dir(&task_dir).unwrap();
+    let mut collision_task: Option<String> = None;
+    if reuse_connection {
+        // All execution is confined to this disposable fixture. Real Git
+        // worktrees exercise caller cwd transport rather than only env changes.
+        fixture_git(
+            &dir,
+            &[
+                "-c",
+                "user.name=Broker fixture",
+                "-c",
+                "user.email=broker-fixture@example.invalid",
+                "commit",
+                "--allow-empty",
+                "-m",
+                "broker fixture base",
+            ],
+        );
+    }
+    for (index, category) in categories.iter().take(count).enumerate() {
+        let agent = format!("caller-{index:02}");
+        let task_dir = dir.join(format!("caller-worktree-{index:02}"));
+        if reuse_connection {
+            fixture_git(
+                &dir,
+                &[
+                    "worktree",
+                    "add",
+                    "--detach",
+                    task_dir.to_str().unwrap(),
+                    "HEAD",
+                ],
+            );
+        } else {
+            std::fs::create_dir(&task_dir).unwrap();
+        }
+        let credential = acquire_session_password_with(&dir, &agent, run_contention_setup);
+        if collide && let Some(id) = &collision_task {
+            tasks.push((agent, credential, id.clone(), task_dir));
+            continue;
+        }
         let added = run_contention_setup(
             &dir,
             &[
                 "todo",
                 "add",
-                agent,
+                &agent,
                 "--scope",
-                agent,
+                &agent,
                 "--dir",
                 task_dir.to_str().unwrap(),
             ],
@@ -977,16 +1057,22 @@ fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
             "{}",
             String::from_utf8_lossy(&edited.stderr)
         );
-        let credential = acquire_session_password_with(&dir, agent, run_contention_setup);
-        tasks.push((agent.to_owned(), credential, id));
+        if collide {
+            collision_task = Some(id.clone());
+        }
+        tasks.push((agent, credential, id, task_dir));
     }
 
-    // Elect a third caller, then submit both claims through its live socket.
+    // Elect an independent caller, then submit every claim through its live socket.
     // The leader remains ephemeral; the bounded guard cleans up on test failure.
     let hooks = dir.join("identity-leader-hooks");
     let stdout = dir.join("identity-leader-out");
     let stderr = dir.join("identity-leader-err");
     let mut command = Command::new(resolve_decapod_bin());
+    command.env(
+        "DECAPOD_STORAGE_OWNER",
+        if reuse_connection { "1" } else { "0" },
+    );
     command
         .current_dir(&dir)
         .args(["todo", "add", "identity-leader"])
@@ -1006,17 +1092,16 @@ fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
         Duration::from_secs(15)
     ));
 
-    let barrier = std::sync::Arc::new(std::sync::Barrier::new(2));
+    let barrier = std::sync::Arc::new(std::sync::Barrier::new(tasks.len()));
     let workers: Vec<_> = tasks
         .iter()
         .cloned()
-        .map(|(agent, credential, id)| {
-            let dir = dir.clone();
+        .map(|(agent, credential, id, caller_dir)| {
             let barrier = barrier.clone();
             std::thread::spawn(move || {
                 barrier.wait();
                 let output = run_contention_command(
-                    &dir,
+                    &caller_dir,
                     &["todo", "claim", "--id", &id],
                     &[
                         ("DECAPOD_AGENT_ID", &agent),
@@ -1039,7 +1124,15 @@ fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
         String::from_utf8_lossy(&leader_output.stderr)
     );
     let leader_hooks = std::fs::read_to_string(&hooks).unwrap();
-    for (agent, _, _) in &tasks {
+    assert_eq!(
+        leader_hooks
+            .lines()
+            .filter(|line| line.starts_with("storage_owner_open|"))
+            .count(),
+        usize::from(reuse_connection),
+        "expected one retained physical storage owner, never a per-caller owner"
+    );
+    for (agent, _, _, _) in &tasks {
         assert!(
             leader_hooks
                 .lines()
@@ -1047,19 +1140,216 @@ fn concurrent_claims_preserve_caller_in_response_and_persisted_owner() {
             "claim did not traverse the elected leader: {agent}"
         );
     }
+    let mut winners = Vec::new();
     for result in results {
         let (agent, id, output) = result.unwrap();
+        let response: serde_json::Value =
+            serde_json::from_slice(&output.stdout).unwrap_or_else(|error| {
+                panic!(
+                    "{agent}: {error}; stdout={} stderr={}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
+                )
+            });
+        if collide && response["result"]["status"] == "conflict" {
+            continue;
+        }
         assert!(
             output.status.success(),
-            "{}",
+            "{agent}: {}",
             String::from_utf8_lossy(&output.stderr)
         );
-        let response: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
         assert_eq!(response["result"]["status"], "ok", "{response}");
         assert_eq!(response["result"]["assigned_to"], agent, "{response}");
-        let fetched = run_contention_setup(&dir, &["todo", "get", "--id", &id], &[]);
+        winners.push((agent.clone(), id.clone()));
+        if !collide {
+            let fetched = run_contention_setup(&dir, &["todo", "get", "--id", &id], &[]);
+            assert!(fetched.status.success());
+            let persisted: serde_json::Value = serde_json::from_slice(&fetched.stdout).unwrap();
+            assert_eq!(persisted["item"]["assigned_to"], agent, "{persisted}");
+        }
+    }
+    if collide {
+        assert_eq!(
+            winners.len(),
+            1,
+            "exactly one exclusive claimant must win: {winners:?}"
+        );
+        let (winner, id) = &winners[0];
+        let fetched = run_contention_setup(&dir, &["todo", "get", "--id", id], &[]);
         assert!(fetched.status.success());
         let persisted: serde_json::Value = serde_json::from_slice(&fetched.stdout).unwrap();
-        assert_eq!(persisted["item"]["assigned_to"], agent, "{persisted}");
+        assert_eq!(persisted["item"]["assigned_to"], *winner, "{persisted}");
+    } else {
+        assert_eq!(winners.len(), count);
     }
+}
+
+#[cfg(unix)]
+fn fixture_git(dir: &Path, args: &[&str]) {
+    use decapod::core::bounded_process::BoundedCommand;
+    let output = Command::new("git")
+        .current_dir(dir)
+        .args(args)
+        .bounded_output(Duration::from_secs(10))
+        .expect("bounded fixture git");
+    assert!(
+        output.status.success(),
+        "git {args:?}: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn storage_worker_parent_loss_interrupts_sql_and_releases_transaction_lock() {
+    use std::io::Read;
+    use std::os::unix::net::UnixStream;
+    use std::os::unix::process::CommandExt;
+    use std::process::Stdio;
+
+    let (_tmp, dir, password) = setup_repo_with(run_contention_setup);
+    if !broker_socket_supported_with(&dir, &password, run_contention_setup) {
+        eprintln!("skipping: unix socket transport not permitted in this sandbox");
+        return;
+    }
+    assert!(wait_for_no_broker_artifacts(&dir, Duration::from_secs(6)));
+    let database = dir.join(".decapod/data/decapod.db").canonicalize().unwrap();
+    {
+        let conn = decapod::core::db::db_connect(database.to_str().unwrap()).unwrap();
+        conn.execute("CREATE TABLE owner_crash_probe(value INTEGER)", [])
+            .unwrap();
+    }
+    let hooks = dir.join("storage-worker-hooks");
+    let stdout = dir.join("storage-worker-out");
+    let stderr = dir.join("storage-worker-err");
+    let command = Command::new(resolve_decapod_bin())
+        .current_dir(&dir)
+        .arg("__storage-owner-worker")
+        .arg(&database)
+        .env("DECAPOD_STORAGE_OWNER_WORKER", "1")
+        .env("DECAPOD_GROUP_BROKER_TEST_HOOK_FILE", &hooks)
+        .stdin(Stdio::piped())
+        .stdout(std::fs::File::create(&stdout).unwrap())
+        .stderr(std::fs::File::create(&stderr).unwrap())
+        .process_group(0)
+        .spawn()
+        .unwrap();
+    let mut worker = ClaimProbeChild(Some(command));
+    let lifetime = worker.0.as_mut().unwrap().stdin.take().unwrap();
+    assert!(wait_for_hook_line(
+        &hooks,
+        "storage_owner_open|",
+        Duration::from_secs(10)
+    ));
+    let ready_started = Instant::now();
+    while std::fs::read(&stdout).unwrap_or_default() != b"R" {
+        assert!(
+            ready_started.elapsed() < Duration::from_secs(3),
+            "worker readiness byte missing"
+        );
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    let mut stream = UnixStream::connect(
+        database
+            .parent()
+            .unwrap()
+            .join("broker-runtime/storage.sock"),
+    )
+    .unwrap();
+    stream
+        .set_read_timeout(Some(Duration::from_secs(2)))
+        .unwrap();
+    stream
+        .set_write_timeout(Some(Duration::from_secs(2)))
+        .unwrap();
+    let caller = serde_json::json!({
+        "agent_id":"crash-caller", "session_id":null, "task_id":null,
+        "correlation_id":null, "causation_id":null, "request_id":"crash-probe"
+    });
+    write_storage_frame(
+        &mut stream,
+        &serde_json::json!({"Open":{
+            "version":1, "database":database, "read_only":false, "caller":caller
+        }}),
+    );
+    assert_eq!(read_storage_frame(&mut stream)["Ready"]["version"], 1);
+    for sql in ["BEGIN IMMEDIATE", "INSERT INTO owner_crash_probe VALUES(1)"] {
+        write_storage_frame(
+            &mut stream,
+            &serde_json::json!({"Write":{"sql":sql,"params":[]}}),
+        );
+        assert!(read_storage_frame(&mut stream).get("Count").is_some());
+    }
+    write_storage_frame(
+        &mut stream,
+        &serde_json::json!({"Read":{
+            "sql":"WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<1000000000) SELECT sum(x) FROM n",
+            "params":[]
+        }}),
+    );
+    assert!(wait_for_hook_line(
+        &hooks,
+        "storage_owner_read|",
+        Duration::from_secs(3)
+    ));
+    // Ensure the expensive read has not already returned an error/result. This
+    // proves EOF cancellation while work is in flight, not idle shutdown only.
+    stream
+        .set_read_timeout(Some(Duration::from_millis(100)))
+        .unwrap();
+    let mut unexpected = [0u8; 1];
+    let pending = stream
+        .read(&mut unexpected)
+        .expect_err("expensive query completed before cancellation");
+    assert!(matches!(
+        pending.kind(),
+        std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+    ));
+    drop(lifetime);
+    let output = worker.output_timeout(
+        &stdout,
+        &stderr,
+        &hooks,
+        "storage worker parent loss",
+        Duration::from_secs(3),
+    );
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    drop(stream);
+    // Process termination must release the physical lock and SQLite recovery
+    // must roll back the interrupted transaction before another caller opens.
+    let conn = decapod::core::db::db_connect(database.to_str().unwrap()).unwrap();
+    let count: i64 = conn
+        .query_row("SELECT count(*) FROM owner_crash_probe", [], |row| {
+            row.get(0)
+        })
+        .unwrap();
+    assert_eq!(count, 0);
+}
+
+#[cfg(unix)]
+fn write_storage_frame(stream: &mut std::os::unix::net::UnixStream, value: &serde_json::Value) {
+    use std::io::Write;
+    let encoded = serde_json::to_vec(value).unwrap();
+    stream
+        .write_all(&(encoded.len() as u32).to_be_bytes())
+        .unwrap();
+    stream.write_all(&encoded).unwrap();
+    stream.flush().unwrap();
+}
+
+#[cfg(unix)]
+fn read_storage_frame(stream: &mut std::os::unix::net::UnixStream) -> serde_json::Value {
+    use std::io::Read;
+    let mut size = [0u8; 4];
+    stream.read_exact(&mut size).unwrap();
+    let length = u32::from_be_bytes(size) as usize;
+    assert!(length > 0 && length <= 16 * 1024 * 1024);
+    let mut bytes = vec![0; length];
+    stream.read_exact(&mut bytes).unwrap();
+    serde_json::from_slice(&bytes).unwrap()
 }

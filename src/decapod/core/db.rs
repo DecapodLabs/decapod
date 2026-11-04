@@ -33,6 +33,19 @@ const UNSUPPORTED_FS_TYPES: &[&str] = &["nfs", "nfs4", "cifs", "smbfs", "9p", "v
 /// processes do not overlap access to the same file.
 pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
+    if let Some(conn) = owner_connection(
+        db_path,
+        dactyl_db::AccessMode::ReadWrite,
+        Duration::from_secs(5),
+    )? {
+        return Ok(conn);
+    }
+    db_connect_owner(db_path)
+}
+
+/// Physical owner entrypoint. Never discovers the owner socket recursively.
+/// Only the foreground storage owner and the no-owner fallback call this.
+pub(crate) fn db_connect_owner(db_path: &Path) -> Result<Connection, error::DecapodError> {
     ensure_db_parent_dir(db_path)?;
     storage_preflight_for_db(db_path, true)?;
     open_with_retry(
@@ -58,6 +71,13 @@ pub fn db_connect(db_path: &str) -> Result<Connection, error::DecapodError> {
 /// Establish a read-only connection for validation probes.
 pub fn db_connect_for_validate(db_path: &str) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
+    if let Some(conn) = owner_connection(
+        db_path,
+        dactyl_db::AccessMode::ReadOnly,
+        Duration::from_secs(2),
+    )? {
+        return Ok(conn);
+    }
     storage_preflight_for_db(db_path, false)?;
     let conn = open_with_retry(
         db_path,
@@ -86,6 +106,13 @@ pub fn db_connect_pooled(
     busy_timeout_secs: u32,
 ) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
+    if let Some(conn) = owner_connection(
+        db_path,
+        dactyl_db::AccessMode::ReadWrite,
+        Duration::from_secs(busy_timeout_secs as u64),
+    )? {
+        return Ok(conn);
+    }
     ensure_db_parent_dir(db_path)?;
     storage_preflight_for_db(db_path, true)?;
 
@@ -115,6 +142,13 @@ pub fn db_connect_read_pooled(
     busy_timeout_secs: u32,
 ) -> Result<Connection, error::DecapodError> {
     let db_path = Path::new(db_path);
+    if let Some(conn) = owner_connection(
+        db_path,
+        dactyl_db::AccessMode::ReadOnly,
+        Duration::from_secs(busy_timeout_secs as u64),
+    )? {
+        return Ok(conn);
+    }
     storage_preflight_for_db(db_path, false)?;
     open_with_retry(
         db_path,
@@ -134,6 +168,31 @@ pub fn db_connect_read_pooled(
         },
         "open_readonly_pooled",
     )
+}
+
+/// Discover live foreground ownership before taking any physical datastore lock.
+/// Transport errors never fall through to another local execution attempt.
+fn owner_connection(
+    path: &Path,
+    access_mode: dactyl_db::AccessMode,
+    timeout: Duration,
+) -> Result<Option<Connection>, error::DecapodError> {
+    #[cfg(unix)]
+    {
+        crate::core::fs_permissions::check_storage(path).map_err(error::DecapodError::IoError)?;
+        crate::core::storage_owner::Proxy::try_connect(
+            path,
+            access_mode,
+            connection_lock_timeout(timeout),
+        )
+        .map(|proxy| proxy.map(Connection::from_owner))
+        .map_err(error::DecapodError::StorageError)
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = (path, access_mode, timeout);
+        Ok(None)
+    }
 }
 
 /// Validation runs in a killable child process. Keep its SQLite busy wait

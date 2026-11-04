@@ -599,6 +599,51 @@ evidence and authority after source readiness.
 - Direct commands can bypass Decapod. The agent contract and human review remain
   necessary outside the runtime's enforceable interface boundary
 
+## Foreground storage ownership and caller isolation
+
+The caller-isolation requirement in issue #1476 applies to returned claim results,
+persisted task assignees, and the metadata attached to each queued operation.
+`group_broker::CallerContext` continues to capture the originating caller and
+replace inherited identity/session fields in isolated command children. The
+storage-owner transition does not dispatch CLI handlers inside the leader or
+swap its process-global environment between callers.
+
+The opt-in `DECAPOD_STORAGE_OWNER=1` path starts a supervised storage child owned by
+the elected foreground broker. `storage_owner::Owner` opens the canonical
+Dactyl connection once and retains it across successive proxy leases. The
+connection is created, used, and dropped on the worker main thread because its
+facade contains thread-local `Rc` state. A lifetime pipe ends the worker on
+parent loss, even during SQL. Normal shutdown stops new leases and gives an
+established lease up to five seconds to finish before killing/reaping a
+nonresponsive worker.
+There is no detached process or independently managed daemon.
+Its lifetime is the current broker election, including the configured idle
+period; it is not the lifetime of an agent authentication session.
+
+All four canonical `db` factories discover the owner before acquiring a physical
+sidecar lock. An isolated child retains its caller context and executes the
+normal policy and audit code, while its facade forwards storage operations.
+Reads of task backlog/status can use that same physical connection. One logical
+stream lease owns transaction affinity until its last facade handle closes.
+Same-thread, same-context nested handles reuse that lease; differing context or
+access mode is rejected rather than silently inherited. Other callers queue.
+Abandoned transactions are rolled back before another caller is admitted.
+
+The sidecar lock coordinates physical ownership; it is not a lock on agent
+coding work. Transaction leases must be released before external Git, container,
+or build activity. Validation's known nested canonical reads reuse one handle,
+and its repair path drops a read lease before opening a writer. Maintenance
+bridges retain the same physical sidecar lock as the owner. File-replacing
+migration recovery holds that lock across its complete backup/restore scope,
+so it cannot race owner startup. Initial migrations precede owner creation.
+
+This remains an opt-in candidate, not a default production guarantee. Required
+proof includes the original #1476 concurrent response-and-persisted-owner test
+on both paths, retained connection identity, transaction isolation and rollback,
+read-only enforcement, shutdown and maintenance exclusion. A reused physical
+connection alone does not make command mutation and broker dedupe storage one
+atomic commit; no new exactly-once guarantee is claimed.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -625,8 +670,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aaf78987259aebeb0d6fba7cfc6ec48447ed286151d24ca2b3e2e1f39694edfd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (210 files), `tests/` (196 files)
+- Repository signal fingerprint: `c32d3631a11de58167cef1acdd39891ae7faafed65cf55eeee0c6f78341a9e14`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (211 files), `tests/` (196 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
