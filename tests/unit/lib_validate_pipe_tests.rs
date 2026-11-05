@@ -120,7 +120,7 @@ fn spawn_pipe_child(mode: &str) -> std::process::Child {
         .expect("failed to spawn pipe child")
 }
 
-/// >1 MiB on both stdout and stderr through the validation child-process
+/// More than 1 MiB on both stdout and stderr through the validation child-process
 /// supervisor must complete (not deadlock) and the full worker report must
 /// still decode. Against the pre-#1526 implementation the child blocks on a
 /// full pipe and never exits, so this test would hit the timeout instead.
