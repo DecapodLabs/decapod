@@ -558,6 +558,15 @@
         "live_recovery",
         "release_projection_refresh"
       ]
+    },
+    {
+      "id": "issue1473-task-binding",
+      "summary": "Keep the original PR task bound to validation while attaching master reconciliation as supporting work; document the fail-closed mismatch and correction.",
+      "input_digest": "sha256:52a7929ee6f30dd076c1f85eaa67740e38f367e9d865009199a930cdfa628db5",
+      "proof_refs": [
+        "master_reconciliation",
+        "validation_task_binding"
+      ]
     }
   ],
   "intents": {
@@ -598,14 +607,14 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Record verified #1473 live-recovery acceptance and exact candidate/accepted-target validation custody.",
+          "reason": "Document original PR task binding across attached reconciliation work items, based on the validation report.",
           "reviewed_code_fingerprint": "7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d",
-          "spec_material_hash": "ee33bd4bcb527c21a10954e5a68ce488fda57a8752308e2fca99828f689f1302"
+          "spec_material_hash": "a9ab4635b5a9a746ef230d5ea4b3f262ff01b13115afb955da67a2ca2f2c26b9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Record verified #1473 live-recovery acceptance and exact candidate/accepted-target validation custody.",
+          "reason": "Record verified live-recovery acceptance and retain exact candidate/accepted-target validation custody.",
           "reviewed_code_fingerprint": "7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d",
           "spec_material_hash": "b385ba0a35344dbd537936013a41c61841e64cf626356fb54e153eafd9857de7"
         },
@@ -626,7 +635,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793838002Z"
+      "updated_at": "1793838112Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -634,7 +643,7 @@
         "Live acceptance proves macOS ARM64 native profile with Vega disabled; enabled inference and other platforms untested in this live run",
         "preserve the accepted #1473 recovery scope and master as target"
       ],
-      "artifact_hash": "sha256:c41fd19cdb2040ce18ab6500e9fcae1734e41693093e7c6cd039bec1a807ba52",
+      "artifact_hash": "sha256:4a29e0175cc488707a7d45077d6c44dff5d17d8bc6d9bb1aca1b4be92f3f66a3",
       "checks": [
         {
           "name": "accepted_target_reconciliation",
@@ -655,6 +664,14 @@
         {
           "name": "release_projection_refresh",
           "status": "passed"
+        },
+        {
+          "name": "trajectory_task_binding",
+          "status": "passed"
+        },
+        {
+          "name": "validation_task_binding",
+          "status": "failed"
         },
         {
           "name": "verification_units",
@@ -710,10 +727,24 @@
             "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ME6GPG834YVYDXV0WYV9RM": {
@@ -820,6 +851,38 @@
                 "validation_findings": [
                   "No code test failed in the inspected source-CI logs; reported blockers were stale target/base custody."
                 ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "The validation report identified a mismatch introduced when the follow-up reconciliation todo was attached to the existing run; preserve run journal and bind its evidence to the original PR todo."
+                ],
+                "proof_refs": [
+                  "trajectory_task_binding"
+                ],
+                "scope": [
+                  "current PR worktree plus authored intent, architecture, and interface specifications",
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "decapod validate correctly failed closed because trajectory task was follow-up todo bugs_01m6mh0e2sm9khap instead of original claimed PR todo bugs_01m6m1303t03z662; restored original run binding without altering proof gates."
+                ],
+                "proof_refs": [
+                  "validation_task_binding"
+                ],
+                "scope": [
+                  "current PR worktree plus authored intent, architecture, and interface specifications",
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -842,7 +905,9 @@
         "PR1522 was merged externally as 558d2ac11280d53b326270208d207d5c1164d579; merged origin/master into this existing dedicated branch; retained exact active journal, all incoming CLI tests and both authored spec sections, then refreshed generated projections via CLI",
         "Real missing-artifact recovery on private fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 failed after passing scoped validation; batch remained pending; historical state preservation assertion passed",
         "Retry harness corrected its state spelling to actual persisted CLAIMED and additionally requires original task.verify.recover event; no fixture proof was deleted or rewritten to satisfy preconditions",
+        "The validation report identified a mismatch introduced when the follow-up reconciliation todo was attached to the existing run; preserve run journal and bind its evidence to the original PR todo.",
         "Two further full scoped validations passed with identical material and epoch; report diff isolated random readiness evidence_path, Vega request_id and binding evidence_digest beyond existing timing/order normalization",
+        "decapod validate correctly failed closed because trajectory task was follow-up todo bugs_01m6mh0e2sm9khap instead of original claimed PR todo bugs_01m6m1303t03z662; restored original run binding without altering proof gates.",
         "origin/master efaae930 merged; v0.126.2 installed; current PR proof must rerun against new candidate"
       ],
       "inspected_files": [
@@ -865,7 +930,9 @@
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks",
-        "checkpoint and validate the exact current candidate"
+        "checkpoint and validate the exact current candidate",
+        "checkpoint corrected validation custody and rerun exact candidate",
+        "refresh specs, checkpoint, commit and rerun exact candidate"
       ],
       "repo_scope": [
         "current PR worktree plus authored intent, architecture, and interface specifications",
@@ -874,7 +941,7 @@
       "run_id": "branch_01M6ME6GPG834YVYDXV0WYV9RM",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6mh0e2sm9khap",
+      "task_id": "bugs_01m6m1303t03z662",
       "tool_calls": [],
       "unresolved_assumptions": [
         "No code test failed in the inspected source-CI logs; reported blockers were stale target/base custody."

@@ -29,6 +29,9 @@ that names an older base is a custody failure even when the Rust tests passed.
 The #1524 validation failures were this target mismatch, not evidence of a test
 failure. Release projection refreshes remain required when the installed
 Decapod version changes.
+The validation trajectory remains bound to the original claimed PR task while
+supporting reconciliation work is attached to the same governed plan; auxiliary
+work items must not replace the identity used to authorize publication.
 
 ## Consumer inventory test boundary
 
