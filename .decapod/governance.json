@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "1d2bf8d6957df65f3f4d24208729766f5e366fe8",
+    "accepted_commit": "c4ab88b1839829be190e56adc0d84d632a613d72",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -476,6 +476,7 @@
       "trajectory:754f2eaee0aa202d": "Successful clean-run ignored outputs and extra refs/stashes remain outside worktree preservation scope",
       "trajectory:760c8a45e61249ac": "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority.",
       "trajectory:77ee70aff183fb2e": "ConcretefixtureIncompletePlan failurepreserved. Sourceandcandidate-build requiredkinds unchanged; actualnativeexecutable suppliesbuildartifact hash, notafakeartifact orverifierwaiver. Newregressionmustreject removal. Functionalcasebytes/labels frozenbeforefirstinference unchanged; nofit/tuning ormodel/calibration/tolerance change. Newtestsauthorednotpassed; normalvalidateownsallverification. Originaltask/branch/custody unchanged.",
+      "trajectory:790a50c1b5645599": "No code test failed in the inspected source-CI logs; reported blockers were stale target/base custody.",
       "trajectory:7d1680219f61cd41": "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained.",
       "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
       "trajectory:7ef3c7e2168ec922": "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain.",
@@ -518,77 +519,23 @@
     }
   },
   "change": {
-    "id": "change_01M6ME6GKMZPVT97CSVYA7V4FT",
-    "base_commit": "1d2bf8d6957df65f3f4d24208729766f5e366fe8",
+    "id": "change_01M6NFG76NGC7VMAFSPCN6P57P",
+    "base_commit": "c4ab88b1839829be190e56adc0d84d632a613d72",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "stable-validation-replay": {
-      "statement": "Repeated successful native validation of unchanged material compares equal despite fresh evidence directories and execution identities; real recovery preserves completion history and finishes unscoped readiness.",
-      "falsifier": "A semantic field change compares equal, or the authorized pending-batch retry fails per-task replay or unscoped readiness.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/support/live_recovery.rs",
-        "tests/unit/plugins/verify_tests.rs"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "stable-recovery-proof",
-      "summary": "Compare stable validation semantics while preserving execution receipts and full recovery proof gates",
-      "input_digest": "sha256:0512f4230841ab0ad81d2a2af76038d7cb5bcf649692f7788d580e5daad518d7"
-    },
-    {
-      "id": "real-recovery-acceptance",
-      "summary": "Record successful real two-task recovery, individual replay and full unscoped readiness with preserved history",
-      "input_digest": "sha256:abec8af11fc4caf0a30e86f2bd569ab1c90c051baee186ba3356a280036057c0"
-    },
-    {
-      "id": "accept-merged-claim-coverage",
-      "summary": "Reconcile latest origin/master while preserving recovery work and accepted claim regression contracts",
-      "input_digest": "sha256:35190716021a124f4de5838626b55d2e9324eea837436e12faead5f6a12adc5c"
-    },
-    {
-      "id": "bugs_01m6mh0e2sm9khap",
-      "summary": "Reconcile the #1473 candidate with v0.126.2 master, refresh release-bound projections, and record exact-target validation failure diagnosis plus verified live-recovery scope.",
-      "input_digest": "sha256:3b9eecb3afe7a5b0433f82ffa2cab37d5975087da627cb68b627b66daebf70b6",
+      "id": "ckpt-1526-fix-01",
+      "summary": "fix: drain validation worker stdout/stderr concurrently to prevent pipe deadlock (#1526)",
+      "input_digest": "sha256:3e7ee91de3d7e546173a2d8cd4f45ee615eb5925dad00d497046a8fde5b32d52",
       "proof_refs": [
-        "accepted_target_reconciliation",
-        "live_recovery",
-        "release_projection_refresh"
-      ]
-    },
-    {
-      "id": "issue1473-task-binding",
-      "summary": "Keep the original PR task bound to validation while attaching master reconciliation as supporting work; document the fail-closed mismatch and correction.",
-      "input_digest": "sha256:52a7929ee6f30dd076c1f85eaa67740e38f367e9d865009199a930cdfa628db5",
-      "proof_refs": [
-        "master_reconciliation",
-        "validation_task_binding"
-      ]
-    },
-    {
-      "id": "issue1473-profile-reconcile",
-      "summary": "Review complete v0.126.2 source inventory, verify unchanged CI adapters, and update only the profile digest for the package-version change.",
-      "input_digest": "sha256:d28a4a10d95a34da9d8992ca8a12e1691d3be4d994be30fa97c96a3ada19964f",
-      "proof_refs": [
-        "master_reconciliation",
-        "required_profile_inventory_review"
-      ]
-    },
-    {
-      "id": "issue1473-security-review",
-      "summary": "Correct stale security-spec review by recording the actual live #1473 recovery result and current platform limitations; refresh reviewed projection.",
-      "input_digest": "sha256:5a5a8fa23ab84ae10b323bbb9db2585d13d2639b2ed60465497ac94c49ea9165",
-      "proof_refs": [
-        "buildkite_source_profile",
-        "live_recovery"
+        "cargo_check",
+        "fix_applied"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT": {
+    "intent:change_01M6NFG76NGC7VMAFSPCN6P57P": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -598,219 +545,95 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+      "id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Establish live historical multi-task recovery acceptance for issue 1473",
-      "refined_intent": "Establish live historical multi-task recovery acceptance for issue 1473",
+      "raw_intent": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
+      "refined_intent": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
       "status": "refined",
       "updated_sequence": 3
     }
   },
   "sections": {
     "plan": {
-      "constraints": {
-        "file_touch_budget": null,
-        "forbidden_paths": []
-      },
-      "deferred_questions": [],
-      "human_questions": [],
-      "intent": "Stabilize historical multi-task recovery validation proofs while preserving material rejection boundaries, and reconcile the exact candidate with master after the v0.126.2 release so PR validation binds to the accepted target.",
-      "phases": [],
+      "constraints": {},
+      "intent": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Record source inventory review for v0.126.2 master: only package version/lock entries changed; workflow adapters are intact.",
-          "reviewed_code_fingerprint": "7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d",
-          "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Record verified live-recovery acceptance and retain exact candidate/accepted-target validation custody.",
-          "reviewed_code_fingerprint": "7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d",
-          "spec_material_hash": "b385ba0a35344dbd537936013a41c61841e64cf626356fb54e153eafd9857de7"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Update the recovery acceptance status from the actual native live run and state the remaining platform and PR-proof limits.",
-          "reviewed_code_fingerprint": "7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d",
-          "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
-        }
-      ],
-      "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Establish live historical multi-task recovery acceptance for issue 1473",
+      "state": "DRAFT",
+      "title": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
       "todo_ids": [
-        "bugs_01m6m1303t03z662",
-        "bugs_01m6mh0e2sm9khap"
+        "bugs_01m6namrghjwn6hk"
       ],
-      "unknowns": [],
-      "unresolved_contradictions": [],
-      "updated_at": "1793840246Z"
+      "updated_at": "1793869749Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Live acceptance proves macOS ARM64 native profile with Vega disabled; enabled inference and other platforms untested in this live run",
-        "preserve the accepted #1473 recovery scope and master as target"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0ee527611ab1eafb7199213c1745ba697521c90473e1dcce65a9c2452cee4fba",
+      "artifact_hash": "sha256:25d5e13f4dfa5e56df25ec9b574224b590100c19e3731e6013128bdd6417ec0c",
       "checks": [
         {
-          "name": "accepted_target_reconciliation",
+          "name": "cargo_check",
           "status": "passed"
         },
         {
-          "name": "buildkite_source_profile",
-          "status": "failed"
-        },
-        {
-          "name": "full_candidate_validation",
-          "status": "partial"
-        },
-        {
-          "name": "integration_substrate_cleanup",
-          "status": "partial"
-        },
-        {
-          "name": "live_recovery",
-          "status": "passed"
-        },
-        {
-          "name": "master_reconciliation",
-          "status": "passed"
-        },
-        {
-          "name": "release_projection_refresh",
-          "status": "passed"
-        },
-        {
-          "name": "required_profile_inventory_review",
-          "status": "passed"
-        },
-        {
-          "name": "trajectory_task_binding",
-          "status": "passed"
-        },
-        {
-          "name": "validation_task_binding",
-          "status": "failed"
-        },
-        {
-          "name": "verification_units",
+          "name": "fix_applied",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
+            "detail": "trajectory:branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
+            "detail": "trajectory:branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6ME6GPG834YVYDXV0WYV9RM": {
+          "branch_01M6NFG79SBFYWDWXMWZ4NWDP7": {
             "evidence_only": true,
-            "id": "branch_01M6ME6GPG834YVYDXV0WYV9RM",
-            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "id": "branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
+            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plugins/verify.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "tests/unit/plugins/verify_tests.rs",
-                  "tests/support/live_recovery.rs",
-                  "docs/verification-recovery-acceptance.md",
-                  "Real missing-artifact recovery on private fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 failed after passing scoped validation; batch remained pending; historical state preservation assertion passed",
-                  "Two further full scoped validations passed with identical material and epoch; report diff isolated random readiness evidence_path, Vega request_id and binding evidence_digest beyond existing timing/order normalization",
-                  "Original failed-run log /private/tmp/1473-live-recovery-exact.log; bounded retry now requires already captured pending state and preserves original absent-artifact test unchanged"
+                  "src/decapod/lib.rs",
+                  "src/decapod/lib.rs",
+                  ".decapod/managed/specs/VALIDATION.md"
                 ],
                 "proof_refs": [
-                  "live_recovery"
+                  "fix_applied",
+                  "cargo_check"
                 ],
                 "scope": [
                   "root"
@@ -822,216 +645,47 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "All 42 plugins::verify unit tests ran: 42 passed, 0 failed, 0 ignored, including failed snapshots, material drift, transaction rollback, batch atomicity and new execution-identity normalization",
-                  "Retry harness corrected its state spelling to actual persisted CLAIMED and additionally requires original task.verify.recover event; no fixture proof was deleted or rewritten to satisfy preconditions"
+                  "src/decapod/lib.rs",
+                  "src/decapod/lib.rs",
+                  ".decapod/managed/specs/VALIDATION.md"
                 ],
                 "proof_refs": [
-                  "verification_units"
+                  "fix_applied",
+                  "cargo_check"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
                 "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Actual pending-batch live test: 1 passed, 0 failed, 0 ignored in 345.76 seconds; /private/tmp/1473-live-recovery-retry-2.log",
-                  "Fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 and accepted GitHub main 2d8e8abbfdcfc8a5e334ac011228beff697172b9; both historical completed tasks preserved all fields and original events; each replay passed and final full unscoped publication_ready/ready/proof_ready were true",
-                  "No evidence deletion, direct datastore mutation, prune, reopen, injected successful snapshot, provider mock or CI-local substitution; supported backup retained before recovery"
-                ],
-                "proof_refs": [
-                  "live_recovery"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "PR1522 was merged externally as 558d2ac11280d53b326270208d207d5c1164d579; merged origin/master into this existing dedicated branch; retained exact active journal, all incoming CLI tests and both authored spec sections, then refreshed generated projections via CLI",
-                  "Early d1ce61f push CI rejected Git merge-base context after target advance; no guard was bypassed; new merge candidate will rerun configured CI"
-                ],
-                "proof_refs": [
-                  "accepted_target_reconciliation"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "command": "git fetch origin master --tags",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "src/decapod/plugins/verify.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "AGENTS.md",
-                  ".decapod/managed/Dockerfile.decapod",
-                  "origin/master efaae930 merged; v0.126.2 installed; current PR proof must rerun against new candidate"
-                ],
-                "proof_refs": [
-                  "master_reconciliation",
-                  "release_projection_refresh",
-                  "full_candidate_validation"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": [
-                  "No code test failed in the inspected source-CI logs; reported blockers were stale target/base custody."
-                ]
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "The validation report identified a mismatch introduced when the follow-up reconciliation todo was attached to the existing run; preserve run journal and bind its evidence to the original PR todo."
-                ],
-                "proof_refs": [
-                  "trajectory_task_binding"
-                ],
-                "scope": [
-                  "current PR worktree plus authored intent, architecture, and interface specifications",
-                  "root"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "decapod validate correctly failed closed because trajectory task was follow-up todo bugs_01m6mh0e2sm9khap instead of original claimed PR todo bugs_01m6m1303t03z662; restored original run binding without altering proof gates."
-                ],
-                "proof_refs": [
-                  "validation_task_binding"
-                ],
-                "scope": [
-                  "current PR worktree plus authored intent, architecture, and interface specifications",
-                  "root"
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:11",
-                "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  "Full discovered inventory digest c13190cbd323fb202cbeb067a696e2fd96a42b6952f1b34e71e42237da981919; compared source diff from accepted 558d2ac to v0.126.2 master efaae930, only Cargo.toml/Cargo.lock Decapod package version changed. No workflow/action/adapter source changed; init dry-run now reports only REQUIRED_PROOF_NOT_RUN."
-                ],
-                "proof_refs": [
-                  "required_profile_inventory_review"
-                ],
-                "scope": [
-                  "current PR worktree plus authored intent, architecture, and interface specifications",
-                  "root"
-                ],
-                "sequence": 11,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:12",
-                "observations": [
-                  ".decapod/managed/specs/SECURITY.md",
-                  "Exact head 82e58110570b55c65594f89ab648216837ab2e62 full validation reached Buildkite and stopped because push build 3746 failed. PR governance job reported STALE_SPEC_REVIEW for SECURITY.md. Substrate integration shard reported 9/9 tests passed but cleanup failed permission-denied on a rootless scratch overlay; umbrella job then lacked the shard receipt. Reviewed source updated to correct security acceptance status."
-                ],
-                "proof_refs": [
-                  "buildkite_source_profile",
-                  "integration_substrate_cleanup"
-                ],
-                "scope": [
-                  "current PR worktree plus authored intent, architecture, and interface specifications",
-                  "root"
-                ],
-                "sequence": 12,
-                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "decapod init --proof",
-        "decapod rpc --op specs.refresh",
-        "git fetch origin master --tags",
-        "git merge --no-edit origin/master"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "Actual pending-batch live test: 1 passed, 0 failed, 0 ignored in 345.76 seconds; /private/tmp/1473-live-recovery-retry-2.log",
-        "All 42 plugins::verify unit tests ran: 42 passed, 0 failed, 0 ignored, including failed snapshots, material drift, transaction rollback, batch atomicity and new execution-identity normalization",
-        "Early d1ce61f push CI rejected Git merge-base context after target advance; no guard was bypassed; new merge candidate will rerun configured CI",
-        "Exact head 82e58110570b55c65594f89ab648216837ab2e62 full validation reached Buildkite and stopped because push build 3746 failed. PR governance job reported STALE_SPEC_REVIEW for SECURITY.md. Substrate integration shard reported 9/9 tests passed but cleanup failed permission-denied on a rootless scratch overlay; umbrella job then lacked the shard receipt. Reviewed source updated to correct security acceptance status.",
-        "Fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 and accepted GitHub main 2d8e8abbfdcfc8a5e334ac011228beff697172b9; both historical completed tasks preserved all fields and original events; each replay passed and final full unscoped publication_ready/ready/proof_ready were true",
-        "Full discovered inventory digest c13190cbd323fb202cbeb067a696e2fd96a42b6952f1b34e71e42237da981919; compared source diff from accepted 558d2ac to v0.126.2 master efaae930, only Cargo.toml/Cargo.lock Decapod package version changed. No workflow/action/adapter source changed; init dry-run now reports only REQUIRED_PROOF_NOT_RUN.",
-        "No evidence deletion, direct datastore mutation, prune, reopen, injected successful snapshot, provider mock or CI-local substitution; supported backup retained before recovery",
-        "Original failed-run log /private/tmp/1473-live-recovery-exact.log; bounded retry now requires already captured pending state and preserves original absent-artifact test unchanged",
-        "PR1522 was merged externally as 558d2ac11280d53b326270208d207d5c1164d579; merged origin/master into this existing dedicated branch; retained exact active journal, all incoming CLI tests and both authored spec sections, then refreshed generated projections via CLI",
-        "Real missing-artifact recovery on private fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 failed after passing scoped validation; batch remained pending; historical state preservation assertion passed",
-        "Retry harness corrected its state spelling to actual persisted CLAIMED and additionally requires original task.verify.recover event; no fixture proof was deleted or rewritten to satisfy preconditions",
-        "The validation report identified a mismatch introduced when the follow-up reconciliation todo was attached to the existing run; preserve run journal and bind its evidence to the original PR todo.",
-        "Two further full scoped validations passed with identical material and epoch; report diff isolated random readiness evidence_path, Vega request_id and binding evidence_digest beyond existing timing/order normalization",
-        "decapod validate correctly failed closed because trajectory task was follow-up todo bugs_01m6mh0e2sm9khap instead of original claimed PR todo bugs_01m6m1303t03z662; restored original run binding without altering proof gates.",
-        "origin/master efaae930 merged; v0.126.2 installed; current PR proof must rerun against new candidate"
-      ],
+      "evidence": [],
       "inspected_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/plugins/verify.rs"
+        "src/decapod/lib.rs"
       ],
-      "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+      "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
       "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "AGENTS.md",
-        "docs/verification-recovery-acceptance.md",
-        "src/decapod/plugins/verify.rs",
-        "tests/support/live_recovery.rs",
-        "tests/unit/plugins/verify_tests.rs"
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/lib.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks",
-        "checkpoint and validate the exact current candidate",
-        "checkpoint corrected validation custody and rerun exact candidate",
-        "checkpoint refreshed SECURITY review and rerun exact candidate validation",
-        "checkpoint reviewed source inventory and rerun exact candidate validation",
-        "refresh specs, checkpoint, commit and rerun exact candidate"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "current PR worktree plus authored intent, architecture, and interface specifications",
         "root"
       ],
-      "run_id": "branch_01M6ME6GPG834YVYDXV0WYV9RM",
+      "run_id": "branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6m1303t03z662",
+      "task_id": "bugs_01m6namrghjwn6hk",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "No code test failed in the inspected source-CI logs; reported blockers were stale target/base custody."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
