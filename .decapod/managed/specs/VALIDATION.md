@@ -8,6 +8,23 @@ do not replace standalone validation: the tracked agent entrypoints and managed
 Dockerfile must also match the evaluating release. A release refresh must use
 the CLI and be committed, so CI does not repair those inputs during proof.
 
+## Real recovery regression
+
+The authorized private Rust fixture reproduced #1473 with two completed tasks:
+full scoped validation passed, but fresh per-execution evidence identities made
+the second snapshot hash differ. Unit tests in `verify_tests.rs` compare repeated
+report identities while rejecting material/policy/verdict drift. The separate
+opt-in pending-batch test in `tests/support/live_recovery.rs` preserves the real
+failed attempt and retries without deleting evidence, pruning or reopening.
+It requires per-task verification and final unscoped publication readiness;
+compilation or an ignored test remains insufficient acceptance.
+
+The macOS ARM64 live retry subsequently executed against the same preserved
+two-task batch and passed (1 executed, 0 failed, 0 ignored). It checked every
+original task field and historical event, replayed each task, and required
+full unscoped publication readiness. This is measured native fixture evidence
+with Vega disabled, not evidence for enabled inference or other platforms.
+
 ## Documented agent bootstrap execution
 
 The always-selected `cli-contracts` proof executes the inline
@@ -887,7 +904,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d00e1a72d5229fdd6838f5122ebec89cd6ca4d50f67eb3d864dac69db5807f95`
+- Repository signal fingerprint: `7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

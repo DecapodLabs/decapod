@@ -10,6 +10,15 @@ Shared-claim acknowledgement preserves the existing primary assignment and
 adds only secondary membership. Enabling the option solely in a worktree
 must not affect the canonical datastore policy.
 
+## Recovery replay comparison
+
+`qa verify recover` and per-task verification use the same normalized validation
+report. Fresh execution paths and receipt IDs do not constitute material drift;
+changed scope, policy, artifact content, epoch, target or verdict still does.
+Persisted output hashes remain SHA-256 values. Baselines captured with the old
+comparison can require one explicit supported recovery to refresh them. No
+command flag bypasses proof, and atomic batch finalization is unchanged.
+
 ## Exact consumer source spelling
 
 The `agent.init` reconciliation result must contain only `Justfile` when that
@@ -37,10 +46,12 @@ original task fields and complete historical events, verifies every recovered
 task, and requires full unscoped validation. It neither reopens tasks nor
 substitutes CI-local success for publication readiness. Failed snapshots and
 changed material remain rejection cases in the existing independent regressions.
-`docs/verification-recovery-acceptance.md` defines the required fixture and agent
-execution contract. Compiling or ignoring the harness does not establish the
-successful recovery required by #1473; that remains unproven until the complete
-live run succeeds with real configured proof access.
+The live retry acceptance has passed on native macOS ARM64 with Vega disabled:
+both recovered tasks verified, full unscoped validation passed, and original
+task/history fields remained unchanged. This closes the live fixture obligation
+for #1473 on that platform only; configured PR proof and other platform coverage
+remain independent. `docs/verification-recovery-acceptance.md` defines the
+fixture and agent execution contract.
 
 ## Local broker caller protocol
 
@@ -844,7 +855,7 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d00e1a72d5229fdd6838f5122ebec89cd6ca4d50f67eb3d864dac69db5807f95`
+- Repository signal fingerprint: `7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

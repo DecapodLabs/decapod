@@ -10,6 +10,16 @@ audit event. Disabling canonical policy prevents new shared members without
 changing primary ownership. These tests do not turn cooperative caller labels
 into authenticated principals or authorize a trust-grant API.
 
+## Execution identity and replay safety
+
+Only three exact JSON pointers are normalized for repeated proof comparison:
+`/readiness/evidence_path`, `/readiness/vega_readiness/request_id`, and
+`/readiness/vega_readiness/binding/evidence_digest`. Fields with those names
+elsewhere and non-string malformed values remain bound. Receipt verification
+and actual validation success remain prerequisites; this projection neither
+imports evidence nor authorizes replay from a failed snapshot. Regression
+coverage requires policy, material, scope and failure changes to remain visible.
+
 ## Rust source-spelling fixture isolation
 
 The new inventory regression uses a private disposable repository, isolated
@@ -17,7 +27,10 @@ machine configuration paths and bounded Git/CLI subprocesses. It does not
 import credentials, forge receipts, replace provider execution, or weaken
 publication gates. Its APFS preconditions fail explicitly. Passing fixture
 unit tests or filename binding is not authority to close the outstanding full
-native readiness or historical recovery acceptance.
+native readiness. The #1473 live historical-recovery retry has passed on native
+macOS ARM64 with Vega disabled, preserving original task/history fields and
+passing full unscoped validation. Other-platform recovery and this PR's configured
+Buildkite proof remain separate obligations.
 
 ## Cooperative shared-claim opt-in
 
@@ -483,7 +496,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d00e1a72d5229fdd6838f5122ebec89cd6ca4d50f67eb3d864dac69db5807f95`
+- Repository signal fingerprint: `7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

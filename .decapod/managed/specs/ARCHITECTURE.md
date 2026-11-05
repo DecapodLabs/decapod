@@ -9,6 +9,34 @@ worktrees verify canonical-store identity and persisted assignment. The test
 also submits an overlapping claim and verifies that rejection leaves it
 unassigned. No database state is injected to construct either scenario.
 
+## Historical proof replay identity
+
+`plugins::verify::normalize_validation_document` compares stable validation
+semantics across executions. It normalizes only the readiness evidence path,
+Vega execution request ID and Vega execution-evidence digest in addition to the
+existing timing/order normalization. Native validation still verifies complete
+receipts on each run. Candidate and accepted-target identity, toolchain, config,
+governance, proof-plan, validation epoch and outcomes remain comparison inputs.
+The change prevents temporary evidence artifacts from blocking a genuine
+multi-task recovery without making failed snapshots eligible for promotion.
+
+## Candidate and accepted-target custody
+
+Source-CI validation binds execution evidence to the immutable candidate and
+accepted target revisions. When master advances, the worktree must incorporate
+that accepted revision and generate fresh candidate-bound evidence; a push proof
+that names an older base is a custody failure even when the Rust tests passed.
+The #1524 validation failures were this target mismatch, not evidence of a test
+failure. Release projection refreshes remain required when the installed
+Decapod version changes.
+The validation trajectory remains bound to the original claimed PR task while
+supporting reconciliation work is attached to the same governed plan; auxiliary
+work items must not replace the identity used to authorize publication.
+The v0.126.2 master update changed only the Decapod package version in the
+reviewed `Cargo.toml`/`Cargo.lock` inventory. The workflow, action and adapter
+contracts were unchanged, so the required-profile source digest is updated to
+the complete current inventory reported by `decapod init --proof --dry-run`.
+
 ## Consumer inventory test boundary
 
 `tests/support/justfile_inventory.rs` copies the Rust fixture under
@@ -726,7 +754,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d00e1a72d5229fdd6838f5122ebec89cd6ca4d50f67eb3d864dac69db5807f95`
+- Repository signal fingerprint: `7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

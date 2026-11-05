@@ -5,6 +5,107 @@ use super::{
 use std::fs;
 use tempfile::tempdir;
 
+fn readiness_document(run: &str) -> serde_json::Value {
+    serde_json::json!({
+        "status": "ok", "scope": "full", "publication_ready": true,
+        "report": {
+            "failures": [], "elapsed_ms": 15,
+            "validation_epoch": {"epoch_id": "epoch-current"},
+            "gate_timings": [{"name": "policy", "elapsed_ms": 3}, {"name": "specs", "elapsed_ms": 8}]
+        },
+        "readiness": {
+            "evidence_path": format!("/private/tmp/decapod-readiness-{run}"),
+            "ready": true, "proof_ready": true, "scope": "repository_local_readiness",
+            "blockers": [], "stage_dispositions": [{"stage": "rust-tests", "disposition": "real"}],
+            "vega_readiness": {
+                "schema": "decapod.vega-readiness.v1", "mode": "disabled", "decision": "disabled",
+                "request_id": format!("sha256:request-{run}"),
+                "binding": {
+                    "evidence_digest": format!("sha256:evidence-{run}"),
+                    "material": {"head_revision": "head", "accepted_base_revision": "base",
+                        "toolchain_digest": "tools", "tree_digest": "tree"},
+                    "configuration_digest": "config", "governance_digest": "governance",
+                    "proof_plan_digest": "plan"
+                }
+            }
+        }
+    })
+}
+
+#[test]
+fn validation_replay_ignores_only_run_evidence_identity() {
+    let first = readiness_document("first");
+    let mut second = readiness_document("second");
+    second["report"]["elapsed_ms"] = 900.into();
+    second["report"]["gate_timings"]
+        .as_array_mut()
+        .unwrap()
+        .reverse();
+    assert_ne!(first, second);
+    assert_eq!(
+        super::normalize_validation_document(&first),
+        super::normalize_validation_document(&second)
+    );
+    // Normalization operates on a copy; the complete execution receipt is kept.
+    assert_eq!(
+        first["readiness"]["vega_readiness"]["request_id"],
+        "sha256:request-first"
+    );
+}
+
+#[test]
+fn validation_replay_retains_material_policy_and_failure_changes() {
+    let baseline = readiness_document("first");
+    let expected = super::normalize_validation_document(&baseline);
+    for pointer in [
+        "/status",
+        "/scope",
+        "/publication_ready",
+        "/report/validation_epoch/epoch_id",
+        "/readiness/ready",
+        "/readiness/proof_ready",
+        "/readiness/scope",
+        "/readiness/vega_readiness/mode",
+        "/readiness/vega_readiness/decision",
+        "/readiness/vega_readiness/binding/material/head_revision",
+        "/readiness/vega_readiness/binding/material/accepted_base_revision",
+        "/readiness/vega_readiness/binding/material/toolchain_digest",
+        "/readiness/vega_readiness/binding/material/tree_digest",
+        "/readiness/vega_readiness/binding/configuration_digest",
+        "/readiness/vega_readiness/binding/governance_digest",
+        "/readiness/vega_readiness/binding/proof_plan_digest",
+        "/readiness/stage_dispositions/0/disposition",
+    ] {
+        let mut changed = baseline.clone();
+        *changed.pointer_mut(pointer).unwrap() = "changed".into();
+        assert_ne!(
+            expected,
+            super::normalize_validation_document(&changed),
+            "{pointer}"
+        );
+    }
+    for pointer in ["/report/failures", "/readiness/blockers"] {
+        let mut changed = baseline.clone();
+        changed
+            .pointer_mut(pointer)
+            .unwrap()
+            .as_array_mut()
+            .unwrap()
+            .push("failed".into());
+        assert_ne!(
+            expected,
+            super::normalize_validation_document(&changed),
+            "{pointer}"
+        );
+    }
+    let mut unknown = baseline.clone();
+    unknown["evidence_digest"] = "new-semantic-field".into();
+    assert_ne!(expected, super::normalize_validation_document(&unknown));
+    let mut malformed = baseline.clone();
+    malformed["readiness"]["evidence_path"] = serde_json::Value::Null;
+    assert_ne!(expected, super::normalize_validation_document(&malformed));
+}
+
 #[test]
 fn stable_failed_validation_remains_blocked_with_explicit_reason() {
     assert_eq!(

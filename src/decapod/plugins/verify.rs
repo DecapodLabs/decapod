@@ -304,6 +304,27 @@ fn normalize_json_value(value: &serde_json::Value) -> serde_json::Value {
     }
 }
 
+/// Compare validation semantics across executions, not the location or identity
+/// of one execution's evidence. The complete receipts remain intact in the
+/// validation output and are verified by readiness before success is returned.
+/// Only these exact report fields are execution-specific; material, epoch,
+/// decisions, scopes, blockers and unknown fields must still affect replay.
+fn normalize_validation_document(value: &serde_json::Value) -> serde_json::Value {
+    let mut normalized = normalize_json_value(value);
+    for pointer in [
+        "/readiness/evidence_path",
+        "/readiness/vega_readiness/request_id",
+        "/readiness/vega_readiness/binding/evidence_digest",
+    ] {
+        if let Some(field) = normalized.pointer_mut(pointer)
+            && field.is_string()
+        {
+            *field = serde_json::Value::String("<execution-evidence>".into());
+        }
+    }
+    normalized
+}
+
 fn sha256_hex(input: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(input);
@@ -407,7 +428,7 @@ fn run_validate_and_hash(
     }
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(&stdout) {
-        let normalized = normalize_json_value(&value);
+        let normalized = normalize_validation_document(&value);
         let canonical = serde_json::to_string(&normalized).unwrap();
         return Ok((output.status.success(), sha256_hex(canonical.as_bytes())));
     }

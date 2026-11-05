@@ -7,6 +7,10 @@ tracked spelling. Issue #1470 coverage includes a dependency-free Rust consumer,
 real CLI inventory/index checks, and a required macOS case-insensitive APFS test.
 These tests establish filename binding; full live native readiness and historical
 recovery remain separate acceptance obligations, not inferred from fixture tests.
+The #1473 historical-recovery retry has since passed against the authorized live
+fixture on native macOS ARM64 with Vega disabled. This evidence verifies the
+recovered tasks and full unscoped readiness; it does not establish readiness on
+other platforms or replace the independently configured PR proof.
 
 ## Product Outcome
 
@@ -260,7 +264,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d00e1a72d5229fdd6838f5122ebec89cd6ca4d50f67eb3d864dac69db5807f95`
+- Repository signal fingerprint: `7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

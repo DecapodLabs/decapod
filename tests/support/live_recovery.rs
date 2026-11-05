@@ -130,6 +130,16 @@ fn live_recovery_children_cannot_inherit_scoped_or_ci_local_validation() {
 #[test]
 #[ignore = "requires an explicitly authorized, already governed live fixture and real proof access; see docs/verification-recovery-acceptance.md"]
 fn live_recovery_preserves_multiple_historical_completions() {
+    recovery_acceptance(true);
+}
+
+#[test]
+#[ignore = "requires an authorized live fixture left pending by a real failed recovery; see docs/verification-recovery-acceptance.md"]
+fn live_recovery_retries_pending_batch_without_rewriting_history() {
+    recovery_acceptance(false);
+}
+
+fn recovery_acceptance(require_missing_artifacts: bool) {
     let root = PathBuf::from(
         std::env::var_os("DECAPOD_RECOVERY_FIXTURE")
             .expect("set DECAPOD_RECOVERY_FIXTURE to the isolated governed fixture"),
@@ -177,12 +187,31 @@ fn live_recovery_preserves_multiple_historical_completions() {
                 )
                 .optional()
                 .unwrap();
-            assert!(
-                artifact
-                    .flatten()
-                    .is_none_or(|value| value.trim().is_empty() || value.trim() == "{}"),
-                "fixture task {id} already has evidence"
-            );
+            let missing = artifact
+                .flatten()
+                .is_none_or(|value| value.trim().is_empty() || value.trim() == "{}");
+            if require_missing_artifacts {
+                assert!(missing, "fixture task {id} already has evidence");
+            } else {
+                assert!(
+                    !missing,
+                    "retry acceptance requires a real captured pending baseline"
+                );
+                let status: String = db
+                    .query_row(
+                        "SELECT last_verified_status FROM task_verification WHERE todo_id = ?1",
+                        [id],
+                        |row| row.get(0),
+                    )
+                    .unwrap();
+                assert_eq!(status, "CLAIMED", "retry fixture must remain unverified");
+                assert!(
+                    events
+                        .values()
+                        .any(|event| event[5] == "task.verify.recover"),
+                    "retry fixture must retain evidence of a real recovery attempt"
+                );
+            }
             let done: i64 = db
                 .query_row(
                     "SELECT COUNT(*) FROM tasks WHERE status = 'done'",
@@ -213,7 +242,7 @@ fn live_recovery_preserves_multiple_historical_completions() {
     let blocked = run(&root, &["validate", "--format", "json"]);
     assert!(
         !blocked.status.success(),
-        "missing evidence unexpectedly passed"
+        "pending historical proof unexpectedly passed"
     );
     assert!(
         String::from_utf8_lossy(&blocked.stdout).contains("PROOF_HOOK_FAILED")
