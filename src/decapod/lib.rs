@@ -7157,41 +7157,14 @@ fn run_validation_in_child_process(
         "DECAPOD_VALIDATE_PROGRESS_PATH",
         progress_path.to_string_lossy().as_ref(),
     );
-    let mut child = command.spawn().map_err(error::DecapodError::IoError)?;
-
-    // Take stdout and stderr handles to read them concurrently (#1526)
-    let mut stdout = child.stdout.take().ok_or_else(|| {
-        error::DecapodError::ValidationError("failed to capture child stdout".to_string())
-    })?;
-    let mut stderr = child.stderr.take().ok_or_else(|| {
-        error::DecapodError::ValidationError("failed to capture child stderr".to_string())
-    })?;
-
-    // Spawn threads to drain stdout and stderr concurrently so the worker
-    // never blocks on a full pipe while the parent waits for exit (#1526)
-    let stdout_handle = thread::spawn(move || {
-        let mut buf = Vec::new();
-        io::Read::read_to_end(&mut stdout, &mut buf).ok();
-        buf
-    });
-    let stderr_handle = thread::spawn(move || {
-        let mut buf = Vec::new();
-        io::Read::read_to_end(&mut stderr, &mut buf).ok();
-        buf
-    });
-
-    let deadline = std::time::Instant::now() + timeout;
-    loop {
-        let status = child.try_wait().map_err(error::DecapodError::IoError)?;
-        if status.is_some() {
-            // Child has exited; join reader threads to get complete output
-            let stdout_bytes = stdout_handle.join().unwrap_or_default();
-            let stderr_bytes = stderr_handle.join().unwrap_or_default();
-            let result = decode_validation_worker_output(&stdout_bytes, &stderr_bytes);
+    let child = command.spawn().map_err(error::DecapodError::IoError)?;
+    match supervise_piped_child(child, timeout)? {
+        PipedChildOutput::Exited { stdout, stderr } => {
+            let result = decode_validation_worker_output(&stdout, &stderr);
             let _ = fs::remove_file(&progress_path);
-            return result;
+            result
         }
-        if std::time::Instant::now() >= deadline {
+        PipedChildOutput::TimedOut => {
             let progress_hint = fs::read_to_string(&progress_path)
                 .ok()
                 .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok())
@@ -7206,17 +7179,96 @@ fn run_validation_in_child_process(
                     Some(format!(" Active gate: {gate} ({state}{elapsed})."))
                 })
                 .unwrap_or_default();
-            let _ = child.kill();
-            let _ = child.wait();
             let _ = fs::remove_file(&progress_path);
-            // Join reader threads to avoid leaving them running
-            let _ = stdout_handle.join();
-            let _ = stderr_handle.join();
-            return Err(error::DecapodError::ValidationError(format!(
+            Err(error::DecapodError::ValidationError(format!(
                 "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({}s). Terminated to preserve proof-gate liveness.{}",
                 timeout.as_secs(),
                 progress_hint
-            )));
+            )))
+        }
+    }
+}
+
+/// Outcome of supervising a piped child process.
+enum PipedChildOutput {
+    /// Child exited on its own; complete stdout/stderr captured.
+    Exited { stdout: Vec<u8>, stderr: Vec<u8> },
+    /// Timeout hit; the child was killed and reaped and readers joined.
+    TimedOut,
+}
+
+/// Supervise a piped child: drain stdout/stderr on dedicated threads while
+/// polling for exit so the child never deadlocks on a full pipe (#1526). On
+/// timeout the child is killed and reaped and the reader threads are joined
+/// before returning, so no child process or reader thread outlives this call.
+fn supervise_piped_child(
+    mut child: std::process::Child,
+    timeout: std::time::Duration,
+) -> Result<PipedChildOutput, error::DecapodError> {
+    // Take stdout and stderr handles to read them concurrently (#1526)
+    let mut stdout = child.stdout.take().ok_or_else(|| {
+        error::DecapodError::ValidationError("failed to capture child stdout".to_string())
+    })?;
+    let mut stderr = child.stderr.take().ok_or_else(|| {
+        error::DecapodError::ValidationError("failed to capture child stderr".to_string())
+    })?;
+
+    // Spawn threads to drain stdout and stderr concurrently so the worker
+    // never blocks on a full pipe while the parent waits for exit (#1526).
+    // Read errors are propagated instead of silently truncating the stream.
+    let stdout_handle = thread::spawn(move || {
+        let mut buf = Vec::new();
+        io::Read::read_to_end(&mut stdout, &mut buf).map(|_| buf)
+    });
+    let stderr_handle = thread::spawn(move || {
+        let mut buf = Vec::new();
+        io::Read::read_to_end(&mut stderr, &mut buf).map(|_| buf)
+    });
+
+    let deadline = std::time::Instant::now() + timeout;
+    loop {
+        let status = child.try_wait().map_err(error::DecapodError::IoError)?;
+        if status.is_some() {
+            // Child has exited; join reader threads to get complete output.
+            // A reader failure means the captured stream may be truncated;
+            // surface it instead of decoding silently truncated bytes.
+            let stdout_bytes = stdout_handle
+                .join()
+                .map_err(|_| {
+                    error::DecapodError::ValidationError(
+                        "VALIDATE_WORKER_FAILED: worker stdout reader thread panicked".to_string(),
+                    )
+                })?
+                .map_err(|error| {
+                    error::DecapodError::ValidationError(format!(
+                        "VALIDATE_WORKER_FAILED: failed to read worker stdout ({error})"
+                    ))
+                })?;
+            let stderr_bytes = stderr_handle
+                .join()
+                .map_err(|_| {
+                    error::DecapodError::ValidationError(
+                        "VALIDATE_WORKER_FAILED: worker stderr reader thread panicked".to_string(),
+                    )
+                })?
+                .map_err(|error| {
+                    error::DecapodError::ValidationError(format!(
+                        "VALIDATE_WORKER_FAILED: failed to read worker stderr ({error})"
+                    ))
+                })?;
+            return Ok(PipedChildOutput::Exited {
+                stdout: stdout_bytes,
+                stderr: stderr_bytes,
+            });
+        }
+        if std::time::Instant::now() >= deadline {
+            let _ = child.kill();
+            let _ = child.wait();
+            // Join reader threads so no reader is left running after the
+            // child's pipes are closed by kill/reap.
+            let _ = stdout_handle.join();
+            let _ = stderr_handle.join();
+            return Ok(PipedChildOutput::TimedOut);
         }
         thread::sleep(std::time::Duration::from_millis(25));
     }
@@ -7437,6 +7489,10 @@ fn trajectory_has_validation_epoch(evidence: &[String], epoch_id: &str) -> bool 
 #[cfg(test)]
 #[path = "../../tests/unit/lib_validation_proof_tests.rs"]
 mod validation_proof_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/lib_validate_pipe_tests.rs"]
+mod validate_pipe_tests;
 
 fn write_validation_receipt(
     project_root: &Path,

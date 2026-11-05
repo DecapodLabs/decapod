@@ -573,6 +573,15 @@
         "inventory_reconciled",
         "lockfile_repaired"
       ]
+    },
+    {
+      "id": "ckpt-1526-pipe-regression-tests",
+      "summary": "add deterministic regression tests for #1526 pipe-capacity deadlock and timeout cleanup; extract supervise_piped_child and propagate reader-thread I/O errors as VALIDATE_WORKER_FAILED",
+      "input_digest": "sha256:dea8f9bfbb205ca18a43146aaf89d73dcc83527a9e80aa908b39cc5215e5aae0",
+      "proof_refs": [
+        "lib_tests_vs_base",
+        "validate_pipe_regression_tests"
+      ]
     }
   ],
   "intents": {
@@ -613,22 +622,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed against current code for the #1526 fix in src/decapod/lib.rs; no interface, architecture, or security surface changed by the concurrent pipe-draining fix, so content is unchanged with reason.",
-          "reviewed_code_fingerprint": "ecfbd9b3cc2ff3f57b9e6b5a35256f80adbad62dcc45c0b473372c6b0634b1c0",
+          "reason": "Reviewed against current code for the #1526 regression-test change in src/decapod/lib.rs (supervise_piped_child refactor + reader-thread io::Result propagation) and tests/unit/lib_validate_pipe_tests.rs; no interface, architecture, or security surface changed, so content is unchanged with reason.",
+          "reviewed_code_fingerprint": "981c78bba3d46cf37d5f93ea28c61db89e43b5a6bc989702d73abad359175f7a",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed against current code for the #1526 fix in src/decapod/lib.rs; no interface, architecture, or security surface changed by the concurrent pipe-draining fix, so content is unchanged with reason.",
-          "reviewed_code_fingerprint": "ecfbd9b3cc2ff3f57b9e6b5a35256f80adbad62dcc45c0b473372c6b0634b1c0",
+          "reason": "Reviewed against current code for the #1526 regression-test change in src/decapod/lib.rs (supervise_piped_child refactor + reader-thread io::Result propagation) and tests/unit/lib_validate_pipe_tests.rs; no interface, architecture, or security surface changed, so content is unchanged with reason.",
+          "reviewed_code_fingerprint": "981c78bba3d46cf37d5f93ea28c61db89e43b5a6bc989702d73abad359175f7a",
           "spec_material_hash": "b385ba0a35344dbd537936013a41c61841e64cf626356fb54e153eafd9857de7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed against current code for the #1526 fix in src/decapod/lib.rs; no interface, architecture, or security surface changed by the concurrent pipe-draining fix, so content is unchanged with reason.",
-          "reviewed_code_fingerprint": "ecfbd9b3cc2ff3f57b9e6b5a35256f80adbad62dcc45c0b473372c6b0634b1c0",
+          "reason": "Reviewed against current code for the #1526 regression-test change in src/decapod/lib.rs (supervise_piped_child refactor + reader-thread io::Result propagation) and tests/unit/lib_validate_pipe_tests.rs; no interface, architecture, or security surface changed, so content is unchanged with reason.",
+          "reviewed_code_fingerprint": "981c78bba3d46cf37d5f93ea28c61db89e43b5a6bc989702d73abad359175f7a",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -640,20 +649,32 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793875117Z"
+      "updated_at": "1793900486Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:25d5e13f4dfa5e56df25ec9b574224b590100c19e3731e6013128bdd6417ec0c",
+      "artifact_hash": "sha256:87aa4997e54cf90cc5b6461e2e03720e644f41042d9f7feb8f3e5ca8d481e933",
       "checks": [
         {
           "name": "cargo_check",
           "status": "passed"
         },
         {
+          "name": "cargo_fmt_check",
+          "status": "passed"
+        },
+        {
           "name": "fix_applied",
+          "status": "passed"
+        },
+        {
+          "name": "lib_tests_vs_base",
+          "status": "passed"
+        },
+        {
+          "name": "validate_pipe_regression_tests",
           "status": "passed"
         }
       ],
@@ -685,10 +706,17 @@
             "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6NFG79SBFYWDWXMWZ4NWDP7": {
@@ -731,6 +759,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "tests/unit/lib_validate_pipe_tests.rs"
+                ],
+                "proof_refs": [
+                  "validate_pipe_regression_tests",
+                  "cargo_fmt_check",
+                  "lib_tests_vs_base"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -740,7 +786,8 @@
       "destination": "pull request",
       "evidence": [],
       "inspected_files": [
-        "src/decapod/lib.rs"
+        "src/decapod/lib.rs",
+        "tests/unit/lib_validate_pipe_tests.rs"
       ],
       "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
       "modified_files": [
