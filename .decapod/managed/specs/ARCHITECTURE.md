@@ -32,6 +32,10 @@ Decapod version changes.
 The validation trajectory remains bound to the original claimed PR task while
 supporting reconciliation work is attached to the same governed plan; auxiliary
 work items must not replace the identity used to authorize publication.
+The v0.126.2 master update changed only the Decapod package version in the
+reviewed `Cargo.toml`/`Cargo.lock` inventory. The workflow, action and adapter
+contracts were unchanged, so the required-profile source digest is updated to
+the complete current inventory reported by `decapod init --proof --dry-run`.
 
 ## Consumer inventory test boundary
 

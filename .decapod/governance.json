@@ -567,6 +567,15 @@
         "master_reconciliation",
         "validation_task_binding"
       ]
+    },
+    {
+      "id": "issue1473-profile-reconcile",
+      "summary": "Review complete v0.126.2 source inventory, verify unchanged CI adapters, and update only the profile digest for the package-version change.",
+      "input_digest": "sha256:d28a4a10d95a34da9d8992ca8a12e1691d3be4d994be30fa97c96a3ada19964f",
+      "proof_refs": [
+        "master_reconciliation",
+        "required_profile_inventory_review"
+      ]
     }
   ],
   "intents": {
@@ -607,9 +616,9 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document original PR task binding across attached reconciliation work items, based on the validation report.",
+          "reason": "Record source inventory review for v0.126.2 master: only package version/lock entries changed; workflow adapters are intact.",
           "reviewed_code_fingerprint": "7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d",
-          "spec_material_hash": "a9ab4635b5a9a746ef230d5ea4b3f262ff01b13115afb955da67a2ca2f2c26b9"
+          "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
           "disposition": "updated",
@@ -635,7 +644,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793838112Z"
+      "updated_at": "1793838268Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -643,7 +652,7 @@
         "Live acceptance proves macOS ARM64 native profile with Vega disabled; enabled inference and other platforms untested in this live run",
         "preserve the accepted #1473 recovery scope and master as target"
       ],
-      "artifact_hash": "sha256:4a29e0175cc488707a7d45077d6c44dff5d17d8bc6d9bb1aca1b4be92f3f66a3",
+      "artifact_hash": "sha256:3076b197e66e7cdcb09357d120514a1688e5de991d9b4d817bc11cb3a2616d1e",
       "checks": [
         {
           "name": "accepted_target_reconciliation",
@@ -663,6 +672,10 @@
         },
         {
           "name": "release_projection_refresh",
+          "status": "passed"
+        },
+        {
+          "name": "required_profile_inventory_review",
           "status": "passed"
         },
         {
@@ -741,10 +754,17 @@
             "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ME6GPG834YVYDXV0WYV9RM": {
@@ -883,6 +903,24 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:11",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "Full discovered inventory digest c13190cbd323fb202cbeb067a696e2fd96a42b6952f1b34e71e42237da981919; compared source diff from accepted 558d2ac to v0.126.2 master efaae930, only Cargo.toml/Cargo.lock Decapod package version changed. No workflow/action/adapter source changed; init dry-run now reports only REQUIRED_PROOF_NOT_RUN."
+                ],
+                "proof_refs": [
+                  "required_profile_inventory_review"
+                ],
+                "scope": [
+                  "current PR worktree plus authored intent, architecture, and interface specifications",
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -900,6 +938,7 @@
         "All 42 plugins::verify unit tests ran: 42 passed, 0 failed, 0 ignored, including failed snapshots, material drift, transaction rollback, batch atomicity and new execution-identity normalization",
         "Early d1ce61f push CI rejected Git merge-base context after target advance; no guard was bypassed; new merge candidate will rerun configured CI",
         "Fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 and accepted GitHub main 2d8e8abbfdcfc8a5e334ac011228beff697172b9; both historical completed tasks preserved all fields and original events; each replay passed and final full unscoped publication_ready/ready/proof_ready were true",
+        "Full discovered inventory digest c13190cbd323fb202cbeb067a696e2fd96a42b6952f1b34e71e42237da981919; compared source diff from accepted 558d2ac to v0.126.2 master efaae930, only Cargo.toml/Cargo.lock Decapod package version changed. No workflow/action/adapter source changed; init dry-run now reports only REQUIRED_PROOF_NOT_RUN.",
         "No evidence deletion, direct datastore mutation, prune, reopen, injected successful snapshot, provider mock or CI-local substitution; supported backup retained before recovery",
         "Original failed-run log /private/tmp/1473-live-recovery-exact.log; bounded retry now requires already captured pending state and preserves original absent-artifact test unchanged",
         "PR1522 was merged externally as 558d2ac11280d53b326270208d207d5c1164d579; merged origin/master into this existing dedicated branch; retained exact active journal, all incoming CLI tests and both authored spec sections, then refreshed generated projections via CLI",
@@ -918,6 +957,7 @@
       ],
       "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
@@ -932,6 +972,7 @@
         "Refine plan and declare falsifiable checks",
         "checkpoint and validate the exact current candidate",
         "checkpoint corrected validation custody and rerun exact candidate",
+        "checkpoint reviewed source inventory and rerun exact candidate validation",
         "refresh specs, checkpoint, commit and rerun exact candidate"
       ],
       "repo_scope": [
