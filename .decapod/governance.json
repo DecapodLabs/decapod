@@ -556,6 +556,14 @@
       "proof_refs": [
         "specs_refreshed"
       ]
+    },
+    {
+      "id": "ckpt-1526-specreview-04",
+      "summary": "record unchanged-with-reason spec reviews for INTERFACES/ARCHITECTURE/SECURITY",
+      "input_digest": "sha256:63fe65713dfcfbb2c25a6cb75d5efd05933516c1212ded24c06be054fe6f5972",
+      "proof_refs": [
+        "spec_reviews_honest"
+      ]
     }
   ],
   "intents": {
@@ -592,6 +600,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed against current code for the #1526 fix in src/decapod/lib.rs; no interface, architecture, or security surface changed by the concurrent pipe-draining fix, so content is unchanged with reason.",
+          "reviewed_code_fingerprint": "ecfbd9b3cc2ff3f57b9e6b5a35256f80adbad62dcc45c0b473372c6b0634b1c0",
+          "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed against current code for the #1526 fix in src/decapod/lib.rs; no interface, architecture, or security surface changed by the concurrent pipe-draining fix, so content is unchanged with reason.",
+          "reviewed_code_fingerprint": "ecfbd9b3cc2ff3f57b9e6b5a35256f80adbad62dcc45c0b473372c6b0634b1c0",
+          "spec_material_hash": "b385ba0a35344dbd537936013a41c61841e64cf626356fb54e153eafd9857de7"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed against current code for the #1526 fix in src/decapod/lib.rs; no interface, architecture, or security surface changed by the concurrent pipe-draining fix, so content is unchanged with reason.",
+          "reviewed_code_fingerprint": "ecfbd9b3cc2ff3f57b9e6b5a35256f80adbad62dcc45c0b473372c6b0634b1c0",
+          "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
@@ -600,7 +631,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793875063Z"
+      "updated_at": "1793875117Z"
     },
     "trajectory": {
       "active_boundaries": [
