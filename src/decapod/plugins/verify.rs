@@ -1631,6 +1631,44 @@ pub fn run_verify_cli(
                 return Ok(());
             }
             VerifyCommand::Recover => {
+                if cli.stale {
+                    // --stale means list stale items only, don't run recovery
+                    let targets = load_targets(store, None)?;
+                    let now = now_iso();
+                    let now_secs = epoch_secs(&now).unwrap_or(0);
+                    let stale_items: Vec<StaleItem> = targets
+                        .iter()
+                        .filter(|t| t.status == "done" && is_stale(t, now_secs))
+                        .map(|t| StaleItem {
+                            todo_id: t.todo_id.clone(),
+                            last_verified_at: t.last_verified_at.clone(),
+                            verification_policy_days: t.verification_policy_days,
+                        })
+                        .collect();
+                    if cli.json {
+                        println!(
+                            "{}",
+                            serde_json::to_string_pretty(&serde_json::json!({
+                                "checked_at": now,
+                                "stale": stale_items
+                            }))
+                            .unwrap()
+                        );
+                    } else if stale_items.is_empty() {
+                        println!("No stale TODOs found.");
+                    } else {
+                        println!("Stale TODOs:");
+                        for item in stale_items {
+                            println!(
+                                "- {} (last_verified_at={}, policy_days={})",
+                                item.todo_id,
+                                item.last_verified_at.unwrap_or_else(|| "never".to_string()),
+                                item.verification_policy_days
+                            );
+                        }
+                    }
+                    return Ok(());
+                }
                 return run_recover_cli(store, repo_root, cli.json);
             }
             VerifyCommand::Completion {
