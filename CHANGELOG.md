@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.126.3](https://github.com/DecapodLabs/decapod/compare/v0.126.2...v0.126.3) - 2026-11-05
+
+### Fixed
+
+- stabilize validation replay across native proof executions
+
+### Other
+
+- record verified issue 1473 recovery acceptance
+- reconcile reviewed proof inventory after release
+- preserve original issue task in validation custody
+- reconcile recovery proof with v0.126.2 master
+- reconcile recovery work with latest master
+- record real historical recovery acceptance
+
 ## [0.126.2](https://github.com/DecapodLabs/decapod/compare/v0.126.1...v0.126.2) - 2026-11-04
 
 ### Fixed
