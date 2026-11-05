@@ -27,7 +27,10 @@ machine configuration paths and bounded Git/CLI subprocesses. It does not
 import credentials, forge receipts, replace provider execution, or weaken
 publication gates. Its APFS preconditions fail explicitly. Passing fixture
 unit tests or filename binding is not authority to close the outstanding full
-native readiness or historical recovery acceptance.
+native readiness. The #1473 live historical-recovery retry has passed on native
+macOS ARM64 with Vega disabled, preserving original task/history fields and
+passing full unscoped validation. Other-platform recovery and this PR's configured
+Buildkite proof remain separate obligations.
 
 ## Cooperative shared-claim opt-in
 

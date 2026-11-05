@@ -576,6 +576,15 @@
         "master_reconciliation",
         "required_profile_inventory_review"
       ]
+    },
+    {
+      "id": "issue1473-security-review",
+      "summary": "Correct stale security-spec review by recording the actual live #1473 recovery result and current platform limitations; refresh reviewed projection.",
+      "input_digest": "sha256:5a5a8fa23ab84ae10b323bbb9db2585d13d2639b2ed60465497ac94c49ea9165",
+      "proof_refs": [
+        "buildkite_source_profile",
+        "live_recovery"
+      ]
     }
   ],
   "intents": {
@@ -630,9 +639,9 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve canonical shared-claim policy and execution-identity replay boundaries",
-          "reviewed_code_fingerprint": "d53c08411e156d5b9434bb3e2295668b5b326683cddf5e59b21bd107909d12e6",
-          "spec_material_hash": "ac3454022a988396df331360d847f7971f65d5d99806022c6b85e2c4309abc2c"
+          "reason": "Update the recovery acceptance status from the actual native live run and state the remaining platform and PR-proof limits.",
+          "reviewed_code_fingerprint": "7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d",
+          "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
       "state": "APPROVED",
@@ -644,7 +653,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793838268Z"
+      "updated_at": "1793840246Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -652,14 +661,22 @@
         "Live acceptance proves macOS ARM64 native profile with Vega disabled; enabled inference and other platforms untested in this live run",
         "preserve the accepted #1473 recovery scope and master as target"
       ],
-      "artifact_hash": "sha256:3076b197e66e7cdcb09357d120514a1688e5de991d9b4d817bc11cb3a2616d1e",
+      "artifact_hash": "sha256:0ee527611ab1eafb7199213c1745ba697521c90473e1dcce65a9c2452cee4fba",
       "checks": [
         {
           "name": "accepted_target_reconciliation",
           "status": "passed"
         },
         {
+          "name": "buildkite_source_profile",
+          "status": "failed"
+        },
+        {
           "name": "full_candidate_validation",
+          "status": "partial"
+        },
+        {
+          "name": "integration_substrate_cleanup",
           "status": "partial"
         },
         {
@@ -761,10 +778,17 @@
             "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ME6GPG834YVYDXV0WYV9RM": {
@@ -921,6 +945,24 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:12",
+                "observations": [
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Exact head 82e58110570b55c65594f89ab648216837ab2e62 full validation reached Buildkite and stopped because push build 3746 failed. PR governance job reported STALE_SPEC_REVIEW for SECURITY.md. Substrate integration shard reported 9/9 tests passed but cleanup failed permission-denied on a rootless scratch overlay; umbrella job then lacked the shard receipt. Reviewed source updated to correct security acceptance status."
+                ],
+                "proof_refs": [
+                  "buildkite_source_profile",
+                  "integration_substrate_cleanup"
+                ],
+                "scope": [
+                  "current PR worktree plus authored intent, architecture, and interface specifications",
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -937,6 +979,7 @@
         "Actual pending-batch live test: 1 passed, 0 failed, 0 ignored in 345.76 seconds; /private/tmp/1473-live-recovery-retry-2.log",
         "All 42 plugins::verify unit tests ran: 42 passed, 0 failed, 0 ignored, including failed snapshots, material drift, transaction rollback, batch atomicity and new execution-identity normalization",
         "Early d1ce61f push CI rejected Git merge-base context after target advance; no guard was bypassed; new merge candidate will rerun configured CI",
+        "Exact head 82e58110570b55c65594f89ab648216837ab2e62 full validation reached Buildkite and stopped because push build 3746 failed. PR governance job reported STALE_SPEC_REVIEW for SECURITY.md. Substrate integration shard reported 9/9 tests passed but cleanup failed permission-denied on a rootless scratch overlay; umbrella job then lacked the shard receipt. Reviewed source updated to correct security acceptance status.",
         "Fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 and accepted GitHub main 2d8e8abbfdcfc8a5e334ac011228beff697172b9; both historical completed tasks preserved all fields and original events; each replay passed and final full unscoped publication_ready/ready/proof_ready were true",
         "Full discovered inventory digest c13190cbd323fb202cbeb067a696e2fd96a42b6952f1b34e71e42237da981919; compared source diff from accepted 558d2ac to v0.126.2 master efaae930, only Cargo.toml/Cargo.lock Decapod package version changed. No workflow/action/adapter source changed; init dry-run now reports only REQUIRED_PROOF_NOT_RUN.",
         "No evidence deletion, direct datastore mutation, prune, reopen, injected successful snapshot, provider mock or CI-local substitution; supported backup retained before recovery",
@@ -962,6 +1005,7 @@
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
         "AGENTS.md",
         "docs/verification-recovery-acceptance.md",
         "src/decapod/plugins/verify.rs",
@@ -972,6 +1016,7 @@
         "Refine plan and declare falsifiable checks",
         "checkpoint and validate the exact current candidate",
         "checkpoint corrected validation custody and rerun exact candidate",
+        "checkpoint refreshed SECURITY review and rerun exact candidate validation",
         "checkpoint reviewed source inventory and rerun exact candidate validation",
         "refresh specs, checkpoint, commit and rerun exact candidate"
       ],
