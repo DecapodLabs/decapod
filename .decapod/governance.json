@@ -564,6 +564,15 @@
       "proof_refs": [
         "spec_reviews_honest"
       ]
+    },
+    {
+      "id": "ckpt-1526-lockfix-06",
+      "summary": "fix: update vega-native Cargo.lock decapod pin 0.121.0 -> 0.126.3; reconcile source digest",
+      "input_digest": "sha256:509d2dd1ff372818cb05f0b33e9663317a2d5e9f56a30b54159242c14a6a79ae",
+      "proof_refs": [
+        "inventory_reconciled",
+        "lockfile_repaired"
+      ]
     }
   ],
   "intents": {
