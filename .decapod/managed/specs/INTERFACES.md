@@ -46,10 +46,12 @@ original task fields and complete historical events, verifies every recovered
 task, and requires full unscoped validation. It neither reopens tasks nor
 substitutes CI-local success for publication readiness. Failed snapshots and
 changed material remain rejection cases in the existing independent regressions.
-`docs/verification-recovery-acceptance.md` defines the required fixture and agent
-execution contract. Compiling or ignoring the harness does not establish the
-successful recovery required by #1473; that remains unproven until the complete
-live run succeeds with real configured proof access.
+The live retry acceptance has passed on native macOS ARM64 with Vega disabled:
+both recovered tasks verified, full unscoped validation passed, and original
+task/history fields remained unchanged. This closes the live fixture obligation
+for #1473 on that platform only; configured PR proof and other platform coverage
+remain independent. `docs/verification-recovery-acceptance.md` defines the
+fixture and agent execution contract.
 
 ## Local broker caller protocol
 
@@ -853,7 +855,7 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d53c08411e156d5b9434bb3e2295668b5b326683cddf5e59b21bd107909d12e6`
+- Repository signal fingerprint: `7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

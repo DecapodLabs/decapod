@@ -548,6 +548,16 @@
       "id": "accept-merged-claim-coverage",
       "summary": "Reconcile latest origin/master while preserving recovery work and accepted claim regression contracts",
       "input_digest": "sha256:35190716021a124f4de5838626b55d2e9324eea837436e12faead5f6a12adc5c"
+    },
+    {
+      "id": "bugs_01m6mh0e2sm9khap",
+      "summary": "Reconcile the #1473 candidate with v0.126.2 master, refresh release-bound projections, and record exact-target validation failure diagnosis plus verified live-recovery scope.",
+      "input_digest": "sha256:3b9eecb3afe7a5b0433f82ffa2cab37d5975087da627cb68b627b66daebf70b6",
+      "proof_refs": [
+        "accepted_target_reconciliation",
+        "live_recovery",
+        "release_projection_refresh"
+      ]
     }
   ],
   "intents": {
@@ -578,7 +588,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix the validation proof hash instability reproduced by real multi-task recovery while retaining exact material, policy, task and artifact rejection boundaries",
+      "intent": "Stabilize historical multi-task recovery validation proofs while preserving material rejection boundaries, and reconcile the exact candidate with master after the v0.126.2 release so PR validation binds to the accepted target.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -588,16 +598,16 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve accepted scoped-claim architecture alongside historical proof replay behavior after master merge",
-          "reviewed_code_fingerprint": "d53c08411e156d5b9434bb3e2295668b5b326683cddf5e59b21bd107909d12e6",
-          "spec_material_hash": "a5709c5961c9f7ab793d5a43c158280bd3d4dd1a8c0baeecb7ee0f2b05731144"
+          "reason": "Record verified #1473 live-recovery acceptance and exact candidate/accepted-target validation custody.",
+          "reviewed_code_fingerprint": "7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d",
+          "spec_material_hash": "ee33bd4bcb527c21a10954e5a68ce488fda57a8752308e2fca99828f689f1302"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retain both accepted claim interface and recovery comparison contracts",
-          "reviewed_code_fingerprint": "d53c08411e156d5b9434bb3e2295668b5b326683cddf5e59b21bd107909d12e6",
-          "spec_material_hash": "d1eefcd2ad771d29f0d69a16cad20e4b357a904dc3e52fb1765c00bc4d02d08b"
+          "reason": "Record verified #1473 live-recovery acceptance and exact candidate/accepted-target validation custody.",
+          "reviewed_code_fingerprint": "7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d",
+          "spec_material_hash": "b385ba0a35344dbd537936013a41c61841e64cf626356fb54e153eafd9857de7"
         },
         {
           "disposition": "updated",
@@ -611,25 +621,39 @@
       "stop_conditions": [],
       "title": "Establish live historical multi-task recovery acceptance for issue 1473",
       "todo_ids": [
-        "bugs_01m6m1303t03z662"
+        "bugs_01m6m1303t03z662",
+        "bugs_01m6mh0e2sm9khap"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793836445Z"
+      "updated_at": "1793838002Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Live acceptance proves macOS ARM64 native profile with Vega disabled; enabled inference and other platforms untested in this live run"
+        "Live acceptance proves macOS ARM64 native profile with Vega disabled; enabled inference and other platforms untested in this live run",
+        "preserve the accepted #1473 recovery scope and master as target"
       ],
-      "artifact_hash": "sha256:fa47c925cc13f8a985f2a00d861684e3419bb3b295f2b89b133afbf0deafe56a",
+      "artifact_hash": "sha256:c41fd19cdb2040ce18ab6500e9fcae1734e41693093e7c6cd039bec1a807ba52",
       "checks": [
         {
           "name": "accepted_target_reconciliation",
           "status": "passed"
         },
         {
+          "name": "full_candidate_validation",
+          "status": "partial"
+        },
+        {
           "name": "live_recovery",
+          "status": "passed"
+        },
+        {
+          "name": "master_reconciliation",
+          "status": "passed"
+        },
+        {
+          "name": "release_projection_refresh",
           "status": "passed"
         },
         {
@@ -679,10 +703,17 @@
             "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6ME6GPG834YVYDXV0WYV9RM",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ME6GPG834YVYDXV0WYV9RM": {
@@ -760,12 +791,46 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "command": "git fetch origin master --tags",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/plugins/verify.rs",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "AGENTS.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  "origin/master efaae930 merged; v0.126.2 installed; current PR proof must rerun against new candidate"
+                ],
+                "proof_refs": [
+                  "master_reconciliation",
+                  "release_projection_refresh",
+                  "full_candidate_validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "No code test failed in the inspected source-CI logs; reported blockers were stale target/base custody."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod init --proof",
+        "decapod rpc --op specs.refresh",
+        "git fetch origin master --tags",
+        "git merge --no-edit origin/master"
+      ],
       "destination": "pull request",
       "evidence": [
         "Actual pending-batch live test: 1 passed, 0 failed, 0 ignored in 345.76 seconds; /private/tmp/1473-live-recovery-retry-2.log",
@@ -777,30 +842,43 @@
         "PR1522 was merged externally as 558d2ac11280d53b326270208d207d5c1164d579; merged origin/master into this existing dedicated branch; retained exact active journal, all incoming CLI tests and both authored spec sections, then refreshed generated projections via CLI",
         "Real missing-artifact recovery on private fixture candidate 79b3b7131a8437453d239ae6f63e8e12dfb792c0 failed after passing scoped validation; batch remained pending; historical state preservation assertion passed",
         "Retry harness corrected its state spelling to actual persisted CLAIMED and additionally requires original task.verify.recover event; no fixture proof was deleted or rewritten to satisfy preconditions",
-        "Two further full scoped validations passed with identical material and epoch; report diff isolated random readiness evidence_path, Vega request_id and binding evidence_digest beyond existing timing/order normalization"
+        "Two further full scoped validations passed with identical material and epoch; report diff isolated random readiness evidence_path, Vega request_id and binding evidence_digest beyond existing timing/order normalization",
+        "origin/master efaae930 merged; v0.126.2 installed; current PR proof must rerun against new candidate"
       ],
       "inspected_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
         "src/decapod/plugins/verify.rs"
       ],
       "intent_id": "intent:change_01M6ME6GKMZPVT97CSVYA7V4FT",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        "AGENTS.md",
         "docs/verification-recovery-acceptance.md",
         "src/decapod/plugins/verify.rs",
         "tests/support/live_recovery.rs",
         "tests/unit/plugins/verify_tests.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "checkpoint and validate the exact current candidate"
       ],
       "repo_scope": [
+        "current PR worktree plus authored intent, architecture, and interface specifications",
         "root"
       ],
       "run_id": "branch_01M6ME6GPG834YVYDXV0WYV9RM",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6m1303t03z662",
+      "task_id": "bugs_01m6mh0e2sm9khap",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "No code test failed in the inspected source-CI logs; reported blockers were stale target/base custody."
+      ]
     }
   },
   "legacy_digests": {
