@@ -540,6 +540,14 @@
       "proof_refs": [
         "specs_refreshed"
       ]
+    },
+    {
+      "id": "ckpt-1526-reconcile-02",
+      "summary": "chore: reconcile proof profile source digest and approve plan for #1526",
+      "input_digest": "sha256:7c1f0898fd2244766dfe73c1b95f5626bd166af7521101e6c2bce12630897c6b",
+      "proof_refs": [
+        "inventory_reconciled"
+      ]
     }
   ],
   "intents": {
@@ -564,18 +572,27 @@
   },
   "sections": {
     "plan": {
-      "constraints": {},
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
       "intent": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
+      "phases": [],
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "state": "DRAFT",
+      "state": "APPROVED",
+      "stop_conditions": [],
       "title": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
       "todo_ids": [
         "bugs_01m6namrghjwn6hk"
       ],
-      "updated_at": "1793869749Z"
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1793875063Z"
     },
     "trajectory": {
       "active_boundaries": [
