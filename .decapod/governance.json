@@ -532,6 +532,14 @@
         "cargo_check",
         "fix_applied"
       ]
+    },
+    {
+      "id": "ckpt-1526-manifest-01",
+      "summary": "chore: refresh specs manifest after initial checkpoint",
+      "input_digest": "sha256:857bc46a62a7fbeb66333c5253fbbd58d5d21c5761ff3be63e6f4e4c410ab0da",
+      "proof_refs": [
+        "specs_refreshed"
+      ]
     }
   ],
   "intents": {
