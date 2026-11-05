@@ -548,6 +548,14 @@
       "proof_refs": [
         "inventory_reconciled"
       ]
+    },
+    {
+      "id": "ckpt-1526-refresh-03",
+      "summary": "chore: refresh specs projections after config digest reconciliation",
+      "input_digest": "sha256:e2e73ac5480bf365af2d6c293da400db1e961c9b7b5e00c841cb57685c229e1f",
+      "proof_refs": [
+        "specs_refreshed"
+      ]
     }
   ],
   "intents": {
