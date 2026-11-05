@@ -7041,6 +7041,9 @@ fn run_validation_bounded_with_receipt(
 /// return an error while its worker continued reading the datastore and kept
 /// the process alive (#1280, #1281). The parent owns the timeout and always
 /// reaps or kills the child before returning.
+/// 
+/// Fix for #1526: read stdout/stderr concurrently to prevent pipe deadlock
+/// when worker output exceeds pipe capacity.
 fn run_validation_in_child_process(
     store: &Store,
     governance_root: &Path,
@@ -7101,16 +7104,32 @@ fn run_validation_in_child_process(
         progress_path.to_string_lossy().as_ref(),
     );
     let mut child = command.spawn().map_err(error::DecapodError::IoError)?;
+
+    // Take stdout and stderr handles to read them concurrently
+    let mut stdout = child.stdout.take().ok_or_else(|| {
+        error::DecapodError::ValidationError("failed to capture child stdout".to_string())
+    })?;
+    let mut stderr = child.stderr.take().ok_or_else(|| {
+        error::DecapodError::ValidationError("failed to capture child stderr".to_string())
+    })?;
+
+    // Spawn threads to drain stdout and stderr concurrently
+    let stdout_handle = thread::spawn(move || {
+        let mut buf = Vec::new();
+        io::Read::read_to_end(&mut stdout, &mut buf).ok();
+        buf
+    });
+    let stderr_handle = thread::spawn(move || {
+        let mut buf = Vec::new();
+        io::Read::read_to_end(&mut stderr, &mut buf).ok();
+        buf
+    });
+
     let deadline = std::time::Instant::now() + timeout;
     loop {
         let status = child.try_wait().map_err(error::DecapodError::IoError)?;
         if status.is_some() {
-            let output = child
-                .wait_with_output()
-                .map_err(error::DecapodError::IoError)?;
-            let result = decode_validation_worker_output(&output.stdout, &output.stderr);
-            let _ = fs::remove_file(&progress_path);
-            return result;
+            break;
         }
         if std::time::Instant::now() >= deadline {
             let progress_hint = fs::read_to_string(&progress_path)
@@ -7128,8 +7147,12 @@ fn run_validation_in_child_process(
                 })
                 .unwrap_or_default();
             let _ = child.kill();
-            let _ = child.wait_with_output();
+            // Wait for child to exit after kill
+            let _ = child.wait();
             let _ = fs::remove_file(&progress_path);
+            // Join reader threads to avoid leaving them running
+            let _ = stdout_handle.join();
+            let _ = stderr_handle.join();
             return Err(error::DecapodError::ValidationError(format!(
                 "VALIDATE_TIMEOUT_OR_LOCK: validate exceeded timeout ({}s). Terminated to preserve proof-gate liveness.{}",
                 timeout.as_secs(),
@@ -7138,6 +7161,14 @@ fn run_validation_in_child_process(
         }
         thread::sleep(std::time::Duration::from_millis(25));
     }
+
+    // Child has exited, join reader threads to get complete output
+    let stdout_bytes = stdout_handle.join().unwrap_or_default();
+    let stderr_bytes = stderr_handle.join().unwrap_or_default();
+
+    let _ = fs::remove_file(&progress_path);
+    let result = decode_validation_worker_output(&stdout_bytes, &stderr_bytes);
+    result
 }
 
 fn decode_validation_worker_output(

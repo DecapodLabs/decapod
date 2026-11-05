@@ -926,7 +926,7 @@ fn private_creation_remains_private_under_permissive_umask() {
             libc::umask(
                 std::env::var("DECAPOD_PRIVATE_RUNTIME_UMASK")
                     .unwrap()
-                    .parse::<u32>()
+                    .parse::<u16>()
                     .unwrap(),
             );
         }
