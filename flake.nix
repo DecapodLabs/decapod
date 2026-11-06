@@ -90,7 +90,16 @@
             cargoLock.lockFile = ./Cargo.lock;
 
             # Dactyl loads the host SQLite runtime dynamically; there is no
-            # bundled SQLite or direct database-driver dependency here.
+            # bundled SQLite or direct database-driver dependency here. The
+            # package still carries the flake's sqlite in its runtime closure
+            # and points the loader at it, so a plain `nix run` works on hosts
+            # without a global libsqlite3 (e.g. Guix System) instead of
+            # requiring a host-specific LD_LIBRARY_PATH (#1536).
+            nativeBuildInputs = [ pkgs.makeWrapper ];
+            postInstall = ''
+              wrapProgram $out/bin/decapod \
+                --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath runtimeLibs}
+            '';
 
             # The test suite is exercised by the repository's primary CI
             # (Bazel + cargo). This derivation is the packaging proof:
@@ -105,6 +114,12 @@
           };
 
           default = self.packages.${system}.decapod;
+
+          # The SQLite runtime library the local store adapter loads at
+          # runtime (#1536). Exposed as a package output so callers can point
+          # LD_LIBRARY_PATH or the decapod SQLite-runtime env override at a
+          # known store path without discovering it themselves.
+          sqlite-runtime = pkgs.sqlite;
         };
 
         # Packaging support matrix (eachDefaultSystem still exposes all four):
