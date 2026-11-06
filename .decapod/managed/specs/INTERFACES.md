@@ -374,7 +374,11 @@ task/revision projects `validation_status: stale`; a done task then projects
 `status: blocked`. Dependency admission and completion reject that evidence.
 Proof references remain historical references rather than renewed permission.
 `qa diagnose` recommends `decapod qa verify regen <id>` for stale binding;
-`qa verify --stale` includes revision drift as well as age. Explicit recapture
+`qa verify --stale` includes revision drift as well as age. The `--stale` flag
+is global and applies to every `qa verify` subcommand, including
+`qa verify recover --stale`: it lists stale done tasks (with
+`last_verified_at` and `verification_policy_days`) and returns without
+running any child validation (#1527). Explicit recapture
 runs real validation before binding new evidence. Batch recovery first leaves
 its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
 
@@ -855,7 +859,7 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `eb3f6119bfe57e46e28f96ede5d47c5eb7b2d19198bea1860423c628d679d396`
+- Repository signal fingerprint: `194f126c8e9ab0f3c13d8608de9b563021be6fe7403b8ffe144a5f0ec80b8d4e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (204 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

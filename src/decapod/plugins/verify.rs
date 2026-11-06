@@ -377,11 +377,27 @@ fn safe_validation_failure_diagnostic(stdout: &[u8], stderr: &[u8]) -> String {
     }
 }
 
+// Test-only seam (#1527): counts entries into the child-validation
+// entrypoint so tests can prove that listing paths never launch the
+// validation worker. Thread-local because each #[test] runs on its own
+// thread; compiled out of production builds entirely.
+#[cfg(test)]
+thread_local! {
+    static VALIDATION_SPAWN_COUNT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+#[cfg(test)]
+fn validation_spawn_count() -> usize {
+    VALIDATION_SPAWN_COUNT.with(|count| count.get())
+}
+
 fn run_validate_and_hash(
     store_root: &Path,
     repo_root: &Path,
     todo_id: Option<&str>,
 ) -> Result<(bool, String), error::DecapodError> {
+    #[cfg(test)]
+    VALIDATION_SPAWN_COUNT.with(|count| count.set(count.get() + 1));
     let _verifying = todo_id.map(|id| {
         let existing = std::env::var("DECAPOD_VERIFYING_TODO").unwrap_or_default();
         let ids = if existing.is_empty() {
@@ -697,6 +713,55 @@ fn is_stale(target: &VerifyTarget, now_secs: i64) -> bool {
     match target.last_verified_at.as_deref().and_then(epoch_secs) {
         None => true,
         Some(last) => now_secs.saturating_sub(last) > target.verification_policy_days * 86_400,
+    }
+}
+
+fn stale_items_from_targets(targets: &[VerifyTarget], now: &str) -> Vec<StaleItem> {
+    let now_secs = epoch_secs(now).unwrap_or(0);
+    targets
+        .iter()
+        .filter(|t| t.status == "done" && is_stale(t, now_secs))
+        .map(|t| StaleItem {
+            todo_id: t.todo_id.clone(),
+            last_verified_at: t.last_verified_at.clone(),
+            verification_policy_days: t.verification_policy_days,
+        })
+        .collect()
+}
+
+/// Stale listing for the whole done batch; read-only, never validates (#1527).
+fn collect_stale_items(store: &Store) -> Result<(String, Vec<StaleItem>), error::DecapodError> {
+    let targets = load_targets(store, None)?;
+    let now = now_iso();
+    let stale_items = stale_items_from_targets(&targets, &now);
+    Ok((now, stale_items))
+}
+
+fn stale_listing_json(checked_at: &str, stale_items: &[StaleItem]) -> String {
+    serde_json::to_string_pretty(&serde_json::json!({
+        "checked_at": checked_at,
+        "stale": stale_items,
+    }))
+    .unwrap()
+}
+
+fn print_stale_listing(json: bool, checked_at: &str, stale_items: &[StaleItem]) {
+    if json {
+        println!("{}", stale_listing_json(checked_at, stale_items));
+    } else if stale_items.is_empty() {
+        println!("No stale TODOs found.");
+    } else {
+        println!("Stale TODOs:");
+        for item in stale_items {
+            println!(
+                "- {} (last_verified_at={}, policy_days={})",
+                item.todo_id,
+                item.last_verified_at
+                    .clone()
+                    .unwrap_or_else(|| "never".to_string()),
+                item.verification_policy_days
+            );
+        }
     }
 }
 
@@ -1864,6 +1929,13 @@ pub fn run_verify_cli(
                 return Ok(());
             }
             VerifyCommand::Recover { artifact } => {
+                if cli.stale {
+                    // --stale lists stale items only and must not run
+                    // verification, even for the recover command (#1527).
+                    let (checked_at, stale_items) = collect_stale_items(store)?;
+                    print_stale_listing(cli.json, &checked_at, &stale_items);
+                    return Ok(());
+                }
                 return run_recover_cli(store, repo_root, cli.json, artifact);
             }
             VerifyCommand::Completion {
@@ -2013,38 +2085,8 @@ pub fn run_verify_cli(
     let now_secs = epoch_secs(&now).unwrap_or(0);
 
     if cli.stale {
-        let stale_items: Vec<StaleItem> = targets
-            .iter()
-            .filter(|t| t.status == "done" && is_stale(t, now_secs))
-            .map(|t| StaleItem {
-                todo_id: t.todo_id.clone(),
-                last_verified_at: t.last_verified_at.clone(),
-                verification_policy_days: t.verification_policy_days,
-            })
-            .collect();
-
-        if cli.json {
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&serde_json::json!({
-                    "checked_at": now,
-                    "stale": stale_items
-                }))
-                .unwrap()
-            );
-        } else if stale_items.is_empty() {
-            println!("No stale TODOs found.");
-        } else {
-            println!("Stale TODOs:");
-            for item in stale_items {
-                println!(
-                    "- {} (last_verified_at={}, policy_days={})",
-                    item.todo_id,
-                    item.last_verified_at.unwrap_or_else(|| "never".to_string()),
-                    item.verification_policy_days
-                );
-            }
-        }
+        let stale_items = stale_items_from_targets(&targets, &now);
+        print_stale_listing(cli.json, &now, &stale_items);
         return Ok(());
     }
 
