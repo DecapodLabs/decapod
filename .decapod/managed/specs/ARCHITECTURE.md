@@ -166,7 +166,10 @@ repository records provide continuity instead of a resident orchestration servic
 
 - Rust implements the `decapod` binary and its supporting library
 - The binary embeds Constitution data and agent documentation
-- Local runtime state uses Dactyl-backed SQLite; cloud routing is optional
+- Local runtime state uses Dactyl-backed SQLite; cloud routing is optional. The
+  SQLite shared library is loaded dynamically from the host, and the Nix flake
+  package carries it in its runtime closure (`packages.sqlite-runtime`, wired into
+  `packages.default` via `LD_LIBRARY_PATH`) so `nix run` needs no host libsqlite3 (#1536)
 - Git worktrees and supported containers provide task execution isolation
 - CLI and Decapod-specific process RPC are the current integration surfaces
 

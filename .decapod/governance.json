@@ -1309,6 +1309,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbg3-4-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (docs: document Nix SQLite runtime packaging in specs (#1536))",
+      "input_digest": "sha256:55e5b9923dcab5b7543c99f4380a0e5f155da0d13ddb3c4967fdd6276fa5a124",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
