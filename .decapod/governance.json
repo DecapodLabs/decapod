@@ -1373,6 +1373,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbg3-12-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: reconcile source digest after vega-native lock pin repair (#1536))",
+      "input_digest": "sha256:6f4a846c520fcd21145e76ca967e94aa001d93c7ee3bdae0a897ded17ea784e3",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
