@@ -1365,6 +1365,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbg3-11-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: repair stale vega-native Cargo.lock decapod pin for v0.126.5 (#1536))",
+      "input_digest": "sha256:781ee021fba6fd858bc0b9b424d8cfc2cd8ff0a29058a78e50bcd4bea2f7d635",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
