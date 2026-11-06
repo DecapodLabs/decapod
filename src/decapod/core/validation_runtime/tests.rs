@@ -1701,6 +1701,7 @@ fn late_verdict_write_failure_revokes_readiness_and_pr_instructions() {
         ready: true,
         proof_ready: true,
         vega_readiness: None,
+        laya_readiness: None,
         scope: READINESS_SCOPE,
         agent_guidance: ValidationGuidance::for_vega_outcome(
             true,
@@ -2194,6 +2195,7 @@ fn native_completion_write_failures_never_publish_success_artifacts() {
                 ready: true,
                 proof_ready: true,
                 vega_readiness: None,
+                laya_readiness: None,
                 scope: READINESS_SCOPE,
                 agent_guidance: ValidationGuidance::for_vega_outcome(
                     true,

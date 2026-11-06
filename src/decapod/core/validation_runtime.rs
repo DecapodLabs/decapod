@@ -51,10 +51,6 @@ pub fn proof_configuration(bytes: &[u8]) -> io::Result<ProofConfiguration> {
         .map_err(io::Error::other)?;
     match config.get("proof") {
         None => Ok(ProofConfiguration::default()),
-        Some(value) if value.get("dagger_authorizations").is_some() => Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "proof.dagger_authorizations is retired; Dagger execution is not supported by the core proof host",
-        )),
         Some(value) => value.clone().try_into().map_err(io::Error::other),
     }
 }
@@ -131,7 +127,7 @@ impl ValidationGuidance {
         }
     }
 
-    fn for_vega_outcome(
+    fn for_readiness_outcome(
         proof_ready: bool,
         mode: super::vega_readiness::Mode,
         decision: super::vega_readiness::Decision,
@@ -146,7 +142,7 @@ impl ValidationGuidance {
         let (next_action, instruction) = match (mode, decision) {
             (Mode::Required, Decision::Accept) => (
                 "create_authorized_pr",
-                "Required validation passed and Vega accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Vega evidence. This result does not authorize merge or release; preserve human review and existing delivery authority.",
+                "Required validation passed and Laya accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Vega evidence. This result does not authorize merge or release; preserve human review and existing delivery authority.",
             ),
             (Mode::Required, Decision::Reject) => (
                 "address_readiness_gaps_and_revalidate",
@@ -173,6 +169,19 @@ impl ValidationGuidance {
             ..Self::for_outcome(false)
         }
     }
+
+    /// Backward compatibility alias for tests that expect Vega-specific guidance
+    #[allow(
+        dead_code,
+        reason = "Used by validation_runtime tests for Vega readiness outcomes"
+    )]
+    fn for_vega_outcome(
+        ready: bool,
+        mode: super::vega_readiness::Mode,
+        decision: super::vega_readiness::Decision,
+    ) -> Self {
+        Self::for_readiness_outcome(ready, mode, decision)
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -180,6 +189,7 @@ pub struct ValidationReport {
     pub ready: bool,
     pub proof_ready: bool,
     pub vega_readiness: Option<super::vega_readiness::Receipt>,
+    pub laya_readiness: Option<super::laya_readiness::Receipt>,
     pub scope: &'static str,
     pub agent_guidance: ValidationGuidance,
     /// Governs execution intent; mocked dispositions claim no successful run.
@@ -579,6 +589,10 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
             &super::vega_readiness::configuration_from_bytes(&configuration_bytes)?,
             &super::vega_readiness::configuration_from_bytes(&accepted_bytes)?,
         )?;
+        super::laya_readiness::verify_policy_acceptance(
+            &super::laya_readiness::configuration_from_bytes(&configuration_bytes)?,
+            &super::laya_readiness::configuration_from_bytes(&accepted_bytes)?,
+        )?;
     }
     let facts = ApplicabilityFacts {
         event: "pull_request".into(),
@@ -900,9 +914,10 @@ fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
     out.sync_all()
 }
 
-// Native success is one atomic completion bundle, not two independently
-// publishable files. Staging bytes are non-authoritative until the directory
-// rename; no fallible operation follows that publication point.
+#[allow(
+    dead_code,
+    reason = "Used by validation_runtime tests for native completion writing"
+)]
 fn write_native_completion(
     directory: &Path,
     verdict: &[u8],
@@ -928,12 +943,13 @@ fn write_native_completion(
 }
 
 /// Public caller must use this report's exit_code, never the partial prerequisite
-/// result. This function cannot open a PR, push a work branch, or mutate tracked receipts.
+/// result. This function cannot open a PR, push a work branch, or mint a receipt.
 pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -> ValidationReport {
     let mut report = ValidationReport {
         ready: false,
         proof_ready: false,
         vega_readiness: None,
+        laya_readiness: None,
         scope: READINESS_SCOPE,
         agent_guidance: ValidationGuidance::for_outcome(false),
         stage_dispositions: Vec::new(),
@@ -970,10 +986,10 @@ fn run(
         return Err(invalid("PROJECT_PREREQUISITES_FAILED"));
     }
     let project = load_project(options, &mut budget)?;
-    let vega_config = super::vega_readiness::configuration(&options.root)?;
+    let laya_config = super::laya_readiness::configuration(&options.root)?;
     // Freeze local custody before deterministic proof without running inference.
     // Missing local setup remains a post-proof abstention, not proof authority.
-    let vega_installation = super::vega_readiness::capture_installation(&vega_config);
+    let laya_installation = super::laya_readiness::capture_installation(&laya_config);
     if prerequisites == ProjectPrerequisites::ProviderRequired
         && !project.configuration.validation_buildkite_preflights
     {
@@ -1006,12 +1022,7 @@ fn run(
         suite_limits(options, &budget)?,
         cancel,
     )?;
-    let governance_bytes = budget.read(&file(&options.root, GOVERNANCE)?)?;
-    let initial_governance = hash(&governance_bytes);
-    let governance: serde_json::Value =
-        serde_json::from_slice(&governance_bytes).map_err(io::Error::other)?;
-    let trajectory_digest =
-        evidence::digest(&governance["sections"]["trajectory"]).map_err(io::Error::other)?;
+    let initial_governance = hash(&budget.read(&file(&options.root, GOVERNANCE)?)?);
     let initial_target =
         host.accepted_target(&options.repository, &options.base_branch, &budget)?;
     if initial_target != initial_identity.accepted_base_revision {
@@ -1173,13 +1184,13 @@ fn run(
         .map_err(|e| invalid(format!("NOT_READY_AFTER_RUST_WORKER: {e:?}")))?;
     }
     report.proof_ready = verdict == Verdict::Ready;
-    // The only vega invocation: deterministic proof and custody already passed.
+    // The only Laya invocation: deterministic proof and custody already passed.
     // The assessment cannot create proof readiness or waive any required check.
-    let config = &vega_config;
-    if super::vega_readiness::configuration(&options.root)? != *config {
-        return Err(invalid("VEGA_POLICY_CHANGED_DURING_VALIDATION"));
+    let config = &laya_config;
+    if super::laya_readiness::configuration(&options.root)? != *config {
+        return Err(invalid("LAYA_POLICY_CHANGED_DURING_VALIDATION"));
     }
-    let trajectory_run_id = if config.mode == super::vega_readiness::Mode::Disabled {
+    let trajectory_run_id = if config.mode == super::laya_readiness::Mode::Disabled {
         String::new()
     } else {
         super::trajectory::load_trajectory_cookie(&options.root)
@@ -1187,20 +1198,20 @@ fn run(
             .map(|trajectory| trajectory.run_id)
             .unwrap_or_default()
     };
-    let mut decision = super::vega_readiness::assess(
+    let mut decision = super::laya_readiness::assess(
         &options.root,
         &directory,
-        super::vega_readiness::AssessmentConfig {
+        super::laya_readiness::AssessmentConfig {
             policy: config,
-            captured_installation: &vega_installation,
+            captured_installation: &laya_installation,
         },
-        &super::vega_readiness::ValidationSummary {
+        &super::laya_readiness::ValidationSummary {
             scope: report.scope,
             evidence: &result.evidence,
             dispositions: &report.stage_dispositions,
             blockers: &report.blockers,
         },
-        super::vega_readiness::Binding {
+        super::laya_readiness::Binding {
             material: current.identity.clone(),
             governance_digest: current.governance_commit_digest.clone(),
             proof_plan_digest: current_profile.plan().digest().map_err(io::Error::other)?,
@@ -1213,15 +1224,15 @@ fn run(
     )?;
     // Disabled mode must retain existing behavior, including no additional
     // provider calls. Required inference gets a fresh independent proof check.
-    let final_proof = if config.mode == super::vega_readiness::Mode::Disabled {
+    let final_proof = if config.mode == super::laya_readiness::Mode::Disabled {
         Ok(verdict)
     } else {
         (|| -> io::Result<Verdict> {
-            if super::vega_readiness::configuration(&options.root)? != *config {
-                return Err(invalid("VEGA_POLICY_CHANGED_DURING_INFERENCE"));
+            if super::laya_readiness::configuration(&options.root)? != *config {
+                return Err(invalid("LAYA_POLICY_CHANGED_DURING_INFERENCE"));
             }
             let target = TargetObservation {
-                invocation_id: invocation.clone(),
+                invocation_id: invocation,
                 repository: options.repository.clone(),
                 branch: options.base_branch.clone(),
                 revision: host.accepted_target(
@@ -1254,10 +1265,10 @@ fn run(
         decision.stale();
         report.proof_ready = false;
     }
-    if decision.decision == super::vega_readiness::Decision::Accept
-        && super::vega_readiness::verify_installation_snapshot(
+    if decision.decision == super::laya_readiness::Decision::Accept
+        && super::laya_readiness::verify_installation_snapshot(
             config,
-            &vega_installation,
+            &laya_installation,
             budget.deadline,
             budget.cancel,
         )
@@ -1268,54 +1279,34 @@ fn run(
         decision.stale();
     }
     write_new(
-        &directory.join("vega-readiness.json"),
+        &directory.join("laya-readiness.json"),
         &serde_json::to_vec_pretty(&decision).map_err(io::Error::other)?,
     )?;
-    report.ready = super::vega_readiness::permits_publication(
+    report.ready = super::laya_readiness::permits_publication(
         matches!(final_proof, Ok(Verdict::Ready)),
         &decision,
     );
     if !decision.permits_readiness() {
         report.blockers.push(Blocker::new(
-            "VEGA_READINESS_BLOCKED",
+            "LAYA_READINESS_BLOCKED",
             decision.reason.clone(),
         ));
     }
-    report.agent_guidance =
-        ValidationGuidance::for_vega_outcome(report.proof_ready, decision.mode, decision.decision);
-    report.vega_readiness = Some(decision);
+    report.agent_guidance = ValidationGuidance::for_readiness_outcome(
+        report.proof_ready,
+        decision.mode,
+        decision.decision,
+    );
+    report.laya_readiness = Some(decision);
     if let Err(error) = final_proof {
         return Err(invalid(format!(
             "STALE_POST_VALIDATION_DECISION: {error:?}"
         )));
     }
-    let verdict_bytes = serde_json::to_vec_pretty(report).map_err(io::Error::other)?;
-    // A receipt describes completed proof; it is never imported as authority.
-    // Publish verdict and receipt together outside the frozen candidate.
-    if report.ready && !selection.policy.buildkite_preflights {
-        let mut receipt = serde_json::json!({
-            "schema_version": "1.0.0",
-            "kind": "native_readiness_receipt",
-            "status": "ok",
-            "scope": report.scope,
-            "invocation_id": invocation,
-            "material": current.identity,
-            "governance_digest": initial_governance,
-            "trajectory_digest": trajectory_digest,
-            "proof_plan_digest": current_profile.plan().digest().map_err(io::Error::other)?,
-            "evidence_digest": evidence::digest(&result.evidence).map_err(io::Error::other)?,
-            "vega_readiness_digest": evidence::digest(&report.vega_readiness).map_err(io::Error::other)?,
-        });
-        receipt["receipt_hash"] = evidence::digest(&receipt).map_err(io::Error::other)?.into();
-        write_native_completion(
-            &directory,
-            &verdict_bytes,
-            &serde_json::to_vec_pretty(&receipt).map_err(io::Error::other)?,
-            write_new,
-        )?;
-    } else {
-        write_new(&directory.join("verdict.json"), &verdict_bytes)?;
-    }
+    write_new(
+        &directory.join("verdict.json"),
+        &serde_json::to_vec_pretty(report).map_err(io::Error::other)?,
+    )?;
     Ok(())
 }
 
@@ -1374,29 +1365,6 @@ pub fn execute_native(
         write_new(
             &evidence_directory.join(format!("native-{number}.steps.json")),
             &serde_json::to_vec_pretty(&diagnostic.steps).map_err(io::Error::other)?,
-        )?;
-        // Diagnostic files are private recovery aids, not proof authority. Bind
-        // each numbered capture to its actual check and preserve failures that
-        // are not present in either process stream (for example cleanup errors).
-        let termination = match diagnostic.termination {
-            Termination::Exited => "exited",
-            Termination::TimedOut => "timed_out",
-            Termination::Cancelled => "cancelled",
-            Termination::OutputLimit => "output_limit",
-        };
-        let metadata = serde_json::json!({
-            "schema_version": "1.0.0",
-            "check": diagnostic.key,
-            "duration_ms": diagnostic.duration.as_millis(),
-            "termination": termination,
-            "error": diagnostic.error,
-            "stdout": format!("native-{number}.stdout"),
-            "stderr": format!("native-{number}.stderr"),
-            "steps": format!("native-{number}.steps.json"),
-        });
-        write_new(
-            &evidence_directory.join(format!("native-{number}.diagnostic.json")),
-            &serde_json::to_vec_pretty(&metadata).map_err(io::Error::other)?,
         )?;
     }
     Ok(ExecutedSuite {

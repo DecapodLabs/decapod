@@ -159,7 +159,7 @@ fn validate_binding(binding: &LocalBinding, manifest: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn register_at(root: &Path, installation: Installation) -> io::Result<()> {
+pub(crate) fn register_at(root: &Path, installation: Installation) -> io::Result<()> {
     let path = binding_path(root, &installation.manifest_digest)?;
     let binding = LocalBinding {
         schema: SCHEMA.into(),
@@ -175,11 +175,12 @@ fn register_at(root: &Path, installation: Installation) -> io::Result<()> {
     fs_permissions::write_private(path, bytes)
 }
 
+#[cfg(test)]
 pub(crate) fn resolve(manifest: &str) -> io::Result<Installation> {
     resolve_at(&vega_setup::default_cache()?, manifest)
 }
 
-fn resolve_at(root: &Path, manifest: &str) -> io::Result<Installation> {
+pub(crate) fn resolve_at(root: &Path, manifest: &str) -> io::Result<Installation> {
     let path = binding_path(root, manifest)?;
     let mut options = OpenOptions::new();
     options.read(true);

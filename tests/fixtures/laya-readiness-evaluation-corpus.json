@@ -1,0 +1,8 @@
+{
+  "schema": "decapod.laya-fitting-inputs.v1",
+  "partition": "evaluation",
+  "families": ["test"],
+  "variants": ["ready"],
+  "label_provenance": "test",
+  "grouping_unit": "test"
+}

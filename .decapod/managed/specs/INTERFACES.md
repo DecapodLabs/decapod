@@ -298,6 +298,262 @@ unknown Decapod-namespaced directives invalidate the whole overlay. Empty
 retired generated directives remain upgrade-compatible. Partial application
 must not conceal ambiguous authority.
 
+Project authority comes from `.decapod/config.toml` and `.decapod/OVERRIDE.md`.
+Each registered override directive owns a fenced source body. Resolution
+preserves nested Markdown and examples, removes the outer wrapper, and exposes
+`directive_id`, `source`, `source_hash`, `body_hash`, `byte_count`, and
+`precedence`. Duplicate exact directives, unclosed wrappers, and non-empty
+unknown Decapod-namespaced directives invalidate the whole overlay. Empty
+retired generated directives remain upgrade-compatible. Partial application
+must not conceal ambiguous authority.
+
+## Validation Rules System Interface
+
+Decapod exposes the validation rules system through CLI, RPC, and configuration
+interfaces.
+
+### Configuration Interface
+
+The validation rules system is configured through `.decapod/OVERRIDE.md` under a
+dedicated `
+
+## VALIDATION_RULES Overrides section. Each rule override uses a
+fenced block with the rule ID as heading:
+
+```markdown
+### decapod.scope.authorized_paths
+````markdown
+severity: error
+applicability:
+  required_changed_paths: ["src/**"]
+  forbidden_changed_paths: ["**/secrets/**"]
+evidence_max_age_seconds: 43200
+````
+```
+
+Supported override fields:
+- `severity`: `advisory`, `warning`, `error`, `critical`
+- `applicability`: `required_changed_paths`, `forbidden_changed_paths`, `task_types`, `ref_patterns`, `ci_only`, `local_only`
+- `evidence_max_age_seconds`: Maximum age of evidence in seconds (0 = no limit)
+- `requirements`: `required_evidence`, `required_evaluators`, `required_context`
+- `remediation`: Override the remediation contract
+
+Override eligibility is enforced per-rule:
+- `NonOverridable`: Cannot be overridden (kernel invariants)
+- `TightenOnly`: Can only increase severity or add constraints
+- `ConfigurableOnly`: Can configure parameters but not disable
+- `FullyOverridable`: Full override permitted
+
+Invalid overrides (unknown rule IDs, duplicate definitions, malformed content,
+unauthorized weakening of kernel invariants) cause validation to fail closed.
+
+### RPC Interface
+
+The validation rules system exposes the following RPC operations:
+
+#### `validation.rules.list`
+List all registered validation rules with their effective configuration.
+
+**Request:**
+```json
+{"op": "validation.rules.list", "params": {}}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "result": {
+    "rules": [
+      {
+        "id": "decapod.scope.authorized_paths",
+        "description": "All changed files must be within authorized scope...",
+        "authority": "constitution",
+        "severity": "error",
+        "evaluator": "decapod.scope.validator",
+        "effective_severity": "error",
+        "override_eligibility": "tighten_only",
+        "applicability": {...},
+        "requirements": {...},
+        "remediation": {...},
+        "provenance": {...}
+      }
+    ]
+  }
+}
+```
+
+#### `validation.rules.evaluate`
+Evaluate all applicable rules against the current context.
+
+**Request:**
+```json
+{
+  "op": "validation.rules.evaluate",
+  "params": {
+    "context": {
+      "changed_paths": ["src/main.rs", "tests/test.rs"],
+      "task_type": "feature",
+      "git_ref": "refs/heads/feature/xyz",
+      "is_ci": false,
+      "evidence_artifacts": {
+        "governed_plan": "sha256:...",
+        "workspace_status": "sha256:..."
+      },
+      "validation_epoch": {...},
+      "policy_fingerprint": "sha256:..."
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "result": {
+    "rules_report": {
+      "results": [
+        {
+          "rule_id": "decapod.scope.authorized_paths",
+          "verdict": "pass",
+          "severity": "error",
+          "evaluated_at": "2026-11-05T18:23:31Z",
+          "evidence_refs": ["governed_plan", "workspace_status"],
+          "message": "Rule passed",
+          "remediation": null,
+          "policy_fingerprint": "sha256:...",
+          "validation_epoch": {...}
+        }
+      ],
+      "passed": 7,
+      "failed": 0,
+      "unverifiable": 0,
+      "overall_verdict": "pass",
+      "has_blocking_failures": false,
+      "has_unverifiable_mandatory": false
+    }
+  }
+}
+```
+
+#### `validation.rules.get`
+Get a specific rule by ID with its effective configuration.
+
+**Request:**
+```json
+{"op": "validation.rules.get", "params": {"rule_id": "decapod.scope.authorized_paths"}}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "result": {
+    "rule": {...},
+    "override_values": null,
+    "effective_severity": "error",
+    "effective_applicability": {...}
+  }
+}
+```
+
+### CLI Interface
+
+The validation rules are evaluated as part of `decapod validate`:
+
+```bash
+decapod validate --format json
+```
+
+The validation output includes a `rules_report` section in the JSON output:
+
+```json
+{
+  "status": "failed",
+  "rules_report": {
+    "results": [...],
+    "passed": 6,
+    "failed": 1,
+    "unverifiable": 0,
+    "overall_verdict": "fail",
+    "has_blocking_failures": true,
+    "has_unverifiable_mandatory": false
+  }
+}
+```
+
+Verbose output (`-v`) includes per-rule details with remediation contracts.
+
+### OVERRIDE.md Integration
+
+Project-specific rule overrides are declared in `.decapod/OVERRIDE.md` under a
+dedicated `
+
+## VALIDATION_RULES Overrides section. Each rule override uses a
+fenced block with the rule ID as heading:
+
+```markdown
+## VALIDATION_RULES Overrides
+
+### decapod.scope.authorized_paths
+````markdown
+severity: error
+applicability:
+  required_changed_paths: ["src/**"]
+  forbidden_changed_paths: ["**/secrets/**"]
+evidence_max_age_seconds: 43200
+````
+```
+
+The OVERRIDE.md parser validates:
+- Known rule IDs only (unknown IDs fail closed)
+- No duplicate rule definitions
+- Well-formed TOML within fenced blocks
+- Override eligibility respected (NonOverridable, TightenOnly enforced)
+
+### Applicability and Context Awareness
+
+Rules declare applicability conditions. The registry only evaluates applicable
+rules based on:
+- Changed paths (required/forbidden patterns)
+- Task type (feature, bugfix, refactor, docs, test)
+- Git ref patterns
+- CI vs local execution context
+
+Custody rules (`task_ownership`, `workspace_isolation`) only apply to governed
+agent workspaces with active task claims. They do not apply to:
+- Detached/post-merge validation contexts
+- Consumer repository validation
+- Release/post-merge validation contexts
+- Fixture/test validation contexts
+
+### Remediation Contract
+
+Every blocking rule result (FAIL or mandatory UNVERIFIABLE) includes a structured
+remediation contract:
+
+```json
+{
+  "error_code": "SCOPE_VIOLATION",
+  "violation_description": "Changed files exceed authorized scope",
+  "expected_condition": "All changed files within declared scope",
+  "observed_condition": "Files outside authorized scope modified",
+  "affected_paths": ["src/secret.rs"],
+  "required_steps": [
+    "Revert changes to files outside authorized scope",
+    "Request human approval for scope expansion"
+  ],
+  "autonomous_remediation_permitted": true,
+  "human_authorization_required": false,
+  "evidence_for_revalidation": ["governed_plan"],
+  "related_rules": ["decapod.scope.file_touch_budget"]
+}
+```
+
+Agents must follow the remediation contract and revalidate. Kernel invariants
+cannot be waived by candidate-controlled policy changes.
+
 ## Current-evidence recovery for historical completion claims
 
 `plugins::verify::VerifyCommand::Recover` accepts repeated `--artifact TODO_ID=FILE`
@@ -859,8 +1115,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `194f126c8e9ab0f3c13d8608de9b563021be6fe7403b8ffe144a5f0ec80b8d4e`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (204 files)
+- Repository signal fingerprint: `0c02225b12f08aa54cd63e7052933ac81b13c2800d155d92df20185a70f9493f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (217 files), `tests/` (207 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

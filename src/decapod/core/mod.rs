@@ -87,6 +87,7 @@ pub mod trajectory;
 pub mod ulid;
 pub mod validate;
 pub mod validation_epoch;
+pub mod validation_rules;
 pub mod validation_runtime;
 pub mod work_claim;
 pub mod workspace;
@@ -99,6 +100,11 @@ pub mod vega_prompt;
 pub mod vega_readiness;
 pub mod vega_runtime;
 pub mod vega_setup;
+
+pub mod laya_assets;
+pub mod laya_protocol;
+pub mod laya_readiness;
+pub mod laya_setup;
 
 #[cfg(unix)]
 pub(crate) mod local_socket;

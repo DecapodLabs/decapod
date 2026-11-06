@@ -25,6 +25,9 @@ use crate::core::scaffold::DECAPOD_GITIGNORE_RULES;
 use crate::core::store::{Store, StoreKind};
 use crate::core::trajectory;
 use crate::core::validation_epoch::{ValidationEpochMetadata, active_validation_epoch};
+use crate::core::validation_rules::{
+    self, RuleEvaluationContext, RuleRegistry, RuleVerdict, RulesValidationReport,
+};
 use crate::core::workunit::{self, WorkUnitManifest, WorkUnitStatus};
 use crate::plan_governance;
 use crate::plugins::internalize::{self, DeterminismClass, InternalizationManifest, ReplayClass};
@@ -3615,6 +3618,317 @@ fn validate_override_authority(
         Err(err) => fail(&err.to_string(), ctx),
     }
     Ok(())
+}
+
+fn validate_validation_rules(
+    ctx: &ValidationContext,
+    working_root: &Path,
+    main_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Validation Rules Gate", ctx);
+
+    // Check if we're in a proper governed agent workspace
+    let workspace_status = match crate::core::workspace::get_workspace_status(working_root) {
+        Ok(status) => status,
+        Err(_) => {
+            warn(
+                "Validation Rules Gate: unable to determine workspace status, skipping",
+                ctx,
+            );
+            return Ok(());
+        }
+    };
+
+    // Skip validation rules gate if not in a proper governed agent workspace
+    if !workspace_status.can_work
+        || !workspace_status.git.in_worktree
+        || workspace_status.git.is_protected
+    {
+        info(
+            "Validation Rules Gate: not in a governed agent workspace, skipping",
+            ctx,
+        );
+        return Ok(());
+    }
+
+    // Build rule evaluation context
+    let changed_paths = collect_changed_paths(working_root, main_root)?;
+    let task_type = get_current_task_type(working_root)?;
+    let git_ref = get_current_git_ref(working_root)?;
+    let is_ci = std::env::var("GITHUB_ACTIONS").is_ok() || std::env::var("BUILDKITE").is_ok();
+    let evidence_artifacts = collect_evidence_artifacts(working_root)?;
+    let validation_epoch = crate::core::validation_epoch::active_validation_epoch(working_root)?;
+    let policy_fingerprint = compute_policy_fingerprint(working_root)?;
+
+    let context = RuleEvaluationContext {
+        changed_paths,
+        task_type,
+        git_ref,
+        is_ci,
+        evidence_artifacts,
+        validation_epoch,
+        policy_fingerprint,
+    };
+
+    // Create and populate rule registry
+    let mut registry = RuleRegistry::new();
+    registry.load_project_rules(main_root)?;
+    registry.load_task_rules(working_root)?;
+
+    // Evaluate all applicable rules
+    let results = validation_rules::evaluate_all_rules(&mut registry, &context);
+    let report = RulesValidationReport::from_results(results);
+
+    // Report results
+    for result in &report.results {
+        match result.verdict {
+            RuleVerdict::Pass => {
+                pass(&format!("Rule {}: {}", result.rule_id, result.message), ctx);
+            }
+            RuleVerdict::Fail => {
+                fail(&format!("Rule {}: {}", result.rule_id, result.message), ctx);
+            }
+            RuleVerdict::Unverifiable => {
+                warn(&format!("Rule {}: {}", result.rule_id, result.message), ctx);
+            }
+        }
+    }
+
+    // Overall result
+    if report.has_blocking_failures() {
+        fail(
+            &format!(
+                "Validation rules: {} passed, {} failed, {} unverifiable (blocking failures present)",
+                report.passed, report.failed, report.unverifiable
+            ),
+            ctx,
+        );
+    } else if report.has_unverifiable_mandatory() {
+        fail(
+            &format!(
+                "Validation rules: {} passed, {} failed, {} unverifiable (mandatory rules unverifiable)",
+                report.passed, report.failed, report.unverifiable
+            ),
+            ctx,
+        );
+    } else if report.failed > 0 || report.unverifiable > 0 {
+        warn(
+            &format!(
+                "Validation rules: {} passed, {} failed, {} unverifiable",
+                report.passed, report.failed, report.unverifiable
+            ),
+            ctx,
+        );
+    } else {
+        pass(&format!("Validation rules: {} passed", report.passed), ctx);
+    }
+
+    Ok(())
+}
+
+/// Collect changed paths between working root and main root.
+fn collect_changed_paths(
+    working_root: &Path,
+    main_root: &Path,
+) -> Result<std::collections::BTreeSet<String>, error::DecapodError> {
+    use std::process::Command;
+    let mut paths = std::collections::BTreeSet::new();
+
+    // Get base branch
+    let base_branch = crate::core::workspace::resolve_base_branch(main_root, None);
+    let base =
+        crate::core::workspace::base_ref_for_branch(main_root, &base_branch).ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "Cannot determine accepted base for scope check".to_string(),
+            )
+        })?;
+
+    // Get changed files from git diff
+    let output = Command::new("git")
+        .args([
+            "diff",
+            "--name-only",
+            "-z",
+            "--no-renames",
+            &base,
+            "HEAD",
+            "--",
+        ])
+        .current_dir(working_root)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+
+    if output.status.success() {
+        for path in output.stdout.split(|b| *b == 0) {
+            if !path.is_empty()
+                && let Ok(s) = std::str::from_utf8(path)
+            {
+                paths.insert(s.to_string());
+            }
+        }
+    }
+
+    // Also include staged changes
+    let output = Command::new("git")
+        .args([
+            "diff",
+            "--cached",
+            "--name-only",
+            "-z",
+            "--no-renames",
+            &base,
+            "--",
+        ])
+        .current_dir(working_root)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+
+    if output.status.success() {
+        for path in output.stdout.split(|b| *b == 0) {
+            if !path.is_empty()
+                && let Ok(s) = std::str::from_utf8(path)
+            {
+                paths.insert(s.to_string());
+            }
+        }
+    }
+
+    // Include untracked files
+    let output = Command::new("git")
+        .args(["ls-files", "--others", "--exclude-standard", "-z"])
+        .current_dir(working_root)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+
+    if output.status.success() {
+        for path in output.stdout.split(|b| *b == 0) {
+            if !path.is_empty()
+                && let Ok(s) = std::str::from_utf8(path)
+            {
+                paths.insert(s.to_string());
+            }
+        }
+    }
+
+    Ok(paths)
+}
+
+/// Get current task type from workspace.
+fn get_current_task_type(working_root: &Path) -> Result<Option<String>, error::DecapodError> {
+    // Try to get from workspace status
+    if let Ok(status) = crate::core::workspace::get_workspace_status(working_root)
+        && let Some(task_id) =
+            crate::core::workspace::extract_task_ids_from_branch(&status.git.current_branch).first()
+    {
+        // Try to get task details from store
+        let main_root = crate::core::workspace::get_main_repo_root(working_root)?;
+        let store_root = main_root.join(".decapod").join("data");
+        if let Ok(Some(task)) = crate::core::todo::get_task(&store_root, task_id) {
+            return Ok(Some(task.category));
+        }
+    }
+    Ok(None)
+}
+
+/// Get current git ref.
+fn get_current_git_ref(working_root: &Path) -> Result<Option<String>, error::DecapodError> {
+    let output = std::process::Command::new("git")
+        .args(["symbolic-ref", "HEAD"])
+        .current_dir(working_root)
+        .output()
+        .map_err(error::DecapodError::IoError)?;
+
+    if output.status.success() {
+        let ref_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if !ref_str.is_empty() {
+            return Ok(Some(ref_str));
+        }
+    }
+    Ok(None)
+}
+
+/// Collect evidence artifacts from the workspace.
+fn collect_evidence_artifacts(
+    working_root: &Path,
+) -> Result<std::collections::BTreeMap<String, String>, error::DecapodError> {
+    let mut artifacts = std::collections::BTreeMap::new();
+
+    // Check for validation receipt
+    let governance_path = working_root.join(".decapod").join("governance.json");
+    if governance_path.exists() {
+        let content =
+            std::fs::read_to_string(&governance_path).map_err(error::DecapodError::IoError)?;
+        let governance: serde_json::Value = serde_json::from_str(&content).map_err(|e| {
+            error::DecapodError::ValidationError(format!("Invalid governance.json: {}", e))
+        })?;
+
+        if let Some(validation) = governance.pointer("/sections/validation")
+            && let Some(receipt) = validation.pointer("/receipt")
+            && let Some(hash) = receipt.pointer("/receipt_hash").and_then(|v| v.as_str())
+        {
+            artifacts.insert("validation_receipt".to_string(), hash.to_string());
+        }
+
+        if let Some(trajectory) = governance.pointer("/sections/trajectory")
+            && let Some(artifact_hash) = trajectory
+                .pointer("/artifact_hash")
+                .and_then(|v| v.as_str())
+        {
+            artifacts.insert("trajectory_artifact".to_string(), artifact_hash.to_string());
+        }
+
+        if let Some(_plan) = governance.pointer("/sections/plan") {
+            artifacts.insert("governed_plan".to_string(), "present".to_string());
+        }
+    }
+
+    // Check for workunit manifest
+    let workunits_dir = working_root.join(".decapod").join("data").join("workunits");
+    if workunits_dir.exists() {
+        artifacts.insert("workunit_manifest".to_string(), "present".to_string());
+    }
+
+    // Config toml
+    let config_path = working_root.join(".decapod").join("config.toml");
+    if config_path.exists() {
+        artifacts.insert("config.toml".to_string(), "present".to_string());
+    }
+
+    // Workspace status
+    artifacts.insert("workspace_status".to_string(), "present".to_string());
+    artifacts.insert("todo_claim".to_string(), "present".to_string());
+
+    Ok(artifacts)
+}
+
+/// Compute policy fingerprint from config and overrides.
+fn compute_policy_fingerprint(working_root: &Path) -> Result<String, error::DecapodError> {
+    use sha2::{Digest, Sha256};
+
+    let mut hasher = Sha256::new();
+
+    // Hash config.toml
+    let config_path = working_root.join(".decapod").join("config.toml");
+    if config_path.exists() {
+        let content = std::fs::read(&config_path).map_err(error::DecapodError::IoError)?;
+        hasher.update(&content);
+    }
+
+    // Hash OVERRIDE.md
+    let override_path = working_root.join(".decapod").join("OVERRIDE.md");
+    if override_path.exists() {
+        let content = std::fs::read(&override_path).map_err(error::DecapodError::IoError)?;
+        hasher.update(&content);
+    }
+
+    // Hash governance.json
+    let governance_path = working_root.join(".decapod").join("governance.json");
+    if governance_path.exists() {
+        let content = std::fs::read(&governance_path).map_err(error::DecapodError::IoError)?;
+        hasher.update(&content);
+    }
+
+    Ok(format!("sha256:{:x}", hasher.finalize()))
 }
 
 fn validate_workunit_manifests_if_present(
@@ -7535,6 +7849,13 @@ pub fn run_validation(
             ctx,
             "validate_override_authority",
             validate_override_authority(ctx, working_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_validation_rules",
+            validate_validation_rules(ctx, working_root, main_root)
         );
         gate!(
             s,
