@@ -368,6 +368,36 @@ status changes distinguish success, not-found, and conflict, and emit their even
 only when the state transition wins. External trackers may remain the
 organizational system of record; they do not replace Decapod execution claims.
 
+### Release version check and opt-in auto-update (#1533)
+
+`decapod capabilities` and the `session acquire` update check query
+`https://crates.io/api/v1/crates/decapod`. crates.io's data access policy
+answers requests without an identifying `User-Agent` with HTTP 403, so every
+request sends `decapod/<version> (https://github.com/DecapodLabs/decapod)`.
+The response carries the newest release in the top-level `crate.max_version`
+field (there is no `version.num`), parsed by `parse_crates_max_version` in
+`src/decapod/lib.rs` and shared with `get_latest_version` in
+`src/decapod/core/rpc.rs`.
+
+The capabilities report never falls back to the running version when the
+registry request fails. It carries `version_check: "ok"` or
+`"unavailable"`, and `latest_version` is null when the registry could not be
+reached or parsed. `is_latest` is true only when `version_check` is `ok` and
+the registry reports the running version as the newest release, so
+`is_latest: true` unambiguously means "current", never "registry unreachable".
+
+Version detection may inform execution but must never independently authorize
+a mutation to the installed toolchain. Generated entrypoint contracts
+(AGENTS.md, CLAUDE.md, CODEX.md, GEMINI.md) therefore contain no
+`cargo install` bootstrap and gate nothing on `is_latest`; validation fails
+any entrypoint that invokes `cargo install`. `decapod session acquire` is the
+single authoritative update path: when a newer release exists it is reported
+on stderr, and `cargo install decapod` runs only behind the explicit opt-in
+`repo.session_auto_update = true` in `.decapod/config.toml` (default false).
+An unreachable registry never triggers an install. Repositories that pin
+Decapod through a package manager therefore never get a second unmanaged
+`~/.cargo/bin` install.
+
 Captured task verification artifacts include `task_id` and `task_revision`.
 A passing legacy record without this binding, a malformed binding, or a different
 task/revision projects `validation_status: stale`; a done task then projects
@@ -859,8 +889,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `194f126c8e9ab0f3c13d8608de9b563021be6fe7403b8ffe144a5f0ec80b8d4e`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (204 files)
+- Repository signal fingerprint: `83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (205 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

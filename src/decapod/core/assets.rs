@@ -687,8 +687,8 @@ Run this gate once when the agent starts and again after every new prompt or use
 
 ## Quick Start
 ```bash
-# Smart bootstrap: only install/init if a newer version is available
-(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
+# Version detection is informational only and never authorizes a toolchain change.
+# Updates flow only through `decapod session acquire` (auto-install is opt-in).
 decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
@@ -756,8 +756,8 @@ Run this gate once when the agent starts and again after every new prompt or use
 
 ## Mandatory Initialization
 ```bash
-# Smart bootstrap: only install/init if a newer version is available
-(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
+# Version detection is informational only and never authorizes a toolchain change.
+# Updates flow only through `decapod session acquire` (auto-install is opt-in).
 decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status

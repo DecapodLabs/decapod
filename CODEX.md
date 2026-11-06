@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.126.4 -->
-<!-- decapod-fingerprint: 76e769139117deb788a527a1a215d399821fec89339424613a46592872f55e07 -->
+<!-- decapod-release: 0.126.5 -->
+<!-- decapod-fingerprint: 426c0221fa1234e7770c23889e3e4b1758192568a24fc1e90ab0063b693d83d2 -->
 # CODEX.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -29,8 +29,8 @@ Run this gate once when the agent starts and again after every new prompt or use
 
 ## Quick Start
 ```bash
-# Smart bootstrap: only install/init if a newer version is available
-(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
+# Version detection is informational only and never authorizes a toolchain change.
+# Updates flow only through `decapod session acquire` (auto-install is opt-in).
 decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status

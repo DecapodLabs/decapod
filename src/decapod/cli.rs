@@ -722,6 +722,11 @@ pub struct RepoContext {
     pub capabilities: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub migration_validation: Option<MigrationValidationConfig>,
+    /// Opt-in: allow `session acquire` to run `cargo install decapod` when a
+    /// newer crates.io release exists. False by default; when false a newer
+    /// release is only reported (#1533).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub session_auto_update: bool,
 }
 
 impl RepoContext {

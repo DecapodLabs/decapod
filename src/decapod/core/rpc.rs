@@ -582,10 +582,35 @@ pub struct CapabilitiesReport {
     /// Active repository configuration
     #[serde(skip_serializing_if = "Option::is_none")]
     pub config: Option<crate::cli::DecapodProjectConfig>,
-    /// Current version status against crates.io
+    /// Current version status against crates.io. True only when the registry
+    /// was reached and reports the running version as the newest release; an
+    /// unreachable registry is never reported as current (#1533).
     pub is_latest: bool,
-    /// Latest version available on crates.io
-    pub latest_version: String,
+    /// Latest version available on crates.io; null when the registry could
+    /// not be reached or parsed (#1533).
+    pub latest_version: Option<String>,
+    /// Outcome of the crates.io reachability check
+    pub version_check: VersionCheckStatus,
+}
+
+/// Outcome of the crates.io version check (#1533). `Unavailable` means the
+/// registry request failed, so the running version's currency is unknown.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum VersionCheckStatus {
+    Ok,
+    Unavailable,
+}
+
+/// Pure version-status computation (#1533): `is_latest` is true only when the
+/// registry was reachable and reports `latest_version` equal to the running
+/// version. An unreachable registry is never "latest".
+pub(crate) fn compute_is_latest(
+    version_check: VersionCheckStatus,
+    latest_version: Option<&str>,
+    current_version: &str,
+) -> bool {
+    version_check == VersionCheckStatus::Ok && latest_version == Some(current_version)
 }
 
 /// Individual capability
@@ -709,8 +734,17 @@ pub fn generate_capabilities() -> CapabilitiesReport {
         .map(|root| crate::cli::DecapodProjectConfig::load(&root).ok())
         .unwrap_or_default();
 
-    let latest_version = get_latest_version();
-    let is_latest = latest_version == env!("CARGO_PKG_VERSION");
+    let (version_check, latest_version) = get_latest_version();
+    // #1533: `is_latest` is true only when the registry answered and reports
+    // the running version as newest. When the registry is unreachable the
+    // report says `version_check: "unavailable"` with `latest_version: null`;
+    // it never falls back to the running version, which would make
+    // `is_latest: true` ambiguous.
+    let is_latest = compute_is_latest(
+        version_check,
+        latest_version.as_deref(),
+        env!("CARGO_PKG_VERSION"),
+    );
 
     CapabilitiesReport {
         version: env!("CARGO_PKG_VERSION").to_string(),
@@ -982,29 +1016,35 @@ pub fn generate_capabilities() -> CapabilitiesReport {
         config,
         is_latest,
         latest_version,
+        version_check,
     }
 }
 
-fn get_latest_version() -> String {
+/// Query crates.io for the latest published release. Returns
+/// `(VersionCheckStatus::Ok, Some(version))` only when the registry answered
+/// and the body parsed; any failure is `(Unavailable, None)` — never a
+/// fallback to the running version (#1533).
+fn get_latest_version() -> (VersionCheckStatus, Option<String>) {
     use std::process::Command;
     let output = Command::new("curl")
         .args([
             "-s",
             "--connect-timeout",
             "2",
+            // crates.io answers HTTP 403 without an identifying User-Agent (#1533)
+            "--user-agent",
+            &crate::crates_io_user_agent(),
             "https://crates.io/api/v1/crates/decapod",
         ])
         .output();
 
     if let Ok(output) = output
         && output.status.success()
+        && let Some(v) = crate::parse_crates_max_version(&output.stdout)
     {
-        let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap_or_default();
-        if let Some(v) = json["crate"]["max_version"].as_str() {
-            return v.to_string();
-        }
+        return (VersionCheckStatus::Ok, Some(v));
     }
-    env!("CARGO_PKG_VERSION").to_string()
+    (VersionCheckStatus::Unavailable, None)
 }
 
 /// Create a successful response

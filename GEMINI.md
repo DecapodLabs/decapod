@@ -1,5 +1,5 @@
-<!-- decapod-release: 0.126.4 -->
-<!-- decapod-fingerprint: 424e68b145cab4bddf77bc97135f864ff90e2fd3e8235e8d4bb1a46fbf117f8d -->
+<!-- decapod-release: 0.126.5 -->
+<!-- decapod-fingerprint: 07229bb5b47757fd9f00fc8914ff1a6a6f3a7cf93fc32845edd77af65c996838 -->
 # GEMINI.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -29,8 +29,8 @@ Run this gate once when the agent starts and again after every new prompt or use
 
 ## Quick Start
 ```bash
-# Smart bootstrap: only install/init if a newer version is available
-(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
+# Version detection is informational only and never authorizes a toolchain change.
+# Updates flow only through `decapod session acquire` (auto-install is opt-in).
 decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
