@@ -981,6 +981,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbd1-2-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (feat: add reviewed ci_only declaration to source_coverage (#1531))",
+      "input_digest": "sha256:bab5fb9cbafcabf3bd5528d7bae1e9f8de24b12678d65494891781b77638102f",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
