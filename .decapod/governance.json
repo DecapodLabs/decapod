@@ -646,6 +646,22 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-1533-rebase-refresh",
+      "summary": "regenerate specs manifest and attestations on v0.126.5 after rebase (#1533)",
+      "input_digest": "sha256:bab67822e22fa5dbff7fe4171c23122f70ec1f9d8cdde76c3a7c9ff58e1a2488",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-11",
+      "summary": "rebind checkpoint to post-rebase tree (chore: regenerate specs projections on v0.126.5 after #1533 rebase)",
+      "input_digest": "sha256:cd226c55cb0bc763db4e053cab91edfabc1a6fd66a11115492e574dbd208f3a6",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
