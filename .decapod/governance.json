@@ -603,6 +603,11 @@
       "id": "regen-01m6qms6a5ec61mx-1",
       "summary": "Regenerate the 4 release-bound entrypoints (AGENTS/CLAUDE/CODEX/GEMINI) to decapod 0.127.0 (fingerprint 6657d308d43fe36d303771a1eaf125f40a2ce9d11de553d6fb3a6d8e3a2ae2ce) via decapod init with the v0.127.0 binary after rebasing onto master 56016070; master's #1539 entrypoint template (no cargo-install bootstrap) is retained.",
       "input_digest": "sha256:44de0fbdfdcd33c998075ca0849953c1e33745acc577e3ec0c1f7dbc9f88c25e"
+    },
+    {
+      "id": "regen-01m6qms6a5ec61mx-3",
+      "summary": "Repin .decapod/managed/Dockerfile.decapod to the v0.127.0 executor image (DECAPOD_IMAGE ghcr.io/decapodlabs/decapod:v0.127.0-debian, DECAPOD_VERSION=0.127.0), healed by decapod init --dry-run with the v0.127.0 binary after rebasing onto master 56016070.",
+      "input_digest": "sha256:ff9bc7a1d272843b4945b378d2fe013f860adb9b3dc372b4ac0fe025344b588a"
     }
   ],
   "intents": {
