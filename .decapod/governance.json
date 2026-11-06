@@ -702,6 +702,22 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-fix-2",
+      "summary": "rebind checkpoint to actual commit tree (chore: reconcile source digest after vega-native lock pin repair (#1533))",
+      "input_digest": "sha256:a4716dad0235c7a256e1f700c1c2886cefc85a0a7ebf445c09e47de6cd25e667",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-fix-review",
+      "summary": "rebind final #1533 commits and re-review canonical specs",
+      "input_digest": "sha256:e23073ebba94ee87e772897ba1fb237780639d62f1ca693c07cd34563b57a060",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
@@ -742,21 +758,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "ARCHITECTURE.md unchanged by #1533 beyond regenerated attestation fingerprint.",
+          "reason": "ARCHITECTURE.md unchanged by #1533 beyond attestation fingerprint.",
           "reviewed_code_fingerprint": "5d3c339f49ecb7e3c6be1249e973d709bfd0b785a88a9e7022281181e6f4dd9d",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-review after checkpoint rebind rewrite (#1533): INTERFACES.md documents the crates.io release version check with User-Agent and opt-in repo.session_auto_update auto-install.",
+          "reason": "Re-review after targeted checkpoint rebind (#1533): INTERFACES.md documents the crates.io version check with User-Agent and opt-in auto-update.",
           "reviewed_code_fingerprint": "5d3c339f49ecb7e3c6be1249e973d709bfd0b785a88a9e7022281181e6f4dd9d",
           "spec_material_hash": "702aa41ea87a0ef804d9d56c361f6851666ca90b644679cd94f531d398ed5223"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "SECURITY.md unchanged by #1533 beyond regenerated attestation fingerprint.",
+          "reason": "SECURITY.md unchanged by #1533 beyond attestation fingerprint.",
           "reviewed_code_fingerprint": "5d3c339f49ecb7e3c6be1249e973d709bfd0b785a88a9e7022281181e6f4dd9d",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
@@ -769,7 +785,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793948722Z"
+      "updated_at": "1793958128Z"
     },
     "trajectory": {
       "active_boundaries": [
