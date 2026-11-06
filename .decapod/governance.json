@@ -540,6 +540,11 @@
       "id": "fix1528-hist-4",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:66ddb29504ba1495be23b2b0ebb8808b509abbe344b3e3423d32845515c98fca"
+    },
+    {
+      "id": "fix1528-hist-5",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:da387ce173dbf0015511d1efb779d858b753201073f709d2ded71fc10a7ac556"
     }
   ],
   "intents": {
@@ -587,9 +592,9 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md with validation rules system interfaces documentation",
-          "reviewed_code_fingerprint": "0c02225b12f08aa54cd63e7052933ac81b13c2800d155d92df20185a70f9493f",
-          "spec_material_hash": "44fb9d8874b2a8d50d659b2e1642b44a4095eec550242499facfe71cbfadc57e"
+          "reason": "Updated INTERFACES.md with validation rules system interfaces documentation and dagger removal",
+          "reviewed_code_fingerprint": "1d6f110d7951f8e894747f11246bb93626044d4e4cfea98d1b22bc9c60839163",
+          "spec_material_hash": "36807d075cdc0b8f6bb5ddcdd9778f2211589056759615d4b50277ebd3f64b15"
         },
         {
           "disposition": "unchanged_with_reason",
@@ -607,7 +612,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793956307Z"
+      "updated_at": "1794000410Z"
     },
     "trajectory": {
       "active_boundaries": [
