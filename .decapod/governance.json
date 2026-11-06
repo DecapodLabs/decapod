@@ -1197,6 +1197,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbf1-9-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: refresh specs manifest and attestations after #1534 spec update)",
+      "input_digest": "sha256:303d7841ccffbca240c3ff9aa1230d460939e103617dabccea65b4a5738d12d2",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {
