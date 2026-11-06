@@ -733,6 +733,11 @@
       "id": "ckpt-1533-session-update-decision",
       "summary": "Extract pure decide_session_update; version detection never authorizes install without opt-in (#1533 follow-up)",
       "input_digest": "sha256:6519a082b9ed795cfca1007252574056fd3f927d68ceaf29ff19d4f65fd5746f"
+    },
+    {
+      "id": "ckpt-1533-payload-docs",
+      "summary": "payload-examples.md: replace version-aware auto-install example with informational capabilities check and session acquire as update path (#1533 follow-up)",
+      "input_digest": "sha256:06f133edd91725a60e30a02cfb28ea5ebd062a1eea41c853cd1e8fd353ea9826"
     }
   ],
   "intents": {
