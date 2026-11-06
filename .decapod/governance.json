@@ -608,6 +608,11 @@
       "id": "regen-01m6qms6a5ec61mx-3",
       "summary": "Repin .decapod/managed/Dockerfile.decapod to the v0.127.0 executor image (DECAPOD_IMAGE ghcr.io/decapodlabs/decapod:v0.127.0-debian, DECAPOD_VERSION=0.127.0), healed by decapod init --dry-run with the v0.127.0 binary after rebasing onto master 56016070.",
       "input_digest": "sha256:ff9bc7a1d272843b4945b378d2fe013f860adb9b3dc372b4ac0fe025344b588a"
+    },
+    {
+      "id": "regen-01m6qms6a5ec61mx-4",
+      "summary": "Reconcile reviewed_sources_digest to sha256:be7f48584127e97ccceb0b1bdbaf89d19e01ca65d20f2ae3772c68fd2a514772, the inventory reported by decapod init --dry-run (v0.127.0 binary) on this branch rebased onto master 56016070; the delta vs the pre-rebase digest is master's #1539/#1545 source changes, our branch still adds only source_ci_profile.rs.",
+      "input_digest": "sha256:6cafd47f0e5f1b7dffdaa5b97797f8a42a8476efff92596e8ced491a1af0eb55"
     }
   ],
   "intents": {

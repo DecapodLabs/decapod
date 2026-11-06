@@ -88,9 +88,13 @@ id = "decapod.pr-readiness.v1"
 # list; the Bazel target is auto-generated from the tests/*.rs glob). Verified via
 # `decapod init` reconciliation "Discovered source inventory" on this exact branch.
 # Reviewed 2026-11-06 for #870/#871: assets/tools/source_ci_profile.rs (+//:interop_conformance)
-# and assets/tools/vega-native/Cargo.lock (decapod path-dep 0.126.4 -> 0.126.5, required for
-# `cargo test --locked` under the v0.126.5 workspace). Verified via init reconciliation on this branch.
-reviewed_sources_digest = "sha256:ca14e2ff95c398d83749252d379d23da9e629794354a488ade835fe629ef76b2"
+# and assets/tools/vega-native/Cargo.lock (decapod path-dep, required for
+# `cargo test --locked` under the workspace). Re-reviewed 2026-11-06 after rebasing
+# onto master 56016070 (v0.127.0, #1539/#1545): the inventory additionally reflects
+# master's Cargo.toml/Cargo.lock (0.127.0), src/ and vega-native lock changes from
+# #1539; this branch still adds only source_ci_profile.rs on top. Verified via
+# `decapod init --dry-run` "Discovered source inventory" on the rebased branch.
+reviewed_sources_digest = "sha256:be7f48584127e97ccceb0b1bdbaf89d19e01ca65d20f2ae3772c68fd2a514772"
 
 [custody]
 isolation = "container"
