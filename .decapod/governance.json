@@ -558,6 +558,16 @@
       "id": "rebind-01m6qms6a5ec61mx-3",
       "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
       "input_digest": "sha256:ba10812329d33f87e1e2bf1748015204619fc5bb62a4b0b56588c916fecc88fb"
+    },
+    {
+      "id": "feat_01m6qms6a5ec61mx-interop-vega-lock",
+      "summary": "Commit vega-native Cargo.lock path-dep bump (decapod 0.126.4 -> 0.126.5) required for cargo test --locked under the v0.126.5 workspace; reconcile reviewed_sources_digest accordingly (ca14e2ff...).",
+      "input_digest": "sha256:0240465c12ab3a266282f65cecf684e0ef226cd86842af3241b1bb829f16f7c1"
+    },
+    {
+      "id": "rebind-01m6qms6a5ec61mx-4",
+      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
+      "input_digest": "sha256:b892668a8e49f4e636d3b005fd195c9bf61993c20bff3a96fedd1253cf27c8bc"
     }
   ],
   "intents": {
