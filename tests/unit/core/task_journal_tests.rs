@@ -1452,3 +1452,108 @@ fn legacy_jsonl_reducer_cannot_write_a_modern_journaled_target() {
     assert_eq!(event_count(&conn), todo_events_before);
     // Broker rejection audit is intentionally separate from task authority.
 }
+
+#[test]
+fn historical_gap_repair_records_reason_and_range_then_baselines_current_state() {
+    let (_temp, conn) = fixture();
+    seed_complete_projection(&conn);
+    baseline(&conn);
+
+    // A domain event lands after the last checkpoint without a new one,
+    // exactly the historical-gap shape from #1534.
+    domain_event(&conn, TASK, "task.release").unwrap();
+    conn.execute(
+        "UPDATE tasks SET title='Released by old build', revision=revision+1 WHERE id=?1",
+        [TASK],
+    )
+    .unwrap();
+
+    // verify and plain checkpoint fail closed on the suffix.
+    assert_conflict(
+        verify(&conn).unwrap_err(),
+        "TASK_JOURNAL_INCOMPLETE_HISTORY",
+    );
+    assert_conflict(
+        transaction(&conn, || checkpoint(&conn, "journal-test")).unwrap_err(),
+        "TASK_JOURNAL_INCOMPLETE_HISTORY",
+    );
+
+    // Repairing a task with no checkpointed history is rejected.
+    assert_conflict(
+        transaction(&conn, || {
+            checkpoint_with_gap(&conn, "journal-test", Some(("no-such-task", "reason")))
+        })
+        .unwrap_err(),
+        "no checkpointed history",
+    );
+
+    // The reviewed repair records reason + range and appends a transition.
+    let result = transaction(&conn, || {
+        checkpoint_with_gap(
+            &conn,
+            "journal-test",
+            Some((
+                TASK,
+                "reviewed: pre-0.126 release events are historical evidence",
+            )),
+        )
+    })
+    .unwrap();
+    let accepted = &result["accepted_historical_gap"];
+    assert_eq!(accepted["task_id"], TASK);
+    assert_eq!(
+        accepted["reason"],
+        "reviewed: pre-0.126 release events are historical evidence"
+    );
+    assert_eq!(accepted["accepted_event_count"], 1);
+    assert!(
+        accepted["accepted_from_seq"].as_u64().unwrap()
+            <= accepted["accepted_through_seq"].as_u64().unwrap()
+    );
+
+    // The gap_accepted bookkeeping event is recorded with the range.
+    let gap_events: Vec<_> = conn
+        .prepare("SELECT event_type, payload FROM events WHERE stream='todo' AND event_type=?1")
+        .unwrap()
+        .query_map([EVENT_TYPE_GAP_ACCEPTED], |r| {
+            Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
+        })
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+    assert_eq!(gap_events.len(), 1);
+    let envelope: serde_json::Value = serde_json::from_str(&gap_events[0].1).unwrap();
+    let payload = &envelope["payload"];
+    assert_eq!(payload["task_id"], TASK);
+    assert_eq!(payload["accepted_event_count"], 1);
+
+    // A transition checkpoint for the current projection was appended.
+    let task_records: Vec<_> = records(&conn)
+        .into_iter()
+        .filter(|record| record.task_id == TASK)
+        .collect();
+    assert_eq!(task_records.len(), 2);
+    assert_eq!(task_records[1].kind, CheckpointKind::Transition);
+    assert_eq!(task_records[1].operation, "historical_gap_accepted");
+
+    // verify and plain checkpoint now succeed.
+    assert_eq!(verify(&conn).unwrap()["status"], "ok");
+    assert_eq!(
+        transaction(&conn, || checkpoint(&conn, "journal-test")).unwrap()["status"],
+        "ok"
+    );
+}
+
+#[test]
+fn historical_gap_repair_without_suffix_is_rejected() {
+    let (_temp, conn) = fixture();
+    seed_task(&conn, TASK);
+    baseline(&conn);
+    assert_conflict(
+        transaction(&conn, || {
+            checkpoint_with_gap(&conn, "journal-test", Some((TASK, "nothing to accept")))
+        })
+        .unwrap_err(),
+        "no uncheckpointed domain-event suffix",
+    );
+}

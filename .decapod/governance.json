@@ -1165,6 +1165,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbf1-5-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (test: cover historical-gap repair in task journal tests (#1534))",
+      "input_digest": "sha256:96abb9af16cfec248839ba19538be9f8037f3c28d84ffb0c068fc4340e23166b",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {
