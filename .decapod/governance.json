@@ -1245,6 +1245,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbf1-15-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: regenerate v0.126.5 entrypoints and re-review specs after #1534 rebase)",
+      "input_digest": "sha256:3fa9c91a0e8b92096d092d86161a68f45b7a29f2d59f1ffd95bdae4a7d321b16",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {
