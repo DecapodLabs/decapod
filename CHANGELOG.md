@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.127.0](https://github.com/DecapodLabs/decapod/compare/v0.126.5...v0.127.0) - 2026-11-06
+
+### Added
+
+- add repo.session_auto_update opt-in config key ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+
+### Fixed
+
+- repair stale vega-native Cargo.lock decapod pin for v0.126.5 ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- correct crates.io version fetch and make auto-install opt-in ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- identify crates.io version check with User-Agent ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+
+### Other
+
+- Fix specs manifest entrypoint hashes with branch-built binary ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- Re-review canonical specs against final code state ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- use .ok() when mapping the registry fetch result ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- Regenerate governed entrypoints without the cargo-install bootstrap ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- Add CHANGELOG Unreleased entry for the entrypoint/version-check interface change ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- Document no-auto-install entrypoint contract and unambiguous is_latest in INTERFACES ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- Add behavioral regression tests for update authorization ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- Document informational version check and session-acquire update path ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- Make session acquire the single authoritative update path; disambiguate is_latest ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- Enforce no-auto-install entrypoint contract in validate ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- Remove cargo-install auto-bootstrap from generated entrypoint templates ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- refresh specs manifest after #1533 digest reconcile
+- reconcile source digest after vega-native lock pin repair ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- regenerate v0.126.5 entrypoints and re-review specs after #1533 rebase
+- regenerate specs projections on v0.126.5 after #1533 rebase
+- rebase #1533 onto v0.126.5 and reconcile source digest
+- refresh specs manifest after #1533 digest reconcile
+- reconcile proof profile source digest for #1533 branch
+- refresh specs manifest and attestations after #1533 spec update
+- document release version check and opt-in auto-update in INTERFACES.md ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- cover crates.io version check parsing and opt-in default ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
+- seed workspace branch for #1533 on v0.126.4 base
+
 ### Fixed
 
 - interface: generated entrypoint contracts no longer run `cargo install decapod`; `decapod session acquire` is the single authoritative update path (auto-install stays opt-in via `repo.session_auto_update`), and `capabilities` reports `version_check` ok/unavailable with a null `latest_version` when crates.io is unreachable so `is_latest: true` is unambiguous ([#1533](https://github.com/DecapodLabs/decapod/issues/1533))
