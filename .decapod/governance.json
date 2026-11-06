@@ -997,6 +997,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbd1-4-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (test: update SourceCoverage constructor in lib_init_prompt_tests (#1531))",
+      "input_digest": "sha256:050b5ecaa89e0e089c90b20db507dbb545f24f06f25b0c5e786b50785f3bd528",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
