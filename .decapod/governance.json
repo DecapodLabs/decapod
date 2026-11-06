@@ -748,6 +748,11 @@
       "id": "ckpt-1533-interfaces-spec",
       "summary": "INTERFACES.md: document no-auto-install entrypoint contract, session acquire as sole update path, unambiguous version_check/is_latest; refresh spec projections (#1533 follow-up)",
       "input_digest": "sha256:392a594585c0eef1be7e59994833e407c70013655f72a6f10e3f574ae44c1ecc"
+    },
+    {
+      "id": "ckpt-1533-changelog",
+      "summary": "CHANGELOG Unreleased entry for rpc.rs interface change: no auto-install entrypoints, session acquire sole update path, unambiguous is_latest (#1533 follow-up)",
+      "input_digest": "sha256:0e9ced5988502a3a1d8edaeb6dd5b18fd75d3bf74162db27a3770e73460aa776"
     }
   ],
   "intents": {

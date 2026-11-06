@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- interface: generated entrypoint contracts no longer run `cargo install decapod`; `decapod session acquire` is the single authoritative update path (auto-install stays opt-in via `repo.session_auto_update`), and `capabilities` reports `version_check` ok/unavailable with a null `latest_version` when crates.io is unreachable so `is_latest: true` is unambiguous ([#1533](https://github.com/DecapodLabs/decapod/issues/1533))
+
 ## [0.126.5](https://github.com/DecapodLabs/decapod/compare/v0.126.4...v0.126.5) - 2026-11-06
 
 ### Fixed
