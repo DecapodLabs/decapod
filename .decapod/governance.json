@@ -564,6 +564,14 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-rebind-4",
+      "summary": "rebind checkpoint to post-rebase tree (fix: identify crates.io version check with User-Agent (#1533))",
+      "input_digest": "sha256:0334a75d6a326990215d44af7023839a326f3b0cebdbb0a799c4dfd2bfd12d30",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
