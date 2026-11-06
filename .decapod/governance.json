@@ -1045,6 +1045,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbd1-10-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: rebase #1531 onto v0.126.5 and reconcile source digest)",
+      "input_digest": "sha256:f73ace7d88490c91ce77b44fd7897b4999359f47447f396ec2f88a72ac04c29b",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
