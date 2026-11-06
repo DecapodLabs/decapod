@@ -728,6 +728,11 @@
       "id": "ckpt-1533-validate-noautoinstall",
       "summary": "validate.rs: entrypoints must not invoke cargo install; session acquire is the only update path (#1533 follow-up)",
       "input_digest": "sha256:8c3ef9d935f85bd203ebf0f1168f96bd0380d19b4e247ecbfe84d7628008c031"
+    },
+    {
+      "id": "ckpt-1533-session-update-decision",
+      "summary": "Extract pure decide_session_update; version detection never authorizes install without opt-in (#1533 follow-up)",
+      "input_digest": "sha256:6519a082b9ed795cfca1007252574056fd3f927d68ceaf29ff19d4f65fd5746f"
     }
   ],
   "intents": {

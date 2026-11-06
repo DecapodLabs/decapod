@@ -3911,6 +3911,43 @@ fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error
 use crate::core::ansi::AnsiExt;
 use crate::core::migration::DECAPOD_VERSION;
 
+/// Decision for the `session acquire` update path (#1533). Version detection
+/// may inform execution, but only the explicit `repo.session_auto_update`
+/// opt-in authorizes a toolchain mutation; an unreachable registry never
+/// authorizes anything.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SessionUpdateDecision {
+    /// Registry unreachable or unparseable: currency unknown, never install.
+    SkipUnknownRegistry,
+    /// Running version is current.
+    UpToDate,
+    /// Newer release exists; report it only (default, no opt-in).
+    ReportOnly,
+    /// Newer release exists and `repo.session_auto_update = true`: install.
+    Install,
+}
+
+/// Pure decision behind `check_and_update_version` (#1533), split out so the
+/// opt-in / opt-out / unavailable-registry behavior is testable without
+/// spawning curl or cargo.
+pub(crate) fn decide_session_update(
+    current_version: &str,
+    latest_version: Option<&str>,
+    session_auto_update: bool,
+) -> SessionUpdateDecision {
+    let Some(latest) = latest_version else {
+        return SessionUpdateDecision::SkipUnknownRegistry;
+    };
+    if !version_gt(latest, current_version) {
+        return SessionUpdateDecision::UpToDate;
+    }
+    if session_auto_update {
+        SessionUpdateDecision::Install
+    } else {
+        SessionUpdateDecision::ReportOnly
+    }
+}
+
 fn check_and_update_version(session_auto_update: bool) -> Result<bool, error::DecapodError> {
     let current_version = DECAPOD_VERSION;
 
@@ -3922,28 +3959,39 @@ fn check_and_update_version(session_auto_update: bool) -> Result<bool, error::De
     }
 
     let latest_version = match fetch_latest_crates_version() {
-        Ok(v) => v,
-        Err(_) => return Ok(false),
+        Ok(v) => Some(v),
+        Err(_) => None,
     };
 
-    if version_gt(&latest_version, current_version) {
-        if !session_auto_update {
+    match decide_session_update(current_version, latest_version.as_deref(), session_auto_update) {
+        SessionUpdateDecision::SkipUnknownRegistry | SessionUpdateDecision::UpToDate => {
+            return Ok(false);
+        }
+        SessionUpdateDecision::ReportOnly => {
             // Automatic install is an explicit opt-in (#1533): by default a
             // newer release is only reported, never installed.
+            let latest = latest_version.unwrap_or_default();
             eprintln!(
                 "{} Decapod v{} → v{} available; set repo.session_auto_update = true in .decapod/config.toml to auto-install.",
                 "⚠".bright_yellow(),
                 current_version,
-                latest_version
+                latest
             );
             return Ok(false);
         }
-        eprintln!(
-            "{} Decapod v{} → v{}, updating...",
-            "⚠".bright_yellow(),
-            current_version,
-            latest_version
-        );
+        SessionUpdateDecision::Install => {
+            let latest_version = latest_version.unwrap_or_default();
+            eprintln!(
+                "{} Decapod v{} → v{}, updating...",
+                "⚠".bright_yellow(),
+                current_version,
+                latest_version
+            );
+        }
+    }
+
+    {
+        let latest_version = latest_version.unwrap_or_default();
 
         let _ = backup_decapod_state(); // Best effort
 
@@ -9523,7 +9571,9 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
 /// Show version information
 fn show_version_info() -> Result<(), error::DecapodError> {
     println!("Decapod version: {}", migration::DECAPOD_VERSION);
-    println!("  Update: cargo install decapod");
+    println!(
+        "  Update: decapod session acquire (auto-install is opt-in via repo.session_auto_update)"
+    );
 
     Ok(())
 }
