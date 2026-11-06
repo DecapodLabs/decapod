@@ -723,6 +723,11 @@
       "id": "ckpt-1533-entrypoint-noautoinstall",
       "summary": "Remove cargo-install auto-bootstrap from generated entrypoint templates in assets.rs (#1533 follow-up)",
       "input_digest": "sha256:7835adccaa328511ed66e55e8559d72b994740aeef74da13f4ea66553dd30deb"
+    },
+    {
+      "id": "ckpt-1533-validate-noautoinstall",
+      "summary": "validate.rs: entrypoints must not invoke cargo install; session acquire is the only update path (#1533 follow-up)",
+      "input_digest": "sha256:8c3ef9d935f85bd203ebf0f1168f96bd0380d19b4e247ecbfe84d7628008c031"
     }
   ],
   "intents": {
