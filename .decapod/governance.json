@@ -768,6 +768,11 @@
       "id": "ckpt-1533-spec-rereview",
       "summary": "Re-review canonical specs against final code state after clippy fix; refresh projections (clears CI STALE_SPEC_REVIEW) (#1533 follow-up)",
       "input_digest": "sha256:3f3a6b6c3b41a1b799ecb09aeb5f3e129c57fc998454e9d1cd44307e13b0507a"
+    },
+    {
+      "id": "ckpt-1533-manifest-branch-binary",
+      "summary": "Refresh specs manifest entrypoint template hashes with the branch-built binary (old 0.126.5 binary had stale templates) to clear CI drift check (#1533 follow-up)",
+      "input_digest": "sha256:42c72499a2e677c43cd587b05f642273fc0592157414035d665e062d4af38dc4"
     }
   ],
   "intents": {
