@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "c4ab88b1839829be190e56adc0d84d632a613d72",
+    "accepted_commit": "f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -519,95 +519,37 @@
     }
   },
   "change": {
-    "id": "change_01M6NFG76NGC7VMAFSPCN6P57P",
-    "base_commit": "c4ab88b1839829be190e56adc0d84d632a613d72",
+    "id": "change_01M6NAN1527V01264",
+    "base_commit": "f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "ckpt-1526-fix-01",
-      "summary": "fix: drain validation worker stdout/stderr concurrently to prevent pipe deadlock (#1526)",
-      "input_digest": "sha256:3e7ee91de3d7e546173a2d8cd4f45ee615eb5925dad00d497046a8fde5b32d52",
+      "id": "ckpt-1527-v01264-01",
+      "summary": "#1527 fix rebased onto v0.126.4 master (f2276c6f) under fresh PR identity: recover --stale lists stale done tasks without child validation (deterministic cfg(test) spawn-counter regression tests, mutation-verified); release-bound entrypoints/Dockerfile pin regenerated to 0.126.4; specs refreshed and canonical spec reviews recorded (INTERFACES updated; ARCHITECTURE/SECURITY unchanged-with-reason); vega-native lock pin 0.126.4; source inventory digest reconciled in config.toml",
+      "input_digest": "sha256:dbeb60019cf2ed72eae7760cbe3e60ea09bc4ec343f51ae5272c94574c5eabe9",
       "proof_refs": [
-        "cargo_check",
-        "fix_applied"
-      ]
-    },
-    {
-      "id": "ckpt-1526-manifest-01",
-      "summary": "chore: refresh specs manifest after initial checkpoint",
-      "input_digest": "sha256:857bc46a62a7fbeb66333c5253fbbd58d5d21c5761ff3be63e6f4e4c410ab0da",
-      "proof_refs": [
-        "specs_refreshed"
-      ]
-    },
-    {
-      "id": "ckpt-1526-reconcile-02",
-      "summary": "chore: reconcile proof profile source digest and approve plan for #1526",
-      "input_digest": "sha256:7c1f0898fd2244766dfe73c1b95f5626bd166af7521101e6c2bce12630897c6b",
-      "proof_refs": [
-        "inventory_reconciled"
-      ]
-    },
-    {
-      "id": "ckpt-1526-refresh-03",
-      "summary": "chore: refresh specs projections after config digest reconciliation",
-      "input_digest": "sha256:e2e73ac5480bf365af2d6c293da400db1e961c9b7b5e00c841cb57685c229e1f",
-      "proof_refs": [
-        "specs_refreshed"
-      ]
-    },
-    {
-      "id": "ckpt-1526-specreview-04",
-      "summary": "record unchanged-with-reason spec reviews for INTERFACES/ARCHITECTURE/SECURITY",
-      "input_digest": "sha256:63fe65713dfcfbb2c25a6cb75d5efd05933516c1212ded24c06be054fe6f5972",
-      "proof_refs": [
-        "spec_reviews_honest"
-      ]
-    },
-    {
-      "id": "ckpt-1526-lockfix-06",
-      "summary": "fix: update vega-native Cargo.lock decapod pin 0.121.0 -> 0.126.3; reconcile source digest",
-      "input_digest": "sha256:509d2dd1ff372818cb05f0b33e9663317a2d5e9f56a30b54159242c14a6a79ae",
-      "proof_refs": [
-        "inventory_reconciled",
-        "lockfile_repaired"
-      ]
-    },
-    {
-      "id": "ckpt-1526-pipe-regression-tests",
-      "summary": "add deterministic regression tests for #1526 pipe-capacity deadlock and timeout cleanup; extract supervise_piped_child and propagate reader-thread I/O errors as VALIDATE_WORKER_FAILED",
-      "input_digest": "sha256:dea8f9bfbb205ca18a43146aaf89d73dcc83527a9e80aa908b39cc5215e5aae0",
-      "proof_refs": [
-        "lib_tests_vs_base",
-        "validate_pipe_regression_tests"
-      ]
-    },
-    {
-      "id": "ckpt-1526-clippy-doc-fix",
-      "summary": "fix doc_lazy_continuation lint in validate pipe regression test doc comment (CI clippy -D warnings)",
-      "input_digest": "sha256:cfc062fc87a902868a4c11342eeb2ee7f2390b3e54bbd18a09d44169855ecfb4",
-      "proof_refs": [
-        "clippy_doc_lazy_continuation_fix"
+        "regression_tests",
+        "spec_reviews"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M6NFG76NGC7VMAFSPCN6P57P": {
+    "intent:branch_01M6NAN1527V01264": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "src/decapod/plugins/verify.rs, tests/unit/plugins/verify_completion_tests.rs, .decapod/managed/specs/INTERFACES.md"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
+      "id": "intent:branch_01M6NAN1527V01264",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
-      "refined_intent": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
+      "raw_intent": "Fix qa verify recover --stale runs validation instead of listing stale items (issue #1527)",
+      "refined_intent": "Recover arm honors global --stale: lists stale done tasks in JSON and returns without child validation; deterministic cfg(test) spawn-counter tests prove the listing path never enters run_validate_and_hash and mutates no state; branch rebased onto v0.126.4 master (f2276c6f) with governance and checksums refreshed",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -620,7 +562,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
+      "intent": "Make `decapod qa verify recover --stale --json` list stale done tasks and return without child validation: the Recover arm honors the global --stale flag, shares the extracted stale-listing helpers with the default --stale path, and never enters run_validate_and_hash on the listing path (proven by cfg(test) spawn-counter regression tests). Rebased onto v0.126.4 master with governance/checksums refreshed.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -630,40 +572,40 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed against current code for the #1526 regression tests (tests/unit/lib_validate_pipe_tests.rs doc fix only); no interface, architecture, or security surface changed, so content is unchanged with reason.",
-          "reviewed_code_fingerprint": "eb3f6119bfe57e46e28f96ede5d47c5eb7b2d19198bea1860423c628d679d396",
+          "reason": "Re-reviewed after rebase onto v0.126.4 master (f2276c6f): no architecture change; the #1527 fix only makes the existing Recover arm honor the global --stale listing path in src/decapod/plugins/verify.rs, with a cfg(test)-only validation-spawn counter as the test seam.",
+          "reviewed_code_fingerprint": "194f126c8e9ab0f3c13d8608de9b563021be6fe7403b8ffe144a5f0ec80b8d4e",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed against current code for the #1526 regression tests (tests/unit/lib_validate_pipe_tests.rs doc fix only); no interface, architecture, or security surface changed, so content is unchanged with reason.",
-          "reviewed_code_fingerprint": "eb3f6119bfe57e46e28f96ede5d47c5eb7b2d19198bea1860423c628d679d396",
-          "spec_material_hash": "b385ba0a35344dbd537936013a41c61841e64cf626356fb54e153eafd9857de7"
+          "reason": "INTERFACES.md materially documents that --stale is global and applies to qa verify recover (#1527): it lists stale done tasks (last_verified_at, verification_policy_days) and returns without child validation. Reviewed on the rebased v0.126.4 tree against final verify.rs bytes; regression tests prove the listing path never enters run_validate_and_hash.",
+          "reviewed_code_fingerprint": "194f126c8e9ab0f3c13d8608de9b563021be6fe7403b8ffe144a5f0ec80b8d4e",
+          "spec_material_hash": "71c4b88df14d938949a1dcc4328d142a9d216b02cd4b5e42e58118ea8d6ee706"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed against current code for the #1526 regression tests (tests/unit/lib_validate_pipe_tests.rs doc fix only); no interface, architecture, or security surface changed, so content is unchanged with reason.",
-          "reviewed_code_fingerprint": "eb3f6119bfe57e46e28f96ede5d47c5eb7b2d19198bea1860423c628d679d396",
+          "reason": "Re-reviewed after rebase onto v0.126.4 master: no security behavior change; recover --stale remains a read-only listing that never spawns child validation and never mutates task/recovery state (proven by the #1527 regression tests).",
+          "reviewed_code_fingerprint": "194f126c8e9ab0f3c13d8608de9b563021be6fe7403b8ffe144a5f0ec80b8d4e",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [],
-      "title": "Fix validate deadlock when worker output exceeds pipe capacity (Issue #1526)",
+      "title": "Fix qa verify recover --stale runs validation instead of listing stale items (Issue #1527)",
       "todo_ids": [
-        "bugs_01m6namrghjwn6hk"
+        "bugs_01m6nan350dwndhn"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793902117Z"
+      "updated_at": "1793939271Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7c6e8b7c023ef2d51c273d95e1234fdf49e9f509aabfe02b87e802341e697e8a",
+      "artifact_hash": "sha256:2f8e93129ea78a944a292ea6632800994f604c623fe0796ce4fd026755a7eba4",
       "checks": [
         {
           "name": "cargo_check",
@@ -674,143 +616,87 @@
           "status": "passed"
         },
         {
-          "name": "clippy_doc_lazy_continuation_fix",
+          "name": "inventory_digest_reconciled",
           "status": "passed"
         },
         {
-          "name": "fix_applied",
+          "name": "plugins_verify_tests_47of47",
           "status": "passed"
         },
         {
-          "name": "lib_tests_vs_base",
+          "name": "rebase_onto_f2276c6f_v01264",
           "status": "passed"
         },
         {
-          "name": "validate_pipe_regression_tests",
+          "name": "release_bound_projections_regenerated_01264",
+          "status": "passed"
+        },
+        {
+          "name": "spec_reviews_recorded",
+          "status": "passed"
+        },
+        {
+          "name": "specs_refresh",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
+            "intent_id": "intent:branch_01M6NAN1527V01264",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
+            "intent_id": "intent:branch_01M6NAN1527V01264",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
+            "detail": "trajectory:branch_01M6NAN1527V01264",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
+            "intent_id": "intent:branch_01M6NAN1527V01264",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6NFG79SBFYWDWXMWZ4NWDP7": {
+          "branch_01M6NAN1527V01264": {
             "evidence_only": true,
-            "id": "branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
-            "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
+            "id": "branch_01M6NAN1527V01264",
+            "intent_id": "intent:branch_01M6NAN1527V01264",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/lib.rs",
-                  ".decapod/managed/specs/VALIDATION.md"
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/plugins/verify_completion_tests.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/plugins/verify_completion_tests.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/config.toml",
+                  "assets/tools/vega-native/Cargo.lock"
                 ],
                 "proof_refs": [
-                  "fix_applied",
-                  "cargo_check"
+                  "cargo_fmt_check",
+                  "cargo_check",
+                  "plugins_verify_tests_47of47",
+                  "rebase_onto_f2276c6f_v01264",
+                  "release_bound_projections_regenerated_01264",
+                  "specs_refresh",
+                  "spec_reviews_recorded",
+                  "inventory_digest_reconciled"
                 ],
                 "scope": [
-                  "root"
+                  "src/decapod/plugins/verify.rs, tests/unit/plugins/verify_completion_tests.rs, .decapod/managed/specs/INTERFACES.md"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/lib.rs",
-                  ".decapod/managed/specs/VALIDATION.md"
-                ],
-                "proof_refs": [
-                  "fix_applied",
-                  "cargo_check"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "src/decapod/lib.rs",
-                  "tests/unit/lib_validate_pipe_tests.rs"
-                ],
-                "proof_refs": [
-                  "validate_pipe_regression_tests",
-                  "cargo_fmt_check",
-                  "lib_tests_vs_base"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "tests/unit/lib_validate_pipe_tests.rs"
-                ],
-                "proof_refs": [
-                  "clippy_doc_lazy_continuation_fix",
-                  "validate_pipe_regression_tests"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
                 "validation_findings": []
               }
             ]
@@ -818,27 +704,26 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [],
       "inspected_files": [
-        "src/decapod/lib.rs",
-        "tests/unit/lib_validate_pipe_tests.rs"
+        "src/decapod/plugins/verify.rs",
+        "tests/unit/plugins/verify_completion_tests.rs"
       ],
-      "intent_id": "intent:change_01M6NFG76NGC7VMAFSPCN6P57P",
+      "intent_id": "intent:branch_01M6NAN1527V01264",
       "modified_files": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "src/decapod/lib.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        ".decapod/config.toml",
+        ".decapod/managed/specs/INTERFACES.md",
+        "assets/tools/vega-native/Cargo.lock",
+        "src/decapod/plugins/verify.rs",
+        "tests/unit/plugins/verify_completion_tests.rs"
       ],
       "repo_scope": [
-        "root"
+        "src/decapod/plugins/verify.rs, tests/unit/plugins/verify_completion_tests.rs, .decapod/managed/specs/INTERFACES.md"
       ],
-      "run_id": "branch_01M6NFG79SBFYWDWXMWZ4NWDP7",
+      "run_id": "branch_01M6NAN1527V01264",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6namrghjwn6hk",
+      "task_id": "bugs_01m6nan350dwndhn",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

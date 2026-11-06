@@ -1324,3 +1324,283 @@ fn recover_cli_accepts_explicit_per_task_artifact_inputs() {
         _ => panic!("wrong recovery command"),
     }
 }
+
+fn task_rows(store: &Store) -> Vec<serde_json::Value> {
+    with_conn(store, |conn| {
+        let mut stmt = conn
+            .prepare("SELECT id, status, revision, completed_at, updated_at FROM tasks ORDER BY id")
+            .unwrap();
+        stmt.query_map([], |row| {
+            Ok(serde_json::json!([
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, i64>(2)?,
+                row.get::<_, Option<String>>(3)?,
+                row.get::<_, Option<String>>(4)?,
+            ]))
+        })
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap()
+    })
+}
+
+const FRESH_ID: &str = "bugs_completion_fresh";
+const OPEN_ID: &str = "bugs_completion_open";
+
+/// Counts only governed event streams (task/verify/worker), excluding the
+/// broker's own audit stream that every DB access appends to.
+fn governed_event_count(store: &Store) -> i64 {
+    count(
+        store,
+        "SELECT COUNT(*) FROM events WHERE stream IN ('todo', 'verification', 'external_actions')",
+    )
+}
+
+/// Fixture for #1527: one stale done task (no verification record, drifted
+/// revision), one freshly verified done task, and one non-done task.
+fn stale_fixture() -> (TempDir, Store) {
+    let (dir, store) = fixture();
+    with_conn(&store, |conn| {
+        conn.execute(
+            "UPDATE tasks SET status = 'done', completed_at = '2Z', revision = revision + 1 WHERE id = ?1",
+            [ID],
+        )
+        .unwrap();
+    });
+    with_conn(&store, |conn| {
+        conn.execute(
+            "INSERT INTO tasks(id, hash, title, status, created_at, updated_at, dir_path, scope, revision)
+             VALUES(?1, 'fresh', 'Freshly verified fixture', 'claimed', '1Z', '1Z', '.', '', 8)",
+            [FRESH_ID],
+        ).unwrap();
+    });
+    capture_done(&store, dir.path(), FRESH_ID);
+    with_conn(&store, |conn| {
+        conn.execute(
+            "INSERT INTO tasks(id, hash, title, status, created_at, updated_at, dir_path, scope, revision)
+             VALUES(?1, 'open', 'Open fixture', 'claimed', '1Z', '1Z', '.', '', 2)",
+            [OPEN_ID],
+        ).unwrap();
+    });
+    (dir, store)
+}
+
+/// Parse the exact #1527 invocation through the real top-level CLI:
+/// `decapod qa verify recover --stale --json`.
+fn parse_qa_verify_recover_stale() -> VerifyCli {
+    use crate::cli::{Cli, Command, QaCli, QaCommand};
+    let cli =
+        Cli::try_parse_from(["decapod", "qa", "verify", "recover", "--stale", "--json"]).unwrap();
+    let Command::Qa(QaCli {
+        command: QaCommand::Verify(verify),
+    }) = cli.command
+    else {
+        panic!("expected qa verify, got {:?}", cli.command);
+    };
+    verify
+}
+
+#[test]
+fn recover_stale_lists_stale_items_without_running_validation() {
+    let (dir, store) = stale_fixture();
+    let tasks_before = task_rows(&store);
+    let baselines_before = baseline_rows(&store);
+    let events_before = governed_event_count(&store);
+
+    // Real CLI/control path for `decapod qa verify recover --stale --json`.
+    let cli = parse_qa_verify_recover_stale();
+    assert!(cli.stale);
+    assert!(cli.json);
+    assert!(matches!(cli.command, Some(VerifyCommand::Recover { .. })));
+
+    let spawns_before = validation_spawn_count();
+    run_verify_cli(&store, dir.path(), cli)
+        .expect("recover --stale must list stale items instead of running validation (#1527)");
+    assert_eq!(
+        validation_spawn_count(),
+        spawns_before,
+        "recover --stale must not invoke child validation or launch the validation worker (#1527)"
+    );
+
+    // The listing is valid structured JSON with the correct stale identity.
+    let (checked_at, items) = collect_stale_items(&store).unwrap();
+    let parsed: serde_json::Value =
+        serde_json::from_str(&stale_listing_json(&checked_at, &items)).unwrap();
+    assert!(parsed["checked_at"].as_str().is_some_and(|v| !v.is_empty()));
+    let stale = parsed["stale"]
+        .as_array()
+        .expect("stale must be a JSON array");
+    assert_eq!(
+        stale.len(),
+        1,
+        "only the stale done task may be listed: {stale:?}"
+    );
+    assert_eq!(stale[0]["todo_id"].as_str(), Some(ID));
+    assert!(
+        stale[0]["last_verified_at"].is_null(),
+        "never-verified done task must report null last_verified_at: {stale:?}"
+    );
+    assert_eq!(stale[0]["verification_policy_days"].as_i64(), Some(90));
+    assert!(
+        stale.iter().all(|item| {
+            item["todo_id"].as_str() != Some(FRESH_ID) && item["todo_id"].as_str() != Some(OPEN_ID)
+        }),
+        "non-stale and non-done tasks must not be promoted into the stale set: {stale:?}"
+    );
+
+    // Listing must not mutate recovery or task state in any way.
+    assert_eq!(
+        task_rows(&store),
+        tasks_before,
+        "listing must not mutate tasks"
+    );
+    assert_eq!(
+        baseline_rows(&store),
+        baselines_before,
+        "listing must not create or alter verification evidence"
+    );
+    assert_eq!(
+        governed_event_count(&store),
+        events_before,
+        "listing must not append task/verify/worker events"
+    );
+}
+
+#[test]
+fn recover_without_stale_keeps_recover_path_and_still_enters_validation() {
+    let (dir, store) = stale_fixture();
+    // Give the stale done task a usable-but-drifted baseline (file artifacts
+    // present, task_revision no longer matching) so the non-stale recover
+    // path passes its evidence preflight and reaches the validation
+    // entrypoint instead of erroring earlier.
+    let drifted_artifacts = serde_json::json!({
+        "completed_at": "2Z",
+        "task_id": ID,
+        "task_revision": 1,
+        "proof_plan_results": [],
+        "file_artifacts": [{"path": "proof.txt", "hash": "sha256:drifted", "size": 1, "mtime": null}],
+    })
+    .to_string();
+    with_conn(&store, |conn| {
+        conn.execute(
+            "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, updated_at)
+             VALUES(?1, '[\"validate_passes\"]', ?2, '1Z', 'fail', '1Z')",
+            crate::core::db::params![ID, drifted_artifacts],
+        )
+        .unwrap();
+    });
+
+    // Without --stale, recover keeps its recovery semantics: it does not take
+    // the listing path and still enters the child-validation entrypoint. The
+    // nonexistent repo root makes that spawn fail deterministically without
+    // launching a worker; only the entry is asserted.
+    let cli = VerifyCli::try_parse_from(["verify", "recover", "--json"]).unwrap();
+    assert!(!cli.stale);
+    let missing = dir.path().join("no-such-repo-root");
+    let spawns_before = validation_spawn_count();
+    let _ = run_verify_cli(&store, &missing, cli).expect_err(
+        "non-stale recover on unverified done work must keep the recovery/validation path",
+    );
+    assert!(
+        validation_spawn_count() > spawns_before,
+        "non-stale recover must still enter child validation (unchanged semantics)"
+    );
+
+    // With --stale the same fixture is a pure listing: success, no validation.
+    let cli = VerifyCli::try_parse_from(["verify", "recover", "--stale", "--json"]).unwrap();
+    let spawns_before = validation_spawn_count();
+    run_verify_cli(&store, dir.path(), cli).expect("stale listing must succeed");
+    assert_eq!(validation_spawn_count(), spawns_before);
+}
+
+#[test]
+fn recover_stale_on_empty_batch_lists_nothing_and_succeeds() {
+    let (dir, store) = fixture();
+    let cli = VerifyCli::try_parse_from(["verify", "recover", "--stale", "--json"]).unwrap();
+    let spawns_before = validation_spawn_count();
+    run_verify_cli(&store, dir.path(), cli).expect("stale listing on an empty batch must succeed");
+    assert_eq!(validation_spawn_count(), spawns_before);
+    let (checked_at, items) = collect_stale_items(&store).unwrap();
+    assert!(items.is_empty());
+    let parsed: serde_json::Value =
+        serde_json::from_str(&stale_listing_json(&checked_at, &items)).unwrap();
+    assert_eq!(parsed["stale"].as_array().map(Vec::len), Some(0));
+
+    // Without --stale, the same empty batch keeps the pre-existing recovery
+    // error, proving dispatch still reaches run_recover_cli (not the listing).
+    let cli = VerifyCli::try_parse_from(["verify", "recover", "--json"]).unwrap();
+    let err = run_verify_cli(&store, dir.path(), cli)
+        .expect_err("non-stale recover without done TODOs must keep the recovery error");
+    assert!(
+        err.to_string()
+            .contains("no done TODOs are available for proof recovery"),
+        "unexpected error: {err}"
+    );
+}
+
+#[test]
+fn qa_verify_stale_flag_parses_globally_in_supported_positions() {
+    use crate::cli::{Cli, Command, QaCli, QaCommand};
+    for argv in [
+        vec!["decapod", "qa", "verify", "recover", "--stale", "--json"],
+        vec!["decapod", "qa", "verify", "--stale", "recover", "--json"],
+    ] {
+        let cli = Cli::try_parse_from(argv.clone()).unwrap();
+        let Command::Qa(QaCli {
+            command: QaCommand::Verify(verify),
+        }) = cli.command
+        else {
+            panic!("expected qa verify for {argv:?}");
+        };
+        assert!(verify.stale, "--stale must parse for {argv:?}");
+        assert!(verify.json);
+        assert!(matches!(
+            verify.command,
+            Some(VerifyCommand::Recover { .. })
+        ));
+    }
+
+    // Other qa verify subcommands parse unchanged; the #1527 fix only touches
+    // the Recover arm.
+    for argv in [
+        vec!["decapod", "qa", "verify", "todo", "X"],
+        vec!["decapod", "qa", "verify", "prune", "X", "--json"],
+        vec!["decapod", "qa", "verify", "regen", "X", "--stale"],
+        vec!["decapod", "qa", "verify", "completion", "X"],
+    ] {
+        let cli = Cli::try_parse_from(argv.clone()).unwrap();
+        let Command::Qa(QaCli {
+            command: QaCommand::Verify(verify),
+        }) = cli.command
+        else {
+            panic!("expected qa verify for {argv:?}");
+        };
+        assert!(
+            matches!(
+                verify.command,
+                Some(VerifyCommand::Todo { .. })
+                    | Some(VerifyCommand::Prune { .. })
+                    | Some(VerifyCommand::Regen { .. })
+                    | Some(VerifyCommand::Completion { .. })
+            ),
+            "unexpected subcommand for {argv:?}"
+        );
+    }
+}
+
+#[test]
+fn validation_spawn_hook_records_child_validation_entry() {
+    let (dir, store) = fixture();
+    let before = validation_spawn_count();
+    // A nonexistent repo root makes the child spawn fail deterministically
+    // after the validation entrypoint is entered, without launching a worker.
+    let missing = dir.path().join("no-such-repo-root");
+    let result = run_validate_and_hash(&store.root, &missing, None);
+    assert!(result.is_err());
+    assert_eq!(
+        validation_spawn_count(),
+        before + 1,
+        "the spawn hook must record entry into the child-validation path"
+    );
+}
