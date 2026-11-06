@@ -753,6 +753,11 @@
       "id": "ckpt-1533-changelog",
       "summary": "CHANGELOG Unreleased entry for rpc.rs interface change: no auto-install entrypoints, session acquire sole update path, unambiguous is_latest (#1533 follow-up)",
       "input_digest": "sha256:0e9ced5988502a3a1d8edaeb6dd5b18fd75d3bf74162db27a3770e73460aa776"
+    },
+    {
+      "id": "ckpt-1533-entrypoints-regen",
+      "summary": "Regenerate release-bound entrypoints from the branch binary with the no-auto-install template; manifest hashes refreshed via project-check --refresh-specs (#1533 follow-up)",
+      "input_digest": "sha256:4d55fdf67c695951ff18459e80d50e564d6b752dbe273deb527dcec6152d5aa1"
     }
   ],
   "intents": {

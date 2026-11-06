@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.126.5 -->
-<!-- decapod-fingerprint: f5adcd9a6ee6fb3e10f14e2d0b08cbbcbc2da76e7d2a47864b5dc346481a8c9d -->
+<!-- decapod-fingerprint: 5750395a7ad85a905468e46c04b9a165732ab4bb823de0488301c8940028ffb9 -->
 # AGENTS.md — Universal Agent Contract
 
 This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
@@ -26,8 +26,8 @@ Run this gate once when the agent starts and again after every new prompt or use
 
 ## Mandatory Initialization
 ```bash
-# Smart bootstrap: only install/init if a newer version is available
-(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
+# Version detection is informational only and never authorizes a toolchain change.
+# Updates flow only through `decapod session acquire` (auto-install is opt-in).
 decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status
