@@ -1189,6 +1189,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbf1-8-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (docs: document todo journal historical-gap repair in INTERFACES.md (#1534))",
+      "input_digest": "sha256:303d7841ccffbca240c3ff9aa1230d460939e103617dabccea65b4a5738d12d2",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {
