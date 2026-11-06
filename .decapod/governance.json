@@ -533,6 +533,21 @@
       "id": "rebind-01m6qms6a5ec61mx-1",
       "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
       "input_digest": "sha256:5e893513a0a9a8494bf713919b43558fe11fc420376219be0cd73a0e0ab350f3"
+    },
+    {
+      "id": "feat_01m6qms6a5ec61mx-interop-2",
+      "summary": "Checkpoint bound to bf8ed9c3: reviewed_sources_digest reconciliation for the interop conformance CI target (source_ci_profile.rs selective-core full list).",
+      "input_digest": "sha256:6fecc8ea2a84202068e8afdefea9aaf1e7686e115b3091eb34bd7e7db0f9e236"
+    },
+    {
+      "id": "feat_01m6qms6a5ec61mx-interop-ci-digest",
+      "summary": "Checkpoint for the reviewed_sources_digest reconciliation: assets/tools/source_ci_profile.rs gained //:interop_conformance in the selective-core full list; digest verified via init reconciliation on this exact branch.",
+      "input_digest": "sha256:6fecc8ea2a84202068e8afdefea9aaf1e7686e115b3091eb34bd7e7db0f9e236"
+    },
+    {
+      "id": "rebind-01m6qms6a5ec61mx-2",
+      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
+      "input_digest": "sha256:4ee4d68ed19fc9d59a57a60b4f37300053e6beaa462f5ae55f98f072497508eb"
     }
   ],
   "intents": {

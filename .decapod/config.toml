@@ -83,7 +83,11 @@ runs = [
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:49355208846de006f7f6f6e791a5b0a5afac7352cae5c513344ed8d495bbf16c"
+# Reviewed 2026-11-06 for #870/#871: only assets/tools/source_ci_profile.rs changed
+# in the hashed inventory (added //:interop_conformance to the selective-core full
+# list; the Bazel target is auto-generated from the tests/*.rs glob). Verified via
+# `decapod init` reconciliation "Discovered source inventory" on this exact branch.
+reviewed_sources_digest = "sha256:d1a963ebf23defca3b10c65e5c47fdf85902bc6427cd8303664f9a864b5867be"
 
 [custody]
 isolation = "container"
