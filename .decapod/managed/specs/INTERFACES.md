@@ -808,6 +808,16 @@ exit status for projection conflict:
   `todo journal verify` checks the journal without restoring state;
   `todo journal restore --expected-current-digest <digest>` requires the observed
   live projection precondition and refuses divergent authority
+- `todo journal checkpoint --accept-historical-gap <task-id> --reason "<text>"`
+  is the supported repair for a historical uncheckpointed domain-event suffix
+  (#1534): verify/checkpoint fail closed with `TASK_JOURNAL_INCOMPLETE_HISTORY`
+  on such a suffix. The repair records the reviewed reason and the accepted
+  event range as a `task.journal.gap_accepted` event (exempt from the
+  complete-suffix check like other journal bookkeeping), then appends a
+  transition checkpoint for the current projection so later `verify` passes.
+  Historical events are preserved, never replayed; the flag is rejected for
+  tasks with no checkpointed history or with no suffix to accept, and
+  `--reason` is required
 - `govern workunit checkpoint --task-id <id> --operation-id <id>` records a
   versioned checkpoint; optional `--expected-generation` fences a known head
 - `govern workunit journal-status --task-id <id>` reports integrity and projection
