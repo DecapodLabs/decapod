@@ -1173,6 +1173,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbf1-6-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (test: update task_journal_checkpoint call in todo_release_tests (#1534))",
+      "input_digest": "sha256:a367d864379a6f497ddc2dc77315057fdf405335115884a780111910b2497614",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {

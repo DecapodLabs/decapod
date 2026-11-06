@@ -167,7 +167,7 @@ fn release_preserves_terminal_status_and_invalidates_claim_cache() {
         .unwrap();
         drop(conn);
         assert_eq!(
-            task_journal_checkpoint(temp.path()).unwrap()["status"],
+            task_journal_checkpoint(temp.path(), None).unwrap()["status"],
             "ok"
         );
         cache_put_claim_status(
