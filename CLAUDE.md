@@ -1,5 +1,5 @@
 <!-- decapod-release: 0.126.5 -->
-<!-- decapod-fingerprint: f9a2fd2ddfbbc6263cceed917e2b38019a04f3e54b21f2537bef80f258db2f65 -->
+<!-- decapod-fingerprint: af3532cd5728471f58dfa97c9fc2ddc7f1496deee5f49c6901bb133180fa1ce3 -->
 # CLAUDE.md - Agent Entrypoint
 
 You are working in a Decapod-managed repository.
@@ -29,8 +29,8 @@ Run this gate once when the agent starts and again after every new prompt or use
 
 ## Quick Start
 ```bash
-# Smart bootstrap: only install/init if a newer version is available
-(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
+# Version detection is informational only and never authorizes a toolchain change.
+# Updates flow only through `decapod session acquire` (auto-install is opt-in).
 decapod docs ingest && decapod session acquire
 decapod rpc --op agent.init
 decapod workspace status

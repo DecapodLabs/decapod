@@ -145,6 +145,14 @@
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
         "status": "open"
       },
+      "claim:dagger-removed": {
+        "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
+        "proof_refs": [
+          "PR source diff and pending remote validation"
+        ],
+        "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
+        "status": "open"
+      },
       "claim:durable-artifact-publication": {
         "falsifier": "Parent sync failure reports success, recovery follows a substituted parent symlink, a partial history is returned as complete, or admitted append crosses its recovery size bound.",
         "proof_refs": [
@@ -517,6 +525,256 @@
   },
   "checkpoints": [
     {
+      "id": "ckpt-1533-seed-0-126-4",
+      "summary": "seed workspace branch for todo bugs_01m6q7cbwbjxpk3d (issue #1533) on master f2276c6f (v0.126.4): release fingerprints, Dockerfile pin, specs manifest, governance template",
+      "input_digest": "sha256:2c6d96aae4f0d5de2f8f4afa8d98b5399bc9a346a0bcbf7f6a38c6d79a357f2d",
+      "proof_refs": [
+        "workspace_ensure"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-1",
+      "summary": "rebind checkpoint to post-rebase tree (chore: seed workspace branch for #1533 on v0.126.4 base)",
+      "input_digest": "sha256:9660a6c933e8de8fcf40e460175e171a20784564bb2d58373fb11175ae9cc41a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-2",
+      "summary": "rebind checkpoint to post-rebase tree (chore: seed workspace branch for #1533 on v0.126.4 base)",
+      "input_digest": "sha256:04aa86fe1edb58cf18b5654ecfe1720fa5064e9c9e3ec08d3d4d7e3fd1a9b5d5",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-rpc-user-agent",
+      "summary": "send identifying User-Agent on crates.io version query in get_latest_version (src/decapod/core/rpc.rs) and parse crate.max_version via shared helper for #1533",
+      "input_digest": "sha256:2c6d96aae4f0d5de2f8f4afa8d98b5399bc9a346a0bcbf7f6a38c6d79a357f2d",
+      "proof_refs": [
+        "crates_io_user_agent_identifies_client",
+        "parse_crates_max_version_reads_crate_field"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-3",
+      "summary": "rebind checkpoint to post-rebase tree (fix: identify crates.io version check with User-Agent (#1533))",
+      "input_digest": "sha256:b19b81433576ac8fc5a77202103dcb4d480eccd8f8563feffa77bdad16ad4282",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-4",
+      "summary": "rebind checkpoint to post-rebase tree (fix: identify crates.io version check with User-Agent (#1533))",
+      "input_digest": "sha256:0334a75d6a326990215d44af7023839a326f3b0cebdbb0a799c4dfd2bfd12d30",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-version-tests",
+      "summary": "add unit tests for #1533: crate.max_version parsing, User-Agent shape, session_auto_update default",
+      "input_digest": "sha256:2c6d96aae4f0d5de2f8f4afa8d98b5399bc9a346a0bcbf7f6a38c6d79a357f2d",
+      "proof_refs": [
+        "crates_io_user_agent_identifies_client",
+        "parse_crates_max_version_reads_crate_field",
+        "session_auto_update_defaults_to_opt_in_false"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-5",
+      "summary": "rebind checkpoint to post-rebase tree (test: cover crates.io version check parsing and opt-in default (#1533))",
+      "input_digest": "sha256:fab6b89bb49b44a83b8187432667a163a14924e7e712ed7cd8343b573b0e28b3",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-6",
+      "summary": "rebind checkpoint to post-rebase tree (test: cover crates.io version check parsing and opt-in default (#1533))",
+      "input_digest": "sha256:ecf99a534516d6030b27d3dc8fd2a3dabfc2a65882b634b3ccf21442a90797af",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-specs-refresh",
+      "summary": "refresh specs manifest/attestations after #1533 INTERFACES.md update",
+      "input_digest": "sha256:1b1f07a3ef3d063c7edf95ccb7b8c9b7fb0f5111d33f44ce4c74df1cf8b9ace6",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-7",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest and attestations after #1533 spec update)",
+      "input_digest": "sha256:ecf99a534516d6030b27d3dc8fd2a3dabfc2a65882b634b3ccf21442a90797af",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-8",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest and attestations after #1533 spec update)",
+      "input_digest": "sha256:6f5dd7057820e46b3554e69ed5dd8fa651c3573bacc6710dc20806a218cd932a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-manifest-after-digest",
+      "summary": "refresh specs manifest config_input_hash after #1533 digest reconcile (fixes CI projection drift)",
+      "input_digest": "sha256:ace89665113de91cba8fe45de5819c3a58d033f80bd584820f50e1ce5873329d",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-9",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest after #1533 digest reconcile)",
+      "input_digest": "sha256:6f5dd7057820e46b3554e69ed5dd8fa651c3573bacc6710dc20806a218cd932a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-10",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest after #1533 digest reconcile)",
+      "input_digest": "sha256:e5b107ed7e7e2ba704b1c563fd78eee70d41f907a6f1bc104f5f1458cff23efd",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-rebase-refresh",
+      "summary": "regenerate specs manifest and attestations on v0.126.5 after rebase (#1533)",
+      "input_digest": "sha256:bab67822e22fa5dbff7fe4171c23122f70ec1f9d8cdde76c3a7c9ff58e1a2488",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-11",
+      "summary": "rebind checkpoint to post-rebase tree (chore: regenerate specs projections on v0.126.5 after #1533 rebase)",
+      "input_digest": "sha256:cd226c55cb0bc763db4e053cab91edfabc1a6fd66a11115492e574dbd208f3a6",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-12",
+      "summary": "rebind checkpoint to post-rebase tree (chore: regenerate specs projections on v0.126.5 after #1533 rebase)",
+      "input_digest": "sha256:786f4f8cbdbe2079be9f1ad829a1ce657059e08e2b93c262c3663b79051b88c5",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-rebind-review",
+      "summary": "rebind checkpoints across rewritten #1533 branch and re-review canonical specs",
+      "input_digest": "sha256:11506999be397e9489ac6b04c9409f1b132e247e7f0a843698919d3977791a1a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-vega-lock",
+      "summary": "repair stale vega-native Cargo.lock decapod pin 0.126.4 -> 0.126.5 so the locked rust-worker check passes on v0.126.5 (#1533)",
+      "input_digest": "sha256:6d96a95c2359f917e7a66776e55858bd6cfe7014538ae66235a8f4c5428d057f",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-digest-vega",
+      "summary": "reconcile proof source digest after vega-native Cargo.lock pin repair (#1533)",
+      "input_digest": "sha256:a4716dad0235c7a256e1f700c1c2886cefc85a0a7ebf445c09e47de6cd25e667",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-fix-1",
+      "summary": "rebind checkpoint to actual commit tree (chore: reconcile source digest after vega-native lock pin repair (#1533))",
+      "input_digest": "sha256:c7c9e17b9f00243f6db950b74c1a7cd246e2c983b44fea34790551425f213fc4",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-fix-2",
+      "summary": "rebind checkpoint to actual commit tree (chore: reconcile source digest after vega-native lock pin repair (#1533))",
+      "input_digest": "sha256:a4716dad0235c7a256e1f700c1c2886cefc85a0a7ebf445c09e47de6cd25e667",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-fix-review",
+      "summary": "rebind final #1533 commits and re-review canonical specs",
+      "input_digest": "sha256:e23073ebba94ee87e772897ba1fb237780639d62f1ca693c07cd34563b57a060",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-entrypoint-noautoinstall",
+      "summary": "Remove cargo-install auto-bootstrap from generated entrypoint templates in assets.rs (#1533 follow-up)",
+      "input_digest": "sha256:7835adccaa328511ed66e55e8559d72b994740aeef74da13f4ea66553dd30deb"
+    },
+    {
+      "id": "ckpt-1533-validate-noautoinstall",
+      "summary": "validate.rs: entrypoints must not invoke cargo install; session acquire is the only update path (#1533 follow-up)",
+      "input_digest": "sha256:8c3ef9d935f85bd203ebf0f1168f96bd0380d19b4e247ecbfe84d7628008c031"
+    },
+    {
+      "id": "ckpt-1533-session-update-decision",
+      "summary": "Extract pure decide_session_update; version detection never authorizes install without opt-in (#1533 follow-up)",
+      "input_digest": "sha256:6519a082b9ed795cfca1007252574056fd3f927d68ceaf29ff19d4f65fd5746f"
+    },
+    {
+      "id": "ckpt-1533-payload-docs",
+      "summary": "payload-examples.md: replace version-aware auto-install example with informational capabilities check and session acquire as update path (#1533 follow-up)",
+      "input_digest": "sha256:06f133edd91725a60e30a02cfb28ea5ebd062a1eea41c853cd1e8fd353ea9826"
+    },
+    {
+      "id": "ckpt-1533-behavioral-tests",
+      "summary": "Behavioral regression tests: opt-in install, opt-out report-only, unavailable registry never installs; generated entrypoints never invoke cargo install (#1533 follow-up)",
+      "input_digest": "sha256:00da9bac56657fea90d25d6121fbdc41b3eda16a976366d9702144b70b5ed937"
+    },
+    {
+      "id": "ckpt-1533-interfaces-spec",
+      "summary": "INTERFACES.md: document no-auto-install entrypoint contract, session acquire as sole update path, unambiguous version_check/is_latest; refresh spec projections (#1533 follow-up)",
+      "input_digest": "sha256:392a594585c0eef1be7e59994833e407c70013655f72a6f10e3f574ae44c1ecc"
+    },
+    {
+      "id": "ckpt-1533-changelog",
+      "summary": "CHANGELOG Unreleased entry for rpc.rs interface change: no auto-install entrypoints, session acquire sole update path, unambiguous is_latest (#1533 follow-up)",
+      "input_digest": "sha256:0e9ced5988502a3a1d8edaeb6dd5b18fd75d3bf74162db27a3770e73460aa776"
+    },
+    {
+      "id": "ckpt-1533-entrypoints-regen",
+      "summary": "Regenerate release-bound entrypoints from the branch binary with the no-auto-install template; manifest hashes refreshed via project-check --refresh-specs (#1533 follow-up)",
+      "input_digest": "sha256:4d55fdf67c695951ff18459e80d50e564d6b752dbe273deb527dcec6152d5aa1"
+    },
+    {
+      "id": "ckpt-1533-clippy-ok",
+      "summary": "clippy: use .ok() for the registry fetch result in check_and_update_version (#1533 follow-up)",
+      "input_digest": "sha256:0b912ad619994f9f14c981932036407ab63106c0b3c7880984bb849f76fdd0b7"
+    },
+    {
+      "id": "ckpt-1533-spec-rereview",
+      "summary": "Re-review canonical specs against final code state after clippy fix; refresh projections (clears CI STALE_SPEC_REVIEW) (#1533 follow-up)",
+      "input_digest": "sha256:3f3a6b6c3b41a1b799ecb09aeb5f3e129c57fc998454e9d1cd44307e13b0507a"
+    },
+    {
+      "id": "ckpt-1533-manifest-branch-binary",
+      "summary": "Refresh specs manifest entrypoint template hashes with the branch-built binary (old 0.126.5 binary had stale templates) to clear CI drift check (#1533 follow-up)",
+      "input_digest": "sha256:42c72499a2e677c43cd587b05f642273fc0592157414035d665e062d4af38dc4"
+    },
+    {
       "id": "validation-rules-impl",
       "summary": "Implement validation rules system with 7 built-in rules, registry, evaluators, OVERRIDE.md integration, and three-verdict system",
       "input_digest": "sha256:adbcf5ec97aaef4462018977f382c24784617098a53e983f991dbad630f953a6"
@@ -550,10 +808,15 @@
       "id": "fix1528-hist-6",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:96bc5eac6a19666615488dbeb4087240c7ea058bb9908d1f107377296d2b7940"
+    },
+    {
+      "id": "fix1528-hist-7",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:ead03ffa3c6b2c911ec3f8780485086414b0523477b5b6f9f470fd04b2dc299c"
     }
   ],
   "intents": {
-    "intent:change_01M6N5X92WX4DENM7AB2NDQCHP": {
+    "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -563,11 +826,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6N5X92WX4DENM7AB2NDQCHP",
+      "id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement validation rules system",
-      "refined_intent": "Implement validation rules system",
+      "raw_intent": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
+      "refined_intent": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -580,20 +843,13 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement validation rules system",
+      "intent": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "No material prose changes; only codebase attestation fingerprint refreshed after validation rules implementation",
-          "reviewed_code_fingerprint": "0c02225b12f08aa54cd63e7052933ac81b13c2800d155d92df20185a70f9493f",
-          "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
-        },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
@@ -603,40 +859,47 @@
         },
         {
           "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "No architecture change: version-check decision logic and entrypoint templates only refine existing interfaces; re-reviewed against final code state (#1533 follow-up)",
+          "reviewed_code_fingerprint": "83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457",
+          "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
+        },
+        {
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No material prose changes; only codebase attestation fingerprint refreshed after validation rules implementation",
-          "reviewed_code_fingerprint": "0c02225b12f08aa54cd63e7052933ac81b13c2800d155d92df20185a70f9493f",
+          "reason": "No security-model change: opt-in auto-install and informational version check strengthen the toolchain trust boundary; re-reviewed against final code state (#1533 follow-up)",
+          "reviewed_code_fingerprint": "83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
       "state": "DRAFT",
       "stop_conditions": [],
-      "title": "Implement validation rules system",
+      "title": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
       "todo_ids": [
-        "feat_01m6n5wb9mf0kjg1"
+        "bugs_01m6q7cbwbjxpk3d"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794000410Z"
+      "updated_at": "1793991007Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:811641f9f265ad6eed8ddbf6412dfd477fc4eaadf210e7eaeee5b585411fd765",
+      "artifact_hash": "sha256:bd0126b4fda2c4fdd41d4d699c9e50c7ad51c8c9c6e44da6327fea11c4542f82",
       "checks": [],
       "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6N5X92WX4DENM7AB2NDQCHP",
+            "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6N5X92WX4DENM7AB2NDQCHP",
+            "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
             "kind": "refined",
             "sequence": 3
           }
@@ -650,7 +913,7 @@
       "destination": "pull request",
       "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:change_01M6N5X92WX4DENM7AB2NDQCHP",
+      "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
       "modified_files": [],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -658,10 +921,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M6N5X9708KAMZKZ987ETZ8N2",
+      "run_id": "branch_01M6Q7DN2806XPGQJA6GFEHASD",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m6n5wb9mf0kjg1",
+      "task_id": "bugs_01m6q7cbwbjxpk3d",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
