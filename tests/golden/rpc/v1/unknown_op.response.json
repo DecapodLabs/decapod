@@ -1,0 +1,25 @@
+{
+  "id": "01HZUNKNOWNOPVECTOR000000000000",
+  "success": false,
+  "mandates": [],
+  "receipt": {
+    "op": "interop.nonexistent",
+    "timestamp": "2026-01-01T00:00:00Z",
+    "inputs_hash": "sha256:placeholder-input",
+    "outputs_hash": "sha256:error",
+    "touched_paths": [],
+    "governing_anchors": []
+  },
+  "error": {
+    "code": "unknown_op",
+    "message": "Unknown operation: interop.nonexistent"
+  },
+  "allowed_next_ops": [
+    {
+      "op": "agent.init",
+      "reason": "bootstrap before retry",
+      "required_params": []
+    }
+  ],
+  "blocked_by": []
+}

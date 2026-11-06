@@ -1,0 +1,29 @@
+{
+  "id": "01HZINTEROPNEGOTIATEOK000000000",
+  "success": true,
+  "mandates": [],
+  "receipt": {
+    "op": "interop.negotiate",
+    "timestamp": "2026-01-01T00:00:00Z",
+    "inputs_hash": "sha256:placeholder-input",
+    "outputs_hash": "sha256:placeholder-output",
+    "touched_paths": [],
+    "governing_anchors": []
+  },
+  "result": {
+    "outcome": {
+      "negotiated": true,
+      "profile_id": "decapod.interop",
+      "profile_version": "v1",
+      "selected_profile": null,
+      "profile_status": null,
+      "missing_profile_ops": [],
+      "supported_required_ops": ["agent.init", "schema.get"],
+      "omitted_optional_ops": ["rpc:transport:mcp"],
+      "omitted_optional_extensions": ["zzz-unknown"],
+      "authority_note": "Negotiation is compatibility discovery only; it grants no authority, creates no ownership, and changes no governed state."
+    }
+  },
+  "allowed_next_ops": [],
+  "blocked_by": []
+}

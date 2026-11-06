@@ -671,7 +671,7 @@ pub fn commands(check: &Check, paths: &[String]) -> io::Result<Vec<Invocation>> 
         "selective-core" if core_full(paths) => vec![
             bazel(&["test", "//:group_broker", "--test_arg=committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry", "--test_arg=--exact", "--test_arg=--nocapture", "--test_output=all"]),
             bazel(&["test", "//:group_broker", "--test_arg=broker_no_sqlite_busy_surfaced_under_concurrent_mutators", "--test_arg=--exact", "--test_arg=--nocapture", "--test_output=all"]),
-            bazel(&["test", "//:todo_enforcement", "//:validate_termination", "//:workspace_interlock", "//:spec_workspace_ownership", "//:workspace_prune_regression", "//:hermes_governance_substrate", "//:group_broker", "//:group_broker_strict", "//:workunit_cli", "//:context_capsule_cli", "--test_arg=--test-threads=1"]),
+            bazel(&["test", "//:todo_enforcement", "//:validate_termination", "//:workspace_interlock", "//:spec_workspace_ownership", "//:workspace_prune_regression", "//:hermes_governance_substrate", "//:group_broker", "//:group_broker_strict", "//:workunit_cli", "//:context_capsule_cli", "//:interop_conformance", "--test_arg=--test-threads=1"]),
         ],
         "selective-core" => vec![bazel(&["test", "//:entrypoint_correctness", "--test_arg=--test-threads=1"])],
         "selective-plugins" => vec![bazel(&["test", "//:plugins_todo_tests", "//:plugins_policy_tests", "//:plugins_health_tests", "//:plugins_aptitude_tests", "//:plugins_internalize_tests", "//:plugins_federation_tests", "//:plugins_decide_tests", "//:plugins_obligation_tests", "--test_arg=--test-threads=1"])],

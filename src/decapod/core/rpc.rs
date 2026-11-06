@@ -324,11 +324,11 @@ pub struct StoreUpsertParams {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StoreUpsertResult {
     pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stored: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub action: Option<String>,
 }
 
@@ -342,7 +342,7 @@ pub struct StoreQueryParams {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StoreQueryResult {
     pub items: Vec<serde_json::Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub next_page: Option<serde_json::Value>,
 }
 
@@ -434,6 +434,52 @@ pub struct AssuranceEvaluateResult {
     pub interlock_code: Option<String>,
 }
 
+// Interoperability subsystem (issues #870/#871)
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct InteropManifestParams {
+    /// When true, also run manifest validation and report violations.
+    #[serde(default)]
+    pub validate: bool,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct InteropManifestResult {
+    pub manifest: crate::core::interop::InteropManifest,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub validation: Option<Vec<crate::core::interop::ManifestViolation>>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct InteropNegotiateParams {
+    #[serde(default)]
+    pub required_ops: Vec<String>,
+    #[serde(default)]
+    pub optional_ops: Vec<String>,
+    #[serde(default)]
+    pub required_extensions: Vec<String>,
+    #[serde(default)]
+    pub optional_extensions: Vec<String>,
+    #[serde(default)]
+    pub requested_profile: Option<String>,
+    #[serde(default)]
+    pub profile_version: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct InteropNegotiateResult {
+    pub outcome: crate::core::interop::NegotiationOutcome,
+}
+
+/// Projection request accepted by `interop.project`.
+pub type InteropProjectParams = crate::core::projection::ProjectRequest;
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct InteropProjectResult {
+    pub projection: serde_json::Value,
+}
+
 pub fn default_request_id() -> String {
     crate::core::ulid::new_ulid()
 }
@@ -448,30 +494,31 @@ pub struct RpcResponse {
     /// Receipt of what happened
     pub receipt: Receipt,
     /// Mandates governing this specific operation
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub mandates: Vec<Mandate>,
     /// Context capsule with relevant documentation slices
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub context_capsule: Option<ContextCapsule>,
     /// Result of the operation
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub result: Option<serde_json::Value>,
     /// Allowed next operations
+    #[serde(default)]
     pub allowed_next_ops: Vec<AllowedOp>,
     /// Blockers preventing progress
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub blocked_by: Vec<Blocker>,
     /// Binding enforcement interlock
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interlock: Option<Interlock>,
     /// Non-binding advisory guidance
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub advisory: Option<Advisory>,
     /// Structured evidence for this operation
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub attestation: Option<Attestation>,
     /// Error details (if success is false)
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub error: Option<RpcError>,
 }
 
@@ -487,10 +534,10 @@ pub struct Receipt {
     /// Content hash of outputs
     pub outputs_hash: String,
     /// Paths touched by the operation
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub touched_paths: Vec<String>,
     /// Governing anchors (rules that governed this operation)
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub governing_anchors: Vec<String>,
 }
 
@@ -498,21 +545,21 @@ pub struct Receipt {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ContextCapsule {
     /// Relevant fragments from the constitution/authority docs
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub fragments: Vec<DocFragment>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resolved_authority: Vec<crate::core::assets::ResolvedOverrideEvidence>,
     /// Relevant spec slices
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spec: Option<String>,
     /// Relevant architecture slices
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub architecture: Option<String>,
     /// Relevant security slices
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub security: Option<String>,
     /// Resolved standards applicable to this operation
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub standards: Option<HashMap<String, serde_json::Value>>,
 }
 
@@ -524,7 +571,7 @@ pub struct AllowedOp {
     /// Why this is allowed
     pub reason: String,
     /// Required parameters
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub required_params: Vec<String>,
 }
 
@@ -560,7 +607,7 @@ pub struct RpcError {
     /// Error message
     pub message: String,
     /// Additional context
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub details: Option<serde_json::Value>,
 }
 
@@ -580,7 +627,7 @@ pub struct CapabilitiesReport {
     /// Stable interlock codes exposed by the assurance harness
     pub interlock_codes: Vec<String>,
     /// Active repository configuration
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub config: Option<crate::cli::DecapodProjectConfig>,
     /// Current version status against crates.io. True only when the registry
     /// was reached and reports the running version as the newest release; an
@@ -664,7 +711,7 @@ pub struct Interlock {
     pub code: String,
     pub message: String,
     pub unblock_ops: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub evidence: Option<serde_json::Value>,
 }
 
@@ -672,7 +719,7 @@ pub struct Interlock {
 pub struct EvidenceRef {
     pub source: String,
     pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub hash: Option<String>,
 }
 
@@ -708,9 +755,9 @@ pub struct LoopSignal {
 pub struct Advisory {
     pub reconciliations: ReconciliationSets,
     pub verification_plan: VerificationPlan,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub loop_signal: Option<LoopSignal>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub notes: Option<Vec<String>>,
 }
 
@@ -721,7 +768,7 @@ pub struct Attestation {
     pub timestamp: String,
     pub input_hash: String,
     pub touched_paths: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interlock_code: Option<String>,
     pub outcome: String,
     pub trace_path: String,

@@ -1,0 +1,7 @@
+{
+  "id": "01HZINTEROPNEGOTIATEREFUSED00000",
+  "op": "interop.negotiate",
+  "params": {
+    "required_ops": ["rpc:transport:mcp"]
+  }
+}
