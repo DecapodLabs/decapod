@@ -1005,6 +1005,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbd1-5-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (test: update SourceCoverage constructor in consumer_readiness (#1531))",
+      "input_digest": "sha256:8ed1199a4e6d9367711fcb7afc9d6fe53930f1b05b98b6e0f6a293165226efff",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
