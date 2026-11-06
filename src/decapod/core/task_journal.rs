@@ -17,6 +17,9 @@ use std::collections::{BTreeMap, BTreeSet};
 pub(super) mod transfer;
 
 pub(super) const EVENT_TYPE: &str = "task.journal.checkpoint";
+/// Reviewed acceptance of a historical uncheckpointed suffix (#1534). Exempt
+/// from the complete-suffix check like other journal bookkeeping events.
+pub(super) const EVENT_TYPE_GAP_ACCEPTED: &str = "task.journal.gap_accepted";
 const SCHEMA_VERSION: u32 = 1;
 const MAX_TASKS: usize = 10_000;
 const MAX_RECORDS: usize = 100_000;
@@ -712,10 +715,14 @@ fn check_complete_suffix(
     conn: &Connection,
     journal: &Journal,
     through: u64,
+    skip: Option<&str>,
 ) -> Result<(), DecapodError> {
     for (id, head) in &journal.heads {
+        if skip == Some(id.as_str()) {
+            continue;
+        }
         let incomplete: bool = conn.query_row(
-            "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND seq<=?3 AND event_type NOT IN ('task.journal.checkpoint','task.journal.restored','task.comment','task.worker.run','task.verify.capture_failed'))",
+            "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND seq<=?3 AND event_type NOT IN ('task.journal.checkpoint','task.journal.restored','task.journal.gap_accepted','task.comment','task.worker.run','task.verify.capture_failed'))",
             params![id,head.source_watermark,through], |r| r.get(0),
         )?;
         if incomplete {
@@ -817,7 +824,7 @@ pub(super) fn record_changes(
     let after = capture_selected(conn, ids)?;
     let source_watermark = watermark(conn)?;
     let mut journal = read_journal(conn, Some(ids))?;
-    check_complete_suffix(conn, &journal, before_watermark)?;
+    check_complete_suffix(conn, &journal, before_watermark, None)?;
     for id in before.keys() {
         if !after.contains_key(id) {
             return Err(invalid(
@@ -829,7 +836,7 @@ pub(super) fn record_changes(
         let prior = before.get(id);
         if prior == Some(current) {
             let has_domain_event: bool = conn.query_row(
-                "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND event_type NOT IN ('task.journal.checkpoint','task.journal.restored','task.comment','task.worker.run','task.verify.capture_failed'))",
+                "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND event_type NOT IN ('task.journal.checkpoint','task.journal.restored','task.journal.gap_accepted','task.comment','task.worker.run','task.verify.capture_failed'))",
                 params![id,before_watermark], |r| r.get(0),
             )?;
             if !has_domain_event {
@@ -915,7 +922,7 @@ pub(super) fn check_execution_authority(
     ids.dedup();
     let current = capture_selected(conn, &ids)?;
     let journal = read_journal(conn, Some(&ids))?;
-    check_complete_suffix(conn, &journal, watermark(conn)?)?;
+    check_complete_suffix(conn, &journal, watermark(conn)?, None)?;
     for (id, head) in &journal.heads {
         if current.get(id).map(digest).transpose()?.as_deref()
             != Some(head.projection_digest.as_str())
@@ -931,7 +938,7 @@ pub(super) fn check_execution_authority(
 pub(super) fn verify(conn: &Connection) -> Result<serde_json::Value, DecapodError> {
     check_schema(conn)?;
     let journal = read_journal(conn, None)?;
-    check_complete_suffix(conn, &journal, watermark(conn)?)?;
+    check_complete_suffix(conn, &journal, watermark(conn)?, None)?;
     report(conn, &journal)
 }
 
@@ -939,19 +946,99 @@ pub(super) fn checkpoint(
     conn: &Connection,
     actor: &str,
 ) -> Result<serde_json::Value, DecapodError> {
+    checkpoint_with_gap(conn, actor, None)
+}
+
+/// Explicit, reviewed repair for a historical uncheckpointed domain-event
+/// suffix (#1534). `gap` is `(task_id, reason)`: the reviewed reason and the
+/// accepted event range are recorded as a `task.journal.gap_accepted` event,
+/// then a transition checkpoint for the current projection is appended, so
+/// the journal becomes complete again without inventing history.
+pub(super) fn checkpoint_with_gap(
+    conn: &Connection,
+    actor: &str,
+    gap: Option<(&str, &str)>,
+) -> Result<serde_json::Value, DecapodError> {
     require_transaction(conn)?;
     let current = capture(conn)?;
     let source_watermark = watermark(conn)?;
     let mut journal = read_journal(conn, None)?;
-    check_complete_suffix(conn, &journal, source_watermark)?;
+    let gap_task = gap.map(|(id, _)| id);
+    let mut accepted: Option<serde_json::Value> = None;
+    if let Some((id, reason)) = gap {
+        let head = journal.heads.get(id).ok_or_else(|| {
+            invalid(format!(
+                "no checkpointed history for {id}; --accept-historical-gap only repairs journaled tasks"
+            ))
+        })?;
+        let (count, from_seq, through_seq): (i64, Option<u64>, Option<u64>) = conn.query_row(
+            "SELECT count(*), min(seq), max(seq) FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND seq<=?3 AND event_type NOT IN ('task.journal.checkpoint','task.journal.restored','task.journal.gap_accepted','task.comment','task.worker.run','task.verify.capture_failed')",
+            params![id, head.source_watermark, source_watermark],
+            |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+        )?;
+        if count == 0 {
+            return Err(invalid(format!(
+                "no uncheckpointed domain-event suffix to accept for {id}"
+            )));
+        }
+        let (from_seq, through_seq) = (from_seq.unwrap_or(0), through_seq.unwrap_or(0));
+        events::append_on_conn(
+            conn,
+            events::TODO,
+            &serde_json::json!({
+                "ts": super::now_iso(),
+                "event_id": format!("task-journal-gap:{id}:{}:{through_seq}", super::now_iso()),
+                "event_type": EVENT_TYPE_GAP_ACCEPTED,
+                "status": "success",
+                "task_id": id,
+                "actor": actor,
+                "payload": {
+                    "task_id": id,
+                    "reason": reason,
+                    "accepted_from_seq": from_seq,
+                    "accepted_through_seq": through_seq,
+                    "accepted_event_count": count,
+                    "repair": "explicit_reviewed_acceptance; historical events are preserved, not replayed"
+                }
+            }),
+        )?;
+        accepted = Some(serde_json::json!({
+            "task_id": id, "reason": reason,
+            "accepted_from_seq": from_seq, "accepted_through_seq": through_seq,
+            "accepted_event_count": count,
+        }));
+    }
+    check_complete_suffix(conn, &journal, source_watermark, gap_task)?;
+    // The reviewed gap task always gets a transition for the current
+    // projection, so its head watermark moves past the accepted suffix and
+    // later verify calls succeed. Collect first to keep the heads borrow.
+    let gap_projection = match gap {
+        Some((id, _)) => Some((
+            id.to_owned(),
+            current.get(id).cloned().ok_or_else(|| {
+                invalid("baseline cannot replace divergent or missing journaled state")
+            })?,
+        )),
+        None => None,
+    };
     for (id, head) in &journal.heads {
-        if current.get(id).map(digest).transpose()?.as_deref()
-            != Some(head.projection_digest.as_str())
-        {
+        let diverged = current.get(id).map(digest).transpose()?.as_deref()
+            != Some(head.projection_digest.as_str());
+        if diverged && gap_task != Some(id.as_str()) {
             return Err(invalid(
                 "baseline cannot replace divergent or missing journaled state",
             ));
         }
+    }
+    if let Some((_id, projection)) = &gap_projection {
+        append_checkpoint(
+            conn,
+            &mut journal,
+            projection,
+            source_watermark,
+            "historical_gap_accepted",
+            actor,
+        )?;
     }
     for (id, projection) in &current {
         if !journal.heads.contains_key(id) {
@@ -965,7 +1052,11 @@ pub(super) fn checkpoint(
             )?;
         }
     }
-    report(conn, &journal)
+    let mut result = report(conn, &journal)?;
+    if let Some(accepted) = accepted {
+        result["accepted_historical_gap"] = accepted;
+    }
+    Ok(result)
 }
 
 /// Restore only exact journal predecessors or absent rows, never arbitrary live
@@ -980,7 +1071,7 @@ pub(super) fn restore(
         return Err(invalid("current projection changed since recovery review"));
     }
     let journal = read_journal(conn, None)?;
-    check_complete_suffix(conn, &journal, watermark(conn)?)?;
+    check_complete_suffix(conn, &journal, watermark(conn)?, None)?;
     let mut restored = Vec::new();
     for (id, head) in &journal.heads {
         if let Some(live) = current.get(id) {
