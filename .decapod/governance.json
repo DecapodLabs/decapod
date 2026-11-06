@@ -743,6 +743,11 @@
       "id": "ckpt-1533-behavioral-tests",
       "summary": "Behavioral regression tests: opt-in install, opt-out report-only, unavailable registry never installs; generated entrypoints never invoke cargo install (#1533 follow-up)",
       "input_digest": "sha256:00da9bac56657fea90d25d6121fbdc41b3eda16a976366d9702144b70b5ed937"
+    },
+    {
+      "id": "ckpt-1533-interfaces-spec",
+      "summary": "INTERFACES.md: document no-auto-install entrypoint contract, session acquire as sole update path, unambiguous version_check/is_latest; refresh spec projections (#1533 follow-up)",
+      "input_digest": "sha256:392a594585c0eef1be7e59994833e407c70013655f72a6f10e3f574ae44c1ecc"
     }
   ],
   "intents": {
@@ -783,22 +788,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "ARCHITECTURE.md unchanged by #1533 beyond attestation fingerprint.",
-          "reviewed_code_fingerprint": "5d3c339f49ecb7e3c6be1249e973d709bfd0b785a88a9e7022281181e6f4dd9d",
+          "reason": "No architecture change: version-check decision logic and entrypoint templates only refine existing interfaces (#1533 follow-up)",
+          "reviewed_code_fingerprint": "fe7c86cb38d746b62ed00a31dfb7a8229347dea46f97a14eda1385488caec4ec",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-review after targeted checkpoint rebind (#1533): INTERFACES.md documents the crates.io version check with User-Agent and opt-in auto-update.",
-          "reviewed_code_fingerprint": "5d3c339f49ecb7e3c6be1249e973d709bfd0b785a88a9e7022281181e6f4dd9d",
-          "spec_material_hash": "702aa41ea87a0ef804d9d56c361f6851666ca90b644679cd94f531d398ed5223"
+          "reason": "Document no-auto-install entrypoint contract, session acquire as sole update path, and unambiguous version_check/is_latest semantics (#1533 follow-up)",
+          "reviewed_code_fingerprint": "fe7c86cb38d746b62ed00a31dfb7a8229347dea46f97a14eda1385488caec4ec",
+          "spec_material_hash": "936a8f34fc31fd16498e690d5b9ed6fe8d2c713d311c3e2defffdffeb0cbbdeb"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "SECURITY.md unchanged by #1533 beyond attestation fingerprint.",
-          "reviewed_code_fingerprint": "5d3c339f49ecb7e3c6be1249e973d709bfd0b785a88a9e7022281181e6f4dd9d",
+          "reason": "No security-model change: opt-in auto-install and informational version check strengthen, not alter, the toolchain trust boundary (#1533 follow-up)",
+          "reviewed_code_fingerprint": "fe7c86cb38d746b62ed00a31dfb7a8229347dea46f97a14eda1385488caec4ec",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -810,7 +815,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793958128Z"
+      "updated_at": "1793988017Z"
     },
     "trajectory": {
       "active_boundaries": [
