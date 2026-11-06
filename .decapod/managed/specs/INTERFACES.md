@@ -878,16 +878,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-<<<<<<< HEAD
 - Repository signal fingerprint: `194f126c8e9ab0f3c13d8608de9b563021be6fe7403b8ffe144a5f0ec80b8d4e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (204 files)
-||||||| parent of e444b109 (docs: document release version check and opt-in auto-update in INTERFACES.md (#1533))
-- Repository signal fingerprint: `eb3f6119bfe57e46e28f96ede5d47c5eb7b2d19198bea1860423c628d679d396`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (204 files)
-=======
-- Repository signal fingerprint: `1ade183dd884927272822d60b043e21d9cd3de20f9ffb60b4cff5b80bc61536c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (205 files)
->>>>>>> e444b109 (docs: document release version check and opt-in auto-update in INTERFACES.md (#1533))
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

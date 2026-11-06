@@ -614,6 +614,14 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-rebind-8",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest and attestations after #1533 spec update)",
+      "input_digest": "sha256:6f5dd7057820e46b3554e69ed5dd8fa651c3573bacc6710dc20806a218cd932a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
