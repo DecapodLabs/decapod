@@ -548,6 +548,16 @@
       "id": "rebind-01m6qms6a5ec61mx-2",
       "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
       "input_digest": "sha256:4ee4d68ed19fc9d59a57a60b4f37300053e6beaa462f5ae55f98f072497508eb"
+    },
+    {
+      "id": "feat_01m6qms6a5ec61mx-interop-release-surfaces",
+      "summary": "Regenerate release-bound entrypoints (AGENTS/CLAUDE/CODEX/GEMINI), managed Dockerfile pin, and specs manifest with decapod 0.126.5 (the accepted-base executor release) to clear CI drift; authored spec prose unchanged; source inventory digest unchanged (d1a963...).",
+      "input_digest": "sha256:882594054b92da142c3e365c88ad04fef85d13ca6dbd3673a5b2fd2f20cd7346"
+    },
+    {
+      "id": "rebind-01m6qms6a5ec61mx-3",
+      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
+      "input_digest": "sha256:ba10812329d33f87e1e2bf1748015204619fc5bb62a4b0b56588c916fecc88fb"
     }
   ],
   "intents": {
