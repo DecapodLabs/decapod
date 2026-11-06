@@ -578,6 +578,16 @@
       "id": "rebind-01m6qms6a5ec61mx-5",
       "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
       "input_digest": "sha256:9b006818829d0c5735ab030567a945184ec6240de799c6a39a530f0444e386d1"
+    },
+    {
+      "id": "feat_01m6qms6a5ec61mx-interop-scope-correction",
+      "summary": "Scope-correction pass per reviewer hold on PR #1541: rescope to Decapod implementation substrate. PR body drops 'Closes #870' in favor of 'Partially addresses #870' with an explicit list of what remains for #870 (Decapod-independent external normative profile, normative spec, JSON Schemas for normative envelopes, canonicalization/replay rules, deterministic vectors, genuinely independent adapter); #871 remains partial (two-transport deferred to #872). RPC_OPS 'single source of truth' wording softened to 'canonical registry drift-checked against the dispatcher by the conformance harness' in core/interop.rs doc comment, ARCHITECTURE.md, INTENT.md (plus explicit #870 scope boundary in INTENT.md), and the PR body. No behavior change; specs refreshed via specs.refresh.",
+      "input_digest": "sha256:9c0db71a53aa06dea2b9d4c6d69c677ad32690f9588dbeae32f443465b7cfc1a"
+    },
+    {
+      "id": "rebind-01m6qms6a5ec61mx-6",
+      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
+      "input_digest": "sha256:69750d7f3603e871bd9cf4f79118f5433123b7aa4d51d38d24b7fe0ea2c7467f"
     }
   ],
   "intents": {

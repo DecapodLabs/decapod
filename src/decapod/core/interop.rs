@@ -24,10 +24,13 @@ pub const SUPPORTED_EXTENSIONS: &[&str] =
 
 /// Registered RPC operation names.
 ///
-/// This list is the single source of truth for the dispatch-derived manifest
-/// entries. The black-box conformance harness (`tests/interop_conformance.rs`)
-/// proves every entry is actually accepted by the real dispatcher (an
-/// advertised op that the dispatch rejects as `unknown_op` fails the suite).
+/// This list is the canonical registry for the dispatch-derived manifest
+/// entries. The dispatcher still matches op names with its own table, so this
+/// is not a generated single source of truth; instead the black-box conformance
+/// harness (`tests/interop_conformance.rs`) drift-checks the two, proving every
+/// entry is actually accepted by the real dispatcher (an advertised op that
+/// the dispatch rejects as `unknown_op` fails the suite). Harness detection of
+/// drift is proof of synchronization between registry and dispatcher.
 pub const RPC_OPS: &[&str] = &[
     "agent.init",
     "workspace.status",
