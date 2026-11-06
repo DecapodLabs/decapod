@@ -287,7 +287,7 @@ fn export_bundle(root: &Path, id: &str, to: &str, actor: &str) -> Result<Bundle,
             }
             let journal = read_journal(conn, Some(&ids))?;
             let through = watermark(conn)?;
-            check_complete_suffix(conn, &journal, through)?;
+            check_complete_suffix(conn, &journal, through, None)?;
             let head = journal.heads.get(id).ok_or_else(|| {
                 fail("source journal is missing; inspect and checkpoint current source state first")
             })?;
