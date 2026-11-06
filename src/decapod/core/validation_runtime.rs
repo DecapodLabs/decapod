@@ -914,10 +914,6 @@ fn write_new(path: &Path, bytes: &[u8]) -> io::Result<()> {
     out.sync_all()
 }
 
-#[allow(
-    dead_code,
-    reason = "Used by validation_runtime tests for native completion writing"
-)]
 fn write_native_completion(
     directory: &Path,
     verdict: &[u8],
@@ -1023,6 +1019,12 @@ fn run(
         cancel,
     )?;
     let initial_governance = hash(&budget.read(&file(&options.root, GOVERNANCE)?)?);
+    let trajectory_digest = {
+        let governance: serde_json::Value =
+            serde_json::from_slice(&budget.read(&file(&options.root, GOVERNANCE)?)?)
+                .map_err(io::Error::other)?;
+        evidence::digest(&governance["sections"]["trajectory"]).map_err(io::Error::other)?
+    };
     let initial_target =
         host.accepted_target(&options.repository, &options.base_branch, &budget)?;
     if initial_target != initial_identity.accepted_base_revision {
@@ -1232,7 +1234,7 @@ fn run(
                 return Err(invalid("LAYA_POLICY_CHANGED_DURING_INFERENCE"));
             }
             let target = TargetObservation {
-                invocation_id: invocation,
+                invocation_id: invocation.clone(),
                 repository: options.repository.clone(),
                 branch: options.base_branch.clone(),
                 revision: host.accepted_target(
@@ -1303,10 +1305,33 @@ fn run(
             "STALE_POST_VALIDATION_DECISION: {error:?}"
         )));
     }
-    write_new(
-        &directory.join("verdict.json"),
-        &serde_json::to_vec_pretty(report).map_err(io::Error::other)?,
-    )?;
+    let verdict_bytes = serde_json::to_vec_pretty(report).map_err(io::Error::other)?;
+    // A receipt describes completed proof; it is never imported as authority.
+    // Publish verdict and receipt together outside the frozen candidate.
+    if report.ready && !selection.policy.buildkite_preflights {
+        let mut receipt = serde_json::json!({
+            "schema_version": "1.0.0",
+            "kind": "native_readiness_receipt",
+            "status": "ok",
+            "scope": report.scope,
+            "invocation_id": invocation,
+            "material": current.identity,
+            "governance_digest": initial_governance,
+            "trajectory_digest": trajectory_digest,
+            "proof_plan_digest": current_profile.plan().digest().map_err(io::Error::other)?,
+            "evidence_digest": evidence::digest(&result.evidence).map_err(io::Error::other)?,
+            "laya_readiness_digest": evidence::digest(&report.laya_readiness).map_err(io::Error::other)?,
+        });
+        receipt["receipt_hash"] = evidence::digest(&receipt).map_err(io::Error::other)?.into();
+        write_native_completion(
+            &directory,
+            &verdict_bytes,
+            &serde_json::to_vec_pretty(&receipt).map_err(io::Error::other)?,
+            write_new,
+        )?;
+    } else {
+        write_new(&directory.join("verdict.json"), &verdict_bytes)?;
+    }
     Ok(())
 }
 
@@ -1365,6 +1390,29 @@ pub fn execute_native(
         write_new(
             &evidence_directory.join(format!("native-{number}.steps.json")),
             &serde_json::to_vec_pretty(&diagnostic.steps).map_err(io::Error::other)?,
+        )?;
+        // Diagnostic files are private recovery aids, not proof authority. Bind
+        // each numbered capture to its actual check and preserve failures that
+        // are not present in either process stream (for example cleanup errors).
+        let termination = match diagnostic.termination {
+            Termination::Exited => "exited",
+            Termination::TimedOut => "timed_out",
+            Termination::Cancelled => "cancelled",
+            Termination::OutputLimit => "output_limit",
+        };
+        let metadata = serde_json::json!({
+            "schema_version": "1.0.0",
+            "check": diagnostic.key,
+            "duration_ms": diagnostic.duration.as_millis(),
+            "termination": termination,
+            "error": diagnostic.error,
+            "stdout": format!("native-{number}.stdout"),
+            "stderr": format!("native-{number}.stderr"),
+            "steps": format!("native-{number}.steps.json"),
+        });
+        write_new(
+            &evidence_directory.join(format!("native-{number}.diagnostic.json")),
+            &serde_json::to_vec_pretty(&metadata).map_err(io::Error::other)?,
         )?;
     }
     Ok(ExecutedSuite {

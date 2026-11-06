@@ -780,6 +780,11 @@
       "input_digest": "sha256:6f3a83a76912664210dbef365195d1c58d53bfc4ffd4bd46ef2b8a9aae343567"
     },
     {
+      "id": "fix1528-native-completion-bundle",
+      "summary": "Restore the native readiness completion bundle (completion/native-readiness-receipt.json + completion/verdict.json via write_native_completion) and the per-check native-{n}.diagnostic.json evidence files that the laya rename dropped; tests/consumer_readiness.rs asserts this layout. Receipt now binds laya_readiness_digest; trajectory_digest recomputed from governance.json.",
+      "input_digest": "sha256:d5fe6edd907814a1fea64c78f753d072720138a0cedcdfa733561f41a4070836"
+    },
+    {
       "id": "validation-rules-impl",
       "summary": "Implement validation rules system with 7 built-in rules, registry, evaluators, OVERRIDE.md integration, and three-verdict system",
       "input_digest": "sha256:adbcf5ec97aaef4462018977f382c24784617098a53e983f991dbad630f953a6"
@@ -863,6 +868,11 @@
       "id": "fix1528-hist-16",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:6f3a83a76912664210dbef365195d1c58d53bfc4ffd4bd46ef2b8a9aae343567"
+    },
+    {
+      "id": "fix1528-hist-17",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:d5fe6edd907814a1fea64c78f753d072720138a0cedcdfa733561f41a4070836"
     }
   ],
   "intents": {
