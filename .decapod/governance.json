@@ -1061,6 +1061,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbd1-12-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: regenerate specs projections on v0.126.5 after #1531 rebase)",
+      "input_digest": "sha256:f73ace7d88490c91ce77b44fd7897b4999359f47447f396ec2f88a72ac04c29b",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
