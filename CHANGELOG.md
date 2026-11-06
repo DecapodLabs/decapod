@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.127.1](https://github.com/DecapodLabs/decapod/compare/v0.127.0...v0.127.1) - 2026-11-06
+
+### Added
+
+- evidence-backed governance interoperability (#870/#871)
+
+### Fixed
+
+- bump vega-native lock path-dep to decapod 0.126.5 and reconcile source digest
+
+### Other
+
+- port #1533 INTERFACES section and refresh specs manifest to v0.127.0 after rebase
+- reconcile reviewed source inventory digest after rebase onto master 56016070 (v0.127.0)
+- repin managed Dockerfile to decapod v0.127.0 after rebase onto master 56016070
+- regenerate entrypoints to v0.127.0 after rebase onto master 56016070
+- refresh spec review dispositions after PR #1541 scope correction
+- rescope PR #1541 to Decapod implementation substrate per reviewer hold
+- refresh specs manifest config hash after source digest reconciliation
+- regenerate release-bound surfaces to v0.126.5 executor release
+- reconcile reviewed source inventory digest for interop conformance CI target
+
 ## [0.127.0](https://github.com/DecapodLabs/decapod/compare/v0.126.5...v0.127.0) - 2026-11-06
 
 ### Added
