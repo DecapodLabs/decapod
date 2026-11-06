@@ -367,6 +367,14 @@ Validation checks repository evidence for these product contracts:
 7. Execution and recovery remain bounded, with owned subprocesses terminated and
    reaped and uncertainty preserved on timeout or interruption
 
+The validation worker subprocess (`__project-check-worker`) reports through
+anonymous pipes. To prevent pipe deadlock when worker output exceeds the
+system pipe capacity (#1526), the parent drains stdout and stderr on
+dedicated threads while polling for child exit, so the worker never blocks
+on a full pipe while the parent waits for termination. Reader threads are
+joined after child exit for complete output, and joined on timeout so no
+reader is left running.
+
 `TODO_PROJECTION_MISSING` is a coordination blocker with
 `execution_ready: false`, not lost request meaning. Its recovery must prove the
 intended task, agent ownership, lease, and control plane before execution resumes.
@@ -904,8 +912,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7f82f44d021c080314543876b7a38745e77f3d0ce41351b67d45c0acaba14a0d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (203 files)
+- Repository signal fingerprint: `eb3f6119bfe57e46e28f96ede5d47c5eb7b2d19198bea1860423c628d679d396`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (204 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
