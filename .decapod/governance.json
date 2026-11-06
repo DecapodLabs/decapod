@@ -838,6 +838,11 @@
       "id": "fix1528-hist-12",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:8ef2967755e13073d80f0735e5eb57352e789ca7a028b1d2387bea250f88d6c4"
+    },
+    {
+      "id": "fix1528-hist-13",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:469d69026ed474557f30bbedd89f18bfca5b1b3da9934f411b5fd27a671e5e7e"
     }
   ],
   "intents": {
@@ -876,18 +881,18 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md with validation rules system interfaces documentation and dagger removal",
-          "reviewed_code_fingerprint": "1d6f110d7951f8e894747f11246bb93626044d4e4cfea98d1b22bc9c60839163",
-          "spec_material_hash": "36807d075cdc0b8f6bb5ddcdd9778f2211589056759615d4b50277ebd3f64b15"
-        },
-        {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "No architecture change: version-check decision logic and entrypoint templates only refine existing interfaces; re-reviewed against final code state (#1533 follow-up)",
           "reviewed_code_fingerprint": "83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Updated INTERFACES.md with validation rules system interfaces documentation and dagger removal; re-reviewed after merge with v0.127.1",
+          "reviewed_code_fingerprint": "149ba52a8ff91dcedc8ca8154d9a3cf2469feb37315e02615da62c79032eee6b",
+          "spec_material_hash": "36807d075cdc0b8f6bb5ddcdd9778f2211589056759615d4b50277ebd3f64b15"
         },
         {
           "disposition": "unchanged_with_reason",
@@ -905,7 +910,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793991007Z"
+      "updated_at": "1794006062Z"
     },
     "trajectory": {
       "active_boundaries": [
