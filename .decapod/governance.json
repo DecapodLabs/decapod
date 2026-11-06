@@ -613,6 +613,11 @@
       "id": "regen-01m6qms6a5ec61mx-4",
       "summary": "Reconcile reviewed_sources_digest to sha256:be7f48584127e97ccceb0b1bdbaf89d19e01ca65d20f2ae3772c68fd2a514772, the inventory reported by decapod init --dry-run (v0.127.0 binary) on this branch rebased onto master 56016070; the delta vs the pre-rebase digest is master's #1539/#1545 source changes, our branch still adds only source_ci_profile.rs.",
       "input_digest": "sha256:6cafd47f0e5f1b7dffdaa5b97797f8a42a8476efff92596e8ced491a1af0eb55"
+    },
+    {
+      "id": "regen-01m6qms6a5ec61mx-5",
+      "summary": "Port master's #1533 'Release version check and opt-in auto-update' section into INTERFACES.md verbatim (lost when specs resolved to the branch side during the rebase) and refresh all specs attestations plus .manifest.json to decapod_release 0.127.0 via specs.refresh with the v0.127.0 binary; spec review dispositions for ARCHITECTURE/INTERFACES/SECURITY re-recorded against the new material hashes.",
+      "input_digest": "sha256:a2f57683358499f886319af3003e0eb433efca14454e77c8c7dbac82c9c13fd2"
     }
   ],
   "intents": {
