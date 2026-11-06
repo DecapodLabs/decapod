@@ -638,6 +638,14 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-rebind-10",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest after #1533 digest reconcile)",
+      "input_digest": "sha256:e5b107ed7e7e2ba704b1c563fd78eee70d41f907a6f1bc104f5f1458cff23efd",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
