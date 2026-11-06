@@ -1181,6 +1181,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbf1-7-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (test: update task_journal_checkpoint call in plugins/todo (#1534))",
+      "input_digest": "sha256:2d86fa332317b504a92a790ebb8b1b680b9c2fbaab64d1724885fc7d6606707a",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {

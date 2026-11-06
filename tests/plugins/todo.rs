@@ -1126,7 +1126,7 @@ fn expired_lease_is_reclaimable_by_another_agent() {
         "agent-old"
     );
     assert_eq!(
-        decapod::core::todo::task_journal_checkpoint(&root).unwrap()["status"],
+        decapod::core::todo::task_journal_checkpoint(&root, None).unwrap()["status"],
         "ok"
     );
 
