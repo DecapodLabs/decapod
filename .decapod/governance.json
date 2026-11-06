@@ -1213,6 +1213,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbf1-11-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: refresh specs manifest after #1534 digest reconcile)",
+      "input_digest": "sha256:f26aae90030e078a5554ebbe828e2474ae72adbbbd47066c462cf1a1edc6d5aa",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {
