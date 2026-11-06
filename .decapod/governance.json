@@ -1149,6 +1149,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbf1-3-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: pass None skip to check_complete_suffix in task_transfer (#1534))",
+      "input_digest": "sha256:3ade9b1b1107ed279059740957bcc6c0a243f417f1a525f39fee8ab67b6a0bb0",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {
