@@ -883,6 +883,11 @@
       "id": "fix1528-hist-18",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:c72d8a4e35f960b64e1284948cf0e30e5a7fd74b40ec20a6f84db4ab63db7549"
+    },
+    {
+      "id": "fix1528-hist-19",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:a6ac4ba84a7c46380a4671185d61dfd04190643e4b1a98a991280cdc6f2e5eb4"
     }
   ],
   "intents": {
@@ -923,7 +928,7 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed on head a680e669 after the bazel srcs fix (//:interop_conformance harness) and the native readiness completion-bundle restore in validation_runtime.rs; ARCHITECTURE.md prose describes the validation rules system and evidence layout unchanged in this pass; attestation fingerprint refreshed via specs.refresh.",
+          "reason": "Re-reviewed after bazel fix and specs.refresh; validation rules system implementation + attestation fingerprint refreshed",
           "reviewed_code_fingerprint": "11b256933d55071bb2f7b346f38fe62d56c0d8f2ba80c75282a3660f6732b2a6",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
@@ -950,7 +955,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794009327Z"
+      "updated_at": "1794009372Z"
     },
     "trajectory": {
       "active_boundaries": [
