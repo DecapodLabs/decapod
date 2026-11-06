@@ -1293,6 +1293,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbg3-2-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: carry SQLite runtime library in the Nix package output (#1536))",
+      "input_digest": "sha256:1103b2a4d01684ff87e0ac4a25f7691de8ae0d58d95165d2a69c3a28e2822ddb",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
