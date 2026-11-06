@@ -763,6 +763,11 @@
       "id": "ckpt-1533-clippy-ok",
       "summary": "clippy: use .ok() for the registry fetch result in check_and_update_version (#1533 follow-up)",
       "input_digest": "sha256:0b912ad619994f9f14c981932036407ab63106c0b3c7880984bb849f76fdd0b7"
+    },
+    {
+      "id": "ckpt-1533-spec-rereview",
+      "summary": "Re-review canonical specs against final code state after clippy fix; refresh projections (clears CI STALE_SPEC_REVIEW) (#1533 follow-up)",
+      "input_digest": "sha256:3f3a6b6c3b41a1b799ecb09aeb5f3e129c57fc998454e9d1cd44307e13b0507a"
     }
   ],
   "intents": {
@@ -803,22 +808,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "No architecture change: version-check decision logic and entrypoint templates only refine existing interfaces (#1533 follow-up)",
-          "reviewed_code_fingerprint": "fe7c86cb38d746b62ed00a31dfb7a8229347dea46f97a14eda1385488caec4ec",
+          "reason": "No architecture change: version-check decision logic and entrypoint templates only refine existing interfaces; re-reviewed against final code state (#1533 follow-up)",
+          "reviewed_code_fingerprint": "83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document no-auto-install entrypoint contract, session acquire as sole update path, and unambiguous version_check/is_latest semantics (#1533 follow-up)",
-          "reviewed_code_fingerprint": "fe7c86cb38d746b62ed00a31dfb7a8229347dea46f97a14eda1385488caec4ec",
+          "reason": "Document no-auto-install entrypoint contract, session acquire as sole update path, and unambiguous version_check/is_latest semantics; re-reviewed against final code state (#1533 follow-up)",
+          "reviewed_code_fingerprint": "83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457",
           "spec_material_hash": "936a8f34fc31fd16498e690d5b9ed6fe8d2c713d311c3e2defffdffeb0cbbdeb"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No security-model change: opt-in auto-install and informational version check strengthen, not alter, the toolchain trust boundary (#1533 follow-up)",
-          "reviewed_code_fingerprint": "fe7c86cb38d746b62ed00a31dfb7a8229347dea46f97a14eda1385488caec4ec",
+          "reason": "No security-model change: opt-in auto-install and informational version check strengthen the toolchain trust boundary; re-reviewed against final code state (#1533 follow-up)",
+          "reviewed_code_fingerprint": "83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -830,7 +835,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793988017Z"
+      "updated_at": "1793991007Z"
     },
     "trajectory": {
       "active_boundaries": [
