@@ -598,6 +598,11 @@
       "id": "rebind-01m6qms6a5ec61mx-7",
       "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
       "input_digest": "sha256:c6d2083d20656b2b4fe82ee3eb08adddc9954f0af010baa78a99efbdb8a69301"
+    },
+    {
+      "id": "regen-01m6qms6a5ec61mx-1",
+      "summary": "Regenerate the 4 release-bound entrypoints (AGENTS/CLAUDE/CODEX/GEMINI) to decapod 0.127.0 (fingerprint 6657d308d43fe36d303771a1eaf125f40a2ce9d11de553d6fb3a6d8e3a2ae2ce) via decapod init with the v0.127.0 binary after rebasing onto master 56016070; master's #1539 entrypoint template (no cargo-install bootstrap) is retained.",
+      "input_digest": "sha256:44de0fbdfdcd33c998075ca0849953c1e33745acc577e3ec0c1f7dbc9f88c25e"
     }
   ],
   "intents": {
@@ -638,43 +643,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Added the governance interoperability components section: core/interop.rs manifest+negotiation with RPC_OPS as single source of truth, core/projection.rs pure projections, lib.rs dispatch and read-only allowlists, and the black-box harness topology.",
-          "reviewed_code_fingerprint": "f2259bdfb5e1eb5cc956ab9f9077e14acda0759ea0b1568169de7ff3cd521723",
-          "spec_material_hash": "8d014e24443aa14eb16762efd5f04ae19f54fbc17ba713624efb490d4b0e64eb"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Added the governance interoperability RPC profile section: interop.manifest/interop.negotiate/interop.project contracts, typed error codes, golden-vector locations, and the unchanged capabilities --format json contract.",
-          "reviewed_code_fingerprint": "f2259bdfb5e1eb5cc956ab9f9077e14acda0759ea0b1568169de7ff3cd521723",
-          "spec_material_hash": "fdcd4657e1018abcfb47bb1285a61135a24005a8a1c743e306a5d60769d06f18"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Added the fail-closed rules for the interop profile: manifest is declaration not authorization, negotiation confers no authority, deny_unknown_fields rejects smuggled role fields, verified evidence requires a known conformance test id plus evidence_ref, conformance reports are not publication proof, MCP advertised only as intentionally_not_used.",
-          "reviewed_code_fingerprint": "f2259bdfb5e1eb5cc956ab9f9077e14acda0759ea0b1568169de7ff3cd521723",
-          "spec_material_hash": "79ca350024f62f36699df951ed2b2a6c6b3d4ded78b8ff64b20ac1903fdbfde3"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Scope-correction pass (reviewer hold on PR #1541): RPC_OPS reworded from 'single source of truth' to canonical registry kept synchronized with the dispatcher by harness drift detection (proof of synchronization, not construction); no behavior change.",
-          "reviewed_code_fingerprint": "d216317c8264d9cb27c6cdf661e2b6b23a4debeed3407ef561e88789673dea6c",
+          "reason": "Re-reviewed after rebase onto master 56016070 (v0.127.0): ARCHITECTURE.md keeps the PR #1541 scope-correction wording (RPC_OPS canonical registry drift-checked against the dispatcher, not a single source of truth; interop components section). Only the specs.refresh attestation fingerprint changed for the v0.127.0 evaluating binary in this pass.",
+          "reviewed_code_fingerprint": "74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8",
           "spec_material_hash": "0b93f48e5f38d411bd0ba5cf0a3f3f9960032de4d0c4d207e029b2d20c314247"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Scope-correction pass for PR #1541 reviewer hold: no authored prose change to this spec in this pass; its bytes changed only via the specs.refresh codebase-attestation fingerprint update after the core/interop.rs RPC_OPS doc-comment rewording (canonical registry drift-checked against the dispatcher, no longer claimed as single source of truth). Re-recording review against current bytes.",
-          "reviewed_code_fingerprint": "d216317c8264d9cb27c6cdf661e2b6b23a4debeed3407ef561e88789673dea6c",
-          "spec_material_hash": "fdcd4657e1018abcfb47bb1285a61135a24005a8a1c743e306a5d60769d06f18"
+          "reason": "Re-reviewed after rebase onto master 56016070 (v0.127.0): INTERFACES.md now carries master's #1533 release-version-check section (ported verbatim) plus this branch's interop RPC profile section (interop.manifest/interop.negotiate/interop.project); attestation fingerprint refreshed for v0.127.0 via specs.refresh.",
+          "reviewed_code_fingerprint": "74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8",
+          "spec_material_hash": "a2f3ed7baebaeeaf615ab13e02aea5b337a4fb893fbed46dabf9b9afe5ab98a2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Scope-correction pass for PR #1541 reviewer hold: no authored prose change to this spec in this pass; bytes changed only via the specs.refresh attestation fingerprint after the interop.rs doc rewording. Re-recording review against current bytes; fail-closed interop rules described here are unchanged.",
-          "reviewed_code_fingerprint": "d216317c8264d9cb27c6cdf661e2b6b23a4debeed3407ef561e88789673dea6c",
+          "reason": "Re-reviewed after rebase onto master 56016070 (v0.127.0): SECURITY.md keeps the interop fail-closed rules (manifest is a declaration, not authorization; negotiation confers no authority; KNOWN_CONFORMANCE_TESTS-bound evidence); only the attestation fingerprint changed via specs.refresh in this pass.",
+          "reviewed_code_fingerprint": "74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8",
           "spec_material_hash": "79ca350024f62f36699df951ed2b2a6c6b3d4ded78b8ff64b20ac1903fdbfde3"
         }
       ],
@@ -686,7 +670,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793986768Z"
+      "updated_at": "1794002696Z"
     },
     "trajectory": {
       "active_boundaries": [
