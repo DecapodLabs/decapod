@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.126.4](https://github.com/DecapodLabs/decapod/compare/v0.126.3...v0.126.4) - 2026-11-06
+
+### Fixed
+
+- repair stale vega-native Cargo.lock decapod pin (0.121.0 -> 0.126.3)
+- prevent validate deadlock when worker output exceeds pipe capacity ([#1526](https://github.com/DecapodLabs/decapod/pull/1526))
+
+### Other
+
+- fix doc_lazy_continuation lint in #1526 pipe regression tests
+- add deterministic #1526 regression tests for pipe deadlock and timeout cleanup
+- record unchanged-with-reason reviews for canonical specs
+- refresh specs manifest and projections after config reconciliation
+- reconcile proof profile source digest and approve plan for #1526
+- refresh specs manifest after checkpoint
+
 ## [0.126.3](https://github.com/DecapodLabs/decapod/compare/v0.126.2...v0.126.3) - 2026-11-05
 
 ### Fixed
