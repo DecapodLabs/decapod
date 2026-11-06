@@ -1,0 +1,9 @@
+{
+  "id": "01HZINTEROPNEGOTIATEOK000000000",
+  "op": "interop.negotiate",
+  "params": {
+    "required_ops": ["schema.get", "agent.init"],
+    "optional_ops": ["rpc:transport:mcp"],
+    "optional_extensions": ["zzz-unknown", "receipts"]
+  }
+}

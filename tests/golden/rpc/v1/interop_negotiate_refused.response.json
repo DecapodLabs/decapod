@@ -1,0 +1,29 @@
+{
+  "id": "01HZINTEROPNEGOTIATEREFUSED00000",
+  "success": false,
+  "mandates": [],
+  "receipt": {
+    "op": "interop.negotiate",
+    "timestamp": "2026-01-01T00:00:00Z",
+    "inputs_hash": "sha256:placeholder-input",
+    "outputs_hash": "sha256:error",
+    "touched_paths": [],
+    "governing_anchors": []
+  },
+  "error": {
+    "code": "negotiation_refused",
+    "message": "Compatibility negotiation refused: {\"reason\":\"unsupported_required_op\",\"op\":\"rpc:transport:mcp\"}",
+    "details": {
+      "reason": "unsupported_required_op",
+      "op": "rpc:transport:mcp"
+    }
+  },
+  "allowed_next_ops": [
+    {
+      "op": "agent.init",
+      "reason": "bootstrap before retry",
+      "required_params": []
+    }
+  ],
+  "blocked_by": []
+}

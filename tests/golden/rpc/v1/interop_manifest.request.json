@@ -1,0 +1,5 @@
+{
+  "id": "01HZINTEROPMANIFEST0000000000",
+  "op": "interop.manifest",
+  "params": { "validate": true }
+}

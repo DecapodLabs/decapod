@@ -231,6 +231,26 @@ document in Git. This protects recoverability for cooperative CLI/RPC writers;
 it does not authenticate the truth of agent-authored observations or prevent a
 principal with unrestricted filesystem/Git access from rewriting history.
 
+## Governance interoperability fail-closed rules (#870/#871)
+
+The `interop.*` RPC profile is read-only and fail-closed. A capability manifest
+is a declaration of what the kernel exposes, never an authorization: reading
+`interop.manifest` or completing `interop.negotiate` grants no mutation
+authority, and the negotiation result carries an explicit `authority_note`.
+Negotiation rejects unknown mandatory requirements with a typed
+`negotiation_refused` error and rejects malformed or smuggled fields (for
+example `role`/`admin` injected into `interop.negotiate` params, blocked by
+`deny_unknown_fields`) with `invalid_params`; outcomes are sorted and
+order-invariant so input ordering cannot change the decision. Manifest entries
+may only claim `verified`/`failed` evidence against a known conformance test id
+from `KNOWN_CONFORMANCE_TESTS` and must carry an `evidence_ref`;
+`validate_manifest` rejects anything else, so an authored manifest cannot
+invent admissible evidence. Conformance reports produced by
+`tests/interop_conformance.rs` are diagnostic evidence, not publication proof:
+they never set `publication_ready`, and `interop.project` refuses to project a
+report with a live stale blocker into readiness. ACP/MCP adapters are out of
+scope (#872); `transport:mcp` is advertised only as `intentionally_not_used`.
+
 ## Authentication
 
 Vega's required publication configuration is inherited from the accepted target.
@@ -496,8 +516,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (205 files)
+- Repository signal fingerprint: `74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (214 files), `tests/` (209 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
