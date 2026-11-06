@@ -3962,36 +3962,39 @@ fn check_and_update_version(session_auto_update: bool) -> Result<bool, error::De
         Ok(v) => Some(v),
         Err(_) => None,
     };
+    let latest_display = latest_version.clone().unwrap_or_default();
 
-    match decide_session_update(current_version, latest_version.as_deref(), session_auto_update) {
+    match decide_session_update(
+        current_version,
+        latest_version.as_deref(),
+        session_auto_update,
+    ) {
         SessionUpdateDecision::SkipUnknownRegistry | SessionUpdateDecision::UpToDate => {
             return Ok(false);
         }
         SessionUpdateDecision::ReportOnly => {
             // Automatic install is an explicit opt-in (#1533): by default a
             // newer release is only reported, never installed.
-            let latest = latest_version.unwrap_or_default();
             eprintln!(
                 "{} Decapod v{} → v{} available; set repo.session_auto_update = true in .decapod/config.toml to auto-install.",
                 "⚠".bright_yellow(),
                 current_version,
-                latest
+                latest_display
             );
             return Ok(false);
         }
         SessionUpdateDecision::Install => {
-            let latest_version = latest_version.unwrap_or_default();
             eprintln!(
                 "{} Decapod v{} → v{}, updating...",
                 "⚠".bright_yellow(),
                 current_version,
-                latest_version
+                latest_display
             );
         }
     }
 
     {
-        let latest_version = latest_version.unwrap_or_default();
+        let latest_version = latest_display;
 
         let _ = backup_decapod_state(); // Best effort
 

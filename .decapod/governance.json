@@ -738,6 +738,11 @@
       "id": "ckpt-1533-payload-docs",
       "summary": "payload-examples.md: replace version-aware auto-install example with informational capabilities check and session acquire as update path (#1533 follow-up)",
       "input_digest": "sha256:06f133edd91725a60e30a02cfb28ea5ebd062a1eea41c853cd1e8fd353ea9826"
+    },
+    {
+      "id": "ckpt-1533-behavioral-tests",
+      "summary": "Behavioral regression tests: opt-in install, opt-out report-only, unavailable registry never installs; generated entrypoints never invoke cargo install (#1533 follow-up)",
+      "input_digest": "sha256:00da9bac56657fea90d25d6121fbdc41b3eda16a976366d9702144b70b5ed937"
     }
   ],
   "intents": {
