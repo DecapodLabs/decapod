@@ -1301,6 +1301,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbg3-3-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: identify supported Nix setup in SQLite runtime error (#1536))",
+      "input_digest": "sha256:80b5b5a654cef85aefd4008f6a5703a143b0f1067eb48ac72fdc894bedb587ec",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {

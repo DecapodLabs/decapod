@@ -220,7 +220,7 @@ fn sqlite_runtime_required_error() -> DecapodError {
     } else if cfg!(target_os = "windows") {
         "winget install SQLite.SQLite"
     } else if cfg!(target_os = "linux") {
-        "Debian/Ubuntu: sudo apt-get install libsqlite3-0; Fedora/RHEL: sudo dnf install sqlite-libs; Nix: nix profile install nixpkgs#sqlite"
+        "Debian/Ubuntu: sudo apt-get install libsqlite3-0; Fedora/RHEL: sudo dnf install sqlite-libs; Nix: the flake output already carries the SQLite runtime (nix run github:DecapodLabs/decapod works without a host lib); otherwise nix profile install nixpkgs#sqlite or nix build github:DecapodLabs/decapod#sqlite-runtime and export its lib dir (#1536)"
     } else {
         "install the SQLite runtime shared library supplied by your operating system"
     };
