@@ -519,7 +519,7 @@
     }
   },
   "change": {
-    "id": "change_01M6QCERW5707BQ53RBYQVN2YB",
+    "id": "change_01M6QH5TYRFW3QDTW3PNDNV922",
     "base_commit": "f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e",
     "target_base": "origin/master"
   },
@@ -1284,6 +1284,14 @@
       "input_digest": "sha256:2c2ebf8d2320a015f76642cf8b1fdc1324c125d5edcefac93a6b103460210522",
       "proof_refs": [
         "task_journal_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbg3-1-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: seed workspace branch for #1536 on v0.126.4 base)",
+      "input_digest": "sha256:833ab3713e8869a9b1b5132bd286c3d2b1bcf6b7010b0dae778311268696e0a7",
+      "proof_refs": [
+        "dactyl_tests"
       ]
     }
   ],
