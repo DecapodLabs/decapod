@@ -3958,10 +3958,7 @@ fn check_and_update_version(session_auto_update: bool) -> Result<bool, error::De
         _ => {}
     }
 
-    let latest_version = match fetch_latest_crates_version() {
-        Ok(v) => Some(v),
-        Err(_) => None,
-    };
+    let latest_version = fetch_latest_crates_version().ok();
     let latest_display = latest_version.clone().unwrap_or_default();
 
     match decide_session_update(

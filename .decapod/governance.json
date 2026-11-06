@@ -758,6 +758,11 @@
       "id": "ckpt-1533-entrypoints-regen",
       "summary": "Regenerate release-bound entrypoints from the branch binary with the no-auto-install template; manifest hashes refreshed via project-check --refresh-specs (#1533 follow-up)",
       "input_digest": "sha256:4d55fdf67c695951ff18459e80d50e564d6b752dbe273deb527dcec6152d5aa1"
+    },
+    {
+      "id": "ckpt-1533-clippy-ok",
+      "summary": "clippy: use .ok() for the registry fetch result in check_and_update_version (#1533 follow-up)",
+      "input_digest": "sha256:0b912ad619994f9f14c981932036407ab63106c0b3c7880984bb849f76fdd0b7"
     }
   ],
   "intents": {
