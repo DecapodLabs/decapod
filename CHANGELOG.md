@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.126.5](https://github.com/DecapodLabs/decapod/compare/v0.126.4...v0.126.5) - 2026-11-06
+
+### Fixed
+
+- qa verify recover --stale lists stale items instead of running validation ([#1527](https://github.com/DecapodLabs/decapod/pull/1527))
+
 ## [0.126.4](https://github.com/DecapodLabs/decapod/compare/v0.126.3...v0.126.4) - 2026-11-06
 
 ### Fixed
