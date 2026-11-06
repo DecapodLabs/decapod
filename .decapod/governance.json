@@ -1013,6 +1013,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbd1-6-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (docs: document reviewed ci_only declaration in INTERFACES.md (#1531))",
+      "input_digest": "sha256:e69bc816af8036ff2656936572ae0b21f1facf5eb3f10f9ad5485b4e339b6974",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {

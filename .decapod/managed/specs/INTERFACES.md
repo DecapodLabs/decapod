@@ -1155,6 +1155,15 @@ working directory and timeout are configuration-bound. Unknown IDs, stale pins,
 empty/optional commands and missing or duplicate coverage fail closed. Init exposes
 both discovered digests for review without updating them or implying proof success.
 
+A `source_coverage` row may instead declare a reviewed CI-only limitation (#1531):
+`{ source = ".github/workflows/ci-only.yml", commands = [], ci_only = true, reason = "..." }`.
+Such a row pins the limitation through `reviewed_commands_digest`, requires a nonempty
+`reason` and no local commands (a `reason` without `ci_only`, or `ci_only` with mapped
+commands, fails closed as a false coverage claim), and is reported in
+`validation-results.v3` as a `NonApplicable` limitation stage for that workflow —
+never counted as a passed or skipped check. Rows without the new fields keep their
+pre-#1531 serialized identity and digests.
+
 `init` and `init with` share option-provenance-aware preservation: omitted defaults
 retain authored configuration even under `--force`; explicit arguments still change
 it. The generated GitHub validation workflow fetches complete history and supplies
