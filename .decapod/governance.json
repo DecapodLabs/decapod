@@ -568,6 +568,16 @@
       "id": "rebind-01m6qms6a5ec61mx-4",
       "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
       "input_digest": "sha256:b892668a8e49f4e636d3b005fd195c9bf61993c20bff3a96fedd1253cf27c8bc"
+    },
+    {
+      "id": "feat_01m6qms6a5ec61mx-interop-manifest-config-hash",
+      "summary": "Refresh specs manifest config_input_hash after the reviewed_sources_digest reconciliation edit to .decapod/config.toml (regenerated with the v0.126.5 binary; matches CI-expected 82d202a2...).",
+      "input_digest": "sha256:28d67cad141af9f318f6eaae5a2a0b1399b85518ba73626519a1756997cc6eca"
+    },
+    {
+      "id": "rebind-01m6qms6a5ec61mx-5",
+      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
+      "input_digest": "sha256:9b006818829d0c5735ab030567a945184ec6240de799c6a39a530f0444e386d1"
     }
   ],
   "intents": {
