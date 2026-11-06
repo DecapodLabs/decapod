@@ -1237,6 +1237,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbf1-14-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: regenerate specs projections on v0.126.5 after #1534 rebase)",
+      "input_digest": "sha256:8b907b8b191f677e534d37b80b6138f7402934777ff70de134e99c3fff3ae60a",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {
