@@ -1381,6 +1381,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbg3-13-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: refresh specs manifest after #1536 digest reconcile)",
+      "input_digest": "sha256:6f4a846c520fcd21145e76ca967e94aa001d93c7ee3bdae0a897ded17ea784e3",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
