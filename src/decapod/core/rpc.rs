@@ -992,17 +992,18 @@ fn get_latest_version() -> String {
             "-s",
             "--connect-timeout",
             "2",
+            // crates.io answers HTTP 403 without an identifying User-Agent (#1533)
+            "--user-agent",
+            &crate::crates_io_user_agent(),
             "https://crates.io/api/v1/crates/decapod",
         ])
         .output();
 
     if let Ok(output) = output
         && output.status.success()
+        && let Some(v) = crate::parse_crates_max_version(&output.stdout)
     {
-        let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap_or_default();
-        if let Some(v) = json["crate"]["max_version"].as_str() {
-            return v.to_string();
-        }
+        return v;
     }
     env!("CARGO_PKG_VERSION").to_string()
 }

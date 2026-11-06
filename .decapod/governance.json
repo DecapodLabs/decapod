@@ -547,6 +547,23 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-1533-rpc-user-agent",
+      "summary": "send identifying User-Agent on crates.io version query in get_latest_version (src/decapod/core/rpc.rs) and parse crate.max_version via shared helper for #1533",
+      "input_digest": "sha256:2c6d96aae4f0d5de2f8f4afa8d98b5399bc9a346a0bcbf7f6a38c6d79a357f2d",
+      "proof_refs": [
+        "crates_io_user_agent_identifies_client",
+        "parse_crates_max_version_reads_crate_field"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-3",
+      "summary": "rebind checkpoint to post-rebase tree (fix: identify crates.io version check with User-Agent (#1533))",
+      "input_digest": "sha256:b19b81433576ac8fc5a77202103dcb4d480eccd8f8563feffa77bdad16ad4282",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
