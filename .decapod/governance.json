@@ -572,6 +572,24 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-1533-version-tests",
+      "summary": "add unit tests for #1533: crate.max_version parsing, User-Agent shape, session_auto_update default",
+      "input_digest": "sha256:2c6d96aae4f0d5de2f8f4afa8d98b5399bc9a346a0bcbf7f6a38c6d79a357f2d",
+      "proof_refs": [
+        "crates_io_user_agent_identifies_client",
+        "parse_crates_max_version_reads_crate_field",
+        "session_auto_update_defaults_to_opt_in_false"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-5",
+      "summary": "rebind checkpoint to post-rebase tree (test: cover crates.io version check parsing and opt-in default (#1533))",
+      "input_digest": "sha256:fab6b89bb49b44a83b8187432667a163a14924e7e712ed7cd8343b573b0e28b3",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
