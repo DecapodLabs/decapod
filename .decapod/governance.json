@@ -718,6 +718,11 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-1533-entrypoint-noautoinstall",
+      "summary": "Remove cargo-install auto-bootstrap from generated entrypoint templates in assets.rs (#1533 follow-up)",
+      "input_digest": "sha256:7835adccaa328511ed66e55e8559d72b994740aeef74da13f4ea66553dd30deb"
     }
   ],
   "intents": {
