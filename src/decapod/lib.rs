@@ -3911,7 +3911,44 @@ fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error
 use crate::core::ansi::AnsiExt;
 use crate::core::migration::DECAPOD_VERSION;
 
-fn check_and_update_version() -> Result<bool, error::DecapodError> {
+/// Decision for the `session acquire` update path (#1533). Version detection
+/// may inform execution, but only the explicit `repo.session_auto_update`
+/// opt-in authorizes a toolchain mutation; an unreachable registry never
+/// authorizes anything.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SessionUpdateDecision {
+    /// Registry unreachable or unparseable: currency unknown, never install.
+    SkipUnknownRegistry,
+    /// Running version is current.
+    UpToDate,
+    /// Newer release exists; report it only (default, no opt-in).
+    ReportOnly,
+    /// Newer release exists and `repo.session_auto_update = true`: install.
+    Install,
+}
+
+/// Pure decision behind `check_and_update_version` (#1533), split out so the
+/// opt-in / opt-out / unavailable-registry behavior is testable without
+/// spawning curl or cargo.
+pub(crate) fn decide_session_update(
+    current_version: &str,
+    latest_version: Option<&str>,
+    session_auto_update: bool,
+) -> SessionUpdateDecision {
+    let Some(latest) = latest_version else {
+        return SessionUpdateDecision::SkipUnknownRegistry;
+    };
+    if !version_gt(latest, current_version) {
+        return SessionUpdateDecision::UpToDate;
+    }
+    if session_auto_update {
+        SessionUpdateDecision::Install
+    } else {
+        SessionUpdateDecision::ReportOnly
+    }
+}
+
+fn check_and_update_version(session_auto_update: bool) -> Result<bool, error::DecapodError> {
     let current_version = DECAPOD_VERSION;
 
     // Skip check if curl not available (treat all errors as skip)
@@ -3921,18 +3958,40 @@ fn check_and_update_version() -> Result<bool, error::DecapodError> {
         _ => {}
     }
 
-    let latest_version = match fetch_latest_crates_version() {
-        Ok(v) => v,
-        Err(_) => return Ok(false),
-    };
+    let latest_version = fetch_latest_crates_version().ok();
+    let latest_display = latest_version.clone().unwrap_or_default();
 
-    if version_gt(&latest_version, current_version) {
-        eprintln!(
-            "{} Decapod v{} → v{}, updating...",
-            "⚠".bright_yellow(),
-            current_version,
-            latest_version
-        );
+    match decide_session_update(
+        current_version,
+        latest_version.as_deref(),
+        session_auto_update,
+    ) {
+        SessionUpdateDecision::SkipUnknownRegistry | SessionUpdateDecision::UpToDate => {
+            return Ok(false);
+        }
+        SessionUpdateDecision::ReportOnly => {
+            // Automatic install is an explicit opt-in (#1533): by default a
+            // newer release is only reported, never installed.
+            eprintln!(
+                "{} Decapod v{} → v{} available; set repo.session_auto_update = true in .decapod/config.toml to auto-install.",
+                "⚠".bright_yellow(),
+                current_version,
+                latest_display
+            );
+            return Ok(false);
+        }
+        SessionUpdateDecision::Install => {
+            eprintln!(
+                "{} Decapod v{} → v{}, updating...",
+                "⚠".bright_yellow(),
+                current_version,
+                latest_display
+            );
+        }
+    }
+
+    {
+        let latest_version = latest_display;
 
         let _ = backup_decapod_state(); // Best effort
 
@@ -3977,9 +4036,36 @@ fn check_and_update_version() -> Result<bool, error::DecapodError> {
     Ok(false)
 }
 
+/// crates.io data access policy requires an identifying User-Agent on API
+/// requests (#1533); without one the API answers HTTP 403.
+fn crates_io_user_agent() -> String {
+    format!(
+        "decapod/{} (https://github.com/DecapodLabs/decapod)",
+        env!("CARGO_PKG_VERSION")
+    )
+}
+
+/// Parse the latest published version from a crates.io
+/// `/api/v1/crates/decapod` response body. The response carries the newest
+/// version in the top-level `crate.max_version` field (#1533).
+fn parse_crates_max_version(body: &[u8]) -> Option<String> {
+    let json: serde_json::Value = serde_json::from_slice(body).ok()?;
+    json.get("crate")
+        .and_then(|c| c.get("max_version"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+}
+
 fn fetch_latest_crates_version() -> Result<String, error::DecapodError> {
     let output = std::process::Command::new("curl")
-        .args(["-s", "https://crates.io/api/v1/crates/decapod"])
+        .args([
+            "-s",
+            "--connect-timeout",
+            "2",
+            "--user-agent",
+            &crates_io_user_agent(),
+            "https://crates.io/api/v1/crates/decapod",
+        ])
         .output()
         .map_err(|e| {
             error::DecapodError::ValidationError(format!("Failed to check version: {e}"))
@@ -3991,13 +4077,7 @@ fn fetch_latest_crates_version() -> Result<String, error::DecapodError> {
         ));
     }
 
-    let json: serde_json::Value = serde_json::from_slice(&output.stdout)
-        .map_err(|e| error::DecapodError::ValidationError(format!("Invalid response: {e}")))?;
-
-    json.get("version")
-        .and_then(|v| v.get("num"))
-        .and_then(|n| n.as_str())
-        .map(|s| s.to_string())
+    parse_crates_max_version(&output.stdout)
         .ok_or_else(|| error::DecapodError::ValidationError("Could not parse version".to_string()))
 }
 
@@ -4076,10 +4156,8 @@ fn install_decapod() -> Result<(), error::DecapodError> {
 fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodError> {
     let current_dir = std::env::current_dir()?;
     let project_root = find_decapod_project_root(&current_dir)?;
-    let cloud_backend = cli::DecapodProjectConfig::load(&project_root)?
-        .repo
-        .effective_backend()
-        .is_cloud();
+    let project_config = cli::DecapodProjectConfig::load(&project_root)?;
+    let cloud_backend = project_config.repo.effective_backend().is_cloud();
     let store_root = find_governance_root(&project_root)
         .join(".decapod")
         .join("data");
@@ -4094,7 +4172,7 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
 
     // Check and update version on session acquire
     if matches!(session_cli.command, SessionCommand::Acquire)
-        && let Ok(true) = check_and_update_version()
+        && let Ok(true) = check_and_update_version(project_config.repo.session_auto_update)
     {
         eprintln!(
             "{} Restart Session: decapod session acquire",
@@ -9495,7 +9573,9 @@ fn run_command_help_smoke() -> Result<(), error::DecapodError> {
 /// Show version information
 fn show_version_info() -> Result<(), error::DecapodError> {
     println!("Decapod version: {}", migration::DECAPOD_VERSION);
-    println!("  Update: cargo install decapod");
+    println!(
+        "  Update: decapod session acquire (auto-install is opt-in via repo.session_auto_update)"
+    );
 
     Ok(())
 }
@@ -12527,3 +12607,7 @@ mod init_prompt_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/lib_ci_scope_tests.rs"]
 mod ci_scope_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/lib_version_check_tests.rs"]
+mod version_check_tests;

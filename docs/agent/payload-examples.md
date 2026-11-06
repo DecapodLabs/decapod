@@ -112,14 +112,20 @@ for all exact enums, check aliases, retry rules, and verification evidence
 requirements. `grader_result: "pass"` and `status: "passed"` are different fields
 with different vocabularies.
 
-## Smart Bootstrap
+## Version Check and Updates
 
-Efficiently install and initialize Decapod only when updates are available.
+`decapod capabilities --format json` reports version status informationally.
+`is_latest` is true only when crates.io was reached and reports the running
+version as the newest release; when the registry is unreachable the report
+says `"version_check": "unavailable"` with `"latest_version": null`, never
+`is_latest: true`. Version detection may inform execution but never
+authorizes a toolchain mutation. `decapod session acquire` is the single
+authoritative update path; installing a newer release requires
+`repo.session_auto_update = true` in `.decapod/config.toml` (default false).
 
-### Version-Aware Installation
+### Informational Version Check
 ```bash
-# Checks crates.io and installs/refreshes only if a newer version exists
-(decapod capabilities --format json | grep -q '"is_latest":true') || (cargo install decapod && decapod init --proof)
+decapod capabilities --format json
 ```
 
 ## Subsystem Queries

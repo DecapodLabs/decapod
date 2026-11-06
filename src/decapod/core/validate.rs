@@ -1099,7 +1099,10 @@ fn validate_entrypoint_invariants(
     // Exact invariant strings (tamper detection)
     let exact_invariants = [
         ("core/decapod", "Router pointer to core/DECAPOD"),
-        ("cargo install decapod", "Version update gate language"),
+        (
+            "never authorizes a toolchain change",
+            "Version detection never authorizes install language",
+        ),
         ("decapod validate", "Validation gate language"),
         (
             "decapod docs ingest",
@@ -1160,6 +1163,23 @@ fn validate_entrypoint_invariants(
             );
             all_present = false;
         }
+    }
+
+    // #1533: version detection may inform execution but must never
+    // independently authorize a toolchain mutation. Generated entrypoints
+    // must not run `cargo install` themselves; `decapod session acquire` is
+    // the single authoritative update path.
+    if normalized.contains("cargo install decapod") {
+        fail(
+            "AGENTS.md contains an auto-install bootstrap (`cargo install decapod`); `decapod session acquire` is the only update path",
+            ctx,
+        );
+        all_present = false;
+    } else {
+        pass(
+            "AGENTS.md contains no auto-install bootstrap; updates flow via `decapod session acquire`",
+            ctx,
+        );
     }
 
     // Line count check (AGENTS.md should be thin: max 100 lines for universal contract)
@@ -1391,12 +1411,27 @@ fn validate_entrypoint_invariants(
             all_present = false;
         }
 
-        // Must include explicit update command in startup sequence
-        if agent_content.contains("cargo install decapod") {
-            pass(&format!("{agent_file} includes version update step"), ctx);
+        // #1533: entrypoints must route updates through `decapod session
+        // acquire` and must never invoke `cargo install` themselves; version
+        // detection may inform but never authorizes a toolchain mutation.
+        if agent_content.contains("cargo install") {
+            fail(
+                &format!(
+                    "{agent_file} invokes `cargo install` from the entrypoint contract; `decapod session acquire` is the only update path"
+                ),
+                ctx,
+            );
+            all_present = false;
+        } else if agent_content.contains("decapod session acquire") {
+            pass(
+                &format!(
+                    "{agent_file} routes updates through `decapod session acquire` without cargo install"
+                ),
+                ctx,
+            );
         } else {
             fail(
-                &format!("{agent_file} missing version update step (`cargo install decapod`)"),
+                &format!("{agent_file} missing `decapod session acquire` update path"),
                 ctx,
             );
             all_present = false;
