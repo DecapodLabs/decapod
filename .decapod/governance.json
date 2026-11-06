@@ -519,7 +519,7 @@
     }
   },
   "change": {
-    "id": "change_01M6QFSVJP980EQWW6P7Z55XGK",
+    "id": "change_01M6QCERW5707BQ53RBYQVN2YB",
     "base_commit": "f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e",
     "target_base": "origin/master"
   },
@@ -1132,6 +1132,14 @@
       "input_digest": "sha256:ca85ceeabcef5122f255ab0199871a853452c0b7f059056ae1165fdd70550559",
       "proof_refs": [
         "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbf1-1-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (Merge pull request #1548 from DecapodLabs/release-plz-2026-11-07T05-25-23Z)",
+      "input_digest": "sha256:0324b908baf8514849566fabde4c6409ce490a0da0806e4142873d799ac4e994",
+      "proof_refs": [
+        "task_journal_tests"
       ]
     }
   ],
