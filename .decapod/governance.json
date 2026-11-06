@@ -535,6 +535,11 @@
       "id": "fix1528-hist-3",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:3b30c21068c2f318f0007731c0afbc971c597936735a1cd70ab279b83728fd93"
+    },
+    {
+      "id": "fix1528-hist-4",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:66ddb29504ba1495be23b2b0ebb8808b509abbe344b3e3423d32845515c98fca"
     }
   ],
   "intents": {
