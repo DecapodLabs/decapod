@@ -662,6 +662,22 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-rebind-12",
+      "summary": "rebind checkpoint to post-rebase tree (chore: regenerate specs projections on v0.126.5 after #1533 rebase)",
+      "input_digest": "sha256:786f4f8cbdbe2079be9f1ad829a1ce657059e08e2b93c262c3663b79051b88c5",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-rebind-review",
+      "summary": "rebind checkpoints across rewritten #1533 branch and re-review canonical specs",
+      "input_digest": "sha256:11506999be397e9489ac6b04c9409f1b132e247e7f0a843698919d3977791a1a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
@@ -686,18 +702,50 @@
   },
   "sections": {
     "plan": {
-      "constraints": {},
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
       "intent": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
+      "phases": [],
       "proof_hooks": [
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "ARCHITECTURE.md unchanged by #1533 beyond regenerated attestation fingerprint.",
+          "reviewed_code_fingerprint": "5d3c339f49ecb7e3c6be1249e973d709bfd0b785a88a9e7022281181e6f4dd9d",
+          "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Re-review after checkpoint rebind rewrite (#1533): INTERFACES.md documents the crates.io release version check with User-Agent and opt-in repo.session_auto_update auto-install.",
+          "reviewed_code_fingerprint": "5d3c339f49ecb7e3c6be1249e973d709bfd0b785a88a9e7022281181e6f4dd9d",
+          "spec_material_hash": "702aa41ea87a0ef804d9d56c361f6851666ca90b644679cd94f531d398ed5223"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "SECURITY.md unchanged by #1533 beyond regenerated attestation fingerprint.",
+          "reviewed_code_fingerprint": "5d3c339f49ecb7e3c6be1249e973d709bfd0b785a88a9e7022281181e6f4dd9d",
+          "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
+        }
+      ],
       "state": "DRAFT",
+      "stop_conditions": [],
       "title": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
       "todo_ids": [
         "bugs_01m6q7cbwbjxpk3d"
       ],
-      "updated_at": "1793928385Z"
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1793948722Z"
     },
     "trajectory": {
       "active_boundaries": [
