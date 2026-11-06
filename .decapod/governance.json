@@ -539,6 +539,14 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-rebind-2",
+      "summary": "rebind checkpoint to post-rebase tree (chore: seed workspace branch for #1533 on v0.126.4 base)",
+      "input_digest": "sha256:04aa86fe1edb58cf18b5654ecfe1720fa5064e9c9e3ec08d3d4d7e3fd1a9b5d5",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
