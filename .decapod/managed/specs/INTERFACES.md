@@ -368,6 +368,25 @@ status changes distinguish success, not-found, and conflict, and emit their even
 only when the state transition wins. External trackers may remain the
 organizational system of record; they do not replace Decapod execution claims.
 
+### Release version check and opt-in auto-update (#1533)
+
+`decapod capabilities` and the `session acquire` update check query
+`https://crates.io/api/v1/crates/decapod`. crates.io's data access policy
+answers requests without an identifying `User-Agent` with HTTP 403, so every
+request sends `decapod/<version> (https://github.com/DecapodLabs/decapod)`;
+without it the check silently falls back to the running version and
+`is_latest` is always true. The response carries the newest release in the
+top-level `crate.max_version` field (there is no `version.num`), parsed by
+`parse_crates_max_version` in `src/decapod/lib.rs` and shared with
+`get_latest_version` in `src/decapod/core/rpc.rs`.
+
+Running `cargo install decapod` from `session acquire` when a newer release
+exists is an explicit opt-in: `repo.session_auto_update = true` in
+`.decapod/config.toml` (default false). By default a newer release is only
+reported on stderr and nothing is installed, so repositories that pin Decapod
+through a package manager never get a second unmanaged `~/.cargo/bin`
+install.
+
 Captured task verification artifacts include `task_id` and `task_revision`.
 A passing legacy record without this binding, a malformed binding, or a different
 task/revision projects `validation_status: stale`; a done task then projects
@@ -859,8 +878,16 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
+<<<<<<< HEAD
 - Repository signal fingerprint: `194f126c8e9ab0f3c13d8608de9b563021be6fe7403b8ffe144a5f0ec80b8d4e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (204 files)
+||||||| parent of e444b109 (docs: document release version check and opt-in auto-update in INTERFACES.md (#1533))
+- Repository signal fingerprint: `eb3f6119bfe57e46e28f96ede5d47c5eb7b2d19198bea1860423c628d679d396`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (204 files)
+=======
+- Repository signal fingerprint: `1ade183dd884927272822d60b043e21d9cd3de20f9ffb60b4cff5b80bc61536c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (205 files)
+>>>>>>> e444b109 (docs: document release version check and opt-in auto-update in INTERFACES.md (#1533))
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

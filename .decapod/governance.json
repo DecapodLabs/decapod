@@ -590,6 +590,14 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-rebind-6",
+      "summary": "rebind checkpoint to post-rebase tree (test: cover crates.io version check parsing and opt-in default (#1533))",
+      "input_digest": "sha256:ecf99a534516d6030b27d3dc8fd2a3dabfc2a65882b634b3ccf21442a90797af",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
