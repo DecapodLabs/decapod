@@ -622,6 +622,22 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-1533-manifest-after-digest",
+      "summary": "refresh specs manifest config_input_hash after #1533 digest reconcile (fixes CI projection drift)",
+      "input_digest": "sha256:ace89665113de91cba8fe45de5819c3a58d033f80bd584820f50e1ce5873329d",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-9",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest after #1533 digest reconcile)",
+      "input_digest": "sha256:6f5dd7057820e46b3554e69ed5dd8fa651c3573bacc6710dc20806a218cd932a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
