@@ -678,6 +678,14 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-1533-vega-lock",
+      "summary": "repair stale vega-native Cargo.lock decapod pin 0.126.4 -> 0.126.5 so the locked rust-worker check passes on v0.126.5 (#1533)",
+      "input_digest": "sha256:6d96a95c2359f917e7a66776e55858bd6cfe7014538ae66235a8f4c5428d057f",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
