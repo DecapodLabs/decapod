@@ -1349,6 +1349,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbg3-9-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: regenerate specs projections on v0.126.5 after #1536 rebase)",
+      "input_digest": "sha256:5f12f0cce18a0f874722ba30b27de36cc6e718010b9bd42d02aea83a0d84d228",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
