@@ -598,6 +598,22 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-1533-specs-refresh",
+      "summary": "refresh specs manifest/attestations after #1533 INTERFACES.md update",
+      "input_digest": "sha256:1b1f07a3ef3d063c7edf95ccb7b8c9b7fb0f5111d33f44ce4c74df1cf8b9ace6",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-7",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest and attestations after #1533 spec update)",
+      "input_digest": "sha256:ecf99a534516d6030b27d3dc8fd2a3dabfc2a65882b634b3ccf21442a90797af",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
