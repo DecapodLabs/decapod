@@ -588,6 +588,16 @@
       "id": "rebind-01m6qms6a5ec61mx-6",
       "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
       "input_digest": "sha256:69750d7f3603e871bd9cf4f79118f5433123b7aa4d51d38d24b7fe0ea2c7467f"
+    },
+    {
+      "id": "feat_01m6qms6a5ec61mx-interop-spec-review-refresh",
+      "summary": "Re-recorded review-spec dispositions for the canonical specs (ARCHITECTURE, INTERFACES, SECURITY) against current bytes after the PR #1541 scope-correction edits, resolving STALE_SPEC_REVIEW: ARCHITECTURE.md material updated (RPC_OPS canonical-registry wording), INTERFACES.md/SECURITY.md unchanged-with-reason (attestation fingerprint only). No code or authored-prose change beyond commit 8ea699cb.",
+      "input_digest": "sha256:4ec8f15fa418afba36a3de74d0df7c8487d53bf244e68f0d9962d710eb5d53bc"
+    },
+    {
+      "id": "rebind-01m6qms6a5ec61mx-7",
+      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
+      "input_digest": "sha256:c6d2083d20656b2b4fe82ee3eb08adddc9954f0af010baa78a99efbdb8a69301"
     }
   ],
   "intents": {
@@ -645,6 +655,27 @@
           "reason": "Added the fail-closed rules for the interop profile: manifest is declaration not authorization, negotiation confers no authority, deny_unknown_fields rejects smuggled role fields, verified evidence requires a known conformance test id plus evidence_ref, conformance reports are not publication proof, MCP advertised only as intentionally_not_used.",
           "reviewed_code_fingerprint": "f2259bdfb5e1eb5cc956ab9f9077e14acda0759ea0b1568169de7ff3cd521723",
           "spec_material_hash": "79ca350024f62f36699df951ed2b2a6c6b3d4ded78b8ff64b20ac1903fdbfde3"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Scope-correction pass (reviewer hold on PR #1541): RPC_OPS reworded from 'single source of truth' to canonical registry kept synchronized with the dispatcher by harness drift detection (proof of synchronization, not construction); no behavior change.",
+          "reviewed_code_fingerprint": "d216317c8264d9cb27c6cdf661e2b6b23a4debeed3407ef561e88789673dea6c",
+          "spec_material_hash": "0b93f48e5f38d411bd0ba5cf0a3f3f9960032de4d0c4d207e029b2d20c314247"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Scope-correction pass for PR #1541 reviewer hold: no authored prose change to this spec in this pass; its bytes changed only via the specs.refresh codebase-attestation fingerprint update after the core/interop.rs RPC_OPS doc-comment rewording (canonical registry drift-checked against the dispatcher, no longer claimed as single source of truth). Re-recording review against current bytes.",
+          "reviewed_code_fingerprint": "d216317c8264d9cb27c6cdf661e2b6b23a4debeed3407ef561e88789673dea6c",
+          "spec_material_hash": "fdcd4657e1018abcfb47bb1285a61135a24005a8a1c743e306a5d60769d06f18"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Scope-correction pass for PR #1541 reviewer hold: no authored prose change to this spec in this pass; bytes changed only via the specs.refresh attestation fingerprint after the interop.rs doc rewording. Re-recording review against current bytes; fail-closed interop rules described here are unchanged.",
+          "reviewed_code_fingerprint": "d216317c8264d9cb27c6cdf661e2b6b23a4debeed3407ef561e88789673dea6c",
+          "spec_material_hash": "79ca350024f62f36699df951ed2b2a6c6b3d4ded78b8ff64b20ac1903fdbfde3"
         }
       ],
       "state": "DRAFT",
@@ -655,7 +686,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1793957192Z"
+      "updated_at": "1793986768Z"
     },
     "trajectory": {
       "active_boundaries": [
