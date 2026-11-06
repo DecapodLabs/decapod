@@ -775,6 +775,11 @@
       "input_digest": "sha256:42c72499a2e677c43cd587b05f642273fc0592157414035d665e062d4af38dc4"
     },
     {
+      "id": "fix1528-bazel-interop-srcs",
+      "summary": "Declare tests/support/interop_harness.rs in the //:interop_conformance rust_test srcs so the #[path] module resolves inside the Bazel sandbox; without it Tests (core) fails with 'couldn't read tests/support/interop_harness.rs'.",
+      "input_digest": "sha256:6f3a83a76912664210dbef365195d1c58d53bfc4ffd4bd46ef2b8a9aae343567"
+    },
+    {
       "id": "validation-rules-impl",
       "summary": "Implement validation rules system with 7 built-in rules, registry, evaluators, OVERRIDE.md integration, and three-verdict system",
       "input_digest": "sha256:adbcf5ec97aaef4462018977f382c24784617098a53e983f991dbad630f953a6"
@@ -853,6 +858,11 @@
       "id": "fix1528-hist-15",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:8f818586f5786780e923b44de399ba856ebd511ef138c176d0091cb3cdbbcdfa"
+    },
+    {
+      "id": "fix1528-hist-16",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:6f3a83a76912664210dbef365195d1c58d53bfc4ffd4bd46ef2b8a9aae343567"
     }
   ],
   "intents": {
