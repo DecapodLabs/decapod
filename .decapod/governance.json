@@ -519,7 +519,7 @@
     }
   },
   "change": {
-    "id": "change_01M6Q7DMYY95KQ09ZA83VBHBKF",
+    "id": "change_01M6QFSVJP980EQWW6P7Z55XGK",
     "base_commit": "f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e",
     "target_base": "origin/master"
   },
@@ -973,6 +973,14 @@
       "id": "fix1528-spec-reviews-gb-bound",
       "summary": "Re-record ARCHITECTURE/INTERFACES/SECURITY spec reviews against the repo signal fingerprint of the head that includes the group_broker contention-bound fix; clears STALE_SPEC_REVIEW",
       "input_digest": "sha256:61712366ac13f7116753457a5b95e2ec1c8200b7d7f9b5017e60b8c497b04db9"
+    },
+    {
+      "id": "ckpt-rbd1-1-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (Merge pull request #1547 from DecapodLabs/release-plz-2026-11-07T03-13-58Z)",
+      "input_digest": "sha256:b005e4ebfc50a7facb982cfd5473cff1818d948ec0a528847776e3a7c4c617de",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
