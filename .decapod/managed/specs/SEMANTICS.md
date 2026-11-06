@@ -169,6 +169,18 @@ sets, failed runtime or stale evidence abstain. `proof_ready` remains separate
 from `ready`; a model result cannot create proof. Indexed prompt compaction never
 removes adverse outcomes, exclusions, simulations, blockers or unknowns.
 
+The `interop.project` projections (`src/decapod/core/projection.rs`) are pure
+functions of their input: deterministic, side-effect-free, and order-invariant
+(negotiation outputs are sorted, so reordering independent inputs yields the
+identical outcome). They never create a competing source of truth: canonical
+governed state remains the only authority. An `unknown` interlock status
+projects to `outcome: "unknown"` and is never mapped to success; a validation
+report carrying a live stale blocker projects to `stale: true` and
+`publication_ready: false` even if the forged input claimed otherwise; a denied
+approval projects to `status: "denied"` with its remediation. Declaration and
+verification stay distinct: a manifest `verified` entry is admissible only with
+a known conformance test id and an `evidence_ref`.
+
 ## Failure reporting
 
 Failures must preserve the violated condition, relevant state, and a supported
@@ -243,7 +255,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (205 files)
+- Repository signal fingerprint: `f2259bdfb5e1eb5cc956ab9f9077e14acda0759ea0b1568169de7ff3cd521723`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (214 files), `tests/` (208 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

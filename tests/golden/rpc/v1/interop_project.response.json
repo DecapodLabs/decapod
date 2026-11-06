@@ -1,0 +1,34 @@
+{
+  "id": "01HZINTEROPPROJECT0000000000000",
+  "success": true,
+  "mandates": [],
+  "receipt": {
+    "op": "interop.project",
+    "timestamp": "2026-01-01T00:00:00Z",
+    "inputs_hash": "sha256:placeholder-input",
+    "outputs_hash": "sha256:placeholder-output",
+    "touched_paths": [],
+    "governing_anchors": []
+  },
+  "result": {
+    "projection": {
+      "op": "interop.negotiate",
+      "correlation_id": "01HZINNERREQUEST000000000000000",
+      "phase": "completed",
+      "status": "refused",
+      "receipt": {
+        "op": "interop.negotiate",
+        "timestamp": "2026-01-01T00:00:00Z",
+        "inputs_hash": "sha256:placeholder-input",
+        "outputs_hash": "sha256:error"
+      },
+      "touched_paths": [],
+      "blockers": [],
+      "allowed_next_ops": [],
+      "error": { "code": "negotiation_refused", "message": "refused" },
+      "source": "rpc_response"
+    }
+  },
+  "allowed_next_ops": [],
+  "blocked_by": []
+}

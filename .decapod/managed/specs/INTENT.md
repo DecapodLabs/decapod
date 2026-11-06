@@ -241,6 +241,23 @@ custody, receipt-independent prerequisites and required Buildkite execution
 remain governed by their existing contracts. Retired Dagger configuration must
 fail explicitly rather than silently discarding a required check.
 
+### Governance interoperability profile (#870/#871)
+
+Decapod exposes a versioned, read-only governance interoperability profile so
+external systems can discover what the kernel can do and negotiate a shared
+operating picture without any of them gaining authority. The profile is
+implemented by three new read-only RPC operations — `interop.manifest`,
+`interop.negotiate`, and `interop.project` — backed by
+`src/decapod/core/interop.rs` and `src/decapod/core/projection.rs`. The
+manifest is a capability declaration, not an authorization; negotiation is
+fail-closed and confers no authority; projections are pure structured views of
+governed state and never write it. ACP/MCP adapter surfaces are explicitly out
+of scope for this profile (tracked separately as #872); the manifest advertises
+`transport:mcp` only as `intentionally_not_used`. Conformance evidence comes
+from a black-box harness (`tests/interop_conformance.rs`) that spawns the real
+`decapod` binary against isolated fixtures; conformance reports are diagnostic
+evidence, never validation receipts or publication authorization.
+
 <!-- decapod:declared-capabilities:start -->
 
 ## Declared Capability Surfaces
@@ -264,8 +281,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (205 files)
+- Repository signal fingerprint: `f2259bdfb5e1eb5cc956ab9f9077e14acda0759ea0b1568169de7ff3cd521723`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (214 files), `tests/` (208 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -462,6 +462,31 @@ labeled; they are not actual uploads, tags, releases, or deployments.
 useful during bootstrap and inside finite recipes, but grants no publication
 readiness on its own.
 
+## Governance interoperability conformance harness (#870/#871)
+
+`tests/interop_conformance.rs` is a reusable black-box harness that spawns the
+real `decapod` binary (`env!("CARGO_BIN_EXE_decapod")`, with a Bazel runfiles
+fallback) against isolated temporary git fixtures with isolated XDG dirs
+(`tests/support/interop_harness.rs`). Eight scenarios run with a bounded 120s
+per-process limit and fail the test (nonzero exit) on any failed assertion:
+`discovery_and_negotiation`, `authorized_mutation`, `denied_mutation`,
+`approval_roundtrip`, `session_task_continuity`, `stale_evidence`,
+`cli_rpc_parity`, and `malformed_adversarial`. Each scenario writes a
+machine-readable JSON report to `target/interop-conformance/<scenario>.json`
+(or `$INTEROP_CONFORMANCE_REPORT_DIR`; under Bazel it falls back to the temp
+dir because runfiles are read-only). The harness proves that every advertised
+read-only op is dispatch-accepted, that negotiation is order-invariant and
+fail-closed, that denied mutations leave canonical state unchanged (git HEAD
+and todo status compared before/after), that the approval roundtrip works
+through the real policy path (fingerprint from `govern policy eval`, grant,
+scope limits, revoke re-blocks), and that stale context bundles are refused
+with `CONTEXT_BUNDLE_STALE`. Conformance reports are diagnostic evidence only:
+they are not `validate` receipts and never set `publication_ready`. In CI the
+target is `//:interop_conformance` (auto-generated from the `tests/*.rs` glob),
+listed in the selective-core full profile in `assets/tools/source_ci_profile.rs`.
+Golden RPC vectors for the new ops live in `tests/golden/rpc/v1/` and are
+replayed by `tests/rpc_golden_vectors.rs`.
+
 Inside GitHub Actions or Buildkite, public CLI, alias, and RPC validation run
 real bounded CI-local checks. Reports state `scope=ci_local` and
 `publication_ready=false`. They do not write a full-readiness receipt, recursively
@@ -912,8 +937,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (205 files)
+- Repository signal fingerprint: `f2259bdfb5e1eb5cc956ab9f9077e14acda0759ea0b1568169de7ff3cd521723`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (214 files), `tests/` (208 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

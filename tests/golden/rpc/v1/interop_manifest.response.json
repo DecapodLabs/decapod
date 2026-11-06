@@ -1,0 +1,61 @@
+{
+  "id": "01HZINTEROPMANIFEST0000000000",
+  "success": true,
+  "mandates": [],
+  "receipt": {
+    "op": "interop.manifest",
+    "timestamp": "2026-01-01T00:00:00Z",
+    "inputs_hash": "sha256:placeholder-input",
+    "outputs_hash": "sha256:placeholder-output",
+    "touched_paths": [],
+    "governing_anchors": []
+  },
+  "result": {
+    "manifest": {
+      "schema_version": "1.0.0",
+      "profile_id": "decapod.interop",
+      "profile_version": "v1",
+      "reference_implementation": "decapod",
+      "implementation_version": "0.0.0-placeholder",
+      "authority_declaration": "Decapod's governed state, session, policy and validation mechanisms are the sole authority. This manifest is a descriptive claim; negotiation is not authorization; conformance results are evidence, not publication proof.",
+      "capabilities": [
+        {
+          "id": "rpc:agent.init",
+          "surface": "rpc",
+          "implementation_status": "implemented",
+          "owner_component": "src/decapod/lib.rs::rpc_handlers",
+          "implementation": {
+            "op": "agent.init",
+            "module": "src/decapod/lib.rs::rpc_handlers",
+            "entrypoints": ["rpc-stdin", "rpc-http-adapter"],
+            "read_only": true,
+            "session_required": false
+          },
+          "evidence": {
+            "conformance_test": "interop_conformance::discovery_and_negotiation",
+            "state": "verified",
+            "evidence_ref": "tests/interop_conformance.rs::discovery_and_negotiation"
+          },
+          "description": "Agent bootstrap and source-inventory reconciliation"
+        },
+        {
+          "id": "transport:mcp",
+          "surface": "transport",
+          "implementation_status": "intentionally_not_used",
+          "owner_component": "none",
+          "evidence": { "state": "not_run" },
+          "description": "Native MCP server adapter (issue #872, not implemented in this build)"
+        }
+      ]
+    },
+    "validation": []
+  },
+  "allowed_next_ops": [
+    {
+      "op": "interop.negotiate",
+      "reason": "compatibility negotiation is read-only",
+      "required_params": []
+    }
+  ],
+  "blocked_by": []
+}

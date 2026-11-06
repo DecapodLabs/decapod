@@ -1,0 +1,23 @@
+{
+  "id": "01HZINTEROPPROJECT0000000000000",
+  "op": "interop.project",
+  "params": {
+    "kind": "rpc_response",
+    "response": {
+      "id": "01HZINNERREQUEST000000000000000",
+      "success": false,
+      "mandates": [],
+      "receipt": {
+        "op": "interop.negotiate",
+        "timestamp": "2026-01-01T00:00:00Z",
+        "inputs_hash": "sha256:placeholder-input",
+        "outputs_hash": "sha256:error",
+        "touched_paths": [],
+        "governing_anchors": []
+      },
+      "error": { "code": "negotiation_refused", "message": "refused" },
+      "allowed_next_ops": [],
+      "blocked_by": []
+    }
+  }
+}

@@ -275,6 +275,33 @@ a failed `validate.run` retains its structured response and returns nonzero.
 Agents use the installed command contracts and schemas rather than inventing
 operations or treating a listed next operation as approval to bypass its gates.
 
+## Governance interoperability RPC profile (#870/#871)
+
+Three read-only operations extend the RPC surface for external interoperability:
+
+- `interop.manifest` — returns the versioned capability manifest
+  (`schema_version` `1.0.0`, per-capability `implementation_status`, profiles,
+  and an authority declaration that Decapod state is the sole authority).
+  `params.validate=true` additionally runs the built-in manifest validator and
+  returns its findings. The manifest declares capabilities; it never grants
+  them. `transport:mcp` is advertised only as `intentionally_not_used`.
+- `interop.negotiate` — fail-closed, deterministic negotiation over
+  `required_ops`, `optional_ops`, `optional_extensions`, `requested_profile`,
+  and `profile_version`. Unknown mandatory requirements produce a typed
+  `negotiation_refused` error; malformed input (including smuggled fields such
+  as `role`/`admin`, rejected by `deny_unknown_fields`) produces
+  `invalid_params`. Outcomes are sorted and order-invariant. Negotiation is
+  read-only and its `authority_note` states that it confers no authority.
+- `interop.project` — pure structured projection of governed responses
+  (`rpc_response`, `validation_report`, `interlock_status`, `approval` kinds).
+  Projections never mutate state, never map `unknown` to success, and never
+  launder a stale blocker into `publication_ready`.
+
+Golden request/response vectors for these ops and the `unknown_op` refusal
+live in `tests/golden/rpc/v1/` and are replayed by `tests/rpc_golden_vectors.rs`.
+The existing `capabilities --format json` contract and all prior RPC ops are
+unchanged.
+
 ## Intent, authority, and context
 
 The prompt, conversation, and explicit human clarifications establish request
@@ -367,36 +394,6 @@ yield, handoff, heartbeat, and completion use governed operations. Conditional
 status changes distinguish success, not-found, and conflict, and emit their event
 only when the state transition wins. External trackers may remain the
 organizational system of record; they do not replace Decapod execution claims.
-
-### Release version check and opt-in auto-update (#1533)
-
-`decapod capabilities` and the `session acquire` update check query
-`https://crates.io/api/v1/crates/decapod`. crates.io's data access policy
-answers requests without an identifying `User-Agent` with HTTP 403, so every
-request sends `decapod/<version> (https://github.com/DecapodLabs/decapod)`.
-The response carries the newest release in the top-level `crate.max_version`
-field (there is no `version.num`), parsed by `parse_crates_max_version` in
-`src/decapod/lib.rs` and shared with `get_latest_version` in
-`src/decapod/core/rpc.rs`.
-
-The capabilities report never falls back to the running version when the
-registry request fails. It carries `version_check: "ok"` or
-`"unavailable"`, and `latest_version` is null when the registry could not be
-reached or parsed. `is_latest` is true only when `version_check` is `ok` and
-the registry reports the running version as the newest release, so
-`is_latest: true` unambiguously means "current", never "registry unreachable".
-
-Version detection may inform execution but must never independently authorize
-a mutation to the installed toolchain. Generated entrypoint contracts
-(AGENTS.md, CLAUDE.md, CODEX.md, GEMINI.md) therefore contain no
-`cargo install` bootstrap and gate nothing on `is_latest`; validation fails
-any entrypoint that invokes `cargo install`. `decapod session acquire` is the
-single authoritative update path: when a newer release exists it is reported
-on stderr, and `cargo install decapod` runs only behind the explicit opt-in
-`repo.session_auto_update = true` in `.decapod/config.toml` (default false).
-An unreachable registry never triggers an install. Repositories that pin
-Decapod through a package manager therefore never get a second unmanaged
-`~/.cargo/bin` install.
 
 Captured task verification artifacts include `task_id` and `task_revision`.
 A passing legacy record without this binding, a malformed binding, or a different
@@ -889,8 +886,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83e72d963f959a78603f75b1ba83e4125590b04bee353d42331cfab6642fd457`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (212 files), `tests/` (205 files)
+- Repository signal fingerprint: `f2259bdfb5e1eb5cc956ab9f9077e14acda0759ea0b1568169de7ff3cd521723`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (214 files), `tests/` (208 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
