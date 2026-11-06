@@ -1157,6 +1157,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbf1-4-37305",
+      "summary": "rebind checkpoint onto v0.128.0 master (feat: add --accept-historical-gap/--reason to todo journal checkpoint (#1534))",
+      "input_digest": "sha256:f59280fd91ecf015fdf492fdeaf1b11b21f2ed8de5d3e480d9570e9751e6845d",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {

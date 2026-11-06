@@ -233,7 +233,11 @@ pub fn capture_execution_custody(
 }
 
 /// Explicitly establish current-state baselines; legacy events are not replayed.
-pub fn task_journal_checkpoint(root: &Path) -> Result<JsonValue, error::DecapodError> {
+/// `gap` is the reviewed `Some((task_id, reason))` historical-gap repair (#1534).
+pub fn task_journal_checkpoint(
+    root: &Path,
+    gap: Option<(String, String)>,
+) -> Result<JsonValue, error::DecapodError> {
     let broker = DbBroker::new(root);
     if broker.is_cloud() {
         return Err(error::DecapodError::NotImplemented("task journal requires the local canonical task schema; cloud mode never falls back locally".into()));
@@ -245,7 +249,14 @@ pub fn task_journal_checkpoint(root: &Path) -> Result<JsonValue, error::DecapodE
         "todo.journal.checkpoint",
         |conn| {
             ensure_schema(conn)?;
-            task_journal::checkpoint(conn, &mutation_actor(None))
+            match &gap {
+                Some((id, reason)) => task_journal::checkpoint_with_gap(
+                    conn,
+                    &mutation_actor(None),
+                    Some((id.as_str(), reason.as_str())),
+                ),
+                None => task_journal::checkpoint(conn, &mutation_actor(None)),
+            }
         },
     )
 }
@@ -295,7 +306,17 @@ pub fn task_journal_restore(
 #[derive(Subcommand, Debug)]
 pub enum TodoJournalCommand {
     /// Observe current state as an explicit versioned baseline.
-    Checkpoint,
+    Checkpoint {
+        /// Explicitly accept a historical uncheckpointed domain-event suffix
+        /// for this task (#1534): records the reviewed reason and event range
+        /// as a task.journal.gap_accepted event, then appends a baseline for
+        /// the current projection.
+        #[clap(long)]
+        accept_historical_gap: Option<String>,
+        /// Reviewed reason required together with --accept-historical-gap.
+        #[clap(long)]
+        reason: Option<String>,
+    },
     /// Verify journal and current projection without mutation.
     Verify,
     /// Restore absent or known-predecessor state after reviewing its digest.
@@ -8005,7 +8026,26 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
         TodoCommand::Release { id } => release_task(root, id)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
         TodoCommand::Journal { command } => match command {
-            TodoJournalCommand::Checkpoint => task_journal_checkpoint(root)?,
+            TodoJournalCommand::Checkpoint {
+                accept_historical_gap,
+                reason,
+            } => {
+                let gap = match (accept_historical_gap, reason) {
+                    (Some(id), Some(reason)) => Some((id.clone(), reason.clone())),
+                    (Some(_), None) => {
+                        return Err(error::DecapodError::ValidationError(
+                            "--reason is required with --accept-historical-gap".into(),
+                        ));
+                    }
+                    (None, Some(_)) => {
+                        return Err(error::DecapodError::ValidationError(
+                            "--accept-historical-gap is required with --reason".into(),
+                        ));
+                    }
+                    (None, None) => None,
+                };
+                task_journal_checkpoint(root, gap)?
+            }
             TodoJournalCommand::Verify => task_journal_verify(root)?,
             TodoJournalCommand::Restore {
                 expected_current_digest,
