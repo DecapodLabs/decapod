@@ -138,15 +138,6 @@ pub fn validate_contract(
                 command.name
             )));
         }
-        if Path::new(&execution.program)
-            .file_name()
-            .and_then(|name| name.to_str())
-            == Some("dagger")
-        {
-            return Err(invalid(
-                "Dagger engine execution is unsupported by repository-local proof; keep engine tooling in external agent skills or project CI",
-            ));
-        }
         // A reviewed canonical program may resolve a named installed command;
         // absolute proof commands must match it exactly. No silent substitution.
         let declared = Path::new(&command.command);

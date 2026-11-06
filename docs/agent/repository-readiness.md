@@ -300,14 +300,3 @@ ready controls; a third validly abstained and missed its expected-accept label.
 The original strict aggregate failed, and domain-level accuracy remains unestablished. See
 [the reference contract](../vega-reference-contract.md) for pins, unchanged
 tolerances, timings/memory scope, historical failures and current-candidate results.
-
-## External Dagger tooling
-
-Dagger engine integration is not part of Decapod core. Use agent skills or project
-CI to operate it outside Decapod. Retired `proof.dagger_authorizations` and
-`proof.repository_contract.executions.*.dagger` fields are rejected as retired or
-unknown configuration; reconcile them without discarding required coverage.
-Direct Dagger execution is not a repository-local proof command. External runs
-do not automatically become Decapod evidence: native receipt prerequisites and
-independently required Buildkite execution remain authoritative. No arbitrary
-CI-result import or engine lifecycle capability is provided.

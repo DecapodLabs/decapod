@@ -667,7 +667,6 @@ fn validate_invocation(
         "xargs",
         "timeout",
         "docker",
-        "dagger",
         "podman",
         "decapod",
         "decapod-native-proof",

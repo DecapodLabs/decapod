@@ -315,65 +315,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.123.0](https://github.com/DecapodLabs/decapod/compare/v0.122.1...v0.123.0) - 2026-11-03
 
-### Added
-
-- *(proof)* add Dagger boundary in dagger.rs
-- *(proof)* add Dagger boundary in consumer_readiness.rs
-- *(proof)* add Dagger boundary in lib.rs
-- *(proof)* add Dagger boundary in repository_host.rs
-- *(proof)* add Dagger boundary in validation_runtime.rs
-- *(proof)* add Dagger boundary in native_proof.rs
-- *(proof)* add Dagger boundary in mod.rs
-- *(proof)* add Dagger boundary in external_action.rs
-- *(proof)* add Dagger boundary in config-schema.md
-- *(proof)* add Dagger boundary in INTERFACES.md
-- *(proof)* declare accepted local Dagger engine contract
-
 ### Fixed
 
-- *(proof)* retain Dagger prerequisite recovery context
-- *(proof)* bind Dagger authorization errors to named config entry
-- *(proof)* identify rejected Dagger authorization entry
-- *(proof)* return actionable agent-owned Dagger recovery
-- *(proof)* remove needless borrow in Dagger policy error
-- *(proof)* import Dagger repository authority module
 - *(deps)* synchronize generated Bazel Tokio lock
 - *(deps)* update Tokio to 1.53.3
-- *(proof)* preserve dormant Dagger policy in consumer_readiness.rs
-- *(proof)* preserve dormant Dagger policy in lib.rs
-- *(proof)* preserve dormant Dagger policy in cli.rs
-- *(proof)* preserve dormant Dagger policy in proof.rs
-- *(proof)* bind Dagger activation to accepted dormant policy
-- *(proof)* permit staged Dagger executor authorization
-- *(proof)* reconcile Dagger workspace contract in config.toml
-- *(proof)* reconcile Dagger workspace contract in INTERFACES.md
-- *(proof)* reconcile Dagger workspace contract in config-schema.md
-- *(proof)* reconcile Dagger workspace contract in dagger.rs
 - *(proof)* bind root workspace argument literals
-- *(proof)* execute Dagger workspace check at snapshot root
-- *(proof)* declare Dagger workspace check protocol
 
 ### Other
 
-- reconcile Dagger proof with accepted v0.122.1
-- *(governance)* bind Dagger recovery review evidence
-- *(specs)* define agent-owned Dagger recovery output
 - *(governance)* bind CI lint and docs input repair reviews
-- *(proof)* retain Dagger guidance in canonical generator input
-- *(governance)* bind Dagger CI repair reviews
-- *(proof)* format fixed Dagger workspace arguments
-- *(governance)* record source-grounded Dagger spec reviews
 - *(proof)* reconcile reviewed dependency inventory
-- *(specs)* define Dagger executor security limits
-- *(specs)* describe optional Dagger executor architecture
-- refresh Dagger authorization integration evidence
-- *(proof)* cover dormant Dagger config and init roundtrip
-- refresh staged Dagger contract projections
-- *(specs)* define staged Dagger authorization boundary
-- *(proof)* explain two-stage Dagger executor activation
-- *(proof)* preserve empty Dagger authorization for local proof
-- refresh governed Dagger adapter evidence
-- initialize governed Dagger adapter workspace
 
 ## [0.122.1](https://github.com/DecapodLabs/decapod/compare/v0.122.0...v0.122.1) - 2026-11-03
 

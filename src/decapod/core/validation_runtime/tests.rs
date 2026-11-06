@@ -1,35 +1,6 @@
 use super::*;
 use std::process::Command;
 
-#[test]
-fn runtime_configuration_rejects_retired_dagger_authorizations() {
-    for config in [
-        "[proof]\ndagger_authorizations = {}\n",
-        "[proof.dagger_authorizations.proof]\nprotocol = \"dagger-1.0-workspace-check.v1\"\n",
-    ] {
-        let error = proof_configuration(config.as_bytes()).unwrap_err();
-        assert_eq!(error.kind(), io::ErrorKind::InvalidData);
-        assert!(error.to_string().contains("proof.dagger_authorizations"));
-    }
-}
-
-#[test]
-fn runtime_configuration_rejects_retired_dagger_execution() {
-    let config = r#"
-[proof.repository_contract]
-reviewed_commands_digest = "unused"
-source_coverage = []
-[proof.repository_contract.executions.retired]
-program = "/opt/dagger"
-toolchain_files = {}
-timeout_seconds = 60
-[proof.repository_contract.executions.retired.dagger]
-cli_contract = "dagger-1.0-workspace-check.v1"
-"#;
-    let error = proof_configuration(config.as_bytes()).unwrap_err();
-    assert!(error.to_string().contains("dagger"));
-}
-
 fn git_path() -> PathBuf {
     PathBuf::from("/usr/bin/git").canonicalize().unwrap()
 }

@@ -1259,17 +1259,6 @@ pass/skip disposition. A valid immutable release emits
 a local early exit instead identifies its explicit skipped reason. Required
 CI context errors remain failures, never these local skip dispositions.
 
-## External engine tooling boundary
-
-The former Dagger-specific core execution interface is removed. Configuration
-containing `proof.dagger_authorizations` or `repository_contract.executions.*.dagger`
-fails closed through strict parsing. The agent must reconcile the retired
-configuration without deleting required coverage or weakening proof gates.
-Direct Dagger commands do not qualify as repository-local checks. Dagger can
-remain in agent skills or project CI outside Decapod; there is no generic import
-of arbitrary CI check results. Generic native receipts, prerequisites, accepted
-source authority, and required Buildkite evidence retain their existing contracts.
-
 ## Handoff caller and recovery contract
 
 The `todo handoff` interface captures the actual request caller before broker
