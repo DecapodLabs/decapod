@@ -686,6 +686,22 @@
       "proof_refs": [
         "version_check_tests"
       ]
+    },
+    {
+      "id": "ckpt-1533-digest-vega",
+      "summary": "reconcile proof source digest after vega-native Cargo.lock pin repair (#1533)",
+      "input_digest": "sha256:a4716dad0235c7a256e1f700c1c2886cefc85a0a7ebf445c09e47de6cd25e667",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-fix-1",
+      "summary": "rebind checkpoint to actual commit tree (chore: reconcile source digest after vega-native lock pin repair (#1533))",
+      "input_digest": "sha256:c7c9e17b9f00243f6db950b74c1a7cd246e2c983b44fea34790551425f213fc4",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     }
   ],
   "intents": {
