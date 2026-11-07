@@ -1405,6 +1405,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbg3-16-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: rebind #1536 artifacts onto post-#1540 master (c6b7919d) - refresh projections and record spec reviews (#1536))",
+      "input_digest": "sha256:0f6232b1567e1ef0e3fb8f2fdb9c95e4154127daa4641df3a04b5cf9a71bb7f0",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
