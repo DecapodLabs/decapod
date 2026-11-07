@@ -1657,6 +1657,14 @@
       "proof_refs": [
         "workflow_rework"
       ]
+    },
+    {
+      "id": "ckpt-finalize-11807",
+      "summary": "Finalize branch: update reviewed_sources_digest to the post-rework inventory (f88e8366...), re-review specs (INTERFACES updated for #1023/#1079 prose, ARCHITECTURE/SECURITY unchanged-with-reason), add material VALIDATION.md prose for the #1134/#1047 CI gates, then specs.refresh LAST (manifest at .decapod/managed/.manifest.json, legacy path removed, fingerprint check green)",
+      "input_digest": "sha256:296ff03ce26ad4d9ca1d01c27ae0fe55378b8e8a9f9c86d3e25b1bb732149f75",
+      "proof_refs": [
+        "finalize_specs"
+      ]
     }
   ],
   "intents": {
@@ -1693,22 +1701,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "No authored changes; #1079 manifest move and scaffold generated_at stability do not alter architecture prose",
-          "reviewed_code_fingerprint": "d4cc99c7128b9aedc1d42dc892d16fb495aa437fcad768cfd1dac52769cb085c",
+          "reason": "No authored architecture change in this PR set; only the regenerated repo signal fingerprint line",
+          "reviewed_code_fingerprint": "5282a2983db6fcede68cfe2e55445cd9979449f7a6f6fc5af9bb66cb95e38081",
           "spec_material_hash": "90fea94969cbcae7abcf34ffc569abe2ce309184968264761102b303daf05e6e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Material authored update for #1079: manifest lives at .decapod/managed/.manifest.json; legacy specs/ location is read-only compatibility removed on refresh",
-          "reviewed_code_fingerprint": "d4cc99c7128b9aedc1d42dc892d16fb495aa437fcad768cfd1dac52769cb085c",
-          "spec_material_hash": "d48560a7bb247781d3dd49ba25f64067539a8b54d92bd1081567178d0e187daa"
+          "reason": "Documents #1023 init README badge (--no-readme-badge / [init] readme_badge) and #1079 specs manifest location .decapod/managed/.manifest.json with legacy fallback",
+          "reviewed_code_fingerprint": "5282a2983db6fcede68cfe2e55445cd9979449f7a6f6fc5af9bb66cb95e38081",
+          "spec_material_hash": "28f1263211c49322b8d84439fa240b186c11d74364cb4859beb123688ccbb6e7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No authored changes; #1079 manifest move does not alter security prose",
-          "reviewed_code_fingerprint": "d4cc99c7128b9aedc1d42dc892d16fb495aa437fcad768cfd1dac52769cb085c",
+          "reason": "No authored security change in this PR set; only the regenerated repo signal fingerprint line",
+          "reviewed_code_fingerprint": "5282a2983db6fcede68cfe2e55445cd9979449f7a6f6fc5af9bb66cb95e38081",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -1720,7 +1728,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794059949Z"
+      "updated_at": "1794076720Z"
     },
     "trajectory": {
       "active_boundaries": [],

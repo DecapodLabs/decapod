@@ -1129,8 +1129,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d4cc99c7128b9aedc1d42dc892d16fb495aa437fcad768cfd1dac52769cb085c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
+- Repository signal fingerprint: `5282a2983db6fcede68cfe2e55445cd9979449f7a6f6fc5af9bb66cb95e38081`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (42 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1185,6 +1185,20 @@ pre-#1531 serialized identity and digests.
 retain authored configuration even under `--force`; explicit arguments still change
 it. The generated GitHub validation workflow fetches complete history and supplies
 immutable `CHANGE_EVENT`, `CHANGE_BASE` and `CHANGE_HEAD` to CI-local validation.
+
+### README badge on init (#1023) and specs manifest location (#1079)
+
+`init` and `init with` accept `--no-readme-badge`; the persisted
+`[init] readme_badge` setting in `.decapod/config.toml` defaults to `true` and
+preserves an authored value when the flag is omitted. When enabled, scaffolding
+inserts the version-matched badge
+`[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v<release>-dc2626)](https://github.com/DecapodLabs/decapod)`
+directly below the first top-level heading of the root `README.md` (creating a
+minimal `# <product name>` README when absent), is idempotent, and never writes
+during `--dry-run`. The specs manifest lives at `.decapod/managed/.manifest.json`;
+the legacy `.decapod/managed/specs/.manifest.json` path is read as a fallback and
+removed on refresh, and scaffolding preserves `generated_at` when every other
+manifest field matches.
 
 ## Local CPU companion and model-free startup protocol
 
