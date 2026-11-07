@@ -96,7 +96,7 @@ walkdir = "2.5.0"
 libm = "0.2"
 
 [package.metadata.cargo-machete]
-ignored = ["flate2"]
+ignored = ["flate2", "libm"]
 
 [features]
 default = ["supabase-cloud"]
