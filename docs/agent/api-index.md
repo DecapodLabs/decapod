@@ -84,6 +84,10 @@ Proceed only when the command exits successfully and returns `"status": "allow"`
 
 ## Documentation Index
 
+This table is the canonical agent corpus list (#1164). `docs/agent/README.md`
+and the agent section of `docs/agent/llms.txt` must list exactly these
+documents; a test enforces the sync.
+
 | Resource | Purpose |
 |---|---|
 | [Command Contracts](command-contracts.md) | **Critical:** Mandatory preconditions and state transitions. |
@@ -93,5 +97,6 @@ Proceed only when the command exits successfully and returns `"status": "allow"`
 | [Config Schema](config-schema.md) | Policy keys that govern your behavior. |
 | [Contribution Conventions](contribution-conventions.md) | Project tooling standard, source layout, and per-PR governance artifact rules. |
 | [MCP Integration](mcp.md) | Using Decapod via Model Context Protocol. |
+| [Repository Readiness](repository-readiness.md) | Repository-local proof profile and readiness contract. |
 
 Do not attempt to bypass Decapod boundaries. If you encounter a block, resolve it through the governed policy path or ask the human operator.

@@ -1521,6 +1521,22 @@
       "proof_refs": [
         "rebase_rebind_0130_2"
       ]
+    },
+    {
+      "id": "ckpt-1164-21559",
+      "summary": "#1164 harmonize agent doc indexes: api-index.md Documentation Index is canonical 9-file corpus, README.md and llms.txt agent section list the same set, sync test added",
+      "input_digest": "sha256:a396ff2177508d48d28fca7da68ab097b3433eaff5a4274b4e42e3547f177ab6",
+      "proof_refs": [
+        "specs_refresh_docs"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-e6c7fba-25806",
+      "summary": "Rebind checkpoint to the post-rebase material tree of e6c7fba (rebase onto v0.130.2 master e5760258 changed trees; original checkpoint digests were bound pre-rebase)",
+      "input_digest": "sha256:45a8add6104d3829d5edb5badefc533b35522413da8684aac802d1000269e163",
+      "proof_refs": [
+        "rebase_rebind_0130_2"
+      ]
     }
   ],
   "intents": {

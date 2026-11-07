@@ -1,5 +1,7 @@
 # Decapod Agent Docs
 
+Agent corpus — must match the Documentation Index in docs/agent/api-index.md (#1164):
+
 - [API Index](docs/agent/api-index.md)
 - [Command Contracts](docs/agent/command-contracts.md)
 - [Payload Examples](docs/agent/payload-examples.md)
@@ -8,6 +10,7 @@
 - [Config Schema](docs/agent/config-schema.md)
 - [Contribution Conventions](docs/agent/contribution-conventions.md)
 - [MCP Integration](docs/agent/mcp.md)
+- [Repository Readiness](docs/agent/repository-readiness.md)
 
 # Decapod Human Book
 

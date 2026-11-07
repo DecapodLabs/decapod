@@ -17,11 +17,13 @@ Reliability is designed, not hoped for. Keep that boundary explicit when
 choosing commands, recording state, interpreting validation, or claiming
 publication.
 
-- [api-index.md](api-index.md): The primary entrypoint.
+- [api-index.md](api-index.md): The primary entrypoint; its Documentation Index is the canonical agent corpus list (#1164).
 - [command-contracts.md](command-contracts.md): Operational contracts for CLI commands.
 - [payload-examples.md](payload-examples.md): Valid call shapes.
 - [error-recovery.md](error-recovery.md): Handling failures.
 - [state-model.md](state-model.md): Conceptual state entities.
 - [config-schema.md](config-schema.md): Configuration policy keys.
 - [contribution-conventions.md](contribution-conventions.md): Project tooling standard, source layout, and per-PR governance artifact rules.
-- [llms.txt](llms.txt): Full documentation index.
+- [mcp.md](mcp.md): Using Decapod via Model Context Protocol.
+- [repository-readiness.md](repository-readiness.md): Repository-local proof profile and readiness contract.
+- [llms.txt](llms.txt): Full documentation index (agent corpus plus the human book under a separate header).

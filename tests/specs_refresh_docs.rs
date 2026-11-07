@@ -247,3 +247,77 @@ fn embedded_orientation_steers_lifecycle_and_committed_candidate_validation() {
     assert!(ingested.contains(orientation.trim()));
     assert!(ingested.contains(conventions.trim()));
 }
+
+/// #1164: the Documentation Index in api-index.md is the canonical agent
+/// corpus; README.md and the agent section of llms.txt must list exactly it.
+#[test]
+fn agent_doc_indexes_are_harmonized_1164() {
+    fn md_links(text: &str) -> std::collections::BTreeSet<String> {
+        let mut links = std::collections::BTreeSet::new();
+        let mut rest = text;
+        while let Some(idx) = rest.find("](") {
+            let after = &rest[idx + 2..];
+            match after.find(')') {
+                Some(end) => {
+                    let target = &after[..end];
+                    if target.ends_with(".md") {
+                        let name = target.rsplit('/').next().unwrap_or(target);
+                        links.insert(name.to_string());
+                    }
+                    rest = &after[end + 1..];
+                }
+                None => break,
+            }
+        }
+        links
+    }
+
+    let canonical: std::collections::BTreeSet<&str> = [
+        "api-index.md",
+        "command-contracts.md",
+        "payload-examples.md",
+        "error-recovery.md",
+        "state-model.md",
+        "config-schema.md",
+        "contribution-conventions.md",
+        "mcp.md",
+        "repository-readiness.md",
+    ]
+    .into_iter()
+    .collect();
+
+    let api_index = include_str!("../docs/agent/api-index.md");
+    let readme = include_str!("../docs/agent/README.md");
+    let llms = include_str!("../docs/agent/llms.txt");
+
+    // api-index.md's own Documentation Index lists every corpus file except itself.
+    let index_section = api_index
+        .split("## Documentation Index")
+        .nth(1)
+        .expect("Documentation Index section")
+        .split("\n## ")
+        .next()
+        .unwrap();
+    let mut index_links = md_links(index_section);
+    index_links.insert("api-index.md".to_string());
+    assert_eq!(
+        index_links,
+        canonical.iter().map(|s| s.to_string()).collect(),
+        "api-index.md Documentation Index must list the canonical corpus"
+    );
+
+    let readme_links = md_links(readme);
+    assert_eq!(
+        readme_links,
+        canonical.iter().map(|s| s.to_string()).collect(),
+        "docs/agent/README.md must list the canonical corpus"
+    );
+
+    let agent_section = llms.split("# Decapod Human Book").next().unwrap();
+    let llms_links = md_links(agent_section);
+    assert_eq!(
+        llms_links,
+        canonical.iter().map(|s| s.to_string()).collect(),
+        "llms.txt agent section must list the canonical corpus"
+    );
+}
