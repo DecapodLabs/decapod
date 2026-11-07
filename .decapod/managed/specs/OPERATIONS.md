@@ -330,6 +330,16 @@ checks. Nix uses the locked Rust toolchain and dependency source; CI does not up
 `flake.lock`. Native Nix checks cover `x86_64-linux` and `aarch64-darwin`; exposed
 `x86_64-darwin` and `aarch64-linux` outputs are not continuous CI proof.
 
+The Nix package output carries the SQLite runtime library the local store adapter
+loads dynamically (#1536): `packages.default` is wrapped so `LD_LIBRARY_PATH`
+points at the flake's `sqlite` lib dir, keeping that store path in the runtime
+closure, and `packages.sqlite-runtime` exposes the library explicitly for callers
+that need a known store path. A plain `nix run github:DecapodLabs/decapod` therefore
+works on hosts without a global `libsqlite3` (e.g. Guix System) without a
+host-specific `LD_LIBRARY_PATH`; when no library is found, the
+`LOCAL_SQLITE_RUNTIME_REQUIRED` error names this flake output as the supported
+setup alongside the OS package and the `SQLITE_LIBRARY_ENV` override.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
