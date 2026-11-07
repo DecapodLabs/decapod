@@ -1421,6 +1421,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-1536-e3c2-32512",
+      "summary": "#1536 rebased onto v0.130.0 master (e3c280ee): v0.130.0 surfaces + lock pin regenerated, source digest reconciled, canonical spec reviews recorded (ARCHITECTURE updated; INTERFACES/SECURITY unchanged-with-reason), projections refreshed",
+      "input_digest": "sha256:d796b1457cdefc47bfe99da8ee0d2ff8ff2490631bcdde4bb76a73a6a3cd44ad",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
@@ -1459,24 +1467,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "#1534 changes no architecture: the repair is an additional journal event type and checkpoint path inside the existing task_journal module; historical events are preserved, never replayed. ARCHITECTURE.md remains accurate as-is.",
-          "reviewed_code_fingerprint": "3353a07fb3ecbdce3228fc1b6763be9b4573d05c0e932d3b88c2b3051576a1d3",
-          "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
+          "reason": "ARCHITECTURE.md now states that the Nix flake package carries the SQLite runtime library in its runtime closure (packages.sqlite-runtime = pkgs.sqlite, wired into packages.default via LD_LIBRARY_PATH wrap) so nix run needs no host libsqlite3 (#1536); flake.nix implements exactly this.",
+          "reviewed_code_fingerprint": "1d2d86ac98e7b01241d20433a55886db76c2314bd05e39bd1fa043795d99abd1",
+          "spec_material_hash": "e1845d42bc19a235f2a78a3306f5cd4a1a35a17c887f4339f6e226437c097c80"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "INTERFACES.md documents the supported historical-gap repair (#1534): todo journal checkpoint --accept-historical-gap <task-id> --reason <text> records a task.journal.gap_accepted event with the reviewed reason and exact accepted range, then appends a transition checkpoint; verify/checkpoint fail closed with TASK_JOURNAL_INCOMPLETE_HISTORY on an uncheckpointed suffix otherwise. src/decapod/core/task_journal.rs implements exactly this; regression tests in tests/unit/core/task_journal_tests.rs reproduce verify/checkpoint failing closed, the repair, and post-repair success, and reject no-history and no-gap misuse.",
-          "reviewed_code_fingerprint": "3353a07fb3ecbdce3228fc1b6763be9b4573d05c0e932d3b88c2b3051576a1d3",
+          "reason": "#1536 changes no CLI/RPC interface: the fix is inside the flake package wrapper (LD_LIBRARY_PATH prefix) and a dactyl.rs error message naming the flake sqlite-runtime output. INTERFACES.md remains accurate as-is.",
+          "reviewed_code_fingerprint": "1d2d86ac98e7b01241d20433a55886db76c2314bd05e39bd1fa043795d99abd1",
           "spec_material_hash": "b0b006e30f3daa0640ee220aeced9c12b530f26516cd6e57107896726d4dfba5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "#1534 weakens no security boundary: gap acceptance is explicit, task-scoped, requires a reviewed --reason, records the accepted range as an auditable event, and is rejected without checkpointed history or without a gap. SECURITY.md remains accurate as-is.",
-          "reviewed_code_fingerprint": "3353a07fb3ecbdce3228fc1b6763be9b4573d05c0e932d3b88c2b3051576a1d3",
+          "reason": "#1536 weakens no security boundary: it ships the flake-pinned SQLite runtime inside the package closure instead of relying on a host libsqlite3; no trust, custody or proof semantics change. SECURITY.md remains accurate as-is.",
+          "reviewed_code_fingerprint": "1d2d86ac98e7b01241d20433a55886db76c2314bd05e39bd1fa043795d99abd1",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -1488,7 +1496,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794029797Z"
+      "updated_at": "1794038578Z"
     },
     "trajectory": {
       "active_boundaries": [
