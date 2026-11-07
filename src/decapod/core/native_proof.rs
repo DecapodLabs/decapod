@@ -1192,7 +1192,8 @@ pub fn run_native(
         {
             return Err(invalid("unreviewed native invocation/purpose/backend"));
         }
-        validate_invocation(invocation, inputs, &mut budget, &self_digest)?;
+        validate_invocation(invocation, inputs, &mut budget, &self_digest)
+            .map_err(|e| invalid(format!("{}: {e}", check.key.job)))?;
         if check.toolchain_digest != measured_toolchain(invocation, &mut budget)? {
             return Err(invalid("reviewed executable digest changed"));
         }
