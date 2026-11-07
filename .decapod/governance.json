@@ -599,6 +599,11 @@
       "id": "cp-1557-14",
       "summary": "Record src/decapod/core/mod.rs",
       "input_digest": "sha256:b49180363888c64f58f7dbc982e098827cc4c6326e7125cd1823abb4527d3d65"
+    },
+    {
+      "id": "cp-1557-15",
+      "summary": "Record src/decapod/core/projection.rs",
+      "input_digest": "sha256:ccdb7a5d989397a687ea7f74393cc7d11f00acdbe18c1e2450712ce7f3ea3271"
     }
   ],
   "legacy_digests": {

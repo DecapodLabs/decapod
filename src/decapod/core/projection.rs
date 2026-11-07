@@ -243,6 +243,9 @@ pub struct ValidationProjection {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub blockers: Vec<String>,
     pub stale: bool,
+    /// Proven, not_proven, failed, stale, or unknown. A boolean is not this field.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proof_judgment: Option<String>,
     pub source: String,
 }
 
@@ -255,10 +258,6 @@ pub fn project_validation_report(report: &serde_json::Value) -> ValidationProjec
         .and_then(|v| v.as_str())
         .unwrap_or("unknown")
         .to_string();
-    let publication_ready = report
-        .get("publication_ready")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
     let readiness = report.get("readiness").cloned().unwrap_or_default();
     let blockers: Vec<String> = readiness
         .get("blockers")
@@ -282,6 +281,7 @@ pub fn project_validation_report(report: &serde_json::Value) -> ValidationProjec
         || blockers
             .iter()
             .any(|b| b.contains("stale") || b.contains("STALE"));
+    let decision = crate::core::governed_transition::project_report_publication(report);
     ValidationProjection {
         validation_id: report
             .get("validation_id")
@@ -298,9 +298,10 @@ pub fn project_validation_report(report: &serde_json::Value) -> ValidationProjec
             .and_then(|v| v.as_str())
             .map(|s| s.to_string()),
         status,
-        publication_ready: publication_ready && !stale,
+        publication_ready: decision.eligible,
         blockers,
-        stale,
+        stale: stale || decision.judgment == crate::core::governed_transition::ProofJudgment::Stale,
+        proof_judgment: Some(decision.judgment.as_str().to_string()),
         source: "validation_report".to_string(),
     }
 }
