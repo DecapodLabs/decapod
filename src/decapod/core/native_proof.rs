@@ -553,6 +553,93 @@ pub fn toolchain_digest_bounded(
     measured_toolchain(invocation, &mut budget)
 }
 
+/// Identify a tool's container format and architecture from its header bytes
+/// so a rejection names the actual file instead of a generic wrong-magic error.
+fn describe_executable(program: &Path) -> io::Result<String> {
+    let mut header = [0u8; 32];
+    let read = std::fs::File::open(program)?.read(&mut header)?;
+    let header = &header[..read];
+    if header.starts_with(b"#!") {
+        return Ok("script".to_string());
+    }
+    if header.len() >= 20 && header.starts_with(b"\x7fELF") {
+        let class = match header[4] {
+            1 => "32-bit",
+            2 => "64-bit",
+            _ => "unknown-class",
+        };
+        let machine = if header[5] == 1 {
+            u16::from_le_bytes([header[18], header[19]])
+        } else {
+            u16::from_be_bytes([header[18], header[19]])
+        };
+        let arch = match machine {
+            0x3E => "x86_64",
+            0xB7 => "arm64",
+            0x28 => "arm",
+            0xF3 => "riscv64",
+            0x08 => "mips",
+            0x15 => "powerpc64",
+            _ => "unknown-arch",
+        };
+        return Ok(format!("ELF {arch} ({class})"));
+    }
+    if header.len() >= 8
+        && matches!(
+            &header[..4],
+            [0xfe, 0xed, 0xfa, 0xce]
+                | [0xfe, 0xed, 0xfa, 0xcf]
+                | [0xce, 0xfa, 0xed, 0xfe]
+                | [0xcf, 0xfa, 0xed, 0xfe]
+        )
+    {
+        let little = matches!(&header[..4], [0xce, 0xfa, 0xed, 0xfe] | [0xcf, 0xfa, 0xed, 0xfe]);
+        let cpu = if little {
+            u32::from_le_bytes(header[4..8].try_into().unwrap())
+        } else {
+            u32::from_be_bytes(header[4..8].try_into().unwrap())
+        };
+        let arch = match cpu {
+            0x0100_0007 => "x86_64",
+            0x0100_000C => "arm64",
+            7 => "x86",
+            12 => "arm",
+            _ => "unknown-arch",
+        };
+        return Ok(format!("Mach-O {arch}"));
+    }
+    if header.len() >= 12 && matches!(&header[..4], [0xca, 0xfe, 0xba, 0xbe] | [0xbe, 0xba, 0xfe, 0xca])
+    {
+        let little = matches!(&header[..4], [0xbe, 0xba, 0xfe, 0xca]);
+        let cpu = if little {
+            u32::from_le_bytes(header[8..12].try_into().unwrap())
+        } else {
+            u32::from_be_bytes(header[8..12].try_into().unwrap())
+        };
+        let arch = match cpu {
+            0x0100_0007 => "x86_64",
+            0x0100_000C => "arm64",
+            7 => "x86",
+            12 => "arm",
+            _ => "unknown-arch",
+        };
+        return Ok(format!("Mach-O fat binary (first arch {arch})"));
+    }
+    Ok("unknown format".to_string())
+}
+
+/// The container format and architecture the current host's native
+/// validation accepts, used to state the expectation in rejection messages.
+fn native_expected_tool() -> io::Result<&'static str> {
+    Ok(match NativePlatform::current()? {
+        NativePlatform::LinuxX86_64 => "ELF x86_64",
+        NativePlatform::LinuxAarch64 => "ELF arm64",
+        NativePlatform::MacosX86_64 => "Mach-O x86_64",
+        NativePlatform::MacosAarch64 => "Mach-O arm64",
+        NativePlatform::WindowsX86_64 => "native Windows executable",
+    })
+}
+
 fn native_executable(program: &Path) -> io::Result<()> {
     if !program.is_absolute() || program.canonicalize()? != program {
         return Err(invalid("tool must be an absolute canonical path"));
@@ -572,9 +659,12 @@ fn native_executable(program: &Path) -> io::Result<()> {
     std::fs::File::open(program)?.read_exact(&mut magic)?;
     #[cfg(target_os = "linux")]
     if magic != *b"\x7fELF" {
-        return Err(invalid(
-            "native Linux tool must be ELF; scripts are unsupported",
-        ));
+        return Err(invalid(format!(
+            "{} is {}; native Linux validation requires {}",
+            program.display(),
+            describe_executable(program)?,
+            native_expected_tool()?
+        )));
     }
     #[cfg(target_os = "macos")]
     if ![
