@@ -1115,7 +1115,7 @@ fn init_supports_and_preserves_declared_capabilities() {
     );
 
     // Verify manifest has them
-    let manifest_path = tmp.path().join(".decapod/managed/specs/.manifest.json");
+    let manifest_path = tmp.path().join(".decapod/managed/.manifest.json");
     let manifest_content = fs::read_to_string(&manifest_path).expect("read manifest");
     assert!(
         manifest_content.contains("persistent-state"),

@@ -745,7 +745,7 @@ fn test_entrypoints_record_release_fingerprints_and_specs_manifest_attestation()
         )));
     }
 
-    let manifest_body = fs::read_to_string(temp_path.join(".decapod/managed/specs/.manifest.json"))
+    let manifest_body = fs::read_to_string(temp_path.join(".decapod/managed/.manifest.json"))
         .expect("read specs manifest");
     let manifest: serde_json::Value =
         serde_json::from_str(&manifest_body).expect("parse specs manifest");

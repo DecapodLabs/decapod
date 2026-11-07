@@ -184,7 +184,7 @@ fn authority_change_cannot_leave_specs_manifest_config_hash_stale() {
     )
     .expect("change override authority");
     let manifest: serde_json::Value = serde_json::from_str(
-        &fs::read_to_string(dir.join(".decapod/managed/specs/.manifest.json"))
+        &fs::read_to_string(dir.join(".decapod/managed/.manifest.json"))
             .expect("specs manifest"),
     )
     .expect("manifest JSON");
@@ -215,7 +215,7 @@ fn authority_change_cannot_leave_specs_manifest_config_hash_stale() {
         "validation must reject the old bound proof after refreshing the manifest: {output}"
     );
     let refreshed_manifest: serde_json::Value = serde_json::from_str(
-        &fs::read_to_string(dir.join(".decapod/managed/specs/.manifest.json"))
+        &fs::read_to_string(dir.join(".decapod/managed/.manifest.json"))
             .expect("refreshed specs manifest"),
     )
     .expect("refreshed manifest JSON");
@@ -397,7 +397,7 @@ fn re_init_preserves_validation_green() {
         String::from_utf8_lossy(&validate1.stderr)
     );
     let before_config = fs::read(dir.join(".decapod/config.toml")).expect("config before reinit");
-    let before_manifest = fs::read(dir.join(".decapod/managed/specs/.manifest.json"))
+    let before_manifest = fs::read(dir.join(".decapod/managed/.manifest.json"))
         .expect("manifest before reinit");
     let before_specs =
         fs::read(dir.join(".decapod/managed/specs/INTENT.md")).expect("spec before reinit");
@@ -415,7 +415,7 @@ fn re_init_preserves_validation_green() {
     );
     assert_eq!(
         before_manifest,
-        fs::read(dir.join(".decapod/managed/specs/.manifest.json")).expect("manifest after reinit"),
+        fs::read(dir.join(".decapod/managed/.manifest.json")).expect("manifest after reinit"),
         "force re-init must preserve the specs manifest"
     );
     assert_eq!(

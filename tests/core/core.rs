@@ -873,7 +873,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
     stale_gitignore.push_str("!.decapod/managed/validation-epoch.json\n");
     fs::write(&gitignore_path, stale_gitignore).expect("seed stale validation epoch allowlist");
 
-    let manifest_path = live_target.join(".decapod/managed/specs/.manifest.json");
+    let manifest_path = live_target.join(".decapod/managed/.manifest.json");
     let mut legacy_manifest: serde_json::Value =
         serde_json::from_str(&fs::read_to_string(&manifest_path).expect("read specs manifest"))
             .expect("parse specs manifest");

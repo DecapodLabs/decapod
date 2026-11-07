@@ -447,7 +447,7 @@ fn capability_survives_config_context_spec_deterministically() {
 
     // Generated surfaces, rather than wall-clock validation timing, must be
     // byte-identical on the second run.
-    let manifest_path = dir.join(".decapod/managed/specs/.manifest.json");
+    let manifest_path = dir.join(".decapod/managed/.manifest.json");
     let first_manifest = fs::read_to_string(&manifest_path).expect("read first manifest");
     let first_intent = fs::read_to_string(dir.join(".decapod/managed/specs/INTENT.md"))
         .expect("read first intent");
@@ -524,7 +524,7 @@ fn capability_regeneration_preserves_authorship() {
     );
 
     // Second refresh should be byte-identical
-    let manifest_path = dir.join(".decapod/managed/specs/.manifest.json");
+    let manifest_path = dir.join(".decapod/managed/.manifest.json");
     let first_manifest = fs::read_to_string(&manifest_path).expect("read manifest");
     let second_refresh = run_decapod(
         &dir,
@@ -563,7 +563,7 @@ fn manifest_provenance_records_capabilities() {
 
     // Check manifest records capabilities
     // Check manifest records capabilities
-    let manifest_path = dir.join(".decapod/managed/specs/.manifest.json");
+    let manifest_path = dir.join(".decapod/managed/.manifest.json");
     let manifest_content = fs::read_to_string(&manifest_path).expect("read manifest");
     let manifest: serde_json::Value =
         serde_json::from_str(&manifest_content).expect("parse manifest");

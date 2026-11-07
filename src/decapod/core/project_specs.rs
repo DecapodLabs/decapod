@@ -18,7 +18,10 @@ pub const LOCAL_PROJECT_SPECS_VALIDATION: &str = ".decapod/managed/specs/VALIDAT
 pub const LOCAL_PROJECT_SPECS_SEMANTICS: &str = ".decapod/managed/specs/SEMANTICS.md";
 pub const LOCAL_PROJECT_SPECS_OPERATIONS: &str = ".decapod/managed/specs/OPERATIONS.md";
 pub const LOCAL_PROJECT_SPECS_SECURITY: &str = ".decapod/managed/specs/SECURITY.md";
-pub const LOCAL_PROJECT_SPECS_MANIFEST: &str = ".decapod/managed/specs/.manifest.json";
+pub const LOCAL_PROJECT_SPECS_MANIFEST: &str = ".decapod/managed/.manifest.json";
+/// Pre-#1079 location, still accepted for read-only compatibility with
+/// existing repositories until their next refresh migrates the file.
+pub const LOCAL_PROJECT_SPECS_MANIFEST_LEGACY: &str = ".decapod/managed/specs/.manifest.json";
 pub const LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA: &str = "1.1.0";
 pub const CAPABILITY_DEFINITION_VERSION: &str = "1.0.0";
 
@@ -664,9 +667,15 @@ pub fn read_specs_manifest(
     project_root: &Path,
 ) -> Result<Option<ProjectSpecsManifest>, error::DecapodError> {
     let path = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST);
-    if !path.exists() {
-        return Ok(None);
-    }
+    // #1079: the manifest lives at .decapod/managed/.manifest.json; fall back
+    // to the legacy specs/ location so existing repositories keep validating
+    // until their next refresh migrates the file.
+    let path = if path.exists() {
+        path
+    } else {
+        let legacy = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST_LEGACY);
+        if legacy.exists() { legacy } else { return Ok(None) }
+    };
     let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
     let manifest: ProjectSpecsManifest = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!("Invalid project specs manifest: {e}"))
@@ -782,6 +791,12 @@ pub fn refresh_specs_manifest(
     })?;
     crate::core::fs_permissions::write_private(manifest_path, manifest_body)
         .map_err(error::DecapodError::IoError)?;
+    // #1079: refresh migrates the manifest out of specs/; remove the legacy
+    // copy so the file no longer lives in the living-spec directory.
+    let legacy_path = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST_LEGACY);
+    if legacy_path.exists() {
+        fs::remove_file(legacy_path).map_err(error::DecapodError::IoError)?;
+    }
 
     Ok(manifest)
 }

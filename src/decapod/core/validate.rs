@@ -1695,6 +1695,9 @@ fn validate_generated_artifact_whitelist(
 
     let allowed_tracked = [
         ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/.manifest",
+        ".decapod/managed/.manifest.json",
+        // #1079 legacy location, accepted until branches migrate the manifest.
         ".decapod/managed/specs/.manifest",
         ".decapod/managed/specs/.manifest.json",
         VALIDATION_RECEIPT_PATH,
@@ -2188,7 +2191,7 @@ fn validate_project_specs_docs(
                 );
             } else {
                 fail(
-                    "OUT_OF_SYNC_ENTRYPOINTS: Generated agent entrypoint hashes differ from .decapod/managed/specs/.manifest.json. Regenerate the governed entrypoints and refresh specs.",
+                    "OUT_OF_SYNC_ENTRYPOINTS: Generated agent entrypoint hashes differ from .decapod/managed/.manifest.json. Regenerate the governed entrypoints and refresh specs.",
                     ctx,
                 );
             }
@@ -3263,7 +3266,6 @@ fn validate_publication_bundle_currency(
         "CODEX.md",
         "GEMINI.md",
         ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json",
         crate::core::governance_document::GOVERNANCE_PATH,
     ];
     let mut failures = Vec::new();
@@ -3274,6 +3276,20 @@ fn validate_publication_bundle_currency(
         if !repo_root.join(path).is_file() {
             failures.push(format!("missing {path}"));
         }
+    }
+    // #1079: the specs manifest lives at .decapod/managed/.manifest.json; the
+    // legacy specs/ location still satisfies presence until migration.
+    if !repo_root
+        .join(crate::core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST)
+        .is_file()
+        && !repo_root
+            .join(crate::core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST_LEGACY)
+            .is_file()
+    {
+        failures.push(format!(
+            "missing {}",
+            crate::core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST
+        ));
     }
 
     let specs_dir = repo_root.join(".decapod/managed/specs");
@@ -3309,7 +3325,7 @@ fn validate_publication_bundle_currency(
             "CODEX.md",
             "GEMINI.md",
             ".decapod/managed/Dockerfile.decapod",
-            ".decapod/managed/specs/.manifest.json",
+            ".decapod/managed/.manifest.json",
         ];
         let missing_refresh =
             release_bound_paths_missing_vs_base(repo_root, &base_ref, &required_refresh)?;
@@ -6004,7 +6020,19 @@ fn validate_projection_consistency(
 
     let config_path = main_root.join(".decapod").join("config.toml");
     let specs_dir = main_root.join(".decapod").join("managed").join("specs");
-    let manifest_path = specs_dir.join(".manifest.json");
+    // #1079: manifest lives under .decapod/managed/, with the legacy specs/
+    // location accepted until migration.
+    let manifest_path = {
+        let current = main_root
+            .join(".decapod")
+            .join("managed")
+            .join(".manifest.json");
+        if current.is_file() {
+            current
+        } else {
+            specs_dir.join(".manifest.json")
+        }
+    };
     let todo_db = main_root
         .join(".decapod")
         .join("data")
@@ -6146,7 +6174,7 @@ fn validate_projection_consistency(
             let current_fp = crate::core::project_specs::repo_signal_fingerprint(main_root)?;
             if repo_fp != current_fp {
                 findings.push(ProjectionFinding {
-                    surface: ".decapod/managed/specs/.manifest.json".to_string(),
+                    surface: ".decapod/managed/.manifest.json".to_string(),
                     kind: SurfaceKind::Projection,
                     expected: format!("repo_signal_fingerprint should match current codebase ({current_fp})"),
                     observed: format!("stale fingerprint: {repo_fp}"),
@@ -6163,14 +6191,14 @@ fn validate_projection_consistency(
             match manifest.get(field).and_then(|v| v.as_str()) {
                 Some(actual) if actual == expected => {}
                 Some(actual) => findings.push(ProjectionFinding {
-                    surface: ".decapod/managed/specs/.manifest.json".to_string(),
+                    surface: ".decapod/managed/.manifest.json".to_string(),
                     kind: SurfaceKind::Authority,
                     expected: format!("{field}={expected}"),
                     observed: format!("{field}={actual}"),
                     remediation: "Refresh the living specs manifest from the canonical config and specs inputs".to_string(),
                 }),
                 None => findings.push(ProjectionFinding {
-                    surface: ".decapod/managed/specs/.manifest.json".to_string(),
+                    surface: ".decapod/managed/.manifest.json".to_string(),
                     kind: SurfaceKind::Authority,
                     expected: format!("{field} must be present"),
                     observed: "missing".to_string(),
@@ -6189,7 +6217,7 @@ fn validate_projection_consistency(
             });
         if manifest_capabilities.as_ref() != Some(&declared_capabilities) {
             findings.push(ProjectionFinding {
-                surface: ".decapod/managed/specs/.manifest.json".to_string(),
+                surface: ".decapod/managed/.manifest.json".to_string(),
                 kind: SurfaceKind::Authority,
                 expected: format!("declared_capabilities={declared_capabilities:?}"),
                 observed: format!("declared_capabilities={manifest_capabilities:?}"),
@@ -6225,7 +6253,7 @@ fn validate_projection_consistency(
         }
     } else if specs_dir.exists() {
         findings.push(ProjectionFinding {
-            surface: ".decapod/managed/specs/.manifest.json".to_string(),
+            surface: ".decapod/managed/.manifest.json".to_string(),
             kind: SurfaceKind::Projection,
             expected: "specs manifest must exist when specs directory exists".to_string(),
             observed: "MISSING".to_string(),

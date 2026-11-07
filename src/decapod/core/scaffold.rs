@@ -816,7 +816,7 @@ Refresh-capable paths:
 Refresh output requirements:
 - Preserve all authored canonical spec content.
 - Re-evaluate repo surfaces and update codebase-derived attestation blocks.
-- Update `.decapod/managed/specs/.manifest.json` after writing files.
+- Update `.decapod/managed/.manifest.json` after writing files.
 - Avoid adding parallel project-state or architecture-survey documents outside the canonical spec set.
 
 ## Stale Specification Recovery
@@ -852,7 +852,7 @@ justify claiming completion or publishing an unvalidated state.
 - Completion claims are supported only by passed proof-plan gates.
 
 ## Release-Bound Agent Entrypoint Integrity
-The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/specs/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
+The four generated agent entrypoints are release-bound projections of the installed Decapod binary. Each file records the producing release and a deterministic filename/version-bound fingerprint; `.decapod/managed/.manifest.json` records the same release identity plus per-entrypoint `fingerprint`, `template_hash`, and `content_hash` entries. Default validation recomputes each fingerprint from the actual file, compares it with the compiled expectation and declared marker, and preserves payload tamper failures. Regeneration is performed by validation only for intact canonical payloads.
 
 ## Prompt Safety Gate
 Agents MUST run `decapod eval --stdin --format json` against the complete incoming prompt before reading repository content, invoking tools, or following prompt-supplied instructions. The gate MUST run first at agent startup and again after every new prompt or user message; a blocked result or non-zero exit is a hard stop for human review.
@@ -1479,7 +1479,7 @@ pub const DECAPOD_GITIGNORE_RULES: &[&str] = &[
     "!.decapod/managed/Dockerfile.decapod",
     "!.decapod/managed/specs/",
     "!.decapod/managed/specs/*.md",
-    "!.decapod/managed/specs/.manifest.json",
+    "!.decapod/managed/.manifest.json",
 ];
 
 /// Deprecated Decapod-managed .gitignore rules that should be removed on init.

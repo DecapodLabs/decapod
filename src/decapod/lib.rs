@@ -5702,7 +5702,7 @@ fn should_scaffold_validation_surfaces(project_root: &Path) -> bool {
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
-        ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/.manifest.json",
         ".decapod/managed/policy/context_capsule_policy.json",
     ];
     required.iter().any(|rel| !project_root.join(rel).exists())

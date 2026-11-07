@@ -1505,6 +1505,22 @@
       "proof_refs": [
         "rebase_rebind_0130_2"
       ]
+    },
+    {
+      "id": "ckpt-1079-114",
+      "summary": "#1079 move specs manifest to .decapod/managed/.manifest.json: const + literals updated, legacy path accepted on read and removed on refresh, gitignore/scaffold/scripts/tests updated, file moved",
+      "input_digest": "sha256:fb62f47bf41d7377d60bb56a47db904767435839347fb1ea3694ca7e416c7bbc",
+      "proof_refs": [
+        "project_specs_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-46feebc-29055",
+      "summary": "Rebind checkpoint to the post-rebase material tree of 46feebc (rebase onto v0.130.2 master e5760258 changed trees; original checkpoint digests were bound pre-rebase)",
+      "input_digest": "sha256:35509864e6bb132d8dca242ecb52650cbfa6ec46dd900a1f26e2bd9b8cfa61b5",
+      "proof_refs": [
+        "rebase_rebind_0130_2"
+      ]
     }
   ],
   "intents": {

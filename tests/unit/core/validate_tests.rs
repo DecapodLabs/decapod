@@ -635,7 +635,12 @@ fn seed_publication_bundle(dir: &Path) {
     let specs = dir.join(".decapod/managed/specs");
     fs::create_dir_all(&specs).expect("specs");
     fs::write(specs.join("INTENT.md"), "# Intent\n\nBase.\n").expect("intent");
-    fs::write(specs.join(".manifest.json"), "{}\n").expect("manifest");
+    // #1079: the specs manifest lives at .decapod/managed/.manifest.json.
+    fs::write(
+        dir.join(".decapod/managed/.manifest.json"),
+        "{}\n",
+    )
+    .expect("manifest");
 
     research_claims::ensure_template(dir, false).expect("claims template");
     let plan = GovernedPlan {
