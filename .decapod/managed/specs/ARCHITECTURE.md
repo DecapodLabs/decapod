@@ -757,7 +757,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3`
+- Repository signal fingerprint: `fcf98add742053dc31854722b1a17a3b19307e12f29b0ed6b5dadc9b03ccc520`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -804,13 +804,6 @@ that reviewed local contract into the existing bounded native runner; it does no
 interpret workflow YAML or introduce an orchestration engine. Every command runs
 in the frozen source snapshot, with byte-measured declared tool inputs and fresh
 accepted-target queries. Source/configuration/tool/target drift invalidates proof.
-Before execution, `core/native_proof.rs` rejects any configured executable whose
-container format does not match the host platform; the rejection names the check,
-the configured path, the detected format/architecture (ELF or Mach-O, including
-fat binaries and shebang scripts) and the host's expected format/architecture,
-e.g. `fmt: /nix/store/.../alejandra is Mach-O arm64; native Linux validation
-requires ELF x86_64`, so a foreign-OS/arch toolchain mismatch is diagnosable
-from the `READINESS_BLOCKED` detail alone.
 
 The resulting `repository_local_readiness` scope attests those local commands,
 not hosted workflow jobs, platform matrices or release/deployment execution. The
@@ -968,63 +961,3 @@ dependency, lease, shared-claim trust or approval gates and do not establish
 verified isolated-worktree custody. Tests cover disjoint/intersecting/parent paths,
 malformed declarations, unchanged shared-claim trust and journaled scopes;
 source declarations are not a claim that tests have run.
-
-
-## Governed-State Projection and Diff
-
-Decapod exposes two new public capabilities for agents to reconstruct governed reality from canonical repository and Decapod state:
-
-### `state.resolve`
-
-Returns a deterministic canonical governed-state projection (`StateResolution`) derived from existing authoritative sources:
-
-- **Identity**: Workunit, trajectory, intent, or obligation context
-- **Revision**: Git HEAD, base, branch, dirty status
-- **Objective/Acceptance**: Intent, acceptance criteria, done criteria
-- **Scope/Constraints**: Active boundaries, repo scope, out-of-scope, protected paths, risk tier
-- **Custody**: Intent status, raw/refined intent, assumptions, proof requirements, blockers
-- **Decisions**: Durable governance knowledge (PROPOSED/ACCEPTED/REJECTED/SUPERSEDED/REQUIRES_HUMAN)
-- **Failed Paths**: Durable negative knowledge preventing rediscovery of invalid approaches
-- **Blockers**: Semantic taxonomy (EXTERNAL_DEPENDENCY, AUTHORITY_REQUIRED, HUMAN_DECISION, ENVIRONMENT, PROOF_UNAVAILABLE, DEPENDENCY_UNRESOLVED, SCOPE_VIOLATION, POLICY_VIOLATION)
-- **Dependencies**: With resolution state (UNRESOLVED, IN_PROGRESS, RESOLVED, FAILED, DEFERRED)
-- **Changed Surfaces**: Files, config, proof, evaluator, spec, governance surfaces
-- **Validation/Proof**: Proof states with freshness (VALID, STALE, UNAFFECTED, UNKNOWN, FAILED), verifier integrity (UNCHANGED, CHANGED_AUTHORIZED, CHANGED_UNTRUSTED), assurance levels (A0-A3), verifier identity
-- **Unresolved Obligations**: From obligation graph
-- **Publication Eligibility**: Based on proof freshness, verifier integrity, state commit, assurance requirements
-- **Admissible Actions**: Allowed, required, forbidden actions derived from governance state
-- **Provenance**: State commit, governance document, trajectory, workunit, validation receipt hashes
-
-### `state.diff`
-
-Computes governed-state diff between two states (`StateDiff`) with:
-- Intent, decision, failed path, custody, scope, dependency, blocker changes
-- Proof added/preserved/invalidated/unknown
-- Publication eligibility transition
-
-### Architecture
-
-- **No shadow state**: Purely deterministic read model over canonical sources (workunit, trajectory, custody, governance document, obligation graph, proof config, validation receipts, state commit, git)
-- **Fail-closed**: Missing governance never widens authority
-- **Deterministic**: Identical inputs produce identical outputs
-- **Agent-invoked**: Request/response, no daemons, no watchers, no session monitoring
-
-### RPC Interface
-
-- `state.resolve` — Returns `StateResolution` with optional filters (workunit_id, trajectory_run_id, intent_id, obligation_id)
-- `state.diff` — Computes `StateDiff` between two states (by workunit_id, state commit, or revision)
-
-### Integration with Existing State
-
-`state.resolve` derives its answer from existing authoritative Decapod and repository state:
-- Workunit manifests and proof results
-- Trajectory artifacts and custody state
-- Governance document (plan, trajectory, claims, validation, intents)
-- Obligation graph and proof outcomes
-- Proof configuration and validation receipts
-- State commit artifacts
-- Git revision and diff state
-
-No shadow state is introduced; this is a read model over existing authoritative sources.
-
----
-
