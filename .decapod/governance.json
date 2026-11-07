@@ -800,6 +800,11 @@
       "input_digest": "sha256:fd49abd4fcc39e51ad53f3d252acef27946f6905a4819c1e13e88088e5f516da"
     },
     {
+      "id": "fix1528-interop-bazel-hang",
+      "summary": "Drain rpc child stdout/stderr concurrently with a 120s bound in the interop harness (wait_bounded) and give //:interop_conformance a long bazel timeout, so //:tests (core) no longer deadlocks/timeouts under the bazel sandbox",
+      "input_digest": "sha256:7a4f1ff6c0d97981ff864eaf9e1c748472919244c5c280fe37ad6a6a421820c8"
+    },
+    {
       "id": "validation-rules-impl",
       "summary": "Implement validation rules system with 7 built-in rules, registry, evaluators, OVERRIDE.md integration, and three-verdict system",
       "input_digest": "sha256:adbcf5ec97aaef4462018977f382c24784617098a53e983f991dbad630f953a6"
@@ -918,6 +923,11 @@
       "id": "fix1528-hist-23",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:1628e97d2e65cd22e41177ef3862d02cc38a4c9ea1bcabf6f4307cd0a887276e"
+    },
+    {
+      "id": "fix1528-hist-24",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:7a4f1ff6c0d97981ff864eaf9e1c748472919244c5c280fe37ad6a6a421820c8"
     }
   ],
   "intents": {

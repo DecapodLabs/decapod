@@ -9,9 +9,50 @@
 
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output, Stdio};
+use std::process::{Child, Command, Output, Stdio};
 use std::sync::Mutex;
 use std::time::Duration;
+
+/// Bounded, deadlock-free child wait: stdout and stderr are drained on
+/// separate threads (a chatty child must never block on a full pipe while the
+/// parent waits), and the wait never exceeds the conformance bound.
+fn wait_bounded(mut child: Child) -> Output {
+    use std::io::Read;
+    let mut stdout = child.stdout.take().expect("stdout");
+    let mut stderr = child.stderr.take().expect("stderr");
+    let out_handle = std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        let _ = stdout.read_to_end(&mut buf);
+        buf
+    });
+    let err_handle = std::thread::spawn(move || {
+        let mut buf = Vec::new();
+        let _ = stderr.read_to_end(&mut buf);
+        buf
+    });
+    let deadline = std::time::Instant::now() + Duration::from_secs(120);
+    loop {
+        match child.try_wait().expect("try_wait") {
+            Some(status) => {
+                let stdout = out_handle.join().unwrap_or_default();
+                let stderr = err_handle.join().unwrap_or_default();
+                return Output {
+                    status,
+                    stdout,
+                    stderr,
+                };
+            }
+            None => {
+                if std::time::Instant::now() > deadline {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                    panic!("decapod rpc --stdin exceeded 120s bound");
+                }
+                std::thread::sleep(Duration::from_millis(50));
+            }
+        }
+    }
+}
 
 /// Serialize scenario execution: fixtures use per-process sqlite stores, but
 /// keep runs deterministic under `cargo test` parallelism anyway.
@@ -304,7 +345,7 @@ impl Harness {
                 .write_all(serde_json::to_string(&payload).unwrap().as_bytes())
                 .expect("write rpc payload");
         }
-        let out = child.wait_with_output().expect("wait rpc");
+        let out = wait_bounded(child);
         let parsed = serde_json::from_slice(&out.stdout).unwrap_or(Value::Null);
         (parsed, out)
     }
@@ -343,7 +384,7 @@ impl Harness {
                 .write_all(serde_json::to_string(&payload).unwrap().as_bytes())
                 .expect("write rpc payload");
         }
-        let out = child.wait_with_output().expect("wait rpc");
+        let out = wait_bounded(child);
         let parsed = serde_json::from_slice(&out.stdout).unwrap_or(Value::Null);
         (parsed, out)
     }

@@ -235,7 +235,7 @@ def decapod_targets():
             # The broker suite includes 20 separately authenticated clients,
             # crash recovery and launch probes. Individual client waits remain
             # bounded; retain a finite aggregate budget for their stage evidence.
-            timeout = "long" if path == "tests/group_broker.rs" else "moderate",
+            timeout = "long" if path in ["tests/group_broker.rs", "tests/interop_conformance.rs"] else "moderate",
             # This suite asserts uncontended process wall-clock budgets. Rust's
             # test-threads flag alone does not isolate concurrent Bazel targets.
             tags = ["exclusive"] if path in [
