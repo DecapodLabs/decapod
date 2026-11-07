@@ -4,8 +4,7 @@
 use super::{
     atomic,
     bounded_process::{BoundedCommand, Cancellation, ProcessLimits, Termination},
-    fs_permissions,
-    laya_assets,
+    fs_permissions, laya_assets,
     laya_protocol::Manifest,
 };
 use fs2::FileExt;
@@ -53,34 +52,181 @@ fn valid_revision(value: &str) -> bool {
 
 const MAX_ARTIFACT: u64 = 4 * 1024 * 1024 * 1024; // 4 GiB
 const DEADLINE: Duration = Duration::from_secs(1800);
+const MAX_RUNTIME: u64 = 512 * 1024 * 1024;
+const MAX_BINDING: usize = 8192;
+const SCHEMA: &str = "decapod.laya-readiness.v1";
+
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LocalBinding {
+    schema: String,
+    installation: Installation,
+}
+
+fn binding_path(root: &Path, manifest: &str) -> io::Result<PathBuf> {
+    if !valid_digest(manifest) {
+        return Err(invalid("laya_local_binding_manifest_required"));
+    }
+    Ok(root
+        .join("runtimes")
+        .join(format!("{}.json", &manifest[7..])))
+}
+
+fn valid_digest(value: &str) -> bool {
+    value.strip_prefix("sha256:").is_some_and(|value| {
+        value.len() == 64
+            && value
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    })
+}
+
+fn validate_binding(binding: &LocalBinding, manifest: &str) -> io::Result<()> {
+    let installation = &binding.installation;
+    if binding.schema != SCHEMA
+        || installation.manifest_digest != manifest
+        || !installation.directory.is_dir()
+        || installation.directory.canonicalize()? != installation.directory
+        || installation.runtime.canonicalize()? != installation.runtime
+        || !valid_digest(&installation.runtime_sha256)
+        || installation.cpu_runtime.as_ref().is_some_and(|cpu| {
+            !cpu.runtime.is_absolute()
+                || cpu.runtime.canonicalize().ok().as_ref() != Some(&cpu.runtime)
+                || !valid_digest(&cpu.runtime_sha256)
+        })
+    {
+        return Err(invalid("laya_local_binding_invalid"));
+    }
+    Ok(())
+}
+
+fn native_header(file: &mut fs::File, length: u64) -> io::Result<()> {
+    let mut header = [0; 64];
+    file.read_exact(&mut header)?;
+    let matches = if cfg!(target_os = "macos") {
+        header[..4] == [0xcf, 0xfa, 0xed, 0xfe]
+            && match std::env::consts::ARCH {
+                "aarch64" => header[4..8] == [12, 0, 0, 1],
+                "x86_64" => header[4..8] == [7, 0, 0, 1],
+                _ => false,
+            }
+    } else if cfg!(target_os = "linux") {
+        header[..6] == [0x7f, b'E', b'L', b'F', 2, 1]
+            && match std::env::consts::ARCH {
+                "aarch64" => length >= 20 && header[18..20] == [183, 0],
+                "x86_64" => length >= 20 && header[18..20] == [62, 0],
+                _ => false,
+            }
+    } else {
+        false
+    };
+    if !matches {
+        return Err(invalid("laya_runtime_header_mismatch"));
+    }
+    Ok(())
+}
+
+pub(crate) fn runtime_digest(
+    path: &Path,
+    deadline: Instant,
+    cancel: &Cancellation,
+) -> io::Result<String> {
+    if Instant::now() >= deadline || cancel.is_cancelled() {
+        return Err(invalid("laya_runtime_verification_cancelled_or_timeout"));
+    }
+    if !path.is_absolute() || path.canonicalize()? != path {
+        return Err(invalid("laya_runtime_path_not_canonical"));
+    }
+    let mut options = OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+    }
+    let mut file = options.open(path)?;
+    let metadata = file.metadata()?;
+    if !metadata.is_file() || !(64..=MAX_RUNTIME).contains(&metadata.len()) {
+        return Err(invalid("laya_runtime_not_bounded_regular_file"));
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::{MetadataExt, PermissionsExt};
+        let mode = metadata.permissions().mode();
+        let uid = unsafe { libc::geteuid() };
+        if (metadata.uid() != uid && metadata.uid() != 0)
+            || metadata.nlink() != 1
+            || mode & 0o022 != 0
+            || mode & 0o111 == 0
+        {
+            return Err(invalid("laya_runtime_unsafe_permissions_or_links"));
+        }
+    }
+    native_header(&mut file, metadata.len())?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0; 65536];
+    let mut count = 0u64;
+    loop {
+        if Instant::now() >= deadline || cancel.is_cancelled() {
+            return Err(invalid("laya_runtime_verification_cancelled_or_timeout"));
+        }
+        let n = file.read(&mut buffer)?;
+        if n == 0 {
+            break;
+        }
+        count += n as u64;
+        if count > MAX_RUNTIME {
+            return Err(invalid("laya_runtime_size_changed"));
+        }
+        hasher.update(&buffer[..n]);
+    }
+    if count != metadata.len() as u64 {
+        return Err(invalid("laya_runtime_size_changed"));
+    }
+    Ok(format!("{:x}", hasher.finalize()))
+}
+
+pub(crate) fn register_at(root: &Path, installation: Installation) -> io::Result<()> {
+    let path = binding_path(root, &installation.manifest_digest)?;
+    let binding = LocalBinding {
+        schema: SCHEMA.into(),
+        installation,
+    };
+    validate_binding(&binding, &binding.installation.manifest_digest)?;
+    let bytes = serde_json::to_vec_pretty(&binding).map_err(io::Error::other)?;
+    if bytes.len() > MAX_BINDING {
+        return Err(invalid("laya_local_binding_overflow"));
+    }
+    fs_permissions::ensure_private_dir(root)?;
+    fs_permissions::ensure_private_dir(path.parent().unwrap())?;
+    fs_permissions::write_private(path, bytes)
+}
 
 fn curl_command(url: &str, destination: &Path, maximum: u64, timeout: Duration) -> Command {
     let mut command = Command::new("/usr/bin/curl");
     // No ambient token, netrc, proxy, cookies, user config or custom trust roots.
-    command
-        .env_clear()
-        .args([
-            "--disable",
-            "--silent",
-            "--show-error",
-            "--fail",
-            "--location",
-            "--max-redirs",
-            "5",
-            "--proto",
-            "=https",
-            "--proto-redir",
-            "=https",
-            "--noproxy",
-            "*",
-            "--user-agent",
-            "decapod-laya-setup",
-            "--write-out",
-            "%{http_code}",
-            "--output",
-            destination.to_str().unwrap_or(""),
-            url,
-        ]);
+    command.env_clear().args([
+        "--disable",
+        "--silent",
+        "--show-error",
+        "--fail",
+        "--location",
+        "--max-redirs",
+        "5",
+        "--proto",
+        "=https",
+        "--proto-redir",
+        "=https",
+        "--noproxy",
+        "*",
+        "--user-agent",
+        "decapod-laya-setup",
+        "--write-out",
+        "%{http_code}",
+        "--output",
+        destination.to_str().unwrap_or(""),
+        url,
+    ]);
     #[cfg(unix)]
     {
         use std::os::unix::process::CommandExt;
@@ -105,7 +251,9 @@ fn safe_path(path: &Path) -> io::Result<()> {
     if !path.is_absolute() || path.canonicalize()? != path {
         return Err(invalid("model path must be absolute canonical"));
     }
-    let parent = path.parent().ok_or_else(|| invalid("model path parent missing"))?;
+    let parent = path
+        .parent()
+        .ok_or_else(|| invalid("model path parent missing"))?;
     fs_permissions::check_directory(parent, false)?;
     Ok(())
 }
@@ -226,7 +374,10 @@ pub struct SetupOptions {
     pub cache_directory: Option<PathBuf>,
     pub runtime: Option<PathBuf>,
     pub cpu_runtime: Option<PathBuf>,
+    pub check_updates: bool,
+    pub refresh: bool,
     pub offline: bool,
+    pub rollback: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -293,20 +444,14 @@ pub fn check_updates(cache_directory: Option<&Path>) -> io::Result<UpdateReport>
     .enumerate()
     {
         let path = scratch.path().join(format!("metadata-{index}.json"));
-        vega_setup::download_public_asset(
-            &url,
-            &path,
-            1024 * 1024,
-            deadline,
-            signal.cancellation(),
-        )?;
+        download_public_asset(&url, &path, 1024 * 1024, deadline, signal.cancellation())?;
         let bytes = fs::read(&path)?;
         let value: serde_json::Value = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
         let revision = value
             .get("sha")
             .or_else(|| value.get(0).and_then(|v| v.get("sha")))
             .and_then(|v| v.as_str())
-            .filter(|v| vega_setup::valid_revision(v))
+            .filter(|v| valid_revision(v))
             .ok_or_else(|| invalid("laya_update_revision_invalid"))?;
         metadata_compatible &= revision == expected;
         latest_revisions.insert(repository.into(), revision.into());
@@ -499,13 +644,7 @@ pub fn run(options: &SetupOptions) -> io::Result<SetupReport> {
                             "https://huggingface.co/{}/resolve/{}/{}",
                             asset.repository, asset.revision, asset.upstream_path
                         );
-                        vega_setup::download_public_asset(
-                            &url,
-                            &pending,
-                            asset.bytes,
-                            deadline,
-                            &cancel,
-                        )?;
+                        download_public_asset(&url, &pending, asset.bytes, deadline, &cancel)?;
                         verify_file(&pending, asset.bytes, &asset.sha256, deadline, &cancel)?;
                         fs::rename(&pending, &cached)?;
                         atomic::sync_parent_directory(&cache)
@@ -542,20 +681,20 @@ pub fn run(options: &SetupOptions) -> io::Result<SetupReport> {
     }
     if let Some(path) = &options.runtime {
         let runtime = path.canonicalize()?;
-        let runtime_sha256 = vega_runtime::runtime_digest(&runtime, deadline, &cancel)?;
+        let runtime_sha256 = runtime_digest(&runtime, deadline, &cancel)?;
         let cpu_runtime = options
             .cpu_runtime
             .as_ref()
             .map(|path| {
                 let runtime = path.canonicalize()?;
-                let runtime_sha256 = vega_runtime::runtime_digest(&runtime, deadline, &cancel)?;
+                let runtime_sha256 = runtime_digest(&runtime, deadline, &cancel)?;
                 Ok::<_, io::Error>(RuntimePin {
                     runtime,
                     runtime_sha256,
                 })
             })
             .transpose()?;
-        vega_runtime::register_at(
+        register_at(
             &root,
             Installation {
                 directory: destination.clone(),

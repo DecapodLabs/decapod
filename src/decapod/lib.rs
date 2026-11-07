@@ -1638,7 +1638,7 @@ fn init_with_from_config(
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
-        vega_decisions: Some(config.vega.mode == core::vega_readiness::Mode::Required),
+        vega_decisions: Some(config.vega.mode == core::laya_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
         backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
@@ -1861,7 +1861,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-        vega: core::vega_readiness::Configuration::default(),
+        vega: core::laya_readiness::Configuration::default(),
     }
 }
 
@@ -2624,15 +2624,17 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
             if let Some(enabled) = init_with.vega_decisions {
                 config.vega.mode = if enabled {
-                    core::vega_readiness::Mode::Required
+                    core::laya_readiness::Mode::Required
                 } else {
-                    core::vega_readiness::Mode::Disabled
+                    core::laya_readiness::Mode::Disabled
                 };
                 if enabled
                     && config.vega.model_manifest_digest.is_empty()
                     && config.vega.installation.is_none()
                 {
-                    config.vega.model_manifest_digest = core::vega_setup::baseline_digest()?;
+                    config.vega.model_manifest_digest =
+                        core::laya_assets::manifest_digest(&core::laya_assets::baseline())
+                            .map_err(io::Error::other)?;
                 }
             }
             write_project_config(&target_dir, &config, init_with.dry_run)?;
@@ -2738,7 +2740,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 offline,
                 rollback,
             } => {
-                let report = core::vega_setup::run(&core::vega_setup::SetupOptions {
+                let report = core::laya_setup::run(&core::laya_setup::SetupOptions {
                     cache_directory,
                     runtime,
                     cpu_runtime,

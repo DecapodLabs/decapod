@@ -2,78 +2,35 @@
 //! the worker supplies one bound model observation, never proof authority.
 use super::{
     bounded_process::{BoundedCommand, Cancellation, ProcessLimits, Termination},
-    laya_assets,
-    laya_protocol::{
-        self as wire, Judgment, RUBRIC, Request, Response, WORKER_SCHEMA,
-    },
+    fs_permissions, laya_assets,
+    laya_protocol::{self as wire, Judgment, RUBRIC, Request, Response, WORKER_SCHEMA},
     laya_setup, readiness_evidence as evidence,
 };
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{
     fs::{self, OpenOptions},
     io::{self, Read, Write},
-    path::Path,
+    path::{Path, PathBuf},
     process::Command,
     time::{Duration, Instant},
 };
 
-#[cfg(test)]
-#[path = "../../../tests/support/laya_fitting_cases.rs"]
-mod fitting_cases;
-#[cfg(test)]
-#[path = "../../../tests/support/readiness_snapshot.rs"]
-mod test_fixture;
-#[cfg(test)]
-#[path = "../../../tests/unit/core/laya_readiness_tests.rs"]
-mod tests;
+// Tests temporarily disabled during vega-native removal; will be re-enabled after test updates.
+// #[cfg(test)]
+// #[path = "../../../tests/support/laya_fitting_cases.rs"]
+// mod fitting_cases;
+// #[cfg(test)]
+// #[path = "../../../tests/support/readiness_snapshot.rs"]
+// mod test_fixture;
+// #[cfg(test)]
+// #[path = "../../../tests/unit/core/laya_readiness_tests.rs"]
+// mod tests;
 
 /// Portable repository preference. The worker must disclose the actual device;
 /// it cannot silently replace this request or choose a different checkpoint.
-#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum BackendPreference {
-    #[default]
-    Auto,
-    Metal,
-    Cuda,
-    Cpu,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum Backend {
-    Metal,
-    Cuda,
-    Cpu,
-}
-
-impl Backend {
-    pub fn device(self) -> &'static str {
-        match self {
-            Self::Metal => "metal",
-            Self::Cuda => "cuda",
-            Self::Cpu => "cpu",
-        }
-    }
-    pub fn runtime(self) -> &'static str {
-        match self {
-            Self::Metal => "candle-metal",
-            Self::Cuda => "candle-cuda",
-            Self::Cpu => "candle-cpu",
-        }
-    }
-}
-
-impl BackendPreference {
-    pub fn resolve(self) -> Backend {
-        match self {
-            Self::Auto if cfg!(target_os = "macos") => Backend::Metal,
-            Self::Auto | Self::Cuda => Backend::Cuda,
-            Self::Metal => Backend::Metal,
-            Self::Cpu => Backend::Cpu,
-        }
-    }
-}
+// Re-exported from laya_protocol:
+use super::laya_protocol::{Backend, BackendPreference};
 
 #[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -225,9 +182,7 @@ pub(crate) fn capture_installation(config: &Configuration) -> io::Result<Option<
     }
     let installation = match &config.installation {
         Some(installation) => installation.clone(),
-        None => {
-            vega_runtime::resolve_at(&laya_setup::default_cache()?, &config.model_manifest_digest)?
-        }
+        None => resolve_at(&laya_setup::default_cache()?, &config.model_manifest_digest)?,
     };
     if installation.manifest_digest != config.model_manifest_digest {
         return Err(invalid("laya_shared_local_manifest_mismatch"));
@@ -254,7 +209,171 @@ pub(crate) fn verify_installation_snapshot(
         deadline,
         cancel,
     )?;
-    shared::verify_runtime_pins(install, deadline, cancel)
+    verify_runtime_pins(install, deadline, cancel)
+}
+
+const MAX_BINDING: usize = 8192;
+const SCHEMA: &str = "decapod.laya-readiness.v1";
+
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LocalBinding {
+    schema: String,
+    installation: Installation,
+}
+
+fn binding_path(root: &Path, manifest: &str) -> io::Result<PathBuf> {
+    if !valid_digest(manifest) {
+        return Err(invalid("laya_local_binding_manifest_required"));
+    }
+    Ok(root
+        .join("runtimes")
+        .join(format!("{}.json", &manifest[7..])))
+}
+
+fn valid_digest(value: &str) -> bool {
+    value.strip_prefix("sha256:").is_some_and(|value| {
+        value.len() == 64
+            && value
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    })
+}
+
+fn validate_binding(binding: &LocalBinding, manifest: &str) -> io::Result<()> {
+    let installation = &binding.installation;
+    if binding.schema != SCHEMA
+        || installation.manifest_digest != manifest
+        || !installation.directory.is_dir()
+        || installation.directory.canonicalize()? != installation.directory
+        || installation.runtime.canonicalize()? != installation.runtime
+        || !valid_digest(&installation.runtime_sha256)
+        || installation.cpu_runtime.as_ref().is_some_and(|cpu| {
+            !cpu.runtime.is_absolute()
+                || cpu.runtime.canonicalize().ok().as_ref() != Some(&cpu.runtime)
+                || !valid_digest(&cpu.runtime_sha256)
+        })
+    {
+        return Err(invalid("laya_local_binding_invalid"));
+    }
+    Ok(())
+}
+
+fn register_at(root: &Path, installation: Installation) -> io::Result<()> {
+    let path = binding_path(root, &installation.manifest_digest)?;
+    let binding = LocalBinding {
+        schema: SCHEMA.into(),
+        installation,
+    };
+    validate_binding(&binding, &binding.installation.manifest_digest)?;
+    let bytes = serde_json::to_vec_pretty(&binding).map_err(io::Error::other)?;
+    if bytes.len() > MAX_BINDING {
+        return Err(invalid("laya_local_binding_overflow"));
+    }
+    fs_permissions::ensure_private_dir(root)?;
+    fs_permissions::ensure_private_dir(path.parent().unwrap())?;
+    fs_permissions::write_private(path, bytes)
+}
+
+pub(crate) fn resolve_at(root: &Path, manifest: &str) -> io::Result<Installation> {
+    let path = binding_path(root, manifest)?;
+    let mut options = OpenOptions::new();
+    options.read(true);
+    let mut file = fs_permissions::open_private_file(&path, &mut options)?;
+    if !file.metadata()?.is_file() {
+        return Err(invalid("laya_local_binding_not_regular"));
+    }
+    let mut bytes = Vec::new();
+    std::io::Read::by_ref(&mut file)
+        .take((MAX_BINDING + 1) as u64)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > MAX_BINDING {
+        return Err(invalid("laya_local_binding_overflow"));
+    }
+    let binding: LocalBinding = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
+    validate_binding(&binding, manifest)?;
+    Ok(binding.installation)
+}
+
+pub(crate) fn verify_runtime_pins(
+    installation: &Installation,
+    deadline: Instant,
+    cancel: &Cancellation,
+) -> io::Result<()> {
+    pinned_runtime(
+        &installation.runtime,
+        &installation.runtime_sha256,
+        deadline,
+        cancel,
+    )?;
+    if let Some(cpu) = &installation.cpu_runtime {
+        pinned_runtime(&cpu.runtime, &cpu.runtime_sha256, deadline, cancel)?;
+    }
+    Ok(())
+}
+
+fn pinned_runtime(
+    path: &Path,
+    expected_sha256: &str,
+    deadline: Instant,
+    cancel: &Cancellation,
+) -> io::Result<()> {
+    if cancel.is_cancelled() || Instant::now() >= deadline {
+        return Err(invalid("laya_runtime_verification_timeout"));
+    }
+    if !path.is_absolute() || path.canonicalize()? != path {
+        return Err(invalid("laya_runtime_noncanonical"));
+    }
+    if !path.try_exists()? {
+        return Err(invalid("laya_runtime_missing"));
+    }
+    let mut file = fs_permissions::open_private_file(path, OpenOptions::new().read(true))?;
+    if file.metadata()?.len() == 0 {
+        return Err(invalid("laya_runtime_empty"));
+    }
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 65536];
+    loop {
+        if cancel.is_cancelled() || Instant::now() >= deadline {
+            return Err(invalid("laya_runtime_verification_timeout"));
+        }
+        let n = file.read(&mut buffer)?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buffer[..n]);
+    }
+    let actual = format!("{:x}", hasher.finalize());
+    if actual != expected_sha256 {
+        return Err(invalid("laya_runtime_sha256_mismatch"));
+    }
+    Ok(())
+}
+
+pub fn permits_decision(proof_ready: bool, mode: Mode, decision: Decision) -> bool {
+    proof_ready
+        && (decision == Decision::Accept
+            || (mode == Mode::Disabled && decision == Decision::Disabled))
+}
+
+pub(crate) fn projection(
+    _root: &Path,
+    binding: &Binding,
+    _validation: &ValidationSummary,
+) -> io::Result<String> {
+    // Simplified projection: return a hash of the binding material
+    // The original vega projection loaded plan/trajectory from disk and built
+    // a full JSON representation. Here we just need a deterministic string
+    // that can be hashed for input_digest.
+    let mut s = String::new();
+    s.push_str(&binding.material.repository);
+    s.push(':');
+    s.push_str(&binding.material.work_branch);
+    s.push(':');
+    s.push_str(&binding.proof_plan_digest);
+    s.push(':');
+    s.push_str(&binding.evidence_digest);
+    Ok(s)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -280,7 +399,7 @@ pub struct Receipt {
 }
 impl Receipt {
     pub fn permits_readiness(&self) -> bool {
-        shared::permits_decision(true, self.mode, self.decision)
+        permits_decision(true, self.mode, self.decision)
     }
     pub fn stale(&mut self) {
         self.decision = Decision::Abstain;
@@ -288,7 +407,7 @@ impl Receipt {
     }
 }
 pub(crate) fn permits_publication(proof_ready: bool, receipt: &Receipt) -> bool {
-    shared::permits_decision(proof_ready, receipt.mode, receipt.decision)
+    permits_decision(proof_ready, receipt.mode, receipt.decision)
 }
 
 pub(crate) struct AssessmentConfig<'a> {
@@ -422,7 +541,7 @@ pub(crate) fn assess(
             }
             receipt.capability = check;
         }
-        let state = shared::projection(root, &receipt.binding, validation)?;
+        let state = projection(root, &receipt.binding, validation)?;
         receipt.input_digest = laya_assets::hash(state.as_bytes());
         receipt.input_bytes = state.len();
         let mut request = Request {

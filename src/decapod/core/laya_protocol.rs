@@ -49,6 +49,23 @@ impl BackendPreference {
     }
 }
 
+impl Backend {
+    pub fn device(self) -> &'static str {
+        match self {
+            Self::Metal => "metal",
+            Self::Cuda => "cuda",
+            Self::Cpu => "cpu",
+        }
+    }
+    pub fn runtime(self) -> &'static str {
+        match self {
+            Self::Metal => "candle-metal",
+            Self::Cuda => "candle-cuda",
+            Self::Cpu => "candle-cpu",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct Asset {
