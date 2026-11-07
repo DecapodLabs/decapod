@@ -1617,24 +1617,28 @@
       "proof_refs": [
         "final_refresh"
       ]
+    },
+    {
+      "id": "ckpt-traj-24483",
+      "summary": "Rebind publication trajectory to task feat_01m6tj6g0yq1tgg1 (worktree seed carried a stale bugs-task trajectory cookie)",
+      "input_digest": "sha256:3340136481506dabb61a3e8a0a2807266edb4fd23354d8cde903f118cfb3a8c6",
+      "proof_refs": [
+        "trajectory_rebind"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF": {
+    "intent:branch_01M6TJ6G0YQ1TGG1R": {
       "acceptance_criteria": [],
       "assumptions": [],
-      "boundaries": [
-        "Current claimed task and isolated work branch"
-      ],
-      "constraints": [
-        "root"
-      ],
+      "boundaries": [],
+      "constraints": [],
       "created_sequence": 1,
-      "id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
+      "id": "intent:branch_01M6TJ6G0YQ1TGG1R",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
-      "refined_intent": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
+      "raw_intent": "Resolve issues #1164 #1079 #1134 #1023 #1047 on the decapod repository",
+      "refined_intent": "Move the specs manifest, harmonize agent doc indexes, add CI fingerprint/pre-build-validate checks, and README badge support, with validated publication",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -1687,23 +1691,21 @@
       "updated_at": "1794058069Z"
     },
     "trajectory": {
-      "active_boundaries": [
-        "Current claimed task and isolated work branch"
-      ],
-      "artifact_hash": "sha256:bd0126b4fda2c4fdd41d4d699c9e50c7ad51c8c9c6e44da6327fea11c4542f82",
+      "active_boundaries": [],
+      "artifact_hash": "sha256:1a45da29011562b9d1ae63084f3fe9028d20dd5ba8b6c61c4044ff705a43ff93",
       "checks": [],
-      "current_phase": "intent",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
+            "intent_id": "intent:branch_01M6TJ6G0YQ1TGG1R",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
+            "intent_id": "intent:branch_01M6TJ6G0YQ1TGG1R",
             "kind": "refined",
             "sequence": 3
           }
@@ -1717,18 +1719,16 @@
       "destination": "pull request",
       "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
+      "intent_id": "intent:branch_01M6TJ6G0YQ1TGG1R",
       "modified_files": [],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "publish"
       ],
-      "repo_scope": [
-        "root"
-      ],
-      "run_id": "branch_01M6Q7DN2806XPGQJA6GFEHASD",
+      "repo_scope": [],
+      "run_id": "branch_01M6TJ6G0YQ1TGG1R",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6q7cbwbjxpk3d",
+      "task_id": "feat_01m6tj6g0yq1tgg1",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
