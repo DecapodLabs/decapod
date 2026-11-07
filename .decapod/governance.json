@@ -1689,6 +1689,14 @@
       "proof_refs": [
         "readme_badge_dogfood"
       ]
+    },
+    {
+      "id": "ckpt-digest-5177",
+      "summary": "Update reviewed_sources_digest to 8022b2da... after the decapod-validate.yml re-pin in 1093b55b changed the source inventory",
+      "input_digest": "sha256:5634dbc36c82ad86c6d869a2adda0ce3e99d502fdb8135b99d9b781837c3d1ac",
+      "proof_refs": [
+        "digest_update"
+      ]
     }
   ],
   "intents": {
