@@ -624,6 +624,11 @@
       "id": "cp-1557-19",
       "summary": "Record src/decapod/core/todo.rs",
       "input_digest": "sha256:b9fa62c3c5392f4e1068ee189cceeab3d1060d859c6d9efc148e9e6cfa8d65e4"
+    },
+    {
+      "id": "cp-1557-20",
+      "summary": "Record src/decapod/core/validate.rs",
+      "input_digest": "sha256:34004e83d9ad00005614634712b5718716c9edc722c242af6b96c92f2a799193"
     }
   ],
   "legacy_digests": {
