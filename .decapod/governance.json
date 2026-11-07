@@ -1793,6 +1793,14 @@
       "proof_refs": [
         "ci_final"
       ]
+    },
+    {
+      "id": "ckpt-specs-final-1794091525",
+      "summary": "Re-review three canonical specs, specs.refresh with signal 58d6ede8...",
+      "input_digest": "sha256:8d26574cd9d7c9f72f093e7f1c65893a1d37cdf2ec37984d90f0c245e0179cf7",
+      "proof_refs": [
+        "specs_final"
+      ]
     }
   ],
   "intents": {
@@ -1877,21 +1885,21 @@
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "No authored architecture change in this PR set; only the regenerated repo signal fingerprint line",
-          "reviewed_code_fingerprint": "4c539d699b8fd605d92e9c811d75dbd489daf6a3bad941a0482afba96264e7de",
+          "reviewed_code_fingerprint": "58d6ede8e3322994400b40efc0a6b83be932e3e1d8be4459785a4be3b44046fa",
           "spec_material_hash": "90fea94969cbcae7abcf34ffc569abe2ce309184968264761102b303daf05e6e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Documents #1023 init README badge (--no-readme-badge / [init] readme_badge), #1079 specs manifest location .decapod/managed/.manifest.json with legacy fallback, plus version-updatable badge logic",
-          "reviewed_code_fingerprint": "4c539d699b8fd605d92e9c811d75dbd489daf6a3bad941a0482afba96264e7de",
+          "reviewed_code_fingerprint": "58d6ede8e3322994400b40efc0a6b83be932e3e1d8be4459785a4be3b44046fa",
           "spec_material_hash": "28f1263211c49322b8d84439fa240b186c11d74364cb4859beb123688ccbb6e7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "No authored security change in this PR set; only the regenerated repo signal fingerprint line",
-          "reviewed_code_fingerprint": "4c539d699b8fd605d92e9c811d75dbd489daf6a3bad941a0482afba96264e7de",
+          "reviewed_code_fingerprint": "58d6ede8e3322994400b40efc0a6b83be932e3e1d8be4459785a4be3b44046fa",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -1903,7 +1911,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794091012Z"
+      "updated_at": "1794091487Z"
     },
     "trajectory": {
       "active_boundaries": [],
