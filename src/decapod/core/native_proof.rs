@@ -1511,3 +1511,104 @@ fn tag_refs(root: &Path, budget: &mut Budget<'_>) -> io::Result<BTreeMap<String,
     }
     Ok(tags)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn write_tool(dir: &tempfile::TempDir, name: &str, bytes: &[u8]) -> PathBuf {
+        // native_executable requires an absolute canonical path.
+        let path = dir.path().canonicalize().unwrap().join(name);
+        std::fs::write(&path, bytes).unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        path
+    }
+
+    fn macho_arm64() -> Vec<u8> {
+        let mut v = vec![0xcf, 0xfa, 0xed, 0xfe];
+        v.extend_from_slice(&0x0100_000C_u32.to_le_bytes());
+        v.extend_from_slice(&[0; 16]);
+        v
+    }
+
+    fn elf_x86_64() -> Vec<u8> {
+        let mut v = vec![0x7f, b'E', b'L', b'F', 2, 1, 1, 0];
+        v.extend_from_slice(&[0; 8]);
+        v.extend_from_slice(&2_u16.to_le_bytes()); // e_type = ET_EXEC
+        v.extend_from_slice(&0x3E_u16.to_le_bytes()); // e_machine = EM_X86_64
+        v
+    }
+
+    #[test]
+    fn describe_mach_o_arm64() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = write_tool(&dir, "alejandra", &macho_arm64());
+        assert_eq!(describe_executable(&path).unwrap(), "Mach-O arm64");
+    }
+
+    #[test]
+    fn describe_elf_x86_64() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = write_tool(&dir, "tool", &elf_x86_64());
+        assert_eq!(describe_executable(&path).unwrap(), "ELF x86_64 (64-bit)");
+    }
+
+    #[test]
+    fn describe_script_and_fat_binary() {
+        let dir = tempfile::tempdir().unwrap();
+        let script = write_tool(&dir, "run.sh", b"#!/bin/sh\necho hi\n");
+        assert_eq!(describe_executable(&script).unwrap(), "script");
+        let mut fat = vec![0xca, 0xfe, 0xba, 0xbe];
+        fat.extend_from_slice(&1_u32.to_be_bytes()); // nfat_arch
+        fat.extend_from_slice(&0x0100_000C_u32.to_be_bytes()); // first arch arm64
+        let fat_path = write_tool(&dir, "fat", &fat);
+        assert_eq!(
+            describe_executable(&fat_path).unwrap(),
+            "Mach-O fat binary (first arch arm64)"
+        );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn linux_rejects_foreign_mach_o_with_identity() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = write_tool(&dir, "alejandra", &macho_arm64());
+        let err = native_executable(&path).unwrap_err().to_string();
+        assert_eq!(
+            err,
+            format!(
+                "{} is Mach-O arm64; native Linux validation requires {}",
+                path.display(),
+                native_expected_tool().unwrap()
+            )
+        );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn linux_accepts_elf_tool() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = write_tool(&dir, "tool", &elf_x86_64());
+        native_executable(&path).unwrap();
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn macos_rejects_foreign_elf_with_identity() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = write_tool(&dir, "alejandra", &elf_x86_64());
+        let err = native_executable(&path).unwrap_err().to_string();
+        assert_eq!(
+            err,
+            format!(
+                "{} is ELF x86_64 (64-bit); native macOS validation requires {}",
+                path.display(),
+                native_expected_tool().unwrap()
+            )
+        );
+    }
+}
