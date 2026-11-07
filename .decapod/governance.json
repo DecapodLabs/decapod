@@ -674,6 +674,11 @@
       "id": "cp-1557-29",
       "summary": "Record GEMINI.md",
       "input_digest": "sha256:d3d6bbe5c7b06ff496686753614b8cfd2bbbb055cacb8d5a8e9b743269f49064"
+    },
+    {
+      "id": "cp-1557-30",
+      "summary": "Record .decapod/managed/Dockerfile.decapod",
+      "input_digest": "sha256:0ee16b5c05a553034ceb4b294a3111df2317f706ee6ba17c98a07a10af7de74a"
     }
   ],
   "legacy_digests": {
