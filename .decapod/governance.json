@@ -544,6 +544,11 @@
       "id": "cp-1557-03",
       "summary": "Record .decapod/managed/specs/INTENT.md",
       "input_digest": "sha256:52c2f07c4c07744fc282cc5fe2afd200505e84a967d901b2d725753f2eef09c6"
+    },
+    {
+      "id": "cp-1557-04",
+      "summary": "Record .decapod/managed/specs/INTERFACES.md",
+      "input_digest": "sha256:519e9224677432e0b333b9287eeb8f75b196ab2f5b85c2f97eb7d90fae6f55cd"
     }
   ],
   "legacy_digests": {
