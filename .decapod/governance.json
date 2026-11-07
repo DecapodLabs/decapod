@@ -1553,6 +1553,22 @@
       "proof_refs": [
         "rebase_rebind_0130_2"
       ]
+    },
+    {
+      "id": "ckpt-1079-genat-30055",
+      "summary": "#1079 follow-up: scaffold manifest write preserves generated_at when all other manifest fields are unchanged, so project-check does not churn the moved manifest (CI drift check only knows the evaluating release's path)",
+      "input_digest": "sha256:9756760e5e51e05864608b0eee7c887a84424b72f5f76a4c211193015d00efe1",
+      "proof_refs": [
+        "scaffold_manifest_idempotent"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-4d70c9a-5600",
+      "summary": "Rebind checkpoint to the post-rebase material tree of 4d70c9a (rebase onto v0.130.2 master e5760258 changed trees; original checkpoint digests were bound pre-rebase)",
+      "input_digest": "sha256:74380f14a7962806777654bd2ece2fb7a810e2825866416386d5df15f9b694e1",
+      "proof_refs": [
+        "rebase_rebind_0130_2"
+      ]
     }
   ],
   "intents": {

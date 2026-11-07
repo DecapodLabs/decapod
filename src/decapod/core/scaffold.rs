@@ -2098,16 +2098,22 @@ pub fn scaffold_project_entrypoints(
                 String::new()
             };
 
-            let manifest = ProjectSpecsManifest {
+            let template_version = if !opts.force {
+                existing_manifest
+                    .as_ref()
+                    .map(|manifest| manifest.template_version.clone())
+                    .unwrap_or_else(|| PROJECT_SPEC_TEMPLATE_VERSION.to_string())
+            } else {
+                PROJECT_SPEC_TEMPLATE_VERSION.to_string()
+            };
+            let mut manifest = ProjectSpecsManifest {
                 schema_version: LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA.to_string(),
-                template_version: if !opts.force {
-                    existing_manifest
-                        .as_ref()
-                        .map(|manifest| manifest.template_version.clone())
-                        .unwrap_or_else(|| PROJECT_SPEC_TEMPLATE_VERSION.to_string())
-                } else {
-                    PROJECT_SPEC_TEMPLATE_VERSION.to_string()
-                },
+                template_version,
+                // Preserve the recorded generation time when every other
+                // manifest field is unchanged, so repeated project-check
+                // scaffolds do not churn generated_at (#1079: the CI drift
+                // check only knows the manifest path of the evaluating
+                // release, so a moved manifest must stay byte-stable).
                 generated_at: crate::core::time::now_epoch_z(),
                 repo_signal_fingerprint: repo_fingerprint,
                 declared_capabilities: opts.capabilities.clone(),
@@ -2118,6 +2124,23 @@ pub fn scaffold_project_entrypoints(
                 entrypoints: entrypoint_list,
                 files: manifest_entries,
             };
+            if let Some(existing) = existing_manifest.as_ref() {
+                let mut existing_value = serde_json::to_value(existing).ok();
+                let mut candidate_value = serde_json::to_value(&manifest).ok();
+                if let (Some(existing_value), Some(candidate_value)) =
+                    (&mut existing_value, &mut candidate_value)
+                {
+                    if let (Some(a), Some(b)) =
+                        (existing_value.as_object_mut(), candidate_value.as_object_mut())
+                    {
+                        a.remove("generated_at");
+                        b.remove("generated_at");
+                    }
+                }
+                if existing_value.is_some() && existing_value == candidate_value {
+                    manifest.generated_at = existing.generated_at.clone();
+                }
+            }
             let manifest_path = opts.target_dir.join(LOCAL_PROJECT_SPECS_MANIFEST);
             if let Err(e) = crate::core::fs_permissions::ensure_private_dir(
                 manifest_path.parent().unwrap_or(std::path::Path::new("/")),
