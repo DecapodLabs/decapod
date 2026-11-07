@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.129.0](https://github.com/DecapodLabs/decapod/compare/v0.128.0...v0.129.0) - 2026-11-07
+
+### Added
+
+- add reviewed ci_only declaration to source_coverage ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+
+### Fixed
+
+- complete ci_only closure for #1531 - all-CI-only repos keep local proof, agent docs aligned ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+- allow ci_only source_coverage rows to omit commands in config.toml ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+- repair stale vega-native Cargo.lock decapod pin for v0.128.0 ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+- repair stale vega-native Cargo.lock decapod pin for v0.126.5 ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+
+### Other
+
+- re-record spec reviews and refresh projections at rebound v0.128.0 head ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+- regenerate v0.128.0 release-bound entrypoints, manifest and Dockerfile pin after rebase ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+- refresh specs manifest after #1531 digest reconcile
+- reconcile source digest after vega-native lock pin repair ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+- regenerate v0.126.5 entrypoints and re-review specs after #1531 rebase
+- regenerate specs projections on v0.126.5 after #1531 rebase
+- rebase #1531 onto v0.126.5 and reconcile source digest
+- refresh specs manifest after #1531 digest reconcile
+- reconcile proof profile source digest for #1531 branch
+- refresh specs manifest and attestations after #1531 spec update
+- document reviewed ci_only declaration in INTERFACES.md ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+- update SourceCoverage constructor in consumer_readiness ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+- update SourceCoverage constructor in lib_init_prompt_tests ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+- cover ci_only source_coverage declaration ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
+- seed workspace branch for #1531 on v0.126.4 base
+
 ### Added
 
 - `repo.pr-readiness.v1` `source_coverage` rows may declare a reviewed CI-only limitation (`ci_only = true` + `reason`, `commands` omitted) instead of a false local mapping; the row is pinned by `reviewed_commands_digest` and reported in `validation-results.v3` as a `NonApplicable` limitation stage, never counted as a passed check (#1531)
