@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e",
+    "accepted_commit": "e922bfb6351c009cb372c5d76df86ea8842a7435",
+    "release": "v0.130.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -519,8 +520,8 @@
     }
   },
   "change": {
-    "id": "change_01M6QH5TYRFW3QDTW3PNDNV922",
-    "base_commit": "f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e",
+    "id": "change_01M6TG3SGY21BGT92Y4YZWRNZ3",
+    "base_commit": "e922bfb6351c009cb372c5d76df86ea8842a7435",
     "target_base": "origin/master"
   },
   "checkpoints": [
@@ -1429,6 +1430,11 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "fix1544-rb-1",
+      "summary": "Rebase pass 1 of the #1544 fix onto v0.130.1 master (e922bfb6351c009cb372c5d76df86ea8842a7435): rebind governance identity and bind a fresh checkpoint to this commit's exact material tree",
+      "input_digest": "sha256:c09c195f360c77b90248351d65e230b53b0ee5d98c026f08bf49d4f0edac52e6"
     }
   ],
   "intents": {
