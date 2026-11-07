@@ -684,8 +684,33 @@
       "id": "cp-1557-reviews",
       "summary": "Record current interface, architecture, and security reviews",
       "input_digest": "sha256:ab0cdfee1040a1c28930584ae9896919fc096d09b959a72b75be8ec9c591a088"
+    },
+    {
+      "id": "cp-1557-trajectory",
+      "summary": "Bind the governed-transition trajectory to the plan",
+      "input_digest": "sha256:207400640311f1ed64e26a800b71b35ea8644cb623486009b87bdc75f020c758"
     }
   ],
+  "intents": {
+    "intent:governed-transitions-1557": {
+      "acceptance_criteria": [],
+      "assumptions": [],
+      "boundaries": [
+        "Governance kernel only"
+      ],
+      "constraints": [
+        "src/decapod/core"
+      ],
+      "created_sequence": 1,
+      "id": "intent:governed-transitions-1557",
+      "out_of_scope": [],
+      "proof_requirements": [],
+      "raw_intent": "Make completion and publication depend on canonical state and reconstructed evidence.",
+      "refined_intent": "Judge admissibility and proof without choosing the next action.",
+      "status": "refined",
+      "updated_sequence": 3
+    }
+  },
   "sections": {
     "plan": {
       "constraints": {
@@ -726,10 +751,53 @@
       "state": "DRAFT",
       "stop_conditions": [],
       "title": "Governed transitions",
-      "todo_ids": [],
+      "todo_ids": [
+        "governed-transitions-1557"
+      ],
       "unknowns": [],
       "unresolved_contradictions": [],
       "updated_at": "1794093843Z"
+    },
+    "trajectory": {
+      "active_boundaries": [
+        "Governance kernel only"
+      ],
+      "artifact_hash": "sha256:04544746e178f43ad271972f2c49eb1ab4516227fde199af2bb04397561cdfde",
+      "checks": [],
+      "custody": {
+        "events": [
+          {
+            "event_id": "event:2",
+            "intent_id": "intent:governed-transitions-1557",
+            "kind": "created",
+            "sequence": 2
+          },
+          {
+            "event_id": "event:3",
+            "intent_id": "intent:governed-transitions-1557",
+            "kind": "refined",
+            "sequence": 3
+          }
+        ],
+        "knowledge_candidates": [],
+        "next_sequence": 3,
+        "schema_version": "1.0.0",
+        "trajectories": {}
+      },
+      "declared_commands": [],
+      "evidence": [],
+      "inspected_files": [],
+      "intent_id": "intent:governed-transitions-1557",
+      "modified_files": [],
+      "repo_scope": [
+        "src/decapod/core"
+      ],
+      "run_id": "governed-transitions-1557",
+      "schema_version": "1.1.0",
+      "shortcut_risk_signals": [],
+      "task_id": "governed-transitions-1557",
+      "tool_calls": [],
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
