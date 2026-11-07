@@ -23,6 +23,29 @@ Generated attestations, manifests, capsules, and receipts report bounded facts
 about their inputs and operations. They do not independently establish the
 semantic correctness of authored prose.
 
+## Governed transitions
+
+Decapod is not an agent workflow engine. A harness chooses what to attempt, an
+agent performs the work, and Decapod decides whether that attempt is admissible
+and whether the resulting claim is proven.
+
+The judgments are `requested`, `admissible`, `rejected`, `attempted`,
+`applied`, `validated`, `proven`, `failed`, `not_proven`, `stale`, and
+`unknown`. `not_proven` means the declaration lacks sufficient evidence.
+`failed` means the evidence shows the claim is false. `unknown` means the
+canonical record is missing, incomplete, or corrupt. `stale` means the evidence
+or authorization was bound to a different head, rules fingerprint, or verifier.
+
+A coordination status of `done` does not prove the work. The canonical
+snapshot from `state.resolve` supplies the governing identity. A verification
+row may describe that proof, but Decapod re-derives the digest from the files
+before it will call the claim proven. Recovery reads the
+durable record and ignores progress notes. The same operation id and digest
+replays without a second effect. A reused id with a different digest conflicts.
+An authorization issued against one state is stale after that state changes.
+Exclusive scope overlap, an expired lease, a forbidden path, a file-touch
+overrun, and unproven prerequisites are rejected rather than scheduled around.
+
 ## State Machines
 
 A todo records the accepted work and its lifecycle. Task status, assignment,
@@ -243,7 +266,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
+- Repository signal fingerprint: `f877bcaa85918acff695d8c3cde0da1fdd755f4b25efceb03edf6d074513d272`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
