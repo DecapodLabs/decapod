@@ -963,6 +963,11 @@
       "id": "fix1528-hist-25",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:22efb541b96e7a712d2fb3a0966796b4ef4520f25698264861d3d4dc088605e9"
+    },
+    {
+      "id": "fix1528-group-broker-contention-bound",
+      "summary": "Raise the group_broker contention-client bound from 120s to 300s: under bazel test //:all the target runs parallel to //:interop_conformance and observed client latencies reach ~120s, so broker_no_sqlite_busy_surfaced_under_concurrent_mutators failed spuriously at the old bound (run 42328620909); the no-SQLITE_BUSY assertion is unchanged and the bound stays below the long target timeout",
+      "input_digest": "sha256:0af21ebf982cd3dcd5c414a15285a23c4a1cb53eae4ecc01cd6f8cb476b34965"
     }
   ],
   "intents": {
