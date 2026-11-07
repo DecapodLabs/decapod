@@ -1729,6 +1729,22 @@
       "proof_refs": [
         "final_specs"
       ]
+    },
+    {
+      "id": "ckpt-final2-1794090396",
+      "summary": "Add specs.verify to worktree-exempt RPC ops; re-refresh specs manifest with new signal 4a3475d0...",
+      "input_digest": "sha256:cea8a71065086e0bd7af0f68432c9e8a510102c1e34adad55cca6516b03c6a91",
+      "proof_refs": [
+        "final_fix"
+      ]
+    },
+    {
+      "id": "ckpt-final3-1794090405",
+      "summary": "Add specs.verify to worktree-exempt RPC ops; re-refresh specs manifest with new signal 4a3475d0...",
+      "input_digest": "sha256:cea8a71065086e0bd7af0f68432c9e8a510102c1e34adad55cca6516b03c6a91",
+      "proof_refs": [
+        "final_fix"
+      ]
     }
   ],
   "intents": {
