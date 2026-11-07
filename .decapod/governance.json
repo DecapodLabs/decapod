@@ -669,6 +669,11 @@
       "id": "cp-1557-28",
       "summary": "Record CODEX.md",
       "input_digest": "sha256:c53535b37097bcd12b0c1f6d5763a67a91c5f69cf82f93182f47e6a4b83dc361"
+    },
+    {
+      "id": "cp-1557-29",
+      "summary": "Record GEMINI.md",
+      "input_digest": "sha256:d3d6bbe5c7b06ff496686753614b8cfd2bbbb055cacb8d5a8e9b743269f49064"
     }
   ],
   "legacy_digests": {
