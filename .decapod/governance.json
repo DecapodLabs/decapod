@@ -589,6 +589,11 @@
       "id": "cp-1557-12",
       "summary": "Record docs/audits/governed-state-machine-audit.md",
       "input_digest": "sha256:c5b027f6b30fe66dcf8bb5665ad36bc944f0f86751ca7e5794abef89339f1b19"
+    },
+    {
+      "id": "cp-1557-13",
+      "summary": "Record src/decapod/core/governed_transition.rs",
+      "input_digest": "sha256:a06fa2265b18fbe58301517936bddb3e3c5ed0e33e551398187c54b95fbad3ae"
     }
   ],
   "legacy_digests": {
