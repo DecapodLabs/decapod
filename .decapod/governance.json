@@ -1625,6 +1625,14 @@
       "proof_refs": [
         "trajectory_rebind"
       ]
+    },
+    {
+      "id": "ckpt-plan-30848",
+      "summary": "Bind governed plan to todo feat_01m6tj6g0yq1tgg1 with the 5-issue intent (replaces stale #1533 plan from the shared seed)",
+      "input_digest": "sha256:f731ab2d657e6d74a2ee66a08ec75e1e77493325d1eaf89ccdf261a0c27c2fbf",
+      "proof_refs": [
+        "plan_task_binding"
+      ]
     }
   ],
   "intents": {
@@ -1651,7 +1659,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
+      "intent": "Harmonize agent doc indexes (#1164); move specs manifest to .decapod/managed/.manifest.json (#1079); CI check for regenerated spec fingerprints (#1134); README badge on init with config toggle (#1023); pre-build validate CI check (#1047)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -1682,13 +1690,13 @@
       ],
       "state": "DRAFT",
       "stop_conditions": [],
-      "title": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
+      "title": "Resolve #1164 #1079 #1134 #1023 #1047",
       "todo_ids": [
-        "bugs_01m6q7cbwbjxpk3d"
+        "feat_01m6tj6g0yq1tgg1"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794058069Z"
+      "updated_at": "1794059949Z"
     },
     "trajectory": {
       "active_boundaries": [],
