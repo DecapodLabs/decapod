@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.130.0](https://github.com/DecapodLabs/decapod/compare/v0.129.0...v0.130.0) - 2026-11-07
+
+### Added
+
+- add --accept-historical-gap/--reason to todo journal checkpoint ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+- add reviewed historical-gap repair to task journal ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+
+### Fixed
+
+- repair stale vega-native Cargo.lock decapod pin for v0.126.5 ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+- pass None skip to check_complete_suffix in task_transfer ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+
+### Other
+
+- rebind #1534 artifacts onto v0.129.0 master - regenerate surfaces, reconcile digest, record spec reviews and refresh projections ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+- regenerate v0.129.0 release-bound entrypoints, manifest pin and vega-native lock after rebase ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+- refresh specs manifest after #1534 digest reconcile
+- reconcile source digest after vega-native lock pin repair ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+- regenerate v0.126.5 entrypoints and re-review specs after #1534 rebase
+- regenerate specs projections on v0.126.5 after #1534 rebase
+- rebase #1534 onto v0.126.5 and reconcile source digest
+- refresh specs manifest after #1534 digest reconcile
+- reconcile proof profile source digest for #1534 branch
+- refresh specs manifest and attestations after #1534 spec update
+- document todo journal historical-gap repair in INTERFACES.md ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+- update task_journal_checkpoint call in plugins/todo ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+- update task_journal_checkpoint call in todo_release_tests ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+- cover historical-gap repair in task journal tests ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
+- seed workspace branch for #1534 on v0.126.4 base
+
 ## [0.129.0](https://github.com/DecapodLabs/decapod/compare/v0.128.0...v0.129.0) - 2026-11-07
 
 ### Added
