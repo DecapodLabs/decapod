@@ -679,8 +679,59 @@
       "id": "cp-1557-30",
       "summary": "Record .decapod/managed/Dockerfile.decapod",
       "input_digest": "sha256:0ee16b5c05a553034ceb4b294a3111df2317f706ee6ba17c98a07a10af7de74a"
+    },
+    {
+      "id": "cp-1557-reviews",
+      "summary": "Record current interface, architecture, and security reviews",
+      "input_digest": "sha256:ab0cdfee1040a1c28930584ae9896919fc096d09b959a72b75be8ec9c591a088"
     }
   ],
+  "sections": {
+    "plan": {
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
+      "intent": "Judge attempted work from canonical state and reconstructed evidence.",
+      "phases": [],
+      "proof_hooks": [
+        "decapod validate"
+      ],
+      "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed the current contract against the governed-transition judgment, canonical state snapshot, and proof reconstruction. The prose matches the implementation.",
+          "reviewed_code_fingerprint": "f877bcaa85918acff695d8c3cde0da1fdd755f4b25efceb03edf6d074513d272",
+          "spec_material_hash": "35697f40069a3b915e9959a3dfae96da24779b4c3e85b78a79b78911636e4eea"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed the current contract against the governed-transition judgment, canonical state snapshot, and proof reconstruction. The prose matches the implementation.",
+          "reviewed_code_fingerprint": "f877bcaa85918acff695d8c3cde0da1fdd755f4b25efceb03edf6d074513d272",
+          "spec_material_hash": "590f81aa227ed6ad6a39adf9a111f36ed8413b3a127b32cde1fd208160871b22"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed the current contract against the governed-transition judgment, canonical state snapshot, and proof reconstruction. The prose matches the implementation.",
+          "reviewed_code_fingerprint": "f877bcaa85918acff695d8c3cde0da1fdd755f4b25efceb03edf6d074513d272",
+          "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
+        }
+      ],
+      "state": "DRAFT",
+      "stop_conditions": [],
+      "title": "Governed transitions",
+      "todo_ids": [],
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1794093843Z"
+    }
+  },
   "legacy_digests": {
     ".decapod/governance/claims.json": "sha256:8f810aa7c70f812f74f283553df4094c6c4b59fbbad7d7a506d20b81a3000712",
     ".decapod/governance/plan.json": "sha256:ca4344858263b306ee2c7af5c8f22610b78e8256a71adca473b7e9ad4e636a07",
