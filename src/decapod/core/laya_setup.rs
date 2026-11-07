@@ -180,7 +180,7 @@ pub(crate) fn runtime_digest(
         }
         hasher.update(&buffer[..n]);
     }
-    if count != metadata.len() as u64 {
+    if count != metadata.len() {
         return Err(invalid("laya_runtime_size_changed"));
     }
     Ok(format!("{:x}", hasher.finalize()))
@@ -202,7 +202,7 @@ pub(crate) fn register_at(root: &Path, installation: Installation) -> io::Result
     fs_permissions::write_private(path, bytes)
 }
 
-fn curl_command(url: &str, destination: &Path, maximum: u64, timeout: Duration) -> Command {
+fn curl_command(url: &str, destination: &Path, maximum: u64, _timeout: Duration) -> Command {
     let mut command = Command::new("/usr/bin/curl");
     // No ambient token, netrc, proxy, cookies, user config or custom trust roots.
     command.env_clear().args([
@@ -321,7 +321,7 @@ pub(crate) fn download_public_asset(
             .ok_or_else(|| invalid("download parent missing"))?,
         false,
     )?;
-    let mut output_file = fs_permissions::open_private_file(
+    let output_file = fs_permissions::open_private_file(
         destination,
         OpenOptions::new().write(true).create_new(true),
     )?;

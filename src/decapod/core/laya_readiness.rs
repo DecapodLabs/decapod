@@ -259,22 +259,6 @@ fn validate_binding(binding: &LocalBinding, manifest: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn register_at(root: &Path, installation: Installation) -> io::Result<()> {
-    let path = binding_path(root, &installation.manifest_digest)?;
-    let binding = LocalBinding {
-        schema: SCHEMA.into(),
-        installation,
-    };
-    validate_binding(&binding, &binding.installation.manifest_digest)?;
-    let bytes = serde_json::to_vec_pretty(&binding).map_err(io::Error::other)?;
-    if bytes.len() > MAX_BINDING {
-        return Err(invalid("laya_local_binding_overflow"));
-    }
-    fs_permissions::ensure_private_dir(root)?;
-    fs_permissions::ensure_private_dir(path.parent().unwrap())?;
-    fs_permissions::write_private(path, bytes)
-}
-
 pub(crate) fn resolve_at(root: &Path, manifest: &str) -> io::Result<Installation> {
     let path = binding_path(root, manifest)?;
     let mut options = OpenOptions::new();
