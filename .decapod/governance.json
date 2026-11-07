@@ -534,6 +534,11 @@
       "id": "cp-1557-01",
       "summary": "Record .decapod/managed/specs/.manifest.json",
       "input_digest": "sha256:c8df4b32e6d94a09fba0901a368c26965bc3ff679d31382c7a627f87a4ef17b4"
+    },
+    {
+      "id": "cp-1557-02",
+      "summary": "Record .decapod/managed/specs/ARCHITECTURE.md",
+      "input_digest": "sha256:90e221d78e3188d3120c320f681c97d598fab6118af84c5874152be6c94ac04d"
     }
   ],
   "legacy_digests": {
