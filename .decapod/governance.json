@@ -1465,6 +1465,11 @@
       "id": "fix1544-rb-7",
       "summary": "Rebase pass 7 of the #1544 fix onto v0.130.1 master (e922bfb6351c009cb372c5d76df86ea8842a7435): rebind governance identity and bind a fresh checkpoint to this commit's exact material tree",
       "input_digest": "sha256:8680dc644fe18331cb140316f6501f344e1766edf3953ebcc1d2da5f8fb08371"
+    },
+    {
+      "id": "fix1544-rb-8",
+      "summary": "Rebase pass 8 of the #1544 fix onto v0.130.1 master (e922bfb6351c009cb372c5d76df86ea8842a7435): rebind governance identity and bind a fresh checkpoint to this commit's exact material tree",
+      "input_digest": "sha256:4e07568cab58c6847816412841ffc317a946e8c94b6fc6ea6323631a06301c9e"
     }
   ],
   "intents": {

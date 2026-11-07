@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- name the check, configured executable path, detected format/arch and expected format/arch in native ELF/Mach-O validation rejections ([#1544](https://github.com/DecapodLabs/decapod/issues/1544))
+
 ## [0.130.1](https://github.com/DecapodLabs/decapod/compare/v0.130.0...v0.130.1) - 2026-11-07
 
 ### Fixed
