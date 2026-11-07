@@ -1759,7 +1759,6 @@ fn ensure_readme_badge(
     seed: Option<&SpecsSeed>,
 ) -> Result<String, error::DecapodError> {
     let readme_path = target_dir.join("README.md");
-    let badge = assets::readme_badge_line();
     let (content, existed) = match fs::read_to_string(&readme_path) {
         Ok(existing) => (existing, true),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -1771,19 +1770,30 @@ fn ensure_readme_badge(
         }
         Err(e) => return Err(error::DecapodError::IoError(e)),
     };
-    if assets::is_readme_badge_present(&content) {
+    let (badge, existing_version) = assets::readme_badge_status(&content);
+    let current_version = crate::core::entrypoint_integrity::RELEASE_VERSION;
+    // If a canonical badge exists with the same version, no-op.
+    if existing_version.as_deref() == Some(current_version) {
         return Ok("unchanged".to_string());
     }
+    // Build the badge line and replace any existing canonical badge, or insert after first heading.
     let badge_line = format!("\n{badge}\n");
     let mut lines: Vec<&str> = content.split_inclusive('\n').collect();
-    // Insert below the first title: a Markdown `# ` heading or an HTML `<h1`
-    // heading (common in badge-heavy project READMEs). Fall back to the top.
-    let insert_at = lines
-        .iter()
-        .position(|line| line.starts_with("# ") || line.starts_with("<h1"))
-        .map(|idx| idx + 1)
-        .unwrap_or(0);
-    lines.insert(insert_at, badge_line.as_str());
+    // If an existing canonical badge is present (any version), replace it in-place.
+    if let Some(pos) = lines.iter().position(|line| {
+        line.contains("img.shields.io/badge/") && line.contains("Decapod-v")
+    }) {
+        lines[pos] = badge_line.as_str();
+    } else {
+        // Insert below the first title: a Markdown `# ` heading or an HTML `<h1`
+        // heading (common in badge-heavy project READMEs). Fall back to the top.
+        let insert_at = lines
+            .iter()
+            .position(|line| line.starts_with("# ") || line.starts_with("<h1"))
+            .map(|idx| idx + 1)
+            .unwrap_or(0);
+        lines.insert(insert_at, badge_line.as_str());
+    }
     let updated = lines.concat();
     crate::core::atomic::write_atomic(&readme_path, updated.as_bytes())
         .map_err(error::DecapodError::IoError)?;

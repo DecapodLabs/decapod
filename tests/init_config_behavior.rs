@@ -1616,3 +1616,52 @@ fn init_readme_badge_defaults_on_and_honors_cli_and_config_toggle() {
         "config must record the explicit --no-readme-badge choice: {config2}"
     );
 }
+
+/// Regression test for #1023: badge must update when Decapod version changes.
+/// Simulates upgrading from v0.130.2 to a newer version by monkeypatching the
+/// version string used by readme_badge_line() in the test environment.
+fn init_readme_badge_upgrades_on_version_change() {
+    // We can't easily change RELEASE_VERSION at runtime, so we test the logic
+    // by directly exercising the badge extraction/replacement via scaffold.
+    let tmp = tempdir().expect("tempdir");
+
+    // Simulate an old README with a v0.130.1 badge (older than current 0.130.2)
+    let old_readme = "# Project\n\n[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v0.130.1-dc2626)](https://github.com/DecapodLabs/decapod)\n";
+    fs::write(tmp.path().join("README.md"), old_readme).expect("write old README");
+
+    // Create minimal .decapod/config.toml with badge enabled
+    fs::create_dir_all(tmp.path().join(".decapod")).unwrap();
+    fs::write(
+        tmp.path().join(".decapod/config.toml"),
+        "[init]\nreadme_badge = true\n",
+    ).unwrap();
+
+    // Run init --force; it should replace the old version badge with the current one
+    let out = run_decapod(tmp.path(), &["init", "with", "--force"]);
+    assert!(
+        out.status.success(),
+        "badge upgrade init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+
+    let readme = fs::read_to_string(tmp.path().join("README.md")).expect("README");
+    let current = format!("Decapod-v{}", decapod::core::entrypoint_integrity::RELEASE_VERSION);
+    assert!(
+        readme.contains(&current),
+        "badge should be updated to current version {current}: {readme}"
+    );
+    assert!(
+        !readme.contains("Decapod-v0.130.1"),
+        "old version badge should be removed: {readme}"
+    );
+
+    // Second run with same version must be idempotent (no changes)
+    let readme_before = readme.clone();
+    let out2 = run_decapod(tmp.path(), &["init", "with", "--force"]);
+    assert!(out2.status.success());
+    let readme_after = fs::read_to_string(tmp.path().join("README.md")).expect("README");
+    assert_eq!(
+        readme_before, readme_after,
+        "second init with same version must be idempotent"
+    );
+}

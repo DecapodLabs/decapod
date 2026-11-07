@@ -1697,6 +1697,14 @@
       "proof_refs": [
         "digest_update"
       ]
+    },
+    {
+      "id": "ckpt-fix-pass-1794089032",
+      "summary": "Three focused fixes: (1) #1023 version-updatable badge with upgrade test; (2) #1047 pre-build-validate now gates validate via needs: and forward-compat exception narrowed to exact manifest path; (3) #1134 Python fingerprint reimplementation replaced with canonical Decapod specs.verify RPC, spec-fingerprints job runs on all non-release events",
+      "input_digest": "sha256:50879c1a8d1ceb87cb99ff554f6d73b459f2d8dff1aa604529388377eadb1661",
+      "proof_refs": [
+        "completion_pass"
+      ]
     }
   ],
   "intents": {

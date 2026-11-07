@@ -11,8 +11,9 @@ JSON report into a pass/fail gate:
   generated-artifact whitelist still only knows the legacy
   `.decapod/managed/specs/.manifest.json` path, so a branch that carries the
   new `.decapod/managed/.manifest.json` produces exactly one known
-  forward-compatibility failure. Failures of that exact shape, with every
-  offending path under `.decapod/managed/`, are allowed and reported.
+  forward-compatibility failure. Failures of that exact shape, with the
+  offending path being exactly `.decapod/managed/.manifest.json`, are
+  allowed and reported.
 - Any other failure fails the job, kicking structural/completeness problems
   (missing claims, stale projections, ...) back to the agent before the heavy
   build pipeline runs.
@@ -26,7 +27,7 @@ WHITELIST_FAILURE = re.compile(
     r"^Tracked non-whitelisted generated artifacts found: \[(?P<offenders>.*)\]\."
 )
 OFFENDER = re.compile(r'"([^"]+)"')
-MANAGED_PREFIX = ".decapod/managed/"
+EXPECTED_OFFENDER = ".decapod/managed/.manifest.json"
 
 
 def is_allowlisted_forward_compat(failure: str) -> bool:
@@ -34,7 +35,8 @@ def is_allowlisted_forward_compat(failure: str) -> bool:
     if not match:
         return False
     offenders = OFFENDER.findall(match.group("offenders"))
-    return bool(offenders) and all(o.startswith(MANAGED_PREFIX) for o in offenders)
+    # Only allow the exact known forward-compat offender: the moved manifest.
+    return bool(offenders) and offenders == [EXPECTED_OFFENDER]
 
 
 def main() -> int:

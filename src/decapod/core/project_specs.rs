@@ -805,6 +805,96 @@ pub fn refresh_specs_manifest(
     Ok(manifest)
 }
 
+/// Read-only verification of the specs manifest against the current codebase.
+/// Returns Ok(()) if the manifest matches the current state, Err with details if stale/missing.
+pub fn verify_specs_manifest(
+    project_root: &Path,
+    declared_capabilities: &[String],
+) -> Result<(), error::DecapodError> {
+    let existing = read_specs_manifest(project_root)?
+        .ok_or_else(|| error::DecapodError::ValidationError("specs manifest not found at .decapod/managed/.manifest.json; run `decapod rpc --op specs.refresh` to generate it".to_string()))?;
+
+    // Verify no legacy manifest exists
+    let legacy_path = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST_LEGACY);
+    if legacy_path.exists() {
+        return Err(error::DecapodError::ValidationError("legacy manifest .decapod/managed/specs/.manifest.json still exists; run `decapod rpc --op specs.refresh` to migrate".to_string()));
+    }
+
+    // Recompute all fields from current codebase
+    let mut manifest_entries = Vec::new();
+    for spec in LOCAL_PROJECT_SPECS {
+        let path = project_root.join(spec.path);
+        if !path.exists() {
+            continue;
+        }
+        let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
+        let content_hash = hash_text(&body);
+
+        let template_hash = existing
+            .files
+            .iter()
+            .find(|f| f.path == spec.path)
+            .map(|f| f.template_hash.clone())
+            .unwrap_or_else(|| content_hash.clone());
+
+        manifest_entries.push(ProjectSpecManifestEntry {
+            path: spec.path.to_string(),
+            template_hash,
+            content_hash,
+            fingerprint: String::new(),
+        });
+    }
+
+    let template_version = existing.template_version.clone();
+    let canonical_capabilities = crate::core::capabilities::CapabilityRegistry::canonicalize_capabilities(declared_capabilities);
+    let repo_signal_fingerprint = repo_signal_fingerprint(project_root)?;
+    let config_input_hash = config_input_hash(project_root)?;
+    let spec_input_hash = spec_input_hash(project_root)?;
+    let entrypoints = entrypoint_manifest_entries(project_root)?;
+
+    // Check each field
+    let mut mismatches = Vec::new();
+    if existing.schema_version != LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA {
+        mismatches.push(format!("schema_version: expected {}, got {}", LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, existing.schema_version));
+    }
+    if existing.template_version != template_version {
+        mismatches.push(format!("template_version: expected {}, got {}", template_version, existing.template_version));
+    }
+    if existing.repo_signal_fingerprint != repo_signal_fingerprint {
+        mismatches.push(format!("repo_signal_fingerprint: expected {}, got {}", repo_signal_fingerprint, existing.repo_signal_fingerprint));
+    }
+    if existing.declared_capabilities != canonical_capabilities {
+        mismatches.push("declared_capabilities mismatch".to_string());
+    }
+    if existing.capability_definition_version != CAPABILITY_DEFINITION_VERSION {
+        mismatches.push(format!("capability_definition_version: expected {}, got {}", CAPABILITY_DEFINITION_VERSION, existing.capability_definition_version));
+    }
+    if existing.config_input_hash != config_input_hash {
+        mismatches.push("config_input_hash mismatch (config.toml changed?)".to_string());
+    }
+    if existing.spec_input_hash != spec_input_hash {
+        mismatches.push("spec_input_hash mismatch (spec files changed?)".to_string());
+    }
+    if existing.decapod_release != crate::core::entrypoint_integrity::RELEASE_VERSION {
+        mismatches.push(format!("decapod_release: expected {}, got {}", crate::core::entrypoint_integrity::RELEASE_VERSION, existing.decapod_release));
+    }
+    if existing.entrypoints != entrypoints {
+        mismatches.push("entrypoints mismatch (entrypoint files changed or fingerprints stale)".to_string());
+    }
+    if existing.files != manifest_entries {
+        mismatches.push("files[] mismatch (spec content_hash or template_hash stale)".to_string());
+    }
+
+    if mismatches.is_empty() {
+        Ok(())
+    } else {
+        Err(error::DecapodError::ValidationError(format!(
+            "specs manifest is stale: {}; run `decapod rpc --op specs.refresh` to regenerate",
+            mismatches.join("; ")
+        )))
+    }
+}
+
 const CODEBASE_ATTESTATION_START: &str = "<!-- decapod:codebase-attestation:start -->";
 const CODEBASE_ATTESTATION_END: &str = "<!-- decapod:codebase-attestation:end -->";
 const DECLARED_CAPABILITIES_START: &str = "<!-- decapod:declared-capabilities:start -->";

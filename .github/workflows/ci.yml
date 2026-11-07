@@ -193,14 +193,31 @@ jobs:
     name: Spec Fingerprint Files (regenerated, #1134)
     needs: release-metadata
     runs-on: ubuntu-latest
-    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
+    if: needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: false
       - name: Require regenerated spec fingerprint files in the PR
-        run: python3 assets/tools/check_spec_fingerprints.py "$GITHUB_WORKSPACE"
+        run: |
+          set -euo pipefail
+          cargo build --locked --quiet --config profile.dev.debug=0 --bin decapod
+          ./target/debug/decapod rpc --op specs.verify --format json > "$RUNNER_TEMP/specs-verify.json"
+          cat "$RUNNER_TEMP/specs-verify.json"
+          python3 - <<'PY'
+          import json, sys
+          raw = open("$RUNNER_TEMP/specs-verify.json").read()
+          d = json.loads(raw[raw.find("{"):])
+          if d.get("success") and d.get("result", {}).get("verified"):
+              print("OK: specs manifest is current")
+              sys.exit(0)
+          else:
+              print("FAIL: spec fingerprint files are missing or stale (#1134):")
+              if d.get("result", {}).get("verified") is False:
+                  print(f"  - {d.get('error', {}).get('message', 'unknown')}")
+              sys.exit(1)
+          PY
   propodus-live:
     name: Propodus Live Contract Proof
     runs-on: ubuntu-latest

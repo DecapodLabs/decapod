@@ -4,6 +4,7 @@
 //! All constitution files are baked into the binary via `assets/constitution.json`.
 
 use crate::core::error;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, HashSet};
@@ -879,9 +880,23 @@ pub fn readme_badge_line() -> String {
     )
 }
 
-/// Marker used to keep badge insertion idempotent.
-pub fn is_readme_badge_present(content: &str) -> bool {
-    content.contains("img.shields.io/badge/") && content.contains("Decapod-v")
+/// Extract the version from a Decapod badge if present, otherwise None.
+/// Recognizes the canonical badge format: `[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v{VERSION}-dc2626)](https://github.com/DecapodLabs/decapod)`
+pub fn extract_readme_badge_version(content: &str) -> Option<String> {
+    use regex::Regex;
+    static BADGE_RE: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
+    let re = BADGE_RE.get_or_init(|| {
+        Regex::new(r"!\[🦀 Decapod\]\(https://img\.shields\.io/badge/🦀%20Decapod-v([^-\]]+)-dc2626\)").unwrap()
+    });
+    re.captures(content).and_then(|c| c.get(1)).map(|m| m.as_str().to_string())
+}
+
+/// Return the current badge line and the existing version if a canonical badge is present.
+/// Used to make badge insertion idempotent and version-updatable.
+pub fn readme_badge_status(content: &str) -> (String, Option<String>) {
+    let badge = readme_badge_line();
+    let existing = extract_readme_badge_version(content);
+    (badge, existing)
 }
 
 fn template_readme() -> String {

@@ -46,6 +46,7 @@ jobs:
       - name: Gate the pre-build validation report
         run: python3 assets/tools/pre_build_validate_gate.py "$RUNNER_TEMP/pre-build-validate.json"
   validate:
+    needs: [pre-build-validate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

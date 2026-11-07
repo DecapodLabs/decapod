@@ -7658,6 +7658,7 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "constitution.get"
             | "schema.get"
             | "specs.refresh"
+            | "specs.verify"
             | "interop.manifest"
             | "interop.negotiate"
             | "interop.project"
@@ -11512,6 +11513,52 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_specs_verify(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let _params: SpecsVerifyParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
+
+        let config = crate::cli::DecapodProjectConfig::load(ctx.project_root).unwrap_or_default();
+        let result = crate::core::project_specs::verify_specs_manifest(
+            ctx.project_root,
+            &config.repo.capabilities,
+        );
+
+        match result {
+            Ok(()) => {
+                let manifest = crate::core::project_specs::read_specs_manifest(ctx.project_root)?
+                    .ok_or_else(|| error::DecapodError::ValidationError("specs manifest not found".to_string()))?;
+                Ok(success_response(
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    Some(
+                        serde_json::to_value(SpecsVerifyResult {
+                            verified: true,
+                            manifest_path: crate::core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST.to_string(),
+                            repo_signal_fingerprint: manifest.repo_signal_fingerprint,
+                        })
+                        .unwrap(),
+                    ),
+                    vec![],
+                    None,
+                    vec![],
+                    ctx.mandates.clone(),
+                ))
+            }
+            Err(e) => {
+                Ok(error_response(
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    "specs_stale".to_string(),
+                    e.to_string(),
+                    None,
+                    ctx.mandates.clone(),
+                ))
+            }
+        }
+    }
+
     pub(crate) fn handle_interop_manifest(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
@@ -11786,6 +11833,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         "constitution.migrate" => rpc_handlers::handle_constitution_migrate(&rpc_ctx)?,
         "agent.registry.query" => rpc_handlers::handle_agent_registry_query(&rpc_ctx)?,
         "specs.refresh" => rpc_handlers::handle_specs_refresh(&rpc_ctx)?,
+        "specs.verify" => rpc_handlers::handle_specs_verify(&rpc_ctx)?,
         "schema.get" => rpc_handlers::handle_schema_get(&rpc_ctx)?,
         "store.upsert" => rpc_handlers::handle_store_upsert(&rpc_ctx)?,
         "store.query" => rpc_handlers::handle_store_query(&rpc_ctx)?,

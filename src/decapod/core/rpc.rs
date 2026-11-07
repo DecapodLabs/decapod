@@ -272,6 +272,16 @@ pub struct SpecsRefreshResult {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SpecsVerifyParams {}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SpecsVerifyResult {
+    pub verified: bool,
+    pub manifest_path: String,
+    pub repo_signal_fingerprint: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ConstitutionMigrateParams {
     pub target_version: String,
 }
