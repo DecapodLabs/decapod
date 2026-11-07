@@ -1413,6 +1413,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-1536-v0130-27368",
+      "summary": "re-stamp release-bound surfaces to v0.130.0 and vega-native lock pin after rebind onto v0.130.0 master e3c280ee (#1536)",
+      "input_digest": "sha256:e31b82206c0422e11e497972d7e26a54450cedc150e26daea58e0d298b5046b1",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
