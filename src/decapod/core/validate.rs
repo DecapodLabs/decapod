@@ -3703,6 +3703,10 @@ fn validate_validation_rules(
         evidence_artifacts,
         validation_epoch,
         policy_fingerprint,
+        repo_root: Some(working_root.to_path_buf()),
+        include_publication: false,
+        governing_identity: None,
+        evidence_identity: std::collections::BTreeMap::new(),
     };
 
     // Create and populate rule registry
@@ -3725,6 +3729,9 @@ fn validate_validation_rules(
             }
             RuleVerdict::Unverifiable => {
                 warn(&format!("Rule {}: {}", result.rule_id, result.message), ctx);
+            }
+            RuleVerdict::Stale => {
+                fail(&format!("Rule {}: {}", result.rule_id, result.message), ctx);
             }
         }
     }
