@@ -203,7 +203,7 @@ jobs:
         run: |
           set -euo pipefail
           cargo build --locked --quiet --config profile.dev.debug=0 --bin decapod
-          ./target/debug/decapod rpc --op specs.verify --format json > "$RUNNER_TEMP/specs-verify.json"
+          ./target/debug/decapod rpc --op specs.verify > "$RUNNER_TEMP/specs-verify.json"
           cat "$RUNNER_TEMP/specs-verify.json"
           python3 - <<'PY'
           import json, sys

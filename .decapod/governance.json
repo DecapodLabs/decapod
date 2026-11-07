@@ -1713,6 +1713,14 @@
       "proof_refs": [
         "spec_review_refresh"
       ]
+    },
+    {
+      "id": "ckpt-ci-fix-1794089874",
+      "summary": "Fix CI spec-fingerprints job: remove --format json flag (not supported by rpc); re-pin ci.yml digest to 3157e1bfc...; update reviewed_sources_digest to fdc5c90e...",
+      "input_digest": "sha256:8bc975f37ab85a669f14ffa5dc89a2b87181273b95d34bb3cda808f580b60f61",
+      "proof_refs": [
+        "ci_fix"
+      ]
     }
   ],
   "intents": {
