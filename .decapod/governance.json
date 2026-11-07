@@ -1101,6 +1101,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbd2-2-14021",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: regenerate v0.128.0 release-bound entrypoints, manifest and Dockerfile pin after rebase (#1531))",
+      "input_digest": "sha256:a93bbc8560200c5c112359aa246d0bd614d7578fb342495c75e7498363498c33",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
