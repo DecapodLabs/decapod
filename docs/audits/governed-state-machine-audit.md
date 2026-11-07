@@ -140,6 +140,8 @@ Lib result: **1554 passed, 42 failed, 8 ignored**. The 42 names, in order, are:
 
 The branch suite on `feat/governed-state-transitions` after the finishing pass ran the same command. Lib result: **1578 passed, 42 failed, 8 ignored**. The 42 failing names are identical to the baseline list above, in the same order. Passed-count growth is new tests, not fewer failures. Both runs stopped at the lib suite, so integration tests did not start on either side. No failure was introduced by this branch.
 
+Publication repair for pull request 1557 records a new PR identity, one checkpoint per authored file, refreshed spec attestations, and current spec reviews. Security prose is reviewed as unchanged because only its attestation moved.
+
 ## Minimal changes applied
 
 - `core/governed_transition.rs` is the judgment kernel: admissibility,
