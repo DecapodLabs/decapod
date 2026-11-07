@@ -1705,6 +1705,14 @@
       "proof_refs": [
         "completion_pass"
       ]
+    },
+    {
+      "id": "ckpt-specs-1794089318",
+      "summary": "Re-review INTERFACES.md (updated badge logic), ARCHITECTURE/SECURITY unchanged-with-reason; specs.refresh with new repo signal 875942b4...",
+      "input_digest": "sha256:7d9cdcdff56c0c152e14cac75fef3647f32405d76c4a155f219ce2d99347bf6c",
+      "proof_refs": [
+        "spec_review_refresh"
+      ]
     }
   ],
   "intents": {
@@ -1789,21 +1797,21 @@
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "No authored architecture change in this PR set; only the regenerated repo signal fingerprint line",
-          "reviewed_code_fingerprint": "84a6948289c02e254c073cd874c4ef582fcf04220eaad3e27b3fa7b07e12a5e2",
+          "reviewed_code_fingerprint": "875942b45474e46988c216e47d8109c709ea026e6fb69f3ba47f0e11eee1c3dc",
           "spec_material_hash": "90fea94969cbcae7abcf34ffc569abe2ce309184968264761102b303daf05e6e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documents #1023 init README badge (--no-readme-badge / [init] readme_badge) and #1079 specs manifest location .decapod/managed/.manifest.json with legacy fallback",
-          "reviewed_code_fingerprint": "84a6948289c02e254c073cd874c4ef582fcf04220eaad3e27b3fa7b07e12a5e2",
+          "reason": "Documents #1023 init README badge (--no-readme-badge / [init] readme_badge), #1079 specs manifest location .decapod/managed/.manifest.json with legacy fallback, plus version-updatable badge logic",
+          "reviewed_code_fingerprint": "875942b45474e46988c216e47d8109c709ea026e6fb69f3ba47f0e11eee1c3dc",
           "spec_material_hash": "28f1263211c49322b8d84439fa240b186c11d74364cb4859beb123688ccbb6e7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "No authored security change in this PR set; only the regenerated repo signal fingerprint line",
-          "reviewed_code_fingerprint": "84a6948289c02e254c073cd874c4ef582fcf04220eaad3e27b3fa7b07e12a5e2",
+          "reviewed_code_fingerprint": "875942b45474e46988c216e47d8109c709ea026e6fb69f3ba47f0e11eee1c3dc",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -1815,7 +1823,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794080342Z"
+      "updated_at": "1794089050Z"
     },
     "trajectory": {
       "active_boundaries": [],
