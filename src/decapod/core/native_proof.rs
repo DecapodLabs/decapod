@@ -593,7 +593,10 @@ fn describe_executable(program: &Path) -> io::Result<String> {
                 | [0xcf, 0xfa, 0xed, 0xfe]
         )
     {
-        let little = matches!(&header[..4], [0xce, 0xfa, 0xed, 0xfe] | [0xcf, 0xfa, 0xed, 0xfe]);
+        let little = matches!(
+            &header[..4],
+            [0xce, 0xfa, 0xed, 0xfe] | [0xcf, 0xfa, 0xed, 0xfe]
+        );
         let cpu = if little {
             u32::from_le_bytes(header[4..8].try_into().unwrap())
         } else {
@@ -608,7 +611,11 @@ fn describe_executable(program: &Path) -> io::Result<String> {
         };
         return Ok(format!("Mach-O {arch}"));
     }
-    if header.len() >= 12 && matches!(&header[..4], [0xca, 0xfe, 0xba, 0xbe] | [0xbe, 0xba, 0xfe, 0xca])
+    if header.len() >= 12
+        && matches!(
+            &header[..4],
+            [0xca, 0xfe, 0xba, 0xbe] | [0xbe, 0xba, 0xfe, 0xca]
+        )
     {
         let little = matches!(&header[..4], [0xbe, 0xba, 0xfe, 0xca]);
         let cpu = if little {
