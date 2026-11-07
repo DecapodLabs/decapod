@@ -1753,6 +1753,14 @@
       "proof_refs": [
         "final_specs"
       ]
+    },
+    {
+      "id": "ckpt-final5-1794090487",
+      "summary": "Re-review three canonical specs, specs.refresh with signal 4a3475d0...",
+      "input_digest": "sha256:f437649e6630e2f1c0ea6e764812ab3f2dba31bafe8e0d21e04452d57bcdc9f5",
+      "proof_refs": [
+        "final_specs"
+      ]
     }
   ],
   "intents": {
