@@ -1093,6 +1093,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbd2-1-14021",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: repair stale vega-native Cargo.lock decapod pin for v0.128.0 (#1531))",
+      "input_digest": "sha256:1826513b49c1f028f2c07496a10e41fbc341f12020a64607a654d2fbfbea8a1a",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
