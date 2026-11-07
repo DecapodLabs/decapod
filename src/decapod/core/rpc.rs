@@ -434,50 +434,35 @@ pub struct AssuranceEvaluateResult {
     pub interlock_code: Option<String>,
 }
 
-// Interoperability subsystem (issues #870/#871)
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct InteropManifestParams {
-    /// When true, also run manifest validation and report violations.
-    #[serde(default)]
-    pub validate: bool,
+// State Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StateResolveParams {
+    pub workunit_id: Option<String>,
+    pub trajectory_run_id: Option<String>,
+    pub intent_id: Option<String>,
+    pub obligation_id: Option<String>,
+    pub include_proof_details: Option<bool>,
+    pub include_obligation_graph: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct InteropManifestResult {
-    pub manifest: crate::core::interop::InteropManifest,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub validation: Option<Vec<crate::core::interop::ManifestViolation>>,
-}
-
-#[derive(Debug, Clone, Default, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
-pub struct InteropNegotiateParams {
-    #[serde(default)]
-    pub required_ops: Vec<String>,
-    #[serde(default)]
-    pub optional_ops: Vec<String>,
-    #[serde(default)]
-    pub required_extensions: Vec<String>,
-    #[serde(default)]
-    pub optional_extensions: Vec<String>,
-    #[serde(default)]
-    pub requested_profile: Option<String>,
-    #[serde(default)]
-    pub profile_version: Option<String>,
+pub struct StateResolveResult {
+    pub resolution: serde_json::Value,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct InteropNegotiateResult {
-    pub outcome: crate::core::interop::NegotiationOutcome,
+pub struct StateDiffParams {
+    pub from_state_commit: Option<String>,
+    pub to_state_commit: Option<String>,
+    pub from_revision: Option<String>,
+    pub to_revision: Option<String>,
+    pub from_workunit_id: Option<String>,
+    pub to_workunit_id: Option<String>,
 }
 
-/// Projection request accepted by `interop.project`.
-pub type InteropProjectParams = crate::core::projection::ProjectRequest;
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct InteropProjectResult {
-    pub projection: serde_json::Value,
+pub struct StateDiffResult {
+    pub diff: serde_json::Value,
 }
 
 pub fn default_request_id() -> String {
@@ -951,6 +936,18 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 stability: "alpha".to_string(),
                 cost: "low".to_string(),
             },
+            Capability {
+                name: "state.resolve".to_string(),
+                description: "Resolve authoritative governed state projection from canonical sources".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "state.diff".to_string(),
+                description: "Compute governed-state diff between two states/state commits/revisions".to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
         ],
         subsystems: vec![
             SubsystemInfo {
@@ -1031,6 +1028,11 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                     "validate".to_string(),
                     "budget".to_string(),
                 ],
+            },
+            SubsystemInfo {
+                name: "state".to_string(),
+                status: "active".to_string(),
+                ops: vec!["resolve".to_string(), "diff".to_string()],
             },
         ],
         workspace: WorkspaceCapabilities {
