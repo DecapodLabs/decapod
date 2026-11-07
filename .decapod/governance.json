@@ -644,6 +644,11 @@
       "id": "cp-1557-23",
       "summary": "Record tests/created_branch_workflow_policy.rs",
       "input_digest": "sha256:d2a51e15da673d17448115b64a4bbc93a9e204284457854b855ca9e7178ca47e"
+    },
+    {
+      "id": "cp-1557-24",
+      "summary": "Record tests/unit/core/projection_tests.rs",
+      "input_digest": "sha256:7cdef21555c7868382f2c548aef0922818931da797c41553371d7a57ab5566cd"
     }
   ],
   "legacy_digests": {

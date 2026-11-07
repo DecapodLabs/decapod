@@ -153,15 +153,26 @@ fn validation_projection_never_turns_stale_or_unknown_into_ready() {
     let pass_report = serde_json::json!({
         "status": "pass",
         "publication_ready": true,
-        "head": "abc123",
+        "head": "abc123abc123",
+        "receipt_hash": "sha256:0123456789abcdef",
         "readiness": { "epoch_id": "epoch-1", "blockers": [] }
     });
     let proj = project_validation_report(&pass_report);
     assert_eq!(proj.status, "pass");
     assert!(proj.publication_ready);
     assert!(!proj.stale);
-    assert_eq!(proj.candidate.as_deref(), Some("abc123"));
+    assert_eq!(proj.proof_judgment.as_deref(), Some("proven"));
+    assert_eq!(proj.candidate.as_deref(), Some("abc123abc123"));
     assert_eq!(proj.epoch_id.as_deref(), Some("epoch-1"));
+
+    let declared = serde_json::json!({
+        "status": "done",
+        "passes": true,
+        "publication_ready": true
+    });
+    let declared_proj = project_validation_report(&declared);
+    assert!(!declared_proj.publication_ready);
+    assert_ne!(declared_proj.proof_judgment.as_deref(), Some("proven"));
 }
 
 #[test]
