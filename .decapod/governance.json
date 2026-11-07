@@ -694,6 +694,11 @@
       "id": "cp-1557-security-review",
       "summary": "Record the unchanged security spec review",
       "input_digest": "sha256:f82bd24dc2df59f2fe754ac207dc5f3fb420424dded4c50b84476b9aec3c5571"
+    },
+    {
+      "id": "cp-1557-audit-note",
+      "summary": "Record the publication repair note",
+      "input_digest": "sha256:6d5df2d8c1bbde5014726d5655869c00276c63ad2936659fc1bc77b85f855a57"
     }
   ],
   "intents": {
