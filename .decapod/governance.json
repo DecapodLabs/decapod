@@ -619,6 +619,11 @@
       "id": "cp-1557-18",
       "summary": "Record src/decapod/core/state_commit.rs",
       "input_digest": "sha256:71709f81a419bea0efebae074e79c2ea230e251146d1cc784560adbb6d859ecf"
+    },
+    {
+      "id": "cp-1557-19",
+      "summary": "Record src/decapod/core/todo.rs",
+      "input_digest": "sha256:b9fa62c3c5392f4e1068ee189cceeab3d1060d859c6d9efc148e9e6cfa8d65e4"
     }
   ],
   "legacy_digests": {
