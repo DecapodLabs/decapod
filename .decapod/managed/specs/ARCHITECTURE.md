@@ -757,7 +757,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3`
+- Repository signal fingerprint: `fcf98add742053dc31854722b1a17a3b19307e12f29b0ed6b5dadc9b03ccc520`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -804,13 +804,6 @@ that reviewed local contract into the existing bounded native runner; it does no
 interpret workflow YAML or introduce an orchestration engine. Every command runs
 in the frozen source snapshot, with byte-measured declared tool inputs and fresh
 accepted-target queries. Source/configuration/tool/target drift invalidates proof.
-Before execution, `core/native_proof.rs` rejects any configured executable whose
-container format does not match the host platform; the rejection names the check,
-the configured path, the detected format/architecture (ELF or Mach-O, including
-fat binaries and shebang scripts) and the host's expected format/architecture,
-e.g. `fmt: /nix/store/.../alejandra is Mach-O arm64; native Linux validation
-requires ELF x86_64`, so a foreign-OS/arch toolchain mismatch is diagnosable
-from the `READINESS_BLOCKED` detail alone.
 
 The resulting `repository_local_readiness` scope attests those local commands,
 not hosted workflow jobs, platform matrices or release/deployment execution. The
