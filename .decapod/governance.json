@@ -1761,6 +1761,14 @@
       "proof_refs": [
         "final_specs"
       ]
+    },
+    {
+      "id": "ckpt-c42e-1794090614",
+      "summary": "Missing checkpoint for c42e2172 - specs.verify worktree exemption",
+      "input_digest": "sha256:f437649e6630e2f1c0ea6e764812ab3f2dba31bafe8e0d21e04452d57bcdc9f5",
+      "proof_refs": [
+        "c42e_checkpoint"
+      ]
     }
   ],
   "intents": {
