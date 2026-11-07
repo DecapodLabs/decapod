@@ -203,12 +203,17 @@ jobs:
         run: |
           set -euo pipefail
           cargo build --locked --quiet --config profile.dev.debug=0 --bin decapod
-          ./target/debug/decapod rpc --op specs.verify > "$RUNNER_TEMP/specs-verify.json"
+          ./target/debug/decapod rpc --op specs.verify > "$RUNNER_TEMP/specs-verify.json" 2>&1
+          echo "=== RPC OUTPUT ==="
           cat "$RUNNER_TEMP/specs-verify.json"
           python3 - <<'PY'
           import json, sys
           raw = open("$RUNNER_TEMP/specs-verify.json").read()
+          print("=== RAW ===")
+          print(raw[:2000])
           d = json.loads(raw[raw.find("{"):])
+          print("=== PARSED ===")
+          print(json.dumps(d, indent=2))
           if d.get("success") and d.get("result", {}).get("verified"):
               print("OK: specs manifest is current")
               sys.exit(0)

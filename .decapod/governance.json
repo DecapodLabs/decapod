@@ -1769,6 +1769,14 @@
       "proof_refs": [
         "c42e_checkpoint"
       ]
+    },
+    {
+      "id": "ckpt-ci-debug-1794090994",
+      "summary": "Add debug output to spec-fingerprints CI step; re-pin ci.yml to 970414fc...; update reviewed_sources_digest to 11354a18...",
+      "input_digest": "sha256:0e9eb7c2e139cef6fa58adb2e95787ce44a8f928d8a94910ae51ecdae138f71c",
+      "proof_refs": [
+        "ci_debug"
+      ]
     }
   ],
   "intents": {
