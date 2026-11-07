@@ -527,14 +527,21 @@ fn finite_inventory_exactly_covers_pr_jobs_and_explicitly_excludes_other_jobs() 
                 "propodus-live",
                 "test-master",
                 "release-build",
-                // Pure checkout verification via ./.github/actions/spec-fingerprints;
+                // Pure checkout verification running assets/tools/check_spec_fingerprints.py;
                 // no measured source-CI recipe, so it stays outside the finite inventory (#1134).
                 "spec-fingerprints",
             ][..],
         ),
         ("docs.yml", &["deploy"][..]),
         ("constitution-sync.yml", &[][..]),
-        ("decapod-validate.yml", &[][..]),
+        (
+            "decapod-validate.yml",
+            &[
+                // Runs the latest released binary via assets/tools/pre_build_validate_gate.py;
+                // deliberately pre-build and outside the measured source-CI inventory (#1047).
+                "pre-build-validate",
+            ][..],
+        ),
         ("docs_sync.yml", &[][..]),
     ]);
     for (file, excluded) in excluded {

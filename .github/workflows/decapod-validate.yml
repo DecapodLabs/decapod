@@ -7,6 +7,44 @@ on:
     branches: [ main, master ]
 
 jobs:
+  # Pre-build structural/completeness check with the latest RELEASED Decapod
+  # (#1047). Runs before any branch build so agents get kicked back early on
+  # problems like a missing claims.json or stale projections. The released
+  # binary is verified against its published sha256 before execution.
+  pre-build-validate:
+    name: Pre-Build Validate (latest released Decapod, #1047)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Download and verify the latest released Decapod
+        run: |
+          set -euo pipefail
+          asset="decapod-x86_64-unknown-linux-gnu.tar.xz"
+          base="https://github.com/DecapodLabs/decapod/releases/latest/download"
+          curl -fsSL -o "$asset" "$base/$asset"
+          curl -fsSL -o "$asset.sha256" "$base/$asset.sha256"
+          sha256sum -c "$asset.sha256"
+          tar -xJf "$asset"
+          ./decapod-x86_64-unknown-linux-gnu/decapod --version
+      - name: Run project prerequisites with the latest released Decapod
+        env:
+          DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"
+          DECAPOD_VALIDATE_REQUIRE_CHANGE_CONTEXT: "1"
+          CHANGE_EVENT: ${{ github.event_name }}
+          CHANGE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          CHANGE_BASE: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+        run: |
+          set -uo pipefail
+          ./decapod-x86_64-unknown-linux-gnu/decapod govern project-check --format json \
+            > "$RUNNER_TEMP/pre-build-validate.json" || true
+          cat "$RUNNER_TEMP/pre-build-validate.json"
+      - name: Gate the pre-build validation report
+        run: python3 assets/tools/pre_build_validate_gate.py "$RUNNER_TEMP/pre-build-validate.json"
   validate:
     runs-on: ubuntu-latest
     steps:

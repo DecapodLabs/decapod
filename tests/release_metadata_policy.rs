@@ -372,9 +372,9 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
     );
     let integration = workflow_job(workflow, "integration-status");
     assert!(integration.contains("name: Tests (integration)"));
-    assert!(
-        integration.contains("needs: [release-metadata, integration-prepare, test-integration, spec-fingerprints]")
-    );
+    assert!(integration.contains(
+        "needs: [release-metadata, integration-prepare, test-integration, spec-fingerprints]"
+    ));
     assert!(integration.contains("run-ci --check integration-status"));
     assert!(
         include_str!("../assets/tools/source_ci/integration-status.sh")

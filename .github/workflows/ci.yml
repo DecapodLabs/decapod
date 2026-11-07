@@ -200,7 +200,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Require regenerated spec fingerprint files in the PR
-        uses: ./.github/actions/spec-fingerprints
+        run: python3 assets/tools/check_spec_fingerprints.py "$GITHUB_WORKSPACE"
   propodus-live:
     name: Propodus Live Contract Proof
     runs-on: ubuntu-latest

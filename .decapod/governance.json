@@ -1649,6 +1649,14 @@
       "proof_refs": [
         "spec_fingerprints_action"
       ]
+    },
+    {
+      "id": "ckpt-1134-1047-rework-14323",
+      "summary": "Revise #1134 to satisfy the executor contract: drop the new .github/actions/spec-fingerprints dir (unknown .github files are rejected), run assets/tools/check_spec_fingerprints.py via a plain run step in ci.yml, and re-pin the ci.yml digest in readiness_profile.rs. Add #1047 as a pre-build-validate job in the pinned decapod-validate.yml: download+sha256-verify the latest released decapod tarball, run govern project-check --format json with SKIP_GIT_GATES/CHANGE_* context, gate via assets/tools/pre_build_validate_gate.py which fails on anything except pass or the known #1079 forward-compat whitelist finding under .decapod/managed/; re-pin decapod-validate.yml digest; policy tests updated (exclusions for both jobs)",
+      "input_digest": "sha256:dafbc3d4d76cde6edc5ea0c9e2095cc2ecb301722c40f039d2d030b86506bff2",
+      "proof_refs": [
+        "workflow_rework"
+      ]
     }
   ],
   "intents": {
