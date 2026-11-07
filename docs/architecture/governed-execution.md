@@ -36,7 +36,7 @@ intent → interpretation → bounded execution → validation
 
 Validation is an iterative control boundary. Failure means at least one required condition remains unsatisfied. When the result exposes a supported remediation, the agent applies it and revalidates. Decision gates, contradictions, unavailable proof, and unsupported remediation remain visible blockers rather than implied success.
 
-Publication is a governed state transition. An agent's statement that the work is complete does not establish that the transition occurred.
+Publication is a governed state transition. An agent's statement that the work is complete does not establish that the transition occurred. The judgment rules, canonical order, freshness, and recovery behavior are specified in [Governed transitions](governed-transitions.md).
 
 ## Durable governance artifacts
 
