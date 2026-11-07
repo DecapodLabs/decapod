@@ -609,6 +609,11 @@
       "id": "cp-1557-16",
       "summary": "Record src/decapod/core/rpc.rs",
       "input_digest": "sha256:31c0f7a7fb86a142e03fd989e883add66ebcfb6725fd515edd2c0d935fb02354"
+    },
+    {
+      "id": "cp-1557-17",
+      "summary": "Record src/decapod/core/state.rs",
+      "input_digest": "sha256:61bfa91f529f3a66c39ff34301e9567cd3b560d18617e041c3c3287a31f5a7dd"
     }
   ],
   "legacy_digests": {
