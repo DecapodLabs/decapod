@@ -4,14 +4,19 @@ use super::{
     bounded_process::{BoundedCommand, Cancellation, ProcessLimits, Termination},
     laya_assets,
     laya_protocol::{
-        self as wire, Backend, BackendPreference, Judgment, RUBRIC, Request, Response,
-        WORKER_SCHEMA,
+        self as wire, Judgment, RUBRIC, Request, Response, WORKER_SCHEMA,
     },
-    laya_setup, readiness_evidence as evidence, vega_readiness as shared, vega_runtime,
+    laya_setup, readiness_evidence as evidence,
 };
 use serde::{Deserialize, Serialize};
-#[cfg(test)]
-use shared as readiness;
+use std::{
+    fs::{self, OpenOptions},
+    io::{self, Read, Write},
+    path::Path,
+    process::Command,
+    time::{Duration, Instant},
+};
+
 #[cfg(test)]
 #[path = "../../../tests/support/laya_fitting_cases.rs"]
 mod fitting_cases;
@@ -21,14 +26,111 @@ mod test_fixture;
 #[cfg(test)]
 #[path = "../../../tests/unit/core/laya_readiness_tests.rs"]
 mod tests;
-pub use shared::{Binding, Decision, Installation, Mode, ValidationSummary};
-use std::{
-    fs::{self, OpenOptions},
-    io::{self, Read, Write},
-    path::Path,
-    process::Command,
-    time::{Duration, Instant},
-};
+
+/// Portable repository preference. The worker must disclose the actual device;
+/// it cannot silently replace this request or choose a different checkpoint.
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum BackendPreference {
+    #[default]
+    Auto,
+    Metal,
+    Cuda,
+    Cpu,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Backend {
+    Metal,
+    Cuda,
+    Cpu,
+}
+
+impl Backend {
+    pub fn device(self) -> &'static str {
+        match self {
+            Self::Metal => "metal",
+            Self::Cuda => "cuda",
+            Self::Cpu => "cpu",
+        }
+    }
+    pub fn runtime(self) -> &'static str {
+        match self {
+            Self::Metal => "candle-metal",
+            Self::Cuda => "candle-cuda",
+            Self::Cpu => "candle-cpu",
+        }
+    }
+}
+
+impl BackendPreference {
+    pub fn resolve(self) -> Backend {
+        match self {
+            Self::Auto if cfg!(target_os = "macos") => Backend::Metal,
+            Self::Auto | Self::Cuda => Backend::Cuda,
+            Self::Metal => Backend::Metal,
+            Self::Cpu => Backend::Cpu,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Mode {
+    #[default]
+    Disabled,
+    Required,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimePin {
+    pub runtime: std::path::PathBuf,
+    pub runtime_sha256: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct Installation {
+    pub directory: std::path::PathBuf,
+    pub manifest_digest: String,
+    #[serde(default)]
+    pub runtime: std::path::PathBuf,
+    #[serde(default)]
+    pub runtime_sha256: String,
+    /// Separate CPU-only executable when GPU libraries prevent worker startup.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpu_runtime: Option<RuntimePin>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Binding {
+    pub material: evidence::MaterialIdentity,
+    pub governance_digest: String,
+    pub proof_plan_digest: String,
+    pub evidence_digest: String,
+    pub configuration_digest: String,
+    pub trajectory_run_id: String,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum Decision {
+    Disabled,
+    Accept,
+    Reject,
+    Abstain,
+}
+
+/// Actual validated observations, never a model-authored summary or a green flag.
+pub struct ValidationSummary<'a> {
+    pub scope: &'a str,
+    pub evidence: &'a evidence::SuiteEvidence,
+    pub dispositions: &'a [super::readiness_profile::StageDisposition],
+    pub blockers: &'a [super::validation_runtime::Blocker],
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default, deny_unknown_fields)]

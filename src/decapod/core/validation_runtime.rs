@@ -129,10 +129,10 @@ impl ValidationGuidance {
 
     fn for_readiness_outcome(
         proof_ready: bool,
-        mode: super::vega_readiness::Mode,
-        decision: super::vega_readiness::Decision,
+        mode: super::laya_readiness::Mode,
+        decision: super::laya_readiness::Decision,
     ) -> Self {
-        use super::vega_readiness::{Decision, Mode};
+        use super::laya_readiness::{Decision, Mode};
         if !proof_ready {
             return Self::for_outcome(false);
         }
@@ -177,8 +177,8 @@ impl ValidationGuidance {
     )]
     fn for_vega_outcome(
         ready: bool,
-        mode: super::vega_readiness::Mode,
-        decision: super::vega_readiness::Decision,
+        mode: super::laya_readiness::Mode,
+        decision: super::laya_readiness::Decision,
     ) -> Self {
         Self::for_readiness_outcome(ready, mode, decision)
     }
@@ -188,7 +188,7 @@ impl ValidationGuidance {
 pub struct ValidationReport {
     pub ready: bool,
     pub proof_ready: bool,
-    pub vega_readiness: Option<super::vega_readiness::Receipt>,
+    pub vega_readiness: Option<super::laya_readiness::Receipt>,
     pub laya_readiness: Option<super::laya_readiness::Receipt>,
     pub scope: &'static str,
     pub agent_guidance: ValidationGuidance,

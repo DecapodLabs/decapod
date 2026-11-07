@@ -96,12 +96,7 @@ pub mod workspace;
 pub mod workspace_lifecycle;
 pub mod workunit;
 
-pub mod vega_calibration;
-pub mod vega_engine;
-pub mod vega_prompt;
-pub mod vega_readiness;
-pub mod vega_runtime;
-pub mod vega_setup;
+
 
 pub mod laya_assets;
 pub mod laya_protocol;

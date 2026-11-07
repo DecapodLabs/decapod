@@ -3,21 +3,223 @@
 //! registry. Cache hits are copied, never hardlinked into active installations.
 use super::{
     atomic,
-    bounded_process::Cancellation,
-    fs_permissions, laya_assets,
+    bounded_process::{BoundedCommand, Cancellation, ProcessLimits, Termination},
+    fs_permissions,
+    laya_assets,
     laya_protocol::Manifest,
-    vega_readiness::{Installation, RuntimePin},
-    vega_runtime, vega_setup,
 };
 use fs2::FileExt;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
     fs::{self, OpenOptions},
     io::{self, Read, Write},
     path::{Path, PathBuf},
+    process::Command,
     time::{Duration, Instant},
 };
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct RuntimePin {
+    pub runtime: PathBuf,
+    pub runtime_sha256: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct Installation {
+    pub directory: PathBuf,
+    pub manifest_digest: String,
+    #[serde(default)]
+    pub runtime: PathBuf,
+    #[serde(default)]
+    pub runtime_sha256: String,
+    /// Separate CPU-only executable when GPU libraries prevent worker startup.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cpu_runtime: Option<RuntimePin>,
+}
+
+fn invalid(reason: impl Into<String>) -> io::Error {
+    io::Error::other(reason.into())
+}
+
+fn valid_revision(value: &str) -> bool {
+    value.len() == 40
+        && value
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+const MAX_ARTIFACT: u64 = 4 * 1024 * 1024 * 1024; // 4 GiB
+const DEADLINE: Duration = Duration::from_secs(1800);
+
+fn curl_command(url: &str, destination: &Path, maximum: u64, timeout: Duration) -> Command {
+    let mut command = Command::new("/usr/bin/curl");
+    // No ambient token, netrc, proxy, cookies, user config or custom trust roots.
+    command
+        .env_clear()
+        .args([
+            "--disable",
+            "--silent",
+            "--show-error",
+            "--fail",
+            "--location",
+            "--max-redirs",
+            "5",
+            "--proto",
+            "=https",
+            "--proto-redir",
+            "=https",
+            "--noproxy",
+            "*",
+            "--user-agent",
+            "decapod-laya-setup",
+            "--write-out",
+            "%{http_code}",
+            "--output",
+            destination.to_str().unwrap_or(""),
+            url,
+        ]);
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        unsafe {
+            command.pre_exec(move || {
+                let limit = libc::rlimit {
+                    rlim_cur: maximum as libc::rlim_t,
+                    rlim_max: maximum as libc::rlim_t,
+                };
+                if libc::setrlimit(libc::RLIMIT_FSIZE, &limit) != 0 {
+                    return Err(io::Error::last_os_error());
+                }
+                libc::umask(0o077);
+                Ok(())
+            });
+        }
+    }
+    command
+}
+
+fn safe_path(path: &Path) -> io::Result<()> {
+    if !path.is_absolute() || path.canonicalize()? != path {
+        return Err(invalid("model path must be absolute canonical"));
+    }
+    let parent = path.parent().ok_or_else(|| invalid("model path parent missing"))?;
+    fs_permissions::check_directory(parent, false)?;
+    Ok(())
+}
+
+fn private_directory(dir: &Path, allow_empty: bool) -> io::Result<()> {
+    fs_permissions::check_directory(dir, allow_empty)
+}
+
+fn checked_file(path: &Path) -> io::Result<fs::File> {
+    safe_path(path)?;
+    fs_permissions::open_private_file(path, OpenOptions::new().read(true))
+}
+
+fn laya_default_cache() -> io::Result<PathBuf> {
+    let home = || std::env::var_os("HOME").map(PathBuf::from);
+    let base = if cfg!(target_os = "macos") {
+        home().map(|path| path.join("Library/Caches"))
+    } else if cfg!(target_os = "windows") {
+        std::env::var_os("LOCALAPPDATA")
+            .map(PathBuf::from)
+            .or_else(|| {
+                std::env::var_os("USERPROFILE")
+                    .map(|path| PathBuf::from(path).join("AppData/Local"))
+            })
+    } else {
+        std::env::var_os("XDG_CACHE_HOME")
+            .map(PathBuf::from)
+            .or_else(|| home().map(|path| path.join(".cache")))
+    };
+    let root = base
+        .ok_or_else(|| invalid("local cache home unavailable; supply --cache-directory"))?
+        .join("decapod/laya");
+    safe_path(&root)?;
+    Ok(root)
+}
+
+pub(crate) fn download_public_asset(
+    url: &str,
+    destination: &Path,
+    maximum: u64,
+    deadline: Instant,
+    cancellation: &Cancellation,
+) -> io::Result<()> {
+    if maximum == 0 || maximum > MAX_ARTIFACT || !url.starts_with("https://") {
+        return Err(invalid("invalid bounded public model transport request"));
+    }
+    let remaining = deadline
+        .checked_duration_since(Instant::now())
+        .ok_or_else(|| io::Error::new(io::ErrorKind::TimedOut, "model setup deadline exceeded"))?;
+    let timeout = remaining.min(if maximum > 4 * 1024 * 1024 {
+        DEADLINE
+    } else {
+        Duration::from_secs(60)
+    });
+    if timeout.as_secs() == 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::TimedOut,
+            "model setup deadline exceeded",
+        ));
+    }
+    safe_path(destination)?;
+    private_directory(
+        destination
+            .parent()
+            .ok_or_else(|| invalid("download parent missing"))?,
+        false,
+    )?;
+    let mut output_file = fs_permissions::open_private_file(
+        destination,
+        OpenOptions::new().write(true).create_new(true),
+    )?;
+    let mut command = curl_command(url, destination, maximum, timeout);
+    let capture = command.bounded_capture(
+        ProcessLimits {
+            timeout,
+            max_output_bytes: 8192,
+        },
+        cancellation,
+    )?;
+    if capture.termination == Termination::Cancelled {
+        return Err(io::Error::new(
+            io::ErrorKind::Interrupted,
+            "model download cancelled",
+        ));
+    }
+    if capture.termination == Termination::TimedOut {
+        return Err(io::Error::new(
+            io::ErrorKind::TimedOut,
+            "model download deadline exceeded",
+        ));
+    }
+    let http_status = std::str::from_utf8(&capture.output.stdout)
+        .ok()
+        .and_then(|text| text.trim().parse::<u16>().ok());
+    if matches!(http_status, Some(401 | 403)) {
+        return Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "public model access denied; no fallback, credential or agreement accepted",
+        ));
+    }
+    if capture.termination != Termination::Exited || !capture.output.status.success() {
+        return Err(invalid(format!(
+            "public model download failed ({:?}, HTTP {:?}, exit {:?}); no checkpoint activated",
+            capture.termination,
+            http_status,
+            capture.output.status.code()
+        )));
+    }
+    let file = checked_file(destination)?;
+    if file.metadata()?.len() == 0 || file.metadata()?.len() > maximum {
+        return Err(invalid("model download length outside bound"));
+    }
+    output_file.sync_all()
+}
 
 #[derive(Debug, Default, Clone)]
 pub struct SetupOptions {
@@ -121,9 +323,6 @@ pub fn check_updates(cache_directory: Option<&Path>) -> io::Result<UpdateReport>
     })
 }
 
-fn invalid(reason: impl Into<String>) -> io::Error {
-    io::Error::other(reason.into())
-}
 fn checkpoint(deadline: Instant, cancel: &Cancellation) -> io::Result<()> {
     if cancel.is_cancelled() || Instant::now() >= deadline {
         Err(invalid("laya_setup_cancelled_or_timeout"))
@@ -132,7 +331,7 @@ fn checkpoint(deadline: Instant, cancel: &Cancellation) -> io::Result<()> {
     }
 }
 pub(crate) fn default_cache() -> io::Result<PathBuf> {
-    Ok(vega_setup::default_cache()?.with_file_name("laya"))
+    Ok(laya_default_cache()?.with_file_name("laya"))
 }
 
 fn read_metadata(path: &Path) -> io::Result<Vec<u8>> {
@@ -257,7 +456,7 @@ pub fn run(options: &SetupOptions) -> io::Result<SetupReport> {
         .cache_directory
         .clone()
         .map(Ok)
-        .unwrap_or_else(default_cache)?;
+        .unwrap_or_else(laya_default_cache)?;
     fs_permissions::ensure_private_dir(&root)?;
     let root = root.canonicalize()?;
     let lock = fs_permissions::open_private_file(

@@ -460,11 +460,6 @@ pub struct DecapodProjectConfig {
     pub tracker: TrackerConfig,
     #[serde(default)]
     pub context: DeclaredContextConfig,
-    #[serde(
-        default,
-        skip_serializing_if = "crate::core::vega_readiness::Configuration::is_default"
-    )]
-    pub vega: crate::core::vega_readiness::Configuration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -802,7 +797,6 @@ impl Default for DecapodProjectConfig {
             custody: CustodyConfig::default(),
             tracker: TrackerConfig::default(),
             context: DeclaredContextConfig::default(),
-            vega: crate::core::vega_readiness::Configuration::default(),
         }
     }
 }
