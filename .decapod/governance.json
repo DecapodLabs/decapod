@@ -584,6 +584,11 @@
       "id": "cp-1557-11",
       "summary": "Record docs/architecture/governed-transitions.md",
       "input_digest": "sha256:f9ea0136f03a63be520fe21aecf354c235f9c385abc5303413282c789f0742bc"
+    },
+    {
+      "id": "cp-1557-12",
+      "summary": "Record docs/audits/governed-state-machine-audit.md",
+      "input_digest": "sha256:c5b027f6b30fe66dcf8bb5665ad36bc944f0f86751ca7e5794abef89339f1b19"
     }
   ],
   "legacy_digests": {
