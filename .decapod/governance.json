@@ -594,6 +594,11 @@
       "id": "cp-1557-13",
       "summary": "Record src/decapod/core/governed_transition.rs",
       "input_digest": "sha256:a06fa2265b18fbe58301517936bddb3e3c5ed0e33e551398187c54b95fbad3ae"
+    },
+    {
+      "id": "cp-1557-14",
+      "summary": "Record src/decapod/core/mod.rs",
+      "input_digest": "sha256:b49180363888c64f58f7dbc982e098827cc4c6326e7125cd1823abb4527d3d65"
     }
   ],
   "legacy_digests": {
