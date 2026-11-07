@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.128.0](https://github.com/DecapodLabs/decapod/compare/v0.127.1...v0.128.0) - 2026-11-07
+
+### Added
+
+- Implement validation rules system
+
+### Fixed
+
+- re-record spec reviews at the fingerprint of the group_broker-bound head
+- give group_broker contention clients 300s headroom under bazel parallel load
+- Record final spec reviews with latest code fingerprint
+- drain rpc child pipes concurrently with bounded wait in interop harness; long bazel timeout for interop_conformance
+- Record final spec reviews with clean-tree repo signal fingerprint
+- re-record spec reviews against clean-tree repo signal fingerprint
+- regenerate release-bound spec projections with clean-tree fingerprint (v0.127.1 evaluator)
+- Record spec review for INTERFACES.md with current code fingerprint
+- Record final spec reviews with latest code fingerprint
+- refresh spec projections and re-review ARCHITECTURE/INTERFACES/SECURITY after CI fixes
+- restore native readiness receipt bundle and per-check diagnostics
+- add interop harness to //:interop_conformance bazel srcs
+- Record unchanged_with_reason spec review for SECURITY.md
+- Record updated spec review for ARCHITECTURE.md
+- Record updated spec review for INTERFACES.md
+- Refresh specs manifest after updating entrypoints to v0.127.1
+- Update to v0.127.1 release fingerprints
+- Update to v0.127.0 release fingerprints
+- Merge master governance.json and sync entrypoint files
+- Record updated spec review for INTERFACES.md
+- Remove all dagger references from codebase
+
+### Other
+
+- Merge origin/master v0.127.1 into validation-rules-system branch
+- Refresh specs manifest after master merge
+- Resolve conflicts with origin/master by keeping feature branch versions
+- Refresh specs manifest after dagger removal
+- Add governance checkpoint for validation rules implementation
+
 ## [0.127.1](https://github.com/DecapodLabs/decapod/compare/v0.127.0...v0.127.1) - 2026-11-06
 
 ### Added
