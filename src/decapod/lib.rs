@@ -20,7 +20,7 @@ use cli::*;
 
 use core::{
     auth, cloud_backend, db, docs, docs_cli, error, flight_recorder, migration, obligation, proof,
-    repomap, scaffold, state_commit,
+    repomap, scaffold, state, state_commit,
     store::{Store, StoreKind, find_decapod_project_root, find_governance_root},
     todo, trace, validate, workspace,
 };
@@ -9773,21 +9773,20 @@ fn run_state_commit_command(
             let cbor_bytes = std::fs::read(&scope_record).map_err(error::DecapodError::IoError)?;
 
             // Use library function for verification
-            let record_hash = if let Some(ref exp) = expected_root {
-                match state_commit::verify(&cbor_bytes, exp) {
-                    Ok(h) => h,
-                    Err(e) => {
-                        println!("STATE_COMMIT verification:");
-                        println!("  scope_record: {}", scope_record.display());
-                        println!("  ❌ MISMATCH: {e}");
-                        return Err(error::DecapodError::ValidationError(e));
-                    }
+            let Some(ref exp) = expected_root else {
+                return Err(error::DecapodError::ValidationError(
+                    "STATE_COMMIT verification requires an expected root. Omitting it is UNKNOWN, not a successful verification."
+                        .into(),
+                ));
+            };
+            let record_hash = match state_commit::verify(&cbor_bytes, exp) {
+                Ok(h) => h,
+                Err(e) => {
+                    println!("STATE_COMMIT verification:");
+                    println!("  scope_record: {}", scope_record.display());
+                    println!("  ❌ MISMATCH: {e}");
+                    return Err(error::DecapodError::ValidationError(e));
                 }
-            } else {
-                use sha2::{Digest, Sha256};
-                let mut hasher = Sha256::new();
-                hasher.update(&cbor_bytes);
-                format!("{:x}", hasher.finalize())
             };
 
             println!("STATE_COMMIT verification:");
@@ -11631,6 +11630,86 @@ mod rpc_handlers {
             ctx.mandates.clone(),
         ))
     }
+
+    pub(crate) fn handle_state_resolve(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let params: state::StateResolveParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
+
+        let resolution = state::resolve_state(ctx.project_root, &params)?;
+        let resolution_json = serde_json::to_value(resolution).map_err(|e| {
+            error::DecapodError::ValidationError(format!("Serialization failed: {e}"))
+        })?;
+
+        let context_capsule = ContextCapsule {
+            fragments: vec![],
+            resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
+            spec: Some("Governed state resolution".to_string()),
+            architecture: None,
+            security: None,
+            standards: None,
+        };
+
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(StateResolveResult {
+                    resolution: resolution_json,
+                })
+                .unwrap(),
+            ),
+            vec![],
+            Some(context_capsule),
+            vec![
+                AllowedOp {
+                    op: "state.diff".to_string(),
+                    reason: "Compare governed state against a prior baseline".to_string(),
+                    required_params: vec![],
+                },
+                AllowedOp {
+                    op: "validate.run".to_string(),
+                    reason: "Run validation to update proof state".to_string(),
+                    required_params: vec![],
+                },
+            ],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_state_diff(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let params: state::StateDiffParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
+
+        let diff = state::diff_state(ctx.project_root, &params)?;
+        let diff_json = serde_json::to_value(diff).map_err(|e| {
+            error::DecapodError::ValidationError(format!("Serialization failed: {e}"))
+        })?;
+
+        let context_capsule = ContextCapsule {
+            fragments: vec![],
+            resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
+            spec: Some("Governed state diff".to_string()),
+            architecture: None,
+            security: None,
+            standards: None,
+        };
+
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::to_value(StateDiffResult { diff: diff_json }).unwrap()),
+            vec![],
+            Some(context_capsule),
+            vec![AllowedOp {
+                op: "state.resolve".to_string(),
+                reason: "Resolve current governed state".to_string(),
+                required_params: vec![],
+            }],
+            ctx.mandates.clone(),
+        ))
+    }
 }
 
 /// Run RPC command
@@ -11793,6 +11872,8 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         "interop.manifest" => rpc_handlers::handle_interop_manifest(&rpc_ctx)?,
         "interop.negotiate" => rpc_handlers::handle_interop_negotiate(&rpc_ctx)?,
         "interop.project" => rpc_handlers::handle_interop_project(&rpc_ctx)?,
+        "state.resolve" => rpc_handlers::handle_state_resolve(&rpc_ctx)?,
+        "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx)?,
         _ => error_response(
             request.id.clone(),
             request.op.clone(),
