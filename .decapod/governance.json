@@ -1569,6 +1569,30 @@
       "proof_refs": [
         "rebase_rebind_0130_2"
       ]
+    },
+    {
+      "id": "ckpt-finalize-10568",
+      "summary": "Finalize for PR: spec reviews recorded (INTERFACES updated; ARCHITECTURE/SECURITY unchanged-with-reason), specs.refresh run last; manifest now at .decapod/managed/.manifest.json with fingerprint for 4d70c9a9 tree and stable generated_at (#1079, #1164)",
+      "input_digest": "sha256:1e31eba4f1ba8eae78d582644d36f579bc1d640f9dd9035f43fe44c80d0fd057",
+      "proof_refs": [
+        "specs_refresh_final"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-98e1af9-18406",
+      "summary": "Rebind checkpoint to the post-rebase material tree of 98e1af9 (rebase onto v0.130.2 master e5760258 changed trees; original checkpoint digests were bound pre-rebase)",
+      "input_digest": "sha256:caad2c8c84382667cde59db952107d894b3fa75068d8818493d8dcc1b4b91e04",
+      "proof_refs": [
+        "rebase_rebind_0130_2"
+      ]
+    },
+    {
+      "id": "ckpt-rereview-2338",
+      "summary": "Re-record spec reviews (INTERFACES updated; ARCHITECTURE/SECURITY unchanged-with-reason) against post-refresh spec bytes after rebase rebind",
+      "input_digest": "sha256:8720d2458228193c6616e55446064f6ccdbc09c1b8985daf6622e5db35fc4054",
+      "proof_refs": [
+        "spec_reviews_post_refresh"
+      ]
     }
   ],
   "intents": {
@@ -1607,24 +1631,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Material update stands: Repository-declared local proof section documents the named-executable native format rejection (#1544); re-reviewed against the current clean-tree fingerprint after the v0.130.1 projection regen",
-          "reviewed_code_fingerprint": "4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3",
+          "reason": "No authored changes since last review; manifest move (#1079) and scaffold generated_at stability do not alter architecture prose",
+          "reviewed_code_fingerprint": "931beb629659c3e8c9e4959f11f08b33bb9f3571dbd60a58c63faa55a918334a",
           "spec_material_hash": "90fea94969cbcae7abcf34ffc569abe2ce309184968264761102b303daf05e6e"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No prose change from #1544; INTERFACES.md does not document the rejection message text. Re-reviewed against the current clean-tree fingerprint after the v0.130.1 projection regen",
-          "reviewed_code_fingerprint": "4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3",
-          "spec_material_hash": "b0b006e30f3daa0640ee220aeced9c12b530f26516cd6e57107896726d4dfba5"
+          "reason": "Material authored update for #1079: manifest lives at .decapod/managed/.manifest.json; legacy specs/ location is read-only compatibility removed on refresh",
+          "reviewed_code_fingerprint": "931beb629659c3e8c9e4959f11f08b33bb9f3571dbd60a58c63faa55a918334a",
+          "spec_material_hash": "d48560a7bb247781d3dd49ba25f64067539a8b54d92bd1081567178d0e187daa"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No prose change from #1544; the rejection remains a hard gate with more diagnostic detail only. Re-reviewed against the current clean-tree fingerprint after the v0.130.1 projection regen",
-          "reviewed_code_fingerprint": "4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3",
+          "reason": "No authored changes since last review; manifest move (#1079) does not alter security prose",
+          "reviewed_code_fingerprint": "931beb629659c3e8c9e4959f11f08b33bb9f3571dbd60a58c63faa55a918334a",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -1636,7 +1660,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794042826Z"
+      "updated_at": "1794057482Z"
     },
     "trajectory": {
       "active_boundaries": [
