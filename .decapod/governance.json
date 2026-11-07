@@ -1125,6 +1125,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-1531-rev3-18881",
+      "summary": "record canonical spec reviews (INTERFACES updated; ARCHITECTURE/SECURITY unchanged-with-reason) and refresh spec projections at the v0.128.0 rebound head for #1531",
+      "input_digest": "sha256:ca85ceeabcef5122f255ab0199871a853452c0b7f059056ae1165fdd70550559",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
@@ -1163,24 +1171,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; ARCHITECTURE.md prose unchanged by that fix, review re-bound to current code bytes",
-          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
+          "reason": "#1531 changes no architecture: ci_only is a validation-contract declaration inside the existing repository_profile module; no new components, boundaries or data flows. ARCHITECTURE.md remains accurate as-is.",
+          "reviewed_code_fingerprint": "84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; INTERFACES.md prose unchanged by that fix, review re-bound to current code bytes",
-          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
-          "spec_material_hash": "36807d075cdc0b8f6bb5ddcdd9778f2211589056759615d4b50277ebd3f64b15"
+          "reason": "INTERFACES.md documents the reviewed ci_only source_coverage row (#1531): commands may be omitted, nonempty reason required, row pinned by reviewed_commands_digest, reported as NonApplicable stage in validation-results.v3 and never counted as passed/skipped; all-ci-only repositories still execute required local commands. src/decapod/core/repository_profile.rs implements exactly this; agent-facing docs/agent/repository-readiness.md and regenerated config-schema.md carry the same contract plus the explicit manual reconciliation limitation.",
+          "reviewed_code_fingerprint": "84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702",
+          "spec_material_hash": "4a753e546e34b3298ec7ea7854c99318b2bb063ad67abfac71b12b976c7af066"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; SECURITY.md prose unchanged by that fix, review re-bound to current code bytes",
-          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
+          "reason": "#1531 weakens no security boundary: ci_only rows fail closed (reason required, no mapped commands, digest-pinned, NonApplicable stage, never a passed check) and remain a human-reviewed config declaration, not an exclusion mechanism. SECURITY.md remains accurate as-is.",
+          "reviewed_code_fingerprint": "84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -1192,7 +1200,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794020082Z"
+      "updated_at": "1794028313Z"
     },
     "trajectory": {
       "active_boundaries": [
