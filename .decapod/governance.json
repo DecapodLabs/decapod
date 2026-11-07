@@ -1480,6 +1480,11 @@
       "id": "fix1544-regen-v0130-1",
       "summary": "Regenerate release-bound entrypoints (AGENTS/CLAUDE/GEMINI/CODEX.md), managed Dockerfile pin and spec attestation/manifest projections for the v0.130.1 evaluator after rebasing onto v0.130.1 master; fixes entrypoint_correctness and living-spec drift in CI",
       "input_digest": "sha256:6b8b3bf3f741b0228b321f77081367fbd9f64d0cd612f6a16d684ab7a0155c8e"
+    },
+    {
+      "id": "fix1544-spec-reviews-final",
+      "summary": "Re-record ARCHITECTURE (updated), INTERFACES/SECURITY (unchanged-with-reason) spec reviews at clean-tree fingerprint 4cedaf57 after the v0.130.1 entrypoint/spec projection regen; clears STALE_SPEC_REVIEW",
+      "input_digest": "sha256:5ba556a7078acb00e95dae70b4e1b3b1e318681b786aa2a41936419339bf0028"
     }
   ],
   "intents": {
@@ -1520,21 +1525,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Material update: the Repository-declared local proof section now documents that native executable format rejection names the check, configured path, detected format/arch and expected format/arch (issue #1544); re-reviewed against the current clean-tree code fingerprint after the v0.130.1 rebase",
+          "reason": "Material update stands: Repository-declared local proof section documents the named-executable native format rejection (#1544); re-reviewed against the current clean-tree fingerprint after the v0.130.1 projection regen",
           "reviewed_code_fingerprint": "4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3",
           "spec_material_hash": "90fea94969cbcae7abcf34ffc569abe2ce309184968264761102b303daf05e6e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No prose change from the #1544 native-error-naming fix; INTERFACES.md does not document the rejection message text. Re-reviewed against the current clean-tree code fingerprint after the v0.130.1 rebase",
+          "reason": "No prose change from #1544; INTERFACES.md does not document the rejection message text. Re-reviewed against the current clean-tree fingerprint after the v0.130.1 projection regen",
           "reviewed_code_fingerprint": "4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3",
           "spec_material_hash": "b0b006e30f3daa0640ee220aeced9c12b530f26516cd6e57107896726d4dfba5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No prose change from the #1544 native-error-naming fix; the rejection remains a hard gate with more diagnostic detail only. Re-reviewed against the current clean-tree code fingerprint after the v0.130.1 rebase",
+          "reason": "No prose change from #1544; the rejection remains a hard gate with more diagnostic detail only. Re-reviewed against the current clean-tree fingerprint after the v0.130.1 projection regen",
           "reviewed_code_fingerprint": "4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
@@ -1547,7 +1552,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794041238Z"
+      "updated_at": "1794042826Z"
     },
     "trajectory": {
       "active_boundaries": [
