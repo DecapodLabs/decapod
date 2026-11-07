@@ -664,6 +664,11 @@
       "id": "cp-1557-27",
       "summary": "Record CLAUDE.md",
       "input_digest": "sha256:197b5d145a8ff19f5742255991508b06ac4c39f9f050c25859b6bfe0d29f75db"
+    },
+    {
+      "id": "cp-1557-28",
+      "summary": "Record CODEX.md",
+      "input_digest": "sha256:c53535b37097bcd12b0c1f6d5763a67a91c5f69cf82f93182f47e6a4b83dc361"
     }
   ],
   "legacy_digests": {
