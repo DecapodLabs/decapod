@@ -1277,6 +1277,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-1534-v0129-rev-46741",
+      "summary": "#1534 rebased onto v0.129.0 master (0b26c87d): v0.129.0 surfaces + lock pin regenerated, source digest reconciled, canonical spec reviews recorded (INTERFACES updated; ARCHITECTURE/SECURITY unchanged-with-reason), projections refreshed",
+      "input_digest": "sha256:2c2ebf8d2320a015f76642cf8b1fdc1324c125d5edcefac93a6b103460210522",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {
@@ -1317,22 +1325,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "#1531 changes no architecture: ci_only is a validation-contract declaration inside the existing repository_profile module; no new components, boundaries or data flows. ARCHITECTURE.md remains accurate as-is.",
-          "reviewed_code_fingerprint": "84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702",
+          "reason": "#1534 changes no architecture: the repair is an additional journal event type and checkpoint path inside the existing task_journal module; historical events are preserved, never replayed. ARCHITECTURE.md remains accurate as-is.",
+          "reviewed_code_fingerprint": "3353a07fb3ecbdce3228fc1b6763be9b4573d05c0e932d3b88c2b3051576a1d3",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "INTERFACES.md documents the reviewed ci_only source_coverage row (#1531): commands may be omitted, nonempty reason required, row pinned by reviewed_commands_digest, reported as NonApplicable stage in validation-results.v3 and never counted as passed/skipped; all-ci-only repositories still execute required local commands. src/decapod/core/repository_profile.rs implements exactly this; agent-facing docs/agent/repository-readiness.md and regenerated config-schema.md carry the same contract plus the explicit manual reconciliation limitation.",
-          "reviewed_code_fingerprint": "84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702",
-          "spec_material_hash": "4a753e546e34b3298ec7ea7854c99318b2bb063ad67abfac71b12b976c7af066"
+          "reason": "INTERFACES.md documents the supported historical-gap repair (#1534): todo journal checkpoint --accept-historical-gap <task-id> --reason <text> records a task.journal.gap_accepted event with the reviewed reason and exact accepted range, then appends a transition checkpoint; verify/checkpoint fail closed with TASK_JOURNAL_INCOMPLETE_HISTORY on an uncheckpointed suffix otherwise. src/decapod/core/task_journal.rs implements exactly this; regression tests in tests/unit/core/task_journal_tests.rs reproduce verify/checkpoint failing closed, the repair, and post-repair success, and reject no-history and no-gap misuse.",
+          "reviewed_code_fingerprint": "3353a07fb3ecbdce3228fc1b6763be9b4573d05c0e932d3b88c2b3051576a1d3",
+          "spec_material_hash": "b0b006e30f3daa0640ee220aeced9c12b530f26516cd6e57107896726d4dfba5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "#1531 weakens no security boundary: ci_only rows fail closed (reason required, no mapped commands, digest-pinned, NonApplicable stage, never a passed check) and remain a human-reviewed config declaration, not an exclusion mechanism. SECURITY.md remains accurate as-is.",
-          "reviewed_code_fingerprint": "84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702",
+          "reason": "#1534 weakens no security boundary: gap acceptance is explicit, task-scoped, requires a reviewed --reason, records the accepted range as an auditable event, and is rejected without checkpointed history or without a gap. SECURITY.md remains accurate as-is.",
+          "reviewed_code_fingerprint": "3353a07fb3ecbdce3228fc1b6763be9b4573d05c0e932d3b88c2b3051576a1d3",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -1344,7 +1352,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794028313Z"
+      "updated_at": "1794029797Z"
     },
     "trajectory": {
       "active_boundaries": [
