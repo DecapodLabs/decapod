@@ -913,6 +913,11 @@
       "id": "fix1528-hist-22",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:fd49abd4fcc39e51ad53f3d252acef27946f6905a4819c1e13e88088e5f516da"
+    },
+    {
+      "id": "fix1528-hist-23",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:1628e97d2e65cd22e41177ef3862d02cc38a4c9ea1bcabf6f4307cd0a887276e"
     }
   ],
   "intents": {
@@ -960,7 +965,7 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed against the clean-tree repo signal fingerprint 914f7c1c after the release-bound regen commit 9e3c239f; INTERFACES.md prose unchanged in this pass, attestation refreshed.",
+          "reason": "Re-reviewed after specs.refresh; validation rules system + dagger removal interfaces + attestation fingerprint refreshed",
           "reviewed_code_fingerprint": "914f7c1c6da50633851a00107b5d337dd165f6b2c7cecdd886eb7c232444b437",
           "spec_material_hash": "36807d075cdc0b8f6bb5ddcdd9778f2211589056759615d4b50277ebd3f64b15"
         },
@@ -980,7 +985,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794011501Z"
+      "updated_at": "1794013072Z"
     },
     "trajectory": {
       "active_boundaries": [
