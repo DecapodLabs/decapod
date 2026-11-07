@@ -97,6 +97,33 @@ fn failed_validation_blocks_done_claim_and_keeps_proof_refs() {
 }
 
 #[test]
+fn status_and_boolean_without_proof_do_not_complete() {
+    let task = task("done", "agent-a");
+    let verification = WorkClaimVerification {
+        last_verified_status: Some("pass".to_string()),
+        verification_artifacts: Some(serde_json::json!({
+            "task_id": task.id,
+            "task_revision": task.revision,
+            "passes": true,
+            "notes": "previous agent marked this done"
+        })),
+    };
+    let claim = from_todo(&task, &verification, None);
+    assert_eq!(claim.status, WorkClaimStatus::Blocked);
+    assert_ne!(claim.validation_status, WorkClaimValidationStatus::Passed);
+
+    let bare = from_todo(
+        &task,
+        &WorkClaimVerification {
+            last_verified_status: Some("done".to_string()),
+            verification_artifacts: None,
+        },
+        None,
+    );
+    assert_eq!(bare.status, WorkClaimStatus::Blocked);
+}
+
+#[test]
 fn passed_validation_completes_done_claim_and_archive_abandons() {
     let verification = bound_verification(&task("done", "agent-a"));
     assert_eq!(

@@ -649,6 +649,11 @@
       "id": "cp-1557-24",
       "summary": "Record tests/unit/core/projection_tests.rs",
       "input_digest": "sha256:7cdef21555c7868382f2c548aef0922818931da797c41553371d7a57ab5566cd"
+    },
+    {
+      "id": "cp-1557-25",
+      "summary": "Record tests/unit/core/work_claim_tests.rs",
+      "input_digest": "sha256:6c21fca42cace217ba6c3848c9e5fc42fe797401d9095f54497cad5d17111988"
     }
   ],
   "legacy_digests": {
