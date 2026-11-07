@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.130.2](https://github.com/DecapodLabs/decapod/compare/v0.130.1...v0.130.2) - 2026-11-07
+
+### Fixed
+
+- restore #1536 SQLite runtime prose in OPERATIONS.md dropped by the rebase seed ([#1544](https://github.com/DecapodLabs/decapod/pull/1544))
+- re-record spec reviews at the post-regen fingerprint ([#1544](https://github.com/DecapodLabs/decapod/pull/1544))
+- re-record spec reviews at the #1544 head fingerprint
+- prefix native per-check validation errors with the check name ([#1544](https://github.com/DecapodLabs/decapod/pull/1544))
+- name path, detected and expected format/arch in macOS native Mach-O rejection ([#1544](https://github.com/DecapodLabs/decapod/pull/1544))
+- name path, detected and expected format/arch in Linux native ELF rejection ([#1544](https://github.com/DecapodLabs/decapod/pull/1544))
+
+### Other
+
+- regenerate release-bound entrypoints, Dockerfile pin and spec projections for v0.130.1 ([#1544](https://github.com/DecapodLabs/decapod/pull/1544))
+- *(changelog)* record native executable naming fix for #1544
+- *(specs)* document named-executable native format rejection in ARCHITECTURE.md ([#1544](https://github.com/DecapodLabs/decapod/pull/1544))
+- cargo fmt the new executable-format helpers ([#1544](https://github.com/DecapodLabs/decapod/pull/1544))
+- cover executable format/arch naming in native_executable rejections ([#1544](https://github.com/DecapodLabs/decapod/pull/1544))
+- seed workspace branch for #1544 on v0.130.0 master (e3c280ee)
+
 ### Fixed
 
 - name the check, configured executable path, detected format/arch and expected format/arch in native ELF/Mach-O validation rejections ([#1544](https://github.com/DecapodLabs/decapod/issues/1544))
