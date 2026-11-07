@@ -3262,6 +3262,7 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "interop.manifest"
             | "interop.negotiate"
             | "interop.project"
+            | "specs.verify"
     )
 }
 
