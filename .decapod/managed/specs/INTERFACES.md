@@ -1,5 +1,23 @@
 # Interfaces
 
+## Publication projection
+
+`interop.project` validation reports expose `proof_judgment` alongside
+`publication_ready`. Eligibility comes from `project_report_publication`.
+A report that only sets `publication_ready` or `passes` stays ineligible.
+A fresh pass with a non-empty head and a receipt digest can be `proven`.
+Stale rules or verifier identity, a failed status, missing canonical state,
+and a corrupt status stay distinct and are not publishable.
+
+`state commit verify` requires the scope-record bytes and an expected root.
+Omitting the root is an error, not a successful verification.
+
+`state.resolve` remains the canonical snapshot. `judge_stored_verification`
+re-hashes the files named by a verification row and binds that digest to the
+snapshot. The row's status field is not accepted as proof. Governed-transition
+decisions are appended to the `traces` stream that `decapod flight-recorder`
+already renders.
+
 ## Claim scope acceptance
 
 `todo add --scope 'paths:["src/a.rs"]'` declares the files an exclusive claim
@@ -1125,8 +1143,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
+- Repository signal fingerprint: `f877bcaa85918acff695d8c3cde0da1fdd755f4b25efceb03edf6d074513d272`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
