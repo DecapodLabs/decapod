@@ -1633,6 +1633,14 @@
       "proof_refs": [
         "plan_task_binding"
       ]
+    },
+    {
+      "id": "ckpt-1023-badge-28410",
+      "summary": "Add init README badge (#1023): InitConfigSection.readme_badge (default true), --no-readme-badge on init/init-with, scaffold ensure_readme_badge writes version-matched shields.io badge below the root README heading, idempotent; tests cover default-on, CLI opt-out, config toggle",
+      "input_digest": "sha256:b40668932013551f5df36c3a9aca778daa3eb9650026b0949074c955e38127e0",
+      "proof_refs": [
+        "readme_badge_tests"
+      ]
     }
   ],
   "intents": {

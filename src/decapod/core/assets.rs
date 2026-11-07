@@ -870,6 +870,20 @@ pub fn canonical_template(name: &str) -> Option<String> {
     }
 }
 
+/// Version-matched Decapod badge for the project README (#1023). The badge
+/// version always tracks the installed Decapod release.
+pub fn readme_badge_line() -> String {
+    format!(
+        "[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v{}-dc2626)](https://github.com/DecapodLabs/decapod)",
+        crate::core::entrypoint_integrity::RELEASE_VERSION
+    )
+}
+
+/// Marker used to keep badge insertion idempotent.
+pub fn is_readme_badge_present(content: &str) -> bool {
+    content.contains("img.shields.io/badge/") && content.contains("Decapod-v")
+}
+
 fn template_readme() -> String {
     r#"# .decapod - Decapod Control Plane
 

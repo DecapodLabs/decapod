@@ -1608,6 +1608,7 @@ fn init_with_from_config(
         agents: has("AGENTS.md"),
         specs: config.init.specs,
         ci: config.init.ci,
+        readme_badge: config.init.readme_badge,
         diagram_style: config.init.diagram_style,
         product_name: config.repo.product_name.clone(),
         product_summary: config.repo.product_summary.clone(),
@@ -1670,6 +1671,9 @@ fn preserve_unspecified_init_options(
     }
     if !explicit("ci") {
         init.ci = existing.ci;
+    }
+    if !explicit("readme_badge") {
+        init.readme_badge = existing.readme_badge;
     }
     if !explicit("diagram_style") {
         init.diagram_style = existing.diagram_style;
@@ -1822,6 +1826,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         init: InitConfigSection {
             specs: init.specs,
             ci: init.ci,
+            readme_badge: init.readme_badge,
             diagram_style: init.diagram_style,
             entrypoints,
         },
@@ -2219,6 +2224,7 @@ fn run_init_apply(
         preserved_agent_content,
         generate_specs,
         generate_ci: init_with.ci,
+        readme_badge: init_with.readme_badge,
         diagram_style: match init_with.diagram_style {
             InitDiagramStyle::Ascii => scaffold::DiagramStyle::Ascii,
             InitDiagramStyle::Mermaid => scaffold::DiagramStyle::Mermaid,
@@ -2494,6 +2500,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             agents: init_group.agents,
                             specs: init_group.specs,
                             ci: init_group.ci,
+                            readme_badge: init_group.readme_badge,
                             diagram_style,
                             product_name: init_group.product_name.clone(),
                             product_summary: init_group.product_summary.clone(),
@@ -5780,6 +5787,7 @@ fn heal_validation_scaffold(
         preserved_agent_content: Vec::new(),
         generate_specs: true,
         generate_ci: true,
+        readme_badge: config.init.readme_badge,
         diagram_style,
         specs_seed: Some(scaffold::SpecsSeed {
             product_name: repo_ctx.product_name.clone(),

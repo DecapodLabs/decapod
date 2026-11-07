@@ -49,6 +49,8 @@ pub struct ScaffoldOptions {
     pub generate_ci: bool,
     /// Diagram style for generated architecture document.
     pub diagram_style: DiagramStyle,
+    /// Write the version-matched Decapod badge into the root README.md (#1023).
+    pub readme_badge: bool,
     /// Whole-project intent/architecture seed from repository context, never a task summary.
     pub specs_seed: Option<SpecsSeed>,
     /// Capabilities declared for the project (for scaffolding proposals)
@@ -1748,11 +1750,47 @@ pub fn blend_overrides(
     Ok(FileAction::Created)
 }
 
+/// Ensure the project root README.md carries the version-matched Decapod badge
+/// (#1023). The badge is inserted directly below the first top-level heading so
+/// it renders at the top of the rendered page; a missing README is created with
+/// a minimal heading. Idempotent: an existing badge is left untouched.
+fn ensure_readme_badge(
+    target_dir: &Path,
+    seed: Option<&SpecsSeed>,
+) -> Result<String, error::DecapodError> {
+    let readme_path = target_dir.join("README.md");
+    let badge = assets::readme_badge_line();
+    let (content, existed) = match fs::read_to_string(&readme_path) {
+        Ok(existing) => (existing, true),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            let title = seed
+                .and_then(|s| s.product_name.clone())
+                .filter(|name| !name.trim().is_empty())
+                .unwrap_or_else(|| "Project".to_string());
+            (format!("# {title}\n"), false)
+        }
+        Err(e) => return Err(error::DecapodError::IoError(e)),
+    };
+    if assets::is_readme_badge_present(&content) {
+        return Ok("unchanged".to_string());
+    }
+    let badge_line = format!("\n{badge}\n");
+    let mut lines: Vec<&str> = content.split_inclusive('\n').collect();
+    let insert_at = lines
+        .iter()
+        .position(|line| line.starts_with("# "))
+        .map(|idx| idx + 1)
+        .unwrap_or(0);
+    lines.insert(insert_at, badge_line.as_str());
+    let updated = lines.concat();
+    crate::core::atomic::write_atomic(&readme_path, updated.as_bytes())
+        .map_err(error::DecapodError::IoError)?;
+    Ok(if existed { "updated" } else { "created" }.to_string())
+}
+
 pub fn scaffold_project_entrypoints(
     opts: &ScaffoldOptions,
 ) -> Result<ScaffoldSummary, error::DecapodError> {
-    eprintln!("DEBUG: target_dir: {:?}", opts.target_dir);
-
     // Ensure target_dir exists before any scaffolding operations
     // This is critical - without it, all subsequent file operations will fail
     if !opts.target_dir.exists() {
@@ -1812,6 +1850,14 @@ pub fn scaffold_project_entrypoints(
             FileAction::Created => ep_created += 1,
             FileAction::Unchanged => ep_unchanged += 1,
             FileAction::Preserved => ep_preserved += 1,
+        }
+    }
+
+    // #1023: project README badge, version-matched to this Decapod release.
+    if opts.readme_badge && !opts.dry_run {
+        match ensure_readme_badge(&opts.target_dir, opts.specs_seed.as_ref()) {
+            Ok(action) => eprintln!("README badge: {action}"),
+            Err(e) => eprintln!("warning: Failed to update README badge: {e}"),
         }
     }
 

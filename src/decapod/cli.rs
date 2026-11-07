@@ -178,6 +178,9 @@ pub(crate) struct InitGroupCli {
     /// Generate GitHub Action workflow for project validation (enabled by default).
     #[clap(long = "no-ci", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub ci: bool,
+    /// Write the version-matched Decapod badge into the project README.md (enabled by default, #1023).
+    #[clap(long = "no-readme-badge", action = clap::ArgAction::SetFalse, default_value_t = true)]
+    pub readme_badge: bool,
     /// Preferred diagram notation for generated `.decapod/managed/specs/ARCHITECTURE.md`.
 
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
@@ -336,6 +339,9 @@ pub(crate) struct InitWithCli {
     /// Generate GitHub Action workflow for project validation (enabled by default).
     #[clap(long = "no-ci", action = clap::ArgAction::SetFalse, default_value_t = true)]
     pub ci: bool,
+    /// Write the version-matched Decapod badge into the project README.md (enabled by default, #1023).
+    #[clap(long = "no-readme-badge", action = clap::ArgAction::SetFalse, default_value_t = true)]
+    pub readme_badge: bool,
     /// Preferred diagram notation for generated `.decapod/managed/specs/ARCHITECTURE.md`.
 
     #[clap(long, value_enum, default_value_t = InitDiagramStyle::Ascii)]
@@ -473,6 +479,9 @@ pub struct InitConfigSection {
     pub specs: bool,
     #[serde(default = "default_true")]
     pub ci: bool,
+    /// Write the version-matched Decapod badge into the project README.md on init (#1023).
+    #[serde(default = "default_true")]
+    pub readme_badge: bool,
     pub diagram_style: InitDiagramStyle,
     pub entrypoints: Vec<String>,
 }
@@ -788,6 +797,7 @@ impl Default for DecapodProjectConfig {
             init: InitConfigSection {
                 specs: true,
                 ci: true,
+                readme_badge: true,
                 diagram_style: InitDiagramStyle::Ascii,
                 entrypoints: vec![
                     "AGENTS.md".to_string(),

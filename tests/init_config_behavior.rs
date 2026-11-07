@@ -1549,3 +1549,70 @@ fn both_init_surfaces_apply_only_explicit_config_overrides() {
         );
     }
 }
+
+#[test]
+fn init_readme_badge_defaults_on_and_honors_cli_and_config_toggle() {
+    // Default (flag omitted) on a fresh project: the version-matched badge is
+    // written and recorded as enabled in config.toml.
+    let tmp = tempdir().expect("tempdir");
+    let out = run_decapod(tmp.path(), &["init", "with", "--force"]);
+    assert!(
+        out.status.success(),
+        "default init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let readme = fs::read_to_string(tmp.path().join("README.md")).expect("README created");
+    assert!(
+        readme.contains("img.shields.io/badge/")
+            && readme.contains(&format!(
+                "Decapod-v{}",
+                decapod::core::entrypoint_integrity::RELEASE_VERSION
+            )),
+        "default init must write the version-matched README badge (#1023): {readme}"
+    );
+    let config =
+        fs::read_to_string(tmp.path().join(".decapod/config.toml")).expect("read config.toml");
+    assert!(
+        config.contains("readme_badge = true"),
+        "config must record the default-enabled badge: {config}"
+    );
+
+    // Config toggle: readme_badge = false must keep the badge out on re-init.
+    fs::remove_file(tmp.path().join("README.md")).expect("remove README");
+    let path = tmp.path().join(".decapod/config.toml");
+    let mut authored: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    authored["init"]["readme_badge"] = false.into();
+    fs::write(&path, toml::to_string_pretty(&authored).unwrap()).unwrap();
+    let out = run_decapod(tmp.path(), &["init", "with", "--force"]);
+    assert!(
+        out.status.success(),
+        "config-toggle re-init failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        !tmp.path().join("README.md").exists(),
+        "readme_badge = false in .decapod/config.toml must disable the badge (#1023)"
+    );
+
+    // Explicit CLI opt-out on a fresh project: no badge, config records false.
+    let tmp2 = tempdir().expect("tempdir");
+    let out = run_decapod(
+        tmp2.path(),
+        &["init", "with", "--force", "--no-readme-badge"],
+    );
+    assert!(
+        out.status.success(),
+        "init --no-readme-badge failed: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        !tmp2.path().join("README.md").exists(),
+        "--no-readme-badge must not create a root README (#1023)"
+    );
+    let config2 =
+        fs::read_to_string(tmp2.path().join(".decapod/config.toml")).expect("read config.toml");
+    assert!(
+        config2.contains("readme_badge = false"),
+        "config must record the explicit --no-readme-badge choice: {config2}"
+    );
+}

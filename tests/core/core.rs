@@ -712,12 +712,17 @@ fn scaffold_store_and_docs_cli_behaviors() {
         preserved_agent_content: vec![],
         generate_specs: true,
         generate_ci: true,
+        readme_badge: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Ascii,
         specs_seed: None,
         capabilities: vec![],
     };
     scaffold_project_entrypoints(&dry_run_opts).expect("dry run scaffold");
     assert!(!dry_run_target.join("AGENTS.md").exists());
+    assert!(
+        !dry_run_target.join("README.md").exists(),
+        "dry run must not write the README badge (#1023)"
+    );
 
     let live_target = tmp.path().join("live");
     let live_opts = ScaffoldOptions {
@@ -730,6 +735,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         preserved_agent_content: vec![],
         generate_specs: true,
         generate_ci: true,
+        readme_badge: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Ascii,
         specs_seed: None,
         capabilities: vec![],
@@ -740,6 +746,28 @@ fn scaffold_store_and_docs_cli_behaviors() {
     scaffold_project_entrypoints(&live_opts).expect("live scaffold");
     assert!(live_target.join("AGENTS.md").exists());
     assert!(live_target.join(".decapod/OVERRIDE.md").exists());
+    let live_readme = fs::read_to_string(live_target.join("README.md")).expect("read README");
+    assert!(
+        live_readme.contains("img.shields.io/badge/")
+            && live_readme.contains(&format!(
+                "Decapod-v{}",
+                decapod::core::entrypoint_integrity::RELEASE_VERSION
+            )),
+        "live scaffold must write the version-matched README badge (#1023)"
+    );
+    let badge_pos = live_readme.find("img.shields.io").expect("badge present");
+    let heading_pos = live_readme.find("# ").expect("heading present");
+    assert!(
+        badge_pos > heading_pos,
+        "badge must render below the top-level heading"
+    );
+    scaffold_project_entrypoints(&live_opts).expect("idempotent re-scaffold");
+    let reread = fs::read_to_string(live_target.join("README.md")).expect("re-read README");
+    assert_eq!(
+        reread.matches("img.shields.io").count(),
+        1,
+        "badge insertion must be idempotent (#1023)"
+    );
     let gitignore = fs::read_to_string(live_target.join(".gitignore")).expect("read .gitignore");
     assert!(
         gitignore.contains(".decapod/managed/*"),
@@ -925,6 +953,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         preserved_agent_content: vec![],
         generate_specs: true,
         generate_ci: true,
+        readme_badge: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Ascii,
         specs_seed: None,
         capabilities: vec![],
@@ -954,6 +983,7 @@ fn scaffold_store_and_docs_cli_behaviors() {
         preserved_agent_content: vec![],
         generate_specs: true,
         generate_ci: true,
+        readme_badge: true,
         diagram_style: decapod::core::scaffold::DiagramStyle::Mermaid,
         specs_seed: None,
         capabilities: vec![],
