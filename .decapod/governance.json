@@ -559,6 +559,11 @@
       "id": "cp-1557-06",
       "summary": "Record .decapod/managed/specs/README.md",
       "input_digest": "sha256:38a87225a21aa755792db674875499766c5c31e865cd6ad235e74ed4aaa546e2"
+    },
+    {
+      "id": "cp-1557-07",
+      "summary": "Record .decapod/managed/specs/SECURITY.md",
+      "input_digest": "sha256:9c0f7a665291d1ec3577113763fa00c1d6091431a6c7e2e164c7999db307ce73"
     }
   ],
   "legacy_digests": {
