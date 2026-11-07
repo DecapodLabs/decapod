@@ -968,3 +968,63 @@ dependency, lease, shared-claim trust or approval gates and do not establish
 verified isolated-worktree custody. Tests cover disjoint/intersecting/parent paths,
 malformed declarations, unchanged shared-claim trust and journaled scopes;
 source declarations are not a claim that tests have run.
+
+
+## Governed-State Projection and Diff
+
+Decapod exposes two new public capabilities for agents to reconstruct governed reality from canonical repository and Decapod state:
+
+### `state.resolve`
+
+Returns a deterministic canonical governed-state projection (`StateResolution`) derived from existing authoritative sources:
+
+- **Identity**: Workunit, trajectory, intent, or obligation context
+- **Revision**: Git HEAD, base, branch, dirty status
+- **Objective/Acceptance**: Intent, acceptance criteria, done criteria
+- **Scope/Constraints**: Active boundaries, repo scope, out-of-scope, protected paths, risk tier
+- **Custody**: Intent status, raw/refined intent, assumptions, proof requirements, blockers
+- **Decisions**: Durable governance knowledge (PROPOSED/ACCEPTED/REJECTED/SUPERSEDED/REQUIRES_HUMAN)
+- **Failed Paths**: Durable negative knowledge preventing rediscovery of invalid approaches
+- **Blockers**: Semantic taxonomy (EXTERNAL_DEPENDENCY, AUTHORITY_REQUIRED, HUMAN_DECISION, ENVIRONMENT, PROOF_UNAVAILABLE, DEPENDENCY_UNRESOLVED, SCOPE_VIOLATION, POLICY_VIOLATION)
+- **Dependencies**: With resolution state (UNRESOLVED, IN_PROGRESS, RESOLVED, FAILED, DEFERRED)
+- **Changed Surfaces**: Files, config, proof, evaluator, spec, governance surfaces
+- **Validation/Proof**: Proof states with freshness (VALID, STALE, UNAFFECTED, UNKNOWN, FAILED), verifier integrity (UNCHANGED, CHANGED_AUTHORIZED, CHANGED_UNTRUSTED), assurance levels (A0-A3), verifier identity
+- **Unresolved Obligations**: From obligation graph
+- **Publication Eligibility**: Based on proof freshness, verifier integrity, state commit, assurance requirements
+- **Admissible Actions**: Allowed, required, forbidden actions derived from governance state
+- **Provenance**: State commit, governance document, trajectory, workunit, validation receipt hashes
+
+### `state.diff`
+
+Computes governed-state diff between two states (`StateDiff`) with:
+- Intent, decision, failed path, custody, scope, dependency, blocker changes
+- Proof added/preserved/invalidated/unknown
+- Publication eligibility transition
+
+### Architecture
+
+- **No shadow state**: Purely deterministic read model over canonical sources (workunit, trajectory, custody, governance document, obligation graph, proof config, validation receipts, state commit, git)
+- **Fail-closed**: Missing governance never widens authority
+- **Deterministic**: Identical inputs produce identical outputs
+- **Agent-invoked**: Request/response, no daemons, no watchers, no session monitoring
+
+### RPC Interface
+
+- `state.resolve` — Returns `StateResolution` with optional filters (workunit_id, trajectory_run_id, intent_id, obligation_id)
+- `state.diff` — Computes `StateDiff` between two states (by workunit_id, state commit, or revision)
+
+### Integration with Existing State
+
+`state.resolve` derives its answer from existing authoritative Decapod and repository state:
+- Workunit manifests and proof results
+- Trajectory artifacts and custody state
+- Governance document (plan, trajectory, claims, validation, intents)
+- Obligation graph and proof outcomes
+- Proof configuration and validation receipts
+- State commit artifacts
+- Git revision and diff state
+
+No shadow state is introduced; this is a read model over existing authoritative sources.
+
+---
+

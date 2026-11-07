@@ -393,3 +393,51 @@ Dockerfile bytes and must not introduce whitespace that makes the independent
 projection check disagree with the actual validator. This focused #1397 delivery
 contributes to #1052/#1069/#1070; it does not by itself prove their full lifecycle,
 platform, hosted-custody or derived-release acceptance scope.
+
+
+## Governed-State Projection and Diff
+
+Decapod implements `state.resolve` and `state.diff` — the authoritative agent-facing projection of governed reality derived from canonical repository and Decapod state. No shadow state is introduced; this is a read model over existing authoritative sources.
+
+### `state.resolve`
+
+Returns a complete `StateResolution` with all requested fields:
+- Identity, revision, objective, acceptance, scope, constraints
+- Custody projection with intent status, assumptions, proof requirements
+- Decisions as durable governance knowledge (PROPOSED/ACCEPTED/REJECTED/SUPERSEDED/REQUIRES_HUMAN)
+- Failed paths as durable negative knowledge
+- Blockers with semantic taxonomy (EXTERNAL_DEPENDENCY, AUTHORITY_REQUIRED, HUMAN_DECISION, ENVIRONMENT, PROOF_UNAVAILABLE, DEPENDENCY_UNRESOLVED, SCOPE_VIOLATION, POLICY_VIOLATION)
+- Dependencies with resolution state
+- Changed surfaces (files, config, proof, evaluator, spec, governance)
+- Validation/proof with freshness (VALID, STALE, UNAFFECTED, UNKNOWN, FAILED), verifier integrity (UNCHANGED, CHANGED_AUTHORIZED, CHANGED_UNTRUSTED), assurance levels (A0-A3), verifier identity
+- Unresolved obligations, publication eligibility, admissible actions, provenance
+
+### `state.diff`
+
+Computes governed-state diff between two states with:
+- Intent, decision, failed path, custody, scope, dependency, blocker changes
+- Proof added/preserved/invalidated/unknown
+- Publication eligibility transition
+
+### Architecture
+
+- **No shadow state**: Purely deterministic read model over canonical sources
+- **Fail-closed**: Missing governance never widens authority
+- **Deterministic**: Identical inputs produce identical outputs
+- **Agent-invoked**: Request/response, no daemons, no watchers, no session monitoring
+
+### Integration with Existing State
+
+Derives answers from existing authoritative Decapod and repository state wherever possible:
+- Workunit manifests and proof results
+- Trajectory artifacts and custody state
+- Governance document (plan, trajectory, claims, validation, intents)
+- Obligation graph and proof outcomes
+- Proof configuration and validation receipts
+- State commit artifacts
+- Git revision and diff state
+
+If an underlying semantic concept is genuinely missing, the smallest durable primitive necessary is introduced (e.g., Decision, FailedPath, BlockerInfo, DependencyInfo types).
+
+---
+
