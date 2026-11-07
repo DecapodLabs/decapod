@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.130.1](https://github.com/DecapodLabs/decapod/compare/v0.130.0...v0.130.1) - 2026-11-07
+
+### Fixed
+
+- repair stale vega-native Cargo.lock decapod pin for v0.126.5 ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
+- identify supported Nix setup in SQLite runtime error ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
+- carry SQLite runtime library in the Nix package output ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
+
+### Other
+
+- rebind #1536 artifacts onto v0.130.0 master - regenerate surfaces, reconcile digest, record spec reviews and refresh projections ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
+- regenerate v0.130.0 release-bound entrypoints and vega-native lock pin after rebase onto v0.130.0 master ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
+- rebind #1536 artifacts onto post-#1540 master (c6b7919d) - refresh projections and record spec reviews ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
+- rebind #1536 artifacts onto v0.129.0 master - regenerate surfaces, reconcile digest, record spec reviews and refresh projections ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
+- regenerate v0.129.0 release-bound entrypoints and vega-native lock pin after rebase ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
+- refresh specs manifest after #1536 digest reconcile
+- reconcile source digest after vega-native lock pin repair ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
+- regenerate v0.126.5 entrypoints and re-review specs after #1536 rebase
+- regenerate specs projections on v0.126.5 after #1536 rebase
+- rebase #1536 onto v0.126.5 and reconcile source digest
+- refresh specs manifest after #1536 digest reconcile
+- reconcile proof profile source digest for #1536 branch
+- refresh specs manifest and attestations after #1536 spec updates
+- document Nix SQLite runtime packaging in specs ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
+- seed workspace branch for #1536 on v0.126.4 base
+
 ## [0.130.0](https://github.com/DecapodLabs/decapod/compare/v0.129.0...v0.130.0) - 2026-11-07
 
 ### Added
