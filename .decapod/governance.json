@@ -1785,6 +1785,14 @@
       "proof_refs": [
         "specs_debug"
       ]
+    },
+    {
+      "id": "ckpt-ci-final-1794091417",
+      "summary": "Fix RUNNER_TEMP variable expansion in spec-fingerprints CI step; re-pin ci.yml to fcebd5a6...; update reviewed_sources_digest to b3540172...",
+      "input_digest": "sha256:f7fefe66ee0c58b2bce96fba1209280774e9d809cdbedd06e58a21b484df0254",
+      "proof_refs": [
+        "ci_final"
+      ]
     }
   ],
   "intents": {
