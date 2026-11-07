@@ -30,7 +30,7 @@ jobs:
           curl -fsSL -o "$asset.sha256" "$base/$asset.sha256"
           sha256sum -c "$asset.sha256"
           tar -xJf "$asset"
-          ./decapod-x86_64-unknown-linux-gnu/decapod --version
+          ./decapod-x86_64-unknown-linux-gnu/decapod system version
       - name: Run project prerequisites with the latest released Decapod
         env:
           DECAPOD_VALIDATE_SKIP_GIT_GATES: "1"

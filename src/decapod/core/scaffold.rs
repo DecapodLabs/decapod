@@ -1776,9 +1776,11 @@ fn ensure_readme_badge(
     }
     let badge_line = format!("\n{badge}\n");
     let mut lines: Vec<&str> = content.split_inclusive('\n').collect();
+    // Insert below the first title: a Markdown `# ` heading or an HTML `<h1`
+    // heading (common in badge-heavy project READMEs). Fall back to the top.
     let insert_at = lines
         .iter()
-        .position(|line| line.starts_with("# "))
+        .position(|line| line.starts_with("# ") || line.starts_with("<h1"))
         .map(|idx| idx + 1)
         .unwrap_or(0);
     lines.insert(insert_at, badge_line.as_str());
