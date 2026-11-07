@@ -192,6 +192,8 @@ impl Fixture {
                     .iter()
                     .map(|command| command.name.clone())
                     .collect(),
+                ci_only: false,
+                reason: None,
             }],
             executions: commands
                 .iter()

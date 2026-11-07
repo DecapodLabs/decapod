@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `repo.pr-readiness.v1` `source_coverage` rows may declare a reviewed CI-only limitation (`ci_only = true` + `reason`, `commands` omitted) instead of a false local mapping; the row is pinned by `reviewed_commands_digest` and reported in `validation-results.v3` as a `NonApplicable` limitation stage, never counted as a passed check (#1531)
+
 ## [0.128.0](https://github.com/DecapodLabs/decapod/compare/v0.127.1...v0.128.0) - 2026-11-07
 
 ### Added

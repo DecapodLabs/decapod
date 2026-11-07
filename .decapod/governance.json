@@ -519,7 +519,7 @@
     }
   },
   "change": {
-    "id": "change_01M6Q7DMYY95KQ09ZA83VBHBKF",
+    "id": "change_01M6QFSVJP980EQWW6P7Z55XGK",
     "base_commit": "f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e",
     "target_base": "origin/master"
   },
@@ -973,6 +973,166 @@
       "id": "fix1528-spec-reviews-gb-bound",
       "summary": "Re-record ARCHITECTURE/INTERFACES/SECURITY spec reviews against the repo signal fingerprint of the head that includes the group_broker contention-bound fix; clears STALE_SPEC_REVIEW",
       "input_digest": "sha256:61712366ac13f7116753457a5b95e2ec1c8200b7d7f9b5017e60b8c497b04db9"
+    },
+    {
+      "id": "ckpt-rbd1-1-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (Merge pull request #1547 from DecapodLabs/release-plz-2026-11-07T03-13-58Z)",
+      "input_digest": "sha256:b005e4ebfc50a7facb982cfd5473cff1818d948ec0a528847776e3a7c4c617de",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-2-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (feat: add reviewed ci_only declaration to source_coverage (#1531))",
+      "input_digest": "sha256:bab5fb9cbafcabf3bd5528d7bae1e9f8de24b12678d65494891781b77638102f",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-3-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (test: cover ci_only source_coverage declaration (#1531))",
+      "input_digest": "sha256:bee8642f6dc7e83704d501727d11489256323a8d6ab6a405d3fe8d645f475bf0",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-4-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (test: update SourceCoverage constructor in lib_init_prompt_tests (#1531))",
+      "input_digest": "sha256:050b5ecaa89e0e089c90b20db507dbb545f24f06f25b0c5e786b50785f3bd528",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-5-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (test: update SourceCoverage constructor in consumer_readiness (#1531))",
+      "input_digest": "sha256:8ed1199a4e6d9367711fcb7afc9d6fe53930f1b05b98b6e0f6a293165226efff",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-6-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (docs: document reviewed ci_only declaration in INTERFACES.md (#1531))",
+      "input_digest": "sha256:e69bc816af8036ff2656936572ae0b21f1facf5eb3f10f9ad5485b4e339b6974",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-7-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: refresh specs manifest and attestations after #1531 spec update)",
+      "input_digest": "sha256:e69bc816af8036ff2656936572ae0b21f1facf5eb3f10f9ad5485b4e339b6974",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-8-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: refresh specs manifest and attestations after #1531 spec update)",
+      "input_digest": "sha256:f247e25de948c845627d54a9bc7e0ba2c89a827ddc0d1b8d282b6c04e35cf3c1",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-9-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: refresh specs manifest after #1531 digest reconcile)",
+      "input_digest": "sha256:f247e25de948c845627d54a9bc7e0ba2c89a827ddc0d1b8d282b6c04e35cf3c1",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-10-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: rebase #1531 onto v0.126.5 and reconcile source digest)",
+      "input_digest": "sha256:f73ace7d88490c91ce77b44fd7897b4999359f47447f396ec2f88a72ac04c29b",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-11-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: rebase #1531 onto v0.126.5 and reconcile source digest)",
+      "input_digest": "sha256:f73ace7d88490c91ce77b44fd7897b4999359f47447f396ec2f88a72ac04c29b",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-12-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: regenerate specs projections on v0.126.5 after #1531 rebase)",
+      "input_digest": "sha256:f73ace7d88490c91ce77b44fd7897b4999359f47447f396ec2f88a72ac04c29b",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-13-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: repair stale vega-native Cargo.lock decapod pin for v0.126.5 (#1531))",
+      "input_digest": "sha256:f73ace7d88490c91ce77b44fd7897b4999359f47447f396ec2f88a72ac04c29b",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-14-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: reconcile source digest after vega-native lock pin repair (#1531))",
+      "input_digest": "sha256:0cba32a305d4e92e0185f0b3823e02acd7f15e6bdad2395d9a16bb079ef4d163",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd1-15-9660",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: reconcile source digest after vega-native lock pin repair (#1531))",
+      "input_digest": "sha256:0cba32a305d4e92e0185f0b3823e02acd7f15e6bdad2395d9a16bb079ef4d163",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd2-1-14021",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: repair stale vega-native Cargo.lock decapod pin for v0.128.0 (#1531))",
+      "input_digest": "sha256:1826513b49c1f028f2c07496a10e41fbc341f12020a64607a654d2fbfbea8a1a",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd2-2-14021",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: regenerate v0.128.0 release-bound entrypoints, manifest and Dockerfile pin after rebase (#1531))",
+      "input_digest": "sha256:a93bbc8560200c5c112359aa246d0bd614d7578fb342495c75e7498363498c33",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd2-3-14021",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: allow ci_only source_coverage rows to omit commands in config.toml (#1531))",
+      "input_digest": "sha256:9e447a3e02877460ace5fd9f826fcefb6d128d91bcde653fdd0f901012d189cf",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-rbd2-4-14021",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: complete ci_only closure for #1531 - all-CI-only repos keep local proof, agent docs aligned (#1531))",
+      "input_digest": "sha256:934086c1b960e0f3728f4aa11385022ff25474bee671bfdd41592bd2e0e71910",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1531-rev3-18881",
+      "summary": "record canonical spec reviews (INTERFACES updated; ARCHITECTURE/SECURITY unchanged-with-reason) and refresh spec projections at the v0.128.0 rebound head for #1531",
+      "input_digest": "sha256:ca85ceeabcef5122f255ab0199871a853452c0b7f059056ae1165fdd70550559",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
@@ -1011,24 +1171,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; ARCHITECTURE.md prose unchanged by that fix, review re-bound to current code bytes",
-          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
+          "reason": "#1531 changes no architecture: ci_only is a validation-contract declaration inside the existing repository_profile module; no new components, boundaries or data flows. ARCHITECTURE.md remains accurate as-is.",
+          "reviewed_code_fingerprint": "84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; INTERFACES.md prose unchanged by that fix, review re-bound to current code bytes",
-          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
-          "spec_material_hash": "36807d075cdc0b8f6bb5ddcdd9778f2211589056759615d4b50277ebd3f64b15"
+          "reason": "INTERFACES.md documents the reviewed ci_only source_coverage row (#1531): commands may be omitted, nonempty reason required, row pinned by reviewed_commands_digest, reported as NonApplicable stage in validation-results.v3 and never counted as passed/skipped; all-ci-only repositories still execute required local commands. src/decapod/core/repository_profile.rs implements exactly this; agent-facing docs/agent/repository-readiness.md and regenerated config-schema.md carry the same contract plus the explicit manual reconciliation limitation.",
+          "reviewed_code_fingerprint": "84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702",
+          "spec_material_hash": "4a753e546e34b3298ec7ea7854c99318b2bb063ad67abfac71b12b976c7af066"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; SECURITY.md prose unchanged by that fix, review re-bound to current code bytes",
-          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
+          "reason": "#1531 weakens no security boundary: ci_only rows fail closed (reason required, no mapped commands, digest-pinned, NonApplicable stage, never a passed check) and remain a human-reviewed config declaration, not an exclusion mechanism. SECURITY.md remains accurate as-is.",
+          "reviewed_code_fingerprint": "84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -1040,7 +1200,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794020082Z"
+      "updated_at": "1794028313Z"
     },
     "trajectory": {
       "active_boundaries": [

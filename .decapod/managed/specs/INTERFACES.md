@@ -1115,8 +1115,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `914f7c1c6da50633851a00107b5d337dd165f6b2c7cecdd886eb7c232444b437`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (212 files)
+- Repository signal fingerprint: `84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1154,6 +1154,18 @@ execute. Absolute installed programs, declared runtime/tool files, exact environ
 working directory and timeout are configuration-bound. Unknown IDs, stale pins,
 empty/optional commands and missing or duplicate coverage fail closed. Init exposes
 both discovered digests for review without updating them or implying proof success.
+
+A `source_coverage` row may instead declare a reviewed CI-only limitation (#1531):
+`{ source = ".github/workflows/ci-only.yml", ci_only = true, reason = "..." }` (`commands`
+may be omitted or empty). Such a row pins the limitation through `reviewed_commands_digest`,
+requires a nonempty `reason` and no local commands (a `reason` without `ci_only`, or
+`ci_only` with mapped commands, fails closed as a false coverage claim), and is reported in
+`validation-results.v3` as a `NonApplicable` limitation stage for that workflow —
+never counted as a passed or skipped check. When every discovered workflow is
+`ci_only`, no row maps commands by design: the required local commands still execute
+normally as the repository's local build/test contract and the usual
+every-command-mapped invariant does not apply. Rows without the new fields keep their
+pre-#1531 serialized identity and digests.
 
 `init` and `init with` share option-provenance-aware preservation: omitted defaults
 retain authored configuration even under `--force`; explicit arguments still change

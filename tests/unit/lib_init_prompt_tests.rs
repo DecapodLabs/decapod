@@ -395,6 +395,8 @@ fn structured_init_proof_config() -> DecapodProjectConfig {
         source_coverage: vec![core::repository_profile::SourceCoverage {
             source: ".github/workflows/consumer.yml".into(),
             commands: vec!["lint".into(), "smoke".into()],
+            ci_only: false,
+            reason: None,
         }],
         executions: BTreeMap::new(),
     });

@@ -17,11 +17,29 @@ use std::path::{Component, Path};
 pub const REQUIRED_PROFILE: &str = "repo.pr-readiness.v1";
 pub const READINESS_SCOPE: &str = "repository_local_readiness";
 
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct SourceCoverage {
     pub source: String,
+    /// Mapped required local commands. May be omitted entirely on a reviewed
+    /// `ci_only` row (#1531), which declares no local proof instead.
+    #[serde(default)]
     pub commands: Vec<String>,
+    /// Reviewed declaration that this workflow has no local proof mapping
+    /// (#1531), e.g. a Nix evaluation or Dagger call. Requires a nonempty
+    /// `reason` and an empty `commands` list; the row is pinned by
+    /// `reviewed_commands_digest` and reported as an explicit limitation, never
+    /// counted as a passed check. Defaults keep pre-#1531 digests stable.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub ci_only: bool,
+    /// Reviewed reason required together with `ci_only = true`; rejected
+    /// without it, so a limitation is never unexplained.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
 }
 
 fn root_directory() -> String {
@@ -166,10 +184,36 @@ pub fn validate_contract(
     let mut covered = BTreeSet::new();
     let mut mapped = BTreeSet::new();
     for row in &contract.source_coverage {
-        if !expected.contains(&row.source)
-            || !covered.insert(row.source.clone())
-            || row.commands.is_empty()
-        {
+        if !expected.contains(&row.source) || !covered.insert(row.source.clone()) {
+            return Err(invalid(
+                "coverage must identify each discovered workflow exactly once, without exclusions",
+            ));
+        }
+        if row.ci_only {
+            // #1531: an honest CI-only declaration is a reviewed limitation, not
+            // a coverage claim, so it must carry a reason and no local commands.
+            if row.commands.is_empty()
+                && row
+                    .reason
+                    .as_deref()
+                    .map(str::trim)
+                    .is_none_or(str::is_empty)
+            {
+                return Err(invalid(
+                    "ci_only coverage requires a nonempty reviewed reason",
+                ));
+            }
+            if !row.commands.is_empty() {
+                return Err(invalid(
+                    "ci_only coverage must not map local commands; declare the limitation, not a false mapping",
+                ));
+            }
+            continue;
+        }
+        if row.reason.is_some() {
+            return Err(invalid("reason is only valid together with ci_only = true"));
+        }
+        if row.commands.is_empty() {
             return Err(invalid(
                 "coverage must identify each discovered workflow exactly once, without exclusions",
             ));
@@ -191,7 +235,10 @@ pub fn validate_contract(
     }
     // Repositories without hosted workflows still have their declared local
     // build/test contract. All commands execute regardless of source mapping.
-    if !expected.is_empty() && mapped != names {
+    // #1531: when every discovered workflow is a reviewed ci_only limitation,
+    // no row maps commands by design, so the local contract stands on its own
+    // and this invariant must not reject it.
+    if !expected.is_empty() && !mapped.is_empty() && mapped != names {
         return Err(invalid(
             "every required command must appear in the reviewed workflow coverage",
         ));
@@ -247,6 +294,24 @@ pub fn required_catalog(
             evidence_scope: READINESS_SCOPE.into(),
         })
         .collect();
+    // #1531: a ci_only row is reported as an explicit reviewed limitation, so
+    // validation-results.v3 shows it as NonApplicable and never counts it as a
+    // passed check.
+    for row in &contract.source_coverage {
+        if row.ci_only {
+            stages.push(StageDisposition {
+                stage: row.source.clone(),
+                key: None,
+                disposition: StageDispositionKind::NonApplicable,
+                policy: REQUIRED_PROFILE.into(),
+                reason: format!(
+                    "Reviewed CI-only limitation: no local proof mapping for this workflow; never counted as a passed check. Reason: {}",
+                    row.reason.clone().unwrap_or_default()
+                ),
+                evidence_scope: READINESS_SCOPE.into(),
+            });
+        }
+    }
     stages.push(StageDisposition { stage: "hosted-ci-and-release".into(), key: None,
         disposition: StageDispositionKind::NonApplicable, policy: REQUIRED_PROFILE.into(),
         reason: "Local contract mappings do not attest hosted workflow, platform matrix, release packaging or deployment execution".into(),
@@ -258,3 +323,7 @@ pub fn required_catalog(
         source_inventory_digest,
     ))
 }
+
+#[cfg(test)]
+#[path = "../../../tests/unit/core/repository_profile_tests.rs"]
+mod tests;
