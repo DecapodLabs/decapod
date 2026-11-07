@@ -1485,6 +1485,11 @@
       "id": "fix1544-spec-reviews-final",
       "summary": "Re-record ARCHITECTURE (updated), INTERFACES/SECURITY (unchanged-with-reason) spec reviews at clean-tree fingerprint 4cedaf57 after the v0.130.1 entrypoint/spec projection regen; clears STALE_SPEC_REVIEW",
       "input_digest": "sha256:5ba556a7078acb00e95dae70b4e1b3b1e318681b786aa2a41936419339bf0028"
+    },
+    {
+      "id": "fix1544-operations-sqlite-prose",
+      "summary": "Restore the #1536 SQLite runtime prose in OPERATIONS.md that the v0.130.0-era seed had accidentally dropped when rebasing onto v0.130.1; only the refreshed attestation fingerprint differs from master",
+      "input_digest": "sha256:a51ccb1fa2983f5be52d034291576bc67a5a27965d8f3d9923acefece38b9a85"
     }
   ],
   "intents": {
