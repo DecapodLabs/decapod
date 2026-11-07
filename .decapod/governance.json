@@ -529,6 +529,11 @@
       "id": "cp-1557-begin",
       "summary": "Begin the governed-transition pull request from master",
       "input_digest": "sha256:3583be83506aa1eabfb08ebe94dfaca5c9d7afec24cb263dab8c68deef3badee"
+    },
+    {
+      "id": "cp-1557-01",
+      "summary": "Record .decapod/managed/specs/.manifest.json",
+      "input_digest": "sha256:c8df4b32e6d94a09fba0901a368c26965bc3ff679d31382c7a627f87a4ef17b4"
     }
   ],
   "legacy_digests": {
