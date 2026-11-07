@@ -804,6 +804,13 @@ that reviewed local contract into the existing bounded native runner; it does no
 interpret workflow YAML or introduce an orchestration engine. Every command runs
 in the frozen source snapshot, with byte-measured declared tool inputs and fresh
 accepted-target queries. Source/configuration/tool/target drift invalidates proof.
+Before execution, `core/native_proof.rs` rejects any configured executable whose
+container format does not match the host platform; the rejection names the check,
+the configured path, the detected format/architecture (ELF or Mach-O, including
+fat binaries and shebang scripts) and the host's expected format/architecture,
+e.g. `fmt: /nix/store/.../alejandra is Mach-O arm64; native Linux validation
+requires ELF x86_64`, so a foreign-OS/arch toolchain mismatch is diagnosable
+from the `READINESS_BLOCKED` detail alone.
 
 The resulting `repository_local_readiness` scope attests those local commands,
 not hosted workflow jobs, platform matrices or release/deployment execution. The
