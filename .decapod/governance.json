@@ -1641,6 +1641,14 @@
       "proof_refs": [
         "readme_badge_tests"
       ]
+    },
+    {
+      "id": "ckpt-1134-13937",
+      "summary": "Add early spec-fingerprints CI gate (#1134): new composite action .github/actions/spec-fingerprints verifies .decapod/managed/.manifest.json exists (legacy path gone), files[] sha256 content hashes, repo signal fingerprint lines in specs, and entrypoint release/fingerprint markers recompute; every ci.yml job now needs spec-fingerprints so a stale/missing regen fails the whole pipeline early; policy tests updated (job excluded from finite inventory, needs strings)",
+      "input_digest": "sha256:d522fe93830b03a9d298bb329ff7f5500b98738d5aff5431f4b346f38b3b0adc",
+      "proof_refs": [
+        "spec_fingerprints_action"
+      ]
     }
   ],
   "intents": {

@@ -123,7 +123,7 @@ fn docs_owner_selector_rejects_sanitized_importers_and_incomplete_identity() {
 #[test]
 fn dependency_tool_preparation_keeps_both_fresh_measured_checks() {
     let lint = job(CI, "deps-lint");
-    assert!(lint.contains("needs: release-metadata"));
+    assert!(lint.contains("needs: [release-metadata, spec-fingerprints]"));
     assert!(lint.contains("if: needs.release-metadata.outputs.release_only != 'true'"));
     assert!(!lint.contains("cargo install"));
     assert!(!lint.contains("command -v cargo-"));
@@ -523,7 +523,14 @@ fn finite_inventory_exactly_covers_pr_jobs_and_explicitly_excludes_other_jobs() 
     let excluded: BTreeMap<&str, &[&str]> = BTreeMap::from([
         (
             "ci.yml",
-            &["propodus-live", "test-master", "release-build"][..],
+            &[
+                "propodus-live",
+                "test-master",
+                "release-build",
+                // Pure checkout verification via ./.github/actions/spec-fingerprints;
+                // no measured source-CI recipe, so it stays outside the finite inventory (#1134).
+                "spec-fingerprints",
+            ][..],
         ),
         ("docs.yml", &["deploy"][..]),
         ("constitution-sync.yml", &[][..]),
@@ -703,7 +710,7 @@ fn grouped_runtime_checks_keep_each_recipe_receipt_and_applicability() {
         );
     }
     let body = job(CI, "test-rpc-suite");
-    assert!(body.contains("needs: release-metadata"));
+    assert!(body.contains("needs: [release-metadata, spec-fingerprints]"));
     assert!(body.contains("needs.release-metadata.outputs.release_only != 'true'"));
     assert_eq!(body.matches("uses: actions/checkout@v4").count(), 1);
     assert_eq!(

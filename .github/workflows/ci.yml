@@ -96,7 +96,7 @@ jobs:
           compression-level: 0
   commit-lint:
     name: Commit Lint
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     steps:
@@ -127,7 +127,7 @@ jobs:
   governance-artifacts:
     name: Governance Checkpoints (every authored commit)
     runs-on: ubuntu-latest
-    needs: [release-metadata, setup]
+    needs: [release-metadata, setup, spec-fingerprints]
     if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
@@ -161,7 +161,7 @@ jobs:
           compression-level: 0
   material-specs:
     name: Material Living Specs (beyond fingerprints)
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     steps:
@@ -189,11 +189,23 @@ jobs:
           if-no-files-found: ignore
           retention-days: 1
           compression-level: 0
+  spec-fingerprints:
+    name: Spec Fingerprint Files (regenerated, #1134)
+    needs: release-metadata
+    runs-on: ubuntu-latest
+    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require regenerated spec fingerprint files in the PR
+        uses: ./.github/actions/spec-fingerprints
   propodus-live:
     name: Propodus Live Contract Proof
     runs-on: ubuntu-latest
     environment: propodus-live
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     if: github.event_name == 'workflow_dispatch' && needs.release-metadata.outputs.event == 'workflow_dispatch' && needs.release-metadata.outputs.pre_pr == 'false' && vars.DECAPOD_PROPODUS_LIVE == 'true'
     env:
       DECAPOD_PROPODUS_LIVE: "1"
@@ -231,7 +243,7 @@ jobs:
 
   detect-migration-script-changes:
     name: Detect Migration Script Changes
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     outputs:
@@ -265,7 +277,7 @@ jobs:
           compression-level: 0
   supabase-consumer:
     name: Supabase consumer (offline fixtures)
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -304,7 +316,7 @@ jobs:
           compression-level: 0
   workspace-lifecycle-docker:
     name: Workspace lifecycle (actual Docker)
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -346,7 +358,7 @@ jobs:
           compression-level: 0
   musl-publication:
     name: Musl build and atomic publication (${{ matrix.target }}, ${{ matrix.execution }})
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -416,7 +428,7 @@ jobs:
           compression-level: 0
   fmt:
     name: Lint (fmt)
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -452,7 +464,7 @@ jobs:
           compression-level: 0
   clippy:
     name: Lint (clippy)
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -493,7 +505,7 @@ jobs:
           compression-level: 0
   deps-lint:
     name: Lint (dependencies)
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -593,7 +605,7 @@ jobs:
   health:
     name: Decapod Validate
     runs-on: ubuntu-latest
-    needs: [setup, release-metadata]
+    needs: [setup, release-metadata, spec-fingerprints]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -630,7 +642,7 @@ jobs:
           compression-level: 0
   state-commit-golden-vectors:
     name: Golden Vectors (${{ matrix.os }})
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ${{ matrix.os }}
     env:
@@ -671,7 +683,7 @@ jobs:
           compression-level: 0
   setup:
     name: Setup & Build Shared Binary
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -737,7 +749,7 @@ jobs:
           compression-level: 0
   test:
     name: Tests (${{ matrix.target }})
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     strategy:
@@ -796,7 +808,7 @@ jobs:
           compression-level: 0
   integration-prepare:
     name: Prepare Integration Tests
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     outputs:
@@ -889,7 +901,7 @@ jobs:
           compression-level: 0
   test-integration:
     name: Tests (integration ${{ matrix.shard }})
-    needs: [release-metadata, integration-prepare]
+    needs: [release-metadata, integration-prepare, spec-fingerprints]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true' && needs.integration-prepare.outputs.count != '0'
     strategy:
@@ -972,7 +984,7 @@ jobs:
           compression-level: 0
   integration-status:
     name: Tests (integration)
-    needs: [release-metadata, integration-prepare, test-integration]
+    needs: [release-metadata, integration-prepare, test-integration, spec-fingerprints]
     runs-on: ubuntu-latest
     if: always() && (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.result == 'success' && needs.release-metadata.outputs.release_only != 'true'
     steps:
@@ -1080,7 +1092,7 @@ jobs:
           compression-level: 0
   test-master:
     name: Tests (Full)
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.event == 'push' && github.ref == 'refs/heads/master') && needs.release-metadata.outputs.release_only != 'true'
     steps:
@@ -1114,7 +1126,7 @@ jobs:
   # Runtime checks execute sequentially, sharing compilation without test contention.
   test-rpc-suite:
     name: Tests (RPC Suite)
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -1167,7 +1179,7 @@ jobs:
           compression-level: 0
   contracts:
     name: Contract Conformance
-    needs: release-metadata
+    needs: [release-metadata, spec-fingerprints]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -1214,7 +1226,7 @@ jobs:
   migration-script-tests:
     name: Migration Script Tests
     runs-on: ubuntu-latest
-    needs: [release-metadata, detect-migration-script-changes]
+    needs: [release-metadata, detect-migration-script-changes, spec-fingerprints]
     if: ((needs.release-metadata.outputs.pr_like == 'true') && needs.detect-migration-script-changes.outputs.changed == 'true') && needs.release-metadata.outputs.release_only != 'true'
     steps:
       - uses: actions/checkout@v4
@@ -1270,7 +1282,7 @@ jobs:
       needs.release-metadata.outputs.pre_pr == 'false' &&
       needs.release-metadata.result == 'success' && needs.health.result == 'success' &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    needs: [release-metadata, fmt, clippy, deps-lint, test, integration-prepare, test-integration, integration-status, test-master, test-rpc-suite, workspace-lifecycle-docker, contracts, health, musl-publication]
+    needs: [release-metadata, fmt, clippy, deps-lint, test, integration-prepare, test-integration, integration-status, test-master, test-rpc-suite, workspace-lifecycle-docker, contracts, health, musl-publication, spec-fingerprints]
     steps:
       - uses: actions/checkout@v4
         with:

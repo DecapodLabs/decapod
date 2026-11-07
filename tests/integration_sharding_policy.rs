@@ -350,7 +350,7 @@ fn static_workers_preserve_selection_shared_build_and_five_minute_test_budget() 
     assert!(
         prepare.contains("path: target/integration-bootstrap-artifacts/integration-bootstrap.tar")
     );
-    assert!(worker.contains("needs: [release-metadata, integration-prepare]"));
+    assert!(worker.contains("needs: [release-metadata, integration-prepare, spec-fingerprints]"));
     assert!(worker.contains("needs.integration-prepare.outputs.count != '0'"));
     assert!(worker.contains("needs.release-metadata.outputs.release_only != 'true'"));
     let selection =
