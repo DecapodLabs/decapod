@@ -1665,6 +1665,14 @@
       "proof_refs": [
         "finalize_specs"
       ]
+    },
+    {
+      "id": "ckpt-executor-fix-520",
+      "summary": "Restore executor-pinned definition files assets/tools/source_ci/health.sh and standalone-validation.sh to base bytes (full validate rejects candidate changes to definition_files at the accepted executor closure); manifest-path handling lives in the unpinned src/ code which preserves generated_at; update reviewed_sources_digest to 52b9f892..., re-review specs, refresh manifest",
+      "input_digest": "sha256:bf434f3d5ba34b84f99466f125b12d096939df08db9c36af56923cd167865273",
+      "proof_refs": [
+        "executor_contract_restore"
+      ]
     }
   ],
   "intents": {
@@ -1728,7 +1736,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794076720Z"
+      "updated_at": "1794078490Z"
     },
     "trajectory": {
       "active_boundaries": [],
