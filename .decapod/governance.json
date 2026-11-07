@@ -689,6 +689,11 @@
       "id": "cp-1557-trajectory",
       "summary": "Bind the governed-transition trajectory to the plan",
       "input_digest": "sha256:207400640311f1ed64e26a800b71b35ea8644cb623486009b87bdc75f020c758"
+    },
+    {
+      "id": "cp-1557-security-review",
+      "summary": "Record the unchanged security spec review",
+      "input_digest": "sha256:f82bd24dc2df59f2fe754ac207dc5f3fb420424dded4c50b84476b9aec3c5571"
     }
   ],
   "intents": {
@@ -741,9 +746,9 @@
           "spec_material_hash": "590f81aa227ed6ad6a39adf9a111f36ed8413b3a127b32cde1fd208160871b22"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the current contract against the governed-transition judgment, canonical state snapshot, and proof reconstruction. The prose matches the implementation.",
+          "reason": "Security contract prose is unchanged. The attestation refresh only records the new repository fingerprint.",
           "reviewed_code_fingerprint": "f877bcaa85918acff695d8c3cde0da1fdd755f4b25efceb03edf6d074513d272",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
@@ -756,7 +761,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794093843Z"
+      "updated_at": "1794094004Z"
     },
     "trajectory": {
       "active_boundaries": [
