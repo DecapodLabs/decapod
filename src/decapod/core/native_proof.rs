@@ -677,9 +677,12 @@ fn native_executable(program: &Path) -> io::Result<()> {
     ]
     .contains(&magic)
     {
-        return Err(invalid(
-            "native macOS tool must be Mach-O; scripts are unsupported",
-        ));
+        return Err(invalid(format!(
+            "{} is {}; native macOS validation requires {}",
+            program.display(),
+            describe_executable(program)?,
+            native_expected_tool()?
+        )));
     }
     Ok(())
 }
