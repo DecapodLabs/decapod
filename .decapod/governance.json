@@ -968,6 +968,11 @@
       "id": "fix1528-group-broker-contention-bound",
       "summary": "Raise the group_broker contention-client bound from 120s to 300s: under bazel test //:all the target runs parallel to //:interop_conformance and observed client latencies reach ~120s, so broker_no_sqlite_busy_surfaced_under_concurrent_mutators failed spuriously at the old bound (run 42328620909); the no-SQLITE_BUSY assertion is unchanged and the bound stays below the long target timeout",
       "input_digest": "sha256:0af21ebf982cd3dcd5c414a15285a23c4a1cb53eae4ecc01cd6f8cb476b34965"
+    },
+    {
+      "id": "fix1528-spec-reviews-gb-bound",
+      "summary": "Re-record ARCHITECTURE/INTERFACES/SECURITY spec reviews against the repo signal fingerprint of the head that includes the group_broker contention-bound fix; clears STALE_SPEC_REVIEW",
+      "input_digest": "sha256:61712366ac13f7116753457a5b95e2ec1c8200b7d7f9b5017e60b8c497b04db9"
     }
   ],
   "intents": {
@@ -1008,22 +1013,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed after specs.refresh; validation rules system implementation + attestation fingerprint refreshed",
-          "reviewed_code_fingerprint": "ec296b32da279319999013b14c4cb72d921ded4ea992841b841f813da253004a",
+          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; ARCHITECTURE.md prose unchanged by that fix, review re-bound to current code bytes",
+          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
           "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed after specs.refresh; validation rules system + dagger removal interfaces + attestation fingerprint refreshed",
-          "reviewed_code_fingerprint": "ec296b32da279319999013b14c4cb72d921ded4ea992841b841f813da253004a",
+          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; INTERFACES.md prose unchanged by that fix, review re-bound to current code bytes",
+          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
           "spec_material_hash": "36807d075cdc0b8f6bb5ddcdd9778f2211589056759615d4b50277ebd3f64b15"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed after specs.refresh; no material prose change, attestation fingerprint refreshed only",
-          "reviewed_code_fingerprint": "ec296b32da279319999013b14c4cb72d921ded4ea992841b841f813da253004a",
+          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; SECURITY.md prose unchanged by that fix, review re-bound to current code bytes",
+          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -1035,7 +1040,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794015968Z"
+      "updated_at": "1794020082Z"
     },
     "trajectory": {
       "active_boundaries": [
