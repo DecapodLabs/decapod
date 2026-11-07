@@ -1269,6 +1269,14 @@
       "proof_refs": [
         "task_journal_tests"
       ]
+    },
+    {
+      "id": "ckpt-1534-v0129-40473",
+      "summary": "re-stamp release-bound surfaces to v0.129.0 and repair vega-native lock pin after rebind onto v0.129.0 master (#1534)",
+      "input_digest": "sha256:53807fc750f704759f18ca326e1950cc62c028edce835c38656d6644ec703265",
+      "proof_refs": [
+        "task_journal_tests"
+      ]
     }
   ],
   "intents": {
