@@ -1397,6 +1397,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbg3-15-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: rebind #1536 artifacts onto v0.129.0 master - regenerate surfaces, reconcile digest, record spec reviews and refresh projections (#1536))",
+      "input_digest": "sha256:06491e2ffeb015b029cecb44353f8f1fca3601a5cc98848e928f395dcdc0261f",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
