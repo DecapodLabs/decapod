@@ -888,6 +888,11 @@
       "id": "fix1528-hist-19",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:a6ac4ba84a7c46380a4671185d61dfd04190643e4b1a98a991280cdc6f2e5eb4"
+    },
+    {
+      "id": "fix1528-hist-20",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:c32e70ab5a46dd337f437aae1451d7a58c8f3384f9b1e41d91d546c32472d92d"
     }
   ],
   "intents": {
@@ -935,7 +940,7 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed on head a680e669 after the bazel srcs fix and native completion-bundle restore; INTERFACES.md prose unchanged in this pass (validation rules / laya readiness sections already reviewed); attestation fingerprint refreshed via specs.refresh.",
+          "reason": "Re-reviewed after specs.refresh; validation rules system + dagger removal interfaces + attestation fingerprint refreshed",
           "reviewed_code_fingerprint": "11b256933d55071bb2f7b346f38fe62d56c0d8f2ba80c75282a3660f6732b2a6",
           "spec_material_hash": "36807d075cdc0b8f6bb5ddcdd9778f2211589056759615d4b50277ebd3f64b15"
         },
@@ -955,7 +960,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794009372Z"
+      "updated_at": "1794011075Z"
     },
     "trajectory": {
       "active_boundaries": [
