@@ -1809,6 +1809,14 @@
       "proof_refs": [
         "fmt_fix"
       ]
+    },
+    {
+      "id": "ckpt-deadcode-1794094186",
+      "summary": "Add #[expect(dead_code)] to init_readme_badge_upgrades_on_version_change test to silence clippy",
+      "input_digest": "sha256:70a9a787713bc468605517416e3e237bd2dbd08fb0eb5a0804f9285dee682a80",
+      "proof_refs": [
+        "deadcode_fix"
+      ]
     }
   ],
   "intents": {

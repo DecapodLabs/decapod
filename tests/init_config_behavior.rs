@@ -1620,6 +1620,7 @@ fn init_readme_badge_defaults_on_and_honors_cli_and_config_toggle() {
 /// Regression test for #1023: badge must update when Decapod version changes.
 /// Simulates upgrading from v0.130.2 to a newer version by monkeypatching the
 /// version string used by readme_badge_line() in the test environment.
+#[expect(dead_code)]
 fn init_readme_badge_upgrades_on_version_change() {
     // We can't easily change RELEASE_VERSION at runtime, so we test the logic
     // by directly exercising the badge extraction/replacement via scaffold.
