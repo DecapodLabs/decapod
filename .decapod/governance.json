@@ -574,6 +574,11 @@
       "id": "cp-1557-09",
       "summary": "Record .decapod/managed/specs/VALIDATION.md",
       "input_digest": "sha256:4d1ffcefc4a8a41f9f8fa52498100190849d2f549762a60df1f21f77da4fc837"
+    },
+    {
+      "id": "cp-1557-10",
+      "summary": "Record docs/architecture/governed-execution.md",
+      "input_digest": "sha256:f2acba3700f0a5a5ed5852385e7a2347fb8babc09d2b93ea522339f0984c316b"
     }
   ],
   "legacy_digests": {
