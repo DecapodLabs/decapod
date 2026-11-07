@@ -1537,6 +1537,22 @@
       "proof_refs": [
         "rebase_rebind_0130_2"
       ]
+    },
+    {
+      "id": "ckpt-restamp-0130-2-23270",
+      "summary": "Rebase onto v0.130.2 master (#1544 merged); re-stamp entrypoints/Dockerfile/manifest/specs to 0.130.2 via branch-built binary; material spec prose for manifest move to .decapod/managed/.manifest.json (#1079); reviewed_sources_digest updated",
+      "input_digest": "sha256:5346e7e8e93287ef611b393fb317f14bcbce31c14a7184ff38c812b16f5a754d",
+      "proof_refs": [
+        "project_check_refresh_specs"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-dde5b85-10222",
+      "summary": "Rebind checkpoint to the post-rebase material tree of dde5b85 (rebase onto v0.130.2 master e5760258 changed trees; original checkpoint digests were bound pre-rebase)",
+      "input_digest": "sha256:43a6fdea19a5fbfa40e1b52190d096a8381bd5f8fa26026fd9c5b8b90fa9370d",
+      "proof_refs": [
+        "rebase_rebind_0130_2"
+      ]
     }
   ],
   "intents": {

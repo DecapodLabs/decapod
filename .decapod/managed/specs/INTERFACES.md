@@ -768,7 +768,11 @@ rationale; that record does not authenticate the human or prove semantic truth.
 Agents directly author semantic prose in `.decapod/managed/specs/*.md` inside
 their isolated workspace. Generated attestations, capability blocks, overlays,
 fingerprints, and manifests remain CLI-owned, as does all other machine-owned
-control-plane state. Supported refresh is `rpc --op specs.refresh` or
+control-plane state. The generated specs manifest lives at
+`.decapod/managed/.manifest.json` (#1079), outside the living-spec directory;
+the legacy `.decapod/managed/specs/.manifest.json` location is read-only
+compatibility for existing repositories and is removed on the next refresh.
+Supported refresh is `rpc --op specs.refresh` or
 `validate --refresh-specs`; there is no top-level `specs.refresh` command.
 Refresh preserves authored content and refuses `SPEC_REFRESH_AUTHORED_CONTENT_LOSS`
 before writing any specification or manifest. A material authored change remains
@@ -1125,7 +1129,7 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3`
+- Repository signal fingerprint: `5cb3869e52af87b28ddff0565e2dab840dbb62cc768daea2feaec833d6506814`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
