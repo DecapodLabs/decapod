@@ -1475,6 +1475,11 @@
       "id": "fix1544-rb-9",
       "summary": "Rebase pass 9 of the #1544 fix onto v0.130.1 master (e922bfb6351c009cb372c5d76df86ea8842a7435): rebind governance identity and bind a fresh checkpoint to this commit's exact material tree",
       "input_digest": "sha256:c26f3ebe4810dfaacf3b048fe8e38e5f109537fdc61b949ab78d617ace7fce30"
+    },
+    {
+      "id": "fix1544-regen-v0130-1",
+      "summary": "Regenerate release-bound entrypoints (AGENTS/CLAUDE/GEMINI/CODEX.md), managed Dockerfile pin and spec attestation/manifest projections for the v0.130.1 evaluator after rebasing onto v0.130.1 master; fixes entrypoint_correctness and living-spec drift in CI",
+      "input_digest": "sha256:6b8b3bf3f741b0228b321f77081367fbd9f64d0cd612f6a16d684ab7a0155c8e"
     }
   ],
   "intents": {
