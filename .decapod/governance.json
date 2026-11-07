@@ -659,6 +659,11 @@
       "id": "cp-1557-26",
       "summary": "Record AGENTS.md",
       "input_digest": "sha256:2ac90cbc2c76cc001ff152927aacdeb9a70cd1cb06b289bd709b61d9ddce9073"
+    },
+    {
+      "id": "cp-1557-27",
+      "summary": "Record CLAUDE.md",
+      "input_digest": "sha256:197b5d145a8ff19f5742255991508b06ac4c39f9f050c25859b6bfe0d29f75db"
     }
   ],
   "legacy_digests": {
