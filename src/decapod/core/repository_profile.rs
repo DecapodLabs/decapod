@@ -25,6 +25,9 @@ fn is_false(value: &bool) -> bool {
 #[serde(deny_unknown_fields)]
 pub struct SourceCoverage {
     pub source: String,
+    /// Mapped required local commands. May be omitted entirely on a reviewed
+    /// `ci_only` row (#1531), which declares no local proof instead.
+    #[serde(default)]
     pub commands: Vec<String>,
     /// Reviewed declaration that this workflow has no local proof mapping
     /// (#1531), e.g. a Nix evaluation or Dagger call. Requires a nonempty

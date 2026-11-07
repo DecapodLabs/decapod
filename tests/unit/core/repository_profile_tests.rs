@@ -241,3 +241,55 @@ fn ci_only_row_serializes_with_new_fields() {
     assert_eq!(value["ci_only"], true);
     assert_eq!(value["reason"], "nix eval has no local profile");
 }
+
+#[test]
+fn ci_only_row_may_omit_commands_in_toml_config() {
+    // The #1531 reproducer declares the row without a `commands` key:
+    // `source_coverage = [ { source = "...", ci_only = true, reason = "..." } ]`.
+    #[derive(serde::Deserialize)]
+    struct CoverageDoc {
+        source_coverage: Vec<SourceCoverage>,
+    }
+    let doc: CoverageDoc = toml::from_str(
+        r#"source_coverage = [ { source = ".github/workflows/ci-only.yml", ci_only = true, reason = "runs nix eval, which has no local proof profile" } ]"#,
+    )
+    .unwrap();
+    let mut rows = doc.source_coverage;
+    assert_eq!(rows.len(), 1);
+    assert!(rows[0].commands.is_empty());
+    assert!(rows[0].ci_only);
+    assert_eq!(
+        rows[0].reason.as_deref(),
+        Some("runs nix eval, which has no local proof profile")
+    );
+
+    // The omitted-commands row validates like an explicit empty list.
+    let sources = inventory();
+    let coverage = vec![
+        SourceCoverage {
+            source: LINT_WORKFLOW.into(),
+            commands: vec!["lint".into()],
+            ci_only: false,
+            reason: None,
+        },
+        rows.pop().unwrap(),
+    ];
+    let contract = contract(coverage);
+    validate_contract(&declaration(&sources), &sources, &commands(), &contract).unwrap();
+}
+
+#[test]
+fn reviewed_commands_digest_pins_the_ci_only_reason() {
+    let sources = inventory();
+    let mut contract = contract(mapped_coverage());
+    validate_contract(&declaration(&sources), &sources, &commands(), &contract).unwrap();
+
+    // Editing the reviewed reason without re-reviewing the digest fails closed.
+    contract.source_coverage[1].reason = Some("different reason".into());
+    let error =
+        validate_contract(&declaration(&sources), &sources, &commands(), &contract).unwrap_err();
+    assert!(
+        error.to_string().contains("STALE_COMMAND_CONTRACT"),
+        "unexpected error: {error}"
+    );
+}

@@ -1109,6 +1109,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbd2-3-14021",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: allow ci_only source_coverage rows to omit commands in config.toml (#1531))",
+      "input_digest": "sha256:9e447a3e02877460ace5fd9f826fcefb6d128d91bcde653fdd0f901012d189cf",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
