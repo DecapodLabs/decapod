@@ -569,6 +569,11 @@
       "id": "cp-1557-08",
       "summary": "Record .decapod/managed/specs/SEMANTICS.md",
       "input_digest": "sha256:b30f0a01069a6a6a4c86748ade672460332634e806866f9261352c51448c2ee9"
+    },
+    {
+      "id": "cp-1557-09",
+      "summary": "Record .decapod/managed/specs/VALIDATION.md",
+      "input_digest": "sha256:4d1ffcefc4a8a41f9f8fa52498100190849d2f549762a60df1f21f77da4fc837"
     }
   ],
   "legacy_digests": {
