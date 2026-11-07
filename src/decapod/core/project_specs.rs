@@ -846,7 +846,10 @@ pub fn verify_specs_manifest(
     }
 
     let template_version = existing.template_version.clone();
-    let canonical_capabilities = crate::core::capabilities::CapabilityRegistry::canonicalize_capabilities(declared_capabilities);
+    let canonical_capabilities =
+        crate::core::capabilities::CapabilityRegistry::canonicalize_capabilities(
+            declared_capabilities,
+        );
     let repo_signal_fingerprint = repo_signal_fingerprint(project_root)?;
     let config_input_hash = config_input_hash(project_root)?;
     let spec_input_hash = spec_input_hash(project_root)?;
@@ -855,19 +858,31 @@ pub fn verify_specs_manifest(
     // Check each field
     let mut mismatches = Vec::new();
     if existing.schema_version != LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA {
-        mismatches.push(format!("schema_version: expected {}, got {}", LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, existing.schema_version));
+        mismatches.push(format!(
+            "schema_version: expected {}, got {}",
+            LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA, existing.schema_version
+        ));
     }
     if existing.template_version != template_version {
-        mismatches.push(format!("template_version: expected {}, got {}", template_version, existing.template_version));
+        mismatches.push(format!(
+            "template_version: expected {}, got {}",
+            template_version, existing.template_version
+        ));
     }
     if existing.repo_signal_fingerprint != repo_signal_fingerprint {
-        mismatches.push(format!("repo_signal_fingerprint: expected {}, got {}", repo_signal_fingerprint, existing.repo_signal_fingerprint));
+        mismatches.push(format!(
+            "repo_signal_fingerprint: expected {}, got {}",
+            repo_signal_fingerprint, existing.repo_signal_fingerprint
+        ));
     }
     if existing.declared_capabilities != canonical_capabilities {
         mismatches.push("declared_capabilities mismatch".to_string());
     }
     if existing.capability_definition_version != CAPABILITY_DEFINITION_VERSION {
-        mismatches.push(format!("capability_definition_version: expected {}, got {}", CAPABILITY_DEFINITION_VERSION, existing.capability_definition_version));
+        mismatches.push(format!(
+            "capability_definition_version: expected {}, got {}",
+            CAPABILITY_DEFINITION_VERSION, existing.capability_definition_version
+        ));
     }
     if existing.config_input_hash != config_input_hash {
         mismatches.push("config_input_hash mismatch (config.toml changed?)".to_string());
@@ -876,10 +891,16 @@ pub fn verify_specs_manifest(
         mismatches.push("spec_input_hash mismatch (spec files changed?)".to_string());
     }
     if existing.decapod_release != crate::core::entrypoint_integrity::RELEASE_VERSION {
-        mismatches.push(format!("decapod_release: expected {}, got {}", crate::core::entrypoint_integrity::RELEASE_VERSION, existing.decapod_release));
+        mismatches.push(format!(
+            "decapod_release: expected {}, got {}",
+            crate::core::entrypoint_integrity::RELEASE_VERSION,
+            existing.decapod_release
+        ));
     }
     if existing.entrypoints != entrypoints {
-        mismatches.push("entrypoints mismatch (entrypoint files changed or fingerprints stale)".to_string());
+        mismatches.push(
+            "entrypoints mismatch (entrypoint files changed or fingerprints stale)".to_string(),
+        );
     }
     if existing.files != manifest_entries {
         mismatches.push("files[] mismatch (spec content_hash or template_hash stale)".to_string());

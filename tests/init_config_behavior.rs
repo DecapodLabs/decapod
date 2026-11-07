@@ -1634,7 +1634,8 @@ fn init_readme_badge_upgrades_on_version_change() {
     fs::write(
         tmp.path().join(".decapod/config.toml"),
         "[init]\nreadme_badge = true\n",
-    ).unwrap();
+    )
+    .unwrap();
 
     // Run init --force; it should replace the old version badge with the current one
     let out = run_decapod(tmp.path(), &["init", "with", "--force"]);
@@ -1645,7 +1646,10 @@ fn init_readme_badge_upgrades_on_version_change() {
     );
 
     let readme = fs::read_to_string(tmp.path().join("README.md")).expect("README");
-    let current = format!("Decapod-v{}", decapod::core::entrypoint_integrity::RELEASE_VERSION);
+    let current = format!(
+        "Decapod-v{}",
+        decapod::core::entrypoint_integrity::RELEASE_VERSION
+    );
     assert!(
         readme.contains(&current),
         "badge should be updated to current version {current}: {readme}"

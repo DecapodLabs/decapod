@@ -4,7 +4,6 @@
 //! All constitution files are baked into the binary via `assets/constitution.json`.
 
 use crate::core::error;
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, HashSet};
@@ -886,9 +885,14 @@ pub fn extract_readme_badge_version(content: &str) -> Option<String> {
     use regex::Regex;
     static BADGE_RE: std::sync::OnceLock<Regex> = std::sync::OnceLock::new();
     let re = BADGE_RE.get_or_init(|| {
-        Regex::new(r"!\[🦀 Decapod\]\(https://img\.shields\.io/badge/🦀%20Decapod-v([^-\]]+)-dc2626\)").unwrap()
+        Regex::new(
+            r"!\[🦀 Decapod\]\(https://img\.shields\.io/badge/🦀%20Decapod-v([^-\]]+)-dc2626\)",
+        )
+        .unwrap()
     });
-    re.captures(content).and_then(|c| c.get(1)).map(|m| m.as_str().to_string())
+    re.captures(content)
+        .and_then(|c| c.get(1))
+        .map(|m| m.as_str().to_string())
 }
 
 /// Return the current badge line and the existing version if a canonical badge is present.

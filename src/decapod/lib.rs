@@ -11527,7 +11527,9 @@ mod rpc_handlers {
         match result {
             Ok(()) => {
                 let manifest = crate::core::project_specs::read_specs_manifest(ctx.project_root)?
-                    .ok_or_else(|| error::DecapodError::ValidationError("specs manifest not found".to_string()))?;
+                    .ok_or_else(|| {
+                    error::DecapodError::ValidationError("specs manifest not found".to_string())
+                })?;
                 Ok(success_response(
                     ctx.request.id.clone(),
                     ctx.request.op.clone(),
@@ -11535,7 +11537,8 @@ mod rpc_handlers {
                     Some(
                         serde_json::to_value(SpecsVerifyResult {
                             verified: true,
-                            manifest_path: crate::core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST.to_string(),
+                            manifest_path: crate::core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST
+                                .to_string(),
                             repo_signal_fingerprint: manifest.repo_signal_fingerprint,
                         })
                         .unwrap(),
@@ -11546,17 +11549,15 @@ mod rpc_handlers {
                     ctx.mandates.clone(),
                 ))
             }
-            Err(e) => {
-                Ok(error_response(
-                    ctx.request.id.clone(),
-                    ctx.request.op.clone(),
-                    ctx.request.params.clone(),
-                    "specs_stale".to_string(),
-                    e.to_string(),
-                    None,
-                    ctx.mandates.clone(),
-                ))
-            }
+            Err(e) => Ok(error_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                "specs_stale".to_string(),
+                e.to_string(),
+                None,
+                ctx.mandates.clone(),
+            )),
         }
     }
 

@@ -1780,9 +1780,10 @@ fn ensure_readme_badge(
     let badge_line = format!("\n{badge}\n");
     let mut lines: Vec<&str> = content.split_inclusive('\n').collect();
     // If an existing canonical badge is present (any version), replace it in-place.
-    if let Some(pos) = lines.iter().position(|line| {
-        line.contains("img.shields.io/badge/") && line.contains("Decapod-v")
-    }) {
+    if let Some(pos) = lines
+        .iter()
+        .position(|line| line.contains("img.shields.io/badge/") && line.contains("Decapod-v"))
+    {
         lines[pos] = badge_line.as_str();
     } else {
         // Insert below the first title: a Markdown `# ` heading or an HTML `<h1`
