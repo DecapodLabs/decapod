@@ -654,6 +654,11 @@
       "id": "cp-1557-25",
       "summary": "Record tests/unit/core/work_claim_tests.rs",
       "input_digest": "sha256:6c21fca42cace217ba6c3848c9e5fc42fe797401d9095f54497cad5d17111988"
+    },
+    {
+      "id": "cp-1557-26",
+      "summary": "Record AGENTS.md",
+      "input_digest": "sha256:2ac90cbc2c76cc001ff152927aacdeb9a70cd1cb06b289bd709b61d9ddce9073"
     }
   ],
   "legacy_digests": {
