@@ -279,6 +279,63 @@ fn ci_only_row_may_omit_commands_in_toml_config() {
 }
 
 #[test]
+fn all_workflows_ci_only_keeps_local_commands_executing() {
+    // #1531 follow-up: a repository whose discovered workflows are all
+    // legitimately CI-only still has a real local build/test contract. The
+    // mapped-commands invariant must not reject it, the local commands must
+    // still produce obligations (they execute normally), and every workflow
+    // must surface as a NonApplicable limitation stage.
+    let sources = inventory();
+    let coverage = vec![
+        SourceCoverage {
+            source: LINT_WORKFLOW.into(),
+            commands: vec![],
+            ci_only: true,
+            reason: Some("lint workflow only runs in CI".into()),
+        },
+        SourceCoverage {
+            source: CI_ONLY_WORKFLOW.into(),
+            commands: vec![],
+            ci_only: true,
+            reason: Some("runs nix eval, which has no local proof profile".into()),
+        },
+    ];
+    let contract = contract(coverage);
+    validate_contract(&declaration(&sources), &sources, &commands(), &contract).unwrap();
+
+    let catalog = required_catalog(
+        &declaration(&sources),
+        &sources,
+        &facts(),
+        &commands(),
+        &contract,
+    )
+    .unwrap();
+    // Required local commands still execute: one obligation per command.
+    assert_eq!(catalog.obligations().len(), 1);
+    assert_eq!(catalog.obligations()[0].key.job, "lint");
+    // Every discovered workflow is an explicit limitation, never a check.
+    for workflow in [LINT_WORKFLOW, CI_ONLY_WORKFLOW] {
+        let stage = catalog
+            .stage_dispositions()
+            .iter()
+            .find(|row| row.stage == workflow)
+            .expect("ci-only workflow must appear as a stage disposition");
+        assert_eq!(stage.disposition, StageDispositionKind::NonApplicable);
+        assert!(stage.key.is_none());
+    }
+    // Only real local command executions are Real stages; no ci_only workflow
+    // is ever a Real (or any) check.
+    let real: Vec<_> = catalog
+        .stage_dispositions()
+        .iter()
+        .filter(|row| row.disposition == StageDispositionKind::Real)
+        .map(|row| row.stage.as_str())
+        .collect();
+    assert_eq!(real, vec!["lint"]);
+}
+
+#[test]
 fn reviewed_commands_digest_pins_the_ci_only_reason() {
     let sources = inventory();
     let mut contract = contract(mapped_coverage());

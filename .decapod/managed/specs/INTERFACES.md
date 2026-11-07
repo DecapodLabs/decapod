@@ -1115,7 +1115,7 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9ecae76a5585be3b92a94de4f2b8e3cfc51d6cc4a68a7330531e68da44021c9f`
+- Repository signal fingerprint: `84de4b048c4522b3b36f189d11be6a7fd5053d5fe349693d6bb0f85c616d9702`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1161,7 +1161,10 @@ may be omitted or empty). Such a row pins the limitation through `reviewed_comma
 requires a nonempty `reason` and no local commands (a `reason` without `ci_only`, or
 `ci_only` with mapped commands, fails closed as a false coverage claim), and is reported in
 `validation-results.v3` as a `NonApplicable` limitation stage for that workflow —
-never counted as a passed or skipped check. Rows without the new fields keep their
+never counted as a passed or skipped check. When every discovered workflow is
+`ci_only`, no row maps commands by design: the required local commands still execute
+normally as the repository's local build/test contract and the usual
+every-command-mapped invariant does not apply. Rows without the new fields keep their
 pre-#1531 serialized identity and digests.
 
 `init` and `init with` share option-provenance-aware preservation: omitted defaults

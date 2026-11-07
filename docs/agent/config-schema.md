@@ -86,9 +86,19 @@ nonempty set of unique `proof.commands` with `required = true`, and an explicit
 `[proof.repository_contract]`:
 
 - `reviewed_commands_digest`: review pin over commands, coverage and execution declarations
-- `source_coverage`: one `{ source, commands }` row for every discovered workflow,
-  with a nonempty list of configured required command names; no duplicate,
-  unknown, omitted, or excluded workflow mappings
+- `source_coverage`: one row for every discovered workflow; no duplicate,
+  unknown, omitted, or excluded workflow mappings. A row either maps the
+  workflow to real local proof (`{ source = "...", commands = ["..."] }`,
+  nonempty list of configured required command names) or declares a reviewed
+  CI-only limitation (`{ source = "...", ci_only = true, reason = "..." }`,
+  `commands` omitted or empty). A `ci_only` row requires a nonempty `reason`,
+  forbids mapped local commands (a `reason` without `ci_only`, or `ci_only`
+  with commands, fails closed as a false coverage claim), is pinned by
+  `reviewed_commands_digest`, and is reported in `validation-results.v3` as a
+  `NonApplicable` limitation stage for that workflow — never counted as a
+  passed or skipped check. When every discovered workflow is `ci_only`, the
+  required local commands still execute normally as the repository's local
+  build/test contract.
 - `executions`: a table keyed by each required command name, containing `program`
   (absolute canonical installed executable), `toolchain_files` (nonempty map of
   labels to absolute canonical tool/runtime files), `environment` (explicit map),
@@ -101,6 +111,15 @@ all inputs and the intended coverage before explicitly entering either digest.
 Neither initialization nor a matching digest executes proof or approves itself.
 A changed workflow, command, arguments, requiredness, tool path, environment or
 coverage mapping needs renewed review. Init reruns preserve both declarations.
+
+Reconciling `source_coverage` and the reviewed digests is a repository-maintainer
+review step on `.decapod/config.toml` (the live authority): edit the coverage
+declaration, inspect the freshly reported `command_contract_digest` from
+`rpc --op agent.init`, and enter the new reviewed digest yourself. There is no
+agent-writable mutation operation that updates coverage or digests; `init` and
+`agent.init` only report them as read-only review aids. This manual
+reconciliation path is an explicit, separate limitation of the profile (#1531),
+not a gap agents can close through any RPC op.
 
 `proof.commands[].command` names the declared executable (or uses its absolute
 path); `args` remain separate literal arguments. Runtime resolves no YAML, shell
@@ -126,7 +145,9 @@ still runs CI-local prerequisites, never recursively proves full publication.
 For Nix projects, installing this profile is not evidence that daemon-backed
 builds, remote builders or deployment ran. A supported local contract can use
 preinstalled pinned formatters/test tools directly; unavailable build/deployment
-proof remains a limitation to reconcile, not a successful or skipped check.
+proof remains a limitation to reconcile, not a successful or skipped check —
+declare it honestly with a `ci_only` coverage row instead of mapping the
+workflow to an unrelated local command.
 
 Repository proof uses a sealed, argument-aware authorization path minted only
 for the validated local contract and exact measured invocation. It does not add

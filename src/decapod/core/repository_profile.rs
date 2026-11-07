@@ -235,7 +235,10 @@ pub fn validate_contract(
     }
     // Repositories without hosted workflows still have their declared local
     // build/test contract. All commands execute regardless of source mapping.
-    if !expected.is_empty() && mapped != names {
+    // #1531: when every discovered workflow is a reviewed ci_only limitation,
+    // no row maps commands by design, so the local contract stands on its own
+    // and this invariant must not reject it.
+    if !expected.is_empty() && !mapped.is_empty() && mapped != names {
         return Err(invalid(
             "every required command must appear in the reviewed workflow coverage",
         ));

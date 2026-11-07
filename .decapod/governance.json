@@ -1117,6 +1117,14 @@
       "proof_refs": [
         "repository_profile_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbd2-4-14021",
+      "summary": "rebind checkpoint onto v0.128.0 master (fix: complete ci_only closure for #1531 - all-CI-only repos keep local proof, agent docs aligned (#1531))",
+      "input_digest": "sha256:934086c1b960e0f3728f4aa11385022ff25474bee671bfdd41592bd2e0e71910",
+      "proof_refs": [
+        "repository_profile_tests"
+      ]
     }
   ],
   "intents": {
