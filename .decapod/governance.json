@@ -790,6 +790,11 @@
       "input_digest": "sha256:c72d8a4e35f960b64e1284948cf0e30e5a7fd74b40ec20a6f84db4ab63db7549"
     },
     {
+      "id": "fix1528-release-bound-regen",
+      "summary": "Regenerate release-bound living-spec projections (.manifest.json + spec attestation blocks) with the head-built v0.127.1 evaluator in a clean worktree: the previously committed projections were generated with bazel-* symlinks present, which polluted the repo signal fingerprint (11b25693 instead of the clean-tree 914f7c1c) and left decapod_release at 0.127.0, causing release-bound drift in validate/health and STALE_SPEC_REVIEW in governance-artifacts.",
+      "input_digest": "sha256:44a0c1ba14b219b1ef1199659117d7f87a84be69be9282af715d6368303f16aa"
+    },
+    {
       "id": "validation-rules-impl",
       "summary": "Implement validation rules system with 7 built-in rules, registry, evaluators, OVERRIDE.md integration, and three-verdict system",
       "input_digest": "sha256:adbcf5ec97aaef4462018977f382c24784617098a53e983f991dbad630f953a6"
@@ -893,6 +898,11 @@
       "id": "fix1528-hist-20",
       "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
       "input_digest": "sha256:c32e70ab5a46dd337f437aae1451d7a58c8f3384f9b1e41d91d546c32472d92d"
+    },
+    {
+      "id": "fix1528-hist-21",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:44a0c1ba14b219b1ef1199659117d7f87a84be69be9282af715d6368303f16aa"
     }
   ],
   "intents": {
