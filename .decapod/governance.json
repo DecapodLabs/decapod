@@ -639,6 +639,11 @@
       "id": "cp-1557-22",
       "summary": "Record src/decapod/lib.rs",
       "input_digest": "sha256:baf64b93ed3a1b76744920b65a3658a5997d7fd32d1d9a55f2fb557f7f3efa92"
+    },
+    {
+      "id": "cp-1557-23",
+      "summary": "Record tests/created_branch_workflow_policy.rs",
+      "input_digest": "sha256:d2a51e15da673d17448115b64a4bbc93a9e204284457854b855ca9e7178ca47e"
     }
   ],
   "legacy_digests": {
