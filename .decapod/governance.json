@@ -2,7 +2,6 @@
   "schema_version": "1.0.0",
   "baseline": {
     "accepted_commit": "e922bfb6351c009cb372c5d76df86ea8842a7435",
-    "release": "v0.130.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -520,7 +519,7 @@
     }
   },
   "change": {
-    "id": "change_01M6TG3SGY21BGT92Y4YZWRNZ3",
+    "id": "change_01M6TJ6ZHRPG3YPEQS87WXMA5S",
     "base_commit": "e922bfb6351c009cb372c5d76df86ea8842a7435",
     "target_base": "origin/master"
   },
@@ -1490,6 +1489,22 @@
       "id": "fix1544-operations-sqlite-prose",
       "summary": "Restore the #1536 SQLite runtime prose in OPERATIONS.md that the v0.130.0-era seed had accidentally dropped when rebasing onto v0.130.1; only the refreshed attestation fingerprint differs from master",
       "input_digest": "sha256:a51ccb1fa2983f5be52d034291576bc67a5a27965d8f3d9923acefece38b9a85"
+    },
+    {
+      "id": "ckpt-seed-1m6tj-54116",
+      "summary": "seed workspace branch for todo feat_01m6tj6g0yq1tgg1 on v0.130.1 master e922bfb6: governance identity change_01M6TJ6ZHRPG3YPEQS87WXMA5S, trajectory/plan bound to task, seeded projections",
+      "input_digest": "sha256:58fc3842bfe2eb2165f41d2065ead6be16d8fcccb20975144ee4eb0b0d53a7ea",
+      "proof_refs": [
+        "workspace_ensure"
+      ]
+    },
+    {
+      "id": "ckpt-rebind-6273729-8036",
+      "summary": "Rebind checkpoint to the post-rebase material tree of 6273729 (rebase onto v0.130.2 master e5760258 changed trees; original checkpoint digests were bound pre-rebase)",
+      "input_digest": "sha256:cce23e76b9b89ec9c097a01785a105359693fcf284a575d2402276c36d7f54ee",
+      "proof_refs": [
+        "rebase_rebind_0130_2"
+      ]
     }
   ],
   "intents": {
