@@ -2,6 +2,8 @@
 
 <h1 align="center">Decapod</h1>
 
+[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v0.130.2-dc2626)](https://github.com/DecapodLabs/decapod)
+
 <p align="center">
   <strong>Metacognition for AI agents.</strong><br />
   A repo-native governance kernel for bounded, convergent, proof-backed work.
