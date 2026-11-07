@@ -634,6 +634,11 @@
       "id": "cp-1557-21",
       "summary": "Record src/decapod/core/validation_rules.rs",
       "input_digest": "sha256:9728fb62999173d96f2cd5705fa57a65dddaf8a66d8781bb34d0f8b726abb65d"
+    },
+    {
+      "id": "cp-1557-22",
+      "summary": "Record src/decapod/lib.rs",
+      "input_digest": "sha256:baf64b93ed3a1b76744920b65a3658a5997d7fd32d1d9a55f2fb557f7f3efa92"
     }
   ],
   "legacy_digests": {
