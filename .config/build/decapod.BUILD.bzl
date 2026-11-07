@@ -235,7 +235,7 @@ def decapod_targets():
             # The broker suite includes 20 separately authenticated clients,
             # crash recovery and launch probes. Individual client waits remain
             # bounded; retain a finite aggregate budget for their stage evidence.
-            timeout = "long" if path == "tests/group_broker.rs" else "moderate",
+            timeout = "long" if path in ["tests/group_broker.rs", "tests/interop_conformance.rs"] else "moderate",
             # This suite asserts uncontended process wall-clock budgets. Rust's
             # test-threads flag alone does not isolate concurrent Bazel targets.
             tags = ["exclusive"] if path in [
@@ -286,7 +286,7 @@ def decapod_targets():
                 "assets/tools/ci_event_context.rs",
                 "assets/tools/integration_shards.rs",
                 "src/decapod/core/release_metadata.rs",
-            ] if path in ["tests/source_ci_profile_policy.rs", "tests/ci_checkout_policy.rs"] else [path],
+            ] if path in ["tests/source_ci_profile_policy.rs", "tests/ci_checkout_policy.rs"] else [path, "tests/support/interop_harness.rs"] if path == "tests/interop_conformance.rs" else [path],
             crate_root = path,
             compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + (["src/decapod/lib.rs"] if path in ["tests/consumer_readiness.rs", "tests/cli_contracts.rs"] else [".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
                 ".github/workflows/ci.yml",

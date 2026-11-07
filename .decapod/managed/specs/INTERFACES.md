@@ -275,33 +275,6 @@ a failed `validate.run` retains its structured response and returns nonzero.
 Agents use the installed command contracts and schemas rather than inventing
 operations or treating a listed next operation as approval to bypass its gates.
 
-## Governance interoperability RPC profile (#870/#871)
-
-Three read-only operations extend the RPC surface for external interoperability:
-
-- `interop.manifest` — returns the versioned capability manifest
-  (`schema_version` `1.0.0`, per-capability `implementation_status`, profiles,
-  and an authority declaration that Decapod state is the sole authority).
-  `params.validate=true` additionally runs the built-in manifest validator and
-  returns its findings. The manifest declares capabilities; it never grants
-  them. `transport:mcp` is advertised only as `intentionally_not_used`.
-- `interop.negotiate` — fail-closed, deterministic negotiation over
-  `required_ops`, `optional_ops`, `optional_extensions`, `requested_profile`,
-  and `profile_version`. Unknown mandatory requirements produce a typed
-  `negotiation_refused` error; malformed input (including smuggled fields such
-  as `role`/`admin`, rejected by `deny_unknown_fields`) produces
-  `invalid_params`. Outcomes are sorted and order-invariant. Negotiation is
-  read-only and its `authority_note` states that it confers no authority.
-- `interop.project` — pure structured projection of governed responses
-  (`rpc_response`, `validation_report`, `interlock_status`, `approval` kinds).
-  Projections never mutate state, never map `unknown` to success, and never
-  launder a stale blocker into `publication_ready`.
-
-Golden request/response vectors for these ops and the `unknown_op` refusal
-live in `tests/golden/rpc/v1/` and are replayed by `tests/rpc_golden_vectors.rs`.
-The existing `capabilities --format json` contract and all prior RPC ops are
-unchanged.
-
 ## Intent, authority, and context
 
 The prompt, conversation, and explicit human clarifications establish request
@@ -324,6 +297,262 @@ preserves nested Markdown and examples, removes the outer wrapper, and exposes
 unknown Decapod-namespaced directives invalidate the whole overlay. Empty
 retired generated directives remain upgrade-compatible. Partial application
 must not conceal ambiguous authority.
+
+Project authority comes from `.decapod/config.toml` and `.decapod/OVERRIDE.md`.
+Each registered override directive owns a fenced source body. Resolution
+preserves nested Markdown and examples, removes the outer wrapper, and exposes
+`directive_id`, `source`, `source_hash`, `body_hash`, `byte_count`, and
+`precedence`. Duplicate exact directives, unclosed wrappers, and non-empty
+unknown Decapod-namespaced directives invalidate the whole overlay. Empty
+retired generated directives remain upgrade-compatible. Partial application
+must not conceal ambiguous authority.
+
+## Validation Rules System Interface
+
+Decapod exposes the validation rules system through CLI, RPC, and configuration
+interfaces.
+
+### Configuration Interface
+
+The validation rules system is configured through `.decapod/OVERRIDE.md` under a
+dedicated `
+
+## VALIDATION_RULES Overrides section. Each rule override uses a
+fenced block with the rule ID as heading:
+
+```markdown
+### decapod.scope.authorized_paths
+````markdown
+severity: error
+applicability:
+  required_changed_paths: ["src/**"]
+  forbidden_changed_paths: ["**/secrets/**"]
+evidence_max_age_seconds: 43200
+````
+```
+
+Supported override fields:
+- `severity`: `advisory`, `warning`, `error`, `critical`
+- `applicability`: `required_changed_paths`, `forbidden_changed_paths`, `task_types`, `ref_patterns`, `ci_only`, `local_only`
+- `evidence_max_age_seconds`: Maximum age of evidence in seconds (0 = no limit)
+- `requirements`: `required_evidence`, `required_evaluators`, `required_context`
+- `remediation`: Override the remediation contract
+
+Override eligibility is enforced per-rule:
+- `NonOverridable`: Cannot be overridden (kernel invariants)
+- `TightenOnly`: Can only increase severity or add constraints
+- `ConfigurableOnly`: Can configure parameters but not disable
+- `FullyOverridable`: Full override permitted
+
+Invalid overrides (unknown rule IDs, duplicate definitions, malformed content,
+unauthorized weakening of kernel invariants) cause validation to fail closed.
+
+### RPC Interface
+
+The validation rules system exposes the following RPC operations:
+
+#### `validation.rules.list`
+List all registered validation rules with their effective configuration.
+
+**Request:**
+```json
+{"op": "validation.rules.list", "params": {}}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "result": {
+    "rules": [
+      {
+        "id": "decapod.scope.authorized_paths",
+        "description": "All changed files must be within authorized scope...",
+        "authority": "constitution",
+        "severity": "error",
+        "evaluator": "decapod.scope.validator",
+        "effective_severity": "error",
+        "override_eligibility": "tighten_only",
+        "applicability": {...},
+        "requirements": {...},
+        "remediation": {...},
+        "provenance": {...}
+      }
+    ]
+  }
+}
+```
+
+#### `validation.rules.evaluate`
+Evaluate all applicable rules against the current context.
+
+**Request:**
+```json
+{
+  "op": "validation.rules.evaluate",
+  "params": {
+    "context": {
+      "changed_paths": ["src/main.rs", "tests/test.rs"],
+      "task_type": "feature",
+      "git_ref": "refs/heads/feature/xyz",
+      "is_ci": false,
+      "evidence_artifacts": {
+        "governed_plan": "sha256:...",
+        "workspace_status": "sha256:..."
+      },
+      "validation_epoch": {...},
+      "policy_fingerprint": "sha256:..."
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "result": {
+    "rules_report": {
+      "results": [
+        {
+          "rule_id": "decapod.scope.authorized_paths",
+          "verdict": "pass",
+          "severity": "error",
+          "evaluated_at": "2026-11-05T18:23:31Z",
+          "evidence_refs": ["governed_plan", "workspace_status"],
+          "message": "Rule passed",
+          "remediation": null,
+          "policy_fingerprint": "sha256:...",
+          "validation_epoch": {...}
+        }
+      ],
+      "passed": 7,
+      "failed": 0,
+      "unverifiable": 0,
+      "overall_verdict": "pass",
+      "has_blocking_failures": false,
+      "has_unverifiable_mandatory": false
+    }
+  }
+}
+```
+
+#### `validation.rules.get`
+Get a specific rule by ID with its effective configuration.
+
+**Request:**
+```json
+{"op": "validation.rules.get", "params": {"rule_id": "decapod.scope.authorized_paths"}}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "result": {
+    "rule": {...},
+    "override_values": null,
+    "effective_severity": "error",
+    "effective_applicability": {...}
+  }
+}
+```
+
+### CLI Interface
+
+The validation rules are evaluated as part of `decapod validate`:
+
+```bash
+decapod validate --format json
+```
+
+The validation output includes a `rules_report` section in the JSON output:
+
+```json
+{
+  "status": "failed",
+  "rules_report": {
+    "results": [...],
+    "passed": 6,
+    "failed": 1,
+    "unverifiable": 0,
+    "overall_verdict": "fail",
+    "has_blocking_failures": true,
+    "has_unverifiable_mandatory": false
+  }
+}
+```
+
+Verbose output (`-v`) includes per-rule details with remediation contracts.
+
+### OVERRIDE.md Integration
+
+Project-specific rule overrides are declared in `.decapod/OVERRIDE.md` under a
+dedicated `
+
+## VALIDATION_RULES Overrides section. Each rule override uses a
+fenced block with the rule ID as heading:
+
+```markdown
+## VALIDATION_RULES Overrides
+
+### decapod.scope.authorized_paths
+````markdown
+severity: error
+applicability:
+  required_changed_paths: ["src/**"]
+  forbidden_changed_paths: ["**/secrets/**"]
+evidence_max_age_seconds: 43200
+````
+```
+
+The OVERRIDE.md parser validates:
+- Known rule IDs only (unknown IDs fail closed)
+- No duplicate rule definitions
+- Well-formed TOML within fenced blocks
+- Override eligibility respected (NonOverridable, TightenOnly enforced)
+
+### Applicability and Context Awareness
+
+Rules declare applicability conditions. The registry only evaluates applicable
+rules based on:
+- Changed paths (required/forbidden patterns)
+- Task type (feature, bugfix, refactor, docs, test)
+- Git ref patterns
+- CI vs local execution context
+
+Custody rules (`task_ownership`, `workspace_isolation`) only apply to governed
+agent workspaces with active task claims. They do not apply to:
+- Detached/post-merge validation contexts
+- Consumer repository validation
+- Release/post-merge validation contexts
+- Fixture/test validation contexts
+
+### Remediation Contract
+
+Every blocking rule result (FAIL or mandatory UNVERIFIABLE) includes a structured
+remediation contract:
+
+```json
+{
+  "error_code": "SCOPE_VIOLATION",
+  "violation_description": "Changed files exceed authorized scope",
+  "expected_condition": "All changed files within declared scope",
+  "observed_condition": "Files outside authorized scope modified",
+  "affected_paths": ["src/secret.rs"],
+  "required_steps": [
+    "Revert changes to files outside authorized scope",
+    "Request human approval for scope expansion"
+  ],
+  "autonomous_remediation_permitted": true,
+  "human_authorization_required": false,
+  "evidence_for_revalidation": ["governed_plan"],
+  "related_rules": ["decapod.scope.file_touch_budget"]
+}
+```
+
+Agents must follow the remediation contract and revalidate. Kernel invariants
+cannot be waived by candidate-controlled policy changes.
 
 ## Current-evidence recovery for historical completion claims
 
@@ -394,140 +623,6 @@ yield, handoff, heartbeat, and completion use governed operations. Conditional
 status changes distinguish success, not-found, and conflict, and emit their event
 only when the state transition wins. External trackers may remain the
 organizational system of record; they do not replace Decapod execution claims.
-
-### Release version check and opt-in auto-update (#1533)
-
-`decapod capabilities` and the `session acquire` update check query
-`https://crates.io/api/v1/crates/decapod`. crates.io's data access policy
-answers requests without an identifying `User-Agent` with HTTP 403, so every
-request sends `decapod/<version> (https://github.com/DecapodLabs/decapod)`.
-The response carries the newest release in the top-level `crate.max_version`
-field (there is no `version.num`), parsed by `parse_crates_max_version` in
-`src/decapod/lib.rs` and shared with `get_latest_version` in
-`src/decapod/core/rpc.rs`.
-
-The capabilities report never falls back to the running version when the
-registry request fails. It carries `version_check: "ok"` or
-`"unavailable"`, and `latest_version` is null when the registry could not be
-reached or parsed. `is_latest` is true only when `version_check` is `ok` and
-the registry reports the running version as the newest release, so
-`is_latest: true` unambiguously means "current", never "registry unreachable".
-
-Version detection may inform execution but must never independently authorize
-a mutation to the installed toolchain. Generated entrypoint contracts
-(AGENTS.md, CLAUDE.md, CODEX.md, GEMINI.md) therefore contain no
-`cargo install` bootstrap and gate nothing on `is_latest`; validation fails
-any entrypoint that invokes `cargo install`. `decapod session acquire` is the
-single authoritative update path: when a newer release exists it is reported
-on stderr, and `cargo install decapod` runs only behind the explicit opt-in
-`repo.session_auto_update = true` in `.decapod/config.toml` (default false).
-An unreachable registry never triggers an install. Repositories that pin
-Decapod through a package manager therefore never get a second unmanaged
-`~/.cargo/bin` install.
-
-Captured task verification artifacts include `task_id` and `task_revision`.
-A passing legacy record without this binding, a malformed binding, or a different
-task/revision projects `validation_status: stale`; a done task then projects
-`status: blocked`. Dependency admission and completion reject that evidence.
-Proof references remain historical references rather than renewed permission.
-`qa diagnose` recommends `decapod qa verify regen <id>` for stale binding;
-`qa verify --stale` includes revision drift as well as age. The `--stale` flag
-is global and applies to every `qa verify` subcommand, including
-`qa verify recover --stale`: it lists stale done tasks (with
-`last_verified_at` and `verification_policy_days`) and returns without
-running any child validation (#1527). Explicit recapture
-runs real validation before binding new evidence. Batch recovery first leaves
-its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
-
-`STALE_TASK_VERIFICATION` reports a task or verification baseline changed while
-verification was running. The stale result is discarded without replacing the
-newer evidence. Inspect the current task and rerun verification or recapture.
-Strict revision binding also invalidates proof after custody changes such as
-release or owner edits; comments alone do not change task revision.
-
-`workspace ensure` requires a claimed task and creates or reuses a matching
-isolated workspace. It starts from committed source, preserves dirty root files
-and the root index, and never imports uncommitted root changes implicitly.
-Existing destinations require verified ownership, Git registration, and branch
-identity. Unknown or symlinked destinations fail with preservation guidance.
-`root_isolation` metadata describes this separation; it is not permission to
-copy root material. `workspace status` is bounded observation and does not run
-validation or refresh specifications.
-
-A committed claim is acknowledged before optional container preparation. The
-preparation runs outside broker/datastore locks; its failure is a warning on the
-successful claim, not a rollback of ownership. A durable request-bound receipt
-prevents automatic duplicate launches. `DECAPOD_CLAIM_AUTORUN=0` disables this
-optional preparation. Interrupted preparation requires supported workspace
-recovery before an explicit retry.
-
-`TODO_PROJECTION_MISSING` means the selected control plane lacks the expected
-coordination projection. It reports `kind: coordination_projection_missing` and
-`execution_ready: false`; it is distinct from missing human intent and from a
-storage read failure. Preserve the request, inspect the original claim and
-workspace through Decapod, resolve ownership or store selection, and rerun the
-execution gate. Never manufacture a duplicate task or copy a database to hide
-this discrepancy.
-
-The explicit local transfer commands preserve an original standalone task:
-`todo transfer export --id <id> --to <receiver> --output <absolute-private-file>`
-requires an actual yield by the source actor and seals source mutation.
-`transfer recover --id <id> --transfer-id <id> --output <new-private-file>`
-recovers identical bytes after interrupted publication. Recovery selects the
-immutable export event by task and transfer identity instead of recapturing the
-entire subject journal. The canonical event read enforces its existing 8 MiB
-record bound before payload materialization, and recovery revalidates the
-repository, exporter, task, transfer, envelope and artifact digest bindings.
-Successful exports at the 4,095/4,096-event boundary remain recoverable after
-the export/checkpoint append and after later comments. This does not relax the
-4 MiB artifact or 4,096-event historical-bundle limits.
-`transfer import --input <absolute-private-file> --expected-digest <sha256:digest>
---accept-source-transfer` requires a trusted source handoff, the same GitHub
-origin and intended receiver, fetched source commit and absent local authority.
-The `decapod.task-transfer.v1` artifact is bounded to 4 MiB and 4,096 subject
-events. Sessions and unrelated tasks are excluded. Export supports only yielded
-tasks without shared owners, parent/dependency edges or incoming relationships.
-Import returns `execution_ready: false`; it neither claims the task nor imports
-current-machine proof. `TODO_PROJECTION_MISSING` remains blocking until the real
-import, claim and applicable execution gates succeed.
-The source seal assumes all cooperating writers use a supporting controller.
-An older executable, privileged database writer or disconnected copy can ignore
-that fence; the artifact does not establish an online exclusive-ownership lease.
-
-Cleanup requires ownership evidence. Task-like names, old timestamps, and an
-empty inventory from a different container engine do not establish permission
-to delete. Managed invocation receipts bind the exact path, directory generation,
-lease, and creating runtime; uncertain resources are preserved for review.
-Workspace/control subprocesses have a 15-second deadline and image builds a
-600-second deadline, with bounded output and owned-child termination/reaping.
-A timeout does not prove that a task, branch, or container is absent.
-
-`container run` reports `workspace_cleanup` in successful summaries: `removed`,
-`preserved_by_request`, `preserved_unsynced_branch`, `preserved_unexpected_head`,
-`preserved_hidden_index`, `preserved_unreturned_refs`, or
-`preserved_dirty_workspace`. Failed executions retain their failure status and
-workspace path; runtime termination retains files after invocation-owned runtime
-cleanup. `--keep-worktree` adds an unconditional retention request. Git inspection
-errors report `container_workspace_status_unavailable`; finalization failures
-report `container_workspace_finalization_failed` with the underlying diagnostic
-and retained path. Foldback rejects divergent host history without forcing it.
-
-`--push` publishes the returned branch only after successful execution. `--pr`
-uses the common governed workspace publisher on the clone, including full
-readiness and verified draft-PR creation/reuse; its result appears as
-`publication` in the summary. Combining `--push --pr` does not cause a separate
-unvalidated push. Publication precedes final foldback because the publisher may
-commit checkpointed material. Publication failure retains the clone; repair the
-reported gate, then run `decapod validate` and `decapod workspace publish` there.
-A failed command never invokes either publication action.
-
-`--local-only` cannot combine with `--push` or `--pr`; the shared boundary rejects
-that conflict before starting a runtime or creating a clone. Omit the publication
-flags to retain local work, or omit `--local-only` to return the actual candidate.
-An explicit `--pr-base` differing from the configured governed publication target
-returns `container_publication_base_mismatch`. Align the intended configuration,
-review the accepted target and revalidate from the retained workspace rather
-than silently publishing against another base.
 
 Captured task verification artifacts include `task_id` and `task_revision`.
 A passing legacy record without this binding, a malformed binding, or a different
@@ -1020,8 +1115,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (214 files), `tests/` (209 files)
+- Repository signal fingerprint: `914f7c1c6da50633851a00107b5d337dd165f6b2c7cecdd886eb7c232444b437`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (212 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1163,17 +1258,6 @@ pass/skip disposition. A valid immutable release emits
 `material_specs: outcome=passed proof=version_only_exact_projections`;
 a local early exit instead identifies its explicit skipped reason. Required
 CI context errors remain failures, never these local skip dispositions.
-
-## External engine tooling boundary
-
-The former Dagger-specific core execution interface is removed. Configuration
-containing `proof.dagger_authorizations` or `repository_contract.executions.*.dagger`
-fails closed through strict parsing. The agent must reconcile the retired
-configuration without deleting required coverage or weakening proof gates.
-Direct Dagger commands do not qualify as repository-local checks. Dagger can
-remain in agent skills or project CI outside Decapod; there is no generic import
-of arbitrary CI check results. Generic native receipts, prerequisites, accepted
-source authority, and required Buildkite evidence retain their existing contracts.
 
 ## Handoff caller and recovery contract
 

@@ -275,7 +275,11 @@ fn assert_concurrent_mutators(reuse_connection: bool) {
                 &dir_cl,
                 &["todo", "add", &task],
                 &env_pairs,
-                Duration::from_secs(120),
+                // Under `bazel test //:all` this target runs in parallel with
+                // //:interop_conformance; observed client latencies reach
+                // ~120s, so keep generous headroom below the long target
+                // timeout instead of failing spuriously at the old bound.
+                Duration::from_secs(300),
                 &format!("client {i:02} first attempt"),
             )
         }));

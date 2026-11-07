@@ -203,28 +203,6 @@ state and actionable reports, evaluates supported transitions, and persists
 their state. Validation is one phase in that lifecycle. The runtime does not
 own a model loop or keep a background service running for a task.
 
-## Governance interoperability components (#870/#871)
-
-`src/decapod/core/interop.rs` owns the versioned capability manifest
-(`schema_version` 1.0.0), its validation, the negotiation profiles, and the
-fail-closed `negotiate()` decision. `pub const RPC_OPS` in that module is the
-canonical registry for the advertised operation list; the dispatcher keeps its
-own match table, so the registry is kept synchronized by proof, not by
-construction — the black-box harness drift-checks registry against dispatcher
-and fails if an advertised op is rejected as `unknown_op`. The built-in
-manifest is derived from the `OP_META` table, so an operation cannot be
-advertised without being registered. `src/decapod/core/projection.rs` owns the
-pure structured projections (`project_rpc_response`, `project_interlock_status`,
-`project_approval`, `project_validation_report`) consumed by `interop.project`.
-`src/decapod/lib.rs` dispatches the three new read-only ops
-(`interop.manifest`, `interop.negotiate`, `interop.project`) alongside the
-existing table and lists them in the session-bypass, worktree-bypass, and
-mandate-skip allowlists because they are read-only; every other gate (session,
-awareness, mandates, policy) still applies. The black-box conformance harness
-(`tests/interop_conformance.rs` + `tests/support/interop_harness.rs`) spawns the
-real binary via `env!("CARGO_BIN_EXE_decapod")` and proves that every
-manifest-advertised read-only op is actually accepted by the dispatcher.
-
 ## Native command sequences
 
 `core::native_proof::Invocation` retains the existing reviewed direct command
@@ -776,8 +754,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (214 files), `tests/` (209 files)
+- Repository signal fingerprint: `914f7c1c6da50633851a00107b5d337dd165f6b2c7cecdd886eb7c232444b437`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (212 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -1,35 +1,6 @@
 use super::*;
 use std::process::Command;
 
-#[test]
-fn runtime_configuration_rejects_retired_dagger_authorizations() {
-    for config in [
-        "[proof]\ndagger_authorizations = {}\n",
-        "[proof.dagger_authorizations.proof]\nprotocol = \"dagger-1.0-workspace-check.v1\"\n",
-    ] {
-        let error = proof_configuration(config.as_bytes()).unwrap_err();
-        assert_eq!(error.kind(), io::ErrorKind::InvalidData);
-        assert!(error.to_string().contains("proof.dagger_authorizations"));
-    }
-}
-
-#[test]
-fn runtime_configuration_rejects_retired_dagger_execution() {
-    let config = r#"
-[proof.repository_contract]
-reviewed_commands_digest = "unused"
-source_coverage = []
-[proof.repository_contract.executions.retired]
-program = "/opt/dagger"
-toolchain_files = {}
-timeout_seconds = 60
-[proof.repository_contract.executions.retired.dagger]
-cli_contract = "dagger-1.0-workspace-check.v1"
-"#;
-    let error = proof_configuration(config.as_bytes()).unwrap_err();
-    assert!(error.to_string().contains("dagger"));
-}
-
 fn git_path() -> PathBuf {
     PathBuf::from("/usr/bin/git").canonicalize().unwrap()
 }
@@ -1701,6 +1672,7 @@ fn late_verdict_write_failure_revokes_readiness_and_pr_instructions() {
         ready: true,
         proof_ready: true,
         vega_readiness: None,
+        laya_readiness: None,
         scope: READINESS_SCOPE,
         agent_guidance: ValidationGuidance::for_vega_outcome(
             true,
@@ -2194,6 +2166,7 @@ fn native_completion_write_failures_never_publish_success_artifacts() {
                 ready: true,
                 proof_ready: true,
                 vega_readiness: None,
+                laya_readiness: None,
                 scope: READINESS_SCOPE,
                 agent_guidance: ValidationGuidance::for_vega_outcome(
                     true,

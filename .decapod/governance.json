@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "5926bbd393612bb3e5fc7342f54a8819a0cd2078",
+    "accepted_commit": "f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -519,109 +519,464 @@
     }
   },
   "change": {
-    "id": "change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
-    "base_commit": "5926bbd393612bb3e5fc7342f54a8819a0cd2078",
+    "id": "change_01M6Q7DMYY95KQ09ZA83VBHBKF",
+    "base_commit": "f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "feat_01m6qms6a5ec61mx",
-      "summary": "Governance interoperability (#870/#871): versioned capability manifest + fail-closed negotiation via read-only interop.* RPC ops (RPC_OPS single source of truth), pure structured projections, black-box conformance harness (8 scenarios, real binary, golden vectors), CI wiring, and material spec updates.",
-      "input_digest": "sha256:7ca4c54f1a9cc2e8fff9e0395049a318e4ec1cbd4a21485b02138f3a4996b01c"
+      "id": "ckpt-1533-seed-0-126-4",
+      "summary": "seed workspace branch for todo bugs_01m6q7cbwbjxpk3d (issue #1533) on master f2276c6f (v0.126.4): release fingerprints, Dockerfile pin, specs manifest, governance template",
+      "input_digest": "sha256:2c6d96aae4f0d5de2f8f4afa8d98b5399bc9a346a0bcbf7f6a38c6d79a357f2d",
+      "proof_refs": [
+        "workspace_ensure"
+      ]
     },
     {
-      "id": "rebind-01m6qms6a5ec61mx-1",
-      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
-      "input_digest": "sha256:5e893513a0a9a8494bf713919b43558fe11fc420376219be0cd73a0e0ab350f3"
+      "id": "ckpt-rebind-1",
+      "summary": "rebind checkpoint to post-rebase tree (chore: seed workspace branch for #1533 on v0.126.4 base)",
+      "input_digest": "sha256:9660a6c933e8de8fcf40e460175e171a20784564bb2d58373fb11175ae9cc41a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "feat_01m6qms6a5ec61mx-interop-2",
-      "summary": "Checkpoint bound to bf8ed9c3: reviewed_sources_digest reconciliation for the interop conformance CI target (source_ci_profile.rs selective-core full list).",
-      "input_digest": "sha256:6fecc8ea2a84202068e8afdefea9aaf1e7686e115b3091eb34bd7e7db0f9e236"
+      "id": "ckpt-rebind-2",
+      "summary": "rebind checkpoint to post-rebase tree (chore: seed workspace branch for #1533 on v0.126.4 base)",
+      "input_digest": "sha256:04aa86fe1edb58cf18b5654ecfe1720fa5064e9c9e3ec08d3d4d7e3fd1a9b5d5",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "feat_01m6qms6a5ec61mx-interop-ci-digest",
-      "summary": "Checkpoint for the reviewed_sources_digest reconciliation: assets/tools/source_ci_profile.rs gained //:interop_conformance in the selective-core full list; digest verified via init reconciliation on this exact branch.",
-      "input_digest": "sha256:6fecc8ea2a84202068e8afdefea9aaf1e7686e115b3091eb34bd7e7db0f9e236"
+      "id": "ckpt-1533-rpc-user-agent",
+      "summary": "send identifying User-Agent on crates.io version query in get_latest_version (src/decapod/core/rpc.rs) and parse crate.max_version via shared helper for #1533",
+      "input_digest": "sha256:2c6d96aae4f0d5de2f8f4afa8d98b5399bc9a346a0bcbf7f6a38c6d79a357f2d",
+      "proof_refs": [
+        "crates_io_user_agent_identifies_client",
+        "parse_crates_max_version_reads_crate_field"
+      ]
     },
     {
-      "id": "rebind-01m6qms6a5ec61mx-2",
-      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
-      "input_digest": "sha256:4ee4d68ed19fc9d59a57a60b4f37300053e6beaa462f5ae55f98f072497508eb"
+      "id": "ckpt-rebind-3",
+      "summary": "rebind checkpoint to post-rebase tree (fix: identify crates.io version check with User-Agent (#1533))",
+      "input_digest": "sha256:b19b81433576ac8fc5a77202103dcb4d480eccd8f8563feffa77bdad16ad4282",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "feat_01m6qms6a5ec61mx-interop-release-surfaces",
-      "summary": "Regenerate release-bound entrypoints (AGENTS/CLAUDE/CODEX/GEMINI), managed Dockerfile pin, and specs manifest with decapod 0.126.5 (the accepted-base executor release) to clear CI drift; authored spec prose unchanged; source inventory digest unchanged (d1a963...).",
-      "input_digest": "sha256:882594054b92da142c3e365c88ad04fef85d13ca6dbd3673a5b2fd2f20cd7346"
+      "id": "ckpt-rebind-4",
+      "summary": "rebind checkpoint to post-rebase tree (fix: identify crates.io version check with User-Agent (#1533))",
+      "input_digest": "sha256:0334a75d6a326990215d44af7023839a326f3b0cebdbb0a799c4dfd2bfd12d30",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "rebind-01m6qms6a5ec61mx-3",
-      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
-      "input_digest": "sha256:ba10812329d33f87e1e2bf1748015204619fc5bb62a4b0b56588c916fecc88fb"
+      "id": "ckpt-1533-version-tests",
+      "summary": "add unit tests for #1533: crate.max_version parsing, User-Agent shape, session_auto_update default",
+      "input_digest": "sha256:2c6d96aae4f0d5de2f8f4afa8d98b5399bc9a346a0bcbf7f6a38c6d79a357f2d",
+      "proof_refs": [
+        "crates_io_user_agent_identifies_client",
+        "parse_crates_max_version_reads_crate_field",
+        "session_auto_update_defaults_to_opt_in_false"
+      ]
     },
     {
-      "id": "feat_01m6qms6a5ec61mx-interop-vega-lock",
-      "summary": "Commit vega-native Cargo.lock path-dep bump (decapod 0.126.4 -> 0.126.5) required for cargo test --locked under the v0.126.5 workspace; reconcile reviewed_sources_digest accordingly (ca14e2ff...).",
-      "input_digest": "sha256:0240465c12ab3a266282f65cecf684e0ef226cd86842af3241b1bb829f16f7c1"
+      "id": "ckpt-rebind-5",
+      "summary": "rebind checkpoint to post-rebase tree (test: cover crates.io version check parsing and opt-in default (#1533))",
+      "input_digest": "sha256:fab6b89bb49b44a83b8187432667a163a14924e7e712ed7cd8343b573b0e28b3",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "rebind-01m6qms6a5ec61mx-4",
-      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
-      "input_digest": "sha256:b892668a8e49f4e636d3b005fd195c9bf61993c20bff3a96fedd1253cf27c8bc"
+      "id": "ckpt-rebind-6",
+      "summary": "rebind checkpoint to post-rebase tree (test: cover crates.io version check parsing and opt-in default (#1533))",
+      "input_digest": "sha256:ecf99a534516d6030b27d3dc8fd2a3dabfc2a65882b634b3ccf21442a90797af",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "feat_01m6qms6a5ec61mx-interop-manifest-config-hash",
-      "summary": "Refresh specs manifest config_input_hash after the reviewed_sources_digest reconciliation edit to .decapod/config.toml (regenerated with the v0.126.5 binary; matches CI-expected 82d202a2...).",
-      "input_digest": "sha256:28d67cad141af9f318f6eaae5a2a0b1399b85518ba73626519a1756997cc6eca"
+      "id": "ckpt-1533-specs-refresh",
+      "summary": "refresh specs manifest/attestations after #1533 INTERFACES.md update",
+      "input_digest": "sha256:1b1f07a3ef3d063c7edf95ccb7b8c9b7fb0f5111d33f44ce4c74df1cf8b9ace6",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "rebind-01m6qms6a5ec61mx-5",
-      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
-      "input_digest": "sha256:9b006818829d0c5735ab030567a945184ec6240de799c6a39a530f0444e386d1"
+      "id": "ckpt-rebind-7",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest and attestations after #1533 spec update)",
+      "input_digest": "sha256:ecf99a534516d6030b27d3dc8fd2a3dabfc2a65882b634b3ccf21442a90797af",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "feat_01m6qms6a5ec61mx-interop-scope-correction",
-      "summary": "Scope-correction pass per reviewer hold on PR #1541: rescope to Decapod implementation substrate. PR body drops 'Closes #870' in favor of 'Partially addresses #870' with an explicit list of what remains for #870 (Decapod-independent external normative profile, normative spec, JSON Schemas for normative envelopes, canonicalization/replay rules, deterministic vectors, genuinely independent adapter); #871 remains partial (two-transport deferred to #872). RPC_OPS 'single source of truth' wording softened to 'canonical registry drift-checked against the dispatcher by the conformance harness' in core/interop.rs doc comment, ARCHITECTURE.md, INTENT.md (plus explicit #870 scope boundary in INTENT.md), and the PR body. No behavior change; specs refreshed via specs.refresh.",
-      "input_digest": "sha256:9c0db71a53aa06dea2b9d4c6d69c677ad32690f9588dbeae32f443465b7cfc1a"
+      "id": "ckpt-rebind-8",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest and attestations after #1533 spec update)",
+      "input_digest": "sha256:6f5dd7057820e46b3554e69ed5dd8fa651c3573bacc6710dc20806a218cd932a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "rebind-01m6qms6a5ec61mx-6",
-      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
-      "input_digest": "sha256:69750d7f3603e871bd9cf4f79118f5433123b7aa4d51d38d24b7fe0ea2c7467f"
+      "id": "ckpt-1533-manifest-after-digest",
+      "summary": "refresh specs manifest config_input_hash after #1533 digest reconcile (fixes CI projection drift)",
+      "input_digest": "sha256:ace89665113de91cba8fe45de5819c3a58d033f80bd584820f50e1ce5873329d",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "feat_01m6qms6a5ec61mx-interop-spec-review-refresh",
-      "summary": "Re-recorded review-spec dispositions for the canonical specs (ARCHITECTURE, INTERFACES, SECURITY) against current bytes after the PR #1541 scope-correction edits, resolving STALE_SPEC_REVIEW: ARCHITECTURE.md material updated (RPC_OPS canonical-registry wording), INTERFACES.md/SECURITY.md unchanged-with-reason (attestation fingerprint only). No code or authored-prose change beyond commit 8ea699cb.",
-      "input_digest": "sha256:4ec8f15fa418afba36a3de74d0df7c8487d53bf244e68f0d9962d710eb5d53bc"
+      "id": "ckpt-rebind-9",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest after #1533 digest reconcile)",
+      "input_digest": "sha256:6f5dd7057820e46b3554e69ed5dd8fa651c3573bacc6710dc20806a218cd932a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "rebind-01m6qms6a5ec61mx-7",
-      "summary": "Rebind checkpoint to the exact post-rebase material tree on master 56016070 (v0.127.0 base after #1539/#1545); commit content unchanged, only the base tree moved.",
-      "input_digest": "sha256:c6d2083d20656b2b4fe82ee3eb08adddc9954f0af010baa78a99efbdb8a69301"
+      "id": "ckpt-rebind-10",
+      "summary": "rebind checkpoint to post-rebase tree (chore: refresh specs manifest after #1533 digest reconcile)",
+      "input_digest": "sha256:e5b107ed7e7e2ba704b1c563fd78eee70d41f907a6f1bc104f5f1458cff23efd",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "regen-01m6qms6a5ec61mx-1",
-      "summary": "Regenerate the 4 release-bound entrypoints (AGENTS/CLAUDE/CODEX/GEMINI) to decapod 0.127.0 (fingerprint 6657d308d43fe36d303771a1eaf125f40a2ce9d11de553d6fb3a6d8e3a2ae2ce) via decapod init with the v0.127.0 binary after rebasing onto master 56016070; master's #1539 entrypoint template (no cargo-install bootstrap) is retained.",
-      "input_digest": "sha256:44de0fbdfdcd33c998075ca0849953c1e33745acc577e3ec0c1f7dbc9f88c25e"
+      "id": "ckpt-1533-rebase-refresh",
+      "summary": "regenerate specs manifest and attestations on v0.126.5 after rebase (#1533)",
+      "input_digest": "sha256:bab67822e22fa5dbff7fe4171c23122f70ec1f9d8cdde76c3a7c9ff58e1a2488",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "regen-01m6qms6a5ec61mx-3",
-      "summary": "Repin .decapod/managed/Dockerfile.decapod to the v0.127.0 executor image (DECAPOD_IMAGE ghcr.io/decapodlabs/decapod:v0.127.0-debian, DECAPOD_VERSION=0.127.0), healed by decapod init --dry-run with the v0.127.0 binary after rebasing onto master 56016070.",
-      "input_digest": "sha256:ff9bc7a1d272843b4945b378d2fe013f860adb9b3dc372b4ac0fe025344b588a"
+      "id": "ckpt-rebind-11",
+      "summary": "rebind checkpoint to post-rebase tree (chore: regenerate specs projections on v0.126.5 after #1533 rebase)",
+      "input_digest": "sha256:cd226c55cb0bc763db4e053cab91edfabc1a6fd66a11115492e574dbd208f3a6",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "regen-01m6qms6a5ec61mx-4",
-      "summary": "Reconcile reviewed_sources_digest to sha256:be7f48584127e97ccceb0b1bdbaf89d19e01ca65d20f2ae3772c68fd2a514772, the inventory reported by decapod init --dry-run (v0.127.0 binary) on this branch rebased onto master 56016070; the delta vs the pre-rebase digest is master's #1539/#1545 source changes, our branch still adds only source_ci_profile.rs.",
-      "input_digest": "sha256:6cafd47f0e5f1b7dffdaa5b97797f8a42a8476efff92596e8ced491a1af0eb55"
+      "id": "ckpt-rebind-12",
+      "summary": "rebind checkpoint to post-rebase tree (chore: regenerate specs projections on v0.126.5 after #1533 rebase)",
+      "input_digest": "sha256:786f4f8cbdbe2079be9f1ad829a1ce657059e08e2b93c262c3663b79051b88c5",
+      "proof_refs": [
+        "version_check_tests"
+      ]
     },
     {
-      "id": "regen-01m6qms6a5ec61mx-5",
-      "summary": "Port master's #1533 'Release version check and opt-in auto-update' section into INTERFACES.md verbatim (lost when specs resolved to the branch side during the rebase) and refresh all specs attestations plus .manifest.json to decapod_release 0.127.0 via specs.refresh with the v0.127.0 binary; spec review dispositions for ARCHITECTURE/INTERFACES/SECURITY re-recorded against the new material hashes.",
-      "input_digest": "sha256:a2f57683358499f886319af3003e0eb433efca14454e77c8c7dbac82c9c13fd2"
+      "id": "ckpt-1533-rebind-review",
+      "summary": "rebind checkpoints across rewritten #1533 branch and re-review canonical specs",
+      "input_digest": "sha256:11506999be397e9489ac6b04c9409f1b132e247e7f0a843698919d3977791a1a",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-vega-lock",
+      "summary": "repair stale vega-native Cargo.lock decapod pin 0.126.4 -> 0.126.5 so the locked rust-worker check passes on v0.126.5 (#1533)",
+      "input_digest": "sha256:6d96a95c2359f917e7a66776e55858bd6cfe7014538ae66235a8f4c5428d057f",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-digest-vega",
+      "summary": "reconcile proof source digest after vega-native Cargo.lock pin repair (#1533)",
+      "input_digest": "sha256:a4716dad0235c7a256e1f700c1c2886cefc85a0a7ebf445c09e47de6cd25e667",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-fix-1",
+      "summary": "rebind checkpoint to actual commit tree (chore: reconcile source digest after vega-native lock pin repair (#1533))",
+      "input_digest": "sha256:c7c9e17b9f00243f6db950b74c1a7cd246e2c983b44fea34790551425f213fc4",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-fix-2",
+      "summary": "rebind checkpoint to actual commit tree (chore: reconcile source digest after vega-native lock pin repair (#1533))",
+      "input_digest": "sha256:a4716dad0235c7a256e1f700c1c2886cefc85a0a7ebf445c09e47de6cd25e667",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-fix-review",
+      "summary": "rebind final #1533 commits and re-review canonical specs",
+      "input_digest": "sha256:e23073ebba94ee87e772897ba1fb237780639d62f1ca693c07cd34563b57a060",
+      "proof_refs": [
+        "version_check_tests"
+      ]
+    },
+    {
+      "id": "ckpt-1533-entrypoint-noautoinstall",
+      "summary": "Remove cargo-install auto-bootstrap from generated entrypoint templates in assets.rs (#1533 follow-up)",
+      "input_digest": "sha256:7835adccaa328511ed66e55e8559d72b994740aeef74da13f4ea66553dd30deb"
+    },
+    {
+      "id": "ckpt-1533-validate-noautoinstall",
+      "summary": "validate.rs: entrypoints must not invoke cargo install; session acquire is the only update path (#1533 follow-up)",
+      "input_digest": "sha256:8c3ef9d935f85bd203ebf0f1168f96bd0380d19b4e247ecbfe84d7628008c031"
+    },
+    {
+      "id": "ckpt-1533-session-update-decision",
+      "summary": "Extract pure decide_session_update; version detection never authorizes install without opt-in (#1533 follow-up)",
+      "input_digest": "sha256:6519a082b9ed795cfca1007252574056fd3f927d68ceaf29ff19d4f65fd5746f"
+    },
+    {
+      "id": "ckpt-1533-payload-docs",
+      "summary": "payload-examples.md: replace version-aware auto-install example with informational capabilities check and session acquire as update path (#1533 follow-up)",
+      "input_digest": "sha256:06f133edd91725a60e30a02cfb28ea5ebd062a1eea41c853cd1e8fd353ea9826"
+    },
+    {
+      "id": "ckpt-1533-behavioral-tests",
+      "summary": "Behavioral regression tests: opt-in install, opt-out report-only, unavailable registry never installs; generated entrypoints never invoke cargo install (#1533 follow-up)",
+      "input_digest": "sha256:00da9bac56657fea90d25d6121fbdc41b3eda16a976366d9702144b70b5ed937"
+    },
+    {
+      "id": "ckpt-1533-interfaces-spec",
+      "summary": "INTERFACES.md: document no-auto-install entrypoint contract, session acquire as sole update path, unambiguous version_check/is_latest; refresh spec projections (#1533 follow-up)",
+      "input_digest": "sha256:392a594585c0eef1be7e59994833e407c70013655f72a6f10e3f574ae44c1ecc"
+    },
+    {
+      "id": "ckpt-1533-changelog",
+      "summary": "CHANGELOG Unreleased entry for rpc.rs interface change: no auto-install entrypoints, session acquire sole update path, unambiguous is_latest (#1533 follow-up)",
+      "input_digest": "sha256:0e9ced5988502a3a1d8edaeb6dd5b18fd75d3bf74162db27a3770e73460aa776"
+    },
+    {
+      "id": "ckpt-1533-entrypoints-regen",
+      "summary": "Regenerate release-bound entrypoints from the branch binary with the no-auto-install template; manifest hashes refreshed via project-check --refresh-specs (#1533 follow-up)",
+      "input_digest": "sha256:4d55fdf67c695951ff18459e80d50e564d6b752dbe273deb527dcec6152d5aa1"
+    },
+    {
+      "id": "ckpt-1533-clippy-ok",
+      "summary": "clippy: use .ok() for the registry fetch result in check_and_update_version (#1533 follow-up)",
+      "input_digest": "sha256:0b912ad619994f9f14c981932036407ab63106c0b3c7880984bb849f76fdd0b7"
+    },
+    {
+      "id": "ckpt-1533-spec-rereview",
+      "summary": "Re-review canonical specs against final code state after clippy fix; refresh projections (clears CI STALE_SPEC_REVIEW) (#1533 follow-up)",
+      "input_digest": "sha256:3f3a6b6c3b41a1b799ecb09aeb5f3e129c57fc998454e9d1cd44307e13b0507a"
+    },
+    {
+      "id": "ckpt-1533-manifest-branch-binary",
+      "summary": "Refresh specs manifest entrypoint template hashes with the branch-built binary (old 0.126.5 binary had stale templates) to clear CI drift check (#1533 follow-up)",
+      "input_digest": "sha256:42c72499a2e677c43cd587b05f642273fc0592157414035d665e062d4af38dc4"
+    },
+    {
+      "id": "fix1528-bazel-interop-srcs",
+      "summary": "Declare tests/support/interop_harness.rs in the //:interop_conformance rust_test srcs so the #[path] module resolves inside the Bazel sandbox; without it Tests (core) fails with 'couldn't read tests/support/interop_harness.rs'.",
+      "input_digest": "sha256:6f3a83a76912664210dbef365195d1c58d53bfc4ffd4bd46ef2b8a9aae343567"
+    },
+    {
+      "id": "fix1528-native-completion-bundle",
+      "summary": "Restore the native readiness completion bundle (completion/native-readiness-receipt.json + completion/verdict.json via write_native_completion) and the per-check native-{n}.diagnostic.json evidence files that the laya rename dropped; tests/consumer_readiness.rs asserts this layout. Receipt now binds laya_readiness_digest; trajectory_digest recomputed from governance.json.",
+      "input_digest": "sha256:d5fe6edd907814a1fea64c78f753d072720138a0cedcdfa733561f41a4070836"
+    },
+    {
+      "id": "fix1528-spec-reviews",
+      "summary": "Refresh specs attestations/manifest via specs.refresh and re-record review dispositions for ARCHITECTURE.md, INTERFACES.md and SECURITY.md on the fixed head (bazel interop srcs + native completion bundle), clearing STALE_SPEC_REVIEW in the governance-artifacts CI job.",
+      "input_digest": "sha256:c72d8a4e35f960b64e1284948cf0e30e5a7fd74b40ec20a6f84db4ab63db7549"
+    },
+    {
+      "id": "fix1528-release-bound-regen",
+      "summary": "Regenerate release-bound living-spec projections (.manifest.json + spec attestation blocks) with the head-built v0.127.1 evaluator in a clean worktree: the previously committed projections were generated with bazel-* symlinks present, which polluted the repo signal fingerprint (11b25693 instead of the clean-tree 914f7c1c) and left decapod_release at 0.127.0, causing release-bound drift in validate/health and STALE_SPEC_REVIEW in governance-artifacts.",
+      "input_digest": "sha256:44a0c1ba14b219b1ef1199659117d7f87a84be69be9282af715d6368303f16aa"
+    },
+    {
+      "id": "fix1528-spec-reviews-clean-signal",
+      "summary": "Re-record INTERFACES.md, ARCHITECTURE.md and SECURITY.md spec reviews against the clean-tree repo signal fingerprint (914f7c1c...) computed by the head-built evaluator, clearing STALE_SPEC_REVIEW in the governance-artifacts check; the earlier reviews recorded a worktree-polluted fingerprint (bazel-* symlinks) of 11b25693.",
+      "input_digest": "sha256:fd49abd4fcc39e51ad53f3d252acef27946f6905a4819c1e13e88088e5f516da"
+    },
+    {
+      "id": "fix1528-interop-bazel-hang",
+      "summary": "Drain rpc child stdout/stderr concurrently with a 120s bound in the interop harness (wait_bounded) and give //:interop_conformance a long bazel timeout, so //:tests (core) no longer deadlocks/timeouts under the bazel sandbox",
+      "input_digest": "sha256:7a4f1ff6c0d97981ff864eaf9e1c748472919244c5c280fe37ad6a6a421820c8"
+    },
+    {
+      "id": "validation-rules-impl",
+      "summary": "Implement validation rules system with 7 built-in rules, registry, evaluators, OVERRIDE.md integration, and three-verdict system",
+      "input_digest": "sha256:adbcf5ec97aaef4462018977f382c24784617098a53e983f991dbad630f953a6"
+    },
+    {
+      "id": "fix1528-rebind-1",
+      "summary": "Rebind first-parent PR identity and base to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e across the rewritten branch history; clears GOVERNANCE_PR_BASE_MISMATCH in the Governance Checkpoints CI job",
+      "input_digest": "sha256:e3aa0a3395d6414e1ec7d9f7b434d973844c77ed79324e5c68acecc566845a4d"
+    },
+    {
+      "id": "fix1528-rebind-2",
+      "summary": "Rebind first-parent PR identity and base to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e across the rewritten branch history; clears GOVERNANCE_PR_BASE_MISMATCH in the Governance Checkpoints CI job",
+      "input_digest": "sha256:e3aa0a3395d6414e1ec7d9f7b434d973844c77ed79324e5c68acecc566845a4d"
+    },
+    {
+      "id": "fix1528-rebind-3",
+      "summary": "Rebind first-parent PR identity and base to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e across the rewritten branch history; clears GOVERNANCE_PR_BASE_MISMATCH in the Governance Checkpoints CI job",
+      "input_digest": "sha256:3b30c21068c2f318f0007731c0afbc971c597936735a1cd70ab279b83728fd93"
+    },
+    {
+      "id": "fix1528-rebind-4",
+      "summary": "Rebind first-parent PR identity and base to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e across the rewritten branch history; clears GOVERNANCE_PR_BASE_MISMATCH in the Governance Checkpoints CI job",
+      "input_digest": "sha256:66ddb29504ba1495be23b2b0ebb8808b509abbe344b3e3423d32845515c98fca"
+    },
+    {
+      "id": "fix1528-rebind-5",
+      "summary": "Rebind first-parent PR identity and base to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e across the rewritten branch history; clears GOVERNANCE_PR_BASE_MISMATCH in the Governance Checkpoints CI job",
+      "input_digest": "sha256:da387ce173dbf0015511d1efb779d858b753201073f709d2ded71fc10a7ac556"
+    },
+    {
+      "id": "fix1528-rebind-6",
+      "summary": "Rebind first-parent PR identity and base to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e across the rewritten branch history; clears GOVERNANCE_PR_BASE_MISMATCH in the Governance Checkpoints CI job",
+      "input_digest": "sha256:96bc5eac6a19666615488dbeb4087240c7ea058bb9908d1f107377296d2b7940"
+    },
+    {
+      "id": "fix1528-hist-1",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:e3aa0a3395d6414e1ec7d9f7b434d973844c77ed79324e5c68acecc566845a4d"
+    },
+    {
+      "id": "fix1528-hist-2",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:e3aa0a3395d6414e1ec7d9f7b434d973844c77ed79324e5c68acecc566845a4d"
+    },
+    {
+      "id": "fix1528-hist-3",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:3b30c21068c2f318f0007731c0afbc971c597936735a1cd70ab279b83728fd93"
+    },
+    {
+      "id": "fix1528-hist-4",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:66ddb29504ba1495be23b2b0ebb8808b509abbe344b3e3423d32845515c98fca"
+    },
+    {
+      "id": "fix1528-hist-5",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:da387ce173dbf0015511d1efb779d858b753201073f709d2ded71fc10a7ac556"
+    },
+    {
+      "id": "fix1528-hist-6",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:96bc5eac6a19666615488dbeb4087240c7ea058bb9908d1f107377296d2b7940"
+    },
+    {
+      "id": "fix1528-hist-7",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:ead03ffa3c6b2c911ec3f8780485086414b0523477b5b6f9f470fd04b2dc299c"
+    },
+    {
+      "id": "fix1528-hist-8",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:00406e887de3055a690665861e9dad284e85265c8ec4bd08ec024b5c5c843f60"
+    },
+    {
+      "id": "fix1528-hist-9",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:66cb79c974dd04c6a17f0aa366c365dc9ffe008e895bad425d86701c99ae68ac"
+    },
+    {
+      "id": "fix1528-hist-10",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:cff61b29f772fe975504da4dc0f1456f19881082a5a651f65dc6a24ff9f0a3f0"
+    },
+    {
+      "id": "fix1528-hist-11",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:c75fb47dfaeca302d1f1882bcd4abd30cde9382b6a233f3ab0780ead4cf0458c"
+    },
+    {
+      "id": "fix1528-hist-12",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:8ef2967755e13073d80f0735e5eb57352e789ca7a028b1d2387bea250f88d6c4"
+    },
+    {
+      "id": "fix1528-hist-13",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:469d69026ed474557f30bbedd89f18bfca5b1b3da9934f411b5fd27a671e5e7e"
+    },
+    {
+      "id": "fix1528-hist-14",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:c6deeb2ef4da14886da71d733d8f81318f897f9e8669a39b1669b13a4ab677c1"
+    },
+    {
+      "id": "fix1528-hist-15",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:8f818586f5786780e923b44de399ba856ebd511ef138c176d0091cb3cdbbcdfa"
+    },
+    {
+      "id": "fix1528-hist-16",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:6f3a83a76912664210dbef365195d1c58d53bfc4ffd4bd46ef2b8a9aae343567"
+    },
+    {
+      "id": "fix1528-hist-17",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:d5fe6edd907814a1fea64c78f753d072720138a0cedcdfa733561f41a4070836"
+    },
+    {
+      "id": "fix1528-hist-18",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:c72d8a4e35f960b64e1284948cf0e30e5a7fd74b40ec20a6f84db4ab63db7549"
+    },
+    {
+      "id": "fix1528-hist-19",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:a6ac4ba84a7c46380a4671185d61dfd04190643e4b1a98a991280cdc6f2e5eb4"
+    },
+    {
+      "id": "fix1528-hist-20",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:c32e70ab5a46dd337f437aae1451d7a58c8f3384f9b1e41d91d546c32472d92d"
+    },
+    {
+      "id": "fix1528-hist-21",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:44a0c1ba14b219b1ef1199659117d7f87a84be69be9282af715d6368303f16aa"
+    },
+    {
+      "id": "fix1528-hist-22",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:fd49abd4fcc39e51ad53f3d252acef27946f6905a4819c1e13e88088e5f516da"
+    },
+    {
+      "id": "fix1528-hist-23",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:1628e97d2e65cd22e41177ef3862d02cc38a4c9ea1bcabf6f4307cd0a887276e"
+    },
+    {
+      "id": "fix1528-hist-24",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:7a4f1ff6c0d97981ff864eaf9e1c748472919244c5c280fe37ad6a6a421820c8"
+    },
+    {
+      "id": "fix1528-hist-25",
+      "summary": "History rewrite pass over the PR first-parent chain: rebind base identity to change_01M6Q7DMYY95KQ09ZA83VBHBKF @ f2276c6f3c00a8a2f48fa36f3a33b5b5bab67b5e where the record differs, carry the parent checkpoint journal forward, and bind a fresh checkpoint to this commit's exact material tree; clears GOVERNANCE_PR_BASE_MISMATCH and checkpoint-coverage failures in the Governance Checkpoints CI job",
+      "input_digest": "sha256:22efb541b96e7a712d2fb3a0966796b4ef4520f25698264861d3d4dc088605e9"
+    },
+    {
+      "id": "fix1528-group-broker-contention-bound",
+      "summary": "Raise the group_broker contention-client bound from 120s to 300s: under bazel test //:all the target runs parallel to //:interop_conformance and observed client latencies reach ~120s, so broker_no_sqlite_busy_surfaced_under_concurrent_mutators failed spuriously at the old bound (run 42328620909); the no-SQLITE_BUSY assertion is unchanged and the bound stays below the long target timeout",
+      "input_digest": "sha256:0af21ebf982cd3dcd5c414a15285a23c4a1cb53eae4ecc01cd6f8cb476b34965"
+    },
+    {
+      "id": "fix1528-spec-reviews-gb-bound",
+      "summary": "Re-record ARCHITECTURE/INTERFACES/SECURITY spec reviews against the repo signal fingerprint of the head that includes the group_broker contention-bound fix; clears STALE_SPEC_REVIEW",
+      "input_digest": "sha256:61712366ac13f7116753457a5b95e2ec1c8200b7d7f9b5017e60b8c497b04db9"
     }
   ],
   "intents": {
-    "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA": {
+    "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -631,11 +986,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
+      "id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement evidence-backed governance interoperability: capability manifests, negotiation, black-box conformance harness, structured projections (#870/#871)",
-      "refined_intent": "Implement evidence-backed governance interoperability: capability manifests, negotiation, black-box conformance harness, structured projections (#870/#871)",
+      "raw_intent": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
+      "refined_intent": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -648,7 +1003,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Add a versioned, evidence-backed interoperability layer to the Decapod governance kernel: (A) typed capability manifest exposed via read-only RPC ops (interop.manifest) with declaration/evidence separation and enforceable validation, (B) deterministic fail-closed capability negotiation (interop.negotiate) that never grants authority, (C) a reusable black-box conformance harness (tests/interop_conformance.rs + tests/support/interop_harness.rs) that spawns the real decapod binary in isolated fixture repos across 8 scenarios, plus versioned golden vectors, and (D) pure structured projections (interop.project) of tool operations, approvals, validation evidence and interlocks that preserve COMMITTED/NOT_COMMITTED/UNKNOWN. ACP/MCP adapters are explicitly out of scope (#872).",
+      "intent": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -658,227 +1013,67 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed after rebase onto master 56016070 (v0.127.0): ARCHITECTURE.md keeps the PR #1541 scope-correction wording (RPC_OPS canonical registry drift-checked against the dispatcher, not a single source of truth; interop components section). Only the specs.refresh attestation fingerprint changed for the v0.127.0 evaluating binary in this pass.",
-          "reviewed_code_fingerprint": "74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8",
-          "spec_material_hash": "0b93f48e5f38d411bd0ba5cf0a3f3f9960032de4d0c4d207e029b2d20c314247"
+          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; ARCHITECTURE.md prose unchanged by that fix, review re-bound to current code bytes",
+          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
+          "spec_material_hash": "71394c392921522bdbbecb79ff7d959bcd9e16364eafa8623e2a3da3f96c0846"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed after rebase onto master 56016070 (v0.127.0): INTERFACES.md now carries master's #1533 release-version-check section (ported verbatim) plus this branch's interop RPC profile section (interop.manifest/interop.negotiate/interop.project); attestation fingerprint refreshed for v0.127.0 via specs.refresh.",
-          "reviewed_code_fingerprint": "74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8",
-          "spec_material_hash": "a2f3ed7baebaeeaf615ab13e02aea5b337a4fb893fbed46dabf9b9afe5ab98a2"
+          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; INTERFACES.md prose unchanged by that fix, review re-bound to current code bytes",
+          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
+          "spec_material_hash": "36807d075cdc0b8f6bb5ddcdd9778f2211589056759615d4b50277ebd3f64b15"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed after rebase onto master 56016070 (v0.127.0): SECURITY.md keeps the interop fail-closed rules (manifest is a declaration, not authorization; negotiation confers no authority; KNOWN_CONFORMANCE_TESTS-bound evidence); only the attestation fingerprint changed via specs.refresh in this pass.",
-          "reviewed_code_fingerprint": "74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8",
-          "spec_material_hash": "79ca350024f62f36699df951ed2b2a6c6b3d4ded78b8ff64b20ac1903fdbfde3"
+          "reason": "Re-reviewed after the group_broker contention-bound fix (a7b4b3dc) changed the repo signal fingerprint; SECURITY.md prose unchanged by that fix, review re-bound to current code bytes",
+          "reviewed_code_fingerprint": "951292d1dc512cb1b1a6706f71e5bd22cb8f3a68a05ffc7e7e40a1f542db465e",
+          "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
       "state": "DRAFT",
       "stop_conditions": [],
-      "title": "Evidence-backed governance interoperability: manifest, negotiation, black-box conformance, projections (#870/#871)",
+      "title": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
       "todo_ids": [
-        "feat_01m6qms6a5ec61mx"
+        "bugs_01m6q7cbwbjxpk3d"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794002696Z"
+      "updated_at": "1794020082Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7de9d1983a9a031ff150523974cdb72d0cb91f02a8253a211dc88a44a19f7112",
-      "checks": [
-        {
-          "name": "interop_conformance_8_scenarios",
-          "status": "passed"
-        },
-        {
-          "name": "interop_manifest_unit_tests",
-          "status": "passed"
-        },
-        {
-          "name": "inventory_rpc_dispatch_capabilities_tests",
-          "status": "passed"
-        },
-        {
-          "name": "material_spec_update",
-          "status": "passed"
-        },
-        {
-          "name": "rpc_golden_vectors",
-          "status": "passed"
-        },
-        {
-          "name": "safety_gate_new_prompt",
-          "status": "passed"
-        }
-      ],
+      "artifact_hash": "sha256:bd0126b4fda2c4fdd41d4d699c9e50c7ad51c8c9c6e44da6327fea11c4542f82",
+      "checks": [],
       "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
+            "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
+            "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
             "kind": "refined",
             "sequence": 3
-          },
-          {
-            "detail": "trajectory:branch_01M6QMTVKWXS3Z9EJ8SP1FDR01",
-            "event_id": "event:4",
-            "intent_id": "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M6QMTVKWXS3Z9EJ8SP1FDR01",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M6QMTVKWXS3Z9EJ8SP1FDR01",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M6QMTVKWXS3Z9EJ8SP1FDR01",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M6QMTVKWXS3Z9EJ8SP1FDR01",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 3,
         "schema_version": "1.0.0",
-        "trajectories": {
-          "branch_01M6QMTVKWXS3Z9EJ8SP1FDR01": {
-            "evidence_only": true,
-            "id": "branch_01M6QMTVKWXS3Z9EJ8SP1FDR01",
-            "intent_id": "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
-            "steps": [
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/capabilities.rs",
-                  "tests/agent_rpc_suite.rs",
-                  "tests/cli_contracts.rs",
-                  "assets/tools/source_ci_profile.rs"
-                ],
-                "proof_refs": [
-                  "inventory_rpc_dispatch_capabilities_tests",
-                  "safety_gate_new_prompt"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/interop.rs"
-                ],
-                "proof_refs": [
-                  "interop_manifest_unit_tests"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "tests/interop_conformance.rs"
-                ],
-                "proof_refs": [
-                  "interop_conformance_8_scenarios"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "tests/rpc_golden_vectors.rs"
-                ],
-                "proof_refs": [
-                  "rpc_golden_vectors"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/specs/INTERFACES.md"
-                ],
-                "proof_refs": [
-                  "material_spec_update"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
+        "trajectories": {}
       },
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
-      "inspected_files": [
-        ".decapod/managed/specs/INTERFACES.md",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/capabilities.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/lib.rs",
-        "tests/agent_rpc_suite.rs",
-        "tests/cli_contracts.rs",
-        "tests/interop_conformance.rs",
-        "tests/rpc_golden_vectors.rs"
-      ],
-      "intent_id": "intent:change_01M6QMTVGXQRGXJPAQ4JJ3MXHA",
+      "inspected_files": [],
+      "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
       "modified_files": [],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -886,10 +1081,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M6QMTVKWXS3Z9EJ8SP1FDR01",
+      "run_id": "branch_01M6Q7DN2806XPGQJA6GFEHASD",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m6qms6a5ec61mx",
+      "task_id": "bugs_01m6q7cbwbjxpk3d",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

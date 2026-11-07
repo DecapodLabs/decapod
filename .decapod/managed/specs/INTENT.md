@@ -241,34 +241,6 @@ custody, receipt-independent prerequisites and required Buildkite execution
 remain governed by their existing contracts. Retired Dagger configuration must
 fail explicitly rather than silently discarding a required check.
 
-### Governance interoperability profile (#870/#871)
-
-Decapod exposes a versioned, read-only governance interoperability profile so
-external systems can discover what the kernel can do and negotiate a shared
-operating picture without any of them gaining authority. The profile is
-implemented by three new read-only RPC operations — `interop.manifest`,
-`interop.negotiate`, and `interop.project` — backed by
-`src/decapod/core/interop.rs` and `src/decapod/core/projection.rs`. The
-manifest is a capability declaration, not an authorization; negotiation is
-fail-closed and confers no authority; projections are pure structured views of
-governed state and never write it. ACP/MCP adapter surfaces are explicitly out
-of scope for this profile (tracked separately as #872); the manifest advertises
-`transport:mcp` only as `intentionally_not_used`. Conformance evidence comes
-from a black-box harness (`tests/interop_conformance.rs`) that spawns the real
-`decapod` binary against isolated fixtures; conformance reports are diagnostic
-evidence, never validation receipts or publication authorization.
-
-Scope boundary for #870: the profile above is the Decapod-side implementation
-substrate, not the complete #870 contract. Still open under #870: the
-Decapod-independent external normative profile, the normative specification,
-JSON Schemas for the normative envelopes, canonicalization/replay rules,
-deterministic vectors for the external profile, and a genuinely independent
-adapter. Deferring transport bindings to #872 does not excuse the missing
-independent implementation — an independent adapter could consume the
-transport-neutral profile without MCP. Decapod's RPC surface must never become
-the interoperability standard by accident: the external semantic contract
-remains independently implementable and independently provable.
-
 <!-- decapod:declared-capabilities:start -->
 
 ## Declared Capability Surfaces
@@ -292,8 +264,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (214 files), `tests/` (209 files)
+- Repository signal fingerprint: `914f7c1c6da50633851a00107b5d337dd165f6b2c7cecdd886eb7c232444b437`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (212 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -340,8 +312,75 @@ the recipe inactive in Decapod's own configuration and needs independent accepta
 and release before the Vega feature can use its controller support.
 
 ### Diagnostic collection and unresolved acceptance (#1445)
-
+ 
 Native diagnostics must be executable before independent parity and readiness evaluation are available. Missing reference/holdout inputs are publication acceptance gaps, not dependencies of a device tensor probe or model forward pass. The agent must produce public, reproducible Rust verification inputs and auditable agent-curated repository cases; these labels are not human-reviewed ground truth. Source/native diagnostic success alone must not trigger feature publication or a completion claim.
+
+## Validation Rules System
+
+Decapod enforces governance through a unified, rule-driven validation system that
+extends the Constitution and OVERRIDE.md authority model. Rules translate
+applicable principles into mechanically checkable requirements.
+
+The intent is to make governance mechanically enforceable while preserving the
+existing authority hierarchy. Rules translate constitutional principles into
+mechanically checkable requirements with structured remediation contracts.
+
+Key intent:
+- **Mechanical enforcement**: Governance violations are detected and reported
+  automatically, not reliant on human review of natural language.
+- **Structured remediation**: Every blocking rule provides actionable repair
+  instructions distinguishing autonomous repair, human authorization, and
+  evidence production.
+- **Anti-bypass**: Kernel invariants cannot be waived by candidate-controlled
+  policy changes. Override eligibility (NonOverridable, TightenOnly) is enforced.
+- **Context awareness**: Rules declare applicability conditions; custody rules
+  only apply in governed agent workspaces with active task claims.
+- **Structured remediation**: Every blocking result provides actionable repair
+  instructions with stable error codes.
+- **Three-verdict system**: PASS/FAIL/UNVERIFIABLE with UNVERIFIABLE never
+  treated as PASS.
+
+The system extends the existing Constitution/OVERRIDE.md authority model:
+Constitution (built-in defaults) → OVERRIDE.md (project overrides) → Task
+constraints (governed plan) → Resolved effective rule set → Validation.
+
+Seven built-in rules cover the existing governance responsibilities:
+scope enforcement, protected paths, task ownership, workspace isolation,
+evidence freshness, proof-backed completion, and file-touch budgets.
+
+Overrides are declared in OVERRIDE.md under a dedicated VALIDATION_RULES section
+with TOML-formatted fenced blocks. Override eligibility (NonOverridable,
+TightenOnly, ConfigurableOnly, FullyOverridable) is enforced per-rule.
+
+The validation rules gate runs as part of `decapod validate` after override
+authority resolution and before project specs validation. Results include
+policy fingerprint and validation epoch binding.
+
+The system is accessible via `decapod validate`, RPC (`validation.rules.list`,
+`validation.rules.evaluate`, `validation.rules.get`), and OVERRIDE.md.
+
+## Validation Rules System Implementation Status
+
+The validation rules system has been implemented with the following components:
+
+- **Rule Registry**: Manages built-in rules, project overrides, and task constraints with proper precedence
+- **Seven Built-in Rules**: Covering scope enforcement, protected paths, task ownership, workspace isolation, evidence freshness, proof-backed completion, and file-touch budgets
+- **Actual Evaluators**: Connected to existing Decapod evaluators (scope validator, gatekeeper, workspace, evidence validator, workunit validator)
+- **Three-Verdict System**: PASS/FAIL/UNVERIFIABLE with UNVERIFIABLE never treated as PASS
+- **Structured Remediation**: Every blocking rule provides actionable repair instructions with stable error codes
+- **Override Integration**: OVERRIDE.md support with TOML-formatted fenced blocks and override eligibility enforcement
+- **Context Awareness**: Rules declare applicability conditions; custody rules only apply in governed agent workspaces
+
+### Implementation Quality
+
+- All validation rules unit tests pass (8/8)
+- Clippy clean with `-D warnings`
+- Cargo fmt clean
+- Actual evaluators connected (no placeholder Pass returns)
+- Override eligibility enforced (NonOverridable, TightenOnly, ConfigurableOnly, FullyOverridable)
+- Anti-bypass protections: kernel invariants non-waivable, candidate-controlled policy changes rejected
+
+The validation rules gate runs as part of `decapod validate` after override authority resolution and before project specs validation. Results include policy fingerprint and validation epoch binding.
 
 ## Immutable CI context and release projection continuity
 

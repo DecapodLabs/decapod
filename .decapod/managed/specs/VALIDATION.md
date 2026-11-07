@@ -462,31 +462,6 @@ labeled; they are not actual uploads, tags, releases, or deployments.
 useful during bootstrap and inside finite recipes, but grants no publication
 readiness on its own.
 
-## Governance interoperability conformance harness (#870/#871)
-
-`tests/interop_conformance.rs` is a reusable black-box harness that spawns the
-real `decapod` binary (`env!("CARGO_BIN_EXE_decapod")`, with a Bazel runfiles
-fallback) against isolated temporary git fixtures with isolated XDG dirs
-(`tests/support/interop_harness.rs`). Eight scenarios run with a bounded 120s
-per-process limit and fail the test (nonzero exit) on any failed assertion:
-`discovery_and_negotiation`, `authorized_mutation`, `denied_mutation`,
-`approval_roundtrip`, `session_task_continuity`, `stale_evidence`,
-`cli_rpc_parity`, and `malformed_adversarial`. Each scenario writes a
-machine-readable JSON report to `target/interop-conformance/<scenario>.json`
-(or `$INTEROP_CONFORMANCE_REPORT_DIR`; under Bazel it falls back to the temp
-dir because runfiles are read-only). The harness proves that every advertised
-read-only op is dispatch-accepted, that negotiation is order-invariant and
-fail-closed, that denied mutations leave canonical state unchanged (git HEAD
-and todo status compared before/after), that the approval roundtrip works
-through the real policy path (fingerprint from `govern policy eval`, grant,
-scope limits, revoke re-blocks), and that stale context bundles are refused
-with `CONTEXT_BUNDLE_STALE`. Conformance reports are diagnostic evidence only:
-they are not `validate` receipts and never set `publication_ready`. In CI the
-target is `//:interop_conformance` (auto-generated from the `tests/*.rs` glob),
-listed in the selective-core full profile in `assets/tools/source_ci_profile.rs`.
-Golden RPC vectors for the new ops live in `tests/golden/rpc/v1/` and are
-replayed by `tests/rpc_golden_vectors.rs`.
-
 Inside GitHub Actions or Buildkite, public CLI, alias, and RPC validation run
 real bounded CI-local checks. Reports state `scope=ci_local` and
 `publication_ready=false`. They do not write a full-readiness receipt, recursively
@@ -687,6 +662,119 @@ must exercise the actual authored helper or workflow body. Tool setup verifies
 pinned official bytes and exact version output before adding tools to PATH.
 Regular-file release staging preserves executable bytes. Tests do not publish
 real packages merely to establish routing or archive policy.
+
+## Validation Rules System
+
+Decapod enforces governance through a unified, rule-driven validation system that
+extends the Constitution and OVERRIDE.md authority model. Rules translate
+applicable principles into mechanically checkable requirements.
+
+### Rule Registry and Precedence
+
+The rule registry resolves an effective rule set from three tiers:
+
+1. **Built-in rules** (Constitution authority): Embedded default rules supplied by
+   Decapod covering scope, custody, evidence, and workunit governance.
+2. **Project overrides** (OVERRIDE.md authority): Project-specific rule
+   customizations in `.decapod/OVERRIDE.md` under the `
+
+## VALIDATION_RULES Overrides
+   section. Overrides can tighten severity, add constraints, or configure
+   evaluator parameters within declared override eligibility.
+3. **Task constraints** (Governed plan authority): Task-specific constraints from
+   the governed plan (forbidden paths, file-touch budgets) automatically become
+   rules with TaskConstraints authority.
+
+Precedence: Kernel invariants (NonOverridable) > Task constraints > Project
+overrides > Built-in defaults. TightenOnly rules can only increase severity or
+add constraints.
+
+### Built-in Validation Rules
+
+| Rule ID | Authority | Severity | Evaluator | Description |
+|---------|-----------|----------|-----------|-------------|
+| `decapod.scope.authorized_paths` | Constitution | Error | scope.validator | All changed files must be within authorized scope defined in governed plan |
+| `decapod.scope.protected_paths` | Constitution | Critical | gatekeeper | Protected paths in config.toml and governed plan must not be modified |
+| `decapod.custody.task_ownership` | KernelInvariant | Critical | workspace | All work must be in claimed task workspace with valid ownership |
+| `decapod.custody.workspace_isolation` | KernelInvariant | Critical | workspace | Changes isolated to task workspace; root repo must not be modified |
+| `decapod.evidence.required_and_fresh` | Constitution | Error | evidence.validator | Required evidence artifacts must exist and be fresh (max age configurable) |
+| `decapod.evidence.proof_backed_completion` | KernelInvariant | Critical | workunit | Task completion requires passing proof-plan gates with valid evidence |
+| `decapod.scope.file_touch_budget` | Constitution | Error | scope.validator | Changed file count must not exceed declared file-touch budget |
+
+### Rule Evaluation and Verdicts
+
+Each rule evaluates to one of three verdicts:
+
+- **PASS**: Required check executed successfully and established the specified condition.
+- **FAIL**: Evaluated condition was violated.
+- **UNVERIFIABLE**: Condition could not be established due to missing evidence, inputs,
+  or evaluator capability. UNVERIFIABLE never counts as PASS.
+
+FAIL and mandatory UNVERIFIABLE verdicts block governed completion and publication
+transitions. Every blocking result includes a structured remediation contract with:
+- Stable error code
+- Rule identifier and applicable authority
+- Actual violation and expected condition
+- Affected paths or governance entities
+- Required remediation steps
+- Whether autonomous remediation is permitted
+- Whether human authorization is required
+- Evidence needed for revalidation
+
+### Override Integration
+
+Project-specific rules are declared in `.decapod/OVERRIDE.md` under a dedicated
+
+## VALIDATION_RULES Overrides section. Each rule override uses a fenced block
+with the rule ID as heading:
+
+```markdown
+### decapod.scope.authorized_paths
+````markdown
+severity: error
+applicability:
+  required_changed_paths: ["src/**"]
+  forbidden_changed_paths: ["**/secrets/**"]
+evidence_max_age_seconds: 43200
+````
+```
+
+Overrides are validated for:
+- Unknown rule IDs (fail closed)
+- Duplicate definitions (fail closed)
+- Malformed definitions (fail closed)
+- Unauthorized weakening of kernel invariants (rejected)
+- Override eligibility violations (TightenOnly, NonOverridable enforced)
+
+### Applicability and Context Awareness
+
+Rules declare applicability conditions (required/forbidden paths, task types, Git
+refs, CI/local-only). The registry only evaluates applicable rules. Custody rules
+(task_ownership, workspace_isolation) only apply to governed agent workspaces
+with active task claims. They do not apply to:
+- Detached/post-merge validation contexts
+- Consumer repository validation
+- Release/post-merge validation contexts
+- Fixture/test validation contexts
+
+### Remediation and Recovery
+
+Every blocking result provides actionable remediation:
+- **Autonomous**: Agent can repair (e.g., revert out-of-scope changes)
+- **Authorization required**: Human approval needed (e.g., protected paths, scope expansion)
+- **Evidence production**: Agent must produce fresh evidence (e.g., re-run validation)
+
+Agents must follow the remediation contract and revalidate. Repeated evaluation of
+unchanged inputs must not invent progress. Kernel invariants cannot be waived by
+candidate-controlled policy changes.
+
+### Integration with Validation Pipeline
+
+The validation rules gate runs as part of `decapod validate` after override
+authority resolution and before project specs validation. It evaluates all
+applicable rules against the current candidate state, evidence artifacts, and
+governance context. Results are included in the validation report with
+policy fingerprint and validation epoch binding.
 
 ## Proof Surfaces
 
@@ -937,8 +1025,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `74509338483e2ac393f6b484e0d4144c4fea30efe5bde9b449053d5c561e65f8`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (214 files), `tests/` (209 files)
+- Repository signal fingerprint: `914f7c1c6da50633851a00107b5d337dd165f6b2c7cecdd886eb7c232444b437`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (212 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
