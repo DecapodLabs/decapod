@@ -1389,6 +1389,14 @@
       "proof_refs": [
         "dactyl_tests"
       ]
+    },
+    {
+      "id": "ckpt-rbg3-14-16855",
+      "summary": "rebind checkpoint onto v0.128.0 master (chore: regenerate v0.129.0 release-bound entrypoints and vega-native lock pin after rebase (#1536))",
+      "input_digest": "sha256:f9b368d162bfaa07c969820758dffd82f8c3f76b249fc7cff69ac7664506fc73",
+      "proof_refs": [
+        "dactyl_tests"
+      ]
     }
   ],
   "intents": {
