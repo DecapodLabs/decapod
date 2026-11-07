@@ -2125,19 +2125,23 @@ pub fn scaffold_project_entrypoints(
                 files: manifest_entries,
             };
             if let Some(existing) = existing_manifest.as_ref() {
-                let mut existing_value = serde_json::to_value(existing).ok();
-                let mut candidate_value = serde_json::to_value(&manifest).ok();
-                if let (Some(existing_value), Some(candidate_value)) =
-                    (&mut existing_value, &mut candidate_value)
-                {
-                    if let (Some(a), Some(b)) =
-                        (existing_value.as_object_mut(), candidate_value.as_object_mut())
-                    {
-                        a.remove("generated_at");
-                        b.remove("generated_at");
+                let same_except_timestamp = match (
+                    serde_json::to_value(existing),
+                    serde_json::to_value(&manifest),
+                ) {
+                    (Ok(mut existing_value), Ok(mut candidate_value)) => {
+                        if let (Some(a), Some(b)) = (
+                            existing_value.as_object_mut(),
+                            candidate_value.as_object_mut(),
+                        ) {
+                            a.remove("generated_at");
+                            b.remove("generated_at");
+                        }
+                        existing_value == candidate_value
                     }
-                }
-                if existing_value.is_some() && existing_value == candidate_value {
+                    _ => false,
+                };
+                if same_except_timestamp {
                     manifest.generated_at = existing.generated_at.clone();
                 }
             }

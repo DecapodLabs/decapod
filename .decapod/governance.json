@@ -1593,6 +1593,22 @@
       "proof_refs": [
         "spec_reviews_post_refresh"
       ]
+    },
+    {
+      "id": "ckpt-lint-fix-18124",
+      "summary": "Fix clippy collapsible-if and rustfmt formatting in the scaffold generated_at preservation (#1079 follow-up)",
+      "input_digest": "sha256:f062c786f11c0c23b7fae9d3a5603fc71d0e7fc13e6f58d229875296b6c05bd2",
+      "proof_refs": [
+        "clippy_fmt_clean"
+      ]
+    },
+    {
+      "id": "ckpt-fmt-1079-10309",
+      "summary": "rustfmt the #1079 manifest read-fallback and test literals (fmt check compliance)",
+      "input_digest": "sha256:f062c786f11c0c23b7fae9d3a5603fc71d0e7fc13e6f58d229875296b6c05bd2",
+      "proof_refs": [
+        "fmt_check_clean"
+      ]
     }
   ],
   "intents": {

@@ -674,7 +674,11 @@ pub fn read_specs_manifest(
         path
     } else {
         let legacy = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST_LEGACY);
-        if legacy.exists() { legacy } else { return Ok(None) }
+        if legacy.exists() {
+            legacy
+        } else {
+            return Ok(None);
+        }
     };
     let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
     let manifest: ProjectSpecsManifest = serde_json::from_str(&raw).map_err(|e| {
