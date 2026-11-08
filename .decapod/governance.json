@@ -579,6 +579,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-architecture-fp",
+      "summary": "Bind the ARCHITECTURE attestation to the current repository signal.",
+      "input_digest": "sha256:edc8efed1ccbd038156fe2c97129348967526dfd45e9d21a187513bd12d5821c",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
