@@ -563,6 +563,11 @@
       "id": "ck-pr1564-008",
       "summary": "Refresh ARCHITECTURE.md attestation/fingerprint projection via project-check --refresh-specs",
       "input_digest": "sha256:db5ac79a7ad8e3476db8dd26402a1b0de6349acbd9175b909721cb846554f9e5"
+    },
+    {
+      "id": "ck-pr1564-009",
+      "summary": "Refresh INTENT.md attestation/fingerprint projection via project-check --refresh-specs",
+      "input_digest": "sha256:abe3670aebead4effa4faf2494fbba2d140a1f2df1d1b0bedf4161e325190aa5"
     }
   ],
   "intents": {
