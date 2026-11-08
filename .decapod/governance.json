@@ -699,6 +699,14 @@
       "id": "cp-1557-audit-note",
       "summary": "Record the publication repair note",
       "input_digest": "sha256:6d5df2d8c1bbde5014726d5655869c00276c63ad2936659fc1bc77b85f855a57"
+    },
+    {
+      "id": "ckpt-v0131-merge-1794097261",
+      "summary": "Merge master v0.131.0; refresh specs with new signal 896b9ee9...",
+      "input_digest": "sha256:40f830aef7255e2546d46cf7c3dd8d45f94374a39b72b3ea031cabf83a8722e1",
+      "proof_refs": [
+        "v0131_merge"
+      ]
     }
   ],
   "intents": {
