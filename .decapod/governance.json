@@ -668,6 +668,11 @@
       "id": "ck-pr1564-029",
       "summary": "chore(specs): refresh SEMANTICS.md attestation for state.resolve PR #1564",
       "input_digest": "sha256:e65f9737b4acb2cf33763fa74d09cde7a1ac65b4fc425e720913d5941127d55f"
+    },
+    {
+      "id": "ck-pr1564-030",
+      "summary": "chore(specs): refresh VALIDATION.md attestation for state.resolve PR #1564",
+      "input_digest": "sha256:84010837c909b0a903fc729b02637c0fad8cb2c774e7c4c9646b64659dcf8b1a"
     }
   ],
   "intents": {
