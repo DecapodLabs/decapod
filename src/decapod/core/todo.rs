@@ -3364,9 +3364,61 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         |conn| {
             ensure_schema(conn)?;
 
-            // A matching title is not task identity. Distinct requests stay
-            // distinct even when their titles are identical.
-            let _ = (&primary_owner, description);
+            // A title or category is not task identity. A repeated request
+            // with the same explicit external reference and the same complete
+            // creation intent is a narrower duplicate; compare the immutable
+            // task.add event rather than the owner field, which claims mutate.
+            if !r#ref.trim().is_empty() {
+                let mut stmt = conn.prepare(
+                    "SELECT t.id, t.hash FROM tasks t JOIN events e ON e.subject_id=t.id
+                     WHERE e.stream='todo' AND e.event_type='task.add'
+                       AND t.status NOT IN ('done','archived')
+                       AND json_extract(e.payload,'$.payload.ref')=?1
+                       AND json_extract(e.payload,'$.payload.title')=?2
+                       AND json_extract(e.payload,'$.payload.description')=?3
+                       AND json_extract(e.payload,'$.payload.tags')=?4
+                       AND json_extract(e.payload,'$.payload.owner')=?5
+                       AND json_extract(e.payload,'$.payload.scope')=?6
+                       AND json_extract(e.payload,'$.payload.dir_path')=?7
+                       AND json_extract(e.payload,'$.payload.priority')=?8
+                       AND json_extract(e.payload,'$.payload.depends_on')=?9
+                       AND json_extract(e.payload,'$.payload.blocks')=?10
+                       AND COALESCE(json_extract(e.payload,'$.payload.due'),'')=?11
+                       AND COALESCE(json_extract(e.payload,'$.payload.parent_task_id'),'')=?12
+                       AND t.one_shot=?13
+                     LIMIT 2",
+                )?;
+                let rows = stmt.query_map(
+                    crate::core::db::params![
+                        r#ref,
+                        title,
+                        description,
+                        effective_tags,
+                        primary_owner,
+                        scope,
+                        dir_abs,
+                        priority,
+                        depends_on,
+                        blocks,
+                        due.as_deref().unwrap_or(""),
+                        parent.as_deref().unwrap_or(""),
+                        one_shot
+                    ],
+                    |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)),
+                )?;
+                let matches = rows.collect::<SqlResult<Vec<_>>>()?;
+                if matches.len() > 1 {
+                    return Err(error::DecapodError::ValidationError("DUPLICATE_TASK_AMBIGUOUS: identical referenced tasks already exist; inspect them before retrying".into()));
+                }
+                if let Some((id, hash)) = matches.into_iter().next() {
+                    return Ok((
+                        id,
+                        hash,
+                        effective_tags.clone(),
+                        Some(serde_json::json!({"reason":"exact_referenced_creation_intent"})),
+                    ));
+                }
+            }
 
             // Infer category from tags or title for auto-assignment.
             let inferred_category = infer_category_from_task(conn, title, &effective_tags)?;
@@ -4166,6 +4218,18 @@ pub fn release_checkout_binding(
                     "caller '{caller}' does not own binding on '{worktree_id}' (owned by '{agent_id}')"
                 )));
             }
+            let assignee: String = conn
+                .query_row("SELECT assigned_to FROM tasks WHERE id = ?1", [&task_id], |row| row.get(0))
+                .map_err(error::DecapodError::StorageError)?;
+            if !assignee.is_empty() && assignee != caller {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "task '{task_id}' custody belongs to '{assignee}'; the former owner cannot release its checkout binding"
+                )));
+            }
+            task_journal::transfer::ensure_not_exported(conn, &task_id)?;
+            let task_ids = vec![task_id.clone()];
+            let before = task_journal::capture_selected(conn, &task_ids)?;
+            let watermark = task_journal::watermark(conn)?;
             conn.execute(
                 "DELETE FROM authoring_bindings WHERE worktree_id = ?1",
                 [worktree_id],
@@ -4184,6 +4248,7 @@ pub fn release_checkout_binding(
                 actor: caller.to_string(),
             };
             append_event(conn, &ev)?;
+            task_journal::record_changes(conn, &before, &task_ids, watermark, "authoring.release", caller)?;
             Ok(true)
         } else {
             Ok(false)
@@ -4272,15 +4337,14 @@ fn replay_authoring_events(
         {
             return Err(bad());
         }
-        if let Some(old) = projection.get(tree) {
-            if old.task != task
+        if let Some(old) = projection.get(tree)
+            && (old.task != task
                 || old.branch != branch
                 || old.repository != repository
                 || generation < old.generation
-                || (generation == old.generation && old.agent != agent)
-            {
-                return Err(bad());
-            }
+                || (generation == old.generation && old.agent != agent))
+        {
+            return Err(bad());
         }
         projection.insert(
             tree.to_owned(),
@@ -4399,6 +4463,7 @@ fn admit_checkout_binding_inner(
                 .prepare(
                     "SELECT id, hash, assigned_to, COALESCE(lease_generation, 0),
                         lease_expires_at, COALESCE(lease_lifecycle, '')
+                        , scope
                      FROM tasks
                      WHERE status NOT IN ('done', 'archived')",
                 )
@@ -4412,26 +4477,30 @@ fn admit_checkout_binding_inner(
                         row.get::<_, i64>(3)?,
                         row.get::<_, Option<String>>(4)?,
                         row.get::<_, String>(5)?,
+                        row.get::<_, String>(6)?,
                     ))
                 })
                 .map_err(error::DecapodError::StorageError)?;
             let mut matched = Vec::new();
             for row in rows {
-                let (id, _hash, assigned_to, generation, expires, lifecycle) =
+                let (id, _hash, assigned_to, generation, expires, lifecycle, scope) =
                     row.map_err(error::DecapodError::StorageError)?;
-                let named = branch
-                    .split(|ch: char| ch == '/' || ch == '-')
-                    .any(|part| part == id);
+                let named = branch.split(['/', '-']).any(|part| part == id);
                 if named {
-                    matched.push((id, assigned_to, generation, expires, lifecycle));
+                    matched.push((id, assigned_to, generation, expires, lifecycle, scope));
                 }
             }
             if matched.len() != 1 {
                 return Ok(base.clone());
             }
-            let (task_id, assigned_to, generation, expires, lifecycle) = matched.remove(0);
+            let (task_id, assigned_to, generation, expires, lifecycle, scope) = matched.remove(0);
             let mut admission = base.clone();
             admission.task_id = Some(task_id.clone());
+            task_journal::check_execution_authority(conn, &task_id)?;
+            if fleet_coord::is_shared_resource_scope(&scope) {
+                admission.state = fleet_coord::AuthoringState::NotProven;
+                return Ok(admission);
+            }
             if generation <= 0 || generation > i64::from(u32::MAX) {
                 admission.state = fleet_coord::AuthoringState::NotProven;
                 return Ok(admission);
@@ -4497,6 +4566,10 @@ fn admit_checkout_binding_inner(
                             admission.state = fleet_coord::AuthoringState::Stale;
                             return Ok(admission);
                         }
+                        task_journal::transfer::ensure_not_exported(conn, &task_id)?;
+                        let task_ids = vec![task_id.clone()];
+                        let before = task_journal::capture_selected(conn, &task_ids)?;
+                        let watermark = task_journal::watermark(conn)?;
                         conn.execute(
                                 "UPDATE authoring_bindings
                                  SET lease_generation = ?1, agent_id = ?2, branch = ?3, updated_at = ?4
@@ -4527,6 +4600,14 @@ fn admit_checkout_binding_inner(
                             actor: assigned_to,
                         };
                         append_event(conn, &ev)?;
+                        task_journal::record_changes(
+                            conn,
+                            &before,
+                            &task_ids,
+                            watermark,
+                            "authoring.bind",
+                            caller.unwrap_or(""),
+                        )?;
                         admission.state = fleet_coord::AuthoringState::Admissible;
                         return Ok(admission);
                     }
@@ -4577,17 +4658,21 @@ fn admit_checkout_binding_inner(
                 )
                 .optional()
                 .map_err(error::DecapodError::StorageError)?;
-            if let Some(bound) = existing_task {
-                if bound != worktree_id {
-                    admission.state = fleet_coord::AuthoringState::Stale;
-                    return Ok(admission);
-                }
+            if let Some(bound) = existing_task
+                && bound != worktree_id
+            {
+                admission.state = fleet_coord::AuthoringState::Stale;
+                return Ok(admission);
             }
 
             if !persist {
                 admission.state = fleet_coord::AuthoringState::CustodyPending;
                 return Ok(admission);
             }
+            task_journal::transfer::ensure_not_exported(conn, &task_id)?;
+            let task_ids = vec![task_id.clone()];
+            let before = task_journal::capture_selected(conn, &task_ids)?;
+            let watermark = task_journal::watermark(conn)?;
             if let Err(error) = conn.execute(
                 "INSERT INTO authoring_bindings(
                     worktree_id, task_id, agent_id, lease_generation, branch, repository_id, updated_at
@@ -4638,6 +4723,14 @@ fn admit_checkout_binding_inner(
                 actor: assigned_to,
             };
             append_event(conn, &ev)?;
+            task_journal::record_changes(
+                conn,
+                &before,
+                &task_ids,
+                watermark,
+                "authoring.bind",
+                caller.unwrap_or(""),
+            )?;
             admission.state = fleet_coord::AuthoringState::Admissible;
             Ok(admission)
         })()?;
@@ -4902,7 +4995,8 @@ pub fn claim_task_with_lease(
                                 "status": "conflict",
                                 "mode": "exclusive",
                                 "conflict_class": "shared_resource",
-                                "resolution": "establish_separate_governed_workspace",
+                                "resolution": "serialize_or_handoff_shared_resource",
+                                "operation": "claim_shared_resource",
                                 "message": format!(
                                     "Task {} conflicts with {} enforced shared resource claim(s)",
                                     id,
@@ -5920,7 +6014,6 @@ fn handoff_task_impl(
         TaskJournalSelection::Ids(vec![id.to_owned()]),
         |conn| {
             ensure_schema(conn)?;
-            let handoff_advisory;
             enforce_operation_policy(root, conn, "todo.handoff", acting_agent, id, None)?;
             touch_agent_presence(conn, to, &ts)?;
 
@@ -6068,7 +6161,8 @@ fn handoff_task_impl(
                     serde_json::json!({
                         "status": "conflict",
                         "conflict_class": "shared_resource",
-                        "resolution": "establish_separate_governed_workspace",
+                        "resolution": "serialize_or_handoff_shared_resource",
+                        "operation": "handoff_shared_resource",
                         "message": format!(
                             "Task {id} handoff to {to} conflicts with {} enforced shared resource claim(s)",
                             blocking.len()
@@ -6079,7 +6173,7 @@ fn handoff_task_impl(
                     String::new(),
                 ));
             }
-            handoff_advisory = overlaps;
+            let handoff_advisory = overlaps;
 
             let previous = if row.assigned_to.is_empty() {
                 from.unwrap_or("unassigned").to_string()
