@@ -583,6 +583,11 @@
       "id": "ck-pr1564-012",
       "summary": "Refresh README.md attestation/fingerprint projection via project-check --refresh-specs",
       "input_digest": "sha256:b6babb66ed52a1de3b93f6649cbc630a976143f2da32dbc0b9b6c6ff7f3eb90d"
+    },
+    {
+      "id": "ck-pr1564-013",
+      "summary": "Refresh SECURITY.md attestation/fingerprint projection via project-check --refresh-specs",
+      "input_digest": "sha256:ec0643bfd5cda112f7d8b30e34f5821644373fd50fdc35ee7c7f186c70b89db9"
     }
   ],
   "intents": {
