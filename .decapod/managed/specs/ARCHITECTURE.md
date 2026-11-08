@@ -1,5 +1,55 @@
 # Architecture
 
+## Governed transition judgment
+
+`src/decapod/core/governed_transition.rs` is the kernel that decides whether an
+attempted change is admissible and whether a completion or publication claim is
+proven. It does not choose the next unit of work. Canonical head, rules
+fingerprint, and verifier come from `state::canonical_snapshot`, which is the
+same revision and provenance resolver used by `state.resolve`. The judgment
+does not keep a second definition of that identity.
+
+A task verification row is an index. `judge_stored_verification` re-hashes the
+bound files and checks that the proof digest matches that reconstruction under
+the canonical snapshot. A pass status or a digest written only into SQLite is
+not `proven`. Material decisions are appended to the existing `traces` event
+stream and rendered by the flight recorder.
+
+Canonical order is Git identity, then task revision, lease, and claim scope in
+the datastore, then evidence bound to that identity. Projections such as
+`project_validation_report` derive a judgment from those records. Task comments,
+verification notes, `passes: true`, and an agent-written `publication_ready`
+boolean are not authority.
+
+`effective_verification_status` returns `unproven` when a passing status is
+bound to a task revision but `proof_plan_results` has no output digest.
+`work_claim::from_todo` then stays blocked. `state_commit::verify` rejects an
+empty scope record or a missing expected root. `state_commit::freshness`
+reports `stale` when the committed head, rules fingerprint, or verifier differs
+from the current identity, and `unknown` when either identity is incomplete.
+
+Validation rules no longer drop an Error or Critical rule because a forbidden
+path changed. `evaluate_workunit_rule` does not pass because a manifest key
+exists. Project and task overlays cannot replace a `NonOverridable` rule body.
+The publication-phase rule `decapod.publication.fresh_proof` runs only when the
+caller sets `include_publication`.
+
+Verifier integrity, runtime capability attestation, and blocker classification
+live in the same kernel. Each isolation axis on `VerifierEnvelope` is an
+`IsolationAttestation` with its own observation, source, and evidence
+reference. A reference on one axis cannot establish another. A native-trace or
+external-observation label without a usable reference stays `unknown`.
+Integrity also compares `canonical_input_hash` with the completion evidence
+`inputs_hash`. `CapabilityAttestation` keeps observed support only when a
+native or external evidence reference is usable and the `StateIdentity` is
+current. It is not `capabilities::CapabilityRegistry`. `classify_blocker` uses
+`AdmissionCause` and optional `ProofCause`. It ignores reason prose.
+`transition_trace` adds `blocker_class` and `required_capability` only when a
+class is known. `capability_gap` is a pure record: runtime for context, state,
+tool semantics, coordination, policy, verification, and mechanical work, and
+frontier only for inference. No second state machine, harness adapter, or
+capability router was added.
+
 ## Claim scope command coverage
 
 The `claim_boundaries` module in `tests/cli_contracts.rs` runs distinct CLI
@@ -757,8 +807,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83b268db9fe1e98544bace06e71dd0eb254b03386050f05022c95e1669245cb1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (214 files), `tests/` (213 files)
+- Repository signal fingerprint: `019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -804,13 +854,6 @@ that reviewed local contract into the existing bounded native runner; it does no
 interpret workflow YAML or introduce an orchestration engine. Every command runs
 in the frozen source snapshot, with byte-measured declared tool inputs and fresh
 accepted-target queries. Source/configuration/tool/target drift invalidates proof.
-Before execution, `core/native_proof.rs` rejects any configured executable whose
-container format does not match the host platform; the rejection names the check,
-the configured path, the detected format/architecture (ELF or Mach-O, including
-fat binaries and shebang scripts) and the host's expected format/architecture,
-e.g. `fmt: /nix/store/.../alejandra is Mach-O arm64; native Linux validation
-requires ELF x86_64`, so a foreign-OS/arch toolchain mismatch is diagnosable
-from the `READINESS_BLOCKED` detail alone.
 
 The resulting `repository_local_readiness` scope attests those local commands,
 not hosted workflow jobs, platform matrices or release/deployment execution. The

@@ -1,7 +1,7 @@
 //! Whole-command regression for a newly created ordinary ref at the accepted tip.
 //! Git, the action shell, and both production CLIs are real. Only the installed
 //! Ajv/Node toolchain and provider event metadata are controlled fixture doubles.
-#![cfg(unix)]
+#![cfg(all(target_os = "linux", target_arch = "x86_64"))]
 
 use decapod::core::bounded_process::BoundedCommand;
 use std::collections::BTreeMap;

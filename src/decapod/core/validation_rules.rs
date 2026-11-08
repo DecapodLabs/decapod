@@ -83,6 +83,8 @@ pub enum RuleVerdict {
     Fail,
     /// Rule could not be evaluated - missing evidence/evaluator.
     Unverifiable,
+    /// Evidence was bound to a different governing identity.
+    Stale,
 }
 
 /// Applicability conditions for a rule.
@@ -217,12 +219,8 @@ impl ValidationRule {
             }
         }
 
-        // Check forbidden changed paths
-        for pattern in &self.applicability.forbidden_changed_paths {
-            if changed_paths.iter().any(|path| glob_match(pattern, path)) {
-                return false;
-            }
-        }
+        // Forbidden paths are scope conditions. They do not exempt the rule.
+        // Evaluation fails the change when a forbidden path is present.
 
         // Check task types
         if let Some(task_type) = task_type
@@ -259,6 +257,22 @@ impl ValidationRule {
 
         true
     }
+
+    /// True when a changed path matches a forbidden-path condition.
+    pub fn forbidden_scope_hit(&self, changed_paths: &BTreeSet<String>) -> bool {
+        self.applicability
+            .forbidden_changed_paths
+            .iter()
+            .any(|pattern| {
+                changed_paths
+                    .iter()
+                    .any(|path| glob_match(pattern, path) || path_prefix(pattern, path))
+            })
+    }
+}
+
+fn path_prefix(prefix: &str, path: &str) -> bool {
+    path == prefix || path.starts_with(&format!("{prefix}/"))
 }
 
 /// Simple glob matching.
@@ -420,6 +434,14 @@ pub struct RuleEvaluationContext {
     pub validation_epoch: ValidationEpochMetadata,
     /// Policy fingerprint.
     pub policy_fingerprint: String,
+    /// Repository whose governed files the evaluators must read.
+    pub repo_root: Option<std::path::PathBuf>,
+    /// Include publication-phase rules. Validation omits them.
+    pub include_publication: bool,
+    /// Governing identity evidence must be bound to, when freshness is required.
+    pub governing_identity: Option<String>,
+    /// Evidence name to the state identity it was bound to.
+    pub evidence_identity: BTreeMap<String, String>,
 }
 
 /// Rule registry for managing validation rules.
@@ -823,6 +845,49 @@ impl RuleRegistry {
                 decapod_version: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
             },
         });
+
+        self.register_rule(ValidationRule {
+            id: RuleId::new("decapod.publication.fresh_proof"),
+            description: "Publication requires fresh proof bound to the current governing identity"
+                .to_string(),
+            authority: RuleAuthority::KernelInvariant,
+            applicability: RuleApplicability::default(),
+            evaluation_phase: EvaluationPhase::Publication,
+            evaluator: "decapod.publication".to_string(),
+            requirements: RuleRequirements {
+                required_evidence: vec![
+                    "validation_receipt".to_string(),
+                    "candidate_head".to_string(),
+                ],
+                ..Default::default()
+            },
+            severity: RuleSeverity::Critical,
+            remediation: RuleRemediation {
+                error_code: "PUBLICATION_NOT_PROVEN".to_string(),
+                violation_description: "Publication was requested without fresh proof".to_string(),
+                expected_condition:
+                    "A fresh receipt is bound to the current head, rules, and verifier".to_string(),
+                observed_condition: "Publication evidence is missing, stale, or self-reported"
+                    .to_string(),
+                affected_paths: vec![],
+                required_steps: vec![
+                    "Revalidate against the current canonical state".to_string(),
+                    "Do not treat a status flag as publication eligibility".to_string(),
+                ],
+                autonomous_remediation_permitted: true,
+                human_authorization_required: false,
+                evidence_for_revalidation: vec!["validation_receipt".to_string()],
+                related_rules: vec![RuleId::new("decapod.evidence.proof_backed_completion")],
+            },
+            override_eligibility: OverrideEligibility::NonOverridable,
+            provenance: RuleProvenance {
+                source: "embedded/constitution.json".to_string(),
+                source_hash: String::new(),
+                body_hash: String::new(),
+                registered_at: crate::core::time::now_epoch_z(),
+                decapod_version: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
+            },
+        });
     }
 
     /// Register a built-in rule.
@@ -1202,11 +1267,12 @@ impl RuleRegistry {
                         continue;
                     }
                     OverrideEligibility::TightenOnly => {
-                        // Only allow increasing severity
+                        // Only allow increasing severity and adding constraints.
+                        // The builtin rule body stays in place so a project copy
+                        // cannot replace the evaluator or authority.
                         if project_rule.severity > existing.rule.severity {
                             existing.effective_severity = project_rule.severity.clone();
                         }
-                        // Merge applicability (add constraints)
                         existing
                             .effective_applicability
                             .required_changed_paths
@@ -1215,14 +1281,27 @@ impl RuleRegistry {
                             .effective_applicability
                             .forbidden_changed_paths
                             .extend(project_rule.applicability.forbidden_changed_paths.clone());
+                        extend_requirements(
+                            &mut existing.rule.requirements,
+                            &project_rule.requirements,
+                        );
                         existing.override_values = Some(RuleOverrideValues {
                             severity: Some(project_rule.severity.clone()),
                             applicability: Some(project_rule.applicability.clone()),
                             ..Default::default()
                         });
                     }
-                    _ => {
-                        // Fully overridable or configurable
+                    OverrideEligibility::ConfigurableOnly => {
+                        existing.effective_severity = project_rule.severity.clone();
+                        existing.rule.severity = project_rule.severity.clone();
+                        existing.rule.requirements = project_rule.requirements.clone();
+                        existing.override_values = Some(RuleOverrideValues {
+                            severity: Some(project_rule.severity.clone()),
+                            requirements: Some(project_rule.requirements.clone()),
+                            ..Default::default()
+                        });
+                    }
+                    OverrideEligibility::FullyOverridable => {
                         existing.effective_severity = project_rule.severity.clone();
                         existing.effective_applicability = project_rule.applicability.clone();
                         existing.override_values = Some(RuleOverrideValues {
@@ -1231,9 +1310,9 @@ impl RuleRegistry {
                             requirements: Some(project_rule.requirements.clone()),
                             remediation: Some(project_rule.remediation.clone()),
                         });
+                        existing.rule = project_rule.clone();
                     }
                 }
-                existing.rule = project_rule.clone();
             } else {
                 // New rule from project override (additive)
                 resolved.insert(
@@ -1251,8 +1330,11 @@ impl RuleRegistry {
         // Apply task constraints (highest precedence for applicable rules)
         for (id, task_rule) in &self.task_rules {
             if let Some(existing) = resolved.get_mut(id) {
-                // Task constraints can only tighten
-                if task_rule.severity > existing.rule.severity {
+                // Task constraints cannot replace a kernel rule body.
+                if existing.rule.override_eligibility == OverrideEligibility::NonOverridable {
+                    continue;
+                }
+                if task_rule.severity > existing.effective_severity {
                     existing.effective_severity = task_rule.severity.clone();
                 }
                 existing
@@ -1263,12 +1345,12 @@ impl RuleRegistry {
                     .effective_applicability
                     .forbidden_changed_paths
                     .extend(task_rule.applicability.forbidden_changed_paths.clone());
+                extend_requirements(&mut existing.rule.requirements, &task_rule.requirements);
                 existing.override_values = Some(RuleOverrideValues {
                     severity: Some(task_rule.severity.clone()),
                     applicability: Some(task_rule.applicability.clone()),
                     ..Default::default()
                 });
-                existing.rule = task_rule.clone();
             } else {
                 // New task-specific rule
                 resolved.insert(
@@ -1292,6 +1374,11 @@ impl RuleRegistry {
         resolved
             .values()
             .filter(|r| {
+                if r.rule.evaluation_phase == EvaluationPhase::Publication
+                    && !context.include_publication
+                {
+                    return false;
+                }
                 r.rule.is_applicable(
                     &context.changed_paths,
                     context.task_type.as_deref(),
@@ -1315,6 +1402,22 @@ impl Default for RuleRegistry {
     }
 }
 
+fn extend_requirements(target: &mut RuleRequirements, extra: &RuleRequirements) {
+    target
+        .required_evidence
+        .extend(extra.required_evidence.clone());
+    target.required_evidence.sort();
+    target.required_evidence.dedup();
+    target
+        .required_evaluators
+        .extend(extra.required_evaluators.clone());
+    target.required_evaluators.sort();
+    target.required_evaluators.dedup();
+    if extra.evidence_max_age_seconds > target.evidence_max_age_seconds {
+        target.evidence_max_age_seconds = extra.evidence_max_age_seconds;
+    }
+}
+
 /// Evaluate a rule against the current context.
 pub fn evaluate_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> RuleEvaluationResult {
     // For now, we'll implement a basic evaluator that checks applicability
@@ -1329,31 +1432,47 @@ pub fn evaluate_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> Ru
         }
     }
 
-    // Check evidence freshness
-    let mut _stale_evidence: Vec<String> = Vec::new();
-    if rule.rule.requirements.evidence_max_age_seconds > 0 {
-        for _evidence in context.evidence_artifacts.keys() {
-            // In a real implementation, we'd check the actual timestamp
-            // For now, we'll skip this check
+    let mut stale_evidence = Vec::new();
+    if let Some(governing) = context.governing_identity.as_deref() {
+        for evidence in &rule.rule.requirements.required_evidence {
+            match context.evidence_identity.get(evidence).map(String::as_str) {
+                Some(bound) if bound != governing => stale_evidence.push(evidence.clone()),
+                Some(_) => {}
+                None if context.evidence_artifacts.contains_key(evidence) => {
+                    missing_evidence.push(format!("{evidence} governing identity"));
+                }
+                None => {}
+            }
         }
     }
 
-    let verdict = if !missing_evidence.is_empty() {
+    let verdict = if rule.rule.forbidden_scope_hit(&context.changed_paths)
+        && matches!(
+            rule.effective_severity,
+            RuleSeverity::Error | RuleSeverity::Critical
+        ) {
+        RuleVerdict::Fail
+    } else if !stale_evidence.is_empty() {
+        RuleVerdict::Stale
+    } else if !missing_evidence.is_empty() {
         RuleVerdict::Unverifiable
     } else {
-        // Delegate to actual evaluator
         match evaluator_name.as_str() {
             "decapod.scope.validator" => evaluate_scope_rule(rule, context),
             "decapod.gatekeeper" => evaluate_gatekeeper_rule(rule, context),
             "decapod.workspace" => evaluate_workspace_rule(rule, context),
             "decapod.evidence.validator" => evaluate_evidence_rule(rule, context),
             "decapod.workunit" => evaluate_workunit_rule(rule, context),
+            "decapod.publication" => evaluate_publication_rule(context),
             _ => RuleVerdict::Unverifiable,
         }
     };
 
     let severity = rule.effective_severity.clone();
-    let remediation = if matches!(verdict, RuleVerdict::Fail | RuleVerdict::Unverifiable) {
+    let remediation = if matches!(
+        verdict,
+        RuleVerdict::Fail | RuleVerdict::Unverifiable | RuleVerdict::Stale
+    ) {
         Some(rule.rule.remediation.clone())
     } else {
         None
@@ -1373,10 +1492,20 @@ pub fn evaluate_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> Ru
                 "Rule violated: {}",
                 rule.rule.remediation.violation_description
             ),
-            RuleVerdict::Unverifiable => format!(
-                "Rule unverifiable: missing evidence {}",
-                missing_evidence.join(", ")
+            RuleVerdict::Stale => format!(
+                "Rule stale: evidence bound to a different governing identity ({})",
+                stale_evidence.join(", ")
             ),
+            RuleVerdict::Unverifiable => {
+                if missing_evidence.is_empty() {
+                    "Rule unverifiable: evidence does not establish the claim".to_string()
+                } else {
+                    format!(
+                        "Rule unverifiable: missing evidence {}",
+                        missing_evidence.join(", ")
+                    )
+                }
+            }
         },
         remediation,
         policy_fingerprint: context.policy_fingerprint.clone(),
@@ -1386,8 +1515,9 @@ pub fn evaluate_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> Ru
 
 /// Evaluate scope rule using existing plan governance.
 fn evaluate_scope_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> RuleVerdict {
-    // Read governed plan to get scope constraints
-    let repo_root = std::path::Path::new(".");
+    let Some(repo_root) = context.repo_root.as_deref() else {
+        return RuleVerdict::Unverifiable;
+    };
     let governance_path = repo_root.join(".decapod").join("governance.json");
 
     let file_touch_budget = if governance_path.exists() {
@@ -1430,8 +1560,9 @@ fn evaluate_gatekeeper_rule(_rule: &ResolvedRule, context: &RuleEvaluationContex
         return RuleVerdict::Unverifiable;
     }
 
-    // Verify we're in a workspace (not root repo)
-    let repo_root = std::path::Path::new(".");
+    let Some(repo_root) = context.repo_root.as_deref() else {
+        return RuleVerdict::Unverifiable;
+    };
     match crate::core::workspace::get_workspace_status(repo_root) {
         Ok(status) => {
             // Gatekeeper only applies in governed agent workspaces with active task claims
@@ -1442,8 +1573,6 @@ fn evaluate_gatekeeper_rule(_rule: &ResolvedRule, context: &RuleEvaluationContex
         Err(_) => return RuleVerdict::Unverifiable,
     }
 
-    // Run actual gatekeeper checks
-    let repo_root = std::path::Path::new(".");
     let paths: Vec<std::path::PathBuf> = context
         .changed_paths
         .iter()
@@ -1505,8 +1634,9 @@ fn evaluate_workspace_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext
         return RuleVerdict::Unverifiable;
     }
 
-    // Verify we're in a workspace (not root repo)
-    let repo_root = std::path::Path::new(".");
+    let Some(repo_root) = context.repo_root.as_deref() else {
+        return RuleVerdict::Unverifiable;
+    };
     match crate::core::workspace::get_workspace_status(repo_root) {
         Ok(status) => {
             // Custody rules only apply in governed agent workspaces with active task claims
@@ -1537,7 +1667,9 @@ fn evaluate_evidence_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) 
 
     // Check evidence freshness if max_age is set
     if rule.rule.requirements.evidence_max_age_seconds > 0 {
-        let repo_root = std::path::Path::new(".");
+        let Some(repo_root) = context.repo_root.as_deref() else {
+            return RuleVerdict::Unverifiable;
+        };
         let max_age =
             std::time::Duration::from_secs(rule.rule.requirements.evidence_max_age_seconds);
         let now = std::time::SystemTime::now();
@@ -1589,19 +1721,77 @@ fn evaluate_evidence_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) 
         }
     }
 
+    if rule
+        .rule
+        .requirements
+        .required_evidence
+        .iter()
+        .any(|evidence| {
+            context
+                .evidence_artifacts
+                .get(evidence)
+                .is_none_or(|value| !evidence_digest_ok(value))
+        })
+    {
+        return RuleVerdict::Unverifiable;
+    }
+
     RuleVerdict::Pass
+}
+
+fn evidence_digest_ok(value: &str) -> bool {
+    let body = value.trim().strip_prefix("sha256:").unwrap_or(value.trim());
+    body.len() >= 8 && body.chars().all(|ch| ch.is_ascii_hexdigit())
 }
 
 /// Evaluate workunit rule using actual workunit validation.
 fn evaluate_workunit_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext) -> RuleVerdict {
-    // Check workunit manifest and proof gates
-    if !context.evidence_artifacts.contains_key("workunit_manifest") {
+    let Some(gates) = context.evidence_artifacts.get("proof_plan_gates") else {
+        return RuleVerdict::Unverifiable;
+    };
+    let Some(manifest) = context.evidence_artifacts.get("workunit_manifest") else {
+        return RuleVerdict::Unverifiable;
+    };
+    if !evidence_digest_ok(manifest) || !gates.starts_with("proven:") {
         return RuleVerdict::Unverifiable;
     }
+    let proof = gates.trim_start_matches("proven:");
+    if !evidence_digest_ok(proof) {
+        return RuleVerdict::Unverifiable;
+    }
+    match context.governing_identity.as_deref() {
+        Some(governing) => match context
+            .evidence_identity
+            .get("proof_plan_gates")
+            .map(String::as_str)
+        {
+            Some(bound) if bound == governing => RuleVerdict::Pass,
+            Some(_) => RuleVerdict::Stale,
+            None => RuleVerdict::Unverifiable,
+        },
+        None => RuleVerdict::Unverifiable,
+    }
+}
 
-    // In a real implementation, we'd check proof gates
-    // For now, assume pass if manifest exists
-    RuleVerdict::Pass
+fn evaluate_publication_rule(context: &RuleEvaluationContext) -> RuleVerdict {
+    let receipt = context.evidence_artifacts.get("validation_receipt");
+    let head = context.evidence_artifacts.get("candidate_head");
+    let report = serde_json::json!({
+        "status": context.evidence_artifacts.get("validation_status").map(String::as_str).unwrap_or("unknown"),
+        "head": head,
+        "receipt_hash": receipt,
+        "rules_fingerprint": context.evidence_identity.get("validation_receipt"),
+        "current_rules_fingerprint": context.governing_identity,
+        "verifier": context.evidence_identity.get("verifier"),
+        "current_verifier": context.evidence_artifacts.get("current_verifier"),
+    });
+    match crate::core::governed_transition::project_report_publication(&report).judgment {
+        crate::core::governed_transition::ProofJudgment::Proven => RuleVerdict::Pass,
+        crate::core::governed_transition::ProofJudgment::Stale => RuleVerdict::Stale,
+        crate::core::governed_transition::ProofJudgment::Failed => RuleVerdict::Fail,
+        crate::core::governed_transition::ProofJudgment::NotProven
+        | crate::core::governed_transition::ProofJudgment::Unknown => RuleVerdict::Unverifiable,
+    }
 }
 
 /// Evaluate all applicable rules.
@@ -1623,6 +1813,8 @@ pub struct RulesValidationReport {
     pub passed: usize,
     pub failed: usize,
     pub unverifiable: usize,
+    #[serde(default)]
+    pub stale: usize,
     pub overall_verdict: RuleVerdict,
 }
 
@@ -1640,9 +1832,15 @@ impl RulesValidationReport {
             .iter()
             .filter(|r| r.verdict == RuleVerdict::Unverifiable)
             .count();
+        let stale = results
+            .iter()
+            .filter(|r| r.verdict == RuleVerdict::Stale)
+            .count();
 
         let overall_verdict = if failed > 0 {
             RuleVerdict::Fail
+        } else if stale > 0 {
+            RuleVerdict::Stale
         } else if unverifiable > 0 {
             RuleVerdict::Unverifiable
         } else {
@@ -1654,13 +1852,14 @@ impl RulesValidationReport {
             passed,
             failed,
             unverifiable,
+            stale,
             overall_verdict,
         }
     }
 
     pub fn has_blocking_failures(&self) -> bool {
         self.results.iter().any(|r| {
-            r.verdict == RuleVerdict::Fail
+            matches!(r.verdict, RuleVerdict::Fail | RuleVerdict::Stale)
                 && matches!(r.severity, RuleSeverity::Error | RuleSeverity::Critical)
         })
     }
@@ -1779,16 +1978,17 @@ mod tests {
             false
         ));
 
-        // Should not apply - forbidden path
+        // Forbidden paths stay applicable. They are violations, not exemptions.
         changed_paths.clear();
         changed_paths.insert("src/main.rs".to_string());
         changed_paths.insert("config/secrets/key.txt".to_string());
-        assert!(!test_rule.is_applicable(
+        assert!(test_rule.is_applicable(
             &changed_paths,
             Some("feature"),
             Some("refs/heads/main"),
             false
         ));
+        assert!(test_rule.forbidden_scope_hit(&changed_paths));
 
         // Should not apply - wrong task type
         changed_paths.clear();

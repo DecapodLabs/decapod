@@ -404,17 +404,20 @@ pub(crate) fn effective_verification_status<'a>(
     task_id: &str,
     revision: i64,
 ) -> Option<&'a str> {
-    if status.is_some_and(|value| {
+    let pass_like = status.is_some_and(|value| {
         matches!(
             value.to_ascii_lowercase().as_str(),
             "pass" | "passed" | "verified"
         )
-    }) && !verification_binding_matches(artifacts, task_id, revision)
-    {
-        Some("stale")
-    } else {
-        status
+    });
+    if pass_like && !verification_binding_matches(artifacts, task_id, revision) {
+        return Some("stale");
     }
+    if pass_like && !artifacts.is_some_and(crate::core::governed_transition::substantive_task_proof)
+    {
+        return Some("unproven");
+    }
+    status
 }
 
 #[derive(Parser, Debug)]
@@ -5105,6 +5108,23 @@ pub fn yield_claim_lease(
     }))
 }
 
+fn project_root_for_verification(store_root: &Path) -> std::path::PathBuf {
+    let data_name = store_root.file_name().and_then(|name| name.to_str());
+    let parent_name = store_root
+        .parent()
+        .and_then(|path| path.file_name())
+        .and_then(|name| name.to_str());
+    if data_name == Some("data") && parent_name == Some(".decapod") {
+        store_root
+            .parent()
+            .and_then(|path| path.parent())
+            .unwrap_or(store_root)
+            .to_path_buf()
+    } else {
+        store_root.to_path_buf()
+    }
+}
+
 fn exclusive_lease_proof_gate_on_conn(
     conn: &Connection,
     root: &Path,
@@ -5147,6 +5167,50 @@ fn exclusive_lease_proof_gate_on_conn(
         )
     });
     if passed {
+        let project = project_root_for_verification(root);
+        if project.join(".git").exists() {
+            let judgment = crate::core::governed_transition::judge_stored_verification(
+                &project,
+                verified.as_deref().unwrap_or(""),
+                artifacts.as_ref().unwrap_or(&JsonValue::Null),
+            );
+            match judgment {
+                Ok(crate::core::governed_transition::ProofJudgment::Proven) => return Ok(None),
+                Ok(judgment) => {
+                    return Ok(Some(serde_json::json!({
+                        "ts": now_iso(),
+                        "cmd": "todo.done",
+                        "status": "conflict",
+                        "root": root.to_string_lossy(),
+                        "id": task_id,
+                        "result": {
+                            "status": "conflict",
+                            "resolution": "proof_not_reconstructed",
+                            "message": format!(
+                                "Task {task_id} verification row is not independent proof ({})",
+                                judgment.as_str()
+                            ),
+                            "judgment": judgment.as_str()
+                        }
+                    })));
+                }
+                Err(_) => {
+                    return Ok(Some(serde_json::json!({
+                        "ts": now_iso(),
+                        "cmd": "todo.done",
+                        "status": "conflict",
+                        "root": root.to_string_lossy(),
+                        "id": task_id,
+                        "result": {
+                            "status": "conflict",
+                            "resolution": "proof_unknown",
+                            "message": format!("Task {task_id} canonical state could not be resolved"),
+                            "judgment": "unknown"
+                        }
+                    })));
+                }
+            }
+        }
         return Ok(None);
     }
     Ok(Some(serde_json::json!({

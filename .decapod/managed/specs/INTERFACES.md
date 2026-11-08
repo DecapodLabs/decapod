@@ -1,5 +1,36 @@
 # Interfaces
 
+## Publication projection
+
+`interop.project` validation reports expose `proof_judgment` alongside
+`publication_ready`. Eligibility comes from `project_report_publication`.
+A report that only sets `publication_ready` or `passes` stays ineligible.
+A fresh pass with a non-empty head and a receipt digest can be `proven`.
+Stale rules or verifier identity, a failed status, missing canonical state,
+and a corrupt status stay distinct and are not publishable.
+
+`state commit verify` requires the scope-record bytes and an expected root.
+Omitting the root is an error, not a successful verification.
+
+`state.resolve` remains the canonical snapshot. `judge_stored_verification`
+re-hashes the files named by a verification row and binds that digest to the
+snapshot. The row's status field is not accepted as proof. Governed-transition
+decisions are appended to the `traces` stream that `decapod flight-recorder`
+already renders. When the transition is not admissible and proven, that payload
+includes `blocker_class` and `required_capability`. Those fields describe the
+blocker. They are not an instruction to the harness.
+
+`judge_completion_with_verifier` is the completion judgment plus an optional
+list of isolation axes. An empty list preserves `judge_completion` and ignores
+the envelope. `judge_verifier_integrity` checks each required axis against that
+axis's evidence reference and checks `canonical_input_hash` against the
+completion `inputs_hash`. `attest_capability` keeps observed support only when
+the attestation carries a usable evidence reference and a current identity.
+`admit_operation_surface` answers whether an operation class may write the
+given paths. None of these functions is a new RPC, and none selects work. A
+missing blocker class means the cause is unclassified. It does not mean
+`state`.
+
 ## Claim scope acceptance
 
 `todo add --scope 'paths:["src/a.rs"]'` declares the files an exclusive claim
@@ -1125,8 +1156,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `83b268db9fe1e98544bace06e71dd0eb254b03386050f05022c95e1669245cb1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (214 files), `tests/` (213 files)
+- Repository signal fingerprint: `019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
