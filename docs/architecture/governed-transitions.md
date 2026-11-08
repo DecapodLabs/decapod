@@ -86,70 +86,80 @@ canonical state.
 ## Verifier integrity
 
 A passing observation and an independently constrained verifier are different
-claims. `VerifierEnvelope` records the subject, the canonical input hash, the
-harness identity and version, the verifier identity, and one observation for
-each isolation axis: parent turns, project instructions, user instructions,
-filesystem scope, tool scope, and network scope. Each observation is
-`proven_excluded`, `observed_inherited`, or `unknown`.
+claims. `VerifierEnvelope` records the subject, the digest of the inputs the
+verifier reviewed, the harness identity and version, the verifier identity, and
+one `IsolationAttestation` for each axis: parent turns, project instructions,
+user instructions, filesystem scope, tool scope, and network scope. Each
+attestation has its own observation (`proven_excluded`, `observed_inherited`,
+or `unknown`), its own evidence source, and its own evidence reference.
 
-`effective_isolation` keeps that observation only when the evidence source is a
-native trace or an external observation. A self-report, a harness name, or an
-absent source becomes `unknown`, including a child statement that it did not
-see the parent context. Axes are independent. Proven exclusion of parent turns
-does not exclude project instructions, user instructions, tools, files, or
-network.
+`effective_isolation` reads only that axis. A self-report, a harness name, or
+an absent source is `unknown`. A native trace or an external observation
+without a usable evidence reference is also `unknown`. A reference on one axis
+does not establish any other axis. Decapod checks that the reference is
+present and well formed. It does not open the trace body, and no harness
+adapter currently constructs these attestations.
 
-`judge_verifier_integrity` binds the envelope to the current `StateIdentity`.
-An incomplete identity is `unknown`. A different identity is `stale`. An empty
-requirement is `proven` for that bound envelope, because no isolation was
-required. Observed inheritance on a required axis is `not_proven`, not
-`failed`. Any remaining unknown required axis is `unknown`. The judgment is
-`proven` only when every required axis is `proven_excluded` under native or
-external evidence.
+`judge_verifier_integrity` binds the envelope to the current `StateIdentity`
+and to the completion evidence `inputs_hash`. An incomplete identity, or a
+missing or malformed subject digest, is `unknown`. A different governing
+identity is `stale`. A well-formed subject digest that differs from
+`inputs_hash` is `not_proven`: the identity still matches, so the verifier
+reviewed a different artifact rather than a stale state. An empty isolation
+requirement is `proven` only after that subject binding matches. Observed
+inheritance on a required axis, backed by its own evidence reference, is
+`not_proven`, not `failed`. Any remaining unknown required axis is `unknown`.
+The judgment is `proven` only when every required axis is `proven_excluded`
+under its own native or external evidence reference.
 
 `judge_completion_with_verifier` calls `judge_completion` first. An empty
-requirement returns that judgment unchanged, so existing completion behavior
-stays in place. A base judgment other than `proven` is also returned unchanged:
-failed evidence stays `failed`, and a missing proof stays `not_proven`. A
-`proven` base with a required axis and no envelope is `unknown`. A `proven`
-base with an envelope is then judged by `judge_verifier_integrity`. A semantic
-reviewer can supply evidence. It does not by itself satisfy an integrity
-requirement.
+requirement returns that judgment unchanged and does not read the envelope.
+A base judgment other than `proven` is also returned unchanged: failed
+evidence stays `failed`, and a missing proof stays `not_proven`. A `proven`
+base with a required axis and no envelope is `unknown`. A `proven` base with
+an envelope is then judged by `judge_verifier_integrity`. A semantic reviewer
+can supply evidence. It does not by itself satisfy an integrity requirement.
 
 ## Runtime capability evidence
 
 `CapabilityAttestation` is not the project capability registry in
-`capabilities.rs`. It records one runtime capability id, the declared support
-(`proven`, `unavailable`, `unknown`, or `stale`), the evidence source, the
-governing identity it was bound to, and a limitation string.
+`capabilities.rs`. It records one runtime capability id, the observed support
+(`proven`, `unavailable`, `unknown`, or `stale`), the evidence source, an
+evidence reference, the governing identity, and a limitation string.
 
-`attest_capability` returns `unknown` for a self-report, a harness name, or an
-absent source, even when the declaration says `proven`. An incomplete identity
-is `unknown`. A complete attestation bound to a different identity is `stale`.
-Otherwise the declared support is returned. `unknown` and `stale` are not
-`proven`, so a policy that needs current support cannot treat them as
-available. `advisory_harness_capability` ignores the harness string and returns
-an unknown, harness-named attestation. Codex, Claude, Grok, and Antigravity are
+`attest_capability` returns `unknown` for a self-report, a harness name, an
+absent source, or a native or external source that lacks a usable evidence
+reference. That is true even when `observed` says `proven`. An incomplete
+identity is `unknown`. A usable native or external reference bound to a
+different identity is `stale`. A fresh usable reference keeps `proven`,
+`unavailable`, or `unknown` as observed. `unknown` is not `unavailable`, and
+`stale` is not `unknown`. Decapod does not open the referenced observation.
+`advisory_harness_capability` ignores the harness string and returns an
+unknown, harness-named attestation. Codex, Claude, Grok, and Antigravity are
 identities, not evidence.
 
 ## Blocker classification
 
 `classify_blocker` names why a transition is not yet safe to treat as proven.
-`capability_gap` names a capability and a provider class for that blocker. The
-trace records `blocker_class` and `required_capability`. Neither function
-changes admission or selects the next action. There is no `capability.resolve`
-operation.
+It reads `AdmissionCause` and, when supplied, `ProofCause`. The human-readable
+reason string is not read. `capability_gap` names a capability and a provider
+class for that blocker. The trace records `blocker_class` and
+`required_capability` only when a class is known. Neither function changes
+admission or selects the next action. There is no `capability.resolve`
+operation. The class is advisory telemetry.
 
-An admissible `proven` transition records no blocker. A rejected or stale
-admission whose reason contains `exclusive` or `lease` is `coordination`. A
-reason that contains `forbidden`, `budget`, `prerequisite`, or `may not` is
-`policy`. A stale admission, or a reason that contains `state`, is `state`.
-The remaining judgment maps `stale` and `unknown` to `state`, `not_proven` and
-`failed` to `verification`, and a non-admissible `proven` judgment to
-`mechanical`. `inference` is available through `capability_gap` for a problem
-that still needs semantic judgment. Its provider class is `frontier` and
-`escalation_required` is true. Every other class names a runtime capability and
-does not require escalation.
+An admissible `proven` transition records no blocker. Typed causes map as
+follows: incomplete governing identity and stale authorization are `state`;
+an expired lease and an exclusive conflict are `coordination`; a file-touch
+budget, a forbidden path, and an unproven prerequisite are `policy`. A `stale`
+proof judgment on an otherwise in-scope attempt is `state`, because the kernel
+has established an identity mismatch. `not_proven` and `failed` on that attempt
+are `verification`. `ProofCause::VerifierIntegrity` with an `unknown` judgment
+is `verification`. An `unknown` judgment with no typed cause, and a rejected
+or stale admission with no typed cause, record no blocker class. `inference`
+is available through `capability_gap` for a problem that still needs semantic
+judgment. Its provider class is `frontier` and `escalation_required` is true.
+Every other class names a runtime capability and does not require escalation.
 
 `admit_operation_surface` maps an operation class to a mutation surface.
 `design.review` may write `docs/**` and `.decapod/**` and may not write
