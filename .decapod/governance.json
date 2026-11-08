@@ -543,6 +543,11 @@
       "id": "ck-pr1564-004",
       "summary": "Document state.resolve/state.diff governed-state subsystem in ARCHITECTURE.md",
       "input_digest": "sha256:6505866323ede5e305946710aa26c9ade2321bf95ee1a10010e731ae8429753a"
+    },
+    {
+      "id": "ck-pr1564-005",
+      "summary": "Document state.resolve publication eligibility intent in INTENT.md",
+      "input_digest": "sha256:e7d4dd302dfec116779062fce69b850fa805d883d11b2da8e7ffcd9e85dd8cd7"
     }
   ],
   "legacy_digests": {

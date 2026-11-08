@@ -81,6 +81,60 @@ with the project when a conversation, process, model, or agent harness changes.
 It connects human intent to agent work, tool execution, produced artifacts, and
 the evidence and decisions needed for delivery.
 
+
+## Governed State Observability
+
+The `state` subsystem adds authoritative governed-state projection and diff as
+additive RPC capabilities. This addresses the need for agents to observe the
+current governed state without modifying it.
+
+### state.resolve
+
+Projects the current governed state from all canonical Decapod sources. This
+replaces ad-hoc state inspection with a single deterministic read model.
+
+Inputs (all optional):
+- `workunit_id`: Specific workunit to resolve
+- `trajectory_run_id`: Specific trajectory run
+- `intent_id`: Specific intent
+- `obligation_id`: Specific obligation
+- `include_proof_details`: Include detailed proof state
+- `include_obligation_graph`: Include full obligation graph
+
+Output: `StateResolution` with complete governed state including revision,
+objective, acceptance, scope, custody, decisions, failed paths, blockers,
+dependencies, changed surfaces, validation/proof state, unresolved obligations,
+publication eligibility, admissible actions, and provenance.
+
+### state.diff
+
+Computes semantic diff between two governed states. Accepts:
+- `from_state_commit` / `to_state_commit`: State commit IDs
+- `from_revision` / `to_revision`: Git revisions
+- `from_workunit_id` / `to_workunit_id`: Workunit IDs
+
+Output: `StateDiff` with added/removed/changed for each projection, proof state
+changes, obligation changes, blocker changes, dependency changes, publication
+transition, and admissible actions delta.
+
+Both operations are read-only, deterministic, and fail-closed. No shadow state
+is introduced; state derives exclusively from canonical sources.
+
+### Regression Tests
+
+The `state` subsystem includes regression tests in `tests/unit/state_eligibility_tests.rs`
+that verify the correctness of publication eligibility decisions:
+
+- **Missing proof result**: Reports not eligible when proof results are absent
+- **Failed proof result**: Reports not eligible when proof status is "fail"
+- **Missing state commit**: Reports not eligible when state commit artifact is absent
+- **Valid complete setup**: Reports eligible when all requirements are satisfied
+- **Empty proof plan**: Handles gracefully (no required proofs = eligible if other conditions met)
+
+These tests ensure the governed-state projection never reports publication eligibility
+without sufficient, current, valid, and properly bound evidence.
+
+
 ## Human and agent experience
 
 The human installs and initializes Decapod in the project:
@@ -276,8 +330,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
+- Repository signal fingerprint: `fcf98add742053dc31854722b1a17a3b19307e12f29b0ed6b5dadc9b03ccc520`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
