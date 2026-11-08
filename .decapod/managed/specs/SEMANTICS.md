@@ -48,29 +48,40 @@ overrun, and unproven prerequisites are rejected rather than scheduled around.
 
 Verifier integrity is a separate judgment from a passing observation.
 `judge_completion_with_verifier` keeps the ordinary completion judgment when no
-isolation axis is required. When an axis is required, a passing receipt becomes
-`proven` only if a `VerifierEnvelope` bound to the current head, rules
-fingerprint, and verifier shows that axis `proven_excluded` by a native trace
-or an external observation. A self-report or a harness name leaves the
-observation `unknown`. Observed inheritance is `not_proven`, not `failed`.
-Unknown isolation stays `unknown`. Parent-turn exclusion does not imply
-project-instruction, user-instruction, filesystem, tool, or network exclusion.
+isolation axis is required, and it does not read the envelope. When an axis is
+required, a passing receipt becomes `proven` only if a `VerifierEnvelope` is
+bound to the current head, rules fingerprint, and verifier, its
+`canonical_input_hash` equals the completion evidence `inputs_hash`, and that
+axis is `proven_excluded` by its own native trace or external observation with
+a usable evidence reference. A source label alone is not proof. Evidence for
+one axis does not establish another. A self-report, a harness name, an absent
+source, or a trusted source without a usable reference leaves that axis
+`unknown`. Observed inheritance with its own evidence reference is
+`not_proven`, not `failed`. A missing or malformed subject digest is
+`unknown`. A well-formed subject digest that differs from `inputs_hash` is
+`not_proven`, because the governing identity still matches. Unknown isolation
+stays `unknown`.
 
 A runtime capability attestation is likewise evidence, not a harness identity.
-`attest_capability` returns `unknown` for a self-report, a harness name, or a
-missing source, `stale` when a native or external attestation is bound to
-another governing identity, and the declared support only when that evidence is
-fresh. `unknown` and `stale` do not count as available. The project capability
-registry is a different record and is not this attestation.
+`attest_capability` returns `unknown` for a self-report, a harness name, an
+absent source, or a native or external source without a usable evidence
+reference, even when the observed support says `proven`. A usable reference
+bound to another governing identity is `stale`. A fresh usable reference keeps
+`proven`, `unavailable`, or `unknown`. `unknown` is not `unavailable`, and
+`stale` is not `unknown`. Decapod checks the reference and the identity. It
+does not open the observation, and no harness adapter constructs these
+attestations. The project capability registry is a different record.
 
-`classify_blocker` and `capability_gap` name why a transition is not yet proven
-and which capability would address that class. They are recorded on the
-existing transition trace. They do not choose the next action. `inference` is
-the only class whose provider is `frontier`. `admit_operation_surface` admits
-or rejects a mutation from the operation class: `design.review` may write
-documentation and `.decapod` evidence, `implementation` remains subject to
-scope admission, and `publication` may not mutate files. An unknown class stays
-`unknown`.
+`classify_blocker` reads the typed admission cause and an optional proof cause.
+It does not read the reason string. An unknown judgment is not automatically
+`state`. Verifier-integrity `unknown` is `verification`. An unknown judgment
+with no typed cause records no blocker class. `capability_gap` names a
+capability for a known class and is recorded on the existing transition trace.
+It does not choose the next action. `inference` is the only class whose
+provider is `frontier`. `admit_operation_surface` admits or rejects a mutation
+from the operation class: `design.review` may write documentation and
+`.decapod` evidence, `implementation` remains subject to scope admission, and
+`publication` may not mutate files. An unknown class stays `unknown`.
 
 ## State Machines
 
