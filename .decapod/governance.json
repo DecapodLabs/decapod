@@ -701,6 +701,14 @@
       "proof_refs": [
         "src/decapod/core/governed_transition.rs"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-evidence-doc",
+      "summary": "Document per-axis isolation evidence, subject binding, and typed blocker causes.",
+      "input_digest": "sha256:f3f552fa9e9e1ae22c768286f007ea1d5ee7cd769b1b65e20e548425c2408466",
+      "proof_refs": [
+        "docs/architecture/governed-transitions.md"
+      ]
     }
   ],
   "intents": {
