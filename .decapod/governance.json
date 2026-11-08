@@ -571,6 +571,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-semantics-fp",
+      "summary": "Bind the SEMANTICS attestation to the current repository signal.",
+      "input_digest": "sha256:25b6b3791de5c790b011e22dfac2efad196ec91970d83db6afeb0b0aceebb9ec",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
