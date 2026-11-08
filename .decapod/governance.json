@@ -539,6 +539,14 @@
       "proof_refs": [
         "src/decapod/core/todo.rs"
       ]
+    },
+    {
+      "id": "ck-1469-overlap-tests",
+      "summary": "Record that reported category and path overlap stays unenforced.",
+      "input_digest": "sha256:5b750e8adb2e010b7152f9848d24a16966a6b40dc3542e108ea4825a765b728e",
+      "proof_refs": [
+        "tests/unit/core/fleet_coord_tests.rs"
+      ]
     }
   ],
   "legacy_digests": {

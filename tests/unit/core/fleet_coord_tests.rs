@@ -175,8 +175,9 @@ fn detect_overlaps_skips_expired_yielded_and_same_agent() {
     assert!(
         overlaps
             .iter()
-            .any(|o| o.task_id == "t1" && o.reason == "path_overlap")
+            .any(|o| o.task_id == "t1" && o.reason == "path_overlap" && !o.enforced)
     );
+    assert!(!authoring_blocked(&overlaps));
     assert!(!overlaps.iter().any(|o| o.task_id == "t2"));
     assert!(!overlaps.iter().any(|o| o.task_id == "t4"));
 }
@@ -389,8 +390,18 @@ fn explicit_paths_preserve_other_claim_gates_and_reject_aliases() {
             "200Z"
         )
         .iter()
-        .any(|o| o.reason == "category_overlap")
+        .any(|o| o.reason == "category_overlap" && !o.enforced)
     );
+    let category = detect_overlaps(
+        "b",
+        "bob",
+        r#"paths:["b"]"#,
+        "security",
+        "/repo",
+        &active,
+        "200Z",
+    );
+    assert!(!authoring_blocked(&category));
     for scope in [
         "paths:[]",
         r#"paths:["../a"]"#,
