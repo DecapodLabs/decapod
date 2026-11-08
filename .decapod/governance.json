@@ -709,6 +709,14 @@
       "proof_refs": [
         "docs/architecture/governed-transitions.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-semantics-evidence",
+      "summary": "State that isolation evidence, subject identity, and capability support are judged per binding.",
+      "input_digest": "sha256:0889be3c3141872c7a5fa4d16fff1e6664a5c0995587815324f0899f8436e2b4",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
