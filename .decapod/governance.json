@@ -523,6 +523,16 @@
     "base_commit": "24164460c936cb42d7cf302acac80e74cfa8ef71",
     "target_base": "origin/master"
   },
+  "claims": {
+    "claim:isolated-authoring-custody": {
+      "statement": "Only a live task owner and a verified physical checkout of the same repository can receive authoring admission; independent worktrees retain independent custody.",
+      "falsifier": "A forged checkout, different repository, stale claim, missing projection, or two tasks on one checkout receive authoring permission.",
+      "status": "open",
+      "proof_refs": [
+        "tests/plugins/todo.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "ck-1469-overlap",
@@ -627,8 +637,158 @@
       "proof_refs": [
         "tests/plugins/todo.rs"
       ]
+    },
+    {
+      "id": "wip-1469-custody-1",
+      "summary": "Preserve in-progress src/decapod/core/todo.rs for review. The earlier 36-test plugin result predates later changes. Current admission, recovery, integration boundaries, living-spec refresh, full validation and PR readiness remain unverified. Original PR and uncommitted source checkout remain preserved.",
+      "input_digest": "sha256:3e789d35a4e3bcff77417b15b0923518fa87db5597ade06527843ec7943fa0da",
+      "proof_refs": [
+        "src/decapod/core/todo.rs"
+      ]
     }
   ],
+  "intents": {
+    "intent:run-1469-authoring-custody": {
+      "acceptance_criteria": [],
+      "assumptions": [],
+      "boundaries": [
+        "Preserve prior PR commits and original uncommitted work; do not merge or waive checks"
+      ],
+      "constraints": [
+        "src/decapod/core, tests, living specifications and generated governance"
+      ],
+      "created_sequence": 1,
+      "id": "intent:run-1469-authoring-custody",
+      "out_of_scope": [],
+      "proof_requirements": [],
+      "raw_intent": "Finish concurrent authoring and preserve task custody",
+      "refined_intent": "Correct admission and stale binding recovery without weakening shared resource or proof gates",
+      "status": "refined",
+      "updated_sequence": 3
+    }
+  },
+  "sections": {
+    "plan": {
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
+      "intent": "Retain task custody, admit only verified and fenced worktrees, preserve independent shared-resource protections, and require current proof for integration.",
+      "phases": [],
+      "proof_hooks": [
+        "Exact candidate decapod validate with required CI, workspace, custody and integration regression evidence"
+      ],
+      "schema_version": "1.1.0",
+      "state": "APPROVED",
+      "stop_conditions": [],
+      "title": "Harden concurrent authoring custody",
+      "todo_ids": [
+        "secu_01m6yj6s5nry0ry5"
+      ],
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1794175900Z"
+    },
+    "trajectory": {
+      "active_boundaries": [
+        "Preserve prior PR commits and original uncommitted work; do not merge or waive checks"
+      ],
+      "artifact_hash": "sha256:ef6bb5fdb8d4b22dfb2e15db0b555ac68449a0007ad8893db5a8bbe470be394e",
+      "checks": [
+        {
+          "name": "current-candidate",
+          "status": "partial"
+        },
+        {
+          "name": "original-plugin-suite",
+          "status": "passed"
+        }
+      ],
+      "custody": {
+        "events": [
+          {
+            "event_id": "event:2",
+            "intent_id": "intent:run-1469-authoring-custody",
+            "kind": "created",
+            "sequence": 2
+          },
+          {
+            "event_id": "event:3",
+            "intent_id": "intent:run-1469-authoring-custody",
+            "kind": "refined",
+            "sequence": 3
+          },
+          {
+            "detail": "trajectory:run-1469-authoring-custody",
+            "event_id": "event:4",
+            "intent_id": "intent:run-1469-authoring-custody",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
+          }
+        ],
+        "knowledge_candidates": [],
+        "next_sequence": 4,
+        "schema_version": "1.0.0",
+        "trajectories": {
+          "run-1469-authoring-custody": {
+            "evidence_only": true,
+            "id": "run-1469-authoring-custody",
+            "intent_id": "intent:run-1469-authoring-custody",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/fleet_coord.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/plugins/todo.rs",
+                  "Original PR head preserved at 6e842a09662e549297f63461358a44712c154647 and pushed on the task-scoped replacement branch. Original plugin suite passed 36 tests before subsequent modifications; no current exact-candidate proof. Admission and event-replay repairs in progress. Original dirty checkout and failed CI preserved."
+                ],
+                "proof_refs": [
+                  "original-plugin-suite",
+                  "current-candidate"
+                ],
+                "scope": [
+                  "src/decapod/core, tests, living specifications and generated governance"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
+      },
+      "declared_commands": [],
+      "evidence": [
+        "Original PR head preserved at 6e842a09662e549297f63461358a44712c154647 and pushed on the task-scoped replacement branch. Original plugin suite passed 36 tests before subsequent modifications; no current exact-candidate proof. Admission and event-replay repairs in progress. Original dirty checkout and failed CI preserved."
+      ],
+      "inspected_files": [
+        "src/decapod/core/fleet_coord.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/workspace.rs"
+      ],
+      "intent_id": "intent:run-1469-authoring-custody",
+      "modified_files": [
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/workspace.rs",
+        "tests/plugins/todo.rs"
+      ],
+      "repo_scope": [
+        "src/decapod/core, tests, living specifications and generated governance"
+      ],
+      "run_id": "run-1469-authoring-custody",
+      "schema_version": "1.1.0",
+      "shortcut_risk_signals": [],
+      "task_id": "secu_01m6yj6s5nry0ry5",
+      "tool_calls": [],
+      "unresolved_assumptions": []
+    }
+  },
   "legacy_digests": {
     ".decapod/governance/claims.json": "sha256:8f810aa7c70f812f74f283553df4094c6c4b59fbbad7d7a506d20b81a3000712",
     ".decapod/governance/plan.json": "sha256:ca4344858263b306ee2c7af5c8f22610b78e8256a71adca473b7e9ad4e636a07",

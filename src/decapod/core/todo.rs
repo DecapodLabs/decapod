@@ -599,6 +599,14 @@ pub enum TodoCommand {
         #[clap(long)]
         id: String,
     },
+    /// Explicitly release an authoring binding owned by the current agent.
+    ReleaseCheckout {
+        /// Exact worktree identity returned by admission diagnostics.
+        #[clap(long)]
+        worktree_id: String,
+    },
+    /// Rebuild a missing checkout-binding projection from canonical TODO events.
+    RecoverCheckoutBindings,
     /// Rebuild / reconcile the todo projection from the canonical events table.
     Rebuild,
     /// Checkpoint, verify, or explicitly recover the task projection journal.
@@ -965,6 +973,16 @@ fn connect_todo(root: &Path) -> Result<Connection, error::DecapodError> {
     crate::db::db_connect(&db_path.to_string_lossy())
 }
 
+const AUTHORING_BINDINGS_SCHEMA: &str = "CREATE TABLE authoring_bindings (
+    worktree_id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL UNIQUE,
+    agent_id TEXT NOT NULL,
+    lease_generation INTEGER NOT NULL,
+    branch TEXT NOT NULL,
+    repository_id TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+)";
+
 fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     // Read operations are intentionally backed by Dactyl read-only
     // connections. Schema creation, additive migrations, and invariant
@@ -1022,18 +1040,27 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_APPROVALS, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_INDEX, [])?;
-    conn.execute_batch(
-        "CREATE TABLE IF NOT EXISTS authoring_bindings (
-            worktree_id TEXT PRIMARY KEY,
-            task_id TEXT NOT NULL UNIQUE,
-            agent_id TEXT NOT NULL,
-            lease_generation INTEGER NOT NULL,
-            branch TEXT NOT NULL,
-            repository_id TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-         );",
-    )
-    .map_err(error::DecapodError::StorageError)?;
+    let authoring_table: bool = conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='authoring_bindings')",
+        [], |row| row.get(0),
+    )?;
+    if !authoring_table {
+        let initialized: bool = conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM meta WHERE namespace='authoring' AND key='projection_initialized')",
+            [], |row| row.get(0),
+        )?;
+        let historical: bool = conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND event_type IN ('authoring.bind','authoring.release'))",
+            [], |row| row.get(0),
+        )?;
+        if initialized || historical {
+            return Err(error::DecapodError::ValidationError(
+                "AUTHORING_PROJECTION_MISSING: run todo recover-checkout-bindings to rebuild the binding projection from its recorded events".into(),
+            ));
+        }
+        conn.execute_batch(AUTHORING_BINDINGS_SCHEMA)?;
+    }
+    conn.execute("INSERT OR IGNORE INTO meta(namespace,key,value) VALUES('authoring','projection_initialized','1')", [])?;
     seed_default_risk_zones(conn)?;
     // Houseboat 2 lease columns must exist even if meta was advanced without the ALTER.
     let _ = conn.execute("ALTER TABLE tasks ADD COLUMN lease_expires_at TEXT", []);
@@ -4055,29 +4082,283 @@ pub struct AuthoringAdmission {
     pub conflicting_task_id: Option<String>,
 }
 
-/// Bind a verified checkout to the task named by its current branch.
-///
-/// The checkout facts must come from `observe_checkout`. An unregistered
-/// checkout is not written. The linearization point is the unique
-/// `worktree_id` row inside one immediate transaction.
-pub fn read_authoring_admission(
+/// Derive the repository and checkout identities at the admission boundary.
+/// Neither a caller's registration flag nor its claimed Git identity is proof.
+fn observed_checkout(root: &Path, checkout: &Path) -> fleet_coord::CheckoutBinding {
+    let mut observed = crate::core::workspace::observe_checkout(checkout);
+    let repository_root = if root.file_name().is_some_and(|n| n == "data")
+        && root
+            .parent()
+            .and_then(Path::file_name)
+            .is_some_and(|n| n == ".decapod")
+    {
+        root.parent().and_then(Path::parent).unwrap_or(root)
+    } else {
+        root
+    };
+    let expected = crate::core::workspace::observe_checkout(repository_root);
+    if !expected.registered
+        || observed.repository_id != expected.repository_id
+        || observed.worktree_id == expected.worktree_id
+        || !checkout.starts_with(repository_root.join(".decapod/workspaces"))
+    {
+        observed.registered = false;
+    }
+    observed
+}
+
+pub fn read_authoring_admission_with_caller(
     root: &Path,
-    repository_id: &str,
-    worktree_id: &str,
-    branch: &str,
-    registered: bool,
+    checkout: &Path,
+    caller: Option<&str>,
 ) -> Result<AuthoringAdmission, error::DecapodError> {
-    admit_checkout_binding_inner(root, repository_id, worktree_id, branch, registered, false)
+    let observed = observed_checkout(root, checkout);
+    admit_checkout_binding_inner(
+        root,
+        &observed.repository_id,
+        &observed.worktree_id,
+        &observed.branch,
+        observed.registered,
+        false,
+        caller,
+    )
 }
 
 pub fn admit_checkout_binding(
     root: &Path,
-    repository_id: &str,
-    worktree_id: &str,
-    branch: &str,
-    registered: bool,
+    checkout: &Path,
+    caller: &str,
 ) -> Result<AuthoringAdmission, error::DecapodError> {
-    admit_checkout_binding_inner(root, repository_id, worktree_id, branch, registered, true)
+    let observed = observed_checkout(root, checkout);
+    admit_checkout_binding_inner(
+        root,
+        &observed.repository_id,
+        &observed.worktree_id,
+        &observed.branch,
+        observed.registered,
+        true,
+        Some(caller),
+    )
+}
+
+pub fn release_checkout_binding(
+    root: &Path,
+    worktree_id: &str,
+    caller: &str,
+) -> Result<bool, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    let ts = now_iso();
+    broker.with_transaction(&db_path, caller, None, "authoring.release", |conn| {
+        ensure_schema(conn)?;
+        verify_authoring_projection(conn)?;
+        let bound: Option<(String, String)> = conn
+            .query_row(
+                "SELECT task_id, agent_id FROM authoring_bindings WHERE worktree_id = ?1",
+                [worktree_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(error::DecapodError::StorageError)?;
+        if let Some((task_id, agent_id)) = bound {
+            if caller != agent_id {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "caller '{caller}' does not own binding on '{worktree_id}' (owned by '{agent_id}')"
+                )));
+            }
+            conn.execute(
+                "DELETE FROM authoring_bindings WHERE worktree_id = ?1",
+                [worktree_id],
+            )
+            .map_err(error::DecapodError::StorageError)?;
+            let ev = TodoEvent {
+                ts: ts.clone(),
+                event_id: crate::core::ulid::new_ulid(),
+                event_type: "authoring.release".to_string(),
+                status: "success".to_string(),
+                task_id: Some(task_id.clone()),
+                payload: serde_json::json!({
+                    "worktree_id": worktree_id,
+                    "agent_id": agent_id,
+                }),
+                actor: caller.to_string(),
+            };
+            append_event(conn, &ev)?;
+            Ok(true)
+        } else {
+            Ok(false)
+        }
+    })
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ReplayedAuthoringBinding {
+    task: String,
+    agent: String,
+    generation: i64,
+    branch: String,
+    repository: String,
+    updated_at: String,
+}
+
+type AuthoringProjection = std::collections::BTreeMap<String, ReplayedAuthoringBinding>;
+
+fn replay_authoring_events(
+    conn: &Connection,
+) -> Result<(usize, AuthoringProjection), error::DecapodError> {
+    let records = {
+        let mut stmt = conn.prepare(
+            "SELECT event_type, payload FROM events WHERE stream='todo' AND event_type IN ('authoring.bind','authoring.release') ORDER BY seq LIMIT 10001"
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })?;
+        rows.collect::<Result<Vec<_>, _>>()?
+    };
+    if records.len() > 10_000 || records.iter().any(|(_, payload)| payload.len() > 16_384) {
+        return Err(error::DecapodError::ValidationError(
+            "AUTHORING_HISTORY_TOO_LARGE".into(),
+        ));
+    }
+    let mut projection = AuthoringProjection::new();
+    for (kind, raw) in &records {
+        let event: TodoEvent = serde_json::from_str(raw).map_err(|_| {
+            error::DecapodError::ValidationError("AUTHORING_HISTORY_MALFORMED".into())
+        })?;
+        let bad = || {
+            error::DecapodError::ValidationError(
+                "AUTHORING_HISTORY_CONFLICT: invalid or contradictory binding event".into(),
+            )
+        };
+        let task = event
+            .task_id
+            .as_deref()
+            .filter(|s| !s.is_empty())
+            .ok_or_else(bad)?;
+        let field = |name: &str| {
+            event
+                .payload
+                .get(name)
+                .and_then(JsonValue::as_str)
+                .filter(|s| !s.is_empty())
+                .ok_or_else(bad)
+        };
+        let tree = field("worktree_id")?;
+        let agent = field("agent_id")?;
+        if event.event_type != *kind || event.status != "success" || event.actor != agent {
+            return Err(bad());
+        }
+        if kind == "authoring.release" {
+            if !projection
+                .get(tree)
+                .is_some_and(|old| old.task == task && old.agent == agent)
+            {
+                return Err(bad());
+            }
+            projection.remove(tree);
+            continue;
+        }
+        let branch = field("branch")?;
+        let repository = field("repository_id")?;
+        let generation = event
+            .payload
+            .get("lease_generation")
+            .and_then(JsonValue::as_i64)
+            .filter(|g| *g > 0 && *g <= i64::from(u32::MAX))
+            .ok_or_else(bad)?;
+        if projection
+            .iter()
+            .any(|(key, old)| key != tree && old.task == task)
+        {
+            return Err(bad());
+        }
+        if let Some(old) = projection.get(tree) {
+            if old.task != task
+                || old.branch != branch
+                || old.repository != repository
+                || generation < old.generation
+                || (generation == old.generation && old.agent != agent)
+            {
+                return Err(bad());
+            }
+        }
+        projection.insert(
+            tree.to_owned(),
+            ReplayedAuthoringBinding {
+                task: task.to_owned(),
+                agent: agent.to_owned(),
+                generation,
+                branch: branch.to_owned(),
+                repository: repository.to_owned(),
+                updated_at: event.ts,
+            },
+        );
+    }
+    Ok((records.len(), projection))
+}
+
+fn stored_authoring_projection(
+    conn: &Connection,
+) -> Result<AuthoringProjection, error::DecapodError> {
+    let mut stmt = conn.prepare("SELECT worktree_id,task_id,agent_id,lease_generation,branch,repository_id,updated_at FROM authoring_bindings ORDER BY worktree_id LIMIT 10001")?;
+    let rows = stmt.query_map([], |row| {
+        Ok((
+            row.get::<_, String>(0)?,
+            ReplayedAuthoringBinding {
+                task: row.get(1)?,
+                agent: row.get(2)?,
+                generation: row.get(3)?,
+                branch: row.get(4)?,
+                repository: row.get(5)?,
+                updated_at: row.get(6)?,
+            },
+        ))
+    })?;
+    let rows = rows.collect::<Result<Vec<_>, _>>()?;
+    if rows.len() > 10_000 {
+        return Err(error::DecapodError::ValidationError(
+            "AUTHORING_PROJECTION_TOO_LARGE".into(),
+        ));
+    }
+    Ok(rows.into_iter().collect())
+}
+
+fn verify_authoring_projection(conn: &Connection) -> Result<(), error::DecapodError> {
+    let (_, expected) = replay_authoring_events(conn)?;
+    if stored_authoring_projection(conn)? != expected {
+        return Err(error::DecapodError::ValidationError("AUTHORING_PROJECTION_DIVERGED: inspect the event history and explicitly recover missing bindings".into()));
+    }
+    Ok(())
+}
+
+/// Restore only missing rows from bounded canonical events. Existing conflicting
+/// rows and malformed histories are preserved and reject the whole transaction.
+pub fn recover_checkout_bindings(root: &Path, caller: &str) -> Result<u64, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    broker.with_transaction(&db_path, caller, None, "authoring.recover", |conn| {
+        let exists: bool = conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='authoring_bindings')",
+            [], |row| row.get(0),
+        )?;
+        let (count, expected) = replay_authoring_events(conn)?;
+        if count == 0 { return Err(error::DecapodError::ValidationError("AUTHORING_HISTORY_UNAVAILABLE".into())); }
+        if !exists { conn.execute_batch(AUTHORING_BINDINGS_SCHEMA)?; }
+        let existing = stored_authoring_projection(conn)?;
+        if existing.iter().any(|(tree, value)| expected.get(tree) != Some(value)) {
+            return Err(error::DecapodError::ValidationError("AUTHORING_PROJECTION_CONFLICT: existing bindings are preserved".into()));
+        }
+        let mut restored = 0;
+        for (tree, value) in &expected {
+            if existing.contains_key(tree) { continue; }
+            conn.execute("INSERT INTO authoring_bindings(worktree_id,task_id,agent_id,lease_generation,branch,repository_id,updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7)",
+                crate::core::db::params![tree,value.task,value.agent,value.generation,value.branch,value.repository,value.updated_at])?;
+            restored += 1;
+        }
+        if restored == 0 && exists { return Err(error::DecapodError::ValidationError("AUTHORING_PROJECTION_CURRENT: no missing bindings".into())); }
+        conn.execute("INSERT OR IGNORE INTO meta(namespace,key,value) VALUES('authoring','projection_initialized','1')", [])?;
+        Ok(restored)
+    })
 }
 
 fn admit_checkout_binding_inner(
@@ -4087,6 +4368,7 @@ fn admit_checkout_binding_inner(
     branch: &str,
     registered: bool,
     persist: bool,
+    caller: Option<&str>,
 ) -> Result<AuthoringAdmission, error::DecapodError> {
     let base = AuthoringAdmission {
         state: fleet_coord::AuthoringState::NotProven,
@@ -4102,9 +4384,16 @@ fn admit_checkout_binding_inner(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
     let ts = now_iso();
-    let op = if persist { "todo.claim" } else { "todo.status" };
-    broker.with_conn(&db_path, "decapod", None, op, |conn| {
-        ensure_schema(conn)?;
+    let op = if persist {
+        "authoring.bind"
+    } else {
+        "authoring.status"
+    };
+    let run = |conn: &Connection| {
+        if persist {
+            ensure_schema(conn)?;
+        }
+        verify_authoring_projection(conn)?;
         let decision = (|| {
             let mut stmt = conn
                 .prepare(
@@ -4143,40 +4432,143 @@ fn admit_checkout_binding_inner(
             let (task_id, assigned_to, generation, expires, lifecycle) = matched.remove(0);
             let mut admission = base.clone();
             admission.task_id = Some(task_id.clone());
+            if generation <= 0 || generation > i64::from(u32::MAX) {
+                admission.state = fleet_coord::AuthoringState::NotProven;
+                return Ok(admission);
+            }
             admission.lease_generation = Some(generation as u32);
+            admission.agent_id = Some(assigned_to.clone());
             if assigned_to.is_empty()
                 || !fleet_coord::LeaseLifecycle::parse(Some(&lifecycle)).holds_exclusive_custody()
             {
                 admission.state = fleet_coord::AuthoringState::CustodyPending;
                 return Ok(admission);
             }
-            if fleet_coord::lease_state(expires.as_deref(), &ts) == fleet_coord::LeaseState::Expired
-            {
-                admission.state = fleet_coord::AuthoringState::Stale;
+            match fleet_coord::lease_state(expires.as_deref(), &ts) {
+                fleet_coord::LeaseState::Active => {}
+                fleet_coord::LeaseState::Expired => {
+                    admission.state = fleet_coord::AuthoringState::Stale;
+                    return Ok(admission);
+                }
+                fleet_coord::LeaseState::Unspecified => {
+                    admission.state = fleet_coord::AuthoringState::NotProven;
+                    return Ok(admission);
+                }
+            }
+            if caller != Some(assigned_to.as_str()) {
+                admission.state = fleet_coord::AuthoringState::NotProven;
                 return Ok(admission);
             }
-            admission.agent_id = Some(assigned_to.clone());
-            let existing_tree: Option<(String, i64, String)> = conn
+            let existing_tree: Option<(String, i64, String, String, String)> = conn
                 .query_row(
-                    "SELECT task_id, lease_generation, branch FROM authoring_bindings WHERE worktree_id = ?1",
+                    "SELECT task_id, lease_generation, branch, agent_id, repository_id FROM authoring_bindings WHERE worktree_id = ?1",
                     [worktree_id],
-                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
                 )
                 .optional()
                 .map_err(error::DecapodError::StorageError)?;
-            if let Some((bound_task, bound_generation, bound_branch)) = existing_tree {
-                if bound_task != task_id {
+            if let Some((
+                bound_task,
+                bound_generation,
+                bound_branch,
+                bound_agent,
+                bound_repository,
+            )) = existing_tree
+            {
+                if bound_repository != repository_id {
+                    admission.state = fleet_coord::AuthoringState::Stale;
+                    return Ok(admission);
+                }
+                if bound_task == task_id {
+                    if bound_branch != branch {
+                        admission.state = fleet_coord::AuthoringState::Stale;
+                        return Ok(admission);
+                    }
+                    if bound_generation > generation {
+                        admission.state = fleet_coord::AuthoringState::Stale;
+                        return Ok(admission);
+                    }
+                    if bound_agent != assigned_to && generation == bound_generation {
+                        admission.state = fleet_coord::AuthoringState::Stale;
+                        return Ok(admission);
+                    }
+                    if generation > bound_generation || bound_agent != assigned_to {
+                        if !persist {
+                            admission.state = fleet_coord::AuthoringState::Stale;
+                            return Ok(admission);
+                        }
+                        conn.execute(
+                                "UPDATE authoring_bindings
+                                 SET lease_generation = ?1, agent_id = ?2, branch = ?3, updated_at = ?4
+                                 WHERE worktree_id = ?5 AND task_id = ?6",
+                                crate::core::db::params![
+                                    generation,
+                                    assigned_to,
+                                    branch,
+                                    ts,
+                                    worktree_id,
+                                    task_id
+                                ],
+                            )
+                            .map_err(error::DecapodError::StorageError)?;
+                        let ev = TodoEvent {
+                            ts: ts.clone(),
+                            event_id: crate::core::ulid::new_ulid(),
+                            event_type: "authoring.bind".to_string(),
+                            status: "success".to_string(),
+                            task_id: Some(task_id),
+                            payload: serde_json::json!({
+                                "worktree_id": worktree_id,
+                                "repository_id": repository_id,
+                                "branch": branch,
+                                "lease_generation": generation,
+                                "agent_id": assigned_to,
+                            }),
+                            actor: assigned_to,
+                        };
+                        append_event(conn, &ev)?;
+                        admission.state = fleet_coord::AuthoringState::Admissible;
+                        return Ok(admission);
+                    }
+                    admission.state = fleet_coord::AuthoringState::Admissible;
+                    return Ok(admission);
+                }
+
+                // bound_task != task_id: checkout was bound to a different task.
+                // Check if the previous task is still actively owned.
+                let bound_task_state: Option<(String, String, Option<String>, String)> = conn
+                    .query_row(
+                        "SELECT status, assigned_to, lease_expires_at, COALESCE(lease_lifecycle, '')
+                         FROM tasks WHERE id = ?1",
+                        [&bound_task],
+                        |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+                    )
+                    .optional()
+                    .map_err(error::DecapodError::StorageError)?;
+                let actively_owned = match bound_task_state {
+                    Some((status, assigned, exp, life)) => {
+                        status != "done"
+                            && status != "archived"
+                            && !assigned.is_empty()
+                            && fleet_coord::LeaseLifecycle::parse(Some(&life))
+                                .holds_exclusive_custody()
+                            && fleet_coord::lease_state(exp.as_deref(), &ts)
+                                == fleet_coord::LeaseState::Active
+                    }
+                    None => false,
+                };
+                if actively_owned {
                     admission.state = fleet_coord::AuthoringState::SharedCheckout;
                     admission.conflicting_task_id = Some(bound_task);
                     return Ok(admission);
                 }
-                if bound_generation != generation || bound_branch != branch {
-                    admission.state = fleet_coord::AuthoringState::Stale;
-                    return Ok(admission);
-                }
-                admission.state = fleet_coord::AuthoringState::Admissible;
+
+                // An expired lease alone does not prove checkout handoff.
+                // Preserve the binding until an authorized release/recovery.
+                admission.state = fleet_coord::AuthoringState::Stale;
                 return Ok(admission);
             }
+
             let existing_task: Option<String> = conn
                 .query_row(
                     "SELECT worktree_id FROM authoring_bindings WHERE task_id = ?1",
@@ -4185,10 +4577,13 @@ fn admit_checkout_binding_inner(
                 )
                 .optional()
                 .map_err(error::DecapodError::StorageError)?;
-            if existing_task.is_some_and(|bound| bound != worktree_id) {
-                admission.state = fleet_coord::AuthoringState::Stale;
-                return Ok(admission);
+            if let Some(bound) = existing_task {
+                if bound != worktree_id {
+                    admission.state = fleet_coord::AuthoringState::Stale;
+                    return Ok(admission);
+                }
             }
+
             if !persist {
                 admission.state = fleet_coord::AuthoringState::CustodyPending;
                 return Ok(admission);
@@ -4217,6 +4612,10 @@ fn admit_checkout_binding_inner(
                         )
                         .optional()
                         .unwrap_or(None);
+                    if winner.as_deref() == Some(&task_id) {
+                        admission.state = fleet_coord::AuthoringState::Admissible;
+                        return Ok(admission);
+                    }
                     admission.state = fleet_coord::AuthoringState::SharedCheckout;
                     admission.conflicting_task_id = winner.filter(|bound| bound != &task_id);
                     return Ok(admission);
@@ -4243,7 +4642,13 @@ fn admit_checkout_binding_inner(
             Ok(admission)
         })()?;
         Ok(decision)
-    })
+    };
+    if persist {
+        broker.with_transaction(&db_path, caller.unwrap_or("decapod"), None, op, run)
+    } else {
+        let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
+        run(&conn)
+    }
 }
 
 pub fn claim_task(
@@ -8077,6 +8482,16 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
         }
         TodoCommand::Fleet { agent } => fleet_health(root, agent.as_deref())?,
         TodoCommand::Release { id } => release_task(root, id)?,
+        TodoCommand::ReleaseCheckout { worktree_id } => {
+            let agent = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let released = release_checkout_binding(root, worktree_id, &agent)?;
+            serde_json::json!({"cmd":"todo.release-checkout", "status": if released {"ok"} else {"not_found"}, "worktree_id":worktree_id})
+        }
+        TodoCommand::RecoverCheckoutBindings => {
+            let agent = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+            let count = recover_checkout_bindings(root, &agent)?;
+            serde_json::json!({"cmd":"todo.recover-checkout-bindings", "status":"ok", "bindings_restored":count})
+        }
         TodoCommand::Rebuild => rebuild_from_events(root)?,
         TodoCommand::Journal { command } => match command {
             TodoJournalCommand::Checkpoint {
