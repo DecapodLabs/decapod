@@ -635,6 +635,14 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-dockerfile",
+      "summary": "Update the managed Decapod image pin to the released evaluator.",
+      "input_digest": "sha256:fe6c108b9a7e5e62dcf9e239b327c3669f2f832a7233af3bdb06cc599372816c",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod"
+      ]
     }
   ],
   "intents": {
