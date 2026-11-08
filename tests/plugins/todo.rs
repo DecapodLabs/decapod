@@ -540,9 +540,44 @@ fn two_verified_worktrees_admit_authoring_and_one_checkout_does_not() {
         "reading must not silently update a generation"
     );
     assert_eq!(admit(&work_a, "agent-a").state, AuthoringState::Admissible);
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.to_path_buf(),
+    };
+    {
+        let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+        set_agent_trust(&db, "agent-a", "verified", "100Z");
+    }
+    policy::approve_action(&store, "todo.handoff", None, "operator", "global").unwrap();
+    let handed = handoff_task_as(
+        &store,
+        &task_a,
+        "agent-b",
+        Some("agent-a"),
+        "verified fixture handoff",
+        Some(600),
+        "agent-a",
+    )
+    .unwrap();
+    assert_eq!(
+        handed["status"], "ok",
+        "handoff must use the existing approval gate: {handed}"
+    );
+    assert_eq!(admit(&work_a, "agent-a").state, AuthoringState::NotProven);
+    assert!(
+        decapod::core::todo::release_checkout_binding(root, &first.worktree_id, "agent-a").is_err(),
+        "the former owner must not erase a binding after custody transfers"
+    );
+    assert_eq!(
+        decapod::core::todo::read_authoring_admission_with_caller(root, &work_a, Some("agent-b"))
+            .unwrap()
+            .state,
+        AuthoringState::Stale
+    );
+    assert_eq!(admit(&work_a, "agent-b").state, AuthoringState::Admissible);
     assert_eq!(
         get_task(root, &task_a).unwrap().unwrap().assigned_to,
-        "agent-a"
+        "agent-b"
     );
 
     assert_eq!(
@@ -570,15 +605,15 @@ fn two_verified_worktrees_admit_authoring_and_one_checkout_does_not() {
     // Another agent cannot clear the binding. The owner explicitly releases it
     // before the second task can obtain this checkout.
     assert!(
-        decapod::core::todo::release_checkout_binding(root, &first.worktree_id, "agent-b").is_err()
+        decapod::core::todo::release_checkout_binding(root, &first.worktree_id, "agent-a").is_err()
     );
     assert!(
-        decapod::core::todo::release_checkout_binding(root, &first.worktree_id, "agent-a").unwrap()
+        decapod::core::todo::release_checkout_binding(root, &first.worktree_id, "agent-b").unwrap()
     );
     assert_eq!(admit(&work_a, "agent-a").state, AuthoringState::Admissible);
     assert_eq!(
         get_task(root, &task_a).unwrap().unwrap().assigned_to,
-        "agent-a"
+        "agent-b"
     );
 
     let missing = admit(&root.join("missing-worktree"), "agent-a");
@@ -701,6 +736,301 @@ fn two_verified_worktrees_admit_authoring_and_one_checkout_does_not() {
         owner, "intruder",
         "conflicting projection must be preserved for review"
     );
+}
+
+#[test]
+fn release_resource_custody_does_not_grant_or_block_source_authoring() {
+    let tmp = tempdir().unwrap();
+    let root_path = tmp.path().canonicalize().unwrap();
+    let root = root_path.as_path();
+    initialize_todo_db(root).unwrap();
+    let git = |args: &[&str]| {
+        let output = Command::new("git")
+            .args(args)
+            .current_dir(root)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "git {args:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    };
+    git(&["init", "-b", "main"]);
+    git(&["config", "user.name", "Resource fixture"]);
+    git(&["config", "user.email", "resource@example.invalid"]);
+    std::fs::write(root.join("lib.rs"), "pub fn ok() {}\n").unwrap();
+    git(&["add", "lib.rs"]);
+    git(&["-c", "commit.gpgsign=false", "commit", "-m", "base"]);
+    let reserve = add_scoped_task(root, "Reserve release", "release", root.to_str().unwrap());
+    let contender = add_scoped_task(root, "Competing release", "release", root.to_str().unwrap());
+    let source = add_scoped_task(
+        root,
+        "Independent source",
+        "workspace",
+        root.to_str().unwrap(),
+    );
+    assert_eq!(
+        claim_task(root, &reserve, "agent-a", ClaimMode::Exclusive).unwrap()["result"]["status"],
+        "ok"
+    );
+    let conflict = claim_task(root, &contender, "agent-b", ClaimMode::Exclusive).unwrap();
+    assert_eq!(conflict["result"]["status"], "conflict");
+    assert!(conflict.to_string().contains("shared_resource_reserved"));
+    assert_eq!(
+        claim_task(root, &source, "agent-b", ClaimMode::Exclusive).unwrap()["result"]["status"],
+        "ok"
+    );
+    let release_tree = root.join(".decapod/workspaces/release");
+    let source_tree = root.join(".decapod/workspaces/source");
+    std::fs::create_dir_all(release_tree.parent().unwrap()).unwrap();
+    git(&[
+        "worktree",
+        "add",
+        "-b",
+        &format!("agent/a/{reserve}"),
+        release_tree.to_str().unwrap(),
+    ]);
+    git(&[
+        "worktree",
+        "add",
+        "-b",
+        &format!("agent/b/{source}"),
+        source_tree.to_str().unwrap(),
+    ]);
+    assert_eq!(
+        admit_checkout_binding(root, &release_tree, "agent-a")
+            .unwrap()
+            .state,
+        AuthoringState::NotProven
+    );
+    assert_eq!(
+        admit_checkout_binding(root, &source_tree, "agent-b")
+            .unwrap()
+            .state,
+        AuthoringState::Admissible
+    );
+    // This tests the existing task-claim reservation, not a release or deploy
+    // execution adapter; those separately need real operation-level protection.
+}
+
+#[test]
+fn separate_worktrees_can_merge_cleanly_but_fail_combined_semantics() {
+    let tmp = tempdir().unwrap();
+    let root_path = tmp.path().canonicalize().unwrap();
+    let root = root_path.as_path();
+    initialize_todo_db(root).unwrap();
+    let git = |cwd: &Path, args: &[&str]| {
+        let output = Command::new("git")
+            .args(args)
+            .current_dir(cwd)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "git {args:?}: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    };
+    git(root, &["init", "-b", "main"]);
+    git(root, &["config", "user.name", "Integration fixture"]);
+    git(
+        root,
+        &["config", "user.email", "integration@example.invalid"],
+    );
+    let base = "fn normalize() -> i32 {\n    0 // NORMALIZE\n}\n\n\n\n\n\n\n\n\n\nfn encode(value: i32) -> i32 {\n    let _ = value;\n    0 // ENCODE\n}\n\n#[test]\nfn invariant() { assert_eq!(encode(normalize()), 0); }\n";
+    std::fs::write(root.join("lib.rs"), base).unwrap();
+    git(root, &["add", "lib.rs"]);
+    git(
+        root,
+        &["-c", "commit.gpgsign=false", "commit", "-m", "base"],
+    );
+    let first = add_scoped_task(
+        root,
+        "Change normalization",
+        "workspace",
+        root.to_str().unwrap(),
+    );
+    let second = add_scoped_task(root, "Change encoding", "workspace", root.to_str().unwrap());
+    assert_eq!(
+        claim_task(root, &first, "agent-a", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+    assert_eq!(
+        claim_task(root, &second, "agent-b", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+    let a = root.join(".decapod/workspaces/a");
+    let b = root.join(".decapod/workspaces/b");
+    std::fs::create_dir_all(a.parent().unwrap()).unwrap();
+    let branch_a = format!("agent/a/{first}");
+    let branch_b = format!("agent/b/{second}");
+    git(
+        root,
+        &["worktree", "add", "-b", &branch_a, a.to_str().unwrap()],
+    );
+    git(
+        root,
+        &["worktree", "add", "-b", &branch_b, b.to_str().unwrap()],
+    );
+    assert_eq!(
+        admit_checkout_binding(root, &a, "agent-a").unwrap().state,
+        AuthoringState::Admissible
+    );
+    assert_eq!(
+        admit_checkout_binding(root, &b, "agent-b").unwrap().state,
+        AuthoringState::Admissible
+    );
+    std::fs::write(
+        a.join("lib.rs"),
+        base.replace("0 // NORMALIZE", "1 // NORMALIZE"),
+    )
+    .unwrap();
+    std::fs::write(
+        b.join("lib.rs"),
+        base.replace("0 // ENCODE", "value // ENCODE"),
+    )
+    .unwrap();
+    let run_test = |path: &Path| {
+        let executable = path.join("fixture-test");
+        let compile = Command::new("rustc")
+            .args(["--test", "--edition=2024", "lib.rs", "-o"])
+            .arg(&executable)
+            .current_dir(path)
+            .output()
+            .unwrap();
+        assert!(
+            compile.status.success(),
+            "{}",
+            String::from_utf8_lossy(&compile.stderr)
+        );
+        Command::new(&executable)
+            .current_dir(path)
+            .output()
+            .unwrap()
+            .status
+            .success()
+    };
+    assert!(run_test(&a));
+    assert!(run_test(&b));
+    for worktree in [&a, &b] {
+        git(worktree, &["add", "lib.rs"]);
+        git(
+            worktree,
+            &[
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "-m",
+                "isolated change",
+            ],
+        );
+    }
+    let integration = root.join(".decapod/workspaces/integration");
+    git(
+        root,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "integration",
+            integration.to_str().unwrap(),
+            "main",
+        ],
+    );
+    git(
+        &integration,
+        &[
+            "-c",
+            "commit.gpgsign=false",
+            "merge",
+            "--no-edit",
+            &branch_a,
+        ],
+    );
+    git(
+        &integration,
+        &[
+            "-c",
+            "commit.gpgsign=false",
+            "merge",
+            "--no-edit",
+            &branch_b,
+        ],
+    );
+    use decapod::core::governed_transition::{
+        ProofJudgment, StateIdentity, commit_freshness, decide_publication,
+    };
+    let head = |path: &Path| {
+        let output = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        assert!(output.status.success());
+        String::from_utf8(output.stdout).unwrap().trim().to_owned()
+    };
+    let isolated_proof = StateIdentity {
+        head: head(&a),
+        rules_fingerprint: "fixture-policy-v1".into(),
+        verifier: "fixture-rustc".into(),
+    };
+    let combined_state = StateIdentity {
+        head: head(&integration),
+        ..isolated_proof.clone()
+    };
+    assert_eq!(
+        commit_freshness(&isolated_proof, &combined_state),
+        ProofJudgment::Stale
+    );
+    assert!(!decide_publication(ProofJudgment::Stale, true, None, None).eligible);
+    let changed_policy = StateIdentity {
+        rules_fingerprint: "fixture-policy-v2".into(),
+        ..isolated_proof.clone()
+    };
+    assert_eq!(
+        commit_freshness(&isolated_proof, &changed_policy),
+        ProofJudgment::Stale
+    );
+    assert!(
+        !run_test(&integration),
+        "a clean Git merge must not stand in for combined semantic proof"
+    );
+    assert!(!decide_publication(ProofJudgment::Failed, true, None, None).eligible);
+}
+
+#[test]
+fn exact_referenced_retry_is_distinct_from_similar_tasks() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let args = |description: &str| TodoCommand::Add {
+        title: "Verify repository proof".into(),
+        description: description.into(),
+        tags: "proof".into(),
+        owner: String::new(),
+        due: None,
+        r#ref: "https://example.invalid/issues/42".into(),
+        scope: String::new(),
+        dir: Some(root.to_string_lossy().into_owned()),
+        priority: "medium".into(),
+        depends_on: String::new(),
+        blocks: String::new(),
+        parent: None,
+        one_shot: 0,
+    };
+    let first = add_task(&root, &args("Check the exact candidate")).unwrap();
+    let id = first["id"].as_str().unwrap();
+    claim_task(&root, id, "retry-agent", ClaimMode::Exclusive).unwrap();
+    let retry = add_task(&root, &args("Check the exact candidate")).unwrap();
+    assert_eq!(retry["id"], id);
+    assert_eq!(retry["new_task_created"], false);
+    assert_eq!(
+        get_task(&root, id).unwrap().unwrap().assigned_to,
+        "retry-agent"
+    );
+    let distinct = add_task(&root, &args("Check a different obligation")).unwrap();
+    assert_ne!(distinct["id"], id);
 }
 
 #[test]
