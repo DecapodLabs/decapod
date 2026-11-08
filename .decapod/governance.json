@@ -781,6 +781,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "ck-vi-operations-fp",
+      "summary": "Bind the OPERATIONS attestation to the current repository signal.",
+      "input_digest": "sha256:80fb8a505554e1a791914494e3ecfb1dc325119d59f42b92e0fc7ff4e4222681",
+      "proof_refs": [
+        ".decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
