@@ -789,6 +789,14 @@
       "proof_refs": [
         ".decapod/managed/specs/OPERATIONS.md"
       ]
+    },
+    {
+      "id": "ck-vi-readme-fp",
+      "summary": "Bind the spec README attestation to the current repository signal.",
+      "input_digest": "sha256:143484e5bba62fa7dbaecf2ab3604c6d2a8c9e98bda95b089232108307031553",
+      "proof_refs": [
+        ".decapod/managed/specs/README.md"
+      ]
     }
   ],
   "intents": {
