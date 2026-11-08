@@ -579,6 +579,14 @@
       "proof_refs": [
         "tests/unit/core/fleet_coord_tests.rs"
       ]
+    },
+    {
+      "id": "ck-1469-todo-custody-tests",
+      "summary": "Distinct same-category tasks can be claimed by different agents, and logical overlap stays advisory.",
+      "input_digest": "sha256:26bde6bd1a2929b6c59b06f45d796a506bdab037f2b46e80dc4155a277a0d5c7",
+      "proof_refs": [
+        "tests/plugins/todo.rs"
+      ]
     }
   ],
   "legacy_digests": {
