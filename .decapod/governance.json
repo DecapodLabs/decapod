@@ -725,6 +725,14 @@
       "proof_refs": [
         "tests/plugins/todo.rs"
       ]
+    },
+    {
+      "id": "wip-1469-custody-second-6",
+      "summary": "Preserve in-progress tests/todo_enforcement.rs. Focused tests and earlier Clippy have passed, but removed-checkout recovery, operation-level shared-resource enforcement, complete validation and publication readiness remain unproven.",
+      "input_digest": "sha256:ed5403fa0dfbfede67da7a9dec6f291a80ffc3c7a5f3f83e503ae65f791b4f9a",
+      "proof_refs": [
+        "tests/todo_enforcement.rs"
+      ]
     }
   ],
   "intents": {
