@@ -2787,7 +2787,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             if requires_session_token(&cli.command) && !cloud_todo_command {
                 ensure_session_valid()?;
             }
-            if !cloud_todo_command {
+            if !cloud_todo_command && !is_workspace_status_command(&cli.command) {
                 core::fs_permissions::ensure_storage_dir(&store_root)
                     .map_err(error::DecapodError::IoError)?;
             }
@@ -2851,6 +2851,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Best-effort hygiene: routinely scrub stale git worktree metadata/config.
             // This must not block primary command execution.
             if !cloud_todo_command
+                && !is_workspace_status_command(&cli.command)
                 && let Err(e) = workspace::prune_stale_worktree_config(&workspace_root)
                 && !is_not_git_repository_error(&e)
             {
@@ -3053,6 +3054,9 @@ fn should_auto_clock_in(command: &Command) -> bool {
 }
 
 fn is_storage_independent_command(command: &Command) -> bool {
+    if is_workspace_status_command(command) {
+        return true;
+    }
     match command {
         Command::Rpc(rpc_cli) => rpc_cli.op.as_deref() == Some("specs.refresh"),
         // Maintenance commands operate on the canonical store through the
@@ -3063,6 +3067,15 @@ fn is_storage_independent_command(command: &Command) -> bool {
         }) => true,
         _ => false,
     }
+}
+
+fn is_workspace_status_command(command: &Command) -> bool {
+    matches!(
+        command,
+        Command::Workspace(WorkspaceCli {
+            command: WorkspaceCommand::Status
+        })
+    ) || matches!(command, Command::Rpc(rpc) if !rpc.stdin && !rpc.http_server && rpc.op.as_deref() == Some("workspace.status"))
 }
 
 fn is_cloud_todo_command(
@@ -3325,6 +3338,9 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
 }
 
 fn requires_session_token(command: &Command) -> bool {
+    if is_workspace_status_command(command) {
+        return false;
+    }
     match command {
         Command::Govern(GovernCli {
             command:
