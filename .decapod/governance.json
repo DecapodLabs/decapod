@@ -533,6 +533,11 @@
       "id": "ck-pr1564-002",
       "summary": "Restore interop RPC handlers and wire state_eligibility_tests module in src/decapod/lib.rs",
       "input_digest": "sha256:7b7f59bc50e44b6b3be20cdea795da65a0d79ef90262199be9c152b143b5f970"
+    },
+    {
+      "id": "ck-pr1564-003",
+      "summary": "Add regression tests for state.resolve publication eligibility in tests/unit/state_eligibility_tests.rs",
+      "input_digest": "sha256:5f4f388abefe28928d1b8f9e9d7bd2582d0941e5283aecbe9120de2aa875630c"
     }
   ],
   "legacy_digests": {
