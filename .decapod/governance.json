@@ -623,6 +623,11 @@
       "id": "ck-pr1564-020",
       "summary": "Record plan init and spec review dispositions (ARCHITECTURE updated; INTERFACES and SECURITY unchanged-with-reason) after stable projection refresh",
       "input_digest": "sha256:a9e80996ffdd9a0630152841076e6159b88077e3d121bcd690e2a5e9e221a330"
+    },
+    {
+      "id": "ck-pr1564-021",
+      "summary": "test(state): clarify eligibility test module doc comment for PR #1564",
+      "input_digest": "sha256:59800e31ce57e7713ad154d7e0d9017c8100139aa70075698852b76e7d6db6bf"
     }
   ],
   "intents": {

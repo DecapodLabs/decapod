@@ -1,7 +1,9 @@
 //! Regression tests for state.resolve publication eligibility bugs
 //!
 //! These tests verify that state.resolve correctly reports publication eligibility
-// ONLY when all required evidence is present, current, valid, and properly bound.
+//! ONLY when all required evidence is present, current, valid, and properly bound.
+//! Each case drives the CLI binary against a scratch workspace and asserts on the
+//! exact eligibility verdict and the evidence fields backing it.
 
 use crate::core::workunit::WorkUnitProofResult;
 use crate::core::workunit::{WorkUnitManifest, WorkUnitStatus};
