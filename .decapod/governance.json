@@ -661,6 +661,14 @@
       "proof_refs": [
         "tests/plugins/todo.rs"
       ]
+    },
+    {
+      "id": "wip-1469-custody-4",
+      "summary": "Preserve in-progress .decapod/managed/specs/ARCHITECTURE.md for review. The earlier 36-test plugin result predates later changes. Current admission, recovery, integration boundaries, living-spec refresh, full validation and PR readiness remain unverified. Original PR and uncommitted source checkout remain preserved.",
+      "input_digest": "sha256:b2166ac751c25d1300d23e0ca9837e73a7f9a7013c2848fe648a4a6143184c2d",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {

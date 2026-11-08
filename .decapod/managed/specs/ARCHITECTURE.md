@@ -1,5 +1,25 @@
 # Architecture
 
+## Task custody and isolated authoring
+
+The candidate separates an exclusive task lease from permission to author in
+a particular Git checkout. `workspace::observe_checkout` derives the repository,
+physical directory and registered worktree identity from Git and the filesystem;
+`todo::admit_checkout_binding` derives those facts again at the binding boundary
+and compares the checkout's repository to the datastore's repository. It binds
+the unique checkout and task to the live lease generation and caller in the same
+transaction as its event. A missing, unregistered, aliased, stale or ambiguous
+identity must not grant permission. These agent identities remain cooperative
+local identities, not cryptographic proof against a privileged or disconnected
+writer.
+
+Logical category and path overlaps are coordination signals for independently
+verified checkouts; they are not integration proof. Shared integration and release
+resources, dependency gates and current-candidate validation retain independent
+authority. A clean textual merge is not semantic verification. Binding replay,
+stale-generation recovery and legacy migration must be verified before this
+candidate can establish the full #1469 contract.
+
 ## Governed transition judgment
 
 `src/decapod/core/governed_transition.rs` is the kernel that decides whether an
