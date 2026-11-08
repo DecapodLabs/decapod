@@ -909,6 +909,14 @@
       "proof_refs": [
         ".decapod/config.toml"
       ]
+    },
+    {
+      "id": "reconcile-1469-manifest-config",
+      "summary": "Refresh spec manifest after reviewed version-only source inventory reconciliation; Buildkite 5729 failure remains recorded.",
+      "input_digest": "sha256:82e13ca89bdace4864ded05239dc686f1b3bf80e38729dbee86ac996f704332a",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -959,7 +967,7 @@
       "active_boundaries": [
         "Preserve prior PR commits and original uncommitted work; do not merge or waive checks"
       ],
-      "artifact_hash": "sha256:22039e8f5e193f3bbff0cdc72147fbbed53faa835aea1b3b69113d45e7df1222",
+      "artifact_hash": "sha256:ae176672bd4e18391bea883f43af4096ee9422ccc784a14a3e4a61c4c47200db",
       "checks": [
         {
           "name": "accepted-base-freshness-test",
@@ -968,6 +976,10 @@
         {
           "name": "bootstrap-order-repaired",
           "status": "passed"
+        },
+        {
+          "name": "buildkite-5729",
+          "status": "failed"
         },
         {
           "name": "cli-rpc-missing-datastore",
@@ -1063,10 +1075,17 @@
             "intent_id": "intent:run-1469-authoring-custody",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:run-1469-authoring-custody",
+            "event_id": "event:8",
+            "intent_id": "intent:run-1469-authoring-custody",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-1469-authoring-custody": {
@@ -1148,6 +1167,21 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Buildkite 5729 independently ran CI-local validation with 190 passes and zero failed local gates, then rejected a stale spec manifest config_input_hash after the version-only inventory update. Refreshed the manifest through specs.refresh; this does not establish full validation."
+                ],
+                "proof_refs": [
+                  "buildkite-5729"
+                ],
+                "scope": [
+                  "src/decapod/core, tests, living specifications and generated governance"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -1155,6 +1189,7 @@
       },
       "declared_commands": [],
       "evidence": [
+        "Buildkite 5729 independently ran CI-local validation with 190 passes and zero failed local gates, then rejected a stale spec manifest config_input_hash after the version-only inventory update. Refreshed the manifest through specs.refresh; this does not establish full validation.",
         "Full validation on 5477b73f stopped with PROOF_PROFILE_RECONCILIATION_REQUIRED. The same discovered inventory digest appears in the main checkout. Project-check reported container workspace required and generated release-bound surfaces; these are not publication proof.",
         "Original PR head preserved at 6e842a09662e549297f63461358a44712c154647 and pushed on the task-scoped replacement branch. Original plugin suite passed 36 tests before subsequent modifications; no current exact-candidate proof. Admission and event-replay repairs in progress. Original dirty checkout and failed CI preserved.",
         "Read-only git archive of d66d7a95 produced the previously pinned inventory 026d0003; d66d7a95 through accepted master changes discovered source files only in Cargo.toml and Cargo.lock, replacing Decapod 0.130.0 with 0.132.0. Candidate versus accepted master changes none of the discovered proof sources. The installed controller reports inventory 8dc60263 for the unchanged 0.132.0 source contract. Reconcile the reviewed pin; this is not validation or acceptance of an unsupported adapter."
