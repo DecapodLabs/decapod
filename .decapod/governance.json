@@ -547,6 +547,14 @@
       "proof_refs": [
         "tests/unit/core/fleet_coord_tests.rs"
       ]
+    },
+    {
+      "id": "ck-1469-authoring-judgment",
+      "summary": "Add an authoring judgment that separates pending custody, admissible worktrees, shared checkouts, shared resources, stale bindings, and unproven identity.",
+      "input_digest": "sha256:a9bb53fbd9d21226714eea95f95192a07b97dba4f7d09975f4350ea9bbefcb54",
+      "proof_refs": [
+        "src/decapod/core/fleet_coord.rs"
+      ]
     }
   ],
   "legacy_digests": {

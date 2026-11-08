@@ -152,6 +152,102 @@ pub fn authoring_blocked(overlaps: &[ClaimOverlap]) -> bool {
     overlaps.iter().any(|overlap| overlap.enforced)
 }
 
+/// Physical and Git identity of one writable checkout.
+///
+/// `worktree_id` is the directory device and inode plus the canonical Git
+/// directory. A path string is not an identity. `registered` is true only when
+/// `git worktree list` names this Git directory.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CheckoutBinding {
+    pub repository_id: String,
+    pub worktree_id: String,
+    pub branch: String,
+    pub registered: bool,
+}
+
+/// Authoring judgment. Custody can exist before a workspace does.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AuthoringState {
+    /// Task custody is held. No workspace identity has been established.
+    CustodyPending,
+    /// The verified checkout is current and is not another task's checkout.
+    Admissible,
+    /// Two tasks resolve to the same writable checkout.
+    SharedCheckout,
+    /// The operation targets a reserved shared resource held by someone else.
+    SharedResource,
+    /// Identity is missing, forged, or not a registered worktree.
+    NotProven,
+    /// The checkout no longer matches the branch or worktree that was bound.
+    Stale,
+}
+
+pub struct AuthoringInput<'a> {
+    pub custody_held: bool,
+    pub lease_current: bool,
+    pub checkout: Option<&'a CheckoutBinding>,
+    pub other_checkouts: &'a [CheckoutBinding],
+    pub expected_worktree_id: Option<&'a str>,
+    pub expected_branch: Option<&'a str>,
+    pub targets_reserved_resource: bool,
+    pub resource_held_by_other: bool,
+}
+
+/// Judge whether authoring or a shared-resource mutation may proceed.
+///
+/// A reserved release or integration resource blocks only the operation that
+/// targets it. Source authoring in a different verified worktree stays
+/// admissible. An unknown checkout does not become isolated.
+pub fn judge_authoring(input: AuthoringInput<'_>) -> AuthoringState {
+    if input.targets_reserved_resource && input.resource_held_by_other {
+        return AuthoringState::SharedResource;
+    }
+    if !input.custody_held {
+        return AuthoringState::NotProven;
+    }
+    if !input.lease_current {
+        return AuthoringState::Stale;
+    }
+    let Some(checkout) = input.checkout else {
+        return AuthoringState::CustodyPending;
+    };
+    if !checkout.registered || checkout.repository_id.is_empty() || checkout.worktree_id.is_empty()
+    {
+        return AuthoringState::NotProven;
+    }
+    if input
+        .expected_worktree_id
+        .is_some_and(|expected| expected != checkout.worktree_id)
+        || input
+            .expected_branch
+            .is_some_and(|expected| expected != checkout.branch)
+    {
+        return AuthoringState::Stale;
+    }
+    if input
+        .other_checkouts
+        .iter()
+        .any(|other| !other.worktree_id.is_empty() && other.worktree_id == checkout.worktree_id)
+    {
+        return AuthoringState::SharedCheckout;
+    }
+    AuthoringState::Admissible
+}
+
+/// Enforced overlap for two observations of the same writable checkout.
+pub fn shared_checkout_overlap(task_id: &str, agent_id: &str, worktree_id: &str) -> ClaimOverlap {
+    ClaimOverlap {
+        task_id: task_id.to_string(),
+        agent_id: agent_id.to_string(),
+        reason: "shared_writable_checkout".to_string(),
+        surface: "worktree_id".to_string(),
+        expected: worktree_id.to_string(),
+        observed: worktree_id.to_string(),
+        enforced: true,
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CapacityPressure {
