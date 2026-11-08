@@ -667,6 +667,14 @@
       "proof_refs": [
         "CODEX.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-gemini",
+      "summary": "Record the v0.131.0 release pin and entrypoint fingerprint.",
+      "input_digest": "sha256:ffd28dd463d35a46f992f37a3ce8191f7d5d83fc77193591b89a7c08a405802d",
+      "proof_refs": [
+        "GEMINI.md"
+      ]
     }
   ],
   "intents": {
