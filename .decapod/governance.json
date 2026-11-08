@@ -733,6 +733,14 @@
       "proof_refs": [
         "tests/todo_enforcement.rs"
       ]
+    },
+    {
+      "id": "wip-1469-custody-second-7",
+      "summary": "Preserve in-progress tests/unit/core/fleet_coord_tests.rs. Focused tests and earlier Clippy have passed, but removed-checkout recovery, operation-level shared-resource enforcement, complete validation and publication readiness remain unproven.",
+      "input_digest": "sha256:c55eeb979e45ce9456c7ea0a49cfa7eab764a06915fe50be1f5cd072e5e29f6d",
+      "proof_refs": [
+        "tests/unit/core/fleet_coord_tests.rs"
+      ]
     }
   ],
   "intents": {

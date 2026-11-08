@@ -535,6 +535,7 @@ fn authoring_waits_for_a_workspace_and_refuses_the_same_checkout() {
 #[test]
 fn real_worktrees_share_identity_through_an_alias_and_not_across_worktrees() {
     let root = tempfile::tempdir().unwrap();
+    let root_path = root.path().canonicalize().unwrap();
     let git = |args: &[&str], dir: &std::path::Path| {
         let status = std::process::Command::new("git")
             .args(args)
@@ -555,12 +556,12 @@ fn real_worktrees_share_identity_through_an_alias_and_not_across_worktrees() {
         &["-c", "commit.gpgsign=false", "commit", "-m", "init"],
         root.path(),
     );
-    let other = root.path().join("other");
+    let other = root_path.join("other");
     git(
         &["worktree", "add", "-b", "task-b", other.to_str().unwrap()],
         root.path(),
     );
-    let main = crate::core::workspace::observe_checkout(root.path());
+    let main = crate::core::workspace::observe_checkout(&root_path);
     let second = crate::core::workspace::observe_checkout(&other);
     assert!(main.registered && second.registered);
     assert_ne!(main.worktree_id, second.worktree_id);
@@ -577,10 +578,10 @@ fn real_worktrees_share_identity_through_an_alias_and_not_across_worktrees() {
         }),
         AuthoringState::Admissible
     );
-    let link = root.path().join("alias");
-    std::os::unix::fs::symlink(root.path(), &link).unwrap();
+    let link = root_path.join("alias");
+    std::os::unix::fs::symlink(&root_path, &link).unwrap();
     let alias = crate::core::workspace::observe_checkout(&link);
-    assert_eq!(alias.worktree_id, main.worktree_id);
+    assert!(!alias.registered);
     assert_eq!(
         judge_authoring(AuthoringInput {
             custody_held: true,
@@ -592,7 +593,7 @@ fn real_worktrees_share_identity_through_an_alias_and_not_across_worktrees() {
             targets_reserved_resource: false,
             resource_held_by_other: false,
         }),
-        AuthoringState::SharedCheckout
+        AuthoringState::NotProven
     );
     let forged = crate::core::workspace::observe_checkout(&root.path().join("missing"));
     assert!(!forged.registered);
