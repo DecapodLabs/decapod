@@ -555,6 +555,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-interfaces",
+      "summary": "Record INTERFACES contract for verifier integrity and capability evidence.",
+      "input_digest": "sha256:d715f4ec803f234e5369c34b341bebf46c73efd615e416d779a6d6417b68c509",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "legacy_digests": {

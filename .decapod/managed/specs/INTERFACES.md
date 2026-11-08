@@ -16,7 +16,16 @@ Omitting the root is an error, not a successful verification.
 re-hashes the files named by a verification row and binds that digest to the
 snapshot. The row's status field is not accepted as proof. Governed-transition
 decisions are appended to the `traces` stream that `decapod flight-recorder`
-already renders.
+already renders. When the transition is not admissible and proven, that payload
+includes `blocker_class` and `required_capability`. Those fields describe the
+blocker. They are not an instruction to the harness.
+
+`judge_completion_with_verifier` is the completion judgment plus an optional
+list of isolation axes. An empty list preserves `judge_completion`.
+`judge_verifier_integrity` answers only the envelope. `attest_capability`
+answers one `CapabilityAttestation` against the current identity.
+`admit_operation_surface` answers whether an operation class may write the
+given paths. None of these functions is a new RPC, and none selects work.
 
 ## Claim scope acceptance
 
