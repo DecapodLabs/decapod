@@ -281,7 +281,7 @@ fn get_workspace_status_for_caller(
 
     let authoring_state = authoring_state_for_status(repo_root, &git, caller);
     let git_ready = !git.is_main_repo && !git.is_protected && git.in_worktree;
-    let managed = git.in_worktree && is_canonical_decapod_workspace_path(repo_root);
+    let managed = is_canonical_decapod_workspace_path(repo_root);
     let can_work = if managed {
         git_ready
             && matches!(
@@ -289,7 +289,7 @@ fn get_workspace_status_for_caller(
                 Some(crate::core::fleet_coord::AuthoringState::Admissible)
             )
     } else {
-        !git.is_main_repo && !git.is_protected
+        git_ready
     };
     if managed && !can_work && !git.is_protected {
         let detail = match authoring_state {
