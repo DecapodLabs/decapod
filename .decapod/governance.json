@@ -568,6 +568,11 @@
       "id": "ck-pr1564-009",
       "summary": "Refresh INTENT.md attestation/fingerprint projection via project-check --refresh-specs",
       "input_digest": "sha256:abe3670aebead4effa4faf2494fbba2d140a1f2df1d1b0bedf4161e325190aa5"
+    },
+    {
+      "id": "ck-pr1564-010",
+      "summary": "Refresh INTERFACES.md attestation/fingerprint projection via project-check --refresh-specs",
+      "input_digest": "sha256:a0a59f3f102a78461c2bf3734c62cc9e4fe9de52da30cbd1e0c6e5427895b80f"
     }
   ],
   "intents": {
