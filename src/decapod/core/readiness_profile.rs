@@ -63,7 +63,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/decapod-validate.yml",
-            "sha256:51285d5aa084c8815b67af39d36a183bea561bcf0a33ba60b49747ca666779c4",
+            "sha256:8fd6fae19015e72c66167267164fd23ab5ed38ef4db68e168178054a3ecd8e21",
         ),
         (
             ".github/workflows/docs.yml",
