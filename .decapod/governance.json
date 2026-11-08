@@ -718,7 +718,7 @@
     }
   ],
   "intents": {
-    "intent:pr-v0131-1794097374": {
+    "intent:pr-v0131-final-1794097738": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -728,7 +728,7 @@
         ".decapod/governance.json"
       ],
       "created_sequence": 1,
-      "id": "intent:pr-v0131-1794097374",
+      "id": "intent:pr-v0131-final-1794097738",
       "out_of_scope": [],
       "proof_requirements": [],
       "raw_intent": "Harmonize docs, manifest relocation, CI fingerprint gate, README badge, pre-build validate",
@@ -788,20 +788,20 @@
       "active_boundaries": [
         "Five-issue PR merge and specs refresh"
       ],
-      "artifact_hash": "sha256:535372e47871e9da166617a27b084f8a44c2adfaf1740908b0381d54d743a707",
+      "artifact_hash": "sha256:3c3de7714c297f0dc0168993ee6a6163b5a94d1a5032df47391c0c5f20c3e4d1",
       "checks": [],
       "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:pr-v0131-1794097374",
+            "intent_id": "intent:pr-v0131-final-1794097738",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:pr-v0131-1794097374",
+            "intent_id": "intent:pr-v0131-final-1794097738",
             "kind": "refined",
             "sequence": 3
           }
@@ -815,7 +815,7 @@
       "destination": "PR #1554 merge",
       "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:pr-v0131-1794097374",
+      "intent_id": "intent:pr-v0131-final-1794097738",
       "modified_files": [],
       "next_transitions": [
         "publish"
@@ -823,7 +823,7 @@
       "repo_scope": [
         ".decapod/governance.json"
       ],
-      "run_id": "pr-v0131-1794097374",
+      "run_id": "pr-v0131-final-1794097738",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "tool_calls": [],
