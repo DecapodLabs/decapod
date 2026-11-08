@@ -1128,6 +1128,35 @@ mod documented_bootstrap {
         );
         let denied: serde_json::Value = serde_json::from_slice(&denied.stdout).unwrap();
         assert_eq!(denied["workspace"]["can_work"], false);
+        // The isolated fixture's datastore can disappear independently of the
+        // still-registered checkout. Its absence must never grant authority.
+        let data = root.join(".decapod/data");
+        let saved = root.join(".decapod/data-saved-by-fixture");
+        std::fs::rename(&data, &saved).unwrap();
+        let absent = cli("agent-a", path_a, &["workspace", "status"]);
+        if absent.status.success() {
+            let value: serde_json::Value = serde_json::from_slice(&absent.stdout).unwrap();
+            assert_eq!(value["workspace"]["can_work"], false);
+        }
+        let rpc = cli("agent-a", path_a, &["rpc", "--op", "workspace.status"]);
+        if rpc.status.success() {
+            let value: serde_json::Value = serde_json::from_slice(&rpc.stdout).unwrap();
+            assert_eq!(value["result"]["can_work"], false);
+        }
+        assert!(
+            !data.join("decapod.db").exists(),
+            "status must not recreate the datastore"
+        );
+        assert!(
+            saved.exists(),
+            "the original datastore must remain preserved"
+        );
+        std::fs::remove_file(path_b.join(".git")).unwrap();
+        let broken = decapod::core::workspace::get_workspace_status(path_b).unwrap();
+        assert!(
+            !broken.can_work,
+            "a checkout without Git identity must not authorize work"
+        );
         fixture.close().unwrap();
     }
 

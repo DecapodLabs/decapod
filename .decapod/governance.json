@@ -773,6 +773,14 @@
       "proof_refs": [
         "src/decapod/lib.rs"
       ]
+    },
+    {
+      "id": "wip-1469-status-3",
+      "summary": "Preserve in-progress tests/cli_contract_enforcement.rs. The explicit CLI and RPC status regression passed; other RPC transports, removed-checkout recovery, operation-level shared-resource enforcement and full validation remain unproven.",
+      "input_digest": "sha256:d9ca949cd2529ecd0a8f26b9d3f9a458f5bc86fab43668d96210171b0b64592d",
+      "proof_refs": [
+        "tests/cli_contract_enforcement.rs"
+      ]
     }
   ],
   "intents": {
