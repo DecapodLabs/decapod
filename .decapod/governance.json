@@ -816,7 +816,7 @@
     }
   ],
   "intents": {
-    "intent:pr-v0132-final-1794109092": {
+    "intent:pr-v0132-final-1794110388": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -826,7 +826,7 @@
         ".decapod/governance.json"
       ],
       "created_sequence": 1,
-      "id": "intent:pr-v0132-final-1794109092",
+      "id": "intent:pr-v0132-final-1794110388",
       "out_of_scope": [],
       "proof_requirements": [],
       "raw_intent": "Harmonize docs, manifest relocation, CI fingerprint gate, README badge, pre-build validate",
@@ -935,20 +935,20 @@
       "active_boundaries": [
         "Five-issue PR merge and specs refresh"
       ],
-      "artifact_hash": "sha256:c3a861cf51dedc4dd1208074ccc856fdc34c73701ae909ec2360ebb9f54ced13",
+      "artifact_hash": "sha256:97341d1a4fe7f8a52c6c51e4ce6e46c74998a6bacf97d5952a99bb4b98d13140",
       "checks": [],
       "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:pr-v0132-final-1794109092",
+            "intent_id": "intent:pr-v0132-final-1794110388",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:pr-v0132-final-1794109092",
+            "intent_id": "intent:pr-v0132-final-1794110388",
             "kind": "refined",
             "sequence": 3
           }
@@ -962,7 +962,7 @@
       "destination": "PR #1554 merge",
       "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:pr-v0132-final-1794109092",
+      "intent_id": "intent:pr-v0132-final-1794110388",
       "modified_files": [],
       "next_transitions": [
         "publish"
@@ -970,7 +970,7 @@
       "repo_scope": [
         ".decapod/governance.json"
       ],
-      "run_id": "pr-v0132-final-1794109092",
+      "run_id": "pr-v0132-final-1794110388",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
       "tool_calls": [],
