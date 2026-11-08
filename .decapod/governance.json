@@ -813,6 +813,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "wip-1469-generated-4",
+      "summary": "Preserve Decapod 0.132.0 project-check generated .decapod/managed/specs/INTENT.md. Full validation remains blocked by source-inventory reconciliation and required container proof; no publication readiness is asserted.",
+      "input_digest": "sha256:5a7fd94b63c805d5cbc3c64715e26872fdd5c82257b9636a35f631afb2801aae",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
