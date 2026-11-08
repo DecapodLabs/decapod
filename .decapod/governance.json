@@ -627,6 +627,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-manifest",
+      "summary": "Record the repository signal fingerprint for the refreshed living specs.",
+      "input_digest": "sha256:8dd87156130225a21485941aaeb1431045b56c7dff66213e2f8f2b4ce7431539",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
