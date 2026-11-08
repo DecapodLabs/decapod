@@ -456,6 +456,27 @@ four-platform packaging is outside that profile. A passing source report makes
 no packaging or delivery claim. Publishing and deployment simulations must be
 labeled; they are not actual uploads, tags, releases, or deployments.
 
+### Early CI gates for regenerated fingerprints and pre-build validation
+
+`ci.yml` runs a `spec-fingerprints` job before every other PR job (#1134). It
+executes `assets/tools/check_spec_fingerprints.py` against the checkout and
+fails when `.decapod/managed/.manifest.json` is missing, the legacy
+`.decapod/managed/specs/.manifest.json` is still committed, any `files[]`
+`content_hash` or repo signal fingerprint line no longer matches, or any
+`entrypoints[]` release/fingerprint marker fails to recompute. Every other
+`ci.yml` job `needs` it, so a PR that omits the regenerated fingerprint files
+is red before the heavy build pipeline starts.
+
+`decapod-validate.yml` additionally runs a `pre-build-validate` job (#1047)
+that downloads the latest released Decapod tarball, verifies its published
+`.sha256`, and runs `govern project-check --format json` against the checkout
+with `DECAPOD_VALIDATE_SKIP_GIT_GATES=1` and the immutable `CHANGE_EVENT`,
+`CHANGE_BASE`, `CHANGE_HEAD` context, gated by
+`assets/tools/pre_build_validate_gate.py`. Any failure other than the known
+forward-compatibility whitelist finding for `.decapod/managed/` artifacts
+(resolved once a release ships the #1079 manifest relocation) fails the job,
+kicking structural or completeness problems back before any branch build.
+
 ## Local and remote execution scopes
 
 `govern project-check` executes bounded project/governance prerequisites. It is

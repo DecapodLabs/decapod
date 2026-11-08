@@ -1213,6 +1213,20 @@ retain authored configuration even under `--force`; explicit arguments still cha
 it. The generated GitHub validation workflow fetches complete history and supplies
 immutable `CHANGE_EVENT`, `CHANGE_BASE` and `CHANGE_HEAD` to CI-local validation.
 
+### README badge on init (#1023) and specs manifest location (#1079)
+
+`init` and `init with` accept `--no-readme-badge`; the persisted
+`[init] readme_badge` setting in `.decapod/config.toml` defaults to `true` and
+preserves an authored value when the flag is omitted. When enabled, scaffolding
+inserts the version-matched badge
+`[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v<release>-dc2626)](https://github.com/DecapodLabs/decapod)`
+directly below the first top-level heading of the root `README.md` (creating a
+minimal `# <product name>` README when absent), is idempotent, and never writes
+during `--dry-run`. The specs manifest lives at `.decapod/managed/.manifest.json`;
+the legacy `.decapod/managed/specs/.manifest.json` path is read as a fallback and
+removed on refresh, and scaffolding preserves `generated_at` when every other
+manifest field matches.
+
 ## Local CPU companion and model-free startup protocol
 
 `setup vega --runtime <native-worker> --cpu-runtime <cpu-only-worker>` registers
