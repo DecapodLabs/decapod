@@ -1167,6 +1167,97 @@ pub fn find_workspace_for_task(host_repo: &Path, task_id: &str) -> Option<PathBu
         .map(|(_, path)| path)
 }
 
+fn git_output(path: &Path, args: &[&str]) -> Option<String> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .args(args)
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
+fn canonical_dir(path: &Path) -> Option<PathBuf> {
+    let canonical = std::fs::canonicalize(path).ok()?;
+    let meta = std::fs::symlink_metadata(&canonical).ok()?;
+    if meta.file_type().is_symlink() || !meta.is_dir() {
+        None
+    } else {
+        Some(canonical)
+    }
+}
+
+fn directory_identity(path: &Path) -> Option<(u64, u64)> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        let meta = std::fs::symlink_metadata(path).ok()?;
+        if meta.file_type().is_symlink() || !meta.is_dir() {
+            return None;
+        }
+        Some((meta.dev(), meta.ino()))
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = path;
+        None
+    }
+}
+
+fn registered_worktree(repo: &Path, canonical: &Path) -> bool {
+    let Some(listed) = git_output(repo, &["worktree", "list", "--porcelain"]) else {
+        return false;
+    };
+    listed.lines().any(|line| {
+        line.strip_prefix("worktree ")
+            .and_then(|path| std::fs::canonicalize(Path::new(path.trim())).ok())
+            .is_some_and(|path| path == canonical)
+    })
+}
+
+/// Observe a checkout. A symlink, an unregistered path, or a missing Git
+/// directory does not become a verified worktree.
+pub fn observe_checkout(path: &Path) -> crate::core::fleet_coord::CheckoutBinding {
+    let unknown = crate::core::fleet_coord::CheckoutBinding {
+        repository_id: String::new(),
+        worktree_id: String::new(),
+        branch: String::new(),
+        registered: false,
+    };
+    let Some(canonical) = canonical_dir(path) else {
+        return unknown;
+    };
+    let Some((device, inode)) = directory_identity(&canonical) else {
+        return unknown;
+    };
+    let Some(common) = git_output(&canonical, &["rev-parse", "--git-common-dir"]) else {
+        return unknown;
+    };
+    let Some(git_dir) = git_output(&canonical, &["rev-parse", "--absolute-git-dir"]) else {
+        return unknown;
+    };
+    let common_path = if Path::new(&common).is_absolute() {
+        PathBuf::from(&common)
+    } else {
+        canonical.join(&common)
+    };
+    let Some(repository) = std::fs::canonicalize(&common_path).ok() else {
+        return unknown;
+    };
+    let git_dir_path = PathBuf::from(&git_dir);
+    let registered = registered_worktree(&canonical, &canonical);
+    let branch = git_output(&canonical, &["branch", "--show-current"]).unwrap_or_default();
+    crate::core::fleet_coord::CheckoutBinding {
+        repository_id: repository.display().to_string(),
+        worktree_id: format!("{device}:{inode}:{}", git_dir_path.display()),
+        branch,
+        registered,
+    }
+}
+
 pub fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {
     if let Some(host) = host_repo_from_canonical_workspace(current_dir) {
         return Ok(host);

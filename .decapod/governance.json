@@ -563,6 +563,14 @@
       "proof_refs": [
         "src/decapod/core/todo.rs"
       ]
+    },
+    {
+      "id": "ck-1469-observe-checkout",
+      "summary": "Resolve a checkout through its canonical directory, Git directory, and worktree registration.",
+      "input_digest": "sha256:57db269f05debff11e25513341ba9afd83549ec2c64d9daed2af9c6570b2eab5",
+      "proof_refs": [
+        "src/decapod/core/workspace.rs"
+      ]
     }
   ],
   "legacy_digests": {
