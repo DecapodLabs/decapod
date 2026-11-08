@@ -653,6 +653,14 @@
       "proof_refs": [
         "src/decapod/core/workspace.rs"
       ]
+    },
+    {
+      "id": "wip-1469-custody-3",
+      "summary": "Preserve in-progress tests/plugins/todo.rs for review. The earlier 36-test plugin result predates later changes. Current admission, recovery, integration boundaries, living-spec refresh, full validation and PR readiness remain unverified. Original PR and uncommitted source checkout remain preserved.",
+      "input_digest": "sha256:ff778c7fdb66bfcfb736a85902036e7f84a29c6a980f0c6dad97f7ab69dc9d77",
+      "proof_refs": [
+        "tests/plugins/todo.rs"
+      ]
     }
   ],
   "intents": {

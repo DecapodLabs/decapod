@@ -423,7 +423,8 @@ fn test_similar_active_task_consolidates_with_comment() {
 #[test]
 fn two_verified_worktrees_admit_authoring_and_one_checkout_does_not() {
     let tmp = tempdir().unwrap();
-    let root = tmp.path();
+    let canonical_root = tmp.path().canonicalize().unwrap();
+    let root = canonical_root.as_path();
     initialize_todo_db(root).unwrap();
     let git = |args: &[&str]| {
         let status = Command::new("git")
@@ -495,19 +496,9 @@ fn two_verified_worktrees_admit_authoring_and_one_checkout_does_not() {
         &format!("agent/b/{task_b}"),
         work_b.to_str().unwrap(),
     ]);
-    let admit = |path: &Path| {
-        let observed = decapod::core::workspace::observe_checkout(path);
-        admit_checkout_binding(
-            root,
-            &observed.repository_id,
-            &observed.worktree_id,
-            &observed.branch,
-            observed.registered,
-        )
-        .unwrap()
-    };
-    let first = admit(&work_a);
-    let second = admit(&work_b);
+    let admit = |path: &Path, caller: &str| admit_checkout_binding(root, path, caller).unwrap();
+    let first = admit(&work_a, "agent-a");
+    let second = admit(&work_b, "agent-b");
     let seen = decapod::core::workspace::observe_checkout(&work_a);
     assert_eq!(
         first.state,
@@ -515,13 +506,45 @@ fn two_verified_worktrees_admit_authoring_and_one_checkout_does_not() {
         "observed={seen:?} admission={first:?}"
     );
     assert_eq!(second.state, AuthoringState::Admissible);
+    assert_eq!(admit(&work_a, "agent-b").state, AuthoringState::NotProven);
     assert_eq!(first.task_id.as_deref(), Some(task_a.as_str()));
     assert_eq!(second.agent_id.as_deref(), Some("agent-b"));
     assert_ne!(first.worktree_id, second.worktree_id);
+    let count_events = || {
+        let conn = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+        conn.query_row("SELECT COUNT(*) FROM events", [], |row| {
+            row.get::<_, i64>(0)
+        })
+        .unwrap()
+    };
+    let before_status = count_events();
+    let read =
+        decapod::core::todo::read_authoring_admission_with_caller(root, &work_a, Some("agent-a"))
+            .unwrap();
+    assert_eq!(read.state, AuthoringState::Admissible);
+    assert_eq!(
+        count_events(),
+        before_status,
+        "status must not append broker or TODO events"
+    );
+    assert_eq!(
+        renew_claim_lease(root, &task_a, "agent-a", Some(600)).unwrap()["status"],
+        "ok"
+    );
+    let stale =
+        decapod::core::todo::read_authoring_admission_with_caller(root, &work_a, Some("agent-a"))
+            .unwrap();
+    assert_eq!(
+        stale.state,
+        AuthoringState::Stale,
+        "reading must not silently update a generation"
+    );
+    assert_eq!(admit(&work_a, "agent-a").state, AuthoringState::Admissible);
     assert_eq!(
         get_task(root, &task_a).unwrap().unwrap().assigned_to,
         "agent-a"
     );
+
     assert_eq!(
         get_task(root, &task_b).unwrap().unwrap().assigned_to,
         "agent-b"
@@ -529,9 +552,8 @@ fn two_verified_worktrees_admit_authoring_and_one_checkout_does_not() {
 
     let alias = root.join(".decapod/workspaces/alias-a");
     std::os::unix::fs::symlink(&work_a, &alias).unwrap();
-    let aliased = admit(&alias);
-    assert_eq!(aliased.worktree_id, first.worktree_id);
-    assert_eq!(aliased.state, AuthoringState::Admissible);
+    let aliased = admit(&alias, "agent-a");
+    assert_eq!(aliased.state, AuthoringState::NotProven);
 
     let switched = Command::new("git")
         .args(["checkout", "-b", &format!("agent/c/{task_c}")])
@@ -539,19 +561,44 @@ fn two_verified_worktrees_admit_authoring_and_one_checkout_does_not() {
         .status()
         .unwrap();
     assert!(switched.success());
-    let same_agent = admit(&work_a);
+    let same_agent = admit(&work_a, "agent-a");
     assert_eq!(same_agent.state, AuthoringState::SharedCheckout);
     assert_eq!(
         same_agent.conflicting_task_id.as_deref(),
         Some(task_a.as_str())
     );
+    // Another agent cannot clear the binding. The owner explicitly releases it
+    // before the second task can obtain this checkout.
+    assert!(
+        decapod::core::todo::release_checkout_binding(root, &first.worktree_id, "agent-b").is_err()
+    );
+    assert!(
+        decapod::core::todo::release_checkout_binding(root, &first.worktree_id, "agent-a").unwrap()
+    );
+    assert_eq!(admit(&work_a, "agent-a").state, AuthoringState::Admissible);
     assert_eq!(
         get_task(root, &task_a).unwrap().unwrap().assigned_to,
         "agent-a"
     );
 
-    let missing = admit(&root.join("missing-worktree"));
+    let missing = admit(&root.join("missing-worktree"), "agent-a");
     assert_eq!(missing.state, AuthoringState::NotProven);
+
+    let foreign = tempdir().unwrap();
+    let foreign_root = foreign.path().canonicalize().unwrap();
+    assert!(
+        Command::new("git")
+            .args(["init", "-b", "main"])
+            .current_dir(&foreign_root)
+            .status()
+            .unwrap()
+            .success()
+    );
+    assert_eq!(
+        admit(&foreign_root, "agent-a").state,
+        AuthoringState::NotProven,
+        "a different repository cannot provide checkout custody for this datastore"
+    );
 
     let task_d = make("Fix recovery task");
     assert_eq!(
@@ -573,24 +620,86 @@ fn two_verified_worktrees_admit_authoring_and_one_checkout_does_not() {
         claim_task(root, &task_f, "agent-b", ClaimMode::Exclusive).unwrap()["result"]["status"],
         "ok"
     );
+    let work_e = root.join(".decapod/workspaces/agent-e");
+    git(&[
+        "worktree",
+        "add",
+        "-b",
+        &format!("agent/a/{task_e}"),
+        work_e.to_str().unwrap(),
+    ]);
     let barrier = Arc::new(Barrier::new(2));
     let store = root.to_path_buf();
-    let race = |branch: String, barrier: Arc<Barrier>| {
+    let race = |checkout: std::path::PathBuf, caller: String, barrier: Arc<Barrier>| {
         let store = store.clone();
         thread::spawn(move || {
             barrier.wait();
-            admit_checkout_binding(&store, "repo-race", "8:8:/one-checkout", &branch, true)
+            admit_checkout_binding(&store, &checkout, &caller)
                 .unwrap()
                 .state
         })
     };
-    let left = race(format!("race/{task_e}"), barrier.clone());
-    let right = race(format!("race/{task_f}"), barrier);
+    let left = race(work_e.clone(), "agent-a".into(), barrier.clone());
+    let right = race(work_e.clone(), "agent-b".into(), barrier);
     let mut states = vec![left.join().unwrap(), right.join().unwrap()];
     states.sort_by_key(|state| format!("{state:?}"));
     assert_eq!(
         states,
-        vec![AuthoringState::Admissible, AuthoringState::SharedCheckout]
+        vec![AuthoringState::Admissible, AuthoringState::NotProven]
+    );
+    {
+        let conn = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+        conn.execute(
+            "DELETE FROM authoring_bindings WHERE worktree_id=?1",
+            [&first.worktree_id],
+        )
+        .unwrap();
+    }
+    assert!(
+        admit_checkout_binding(root, &work_a, "agent-a").is_err(),
+        "a missing row must not look like a never-bound checkout"
+    );
+    assert_eq!(
+        decapod::core::todo::recover_checkout_bindings(root, "agent-a").unwrap(),
+        1
+    );
+    assert_eq!(admit(&work_a, "agent-a").state, AuthoringState::Admissible);
+    // Simulate loss of the reconstructible projection in this isolated test
+    // datastore. Ordinary admission must fail closed until explicit replay.
+    {
+        let conn = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+        conn.execute("DROP TABLE authoring_bindings", []).unwrap();
+    }
+    assert!(admit_checkout_binding(root, &work_b, "agent-b").is_err());
+    let replayed = decapod::core::todo::recover_checkout_bindings(root, "agent-a").unwrap();
+    assert_eq!(replayed, 3);
+    assert_eq!(admit(&work_b, "agent-b").state, AuthoringState::Admissible);
+    assert_eq!(admit(&work_a, "agent-a").state, AuthoringState::Admissible);
+    assert!(
+        decapod::core::todo::recover_checkout_bindings(root, "agent-a").is_err(),
+        "recovery must never overwrite an existing projection"
+    );
+    {
+        let conn = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+        conn.execute(
+            "UPDATE authoring_bindings SET agent_id='intruder' WHERE worktree_id=?1",
+            [&first.worktree_id],
+        )
+        .unwrap();
+    }
+    assert!(admit_checkout_binding(root, &work_a, "agent-a").is_err());
+    assert!(decapod::core::todo::recover_checkout_bindings(root, "agent-a").is_err());
+    let conn = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let owner: String = conn
+        .query_row(
+            "SELECT agent_id FROM authoring_bindings WHERE worktree_id=?1",
+            [&first.worktree_id],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(
+        owner, "intruder",
+        "conflicting projection must be preserved for review"
     );
 }
 
