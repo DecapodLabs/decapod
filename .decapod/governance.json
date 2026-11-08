@@ -643,6 +643,11 @@
       "id": "ck-pr1564-024",
       "summary": "chore(specs): refresh INTENT.md attestation for state.resolve PR #1564",
       "input_digest": "sha256:7befda9b80658029d147c7fa3f3833f3f88c6d3506cb98d16b1448c176fa9c4f"
+    },
+    {
+      "id": "ck-pr1564-025",
+      "summary": "chore(specs): refresh INTERFACES.md attestation for state.resolve PR #1564",
+      "input_digest": "sha256:b7dbed0fe126ef2a30a5a7321d65ef0b0dd9c5d1cf3b279678af8b5022400c71"
     }
   ],
   "intents": {
