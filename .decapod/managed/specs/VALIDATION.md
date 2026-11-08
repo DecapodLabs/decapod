@@ -1,5 +1,18 @@
 # Validation
 
+## Concurrent authoring proof in progress
+
+The existing PR's history is retained on the claimed work branch. Earlier TODO
+plugin results and the original CI failures are historical evidence; they do not
+prove subsequent admission changes. Required current proof includes independent
+real worktrees, same-checkout exclusion, wrong repository and alias rejection,
+missing or unreadable datastore, lease fencing and recovery, a fresh-worktree
+bootstrap, and separation of shared integration and release operations. A
+two-agent clean merge with a semantic incompatibility requires combined-candidate
+validation. Do not close #1469 or assert readiness from isolated authoring or
+from a clean Git merge. Full `decapod validate` and terminal provider evidence
+are still required against the exact candidate and accepted target.
+
 ## Claim boundary delivery checks
 
 The required CLI target runs the two `claim_boundaries` regressions with

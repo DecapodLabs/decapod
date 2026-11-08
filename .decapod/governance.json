@@ -677,6 +677,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "wip-1469-custody-6",
+      "summary": "Preserve in-progress .decapod/managed/specs/VALIDATION.md for review. The earlier 36-test plugin result predates later changes. Current admission, recovery, integration boundaries, living-spec refresh, full validation and PR readiness remain unverified. Original PR and uncommitted source checkout remain preserved.",
+      "input_digest": "sha256:cf5553a1688f3f37dbbb7c5466e512c9617a1d7c5f2e08cb146b2ec689d7c5d6",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
