@@ -619,6 +619,14 @@
       "proof_refs": [
         "tests/unit/core/fleet_coord_tests.rs"
       ]
+    },
+    {
+      "id": "ck-1469-two-worktree-proof",
+      "summary": "Prove distinct verified worktrees, alias refusal, same-agent refusal, and a raced binding.",
+      "input_digest": "sha256:fba30b156d4856c62ca3307a5c2c1321bd9b4e8c5ab83f54930a4d7ca4519629",
+      "proof_refs": [
+        "tests/plugins/todo.rs"
+      ]
     }
   ],
   "legacy_digests": {

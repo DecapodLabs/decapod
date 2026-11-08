@@ -1,20 +1,23 @@
 use decapod::core::broker::DbBroker;
 use decapod::core::db::Connection;
 use decapod::core::events;
+use decapod::core::fleet_coord::AuthoringState;
 use decapod::core::pool::global_pool;
 use decapod::core::schemas;
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::core::todo::{
-    ClaimMode, TodoCommand, add_task, check_trust_level, claim_task, claim_task_with_lease,
-    fleet_health, get_task, get_work_claim, handoff_task_as, initialize_todo_db, list_tasks,
-    rebuild_from_events, renew_claim_lease, update_status, yield_claim_lease,
+    ClaimMode, TodoCommand, add_task, admit_checkout_binding, check_trust_level, claim_task,
+    claim_task_with_lease, fleet_health, get_task, get_work_claim, handoff_task_as,
+    initialize_todo_db, list_tasks, rebuild_from_events, renew_claim_lease, update_status,
+    yield_claim_lease,
 };
 use decapod::plugins::policy;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Barrier};
+use std::thread;
 use std::time::{Duration, Instant};
 use tempfile::tempdir;
 
@@ -402,15 +405,193 @@ fn test_similar_active_task_consolidates_with_comment() {
         parent: None,
         one_shot: 0,
     };
-    let consolidated = add_task(&root, &similar_args).unwrap();
-    assert_eq!(consolidated["id"], active_id);
-    assert_eq!(consolidated["consolidated"], true);
+    let duplicate_title = add_task(&root, &similar_args).unwrap();
+    assert_ne!(duplicate_title["id"], active_id);
+    assert!(duplicate_title.get("consolidated").is_none());
 
     let open = list_tasks(&root, Some("open".to_string()), None, None, None, None).unwrap();
-    assert_eq!(open.len(), 2);
-    let task = get_task(&root, active_id).unwrap().unwrap();
-    assert_eq!(task.comments.len(), 1);
-    assert_eq!(task.comments[0].kind, "fuzzy-consolidation");
+    assert_eq!(open.len(), 3);
+    assert!(
+        get_task(&root, active_id)
+            .unwrap()
+            .unwrap()
+            .comments
+            .is_empty()
+    );
+}
+
+#[test]
+fn two_verified_worktrees_admit_authoring_and_one_checkout_does_not() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    initialize_todo_db(root).unwrap();
+    let git = |args: &[&str]| {
+        let status = Command::new("git")
+            .args(args)
+            .current_dir(root)
+            .status()
+            .unwrap();
+        assert!(status.success(), "{args:?}");
+    };
+    git(&["init"]);
+    git(&["config", "user.email", "authoring@example.com"]);
+    git(&["config", "user.name", "authoring"]);
+    std::fs::write(root.join("lib.rs"), b"fn shared() {}\n").unwrap();
+    git(&["add", "lib.rs"]);
+    git(&["-c", "commit.gpgsign=false", "commit", "-m", "init"]);
+    let make = |title: &str| {
+        add_task(
+            root,
+            &TodoCommand::Add {
+                title: title.into(),
+                description: "distinct".into(),
+                tags: String::new(),
+                owner: String::new(),
+                due: None,
+                r#ref: String::new(),
+                scope: String::new(),
+                dir: Some(root.to_string_lossy().into_owned()),
+                priority: "normal".into(),
+                depends_on: String::new(),
+                blocks: String::new(),
+                parent: None,
+                one_shot: 0,
+            },
+        )
+        .unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string()
+    };
+    let task_a = make("Fix parser boundary");
+    let task_b = make("Fix renderer boundary");
+    let task_c = make("Fix same agent second task");
+    assert_eq!(
+        claim_task(root, &task_a, "agent-a", ClaimMode::Exclusive).unwrap()["result"]["status"],
+        "ok"
+    );
+    assert_eq!(
+        claim_task(root, &task_b, "agent-b", ClaimMode::Exclusive).unwrap()["result"]["status"],
+        "ok"
+    );
+    assert_eq!(
+        claim_task(root, &task_c, "agent-a", ClaimMode::Exclusive).unwrap()["result"]["status"],
+        "ok"
+    );
+    std::fs::create_dir_all(root.join(".decapod/workspaces")).unwrap();
+    let work_a = root.join(".decapod/workspaces/agent-a");
+    let work_b = root.join(".decapod/workspaces/agent-b");
+    git(&[
+        "worktree",
+        "add",
+        "-b",
+        &format!("agent/a/{task_a}"),
+        work_a.to_str().unwrap(),
+    ]);
+    git(&[
+        "worktree",
+        "add",
+        "-b",
+        &format!("agent/b/{task_b}"),
+        work_b.to_str().unwrap(),
+    ]);
+    let admit = |path: &Path| {
+        let observed = decapod::core::workspace::observe_checkout(path);
+        admit_checkout_binding(
+            root,
+            &observed.repository_id,
+            &observed.worktree_id,
+            &observed.branch,
+            observed.registered,
+        )
+        .unwrap()
+    };
+    let first = admit(&work_a);
+    let second = admit(&work_b);
+    let seen = decapod::core::workspace::observe_checkout(&work_a);
+    assert_eq!(
+        first.state,
+        AuthoringState::Admissible,
+        "observed={seen:?} admission={first:?}"
+    );
+    assert_eq!(second.state, AuthoringState::Admissible);
+    assert_eq!(first.task_id.as_deref(), Some(task_a.as_str()));
+    assert_eq!(second.agent_id.as_deref(), Some("agent-b"));
+    assert_ne!(first.worktree_id, second.worktree_id);
+    assert_eq!(
+        get_task(root, &task_a).unwrap().unwrap().assigned_to,
+        "agent-a"
+    );
+    assert_eq!(
+        get_task(root, &task_b).unwrap().unwrap().assigned_to,
+        "agent-b"
+    );
+
+    let alias = root.join(".decapod/workspaces/alias-a");
+    std::os::unix::fs::symlink(&work_a, &alias).unwrap();
+    let aliased = admit(&alias);
+    assert_eq!(aliased.worktree_id, first.worktree_id);
+    assert_eq!(aliased.state, AuthoringState::Admissible);
+
+    let switched = Command::new("git")
+        .args(["checkout", "-b", &format!("agent/c/{task_c}")])
+        .current_dir(&work_a)
+        .status()
+        .unwrap();
+    assert!(switched.success());
+    let same_agent = admit(&work_a);
+    assert_eq!(same_agent.state, AuthoringState::SharedCheckout);
+    assert_eq!(
+        same_agent.conflicting_task_id.as_deref(),
+        Some(task_a.as_str())
+    );
+    assert_eq!(
+        get_task(root, &task_a).unwrap().unwrap().assigned_to,
+        "agent-a"
+    );
+
+    let missing = admit(&root.join("missing-worktree"));
+    assert_eq!(missing.state, AuthoringState::NotProven);
+
+    let task_d = make("Fix recovery task");
+    assert_eq!(
+        claim_task(root, &task_d, "agent-b", ClaimMode::Exclusive).unwrap()["result"]["status"],
+        "ok"
+    );
+    assert_eq!(
+        get_task(root, &task_d).unwrap().unwrap().assigned_to,
+        "agent-b"
+    );
+
+    let task_e = make("Fix race left");
+    let task_f = make("Fix race right");
+    assert_eq!(
+        claim_task(root, &task_e, "agent-a", ClaimMode::Exclusive).unwrap()["result"]["status"],
+        "ok"
+    );
+    assert_eq!(
+        claim_task(root, &task_f, "agent-b", ClaimMode::Exclusive).unwrap()["result"]["status"],
+        "ok"
+    );
+    let barrier = Arc::new(Barrier::new(2));
+    let store = root.to_path_buf();
+    let race = |branch: String, barrier: Arc<Barrier>| {
+        let store = store.clone();
+        thread::spawn(move || {
+            barrier.wait();
+            admit_checkout_binding(&store, "repo-race", "8:8:/one-checkout", &branch, true)
+                .unwrap()
+                .state
+        })
+    };
+    let left = race(format!("race/{task_e}"), barrier.clone());
+    let right = race(format!("race/{task_f}"), barrier);
+    let mut states = vec![left.join().unwrap(), right.join().unwrap()];
+    states.sort_by_key(|state| format!("{state:?}"));
+    assert_eq!(
+        states,
+        vec![AuthoringState::Admissible, AuthoringState::SharedCheckout]
+    );
 }
 
 #[test]
