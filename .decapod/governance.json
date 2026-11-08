@@ -893,6 +893,14 @@
       "proof_refs": [
         "CODEX.md"
       ]
+    },
+    {
+      "id": "wip-1469-generated-14",
+      "summary": "Preserve Decapod 0.132.0 project-check generated GEMINI.md. Full validation remains blocked by source-inventory reconciliation and required container proof; no publication readiness is asserted.",
+      "input_digest": "sha256:f2453a3894708bf9372a5103465c946fb9a1c8a66f157195a7205f9a02f80b25",
+      "proof_refs": [
+        "GEMINI.md"
+      ]
     }
   ],
   "intents": {
