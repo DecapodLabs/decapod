@@ -603,6 +603,11 @@
       "id": "ck-pr1564-016",
       "summary": "Refresh AGENTS.md entrypoint fingerprint projection via project-check --refresh-specs",
       "input_digest": "sha256:2fa6b82119a5893f3e9075632a83c61f64921f10ec31c430a4dc05058f32910c"
+    },
+    {
+      "id": "ck-pr1564-017",
+      "summary": "Refresh CLAUDE.md entrypoint fingerprint projection via project-check --refresh-specs",
+      "input_digest": "sha256:6540fb85e0bc23991fb809544b6f1bfa06d8bf5a9b0fd80a6c0363fc6bfc25fb"
     }
   ],
   "intents": {
