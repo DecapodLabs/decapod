@@ -558,6 +558,11 @@
       "id": "ck-pr1564-007",
       "summary": "Refresh .decapod/managed/specs/.manifest.json fingerprints via project-check --refresh-specs",
       "input_digest": "sha256:11838160cb300d275ae3c1d477ce3057befcea86f6be60b669ed1bad3bb75283"
+    },
+    {
+      "id": "ck-pr1564-008",
+      "summary": "Refresh ARCHITECTURE.md attestation/fingerprint projection via project-check --refresh-specs",
+      "input_digest": "sha256:db5ac79a7ad8e3476db8dd26402a1b0de6349acbd9175b909721cb846554f9e5"
     }
   ],
   "intents": {

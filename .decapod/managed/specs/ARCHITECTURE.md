@@ -212,7 +212,6 @@ The product is a local-first command-line runtime with a structured process RPC
 surface. Agents invoke it at decision and state-transition boundaries. Durable
 repository records provide continuity instead of a resident orchestration service.
 
-
 ## State Subsystem
 
 The `state` subsystem provides two additive RPC capabilities for governed-state observability:
@@ -269,7 +268,6 @@ The `state` subsystem includes regression tests in `tests/unit/state_eligibility
 - **Empty proof plan**: Handles gracefully (no required proofs = eligible if other conditions met)
 
 These tests ensure the governed-state projection never reports publication eligibility without sufficient, current, valid, and properly bound evidence.
-
 
 ## Current Facts
 
@@ -866,8 +864,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fcf98add742053dc31854722b1a17a3b19307e12f29b0ed6b5dadc9b03ccc520`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
+- Repository signal fingerprint: `93b07b750dd60d2bc9c8b28590fc73c38787b46335d8a015a649fbf6f277522b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (214 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
