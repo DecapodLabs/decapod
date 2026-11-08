@@ -853,6 +853,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "wip-1469-generated-9",
+      "summary": "Preserve Decapod 0.132.0 project-check generated .decapod/managed/specs/SEMANTICS.md. Full validation remains blocked by source-inventory reconciliation and required container proof; no publication readiness is asserted.",
+      "input_digest": "sha256:0d0d18bb098858b790f57130e0c46ced56ee93d65b71bcc51a886569a9d1e56d",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
