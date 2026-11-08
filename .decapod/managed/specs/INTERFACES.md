@@ -1,5 +1,20 @@
 # Interfaces
 
+## Checkout admission
+
+The authoring admission boundary receives a checkout path and the current agent;
+it observes Git and filesystem identity itself instead of accepting a supplied
+repository ID, worktree ID, branch or registration assertion. Workspace status
+is a read operation: missing or unreadable admission evidence is not permission.
+`workspace ensure` must bind a newly created managed checkout before reporting it
+usable and must propagate non-admissible outcomes. A lease renewal or handoff
+requires a current generation and owner; reading a stale binding cannot refresh
+it. Recovery cannot delete a different live checkout's binding. The explicit
+`todo release-checkout --worktree-id <id>` operation checks the binding owner
+against the current agent and records the release before another task can bind.
+Owner handoff, a removed original worktree and event replay still require
+separate recovery proof; an agent cannot silently discard an older binding.
+
 ## Publication projection
 
 `interop.project` validation reports expose `proof_judgment` alongside

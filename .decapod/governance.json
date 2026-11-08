@@ -669,6 +669,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "wip-1469-custody-5",
+      "summary": "Preserve in-progress .decapod/managed/specs/INTERFACES.md for review. The earlier 36-test plugin result predates later changes. Current admission, recovery, integration boundaries, living-spec refresh, full validation and PR readiness remain unverified. Original PR and uncommitted source checkout remain preserved.",
+      "input_digest": "sha256:851a07b822aca380a2d179f1daa9ce025560170922a099ee94520f6d55756548",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
