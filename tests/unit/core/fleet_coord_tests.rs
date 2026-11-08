@@ -458,6 +458,144 @@ fn explicit_paths_fail_closed_on_case_and_unicode_aliases() {
     }
 }
 
+fn binding(id: &str, branch: &str) -> CheckoutBinding {
+    CheckoutBinding {
+        repository_id: "repo".to_string(),
+        worktree_id: id.to_string(),
+        branch: branch.to_string(),
+        registered: true,
+    }
+}
+
+fn authoring<'a>(
+    checkout: Option<&'a CheckoutBinding>,
+    others: &'a [CheckoutBinding],
+    resource: bool,
+) -> AuthoringState {
+    judge_authoring(AuthoringInput {
+        custody_held: true,
+        lease_current: true,
+        checkout,
+        other_checkouts: others,
+        expected_worktree_id: None,
+        expected_branch: None,
+        targets_reserved_resource: resource,
+        resource_held_by_other: resource,
+    })
+}
+
+#[test]
+fn authoring_waits_for_a_workspace_and_refuses_the_same_checkout() {
+    assert_eq!(authoring(None, &[], false), AuthoringState::CustodyPending);
+    let left = binding("1:10:/git/a", "task-a");
+    let right = binding("2:11:/git/b", "task-b");
+    assert_eq!(
+        authoring(Some(&right), std::slice::from_ref(&left), false),
+        AuthoringState::Admissible
+    );
+    assert_eq!(
+        authoring(Some(&left), std::slice::from_ref(&left), false),
+        AuthoringState::SharedCheckout
+    );
+    assert!(authoring_blocked(&[shared_checkout_overlap(
+        "task-b",
+        "agent-b",
+        &left.worktree_id
+    )]));
+    assert_eq!(
+        authoring(Some(&right), std::slice::from_ref(&left), true),
+        AuthoringState::SharedResource
+    );
+    let mut forged = binding("1:10:/git/a", "task-a");
+    forged.registered = false;
+    assert_eq!(
+        authoring(Some(&forged), &[], false),
+        AuthoringState::NotProven
+    );
+    let stale = judge_authoring(AuthoringInput {
+        custody_held: true,
+        lease_current: true,
+        checkout: Some(&left),
+        other_checkouts: &[],
+        expected_worktree_id: Some("replaced"),
+        expected_branch: None,
+        targets_reserved_resource: false,
+        resource_held_by_other: false,
+    });
+    assert_eq!(stale, AuthoringState::Stale);
+    assert_ne!(stale, AuthoringState::NotProven);
+}
+
+#[test]
+fn real_worktrees_share_identity_through_an_alias_and_not_across_worktrees() {
+    let root = tempfile::tempdir().unwrap();
+    let git = |args: &[&str], dir: &std::path::Path| {
+        let status = std::process::Command::new("git")
+            .args(args)
+            .current_dir(dir)
+            .status()
+            .unwrap();
+        assert!(status.success());
+    };
+    git(&["init"], root.path());
+    git(
+        &["config", "user.email", "authoring@example.com"],
+        root.path(),
+    );
+    git(&["config", "user.name", "authoring"], root.path());
+    std::fs::write(root.path().join("lib.rs"), b"fn main() {}\n").unwrap();
+    git(&["add", "lib.rs"], root.path());
+    git(
+        &["-c", "commit.gpgsign=false", "commit", "-m", "init"],
+        root.path(),
+    );
+    let other = root.path().join("other");
+    git(
+        &["worktree", "add", "-b", "task-b", other.to_str().unwrap()],
+        root.path(),
+    );
+    let main = crate::core::workspace::observe_checkout(root.path());
+    let second = crate::core::workspace::observe_checkout(&other);
+    assert!(main.registered && second.registered);
+    assert_ne!(main.worktree_id, second.worktree_id);
+    assert_eq!(
+        judge_authoring(AuthoringInput {
+            custody_held: true,
+            lease_current: true,
+            checkout: Some(&second),
+            other_checkouts: std::slice::from_ref(&main),
+            expected_worktree_id: None,
+            expected_branch: None,
+            targets_reserved_resource: false,
+            resource_held_by_other: false,
+        }),
+        AuthoringState::Admissible
+    );
+    let link = root.path().join("alias");
+    std::os::unix::fs::symlink(root.path(), &link).unwrap();
+    let alias = crate::core::workspace::observe_checkout(&link);
+    assert_eq!(alias.worktree_id, main.worktree_id);
+    assert_eq!(
+        judge_authoring(AuthoringInput {
+            custody_held: true,
+            lease_current: true,
+            checkout: Some(&alias),
+            other_checkouts: std::slice::from_ref(&main),
+            expected_worktree_id: None,
+            expected_branch: None,
+            targets_reserved_resource: false,
+            resource_held_by_other: false,
+        }),
+        AuthoringState::SharedCheckout
+    );
+    let forged = crate::core::workspace::observe_checkout(&root.path().join("missing"));
+    assert!(!forged.registered);
+    assert_eq!(
+        authoring(Some(&forged), &[], false),
+        AuthoringState::NotProven
+    );
+}
+
 #[test]
 fn file_scope_restrictions_do_not_change_legacy_paths() {
     assert_eq!(declared_paths("café").unwrap(), None);

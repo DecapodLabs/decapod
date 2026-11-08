@@ -571,6 +571,14 @@
       "proof_refs": [
         "src/decapod/core/workspace.rs"
       ]
+    },
+    {
+      "id": "ck-1469-authoring-tests",
+      "summary": "Cover pending custody, distinct worktrees, aliases, forged paths, stale bindings, and reserved resources.",
+      "input_digest": "sha256:fa3cec416100bcb4639a206558567f398c5a1327973f9b45a01b77977b244fca",
+      "proof_refs": [
+        "tests/unit/core/fleet_coord_tests.rs"
+      ]
     }
   ],
   "legacy_digests": {
