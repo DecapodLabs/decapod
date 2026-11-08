@@ -19,6 +19,16 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
+The harness chooses what to attempt and the agent performs the work. Decapod
+resolves canonical state, decides whether the attempt is admissible, and judges
+whether the resulting claim is proven. It does not choose the next action. A
+passing verifier is not, by itself, an independently constrained verifier.
+Isolation is `proven_excluded` only when a native trace or an external
+observation shows the input was absent. A self-report or a harness name remains
+`unknown`. `not_proven` stays distinct from `failed`, and `unknown` stays
+distinct from `proven`. A runtime capability bound to a different governing
+identity is `stale` and does not satisfy a freshness-sensitive requirement.
+
 Concurrent local agents and worktrees must retain their own caller identity in
 results, task ownership and audit evidence while sharing canonical storage.
 The foreground broker's optional reusable connection must make bounded progress,
@@ -264,7 +274,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f877bcaa85918acff695d8c3cde0da1fdd755f4b25efceb03edf6d074513d272`
+- Repository signal fingerprint: `7b2ddf861e25c6bfdf38883fd2050d065a1261cc61be217f9ec65d44a3f9918c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
