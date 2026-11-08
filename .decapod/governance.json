@@ -611,6 +611,14 @@
       "proof_refs": [
         "src/decapod/core/workspace.rs"
       ]
+    },
+    {
+      "id": "ck-1469-same-agent-test",
+      "summary": "A shared agent id still reports logical overlap and does not enforce it.",
+      "input_digest": "sha256:c8045ccea6d7352fe819fde0955a82fb0a92fd8600d618dae70a3a30e9afd9cc",
+      "proof_refs": [
+        "tests/unit/core/fleet_coord_tests.rs"
+      ]
     }
   ],
   "legacy_digests": {

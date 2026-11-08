@@ -161,7 +161,13 @@ fn detect_overlaps_skips_expired_yielded_and_same_agent() {
         &active,
         "100Z",
     );
-    assert!(overlaps.is_empty());
+    assert!(
+        overlaps
+            .iter()
+            .any(|overlap| overlap.task_id == "t1" && !overlap.enforced),
+        "same agent does not hide logical overlap"
+    );
+    assert!(!authoring_blocked(&overlaps));
 
     let overlaps = detect_overlaps(
         "t-new",
