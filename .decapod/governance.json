@@ -573,6 +573,11 @@
       "id": "ck-pr1564-010",
       "summary": "Refresh INTERFACES.md attestation/fingerprint projection via project-check --refresh-specs",
       "input_digest": "sha256:a0a59f3f102a78461c2bf3734c62cc9e4fe9de52da30cbd1e0c6e5427895b80f"
+    },
+    {
+      "id": "ck-pr1564-011",
+      "summary": "Refresh OPERATIONS.md attestation/fingerprint projection via project-check --refresh-specs",
+      "input_digest": "sha256:e8c0b55de93d80882603abe4d57db19933dc62f82aa794cd3534af7832856b3f"
     }
   ],
   "intents": {
