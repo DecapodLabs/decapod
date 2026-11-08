@@ -523,6 +523,16 @@
     "base_commit": "fee3544a78200030364777bd04eb71452a8efaba",
     "target_base": "master"
   },
+  "claims": {
+    "verifier-integrity": {
+      "statement": "When isolation is required, unknown isolation, a self-report, or a harness name does not make a passing observation proven, and not_proven stays distinct from failed.",
+      "falsifier": "A passing receipt with unknown, self-reported, or harness-named isolation is judged proven, or failed evidence becomes not_proven when integrity is also requested.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/governed_transition.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "ck-verifier-integrity-kernel",
@@ -675,6 +685,14 @@
       "proof_refs": [
         "GEMINI.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-governance",
+      "summary": "Bind the plan, trajectory, claim, and spec reviews for verifier integrity.",
+      "input_digest": "sha256:33baadcc9392a903870474a7d82e8b05d61f5b26560bb15e8510edef20f20f07",
+      "proof_refs": [
+        ".decapod/governance.json"
+      ]
     }
   ],
   "intents": {
@@ -746,11 +764,59 @@
     }
   },
   "sections": {
+    "plan": {
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
+      "intent": "Judge completion from observed verifier isolation and runtime capability evidence without choosing the next action.",
+      "phases": [],
+      "proof_hooks": [
+        "cargo test --offline --lib governed_transition::"
+      ],
+      "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Architecture now places verifier integrity, capability attestation, and blocker classification in the existing governed transition kernel. Harness identity is not capability evidence, and no second state machine was added.",
+          "reviewed_code_fingerprint": "7b2ddf861e25c6bfdf38883fd2050d065a1261cc61be217f9ec65d44a3f9918c",
+          "spec_material_hash": "1664a1fddebdb1e12669df19d22a692f18973fdeb5fe3d7632ede3fb81798d74"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Interfaces now record optional isolation axes on completion, capability attestation against the current identity, and trace fields blocker_class and required_capability. No new RPC was added.",
+          "reviewed_code_fingerprint": "7b2ddf861e25c6bfdf38883fd2050d065a1261cc61be217f9ec65d44a3f9918c",
+          "spec_material_hash": "14e9c59f79b0d267f1772df3aca760270fd2e4b02a16d931cb2b6c7a067d85aa"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "This change does not alter authorization, custody, or publication controls. Verifier integrity is a proof judgment over observed isolation. It does not add a trust root or a security boundary.",
+          "reviewed_code_fingerprint": "7b2ddf861e25c6bfdf38883fd2050d065a1261cc61be217f9ec65d44a3f9918c",
+          "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
+        }
+      ],
+      "state": "DRAFT",
+      "stop_conditions": [
+        "Do not treat unknown isolation, a self-report, or a harness name as proof."
+      ],
+      "title": "Verifier integrity",
+      "todo_ids": [
+        "verifier-integrity"
+      ],
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1794097072Z"
+    },
     "trajectory": {
       "active_boundaries": [
         "Repository validation and tracked proof artifacts"
       ],
-      "artifact_hash": "sha256:e22eba161de0e0023749318ce7e119bf5ff739e2ec488b3305d01b932209ad55",
+      "artifact_hash": "sha256:eb2a3890e3428cab6ea4b148e184b04130516802aa80a58097b3af510bb1e950",
       "checks": [
         {
           "name": "decapod validate",
@@ -832,6 +898,7 @@
       "run_id": "validation_01M6W82F3V0XWS9KXEEWY3VMK1",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
+      "task_id": "verifier-integrity",
       "tool_calls": [],
       "unresolved_assumptions": []
     },
