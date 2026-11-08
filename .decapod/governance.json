@@ -829,6 +829,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "wip-1469-generated-6",
+      "summary": "Preserve Decapod 0.132.0 project-check generated .decapod/managed/specs/OPERATIONS.md. Full validation remains blocked by source-inventory reconciliation and required container proof; no publication readiness is asserted.",
+      "input_digest": "sha256:d3026d19726c957ac2a0e63560c25a1303627be5995306677efff6108d5a022f",
+      "proof_refs": [
+        ".decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
