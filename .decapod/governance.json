@@ -816,21 +816,21 @@
     }
   ],
   "intents": {
-    "intent:verifier-integrity-evidence": {
+    "intent:pr-v0132-final-1794109092": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Governed transition kernel and its living specs"
+        "Five-issue PR merge and specs refresh"
       ],
       "constraints": [
-        "src/decapod/core/governed_transition.rs"
+        ".decapod/governance.json"
       ],
       "created_sequence": 1,
-      "id": "intent:verifier-integrity-evidence",
+      "id": "intent:pr-v0132-final-1794109092",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Bind verifier isolation and capability judgments to reconstructable evidence.",
-      "refined_intent": "Each isolation axis and capability attestation requires its own usable evidence reference, and unknown judgments stay unclassified without a typed cause.",
+      "raw_intent": "Harmonize docs, manifest relocation, CI fingerprint gate, README badge, pre-build validate",
+      "refined_intent": "Complete v0.132.0 merge with all five issues",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -933,90 +933,46 @@
     },
     "trajectory": {
       "active_boundaries": [
-        "Governed transition kernel and its living specs"
+        "Five-issue PR merge and specs refresh"
       ],
-      "artifact_hash": "sha256:9d9de30f4de487eb10e69498c194d710ac0a282aa7f057fb334ec1c33ccca466",
-      "checks": [
-        {
-          "name": "decapod validate",
-          "status": "passed"
-        }
-      ],
+      "artifact_hash": "sha256:c3a861cf51dedc4dd1208074ccc856fdc34c73701ae909ec2360ebb9f54ced13",
+      "checks": [],
       "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:verifier-integrity-evidence",
+            "intent_id": "intent:pr-v0132-final-1794109092",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:verifier-integrity-evidence",
+            "intent_id": "intent:pr-v0132-final-1794109092",
             "kind": "refined",
             "sequence": 3
-          },
-          {
-            "detail": "trajectory:verifier-integrity-evidence",
-            "event_id": "event:4",
-            "intent_id": "intent:verifier-integrity-evidence",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 3,
         "schema_version": "1.0.0",
-        "trajectories": {
-          "verifier-integrity-evidence": {
-            "evidence_only": true,
-            "id": "verifier-integrity-evidence",
-            "intent_id": "intent:verifier-integrity-evidence",
-            "steps": [
-              {
-                "action": "validation",
-                "command": "decapod validate",
-                "custody_event_id": "event:4",
-                "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_591714f25468cf8c completed with zero failures"
-                ],
-                "proof_refs": [
-                  "decapod validate"
-                ],
-                "scope": [
-                  "src/decapod/core/governed_transition.rs"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
+        "trajectories": {}
       },
-      "declared_commands": [
-        "decapod validate"
-      ],
-      "evidence": [
-        "validation epoch ve_591714f25468cf8c completed with zero failures"
-      ],
+      "declared_commands": [],
+      "destination": "PR #1554 merge",
+      "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:verifier-integrity-evidence",
-      "modified_files": [
-        ".decapod/governance.json"
-      ],
+      "intent_id": "intent:pr-v0132-final-1794109092",
+      "modified_files": [],
       "next_transitions": [
         "publish"
       ],
       "repo_scope": [
-        "src/decapod/core/governed_transition.rs"
+        ".decapod/governance.json"
       ],
-      "run_id": "verifier-integrity-evidence",
+      "run_id": "pr-v0132-final-1794109092",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "verifier-integrity",
       "tool_calls": [],
       "unresolved_assumptions": []
     },
