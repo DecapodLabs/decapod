@@ -797,6 +797,14 @@
       "proof_refs": [
         ".decapod/managed/Dockerfile.decapod"
       ]
+    },
+    {
+      "id": "wip-1469-generated-2",
+      "summary": "Preserve Decapod 0.132.0 project-check generated .decapod/managed/specs/.manifest.json. Full validation remains blocked by source-inventory reconciliation and required container proof; no publication readiness is asserted.",
+      "input_digest": "sha256:9a6d30f20232bc95f9a98acdc020aaaf9edee66452af3c6cc867812f9018f269",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
