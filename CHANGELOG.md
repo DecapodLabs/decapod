@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.0](https://github.com/DecapodLabs/decapod/compare/v0.131.0...v0.132.0) - 2026-11-08
+
+### Added
+
+- judge verifier integrity from observed isolation
+
+### Fixed
+
+- bind isolation and capability judgments to evidence
+
+### Other
+
+- refresh the VALIDATION attestation
+- refresh the SECURITY attestation
+- refresh the spec README attestation
+- refresh the OPERATIONS attestation
+- refresh the INTERFACES attestation
+- refresh the ARCHITECTURE attestation
+- refresh the SEMANTICS attestation
+- refresh the INTENT attestation
+- refresh the spec manifest fingerprint
+- require evidence references in INTENT
+- require per-axis evidence in INTERFACES
+- require per-axis evidence in ARCHITECTURE
+- require per-axis evidence in SEMANTICS
+- bind verifier evidence in the transition architecture
+- *(governance)* bind plan, claim, and spec reviews
+- refresh the GEMINI entrypoint pin
+- refresh the CODEX entrypoint pin
+- refresh the CLAUDE entrypoint pin
+- refresh the AGENTS entrypoint pin
+- pin the managed image to v0.131.0
+- refresh the spec manifest fingerprint
+- refresh the VALIDATION attestation
+- refresh the SECURITY attestation
+- refresh the spec README attestation
+- refresh the OPERATIONS attestation
+- refresh the INTERFACES attestation
+- refresh the ARCHITECTURE attestation
+- refresh the SEMANTICS attestation
+- state the evidence boundary in INTENT
+- update INTERFACES for verifier integrity
+- update ARCHITECTURE for verifier integrity
+- update SEMANTICS for verifier integrity
+- describe verifier integrity on the transition kernel
+
 ## [0.131.0](https://github.com/DecapodLabs/decapod/compare/v0.130.2...v0.131.0) - 2026-11-07
 
 ### Other
