@@ -728,9 +728,7 @@ pub fn detect_overlaps(
         if claim.task_id == candidate_task_id {
             continue;
         }
-        if claim.agent_id == candidate_agent {
-            continue;
-        }
+        let _ = candidate_agent;
         // Yielded and expired leases do not block new exclusive claims.
         if matches!(
             claim.lease_lifecycle,
@@ -819,9 +817,6 @@ pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<Cl
     let mut out = Vec::new();
     for (i, left) in live.iter().enumerate() {
         for right in live.iter().skip(i + 1) {
-            if left.agent_id == right.agent_id {
-                continue;
-            }
             if categories_overlap(&left.category, &right.category) {
                 out.push(ClaimOverlap::advisory(
                     right.task_id.clone(),

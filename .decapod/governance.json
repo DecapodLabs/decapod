@@ -587,6 +587,14 @@
       "proof_refs": [
         "tests/plugins/todo.rs"
       ]
+    },
+    {
+      "id": "ck-1469-same-agent-overlap",
+      "summary": "Same-agent identity no longer hides logical overlap between tasks.",
+      "input_digest": "sha256:34c1e1f9e7755ff99e46adc5be40db7abd75dcad616b4246f169c1ded30bff2c",
+      "proof_refs": [
+        "src/decapod/core/fleet_coord.rs"
+      ]
     }
   ],
   "legacy_digests": {
