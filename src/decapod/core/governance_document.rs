@@ -368,11 +368,9 @@ fn validate_domain(section: &str, value: &Value) -> Result<(), DecapodError> {
             let artifact: crate::core::trajectory::TrajectoryArtifact =
                 serde_json::from_value(value.clone()).map_err(|e| invalid(e.to_string()))?;
             crate::core::trajectory::validate_loops(&artifact)?;
-            if artifact
-                .computed_hash_hex()
-                .map_err(|e| invalid(e.to_string()))?
-                != artifact.artifact_hash
-            {
+            let computed = artifact.computed_hash_hex().map_err(|e| invalid(e.to_string()))?;
+            eprintln!("DEBUG: computed hash = {}, stored hash = {}", computed, artifact.artifact_hash);
+            if computed != artifact.artifact_hash {
                 return Err(invalid("Trajectory artifact hash mismatch"));
             }
         }
