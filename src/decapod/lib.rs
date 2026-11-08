@@ -3252,9 +3252,6 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "store.query"
             | "validate.run"
             | "standards.resolve"
-            | "interop.manifest"
-            | "interop.negotiate"
-            | "interop.project"
     )
 }
 
@@ -3318,9 +3315,6 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "workspace.status"
             | "workspace.ensure"
             | "standards.resolve"
-            | "interop.manifest"
-            | "interop.negotiate"
-            | "interop.project"
     )
 }
 
@@ -7577,6 +7571,10 @@ fn trajectory_has_validation_epoch(evidence: &[String], epoch_id: &str) -> bool 
 mod validation_proof_tests;
 
 #[cfg(test)]
+#[path = "../../tests/unit/state_eligibility_tests.rs"]
+mod state_eligibility_tests;
+
+#[cfg(test)]
 #[path = "../../tests/unit/lib_validate_pipe_tests.rs"]
 mod validate_pipe_tests;
 
@@ -7650,9 +7648,6 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "constitution.get"
             | "schema.get"
             | "specs.refresh"
-            | "interop.manifest"
-            | "interop.negotiate"
-            | "interop.project"
     )
 }
 
@@ -11313,6 +11308,134 @@ mod rpc_handlers {
         Ok(response)
     }
 
+    pub(crate) fn handle_interop_manifest(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: InteropManifestParams = match serde_json::from_value(ctx.request.params.clone())
+        {
+            Ok(p) => p,
+            Err(e) => {
+                return Ok(error_response(
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    "invalid_params".to_string(),
+                    format!("Invalid params: {e}"),
+                    None,
+                    ctx.mandates.clone(),
+                ));
+            }
+        };
+        let manifest = crate::core::interop::builtin_manifest();
+        let validation = if params.validate {
+            Some(
+                crate::core::interop::validate_manifest(&manifest)
+                    .err()
+                    .unwrap_or_default(),
+            )
+        } else {
+            None
+        };
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(InteropManifestResult {
+                    manifest,
+                    validation,
+                })
+                .unwrap(),
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_interop_negotiate(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: InteropNegotiateParams =
+            match serde_json::from_value(ctx.request.params.clone()) {
+                Ok(p) => p,
+                Err(e) => {
+                    return Ok(error_response(
+                        ctx.request.id.clone(),
+                        ctx.request.op.clone(),
+                        ctx.request.params.clone(),
+                        "invalid_params".to_string(),
+                        format!("Invalid params: {e}"),
+                        None,
+                        ctx.mandates.clone(),
+                    ));
+                }
+            };
+        let manifest = crate::core::interop::builtin_manifest();
+        let request = crate::core::interop::NegotiationRequest {
+            required_ops: params.required_ops,
+            optional_ops: params.optional_ops,
+            required_extensions: params.required_extensions,
+            optional_extensions: params.optional_extensions,
+            requested_profile: params.requested_profile,
+            profile_version: params.profile_version,
+        };
+        match crate::core::interop::negotiate(&manifest, &request) {
+            Ok(outcome) => Ok(success_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                Some(serde_json::to_value(InteropNegotiateResult { outcome }).unwrap()),
+                vec![],
+                None,
+                vec![],
+                ctx.mandates.clone(),
+            )),
+            Err(refusal) => Ok(error_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                refusal.code().to_string(),
+                format!(
+                    "Compatibility negotiation refused: {}",
+                    serde_json::to_string(&refusal).unwrap_or_default()
+                ),
+                None,
+                ctx.mandates.clone(),
+            )),
+        }
+    }
+
+    pub(crate) fn handle_interop_project(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        let params: InteropProjectParams = match serde_json::from_value(ctx.request.params.clone())
+        {
+            Ok(p) => p,
+            Err(e) => {
+                return Ok(error_response(
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    "invalid_params".to_string(),
+                    format!("Invalid params: {e}"),
+                    None,
+                    ctx.mandates.clone(),
+                ));
+            }
+        };
+        let projection = crate::core::projection::project(&params);
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::to_value(InteropProjectResult { projection }).unwrap()),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
     pub(crate) fn handle_constitution_links_query(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
@@ -11496,134 +11619,6 @@ mod rpc_handlers {
                 })
                 .unwrap(),
             ),
-            vec![],
-            None,
-            vec![],
-            ctx.mandates.clone(),
-        ))
-    }
-
-    pub(crate) fn handle_interop_manifest(
-        ctx: &RpcCtx,
-    ) -> Result<RpcResponse, error::DecapodError> {
-        let params: InteropManifestParams = match serde_json::from_value(ctx.request.params.clone())
-        {
-            Ok(p) => p,
-            Err(e) => {
-                return Ok(error_response(
-                    ctx.request.id.clone(),
-                    ctx.request.op.clone(),
-                    ctx.request.params.clone(),
-                    "invalid_params".to_string(),
-                    format!("Invalid params: {e}"),
-                    None,
-                    ctx.mandates.clone(),
-                ));
-            }
-        };
-        let manifest = crate::core::interop::builtin_manifest();
-        let validation = if params.validate {
-            Some(
-                crate::core::interop::validate_manifest(&manifest)
-                    .err()
-                    .unwrap_or_default(),
-            )
-        } else {
-            None
-        };
-        Ok(success_response(
-            ctx.request.id.clone(),
-            ctx.request.op.clone(),
-            ctx.request.params.clone(),
-            Some(
-                serde_json::to_value(InteropManifestResult {
-                    manifest,
-                    validation,
-                })
-                .unwrap(),
-            ),
-            vec![],
-            None,
-            vec![],
-            ctx.mandates.clone(),
-        ))
-    }
-
-    pub(crate) fn handle_interop_negotiate(
-        ctx: &RpcCtx,
-    ) -> Result<RpcResponse, error::DecapodError> {
-        let params: InteropNegotiateParams =
-            match serde_json::from_value(ctx.request.params.clone()) {
-                Ok(p) => p,
-                Err(e) => {
-                    return Ok(error_response(
-                        ctx.request.id.clone(),
-                        ctx.request.op.clone(),
-                        ctx.request.params.clone(),
-                        "invalid_params".to_string(),
-                        format!("Invalid params: {e}"),
-                        None,
-                        ctx.mandates.clone(),
-                    ));
-                }
-            };
-        let manifest = crate::core::interop::builtin_manifest();
-        let request = crate::core::interop::NegotiationRequest {
-            required_ops: params.required_ops,
-            optional_ops: params.optional_ops,
-            required_extensions: params.required_extensions,
-            optional_extensions: params.optional_extensions,
-            requested_profile: params.requested_profile,
-            profile_version: params.profile_version,
-        };
-        match crate::core::interop::negotiate(&manifest, &request) {
-            Ok(outcome) => Ok(success_response(
-                ctx.request.id.clone(),
-                ctx.request.op.clone(),
-                ctx.request.params.clone(),
-                Some(serde_json::to_value(InteropNegotiateResult { outcome }).unwrap()),
-                vec![],
-                None,
-                vec![],
-                ctx.mandates.clone(),
-            )),
-            Err(refusal) => Ok(error_response(
-                ctx.request.id.clone(),
-                ctx.request.op.clone(),
-                ctx.request.params.clone(),
-                refusal.code().to_string(),
-                format!(
-                    "Compatibility negotiation refused: {}",
-                    serde_json::to_string(&refusal).unwrap_or_default()
-                ),
-                None,
-                ctx.mandates.clone(),
-            )),
-        }
-    }
-
-    pub(crate) fn handle_interop_project(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
-        let params: InteropProjectParams = match serde_json::from_value(ctx.request.params.clone())
-        {
-            Ok(p) => p,
-            Err(e) => {
-                return Ok(error_response(
-                    ctx.request.id.clone(),
-                    ctx.request.op.clone(),
-                    ctx.request.params.clone(),
-                    "invalid_params".to_string(),
-                    format!("Invalid params: {e}"),
-                    None,
-                    ctx.mandates.clone(),
-                ));
-            }
-        };
-        let projection = crate::core::projection::project(&params);
-        Ok(success_response(
-            ctx.request.id.clone(),
-            ctx.request.op.clone(),
-            ctx.request.params.clone(),
-            Some(serde_json::to_value(InteropProjectResult { projection }).unwrap()),
             vec![],
             None,
             vec![],

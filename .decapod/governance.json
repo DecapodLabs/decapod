@@ -528,6 +528,11 @@
       "id": "ck-pr1564-001",
       "summary": "Restore StateResolveParams Default derive in src/decapod/core/state.rs for state.resolve eligibility handling",
       "input_digest": "sha256:314e53bfe31865abb5cd85aec6911c72f577834fc41a520cadbdd6f8146164e6"
+    },
+    {
+      "id": "ck-pr1564-002",
+      "summary": "Restore interop RPC handlers and wire state_eligibility_tests module in src/decapod/lib.rs",
+      "input_digest": "sha256:7b7f59bc50e44b6b3be20cdea795da65a0d79ef90262199be9c152b143b5f970"
     }
   ],
   "legacy_digests": {
