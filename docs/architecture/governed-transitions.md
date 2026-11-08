@@ -83,6 +83,81 @@ judgment, so the row alone cannot clear the proof gate.
 The flight recorder renders that stream. The event is provenance, not a second
 canonical state.
 
+## Verifier integrity
+
+A passing observation and an independently constrained verifier are different
+claims. `VerifierEnvelope` records the subject, the canonical input hash, the
+harness identity and version, the verifier identity, and one observation for
+each isolation axis: parent turns, project instructions, user instructions,
+filesystem scope, tool scope, and network scope. Each observation is
+`proven_excluded`, `observed_inherited`, or `unknown`.
+
+`effective_isolation` keeps that observation only when the evidence source is a
+native trace or an external observation. A self-report, a harness name, or an
+absent source becomes `unknown`, including a child statement that it did not
+see the parent context. Axes are independent. Proven exclusion of parent turns
+does not exclude project instructions, user instructions, tools, files, or
+network.
+
+`judge_verifier_integrity` binds the envelope to the current `StateIdentity`.
+An incomplete identity is `unknown`. A different identity is `stale`. An empty
+requirement is `proven` for that bound envelope, because no isolation was
+required. Observed inheritance on a required axis is `not_proven`, not
+`failed`. Any remaining unknown required axis is `unknown`. The judgment is
+`proven` only when every required axis is `proven_excluded` under native or
+external evidence.
+
+`judge_completion_with_verifier` calls `judge_completion` first. An empty
+requirement returns that judgment unchanged, so existing completion behavior
+stays in place. A base judgment other than `proven` is also returned unchanged:
+failed evidence stays `failed`, and a missing proof stays `not_proven`. A
+`proven` base with a required axis and no envelope is `unknown`. A `proven`
+base with an envelope is then judged by `judge_verifier_integrity`. A semantic
+reviewer can supply evidence. It does not by itself satisfy an integrity
+requirement.
+
+## Runtime capability evidence
+
+`CapabilityAttestation` is not the project capability registry in
+`capabilities.rs`. It records one runtime capability id, the declared support
+(`proven`, `unavailable`, `unknown`, or `stale`), the evidence source, the
+governing identity it was bound to, and a limitation string.
+
+`attest_capability` returns `unknown` for a self-report, a harness name, or an
+absent source, even when the declaration says `proven`. An incomplete identity
+is `unknown`. A complete attestation bound to a different identity is `stale`.
+Otherwise the declared support is returned. `unknown` and `stale` are not
+`proven`, so a policy that needs current support cannot treat them as
+available. `advisory_harness_capability` ignores the harness string and returns
+an unknown, harness-named attestation. Codex, Claude, Grok, and Antigravity are
+identities, not evidence.
+
+## Blocker classification
+
+`classify_blocker` names why a transition is not yet safe to treat as proven.
+`capability_gap` names a capability and a provider class for that blocker. The
+trace records `blocker_class` and `required_capability`. Neither function
+changes admission or selects the next action. There is no `capability.resolve`
+operation.
+
+An admissible `proven` transition records no blocker. A rejected or stale
+admission whose reason contains `exclusive` or `lease` is `coordination`. A
+reason that contains `forbidden`, `budget`, `prerequisite`, or `may not` is
+`policy`. A stale admission, or a reason that contains `state`, is `state`.
+The remaining judgment maps `stale` and `unknown` to `state`, `not_proven` and
+`failed` to `verification`, and a non-admissible `proven` judgment to
+`mechanical`. `inference` is available through `capability_gap` for a problem
+that still needs semantic judgment. Its provider class is `frontier` and
+`escalation_required` is true. Every other class names a runtime capability and
+does not require escalation.
+
+`admit_operation_surface` maps an operation class to a mutation surface.
+`design.review` may write `docs/**` and `.decapod/**` and may not write
+`src/**` or `Cargo.toml`; any other path stays `unknown`. `implementation` is
+admissible at this surface and remains subject to `admit`. `publication` may
+record evidence and may not mutate files. An unrecognized class stays
+`unknown`. The harness's phase name is not the operation class.
+
 Publication eligibility is `decide_publication` / `project_report_publication`.
 The projection field `publication_ready` is that decision. The boolean in an
 agent-written report is ignored. Stale, failed, unproven, and unknown reports
@@ -137,7 +212,8 @@ phase as already satisfied.
 
 `transition_trace` / `trace_json` is the payload for op `govern.transition`.
 It records the actor, prior state, rules, verifier, admission, scope, expected
-and observed effects, evidence hash, outcome, reason, and freshness. It does
+and observed effects, evidence hash, outcome, reason, freshness, and, when a
+blocker remains, `blocker_class` and `required_capability`. It does
 not record notes or a passes flag. The flight recorder remains a renderer over
 events. The trace is provenance. Canonical state stays in the repository and
 the datastore.
