@@ -718,21 +718,21 @@
     }
   ],
   "intents": {
-    "intent:governed-transitions-1557": {
+    "intent:pr-v0131-1794097374": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Governance kernel only"
+        "Five-issue PR merge and specs refresh"
       ],
       "constraints": [
-        "src/decapod/core"
+        ".decapod/governance.json"
       ],
       "created_sequence": 1,
-      "id": "intent:governed-transitions-1557",
+      "id": "intent:pr-v0131-1794097374",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Make completion and publication depend on canonical state and reconstructed evidence.",
-      "refined_intent": "Judge admissibility and proof without choosing the next action.",
+      "raw_intent": "Harmonize docs, manifest relocation, CI fingerprint gate, README badge, pre-build validate",
+      "refined_intent": "Complete v0.131.0 merge with all five issues",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -786,21 +786,22 @@
     },
     "trajectory": {
       "active_boundaries": [
-        "Governance kernel only"
+        "Five-issue PR merge and specs refresh"
       ],
-      "artifact_hash": "sha256:04544746e178f43ad271972f2c49eb1ab4516227fde199af2bb04397561cdfde",
+      "artifact_hash": "sha256:535372e47871e9da166617a27b084f8a44c2adfaf1740908b0381d54d743a707",
       "checks": [],
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:governed-transitions-1557",
+            "intent_id": "intent:pr-v0131-1794097374",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:governed-transitions-1557",
+            "intent_id": "intent:pr-v0131-1794097374",
             "kind": "refined",
             "sequence": 3
           }
@@ -811,17 +812,20 @@
         "trajectories": {}
       },
       "declared_commands": [],
+      "destination": "PR #1554 merge",
       "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:governed-transitions-1557",
+      "intent_id": "intent:pr-v0131-1794097374",
       "modified_files": [],
-      "repo_scope": [
-        "src/decapod/core"
+      "next_transitions": [
+        "publish"
       ],
-      "run_id": "governed-transitions-1557",
+      "repo_scope": [
+        ".decapod/governance.json"
+      ],
+      "run_id": "pr-v0131-1794097374",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "governed-transitions-1557",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
