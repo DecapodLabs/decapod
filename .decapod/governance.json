@@ -531,6 +531,14 @@
       "proof_refs": [
         "src/decapod/core/fleet_coord.rs"
       ]
+    },
+    {
+      "id": "ck-1469-claim-handoff",
+      "summary": "Claim and handoff reject only enforced overlaps and do not transfer category ownership.",
+      "input_digest": "sha256:c9b8b7b60f615c25b837d0e740138737f19c087694bf14767a1a5410d8a5dab1",
+      "proof_refs": [
+        "src/decapod/core/todo.rs"
+      ]
     }
   ],
   "legacy_digests": {

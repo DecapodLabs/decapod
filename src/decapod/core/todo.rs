@@ -4320,6 +4320,7 @@ pub fn claim_task_with_lease(
         TaskJournalSelection::Ids(vec![id.to_owned()]),
         |conn| {
             ensure_schema(conn)?;
+            let mut advisory_overlaps = Vec::new();
             touch_agent_presence(conn, agent_id, &ts)?;
             let claim_zone = if mode == ClaimMode::Shared {
                 "todo.claim.shared"
@@ -4498,40 +4499,27 @@ pub fn claim_task_with_lease(
                         let overlaps = fleet_coord::detect_overlaps(
                             id, agent_id, &scope, &category, &dir_path, &active, &ts,
                         );
-                        if !overlaps.is_empty() {
+                        let blocking: Vec<_> = overlaps
+                            .iter()
+                            .filter(|overlap| overlap.enforced)
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        if !blocking.is_empty() {
                             return Ok(serde_json::json!({
                                 "status": "conflict",
                                 "mode": "exclusive",
-                                "resolution": "serialize_or_handoff",
+                                "conflict_class": "shared_resource",
+                                "resolution": "establish_separate_governed_workspace",
                                 "message": format!(
-                                    "Task {} overlaps {} active exclusive claim(s); serialize or hand off before claiming",
+                                    "Task {} conflicts with {} enforced shared resource claim(s)",
                                     id,
-                                    overlaps.len()
+                                    blocking.len()
                                 ),
                                 "overlap": true,
-                                "overlaps": overlaps
+                                "overlaps": blocking
                             }));
                         }
-                    }
-
-                    if !category.is_empty() && mode == ClaimMode::Exclusive {
-                        if let Some(owner) = get_category_owner(conn, &category)? {
-                            if owner != agent_id {
-                                if is_agent_stale(conn, &owner, &ts, AGENT_EVICT_TIMEOUT_SECS)? {
-                                    claim_category_for_agent(conn, agent_id, &category, &ts)?;
-                                } else {
-                                    return Ok(serde_json::json!({
-                                        "status": "error",
-                                        "message": format!(
-                                            "Category '{}' is owned by {}; cannot claim task {}",
-                                            category, owner, id
-                                        )
-                                    }));
-                                }
-                            }
-                        } else {
-                            claim_category_if_unowned(conn, &category, agent_id, &ts)?;
-                        }
+                        advisory_overlaps = overlaps;
                     }
                 }
             }
@@ -4664,6 +4652,10 @@ pub fn claim_task_with_lease(
             if let Some(prev) = reclaimed_from {
                 ok["reclaimed_from"] = serde_json::json!(prev);
                 ok["resolution"] = serde_json::json!("reclaimed");
+            }
+            if !advisory_overlaps.is_empty() {
+                ok["advisory_overlaps"] = serde_json::json!(advisory_overlaps);
+                ok["authoring_isolation"] = serde_json::json!("not_yet_proven");
             }
             Ok(ok)
         },
@@ -5534,6 +5526,7 @@ fn handoff_task_impl(
         TaskJournalSelection::Ids(vec![id.to_owned()]),
         |conn| {
             ensure_schema(conn)?;
+            let handoff_advisory;
             enforce_operation_policy(root, conn, "todo.handoff", acting_agent, id, None)?;
             touch_agent_presence(conn, to, &ts)?;
 
@@ -5671,25 +5664,28 @@ fn handoff_task_impl(
                 &active,
                 &ts,
             );
-            if !overlaps.is_empty() {
+            let blocking: Vec<_> = overlaps
+                .iter()
+                .filter(|overlap| overlap.enforced)
+                .cloned()
+                .collect::<Vec<_>>();
+            if !blocking.is_empty() {
                 return Ok((
                     serde_json::json!({
                         "status": "conflict",
-                        "resolution": "serialize_or_handoff",
+                        "conflict_class": "shared_resource",
+                        "resolution": "establish_separate_governed_workspace",
                         "message": format!(
-                            "Task {id} handoff to {to} overlaps {} active exclusive claim(s)",
-                            overlaps.len()
+                            "Task {id} handoff to {to} conflicts with {} enforced shared resource claim(s)",
+                            blocking.len()
                         ),
                         "overlap": true,
-                        "overlaps": overlaps
+                        "overlaps": blocking
                     }),
                     String::new(),
                 ));
             }
-
-            if !row.category.is_empty() {
-                claim_category_for_agent(conn, to, &row.category, &ts)?;
-            }
+            handoff_advisory = overlaps;
 
             let previous = if row.assigned_to.is_empty() {
                 from.unwrap_or("unassigned").to_string()
@@ -5782,6 +5778,11 @@ fn handoff_task_impl(
             append_event(conn, &ev)?;
             insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
+            let authoring_isolation = if handoff_advisory.is_empty() {
+                "not_applicable"
+            } else {
+                "not_yet_proven"
+            };
             Ok((
                 serde_json::json!({
                     "status": "ok",
@@ -5800,7 +5801,9 @@ fn handoff_task_impl(
                     "lease_expires_at": transfer.lease_expires_at,
                     "lease_seconds": transfer.lease_seconds,
                     "lease_state": "active",
-                    "dependency_readiness": dependency_readiness
+                    "dependency_readiness": dependency_readiness,
+                    "advisory_overlaps": handoff_advisory,
+                    "authoring_isolation": authoring_isolation
                 }),
                 event_id,
             ))
