@@ -628,6 +628,11 @@
       "id": "ck-pr1564-021",
       "summary": "test(state): clarify eligibility test module doc comment for PR #1564",
       "input_digest": "sha256:59800e31ce57e7713ad154d7e0d9017c8100139aa70075698852b76e7d6db6bf"
+    },
+    {
+      "id": "ck-pr1564-022",
+      "summary": "chore(specs): refresh .manifest.json attestation for state.resolve PR #1564",
+      "input_digest": "sha256:204f3580059ed90a5a879c9e782f050bbd8624894ff732ebcdb07b95e5e660bd"
     }
   ],
   "intents": {
