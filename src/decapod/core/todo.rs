@@ -1443,55 +1443,6 @@ struct SimilarActiveTask {
     score: f64,
 }
 
-fn canonical_similarity_term(term: &str) -> &str {
-    match term {
-        "bug" | "bugfix" | "broken" | "error" | "errors" | "failure" | "failures" | "fix"
-        | "fixes" | "repair" | "regression" => "fix",
-        "agent" | "agents" | "owner" | "owned" | "ownership" | "assignee" | "assigned"
-        | "claim" | "claimed" | "handoff" | "handoffs" | "transfer" | "route" | "routing" => {
-            "ownership"
-        }
-        "comment" | "comments" | "note" | "notes" | "annotation" | "annotations" => "comment",
-        "duplicate" | "duplicates" | "similar" | "same" | "overlap" | "overlapping" => "similar",
-        "find" | "fuzzy" | "match" | "matching" | "search" => "search",
-        "label" | "labels" | "tag" | "tags" => "label",
-        "task" | "tasks" | "todo" | "todos" | "work" | "workitem" | "workitems" => "todo",
-        _ => term,
-    }
-}
-
-fn task_similarity_terms(title: &str, tags: &str) -> HashSet<String> {
-    const STOP_WORDS: &[&str] = &[
-        "about", "active", "also", "and", "another", "for", "from", "into", "new", "other", "that",
-        "the", "this", "with",
-    ];
-
-    format!("{title} {tags}")
-        .split(|c: char| !c.is_ascii_alphanumeric())
-        .map(str::trim)
-        .filter(|term| term.len() >= 3)
-        .map(str::to_ascii_lowercase)
-        .filter(|term| !STOP_WORDS.contains(&term.as_str()))
-        .map(|term| canonical_similarity_term(&term).to_string())
-        .collect()
-}
-
-fn fuzzy_task_similarity(title_a: &str, tags_a: &str, title_b: &str, tags_b: &str) -> f64 {
-    let terms_a = task_similarity_terms(title_a, tags_a);
-    let terms_b = task_similarity_terms(title_b, tags_b);
-    if terms_a.is_empty() || terms_b.is_empty() {
-        return 0.0;
-    }
-
-    let shared = terms_a.intersection(&terms_b).count();
-    if shared < 3 {
-        return 0.0;
-    }
-
-    let total = terms_a.union(&terms_b).count();
-    shared as f64 / total as f64
-}
-
 fn append_unique_tag(tags: &mut String, tag: &str) {
     let exists = tags
         .split(',')
@@ -1559,8 +1510,10 @@ fn find_similar_active_task(
 
         let source_text = format!("{title} {description}");
         let candidate_text = format!("{candidate_title} {candidate_description}");
-        let score = fuzzy_task_similarity(&source_text, tags, &candidate_text, &candidate_tags);
-        if score < 0.42 {
+        let _ = (source_text, candidate_text, tags, candidate_tags);
+        // Resembling descriptions are not the same task. Only an identical
+        // title may consolidate.
+        if !title.trim().eq_ignore_ascii_case(candidate_title.trim()) {
             continue;
         }
 
@@ -1569,7 +1522,7 @@ fn find_similar_active_task(
             task_hash,
             title: candidate_title,
             assigned_to,
-            score,
+            score: 1.0,
         };
         if best.as_ref().is_none_or(|current| {
             candidate.score > current.score
@@ -2937,21 +2890,6 @@ fn find_agent_for_category(
     Ok(agent)
 }
 
-fn claim_category_if_unowned(
-    conn: &Connection,
-    category: &str,
-    agent_id: &str,
-    ts: &str,
-) -> Result<(), error::DecapodError> {
-    if category.is_empty() || agent_id.is_empty() {
-        return Ok(());
-    }
-    if get_category_owner(conn, category)?.is_some() {
-        return Ok(());
-    }
-    claim_category_for_agent(conn, agent_id, category, ts)
-}
-
 fn get_category_owner(
     conn: &Connection,
     category: &str,
@@ -3555,25 +3493,15 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             let task_id = make_task_id(&task_type);
             let task_hash = task_hash_from_id(&task_id);
 
-            let category_agent = if let Some(cat) = &inferred_category {
+            // Category expertise is a routing hint. It is not task custody and
+            // it does not claim the category for the recommended agent.
+            let routing_agent = if let Some(cat) = &inferred_category {
                 find_agent_for_category(conn, cat, &ts)?
             } else {
                 None
             };
-
-            // Determine assigned_to and assigned_at
-            let (assigned_to, assigned_at, auto_assignment_reason) =
-                if let Some(agent) = category_agent {
-                    (agent, Some(ts.clone()), Some("category-owner"))
-                } else {
-                    (String::new(), None, None)
-                };
-
-            if let Some(cat) = inferred_category.as_deref()
-                && !assigned_to.is_empty()
-            {
-                claim_category_if_unowned(conn, cat, &assigned_to, &ts)?;
-            }
+            let assigned_to = String::new();
+            let assigned_at: Option<String> = None;
 
             conn.execute(
             "INSERT INTO tasks(id, hash, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at, one_shot)
@@ -3624,18 +3552,17 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 "task_type": task_type,
             });
 
-            // Add auto-assignment info if applicable
-            if !assigned_to.is_empty()
+            if let Some(agent) = routing_agent
                 && let Some(obj) = payload.as_object_mut()
             {
-                obj.insert("assigned_to".to_string(), serde_json::json!(assigned_to));
-                obj.insert("auto_assigned".to_string(), serde_json::json!(true));
-                if let Some(reason) = auto_assignment_reason {
-                    obj.insert(
-                        "auto_assignment_reason".to_string(),
-                        serde_json::json!(reason),
-                    );
-                }
+                obj.insert(
+                    "routing_recommendation".to_string(),
+                    serde_json::json!(agent),
+                );
+                obj.insert(
+                    "routing_basis".to_string(),
+                    serde_json::json!("category-expertise"),
+                );
             }
 
             let ev = TodoEvent {
@@ -4655,8 +4582,9 @@ pub fn claim_task_with_lease(
             }
             if !advisory_overlaps.is_empty() {
                 ok["advisory_overlaps"] = serde_json::json!(advisory_overlaps);
-                ok["authoring_isolation"] = serde_json::json!("not_yet_proven");
             }
+            ok["authoring_state"] = serde_json::json!(fleet_coord::AuthoringState::CustodyPending);
+            ok["authoring_isolation"] = serde_json::json!("custody_acquired_workspace_unproven");
             Ok(ok)
         },
     )?;
@@ -5778,11 +5706,8 @@ fn handoff_task_impl(
             append_event(conn, &ev)?;
             insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
-            let authoring_isolation = if handoff_advisory.is_empty() {
-                "not_applicable"
-            } else {
-                "not_yet_proven"
-            };
+            let authoring_isolation = "custody_acquired_workspace_unproven";
+            let _ = handoff_advisory.is_empty();
             Ok((
                 serde_json::json!({
                     "status": "ok",

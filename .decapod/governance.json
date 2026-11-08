@@ -555,6 +555,14 @@
       "proof_refs": [
         "src/decapod/core/fleet_coord.rs"
       ]
+    },
+    {
+      "id": "ck-1469-category-routing",
+      "summary": "Stop todo.add from assigning a category owner or merging tasks that only resemble each other.",
+      "input_digest": "sha256:5d4b83b0c41d1e547c193b977bb595e20c7ea72f21834a70e7d434b18d93b02c",
+      "proof_refs": [
+        "src/decapod/core/todo.rs"
+      ]
     }
   ],
   "legacy_digests": {
