@@ -603,6 +603,14 @@
       "proof_refs": [
         ".decapod/managed/specs/OPERATIONS.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-readme-fp",
+      "summary": "Bind the spec README attestation to the current repository signal.",
+      "input_digest": "sha256:32796ff94d0d149bc26b9b19fab7bf5324d189e258ae15367d3447e0faee187d",
+      "proof_refs": [
+        ".decapod/managed/specs/README.md"
+      ]
     }
   ],
   "intents": {
