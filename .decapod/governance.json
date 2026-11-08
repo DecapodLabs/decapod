@@ -725,6 +725,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-interfaces-evidence",
+      "summary": "State that integrity checks the reviewed input digest and that an absent blocker class is unclassified.",
+      "input_digest": "sha256:f1a1ea92da8266aef1da40a963d96246a1d39b364c74abc5af2ec91813e2dd8d",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
