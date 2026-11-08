@@ -611,6 +611,14 @@
       "proof_refs": [
         ".decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-security-fp",
+      "summary": "Bind the SECURITY attestation to the current repository signal.",
+      "input_digest": "sha256:bf3decc51e013ea127f9af3da3881a6d319356bc6f48ba2a7393e4c1fbacf4f3",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
