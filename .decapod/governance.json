@@ -701,6 +701,14 @@
       "proof_refs": [
         "src/decapod/core/todo.rs"
       ]
+    },
+    {
+      "id": "wip-1469-custody-second-3",
+      "summary": "Preserve in-progress src/decapod/core/workspace.rs. Focused tests and earlier Clippy have passed, but removed-checkout recovery, operation-level shared-resource enforcement, complete validation and publication readiness remain unproven.",
+      "input_digest": "sha256:2878bf0832192af49e1a3bce96bdbb9e787ce32db33e2c5ca18ad1bf85fe35ca",
+      "proof_refs": [
+        "src/decapod/core/workspace.rs"
+      ]
     }
   ],
   "intents": {

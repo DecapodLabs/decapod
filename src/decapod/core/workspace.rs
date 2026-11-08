@@ -595,7 +595,7 @@ pub(crate) fn initialize_workbranch_governance_at(
     explicit_base: Option<&str>,
     created_base: Option<&str>,
 ) -> Result<(), DecapodError> {
-    let status = get_workspace_status(repo_root)?;
+    let status = get_workspace_status_for_caller(repo_root, Some(agent_id))?;
     if !status.git.in_worktree || !status.can_work {
         return Ok(());
     }
@@ -828,6 +828,12 @@ pub fn ensure_workspace(
         create_worktree(repo_root, branch, agent_id, &todo_scope, &base_branch)?
     };
 
+    // Admission must precede initialization: governance initialization itself
+    // requires an admissible checkout, including on the first ensure call.
+    if is_canonical_decapod_workspace_path(&worktree_path) {
+        admit_managed_workspace(&store_root, &worktree_path, agent_id)?;
+    }
+
     initialize_workbranch_governance_at(
         &worktree_path,
         agent_id,
@@ -835,10 +841,6 @@ pub fn ensure_workspace(
         created_base.as_deref(),
     )?;
     refresh_workspace_release_surfaces(&worktree_path)?;
-
-    if is_canonical_decapod_workspace_path(&worktree_path) {
-        admit_managed_workspace(&store_root, &worktree_path, agent_id)?;
-    }
 
     // 2. Ensure container (if requested)
     if config.use_container {
