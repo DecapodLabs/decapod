@@ -595,6 +595,14 @@
       "proof_refs": [
         "src/decapod/core/fleet_coord.rs"
       ]
+    },
+    {
+      "id": "ck-1469-authoring-bind",
+      "summary": "Admit authoring from the current lease and a unique checkout row, and stop title-based task merges.",
+      "input_digest": "sha256:6293a67658293131eef59e07947c913e5fdb9447eeb673f3044c65fde7163592",
+      "proof_refs": [
+        "src/decapod/core/todo.rs"
+      ]
     }
   ],
   "legacy_digests": {

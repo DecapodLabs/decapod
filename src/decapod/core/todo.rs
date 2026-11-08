@@ -1022,6 +1022,18 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_APPROVALS, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_INDEX, [])?;
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS authoring_bindings (
+            worktree_id TEXT PRIMARY KEY,
+            task_id TEXT NOT NULL UNIQUE,
+            agent_id TEXT NOT NULL,
+            lease_generation INTEGER NOT NULL,
+            branch TEXT NOT NULL,
+            repository_id TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+         );",
+    )
+    .map_err(error::DecapodError::StorageError)?;
     seed_default_risk_zones(conn)?;
     // Houseboat 2 lease columns must exist even if meta was advanced without the ALTER.
     let _ = conn.execute("ALTER TABLE tasks ADD COLUMN lease_expires_at TEXT", []);
@@ -1432,107 +1444,6 @@ pub fn infer_component(title: &str, tags: &str) -> Option<String> {
         }
     }
     None
-}
-
-#[derive(Debug, Clone)]
-struct SimilarActiveTask {
-    task_id: String,
-    task_hash: String,
-    title: String,
-    assigned_to: String,
-    score: f64,
-}
-
-fn append_unique_tag(tags: &mut String, tag: &str) {
-    let exists = tags
-        .split(',')
-        .map(str::trim)
-        .any(|existing| existing == tag);
-    if exists {
-        return;
-    }
-
-    if !tags.trim().is_empty() {
-        tags.push(',');
-    }
-    tags.push_str(tag);
-}
-
-fn append_fuzzy_assignment_labels(tags: &mut String, similar: &SimilarActiveTask) {
-    append_unique_tag(tags, "fuzzy-similar");
-    append_unique_tag(tags, &format!("similar-task:{}", similar.task_id));
-    append_unique_tag(tags, &format!("similar-hash:{}", similar.task_hash));
-    append_unique_tag(tags, &format!("handoff-to:{}", similar.assigned_to));
-}
-
-fn find_similar_active_task(
-    conn: &Connection,
-    title: &str,
-    description: &str,
-    tags: &str,
-    creating_owner: &str,
-) -> Result<Option<SimilarActiveTask>, error::DecapodError> {
-    let mut stmt = conn
-        .prepare(
-            "SELECT id, hash, title, description, tags, assigned_to
-             FROM tasks
-             WHERE status NOT IN ('done', 'archived')
-               AND assigned_to != ''
-             ORDER BY created_at ASC",
-        )
-        .map_err(error::DecapodError::StorageError)?;
-    let rows = stmt
-        .query_map([], |row| {
-            Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, String>(1)?,
-                row.get::<_, String>(2)?,
-                row.get::<_, String>(3)?,
-                row.get::<_, String>(4)?,
-                row.get::<_, String>(5)?,
-            ))
-        })
-        .map_err(error::DecapodError::StorageError)?;
-
-    let mut best: Option<SimilarActiveTask> = None;
-    for row in rows {
-        let (
-            task_id,
-            task_hash,
-            candidate_title,
-            candidate_description,
-            candidate_tags,
-            assigned_to,
-        ) = row.map_err(error::DecapodError::StorageError)?;
-        if !creating_owner.is_empty() && assigned_to == creating_owner {
-            continue;
-        }
-
-        let source_text = format!("{title} {description}");
-        let candidate_text = format!("{candidate_title} {candidate_description}");
-        let _ = (source_text, candidate_text, tags, candidate_tags);
-        // Resembling descriptions are not the same task. Only an identical
-        // title may consolidate.
-        if !title.trim().eq_ignore_ascii_case(candidate_title.trim()) {
-            continue;
-        }
-
-        let candidate = SimilarActiveTask {
-            task_id,
-            task_hash,
-            title: candidate_title,
-            assigned_to,
-            score: 1.0,
-        };
-        if best.as_ref().is_none_or(|current| {
-            candidate.score > current.score
-                || (candidate.score == current.score && candidate.task_id < current.task_id)
-        }) {
-            best = Some(candidate);
-        }
-    }
-
-    Ok(best)
 }
 
 pub fn infer_category(title: &str, tags: &str) -> Option<String> {
@@ -3406,7 +3317,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     let intent_ref = format!("intent:todo.add:{}", crate::core::ulid::new_ulid());
     let owner_list = parse_owners_input(owner);
     let primary_owner = owner_list.first().cloned().unwrap_or_default();
-    let mut effective_tags = tags.clone();
+    let effective_tags = tags.clone();
 
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -3426,65 +3337,9 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         |conn| {
             ensure_schema(conn)?;
 
-            let similar_active_task = if scope == "workspace" || scope.starts_with("paths:") {
-                None
-            } else {
-                find_similar_active_task(conn, title, description, &effective_tags, &primary_owner)?
-            };
-            if let Some(similar) = similar_active_task.as_ref() {
-                append_fuzzy_assignment_labels(&mut effective_tags, similar);
-                let comment = format!(
-                    "Similar todo request consolidated here: title=\"{}\" priority={} tags=\"{}\" description=\"{}\"",
-                    title, priority, effective_tags, description
-                );
-                write_task_comment_event(
-                    root,
-                    conn,
-                    &similar.task_id,
-                    "decapod",
-                    &comment,
-                    serde_json::json!({
-                        "kind": "fuzzy-consolidation",
-                        "source_title": title,
-                        "source_description": description,
-                        "source_priority": priority,
-                        "source_tags": effective_tags,
-                        "similarity_score": similar.score,
-                        "matched_task_id": similar.task_id,
-                        "matched_task_hash": similar.task_hash,
-                        "matched_task_title": similar.title,
-                        "assigned_to": similar.assigned_to,
-                        "intent_ref": intent_ref,
-                        "fuzzy_labels": [
-                            "fuzzy-similar",
-                            format!("similar-task:{}", similar.task_id),
-                            format!("similar-hash:{}", similar.task_hash),
-                            format!("handoff-to:{}", similar.assigned_to),
-                        ],
-                    }),
-                    &ts,
-                )?;
-
-                return Ok((
-                    similar.task_id.clone(),
-                    similar.task_hash.clone(),
-                    effective_tags.clone(),
-                    Some(serde_json::json!({
-                        "matched_task_id": similar.task_id,
-                        "matched_task_hash": similar.task_hash,
-                        "matched_task_title": similar.title,
-                        "assigned_to": similar.assigned_to,
-                        "similarity_score": similar.score,
-                        "comment_added": true,
-                        "labels": [
-                            "fuzzy-similar",
-                            format!("similar-task:{}", similar.task_id),
-                            format!("similar-hash:{}", similar.task_hash),
-                            format!("handoff-to:{}", similar.assigned_to),
-                        ],
-                    })),
-                ));
-            }
+            // A matching title is not task identity. Distinct requests stay
+            // distinct even when their titles are identical.
+            let _ = (&primary_owner, description);
 
             // Infer category from tags or title for auto-assignment.
             let inferred_category = infer_category_from_task(conn, title, &effective_tags)?;
@@ -3594,7 +3449,12 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 )?;
             }
             sync_legacy_owner_column(conn, &task_id)?;
-            Ok((task_id, task_hash, effective_tags.clone(), None))
+            Ok((
+                task_id,
+                task_hash,
+                effective_tags.clone(),
+                None::<serde_json::Value>,
+            ))
         },
     )?;
 
@@ -4183,6 +4043,207 @@ fn claim_status(root: &Path, id: &str) -> Result<serde_json::Value, error::Decap
         "root": root.to_string_lossy(),
         "id": id
     }))
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct AuthoringAdmission {
+    pub state: fleet_coord::AuthoringState,
+    pub task_id: Option<String>,
+    pub agent_id: Option<String>,
+    pub worktree_id: String,
+    pub lease_generation: Option<u32>,
+    pub conflicting_task_id: Option<String>,
+}
+
+/// Bind a verified checkout to the task named by its current branch.
+///
+/// The checkout facts must come from `observe_checkout`. An unregistered
+/// checkout is not written. The linearization point is the unique
+/// `worktree_id` row inside one immediate transaction.
+pub fn read_authoring_admission(
+    root: &Path,
+    repository_id: &str,
+    worktree_id: &str,
+    branch: &str,
+    registered: bool,
+) -> Result<AuthoringAdmission, error::DecapodError> {
+    admit_checkout_binding_inner(root, repository_id, worktree_id, branch, registered, false)
+}
+
+pub fn admit_checkout_binding(
+    root: &Path,
+    repository_id: &str,
+    worktree_id: &str,
+    branch: &str,
+    registered: bool,
+) -> Result<AuthoringAdmission, error::DecapodError> {
+    admit_checkout_binding_inner(root, repository_id, worktree_id, branch, registered, true)
+}
+
+fn admit_checkout_binding_inner(
+    root: &Path,
+    repository_id: &str,
+    worktree_id: &str,
+    branch: &str,
+    registered: bool,
+    persist: bool,
+) -> Result<AuthoringAdmission, error::DecapodError> {
+    let base = AuthoringAdmission {
+        state: fleet_coord::AuthoringState::NotProven,
+        task_id: None,
+        agent_id: None,
+        worktree_id: worktree_id.to_string(),
+        lease_generation: None,
+        conflicting_task_id: None,
+    };
+    if !registered || repository_id.is_empty() || worktree_id.is_empty() || branch.is_empty() {
+        return Ok(base);
+    }
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    let ts = now_iso();
+    let op = if persist { "todo.claim" } else { "todo.status" };
+    broker.with_conn(&db_path, "decapod", None, op, |conn| {
+        ensure_schema(conn)?;
+        let decision = (|| {
+            let mut stmt = conn
+                .prepare(
+                    "SELECT id, hash, assigned_to, COALESCE(lease_generation, 0),
+                        lease_expires_at, COALESCE(lease_lifecycle, '')
+                     FROM tasks
+                     WHERE status NOT IN ('done', 'archived')",
+                )
+                .map_err(error::DecapodError::StorageError)?;
+            let rows = stmt
+                .query_map([], |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, String>(2)?,
+                        row.get::<_, i64>(3)?,
+                        row.get::<_, Option<String>>(4)?,
+                        row.get::<_, String>(5)?,
+                    ))
+                })
+                .map_err(error::DecapodError::StorageError)?;
+            let mut matched = Vec::new();
+            for row in rows {
+                let (id, _hash, assigned_to, generation, expires, lifecycle) =
+                    row.map_err(error::DecapodError::StorageError)?;
+                let named = branch
+                    .split(|ch: char| ch == '/' || ch == '-')
+                    .any(|part| part == id);
+                if named {
+                    matched.push((id, assigned_to, generation, expires, lifecycle));
+                }
+            }
+            if matched.len() != 1 {
+                return Ok(base.clone());
+            }
+            let (task_id, assigned_to, generation, expires, lifecycle) = matched.remove(0);
+            let mut admission = base.clone();
+            admission.task_id = Some(task_id.clone());
+            admission.lease_generation = Some(generation as u32);
+            if assigned_to.is_empty()
+                || !fleet_coord::LeaseLifecycle::parse(Some(&lifecycle)).holds_exclusive_custody()
+            {
+                admission.state = fleet_coord::AuthoringState::CustodyPending;
+                return Ok(admission);
+            }
+            if fleet_coord::lease_state(expires.as_deref(), &ts) == fleet_coord::LeaseState::Expired
+            {
+                admission.state = fleet_coord::AuthoringState::Stale;
+                return Ok(admission);
+            }
+            admission.agent_id = Some(assigned_to.clone());
+            let existing_tree: Option<(String, i64, String)> = conn
+                .query_row(
+                    "SELECT task_id, lease_generation, branch FROM authoring_bindings WHERE worktree_id = ?1",
+                    [worktree_id],
+                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+                )
+                .optional()
+                .map_err(error::DecapodError::StorageError)?;
+            if let Some((bound_task, bound_generation, bound_branch)) = existing_tree {
+                if bound_task != task_id {
+                    admission.state = fleet_coord::AuthoringState::SharedCheckout;
+                    admission.conflicting_task_id = Some(bound_task);
+                    return Ok(admission);
+                }
+                if bound_generation != generation || bound_branch != branch {
+                    admission.state = fleet_coord::AuthoringState::Stale;
+                    return Ok(admission);
+                }
+                admission.state = fleet_coord::AuthoringState::Admissible;
+                return Ok(admission);
+            }
+            let existing_task: Option<String> = conn
+                .query_row(
+                    "SELECT worktree_id FROM authoring_bindings WHERE task_id = ?1",
+                    [&task_id],
+                    |row| row.get(0),
+                )
+                .optional()
+                .map_err(error::DecapodError::StorageError)?;
+            if existing_task.is_some_and(|bound| bound != worktree_id) {
+                admission.state = fleet_coord::AuthoringState::Stale;
+                return Ok(admission);
+            }
+            if !persist {
+                admission.state = fleet_coord::AuthoringState::CustodyPending;
+                return Ok(admission);
+            }
+            if let Err(error) = conn.execute(
+                "INSERT INTO authoring_bindings(
+                    worktree_id, task_id, agent_id, lease_generation, branch, repository_id, updated_at
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                crate::core::db::params![
+                    worktree_id,
+                    task_id,
+                    assigned_to,
+                    generation,
+                    branch,
+                    repository_id,
+                    ts
+                ],
+            ) {
+                let message = error.to_string();
+                if message.contains("UNIQUE") || message.contains("constraint") {
+                    let winner: Option<String> = conn
+                        .query_row(
+                            "SELECT task_id FROM authoring_bindings WHERE worktree_id = ?1",
+                            [worktree_id],
+                            |row| row.get(0),
+                        )
+                        .optional()
+                        .unwrap_or(None);
+                    admission.state = fleet_coord::AuthoringState::SharedCheckout;
+                    admission.conflicting_task_id = winner.filter(|bound| bound != &task_id);
+                    return Ok(admission);
+                }
+                return Err(error::DecapodError::StorageError(error));
+            }
+            let ev = TodoEvent {
+                ts: ts.clone(),
+                event_id: crate::core::ulid::new_ulid(),
+                event_type: "authoring.bind".to_string(),
+                status: "success".to_string(),
+                task_id: Some(task_id),
+                payload: serde_json::json!({
+                    "worktree_id": worktree_id,
+                    "repository_id": repository_id,
+                    "branch": branch,
+                    "lease_generation": generation,
+                    "agent_id": assigned_to,
+                }),
+                actor: assigned_to,
+            };
+            append_event(conn, &ev)?;
+            admission.state = fleet_coord::AuthoringState::Admissible;
+            Ok(admission)
+        })()?;
+        Ok(decision)
+    })
 }
 
 pub fn claim_task(
