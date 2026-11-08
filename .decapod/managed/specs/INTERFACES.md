@@ -6,6 +6,11 @@ The authoring admission boundary receives a checkout path and the current agent;
 it observes Git and filesystem identity itself instead of accepting a supplied
 repository ID, worktree ID, branch or registration assertion. Workspace status
 is a read operation: missing or unreadable admission evidence is not permission.
+The explicit `workspace status` and `rpc --op workspace.status` entrypoints do
+not initialize the datastore, migrate it, clock in presence or prune worktrees.
+A missing Git marker does not turn a managed directory into an authorized
+checkout. Other RPC transports retain their existing startup behavior and are
+not yet shown to have this read-only property.
 `workspace ensure` must bind a newly created managed checkout before reporting it
 usable and must propagate non-admissible outcomes. A lease renewal or handoff
 requires a current generation and owner; reading a stale binding cannot refresh

@@ -781,6 +781,14 @@
       "proof_refs": [
         "tests/cli_contract_enforcement.rs"
       ]
+    },
+    {
+      "id": "wip-1469-status-4",
+      "summary": "Preserve in-progress .decapod/managed/specs/INTERFACES.md. The explicit CLI and RPC status regression passed; other RPC transports, removed-checkout recovery, operation-level shared-resource enforcement and full validation remain unproven.",
+      "input_digest": "sha256:4210c3409e39644d7985f3a7013d5da44790ea4fde34893317d75a1c930ad83b",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
