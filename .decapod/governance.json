@@ -613,6 +613,11 @@
       "id": "ck-pr1564-018",
       "summary": "Refresh CODEX.md entrypoint fingerprint projection via project-check --refresh-specs",
       "input_digest": "sha256:4f5f97f5a2c46cef76adddda09da8962427abf46a64412bc75326217e744dc37"
+    },
+    {
+      "id": "ck-pr1564-019",
+      "summary": "Refresh GEMINI.md entrypoint fingerprint projection via project-check --refresh-specs",
+      "input_digest": "sha256:95a16255eb083079133739faa0359be49db8c11b6523930bab45246c10739628"
     }
   ],
   "intents": {
