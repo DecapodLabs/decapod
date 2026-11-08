@@ -709,6 +709,14 @@
       "proof_refs": [
         "src/decapod/core/workspace.rs"
       ]
+    },
+    {
+      "id": "wip-1469-custody-second-4",
+      "summary": "Preserve in-progress tests/cli_contract_enforcement.rs. Focused tests and earlier Clippy have passed, but removed-checkout recovery, operation-level shared-resource enforcement, complete validation and publication readiness remain unproven.",
+      "input_digest": "sha256:3d1b26e03ea60b936693a3532ac95ec9ec8bb032a502dc39dfb324878ed88926",
+      "proof_refs": [
+        "tests/cli_contract_enforcement.rs"
+      ]
     }
   ],
   "intents": {

@@ -1022,6 +1022,116 @@ mod documented_bootstrap {
     }
 
     #[test]
+    fn independent_cli_processes_claim_and_admit_separate_worktrees() {
+        use std::process::Stdio;
+        let fixture = contract_fixture();
+        let root = fixture.path().join("repo");
+        let home = fixture.path().join("home");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::create_dir_all(&home).unwrap();
+        let root = root.canonicalize().unwrap();
+        let home = home.canonicalize().unwrap();
+        let binary = super::resolve_decapod_bin();
+        let cli = |agent: &str, cwd: &Path, args: &[&str]| {
+            isolated_command(&binary, cwd, &home)
+                .env("DECAPOD_AGENT_ID", agent)
+                .args(args)
+                .output()
+                .expect("execute decapod CLI")
+        };
+        let git = |args: &[&str]| {
+            success(
+                isolated_command(Path::new("git"), &root, &home)
+                    .args(args)
+                    .output()
+                    .unwrap(),
+                "fixture git",
+            )
+        };
+        success(
+            cli(
+                "agent-a",
+                &root,
+                &["init", "--no-git", "--no-ci", "--no-container-workspaces"],
+            ),
+            "fixture init",
+        );
+        git(&["init", "-q", "-b", "main"]);
+        git(&["config", "user.name", "Concurrent CLI Test"]);
+        git(&["config", "user.email", "concurrent@example.invalid"]);
+        git(&["add", "."]);
+        git(&["commit", "-qm", "Initialize governed fixture"]);
+        let add = |title: &str| -> String {
+            let output = success(
+                cli(
+                    "agent-a",
+                    &root,
+                    &[
+                        "todo",
+                        "add",
+                        title,
+                        "--scope",
+                        "workspace",
+                        "--format",
+                        "json",
+                    ],
+                ),
+                "todo add",
+            );
+            let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            json["id"].as_str().unwrap().to_owned()
+        };
+        let a = add("Independent concurrent parser task");
+        let b = add("Independent concurrent renderer task");
+        assert_ne!(a, b);
+        let spawn = |agent: &str, args: &[&str]| {
+            isolated_command(&binary, &root, &home)
+                .env("DECAPOD_AGENT_ID", agent)
+                .args(args)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .unwrap()
+        };
+        let claim_a = spawn(
+            "agent-a",
+            &["todo", "claim", "--id", &a, "--format", "json"],
+        );
+        let claim_b = spawn(
+            "agent-b",
+            &["todo", "claim", "--id", &b, "--format", "json"],
+        );
+        for output in [
+            claim_a.wait_with_output().unwrap(),
+            claim_b.wait_with_output().unwrap(),
+        ] {
+            let output = success(output, "concurrent claim");
+            let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(value["status"], "ok");
+        }
+        let branch_a = format!("agent/agent-a/{a}");
+        let branch_b = format!("agent/agent-b/{b}");
+        let ensure_a = spawn("agent-a", &["workspace", "ensure", "--branch", &branch_a]);
+        let ensure_b = spawn("agent-b", &["workspace", "ensure", "--branch", &branch_b]);
+        let a_out = success(ensure_a.wait_with_output().unwrap(), "agent-a workspace");
+        let b_out = success(ensure_b.wait_with_output().unwrap(), "agent-b workspace");
+        let a_json: serde_json::Value = serde_json::from_slice(&a_out.stdout).unwrap();
+        let b_json: serde_json::Value = serde_json::from_slice(&b_out.stdout).unwrap();
+        assert_eq!(a_json["can_work"], true);
+        assert_eq!(b_json["can_work"], true);
+        let path_a = Path::new(a_json["worktree_path"].as_str().unwrap());
+        let path_b = Path::new(b_json["worktree_path"].as_str().unwrap());
+        assert_ne!(path_a, path_b);
+        let denied = success(
+            cli("agent-b", path_a, &["workspace", "status"]),
+            "cross-agent status",
+        );
+        let denied: serde_json::Value = serde_json::from_slice(&denied.stdout).unwrap();
+        assert_eq!(denied["workspace"]["can_work"], false);
+        fixture.close().unwrap();
+    }
+
+    #[test]
     fn generated_agent_sequence_orients_only_after_entering_claimed_workspace() {
         let fixture = contract_fixture();
         let root = fixture.path().join("repo");
