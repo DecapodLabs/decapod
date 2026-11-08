@@ -118,6 +118,38 @@ pub struct ClaimOverlap {
     pub surface: String,
     pub expected: String,
     pub observed: String,
+    /// True only when the overlap is an actual shared-resource or custody conflict.
+    /// Category, scope, and logical path overlap stay false: they are coordination
+    /// evidence, not an authoring lock. A source label or directory string is not
+    /// a verified writable checkout.
+    #[serde(default)]
+    pub enforced: bool,
+}
+
+impl ClaimOverlap {
+    fn advisory(
+        task_id: impl Into<String>,
+        agent_id: impl Into<String>,
+        reason: &str,
+        surface: &str,
+        expected: impl Into<String>,
+        observed: impl Into<String>,
+    ) -> Self {
+        Self {
+            task_id: task_id.into(),
+            agent_id: agent_id.into(),
+            reason: reason.to_string(),
+            surface: surface.to_string(),
+            expected: expected.into(),
+            observed: observed.into(),
+            enforced: false,
+        }
+    }
+}
+
+/// True when at least one overlap must refuse the custody or resource operation.
+pub fn authoring_blocked(overlaps: &[ClaimOverlap]) -> bool {
+    overlaps.iter().any(|overlap| overlap.enforced)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -618,24 +650,24 @@ pub fn detect_overlaps(
         }
 
         if categories_overlap(candidate_category, &claim.category) {
-            out.push(ClaimOverlap {
-                task_id: claim.task_id.clone(),
-                agent_id: claim.agent_id.clone(),
-                reason: "category_overlap".to_string(),
-                surface: "category".to_string(),
-                expected: candidate_category.to_string(),
-                observed: claim.category.clone(),
-            });
+            out.push(ClaimOverlap::advisory(
+                claim.task_id.clone(),
+                claim.agent_id.clone(),
+                "category_overlap",
+                "category",
+                candidate_category,
+                claim.category.clone(),
+            ));
         }
         if scopes_overlap(candidate_scope, &claim.scope) {
-            out.push(ClaimOverlap {
-                task_id: claim.task_id.clone(),
-                agent_id: claim.agent_id.clone(),
-                reason: "scope_overlap".to_string(),
-                surface: "scope".to_string(),
-                expected: candidate_scope.to_string(),
-                observed: claim.scope.clone(),
-            });
+            out.push(ClaimOverlap::advisory(
+                claim.task_id.clone(),
+                claim.agent_id.clone(),
+                "scope_overlap",
+                "scope",
+                candidate_scope,
+                claim.scope.clone(),
+            ));
         }
         let candidate_paths = claim_paths(candidate_scope, candidate_dir);
         let existing_paths = claim_paths(&claim.scope, &claim.dir_path);
@@ -648,14 +680,14 @@ pub fn detect_overlaps(
                 )
             })
         }) {
-            out.push(ClaimOverlap {
-                task_id: claim.task_id.clone(),
-                agent_id: claim.agent_id.clone(),
-                reason: "path_overlap".to_string(),
-                surface: "dir_path".to_string(),
-                expected: candidate_dir.to_string(),
-                observed: claim.dir_path.clone(),
-            });
+            out.push(ClaimOverlap::advisory(
+                claim.task_id.clone(),
+                claim.agent_id.clone(),
+                "path_overlap",
+                "dir_path",
+                candidate_dir,
+                claim.dir_path.clone(),
+            ));
         }
     }
     out.sort_by(|a, b| {
@@ -695,24 +727,24 @@ pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<Cl
                 continue;
             }
             if categories_overlap(&left.category, &right.category) {
-                out.push(ClaimOverlap {
-                    task_id: right.task_id.clone(),
-                    agent_id: right.agent_id.clone(),
-                    reason: "category_overlap".to_string(),
-                    surface: "category".to_string(),
-                    expected: left.category.clone(),
-                    observed: right.category.clone(),
-                });
+                out.push(ClaimOverlap::advisory(
+                    right.task_id.clone(),
+                    right.agent_id.clone(),
+                    "category_overlap",
+                    "category",
+                    left.category.clone(),
+                    right.category.clone(),
+                ));
             }
             if scopes_overlap(&left.scope, &right.scope) {
-                out.push(ClaimOverlap {
-                    task_id: right.task_id.clone(),
-                    agent_id: right.agent_id.clone(),
-                    reason: "scope_overlap".to_string(),
-                    surface: "scope".to_string(),
-                    expected: left.scope.clone(),
-                    observed: right.scope.clone(),
-                });
+                out.push(ClaimOverlap::advisory(
+                    right.task_id.clone(),
+                    right.agent_id.clone(),
+                    "scope_overlap",
+                    "scope",
+                    left.scope.clone(),
+                    right.scope.clone(),
+                ));
             }
             if claim_paths(&left.scope, &left.dir_path).iter().any(|a| {
                 claim_paths(&right.scope, &right.dir_path).iter().any(|b| {
@@ -723,14 +755,14 @@ pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<Cl
                     )
                 })
             }) {
-                out.push(ClaimOverlap {
-                    task_id: right.task_id.clone(),
-                    agent_id: right.agent_id.clone(),
-                    reason: "path_overlap".to_string(),
-                    surface: "dir_path".to_string(),
-                    expected: left.dir_path.clone(),
-                    observed: right.dir_path.clone(),
-                });
+                out.push(ClaimOverlap::advisory(
+                    right.task_id.clone(),
+                    right.agent_id.clone(),
+                    "path_overlap",
+                    "dir_path",
+                    left.dir_path.clone(),
+                    right.dir_path.clone(),
+                ));
             }
         }
     }
