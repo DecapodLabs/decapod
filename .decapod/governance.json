@@ -765,6 +765,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "ck-vi-architecture-fp",
+      "summary": "Bind the ARCHITECTURE attestation to the current repository signal.",
+      "input_digest": "sha256:55df41a82a5d231dc09b2f8d8ec38c8f5db15bed3014fa094344952f06e87335",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
