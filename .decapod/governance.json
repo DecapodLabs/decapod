@@ -553,6 +553,11 @@
       "id": "ck-pr1564-006",
       "summary": "Refresh managed Dockerfile.decapod pin projection via project-check --refresh-specs",
       "input_digest": "sha256:43da92dd862f6c2c8058af0495154b0fb62d6b5aaeccee18697380a8d59bc261"
+    },
+    {
+      "id": "ck-pr1564-007",
+      "summary": "Refresh .decapod/managed/specs/.manifest.json fingerprints via project-check --refresh-specs",
+      "input_digest": "sha256:11838160cb300d275ae3c1d477ce3057befcea86f6be60b669ed1bad3bb75283"
     }
   ],
   "intents": {
