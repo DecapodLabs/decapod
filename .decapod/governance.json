@@ -539,6 +539,14 @@
       "proof_refs": [
         "docs/architecture/governed-transitions.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-semantics",
+      "summary": "Record SEMANTICS contract for verifier integrity and capability evidence.",
+      "input_digest": "sha256:c94f8ae22941e820f2a3a64c0cb6da0a8f371c611999fd2636769a4d44ae684b",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "legacy_digests": {

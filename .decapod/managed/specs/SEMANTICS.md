@@ -46,6 +46,32 @@ An authorization issued against one state is stale after that state changes.
 Exclusive scope overlap, an expired lease, a forbidden path, a file-touch
 overrun, and unproven prerequisites are rejected rather than scheduled around.
 
+Verifier integrity is a separate judgment from a passing observation.
+`judge_completion_with_verifier` keeps the ordinary completion judgment when no
+isolation axis is required. When an axis is required, a passing receipt becomes
+`proven` only if a `VerifierEnvelope` bound to the current head, rules
+fingerprint, and verifier shows that axis `proven_excluded` by a native trace
+or an external observation. A self-report or a harness name leaves the
+observation `unknown`. Observed inheritance is `not_proven`, not `failed`.
+Unknown isolation stays `unknown`. Parent-turn exclusion does not imply
+project-instruction, user-instruction, filesystem, tool, or network exclusion.
+
+A runtime capability attestation is likewise evidence, not a harness identity.
+`attest_capability` returns `unknown` for a self-report, a harness name, or a
+missing source, `stale` when a native or external attestation is bound to
+another governing identity, and the declared support only when that evidence is
+fresh. `unknown` and `stale` do not count as available. The project capability
+registry is a different record and is not this attestation.
+
+`classify_blocker` and `capability_gap` name why a transition is not yet proven
+and which capability would address that class. They are recorded on the
+existing transition trace. They do not choose the next action. `inference` is
+the only class whose provider is `frontier`. `admit_operation_surface` admits
+or rejects a mutation from the operation class: `design.review` may write
+documentation and `.decapod` evidence, `implementation` remains subject to
+scope admission, and `publication` may not mutate files. An unknown class stays
+`unknown`.
+
 ## State Machines
 
 A todo records the accepted work and its lifecycle. Task status, assignment,
