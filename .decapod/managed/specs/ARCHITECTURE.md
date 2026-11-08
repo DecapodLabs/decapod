@@ -34,6 +34,19 @@ exists. Project and task overlays cannot replace a `NonOverridable` rule body.
 The publication-phase rule `decapod.publication.fresh_proof` runs only when the
 caller sets `include_publication`.
 
+Verifier integrity, runtime capability attestation, and blocker classification
+live in the same kernel. `VerifierEnvelope` stores tri-state isolation for
+parent turns, project instructions, user instructions, filesystem scope, tool
+scope, and network scope. Only a native trace or an external observation can
+carry `proven_excluded` or `observed_inherited`. `CapabilityAttestation` binds
+declared support to an evidence source and a `StateIdentity`. It is not
+`capabilities::CapabilityRegistry` and it is not inferred from a harness name.
+`transition_trace` adds `blocker_class` and `required_capability` when
+`classify_blocker` finds a blocker. `capability_gap` is a pure record: runtime
+for context, state, tool semantics, coordination, policy, verification, and
+mechanical work, and frontier only for inference. No second state machine and
+no capability router were added.
+
 ## Claim scope command coverage
 
 The `claim_boundaries` module in `tests/cli_contracts.rs` runs distinct CLI

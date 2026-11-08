@@ -547,6 +547,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-architecture",
+      "summary": "Record ARCHITECTURE contract for verifier integrity and capability evidence.",
+      "input_digest": "sha256:6ff4c0ccb61dcdc9ca7f04af0fe82252ceedd7447213835131e77ab85a6c6788",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "legacy_digests": {
