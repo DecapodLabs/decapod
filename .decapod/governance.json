@@ -717,6 +717,14 @@
       "proof_refs": [
         ".decapod/managed/specs/SEMANTICS.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-architecture-evidence",
+      "summary": "State that each isolation axis and capability attestation carries its own evidence reference.",
+      "input_digest": "sha256:3e05ff49dc62942315efa63b55452add494cce4a2a7cff58d7d6b9eb67f2b0ab",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {
