@@ -789,6 +789,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "wip-1469-generated-1",
+      "summary": "Preserve Decapod 0.132.0 project-check generated .decapod/managed/Dockerfile.decapod. Full validation remains blocked by source-inventory reconciliation and required container proof; no publication readiness is asserted.",
+      "input_digest": "sha256:c50cb9c47afc8f2ba924d683e294afaf22008779abd1ced5fe745fbd451b3e22",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod"
+      ]
     }
   ],
   "intents": {
@@ -839,10 +847,18 @@
       "active_boundaries": [
         "Preserve prior PR commits and original uncommitted work; do not merge or waive checks"
       ],
-      "artifact_hash": "sha256:da2fd27f15d888f92caffcb24a275b32c02fc95bff77df03ac9d898079127b87",
+      "artifact_hash": "sha256:0aec3cdb7b988aaf2f4b451eaa826d11f9463874442ae2057ada868396736315",
       "checks": [
         {
+          "name": "accepted-base-freshness-test",
+          "status": "passed"
+        },
+        {
           "name": "bootstrap-order-repaired",
+          "status": "passed"
+        },
+        {
+          "name": "cli-rpc-missing-datastore",
           "status": "passed"
         },
         {
@@ -862,6 +878,10 @@
           "status": "partial"
         },
         {
+          "name": "full-validation-source-inventory",
+          "status": "failed"
+        },
+        {
           "name": "intermediate-fleet-16-tests",
           "status": "passed"
         },
@@ -875,6 +895,14 @@
         },
         {
           "name": "post-lint-clippy-before-fencing-edit",
+          "status": "passed"
+        },
+        {
+          "name": "project-check-container-and-release-surfaces",
+          "status": "failed"
+        },
+        {
+          "name": "protected-root-isolation-tests",
           "status": "passed"
         }
       ],
@@ -905,10 +933,17 @@
             "intent_id": "intent:run-1469-authoring-custody",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:run-1469-authoring-custody",
+            "event_id": "event:6",
+            "intent_id": "intent:run-1469-authoring-custody",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-1469-authoring-custody": {
@@ -956,6 +991,25 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Full validation on 5477b73f stopped with PROOF_PROFILE_RECONCILIATION_REQUIRED. The same discovered inventory digest appears in the main checkout. Project-check reported container workspace required and generated release-bound surfaces; these are not publication proof."
+                ],
+                "proof_refs": [
+                  "cli-rpc-missing-datastore",
+                  "accepted-base-freshness-test",
+                  "protected-root-isolation-tests",
+                  "full-validation-source-inventory",
+                  "project-check-container-and-release-surfaces"
+                ],
+                "scope": [
+                  "src/decapod/core, tests, living specifications and generated governance"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -963,6 +1017,7 @@
       },
       "declared_commands": [],
       "evidence": [
+        "Full validation on 5477b73f stopped with PROOF_PROFILE_RECONCILIATION_REQUIRED. The same discovered inventory digest appears in the main checkout. Project-check reported container workspace required and generated release-bound surfaces; these are not publication proof.",
         "Original PR head preserved at 6e842a09662e549297f63461358a44712c154647 and pushed on the task-scoped replacement branch. Original plugin suite passed 36 tests before subsequent modifications; no current exact-candidate proof. Admission and event-replay repairs in progress. Original dirty checkout and failed CI preserved."
       ],
       "inspected_files": [
