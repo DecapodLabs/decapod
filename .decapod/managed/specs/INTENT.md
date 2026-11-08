@@ -19,6 +19,18 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
+The harness chooses what to attempt and the agent performs the work. Decapod
+resolves canonical state, decides whether the attempt is admissible, and judges
+whether the resulting claim is proven. It does not choose the next action. A
+passing verifier is not, by itself, an independently constrained verifier.
+Each isolation axis needs its own usable evidence reference. A native-trace
+label, a self-report, or a harness name does not prove that axis, and evidence
+for one axis does not prove another. The verifier must also have reviewed the
+same input digest as the completion evidence. `not_proven` stays distinct from
+`failed`, and `unknown` stays distinct from `proven`. A capability is `stale`
+only when a usable evidence reference is bound to a different governing
+identity. An unknown judgment is not automatically a state blocker.
+
 Concurrent local agents and worktrees must retain their own caller identity in
 results, task ownership and audit evidence while sharing canonical storage.
 The foreground broker's optional reusable connection must make bounded progress,
@@ -264,8 +276,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (42 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
+- Repository signal fingerprint: `019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

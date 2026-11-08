@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "e57602588612f6082d361b09d89c7940e64ec400",
-    "release": "v0.130.2",
+    "accepted_commit": "fee3544a78200030364777bd04eb71452a8efaba",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -520,221 +519,367 @@
     }
   },
   "change": {
-    "id": "pr-1557-governed-transitions",
-    "base_commit": "e57602588612f6082d361b09d89c7940e64ec400",
+    "id": "pr-verifier-integrity",
+    "base_commit": "fee3544a78200030364777bd04eb71452a8efaba",
     "target_base": "master"
+  },
+  "claims": {
+    "verifier-integrity": {
+      "statement": "When isolation is required, unknown isolation, a self-report, or a harness name does not make a passing observation proven, and not_proven stays distinct from failed.",
+      "falsifier": "A passing receipt with unknown, self-reported, or harness-named isolation is judged proven, or failed evidence becomes not_proven when integrity is also requested.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/governed_transition.rs"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "cp-1557-begin",
-      "summary": "Begin the governed-transition pull request from master",
-      "input_digest": "sha256:3583be83506aa1eabfb08ebe94dfaca5c9d7afec24cb263dab8c68deef3badee"
-    },
-    {
-      "id": "cp-1557-01",
-      "summary": "Record .decapod/managed/specs/.manifest.json",
-      "input_digest": "sha256:c8df4b32e6d94a09fba0901a368c26965bc3ff679d31382c7a627f87a4ef17b4"
-    },
-    {
-      "id": "cp-1557-02",
-      "summary": "Record .decapod/managed/specs/ARCHITECTURE.md",
-      "input_digest": "sha256:90e221d78e3188d3120c320f681c97d598fab6118af84c5874152be6c94ac04d"
-    },
-    {
-      "id": "cp-1557-03",
-      "summary": "Record .decapod/managed/specs/INTENT.md",
-      "input_digest": "sha256:52c2f07c4c07744fc282cc5fe2afd200505e84a967d901b2d725753f2eef09c6"
-    },
-    {
-      "id": "cp-1557-04",
-      "summary": "Record .decapod/managed/specs/INTERFACES.md",
-      "input_digest": "sha256:519e9224677432e0b333b9287eeb8f75b196ab2f5b85c2f97eb7d90fae6f55cd"
-    },
-    {
-      "id": "cp-1557-05",
-      "summary": "Record .decapod/managed/specs/OPERATIONS.md",
-      "input_digest": "sha256:b624097797bfcd61d8e0c155a60a6666e38795f87bafa7d2c6687188d2b7da99"
-    },
-    {
-      "id": "cp-1557-06",
-      "summary": "Record .decapod/managed/specs/README.md",
-      "input_digest": "sha256:38a87225a21aa755792db674875499766c5c31e865cd6ad235e74ed4aaa546e2"
-    },
-    {
-      "id": "cp-1557-07",
-      "summary": "Record .decapod/managed/specs/SECURITY.md",
-      "input_digest": "sha256:9c0f7a665291d1ec3577113763fa00c1d6091431a6c7e2e164c7999db307ce73"
-    },
-    {
-      "id": "cp-1557-08",
-      "summary": "Record .decapod/managed/specs/SEMANTICS.md",
-      "input_digest": "sha256:b30f0a01069a6a6a4c86748ade672460332634e806866f9261352c51448c2ee9"
-    },
-    {
-      "id": "cp-1557-09",
-      "summary": "Record .decapod/managed/specs/VALIDATION.md",
-      "input_digest": "sha256:4d1ffcefc4a8a41f9f8fa52498100190849d2f549762a60df1f21f77da4fc837"
-    },
-    {
-      "id": "cp-1557-10",
-      "summary": "Record docs/architecture/governed-execution.md",
-      "input_digest": "sha256:f2acba3700f0a5a5ed5852385e7a2347fb8babc09d2b93ea522339f0984c316b"
-    },
-    {
-      "id": "cp-1557-11",
-      "summary": "Record docs/architecture/governed-transitions.md",
-      "input_digest": "sha256:f9ea0136f03a63be520fe21aecf354c235f9c385abc5303413282c789f0742bc"
-    },
-    {
-      "id": "cp-1557-12",
-      "summary": "Record docs/audits/governed-state-machine-audit.md",
-      "input_digest": "sha256:c5b027f6b30fe66dcf8bb5665ad36bc944f0f86751ca7e5794abef89339f1b19"
-    },
-    {
-      "id": "cp-1557-13",
-      "summary": "Record src/decapod/core/governed_transition.rs",
-      "input_digest": "sha256:a06fa2265b18fbe58301517936bddb3e3c5ed0e33e551398187c54b95fbad3ae"
-    },
-    {
-      "id": "cp-1557-14",
-      "summary": "Record src/decapod/core/mod.rs",
-      "input_digest": "sha256:b49180363888c64f58f7dbc982e098827cc4c6326e7125cd1823abb4527d3d65"
-    },
-    {
-      "id": "cp-1557-15",
-      "summary": "Record src/decapod/core/projection.rs",
-      "input_digest": "sha256:ccdb7a5d989397a687ea7f74393cc7d11f00acdbe18c1e2450712ce7f3ea3271"
-    },
-    {
-      "id": "cp-1557-16",
-      "summary": "Record src/decapod/core/rpc.rs",
-      "input_digest": "sha256:31c0f7a7fb86a142e03fd989e883add66ebcfb6725fd515edd2c0d935fb02354"
-    },
-    {
-      "id": "cp-1557-17",
-      "summary": "Record src/decapod/core/state.rs",
-      "input_digest": "sha256:61bfa91f529f3a66c39ff34301e9567cd3b560d18617e041c3c3287a31f5a7dd"
-    },
-    {
-      "id": "cp-1557-18",
-      "summary": "Record src/decapod/core/state_commit.rs",
-      "input_digest": "sha256:71709f81a419bea0efebae074e79c2ea230e251146d1cc784560adbb6d859ecf"
-    },
-    {
-      "id": "cp-1557-19",
-      "summary": "Record src/decapod/core/todo.rs",
-      "input_digest": "sha256:b9fa62c3c5392f4e1068ee189cceeab3d1060d859c6d9efc148e9e6cfa8d65e4"
-    },
-    {
-      "id": "cp-1557-20",
-      "summary": "Record src/decapod/core/validate.rs",
-      "input_digest": "sha256:34004e83d9ad00005614634712b5718716c9edc722c242af6b96c92f2a799193"
-    },
-    {
-      "id": "cp-1557-21",
-      "summary": "Record src/decapod/core/validation_rules.rs",
-      "input_digest": "sha256:9728fb62999173d96f2cd5705fa57a65dddaf8a66d8781bb34d0f8b726abb65d"
-    },
-    {
-      "id": "cp-1557-22",
-      "summary": "Record src/decapod/lib.rs",
-      "input_digest": "sha256:baf64b93ed3a1b76744920b65a3658a5997d7fd32d1d9a55f2fb557f7f3efa92"
-    },
-    {
-      "id": "cp-1557-23",
-      "summary": "Record tests/created_branch_workflow_policy.rs",
-      "input_digest": "sha256:d2a51e15da673d17448115b64a4bbc93a9e204284457854b855ca9e7178ca47e"
-    },
-    {
-      "id": "cp-1557-24",
-      "summary": "Record tests/unit/core/projection_tests.rs",
-      "input_digest": "sha256:7cdef21555c7868382f2c548aef0922818931da797c41553371d7a57ab5566cd"
-    },
-    {
-      "id": "cp-1557-25",
-      "summary": "Record tests/unit/core/work_claim_tests.rs",
-      "input_digest": "sha256:6c21fca42cace217ba6c3848c9e5fc42fe797401d9095f54497cad5d17111988"
-    },
-    {
-      "id": "cp-1557-26",
-      "summary": "Record AGENTS.md",
-      "input_digest": "sha256:2ac90cbc2c76cc001ff152927aacdeb9a70cd1cb06b289bd709b61d9ddce9073"
-    },
-    {
-      "id": "cp-1557-27",
-      "summary": "Record CLAUDE.md",
-      "input_digest": "sha256:197b5d145a8ff19f5742255991508b06ac4c39f9f050c25859b6bfe0d29f75db"
-    },
-    {
-      "id": "cp-1557-28",
-      "summary": "Record CODEX.md",
-      "input_digest": "sha256:c53535b37097bcd12b0c1f6d5763a67a91c5f69cf82f93182f47e6a4b83dc361"
-    },
-    {
-      "id": "cp-1557-29",
-      "summary": "Record GEMINI.md",
-      "input_digest": "sha256:d3d6bbe5c7b06ff496686753614b8cfd2bbbb055cacb8d5a8e9b743269f49064"
-    },
-    {
-      "id": "cp-1557-30",
-      "summary": "Record .decapod/managed/Dockerfile.decapod",
-      "input_digest": "sha256:0ee16b5c05a553034ceb4b294a3111df2317f706ee6ba17c98a07a10af7de74a"
-    },
-    {
-      "id": "cp-1557-reviews",
-      "summary": "Record current interface, architecture, and security reviews",
-      "input_digest": "sha256:ab0cdfee1040a1c28930584ae9896919fc096d09b959a72b75be8ec9c591a088"
-    },
-    {
-      "id": "cp-1557-trajectory",
-      "summary": "Bind the governed-transition trajectory to the plan",
-      "input_digest": "sha256:207400640311f1ed64e26a800b71b35ea8644cb623486009b87bdc75f020c758"
-    },
-    {
-      "id": "cp-1557-security-review",
-      "summary": "Record the unchanged security spec review",
-      "input_digest": "sha256:f82bd24dc2df59f2fe754ac207dc5f3fb420424dded4c50b84476b9aec3c5571"
-    },
-    {
-      "id": "cp-1557-audit-note",
-      "summary": "Record the publication repair note",
-      "input_digest": "sha256:6d5df2d8c1bbde5014726d5655869c00276c63ad2936659fc1bc77b85f855a57"
-    },
-    {
-      "id": "ckpt-v0131-merge-1794097261",
-      "summary": "Merge master v0.131.0; refresh specs with new signal 896b9ee9...",
-      "input_digest": "sha256:40f830aef7255e2546d46cf7c3dd8d45f94374a39b72b3ea031cabf83a8722e1",
+      "id": "ck-verifier-integrity-kernel",
+      "summary": "Record verifier integrity, capability attestation, and blocker classification on the governed transition kernel.",
+      "input_digest": "sha256:05ad19995d6d3d43b0f525880d5097db4c8fdc93ca2612611b1e683353c5a0da",
       "proof_refs": [
-        "v0131_merge"
+        "src/decapod/core/governed_transition.rs"
       ]
     },
     {
-      "id": "ckpt-final-v0131-1794097354",
-      "summary": "Final checkpoint after v0.131.0 merge; re-reviewed three canonical specs as unchanged-with-reason; specs.refresh with signal 896b9ee9...",
-      "input_digest": "sha256:55a67e967b1e90152ad9d734a8bab62d23c58cfefea373ff3edfd27103db1970",
+      "id": "ck-verifier-integrity-arch-doc",
+      "summary": "Document verifier integrity, capability evidence, and blocker classification.",
+      "input_digest": "sha256:fc3743d81e921241418cf6fc0eb56f9603301eee26fe157bfc865842631962c9",
       "proof_refs": [
-        "final_v0131"
+        "docs/architecture/governed-transitions.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-semantics",
+      "summary": "Record SEMANTICS contract for verifier integrity and capability evidence.",
+      "input_digest": "sha256:c94f8ae22941e820f2a3a64c0cb6da0a8f371c611999fd2636769a4d44ae684b",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-architecture",
+      "summary": "Record ARCHITECTURE contract for verifier integrity and capability evidence.",
+      "input_digest": "sha256:6ff4c0ccb61dcdc9ca7f04af0fe82252ceedd7447213835131e77ab85a6c6788",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-interfaces",
+      "summary": "Record INTERFACES contract for verifier integrity and capability evidence.",
+      "input_digest": "sha256:d715f4ec803f234e5369c34b341bebf46c73efd615e416d779a6d6417b68c509",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-intent",
+      "summary": "Record that Decapod judges admissibility and proof and does not choose the next action.",
+      "input_digest": "sha256:df4f318030fb5c8de51ff375c3387dff34213c44df091dd4d59fd743ba717abd",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-semantics-fp",
+      "summary": "Bind the SEMANTICS attestation to the current repository signal.",
+      "input_digest": "sha256:25b6b3791de5c790b011e22dfac2efad196ec91970d83db6afeb0b0aceebb9ec",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-architecture-fp",
+      "summary": "Bind the ARCHITECTURE attestation to the current repository signal.",
+      "input_digest": "sha256:edc8efed1ccbd038156fe2c97129348967526dfd45e9d21a187513bd12d5821c",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-interfaces-fp",
+      "summary": "Bind the INTERFACES attestation to the current repository signal.",
+      "input_digest": "sha256:c596022f96fd6060c6f54a0b2a4f9e84bd12706f518aa0b20d49a06bdd7ebbad",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-operations-fp",
+      "summary": "Bind the OPERATIONS attestation to the current repository signal.",
+      "input_digest": "sha256:3edcda2205e77514cf13dd0bc556dc66508bb27b7fe41bbf78b89bea8055fb4c",
+      "proof_refs": [
+        ".decapod/managed/specs/OPERATIONS.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-readme-fp",
+      "summary": "Bind the spec README attestation to the current repository signal.",
+      "input_digest": "sha256:32796ff94d0d149bc26b9b19fab7bf5324d189e258ae15367d3447e0faee187d",
+      "proof_refs": [
+        ".decapod/managed/specs/README.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-security-fp",
+      "summary": "Bind the SECURITY attestation to the current repository signal.",
+      "input_digest": "sha256:bf3decc51e013ea127f9af3da3881a6d319356bc6f48ba2a7393e4c1fbacf4f3",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-validation-fp",
+      "summary": "Bind the VALIDATION attestation to the current repository signal.",
+      "input_digest": "sha256:bc0ee029538d870949c21b6db266d119d7fda6f2c9d4148c09dc16adf756ef11",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-manifest",
+      "summary": "Record the repository signal fingerprint for the refreshed living specs.",
+      "input_digest": "sha256:8dd87156130225a21485941aaeb1431045b56c7dff66213e2f8f2b4ce7431539",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-dockerfile",
+      "summary": "Update the managed Decapod image pin to the released evaluator.",
+      "input_digest": "sha256:fe6c108b9a7e5e62dcf9e239b327c3669f2f832a7233af3bdb06cc599372816c",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-agents",
+      "summary": "Record the v0.131.0 release pin and entrypoint fingerprint.",
+      "input_digest": "sha256:d1a30e4cbbde2518a18567cc6162b4c86f7558d7ab815bfb56beb1cd7cf8b3c5",
+      "proof_refs": [
+        "AGENTS.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-claude",
+      "summary": "Record the v0.131.0 release pin and entrypoint fingerprint.",
+      "input_digest": "sha256:9cbe75e1b6c2b7478ce56fa4c76097e01703029a16d2bfa3f9a6d429ca2be616",
+      "proof_refs": [
+        "CLAUDE.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-codex",
+      "summary": "Record the v0.131.0 release pin and entrypoint fingerprint.",
+      "input_digest": "sha256:2e3d2ef2af97adca7a6ced9cbe1a8587a9a5902526a5f30882476d91c2694a9a",
+      "proof_refs": [
+        "CODEX.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-gemini",
+      "summary": "Record the v0.131.0 release pin and entrypoint fingerprint.",
+      "input_digest": "sha256:ffd28dd463d35a46f992f37a3ce8191f7d5d83fc77193591b89a7c08a405802d",
+      "proof_refs": [
+        "GEMINI.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-governance",
+      "summary": "Bind the plan, trajectory, claim, and spec reviews for verifier integrity.",
+      "input_digest": "sha256:33baadcc9392a903870474a7d82e8b05d61f5b26560bb15e8510edef20f20f07",
+      "proof_refs": [
+        ".decapod/governance.json"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-evidence-binding",
+      "summary": "Bind each isolation axis and capability attestation to its own evidence reference, and classify blockers from typed causes.",
+      "input_digest": "sha256:6e10cbb157640407945de4dff429bc1c08bfebd5e7480c76bc2b49dd290d0ba8",
+      "proof_refs": [
+        "src/decapod/core/governed_transition.rs"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-evidence-doc",
+      "summary": "Document per-axis isolation evidence, subject binding, and typed blocker causes.",
+      "input_digest": "sha256:f3f552fa9e9e1ae22c768286f007ea1d5ee7cd769b1b65e20e548425c2408466",
+      "proof_refs": [
+        "docs/architecture/governed-transitions.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-semantics-evidence",
+      "summary": "State that isolation evidence, subject identity, and capability support are judged per binding.",
+      "input_digest": "sha256:0889be3c3141872c7a5fa4d16fff1e6664a5c0995587815324f0899f8436e2b4",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-architecture-evidence",
+      "summary": "State that each isolation axis and capability attestation carries its own evidence reference.",
+      "input_digest": "sha256:3e05ff49dc62942315efa63b55452add494cce4a2a7cff58d7d6b9eb67f2b0ab",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-interfaces-evidence",
+      "summary": "State that integrity checks the reviewed input digest and that an absent blocker class is unclassified.",
+      "input_digest": "sha256:f1a1ea92da8266aef1da40a963d96246a1d39b364c74abc5af2ec91813e2dd8d",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "ck-verifier-integrity-intent-evidence",
+      "summary": "State that each isolation axis and capability needs its own evidence reference.",
+      "input_digest": "sha256:c98f504abd386da5350083f48a87bc6b074528c670f133f6d80d965c0e7edf94",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
+    },
+    {
+      "id": "ck-vi-manifest-2",
+      "summary": "Record the repository signal after evidence-binding kernel changes.",
+      "input_digest": "sha256:b5282645b95d063949574ff61bf0f42e89b5760cacc5c6bd0774dddec1d2887e",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
+    },
+    {
+      "id": "ck-vi-intent-fp",
+      "summary": "Bind the INTENT attestation to the current repository signal.",
+      "input_digest": "sha256:d330293f309f0864c6a4a5b97fe2c5a75f5fd41000fbd86cbefb50fa45714863",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
+    },
+    {
+      "id": "ck-vi-semantics-fp",
+      "summary": "Bind the SEMANTICS attestation to the current repository signal.",
+      "input_digest": "sha256:cfbe2fbaf6b1176e7f43ba5c2fab89b5db599a9b4b94fbcac8cab611c3dd18dc",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
+    },
+    {
+      "id": "ck-vi-architecture-fp",
+      "summary": "Bind the ARCHITECTURE attestation to the current repository signal.",
+      "input_digest": "sha256:55df41a82a5d231dc09b2f8d8ec38c8f5db15bed3014fa094344952f06e87335",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "ck-vi-interfaces-fp",
+      "summary": "Bind the INTERFACES attestation to the current repository signal.",
+      "input_digest": "sha256:cb03d435577bfdd70e083c987927831dd52808f94d5bde8f101c50255efb0946",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "ck-vi-operations-fp",
+      "summary": "Bind the OPERATIONS attestation to the current repository signal.",
+      "input_digest": "sha256:80fb8a505554e1a791914494e3ecfb1dc325119d59f42b92e0fc7ff4e4222681",
+      "proof_refs": [
+        ".decapod/managed/specs/OPERATIONS.md"
+      ]
+    },
+    {
+      "id": "ck-vi-readme-fp",
+      "summary": "Bind the spec README attestation to the current repository signal.",
+      "input_digest": "sha256:143484e5bba62fa7dbaecf2ab3604c6d2a8c9e98bda95b089232108307031553",
+      "proof_refs": [
+        ".decapod/managed/specs/README.md"
+      ]
+    },
+    {
+      "id": "ck-vi-security-fp",
+      "summary": "Bind the SECURITY attestation to the current repository signal.",
+      "input_digest": "sha256:61ddcc4f3aec6e3ae1c3dfaa6f0bf13e3398f62dffed0ce0bead34c8c868e53d",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
+    },
+    {
+      "id": "ck-vi-validation-fp",
+      "summary": "Bind the VALIDATION attestation to the current repository signal.",
+      "input_digest": "sha256:0d7de22dfcaa11a0547f4651f36cd884f79a63550a9f3863c73185689038fef4",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
       ]
     }
   ],
   "intents": {
-    "intent:pr-v0131-final-1794098157": {
+    "intent:verifier-integrity-evidence": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Five-issue PR merge and specs refresh"
+        "Governed transition kernel and its living specs"
       ],
       "constraints": [
-        ".decapod/governance.json"
+        "src/decapod/core/governed_transition.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:pr-v0131-final-1794098157",
+      "id": "intent:verifier-integrity-evidence",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Harmonize docs, manifest relocation, CI fingerprint gate, README badge, pre-build validate",
-      "refined_intent": "Complete v0.131.0 merge with all five issues",
+      "raw_intent": "Bind verifier isolation and capability judgments to reconstructable evidence.",
+      "refined_intent": "Each isolation axis and capability attestation requires its own usable evidence reference, and unknown judgments stay unclassified without a typed cause.",
       "status": "refined",
       "updated_sequence": 3
+    }
+  },
+  "epochs": {
+    "ve_591714f25468cf8c": {
+      "constitution_hash": "sha256:ebc3e8662e6489375cd0030dd555d9d060a169edaf3cf0098b1a90e2b6ead076",
+      "constitution_version": "embedded-docs@0.131.0",
+      "epoch_id": "ve_591714f25468cf8c",
+      "evaluator_identity": "decapod-validate@0.131.0",
+      "evaluator_set_hash": "sha256:4165a5d87cc0b60c76b9abec3e15008f426e9bdab51a5775105babbf8a6abb4a",
+      "generated_specs_fingerprint": "019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1",
+      "generated_specs_manifest_hash": "sha256:8defd2bd55f0badf3a8703dfc526313979e26dd9c9bc9cbd46c6e327495420d7",
+      "material_hashes": {
+        "constitution:core/DECAPOD": "sha256:ebc3e8662e6489375cd0030dd555d9d060a169edaf3cf0098b1a90e2b6ead076",
+        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:97fef7706331f2caf629fcc714004f88e9940b7cc0a9e3767261ab9abadf3931",
+        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:186dd906b71bccee085f87d8b91abb85884e3c27812822d539790ced41b1dffd",
+        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:e3dc0f25d2a1dc3f6d93cc715b0a77d9eca5ad2c17079359a600d095a15ec119",
+        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:c47edc3744465b2479fef59fc95dd498a071a85ec046a33d4b14cf5f16f28de8",
+        "generated_spec:.decapod/managed/specs/README.md": "sha256:519bca887e06cb12e85d73ebefa3f6f811295b98e5b3f6d1bbc70ae4573d44bd",
+        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:c9d9586c639354941eb91f12ea43499ef379760b8e4492876bb99bcc4844bb10",
+        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:fa059d7c7afc12bcc14c88b202bc3542815ff854dbd8d699ebac7370a802f8e2",
+        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:412b655ec29486ca8ef78cc94eeb16ff2dcca6d0f66e0067e2873331f971c15b",
+        "generated_specs_fingerprint": "019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1",
+        "generated_specs_manifest": "sha256:8defd2bd55f0badf3a8703dfc526313979e26dd9c9bc9cbd46c6e327495420d7",
+        "governance_context": "sha256:389692876e9d1136e1abb52af9d32c50b58d11a57eb4ef085fdd90b10c82c927",
+        "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:e7fd556f09b35a89d385557fbe0fe845619adcf385849f32ae173cd6cc0f9e5f",
+        "governance_material:AGENTS.md": "sha256:b59d9a124e8729f1c5681d57b3b6925cdc03c1e006aa95844a50292f9d0449ef",
+        "governance_material:CLAUDE.md": "sha256:f690c094135ca04031e20ad45db484b82ccc05305ce96fe5e954cdc371d6a65b",
+        "governance_material:CODEX.md": "sha256:5e467b41fd1aa44ff6acffd07db93575efa0964ceb88a4f13732d9372a793278",
+        "governance_material:GEMINI.md": "sha256:04c27912b67a8e4cda63efb2854a981c2f50b9ca99368c6995c8053676ed30fe",
+        "governance_section:claims": "sha256:90c042e19f5365463af2e3e0c27a0f233c086496d8ffc4a8a699773e0de06d02",
+        "governance_section:plan": "sha256:e22c261cd57a56d2289d83d86d0451a5d74767af0a3d61947a785649d48cdf10",
+        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:89da6d663c37600d5b33e8475e992e0b35fdaf07bb6ffbf542e9b7c198fd99de",
+        "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:e635882439bec1f90a9409bd9e1622126289d20cefedcfbbabf09913ea3b39b0",
+        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:b01b699680818592767fc4ae7b487c02d5906d7f3da36a0891386af2d711ba8a",
+        "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:ce5a727ace7c5ae19290917385bee9192db0cf09fc47688fe7a39e47768d6948",
+        "living_spec_material:.decapod/managed/specs/README.md": "sha256:b438399f5c0f241858ccea303abbd1076a8728d2560509e7a15e012dd698765c",
+        "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d",
+        "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:f8e8795b50e92eb0a30a06548e8cb84a7283aad77d2d7c6e92bf40c2c18f8ace",
+        "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:2455891ae1857945d05db71aa562bd7701db6b31ac6fd2d810e76f950c929622",
+        "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
+        "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
+      },
+      "proof_rubric": "decapod-validate/current-proof-v1",
+      "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
+      "schema_version": "1.0.0",
+      "validation_profile": "default",
+      "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
   },
   "sections": {
@@ -745,89 +890,395 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Judge attempted work from canonical state and reconstructed evidence.",
+      "intent": "Judge completion from observed verifier isolation and runtime capability evidence without choosing the next action.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cargo test --offline --lib governed_transition::"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "No authored architecture change in this PR set; merged master v0.131.0; only the regenerated repo signal fingerprint line",
-          "reviewed_code_fingerprint": "896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a",
-          "spec_material_hash": "35697f40069a3b915e9959a3dfae96da24779b4c3e85b78a79b78911636e4eea"
+          "reason": "Architecture now stores an IsolationAttestation on each axis and keeps capability support only when a usable evidence reference is bound to the current identity. Classification uses typed causes and ignores reason prose.",
+          "reviewed_code_fingerprint": "019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1",
+          "spec_material_hash": "89da6d663c37600d5b33e8475e992e0b35fdaf07bb6ffbf542e9b7c198fd99de"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No authored content change in this PR set; merged master v0.131.0; only regenerated repo signal fingerprint line",
-          "reviewed_code_fingerprint": "896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a",
-          "spec_material_hash": "590f81aa227ed6ad6a39adf9a111f36ed8413b3a127b32cde1fd208160871b22"
+          "reason": "Interfaces now require a per-axis evidence reference and compare the verifier input digest with the completion inputs hash. An absent blocker class means the cause is unclassified.",
+          "reviewed_code_fingerprint": "019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1",
+          "spec_material_hash": "b01b699680818592767fc4ae7b487c02d5906d7f3da36a0891386af2d711ba8a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No authored security change in this PR set; merged master v0.131.0; only the regenerated repo signal fingerprint line",
-          "reviewed_code_fingerprint": "896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a",
+          "reason": "Security controls are unchanged. Evidence binding is a proof judgment. It does not add a trust root, a harness adapter, or a publication authority.",
+          "reviewed_code_fingerprint": "019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
       "state": "DRAFT",
-      "stop_conditions": [],
-      "title": "Governed transitions",
+      "stop_conditions": [
+        "Do not treat unknown isolation, a self-report, or a harness name as proof."
+      ],
+      "title": "Verifier integrity",
       "todo_ids": [
-        "governed-transitions-1557"
+        "verifier-integrity"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794097325Z"
+      "updated_at": "1794098269Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Five-issue PR merge and specs refresh"
+        "Governed transition kernel and its living specs"
       ],
-      "artifact_hash": "sha256:d41b97fa567b19f816157597551eeee07665ec785023b67225df8fcad3428bcd",
-      "checks": [],
+      "artifact_hash": "sha256:9d9de30f4de487eb10e69498c194d710ac0a282aa7f057fb334ec1c33ccca466",
+      "checks": [
+        {
+          "name": "decapod validate",
+          "status": "passed"
+        }
+      ],
       "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:pr-v0131-final-1794098157",
+            "intent_id": "intent:verifier-integrity-evidence",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:pr-v0131-final-1794098157",
+            "intent_id": "intent:verifier-integrity-evidence",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:verifier-integrity-evidence",
+            "event_id": "event:4",
+            "intent_id": "intent:verifier-integrity-evidence",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.0.0",
-        "trajectories": {}
+        "trajectories": {
+          "verifier-integrity-evidence": {
+            "evidence_only": true,
+            "id": "verifier-integrity-evidence",
+            "intent_id": "intent:verifier-integrity-evidence",
+            "steps": [
+              {
+                "action": "validation",
+                "command": "decapod validate",
+                "custody_event_id": "event:4",
+                "observations": [
+                  ".decapod/governance.json",
+                  ".decapod/governance.json",
+                  "validation epoch ve_591714f25468cf8c completed with zero failures"
+                ],
+                "proof_refs": [
+                  "decapod validate"
+                ],
+                "scope": [
+                  "src/decapod/core/governed_transition.rs"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
-      "declared_commands": [],
-      "destination": "PR #1554 merge",
-      "evidence": [],
+      "declared_commands": [
+        "decapod validate"
+      ],
+      "evidence": [
+        "validation epoch ve_591714f25468cf8c completed with zero failures"
+      ],
       "inspected_files": [],
-      "intent_id": "intent:pr-v0131-final-1794098157",
-      "modified_files": [],
+      "intent_id": "intent:verifier-integrity-evidence",
+      "modified_files": [
+        ".decapod/governance.json"
+      ],
       "next_transitions": [
         "publish"
       ],
       "repo_scope": [
-        ".decapod/governance.json"
+        "src/decapod/core/governed_transition.rs"
       ],
-      "run_id": "pr-v0131-final-1794098157",
+      "run_id": "verifier-integrity-evidence",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
+      "task_id": "verifier-integrity",
       "tool_calls": [],
       "unresolved_assumptions": []
+    },
+    "validation": {
+      "ci_prediction": {
+        "confidence": "medium",
+        "recommendations": [
+          "Review the reported validation warnings before relying on the CI result.",
+          "Use `decapod validate -v --format json` to inspect the affected gate output."
+        ],
+        "result": "review"
+      },
+      "decapod_release": "0.131.0",
+      "drift_findings": [],
+      "elapsed_ms": 4153,
+      "epoch_ref": "ve_591714f25468cf8c",
+      "fail_count": 0,
+      "failures": [],
+      "gate_timings": [
+        {
+          "elapsed_ms": 616,
+          "name": "validate_machine_contract"
+        },
+        {
+          "elapsed_ms": 614,
+          "name": "validate_markdown_primitives_roundtrip_gate"
+        },
+        {
+          "elapsed_ms": 334,
+          "name": "validate_project_specs_docs"
+        },
+        {
+          "elapsed_ms": 129,
+          "name": "validate_obligations"
+        },
+        {
+          "elapsed_ms": 104,
+          "name": "validate_legacy_jsonl_retired"
+        },
+        {
+          "elapsed_ms": 87,
+          "name": "validate_validation_rules"
+        },
+        {
+          "elapsed_ms": 77,
+          "name": "validate_federation_gates"
+        },
+        {
+          "elapsed_ms": 51,
+          "name": "validate_archive_integrity"
+        },
+        {
+          "elapsed_ms": 46,
+          "name": "validate_lineage_hard_gate"
+        },
+        {
+          "elapsed_ms": 38,
+          "name": "validate_repomap_determinism"
+        },
+        {
+          "elapsed_ms": 37,
+          "name": "validate_no_legacy_namespaces"
+        },
+        {
+          "elapsed_ms": 32,
+          "name": "validate_control_plane_contract"
+        },
+        {
+          "elapsed_ms": 28,
+          "name": "validate_gatekeeper_gate"
+        },
+        {
+          "elapsed_ms": 25,
+          "name": "validate_generated_artifact_whitelist"
+        },
+        {
+          "elapsed_ms": 23,
+          "name": "validate_schema_determinism"
+        },
+        {
+          "elapsed_ms": 21,
+          "name": "validate_policy_integrity"
+        },
+        {
+          "elapsed_ms": 21,
+          "name": "validate_embedded_self_contained"
+        },
+        {
+          "elapsed_ms": 19,
+          "name": "validate_knowledge_integrity"
+        },
+        {
+          "elapsed_ms": 19,
+          "name": "validate_knowledge_promotions_if_present"
+        },
+        {
+          "elapsed_ms": 19,
+          "name": "validate_repo_map"
+        },
+        {
+          "elapsed_ms": 18,
+          "name": "validate_canon_mutation"
+        },
+        {
+          "elapsed_ms": 17,
+          "name": "validate_risk_map_violations"
+        },
+        {
+          "elapsed_ms": 17,
+          "name": "validate_lcm_rebuild_gate"
+        },
+        {
+          "elapsed_ms": 17,
+          "name": "validate_watcher_audit"
+        },
+        {
+          "elapsed_ms": 17,
+          "name": "validate_watcher_purity"
+        },
+        {
+          "elapsed_ms": 15,
+          "name": "validate_lcm_immutability"
+        },
+        {
+          "elapsed_ms": 14,
+          "name": "validate_interface_contract_bootstrap"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_git_workspace_context"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_database_schema_versions"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_health_cache_integrity"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_heartbeat_invocation_gate"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_override_authority"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_trajectory_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_recursive_improvement_passes_if_present"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_state_commit_gate"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_tooling_gate"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_health_purity"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_plan_governed_execution_gate"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_root_dockerfile_seed_detection"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_workunit_manifests_if_present"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_risk_map"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_context_capsules_if_present"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_validation_receipt_if_present"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_research_claims_if_present"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_spec_drift"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_project_scoped_state"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_coplayer_policy_tightening"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_git_protected_branch"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_git_push_pr_gate"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_stale_workspaces"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_context_capsule_policy_contract"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_eval_gate_if_required"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_entrypoint_invariants"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_internalization_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_project_config_toml"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_docs_templates_bucket"
+        }
+      ],
+      "git_revision": "d5b27d61f5a98b27a33dc2f0f0111c880f6895d7",
+      "kind": "validation_receipt",
+      "parallelism": 1,
+      "pass_count": 191,
+      "prediction_uses_warnings": true,
+      "receipt_hash": "sha256:3dde11c9c644f5bdf294b928284e8a5426fc2a85e83e279a7174b18f2bfa08e7",
+      "repo_signal_fingerprint": "019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1",
+      "schema_version": "1.0.0",
+      "status": "ok",
+      "temporary_artifacts_cleaned": 0,
+      "trajectory_artifact_hash": "sha256:9d9de30f4de487eb10e69498c194d710ac0a282aa7f057fb334ec1c33ccca466",
+      "trajectory_run_id": "verifier-integrity-evidence",
+      "warn_count": 3,
+      "warnings": [
+        "Risk map missing (run `decapod riskmap init`)",
+        "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v4' while current scaffolding is 'scaffold-v5'; living spec content remains authoritative.",
+        "Watcher audit trail missing (run `decapod govern watcher run`)"
+      ]
     }
   },
   "legacy_digests": {

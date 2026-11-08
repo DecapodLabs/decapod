@@ -34,6 +34,22 @@ exists. Project and task overlays cannot replace a `NonOverridable` rule body.
 The publication-phase rule `decapod.publication.fresh_proof` runs only when the
 caller sets `include_publication`.
 
+Verifier integrity, runtime capability attestation, and blocker classification
+live in the same kernel. Each isolation axis on `VerifierEnvelope` is an
+`IsolationAttestation` with its own observation, source, and evidence
+reference. A reference on one axis cannot establish another. A native-trace or
+external-observation label without a usable reference stays `unknown`.
+Integrity also compares `canonical_input_hash` with the completion evidence
+`inputs_hash`. `CapabilityAttestation` keeps observed support only when a
+native or external evidence reference is usable and the `StateIdentity` is
+current. It is not `capabilities::CapabilityRegistry`. `classify_blocker` uses
+`AdmissionCause` and optional `ProofCause`. It ignores reason prose.
+`transition_trace` adds `blocker_class` and `required_capability` only when a
+class is known. `capability_gap` is a pure record: runtime for context, state,
+tool semantics, coordination, policy, verification, and mechanical work, and
+frontier only for inference. No second state machine, harness adapter, or
+capability router was added.
+
 ## Claim scope command coverage
 
 The `claim_boundaries` module in `tests/cli_contracts.rs` runs distinct CLI
@@ -791,8 +807,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (42 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
+- Repository signal fingerprint: `019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -113,6 +113,13 @@ pub struct TransitionTrace {
     pub outcome: String,
     pub reason: String,
     pub freshness: String,
+    /// Why the transition cannot yet be treated as proven. Absent when no blocker remains.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub blocker_class: Option<String>,
+    /// Capability the runtime would need before this blocker can be resolved.
+    /// Recording it does not choose the next action.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub required_capability: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -142,10 +149,27 @@ pub struct AdmissionRequest {
     pub own_lease_expired: bool,
 }
 
+/// Typed admission cause. The human-readable `reason` is presentation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AdmissionCause {
+    GoverningIdentityIncomplete,
+    AuthorizationStale,
+    LeaseExpired,
+    BudgetExceeded,
+    ForbiddenPath,
+    PrerequisiteNotProven,
+    ExclusiveConflict,
+    /// The attempt is inside the authorized identity. This is not a blocker.
+    InScope,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Admission {
     pub phase: TransitionPhase,
     pub reason: String,
+    /// Authority for classification. Absent when the cause was not typed.
+    pub cause: Option<AdmissionCause>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -389,18 +413,21 @@ pub fn admit(current: &StateIdentity, request: &AdmissionRequest) -> Admission {
         return Admission {
             phase: TransitionPhase::Unknown,
             reason: "governing identity is incomplete".to_string(),
+            cause: Some(AdmissionCause::GoverningIdentityIncomplete),
         };
     }
     if request.authorized != *current {
         return Admission {
             phase: TransitionPhase::Stale,
             reason: "authorization was not issued for the current state".to_string(),
+            cause: Some(AdmissionCause::AuthorizationStale),
         };
     }
     if request.own_lease_expired {
         return Admission {
             phase: TransitionPhase::Rejected,
             reason: "caller lease is expired".to_string(),
+            cause: Some(AdmissionCause::LeaseExpired),
         };
     }
     if let Some(limit) = request.file_touch_budget
@@ -409,6 +436,7 @@ pub fn admit(current: &StateIdentity, request: &AdmissionRequest) -> Admission {
         return Admission {
             phase: TransitionPhase::Rejected,
             reason: "change exceeds the file-touch budget".to_string(),
+            cause: Some(AdmissionCause::BudgetExceeded),
         };
     }
     if request.paths.iter().any(|path| {
@@ -420,12 +448,14 @@ pub fn admit(current: &StateIdentity, request: &AdmissionRequest) -> Admission {
         return Admission {
             phase: TransitionPhase::Rejected,
             reason: "change includes a forbidden path".to_string(),
+            cause: Some(AdmissionCause::ForbiddenPath),
         };
     }
     if !request.prerequisites_proven {
         return Admission {
             phase: TransitionPhase::Rejected,
             reason: "prerequisites are not proven".to_string(),
+            cause: Some(AdmissionCause::PrerequisiteNotProven),
         };
     }
     for claim in &request.other_claims {
@@ -436,12 +466,14 @@ pub fn admit(current: &StateIdentity, request: &AdmissionRequest) -> Admission {
             return Admission {
                 phase: TransitionPhase::Rejected,
                 reason: format!("exclusive scope conflicts with {}", claim.actor),
+                cause: Some(AdmissionCause::ExclusiveConflict),
             };
         }
     }
     Admission {
         phase: TransitionPhase::Admissible,
         reason: "attempt is inside the authorized governing identity".to_string(),
+        cause: Some(AdmissionCause::InScope),
     }
 }
 
@@ -726,6 +758,427 @@ pub fn record_transition(
     events::append(store_root, events::TRACES, &event)
 }
 
+/// Observable isolation. A missing observation stays unknown.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum IsolationObservation {
+    /// Direct evidence shows the input was not supplied to the verifier.
+    ProvenExcluded,
+    /// Direct evidence shows the verifier received the input.
+    ObservedInherited,
+    Unknown,
+}
+
+/// Where an isolation or capability observation came from.
+///
+/// A harness name and a verifier's own statement are identities or testimony.
+/// They are not evidence that a constraint was enforced. A native-trace or
+/// external-observation label is also not proof until that axis carries a
+/// usable evidence reference.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum EvidenceSource {
+    NativeTrace,
+    ExternalObservation,
+    SelfReport,
+    HarnessName,
+    Absent,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum IsolationAxis {
+    ParentTurns,
+    ProjectInstructions,
+    UserInstructions,
+    FilesystemScope,
+    ToolScope,
+    NetworkScope,
+}
+
+/// One isolation axis and the evidence that supports that axis alone.
+///
+/// Decapod checks that a trusted source names a usable reference. It does not
+/// open the trace or observation body. A reference attached to one axis does
+/// not support any other axis.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct IsolationAttestation {
+    pub observation: IsolationObservation,
+    pub source: EvidenceSource,
+    pub evidence_ref: Option<String>,
+}
+
+/// Conditions under which a verifier operated. Each axis carries its own evidence.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct VerifierEnvelope {
+    pub subject: String,
+    /// Digest of the inputs the verifier reviewed. Compared with the completion
+    /// evidence `inputs_hash`. Stored alone, it proves nothing.
+    pub canonical_input_hash: String,
+    pub harness: String,
+    pub harness_version: String,
+    pub verifier_identity: String,
+    pub parent_turns: IsolationAttestation,
+    pub project_instructions: IsolationAttestation,
+    pub user_instructions: IsolationAttestation,
+    pub filesystem_scope: IsolationAttestation,
+    pub tool_scope: IsolationAttestation,
+    pub network_scope: IsolationAttestation,
+    pub bound: StateIdentity,
+}
+
+impl VerifierEnvelope {
+    fn axis(&self, axis: IsolationAxis) -> &IsolationAttestation {
+        match axis {
+            IsolationAxis::ParentTurns => &self.parent_turns,
+            IsolationAxis::ProjectInstructions => &self.project_instructions,
+            IsolationAxis::UserInstructions => &self.user_instructions,
+            IsolationAxis::FilesystemScope => &self.filesystem_scope,
+            IsolationAxis::ToolScope => &self.tool_scope,
+            IsolationAxis::NetworkScope => &self.network_scope,
+        }
+    }
+}
+
+/// A label is not an observation. Trusted sources still need a usable reference.
+pub fn effective_isolation(attestation: &IsolationAttestation) -> IsolationObservation {
+    match attestation.source {
+        EvidenceSource::SelfReport | EvidenceSource::HarnessName | EvidenceSource::Absent => {
+            IsolationObservation::Unknown
+        }
+        EvidenceSource::NativeTrace | EvidenceSource::ExternalObservation => {
+            match attestation.evidence_ref.as_deref() {
+                Some(evidence_ref) if digest_ok(evidence_ref) => attestation.observation,
+                _ => IsolationObservation::Unknown,
+            }
+        }
+    }
+}
+
+/// Whether required isolation axes are excluded for this state and this subject.
+///
+/// `reviewed_inputs` is the completion evidence input digest. A different
+/// well-formed digest is `not_proven`: the governing identity still matches, so
+/// this is not `stale`. A missing or malformed digest is `unknown`.
+/// `Unknown` isolation stays unknown. Observed inheritance is `not_proven`,
+/// not `failed`.
+pub fn judge_verifier_integrity(
+    envelope: &VerifierEnvelope,
+    required: &[IsolationAxis],
+    current: &StateIdentity,
+    reviewed_inputs: &str,
+) -> ProofJudgment {
+    if !envelope.bound.complete() || !current.complete() {
+        return ProofJudgment::Unknown;
+    }
+    if envelope.bound != *current {
+        return ProofJudgment::Stale;
+    }
+    if !digest_ok(&envelope.canonical_input_hash) || !digest_ok(reviewed_inputs) {
+        return ProofJudgment::Unknown;
+    }
+    if envelope.canonical_input_hash.trim() != reviewed_inputs.trim() {
+        return ProofJudgment::NotProven;
+    }
+    if required.is_empty() {
+        return ProofJudgment::Proven;
+    }
+    let mut unknown = false;
+    for axis in required {
+        match effective_isolation(envelope.axis(*axis)) {
+            IsolationObservation::ProvenExcluded => {}
+            IsolationObservation::ObservedInherited => return ProofJudgment::NotProven,
+            IsolationObservation::Unknown => unknown = true,
+        }
+    }
+    if unknown {
+        ProofJudgment::Unknown
+    } else {
+        ProofJudgment::Proven
+    }
+}
+
+/// Completion proof plus an optional verifier-integrity requirement.
+///
+/// Omitting the requirement preserves the existing completion judgment and does
+/// not read the envelope. A passing observation does not become proven when
+/// required isolation is missing, inherited, unbound, or reviewed against a
+/// different input digest.
+pub fn judge_completion_with_verifier(
+    claim: &CompletionClaim,
+    current: &StateIdentity,
+    envelope: Option<&VerifierEnvelope>,
+    required: &[IsolationAxis],
+) -> ProofJudgment {
+    let base = judge_completion(claim, current);
+    if required.is_empty() {
+        return base;
+    }
+    match base {
+        ProofJudgment::Proven => {
+            let Some(envelope) = envelope else {
+                return ProofJudgment::Unknown;
+            };
+            let reviewed_inputs = claim
+                .evidence
+                .as_ref()
+                .map(|evidence| evidence.inputs_hash.as_str())
+                .unwrap_or("");
+            judge_verifier_integrity(envelope, required, current, reviewed_inputs)
+        }
+        other => other,
+    }
+}
+
+/// Support observed for one runtime capability. Harness identity is not support.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CapabilitySupport {
+    Proven,
+    Unavailable,
+    Unknown,
+    Stale,
+}
+
+/// One runtime capability bound to an identifiable observation.
+///
+/// `observed` is the support recorded in that observation. It is kept only when
+/// the source is native or external and `evidence_ref` is usable. Decapod does
+/// not open the referenced trace. A source label alone is not support.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CapabilityAttestation {
+    pub id: String,
+    pub observed: CapabilitySupport,
+    pub source: EvidenceSource,
+    pub evidence_ref: Option<String>,
+    pub bound: StateIdentity,
+    pub limitation: String,
+}
+
+pub fn attest_capability(
+    attestation: &CapabilityAttestation,
+    current: &StateIdentity,
+) -> CapabilitySupport {
+    if matches!(
+        attestation.source,
+        EvidenceSource::SelfReport | EvidenceSource::HarnessName | EvidenceSource::Absent
+    ) {
+        return CapabilitySupport::Unknown;
+    }
+    if !attestation.evidence_ref.as_deref().is_some_and(digest_ok) {
+        return CapabilitySupport::Unknown;
+    }
+    if !attestation.bound.complete() || !current.complete() {
+        return CapabilitySupport::Unknown;
+    }
+    if attestation.bound != *current {
+        return CapabilitySupport::Stale;
+    }
+    match attestation.observed {
+        CapabilitySupport::Proven | CapabilitySupport::Unavailable | CapabilitySupport::Unknown => {
+            attestation.observed
+        }
+        // Staleness is the identity comparison above. A field cannot declare it.
+        CapabilitySupport::Stale => CapabilitySupport::Unknown,
+    }
+}
+
+/// Advisory only. The harness name never becomes current evidence.
+pub fn advisory_harness_capability(harness: &str, capability: &str) -> CapabilityAttestation {
+    let _ = harness;
+    CapabilityAttestation {
+        id: capability.to_string(),
+        observed: CapabilitySupport::Unknown,
+        source: EvidenceSource::HarnessName,
+        evidence_ref: None,
+        bound: StateIdentity {
+            head: String::new(),
+            rules_fingerprint: String::new(),
+            verifier: String::new(),
+        },
+        limitation: "harness identity is not a capability attestation".to_string(),
+    }
+}
+
+/// Why a recorded proof judgment is unknown, when that cause is typed.
+///
+/// Absent means the root cause is not known. Classification must not invent one.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProofCause {
+    VerifierIntegrity,
+}
+
+/// Why a transition is not yet safe to treat as proven.
+///
+/// This classifies the blocker. It does not select the next action.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BlockerClass {
+    Context,
+    State,
+    ToolSemantics,
+    Coordination,
+    Policy,
+    Verification,
+    Mechanical,
+    Inference,
+}
+
+impl BlockerClass {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Context => "context",
+            Self::State => "state",
+            Self::ToolSemantics => "tool_semantics",
+            Self::Coordination => "coordination",
+            Self::Policy => "policy",
+            Self::Verification => "verification",
+            Self::Mechanical => "mechanical",
+            Self::Inference => "inference",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CapabilityGap {
+    pub blocked_by: BlockerClass,
+    pub required_capability: &'static str,
+    pub provider_class: &'static str,
+    pub escalation_required: bool,
+}
+
+fn class_for_admission(cause: AdmissionCause) -> Option<BlockerClass> {
+    match cause {
+        AdmissionCause::GoverningIdentityIncomplete | AdmissionCause::AuthorizationStale => {
+            Some(BlockerClass::State)
+        }
+        AdmissionCause::LeaseExpired | AdmissionCause::ExclusiveConflict => {
+            Some(BlockerClass::Coordination)
+        }
+        AdmissionCause::BudgetExceeded
+        | AdmissionCause::ForbiddenPath
+        | AdmissionCause::PrerequisiteNotProven => Some(BlockerClass::Policy),
+        AdmissionCause::InScope => None,
+    }
+}
+
+/// Advisory class for a transition that is not yet proven.
+///
+/// Typed admission causes win. The reason string is ignored. A `stale` proof
+/// judgment is a known identity mismatch and is `state`. `unknown` without
+/// `ProofCause::VerifierIntegrity` stays unclassified. `not_proven` and
+/// `failed` on an otherwise admissible attempt are `verification`.
+pub fn classify_blocker(
+    admission: &Admission,
+    judgment: ProofJudgment,
+    proof_cause: Option<ProofCause>,
+) -> Option<BlockerClass> {
+    if admission.phase == TransitionPhase::Admissible && judgment == ProofJudgment::Proven {
+        return None;
+    }
+    if let Some(cause) = admission.cause
+        && let Some(class) = class_for_admission(cause)
+    {
+        return Some(class);
+    }
+    if admission.cause.is_none()
+        && matches!(
+            admission.phase,
+            TransitionPhase::Rejected | TransitionPhase::Stale | TransitionPhase::Unknown
+        )
+    {
+        return None;
+    }
+    match judgment {
+        ProofJudgment::Stale => Some(BlockerClass::State),
+        ProofJudgment::NotProven | ProofJudgment::Failed => Some(BlockerClass::Verification),
+        ProofJudgment::Unknown if proof_cause == Some(ProofCause::VerifierIntegrity) => {
+            Some(BlockerClass::Verification)
+        }
+        ProofJudgment::Unknown | ProofJudgment::Proven => None,
+    }
+}
+
+/// Names the missing capability. The harness still decides whether to use it.
+pub fn capability_gap(class: BlockerClass) -> CapabilityGap {
+    let (required_capability, provider_class, escalation_required) = match class {
+        BlockerClass::Context => ("context_resolution", "runtime", false),
+        BlockerClass::State => ("canonical_state", "runtime", false),
+        BlockerClass::ToolSemantics => ("command_introspection", "runtime", false),
+        BlockerClass::Coordination => ("claim_lease", "runtime", false),
+        BlockerClass::Policy => ("admissibility", "runtime", false),
+        BlockerClass::Verification => ("verifier_integrity", "runtime", false),
+        BlockerClass::Mechanical => ("deterministic_command", "runtime", false),
+        BlockerClass::Inference => ("semantic_judgment", "frontier", true),
+    };
+    CapabilityGap {
+        blocked_by: class,
+        required_capability,
+        provider_class,
+        escalation_required,
+    }
+}
+
+/// Operation class to mutation surface. Unknown classes stay unknown.
+pub fn admit_operation_surface(operation_class: &str, paths: &BTreeSet<String>) -> Admission {
+    match operation_class {
+        "design.review" => {
+            let forbidden = paths.iter().any(|path| {
+                path == "Cargo.toml" || path.starts_with("src/") || path.starts_with("Cargo.toml")
+            });
+            if forbidden {
+                return Admission {
+                    phase: TransitionPhase::Rejected,
+                    reason: "design.review may not change implementation files".to_string(),
+                    cause: Some(AdmissionCause::ForbiddenPath),
+                };
+            }
+            if paths
+                .iter()
+                .all(|path| path.starts_with("docs/") || path.starts_with(".decapod/"))
+            {
+                Admission {
+                    phase: TransitionPhase::Admissible,
+                    reason: "design.review stays on documentation and evidence".to_string(),
+                    cause: Some(AdmissionCause::InScope),
+                }
+            } else {
+                Admission {
+                    phase: TransitionPhase::Unknown,
+                    reason: "design.review has no governed surface for this path".to_string(),
+                    cause: None,
+                }
+            }
+        }
+        "implementation" => Admission {
+            phase: TransitionPhase::Admissible,
+            reason: "implementation writes remain subject to scope admission".to_string(),
+            cause: Some(AdmissionCause::InScope),
+        },
+        "publication" => {
+            if paths.is_empty() {
+                Admission {
+                    phase: TransitionPhase::Admissible,
+                    reason: "publication records evidence and does not mutate source".to_string(),
+                    cause: Some(AdmissionCause::InScope),
+                }
+            } else {
+                Admission {
+                    phase: TransitionPhase::Rejected,
+                    reason: "publication may not mutate files".to_string(),
+                    cause: Some(AdmissionCause::ForbiddenPath),
+                }
+            }
+        }
+        _ => Admission {
+            phase: TransitionPhase::Unknown,
+            reason: "operation class has no governed mutation surface".to_string(),
+            cause: None,
+        },
+    }
+}
+
 pub fn commit_freshness(committed: &StateIdentity, current: &StateIdentity) -> ProofJudgment {
     if !committed.complete() || !current.complete() {
         ProofJudgment::Unknown
@@ -747,9 +1200,13 @@ pub struct TraceInput<'a> {
     pub evidence_hash: Option<&'a str>,
     pub judgment: ProofJudgment,
     pub reason: &'a str,
+    /// Set when the judgment came from verifier integrity. Absent otherwise.
+    pub proof_cause: Option<ProofCause>,
 }
 
 pub fn transition_trace(input: TraceInput<'_>) -> TransitionTrace {
+    let blocker = classify_blocker(input.admission, input.judgment, input.proof_cause);
+    let gap = blocker.map(capability_gap);
     TransitionTrace {
         op: TRANSITION_OP.to_string(),
         requested: input.requested.to_string(),
@@ -766,6 +1223,8 @@ pub fn transition_trace(input: TraceInput<'_>) -> TransitionTrace {
         outcome: input.judgment.as_str().to_string(),
         reason: input.reason.to_string(),
         freshness: input.judgment.as_str().to_string(),
+        blocker_class: blocker.map(|class| class.as_str().to_string()),
+        required_capability: gap.map(|gap| gap.required_capability.to_string()),
     }
 }
 
@@ -1282,6 +1741,7 @@ mod tests {
             evidence_hash: Some("sha256:0123456789abcdef"),
             judgment: ProofJudgment::Proven,
             reason: "fresh",
+            proof_cause: None,
         });
         let json = trace_json(&trace);
         assert_eq!(json["op"], TRANSITION_OP);
@@ -1444,6 +1904,7 @@ mod tests {
         let admission = Admission {
             phase: TransitionPhase::Admissible,
             reason: "in scope".to_string(),
+            cause: Some(AdmissionCause::InScope),
         };
         let trace = transition_trace(TraceInput {
             actor: "agent-a",
@@ -1456,6 +1917,7 @@ mod tests {
             evidence_hash: Some("sha256:0123456789abcdef"),
             judgment: ProofJudgment::NotProven,
             reason: "verification row is not evidence",
+            proof_cause: None,
         });
         record_transition(root.path(), &trace).unwrap();
         let records = events::query(root.path(), events::TRACES, 10).unwrap();
@@ -1467,5 +1929,472 @@ mod tests {
         assert_eq!(records[0].payload["rules_fingerprint"], "rules-1");
         assert_eq!(records[0].payload["verifier"], "decapod-0.130.2");
         assert!(records[0].payload.get("notes").is_none());
+        assert_eq!(records[0].payload["blocker_class"], "verification");
+        assert_eq!(
+            records[0].payload["required_capability"],
+            "verifier_integrity"
+        );
+        assert_eq!(records[0].payload["admission"], "admissible");
+    }
+
+    const INPUTS: &str = "sha256:fedcba9876543210";
+
+    fn axis(
+        observation: IsolationObservation,
+        source: EvidenceSource,
+        evidence_ref: Option<&str>,
+    ) -> IsolationAttestation {
+        IsolationAttestation {
+            observation,
+            source,
+            evidence_ref: evidence_ref.map(str::to_string),
+        }
+    }
+
+    fn unknown_axis() -> IsolationAttestation {
+        axis(IsolationObservation::Unknown, EvidenceSource::Absent, None)
+    }
+
+    fn excluded(source: EvidenceSource, evidence_ref: Option<&str>) -> IsolationAttestation {
+        axis(IsolationObservation::ProvenExcluded, source, evidence_ref)
+    }
+
+    fn envelope(parent: IsolationAttestation, project: IsolationAttestation) -> VerifierEnvelope {
+        VerifierEnvelope {
+            subject: "completion".to_string(),
+            canonical_input_hash: INPUTS.to_string(),
+            harness: "codex".to_string(),
+            harness_version: "0".to_string(),
+            verifier_identity: "reviewer".to_string(),
+            parent_turns: parent,
+            project_instructions: project,
+            user_instructions: unknown_axis(),
+            filesystem_scope: unknown_axis(),
+            tool_scope: unknown_axis(),
+            network_scope: unknown_axis(),
+            bound: identity("s0"),
+        }
+    }
+
+    fn passing_claim() -> CompletionClaim {
+        CompletionClaim {
+            declared_status: Some("pass".to_string()),
+            passes: Some(true),
+            notes: Some("reviewer says independent".to_string()),
+            evidence: Some(evidence("s0", true)),
+        }
+    }
+
+    fn fresh_capability(observed: CapabilitySupport) -> CapabilityAttestation {
+        CapabilityAttestation {
+            id: "fresh_context".to_string(),
+            observed,
+            source: EvidenceSource::NativeTrace,
+            evidence_ref: Some("sha256:capabilityevidence01".to_string()),
+            bound: identity("s0"),
+            limitation: String::new(),
+        }
+    }
+
+    #[test]
+    fn unknown_isolation_does_not_satisfy_an_independence_requirement() {
+        let judgment = judge_completion_with_verifier(
+            &passing_claim(),
+            &identity("s0"),
+            Some(&envelope(
+                excluded(
+                    EvidenceSource::NativeTrace,
+                    Some("sha256:parentturnevidence1"),
+                ),
+                unknown_axis(),
+            )),
+            &[
+                IsolationAxis::ParentTurns,
+                IsolationAxis::ProjectInstructions,
+            ],
+        );
+        assert_eq!(judgment, ProofJudgment::Unknown);
+        assert_ne!(judgment, ProofJudgment::Proven);
+        assert_ne!(judgment, ProofJudgment::Failed);
+    }
+
+    #[test]
+    fn one_trace_does_not_bless_an_unrelated_isolation_axis() {
+        let judgment = judge_verifier_integrity(
+            &envelope(
+                excluded(
+                    EvidenceSource::NativeTrace,
+                    Some("sha256:parentturnevidence1"),
+                ),
+                excluded(EvidenceSource::NativeTrace, None),
+            ),
+            &[
+                IsolationAxis::ParentTurns,
+                IsolationAxis::ProjectInstructions,
+            ],
+            &identity("s0"),
+            INPUTS,
+        );
+        assert_eq!(judgment, ProofJudgment::Unknown);
+        assert_eq!(
+            effective_isolation(&excluded(EvidenceSource::NativeTrace, None)),
+            IsolationObservation::Unknown
+        );
+    }
+
+    #[test]
+    fn self_reported_isolation_is_not_proven_exclusion() {
+        let claimed = effective_isolation(&excluded(EvidenceSource::SelfReport, None));
+        assert_eq!(claimed, IsolationObservation::Unknown);
+        let judgment = judge_verifier_integrity(
+            &envelope(
+                excluded(
+                    EvidenceSource::SelfReport,
+                    Some("sha256:selfreportnotproof1"),
+                ),
+                excluded(
+                    EvidenceSource::SelfReport,
+                    Some("sha256:selfreportnotproof2"),
+                ),
+            ),
+            &[
+                IsolationAxis::ParentTurns,
+                IsolationAxis::ProjectInstructions,
+            ],
+            &identity("s0"),
+            INPUTS,
+        );
+        assert_eq!(judgment, ProofJudgment::Unknown);
+    }
+
+    #[test]
+    fn trusted_source_without_an_evidence_ref_does_not_prove_exclusion() {
+        for source in [
+            EvidenceSource::NativeTrace,
+            EvidenceSource::ExternalObservation,
+        ] {
+            assert_eq!(
+                effective_isolation(&excluded(source, None)),
+                IsolationObservation::Unknown
+            );
+            assert_eq!(
+                effective_isolation(&excluded(source, Some("true"))),
+                IsolationObservation::Unknown
+            );
+            let judgment = judge_verifier_integrity(
+                &envelope(excluded(source, None), unknown_axis()),
+                &[IsolationAxis::ParentTurns],
+                &identity("s0"),
+                INPUTS,
+            );
+            assert_eq!(judgment, ProofJudgment::Unknown);
+        }
+    }
+
+    #[test]
+    fn parent_turn_exclusion_does_not_imply_project_instruction_exclusion() {
+        let judgment = judge_verifier_integrity(
+            &envelope(
+                excluded(
+                    EvidenceSource::NativeTrace,
+                    Some("sha256:parentturnevidence1"),
+                ),
+                unknown_axis(),
+            ),
+            &[
+                IsolationAxis::ParentTurns,
+                IsolationAxis::ProjectInstructions,
+            ],
+            &identity("s0"),
+            INPUTS,
+        );
+        assert_eq!(judgment, ProofJudgment::Unknown);
+        let parent_only = judge_verifier_integrity(
+            &envelope(
+                excluded(
+                    EvidenceSource::NativeTrace,
+                    Some("sha256:parentturnevidence1"),
+                ),
+                axis(
+                    IsolationObservation::ObservedInherited,
+                    EvidenceSource::ExternalObservation,
+                    Some("sha256:projectinstructobs01"),
+                ),
+            ),
+            &[IsolationAxis::ParentTurns],
+            &identity("s0"),
+            INPUTS,
+        );
+        assert_eq!(parent_only, ProofJudgment::Proven);
+    }
+
+    #[test]
+    fn inherited_instructions_are_not_proven_and_not_failed() {
+        let judgment = judge_completion_with_verifier(
+            &passing_claim(),
+            &identity("s0"),
+            Some(&envelope(
+                axis(
+                    IsolationObservation::ObservedInherited,
+                    EvidenceSource::ExternalObservation,
+                    Some("sha256:parentinherited0001"),
+                ),
+                excluded(
+                    EvidenceSource::NativeTrace,
+                    Some("sha256:projectexcluded0001"),
+                ),
+            )),
+            &[IsolationAxis::ParentTurns],
+        );
+        assert_eq!(judgment, ProofJudgment::NotProven);
+        assert_ne!(judgment, ProofJudgment::Failed);
+        assert_ne!(judgment, ProofJudgment::Unknown);
+    }
+
+    #[test]
+    fn isolation_of_a_different_input_does_not_prove_completion() {
+        let mut wrong = envelope(
+            excluded(
+                EvidenceSource::NativeTrace,
+                Some("sha256:parentturnevidence1"),
+            ),
+            excluded(
+                EvidenceSource::NativeTrace,
+                Some("sha256:projectexcluded0001"),
+            ),
+        );
+        wrong.canonical_input_hash = "sha256:ffffffffffffffff".to_string();
+        let judgment = judge_completion_with_verifier(
+            &passing_claim(),
+            &identity("s0"),
+            Some(&wrong),
+            &[
+                IsolationAxis::ParentTurns,
+                IsolationAxis::ProjectInstructions,
+            ],
+        );
+        assert_eq!(judgment, ProofJudgment::NotProven);
+        assert_ne!(judgment, ProofJudgment::Stale);
+        assert_ne!(judgment, ProofJudgment::Proven);
+    }
+
+    #[test]
+    fn malformed_verifier_subject_is_unknown() {
+        let mut broken = envelope(
+            excluded(
+                EvidenceSource::NativeTrace,
+                Some("sha256:parentturnevidence1"),
+            ),
+            unknown_axis(),
+        );
+        broken.canonical_input_hash = "true".to_string();
+        let judgment = judge_verifier_integrity(
+            &broken,
+            &[IsolationAxis::ParentTurns],
+            &identity("s0"),
+            INPUTS,
+        );
+        assert_eq!(judgment, ProofJudgment::Unknown);
+        assert_ne!(judgment, ProofJudgment::NotProven);
+    }
+
+    #[test]
+    fn matching_subject_and_per_axis_evidence_can_prove() {
+        let judgment = judge_completion_with_verifier(
+            &passing_claim(),
+            &identity("s0"),
+            Some(&envelope(
+                excluded(
+                    EvidenceSource::NativeTrace,
+                    Some("sha256:parentturnevidence1"),
+                ),
+                excluded(
+                    EvidenceSource::ExternalObservation,
+                    Some("sha256:projectexcluded0001"),
+                ),
+            )),
+            &[
+                IsolationAxis::ParentTurns,
+                IsolationAxis::ProjectInstructions,
+            ],
+        );
+        assert_eq!(judgment, ProofJudgment::Proven);
+    }
+
+    #[test]
+    fn stale_capability_attestation_does_not_satisfy_a_fresh_requirement() {
+        let mut attestation = fresh_capability(CapabilitySupport::Proven);
+        attestation.bound.head = "s0-old".to_string();
+        let support = attest_capability(&attestation, &identity("s0"));
+        assert_eq!(support, CapabilitySupport::Stale);
+        assert_ne!(support, CapabilitySupport::Unknown);
+        assert_ne!(support, CapabilitySupport::Proven);
+    }
+
+    #[test]
+    fn native_trace_without_capability_evidence_is_unknown() {
+        let mut attestation = fresh_capability(CapabilitySupport::Proven);
+        attestation.evidence_ref = None;
+        assert_eq!(
+            attest_capability(&attestation, &identity("s0")),
+            CapabilitySupport::Unknown
+        );
+        attestation.evidence_ref = Some("pass".to_string());
+        assert_eq!(
+            attest_capability(&attestation, &identity("s0")),
+            CapabilitySupport::Unknown
+        );
+    }
+
+    #[test]
+    fn observed_unavailability_stays_unavailable() {
+        let support = attest_capability(
+            &fresh_capability(CapabilitySupport::Unavailable),
+            &identity("s0"),
+        );
+        assert_eq!(support, CapabilitySupport::Unavailable);
+        assert_ne!(support, CapabilitySupport::Unknown);
+        assert_ne!(support, CapabilitySupport::Proven);
+    }
+
+    #[test]
+    fn harness_name_does_not_attest_a_capability() {
+        for harness in ["codex", "claude", "grok", "antigravity"] {
+            let attestation = advisory_harness_capability(harness, "fresh_context");
+            assert_eq!(
+                attest_capability(&attestation, &identity("s0")),
+                CapabilitySupport::Unknown
+            );
+        }
+    }
+
+    #[test]
+    fn reviewer_success_without_integrity_does_not_prove_when_integrity_is_required() {
+        let judgment = judge_completion_with_verifier(
+            &passing_claim(),
+            &identity("s0"),
+            None,
+            &[IsolationAxis::ProjectInstructions],
+        );
+        assert_eq!(judgment, ProofJudgment::Unknown);
+        let unconstrained = judge_completion_with_verifier(
+            &passing_claim(),
+            &identity("s0"),
+            Some(&envelope(unknown_axis(), unknown_axis())),
+            &[],
+        );
+        assert_eq!(unconstrained, ProofJudgment::Proven);
+    }
+
+    #[test]
+    fn failed_evidence_stays_failed_when_integrity_is_also_requested() {
+        let mut claim = passing_claim();
+        claim.evidence.as_mut().unwrap().observed_pass = false;
+        let judgment = judge_completion_with_verifier(
+            &claim,
+            &identity("s0"),
+            Some(&envelope(
+                excluded(
+                    EvidenceSource::NativeTrace,
+                    Some("sha256:parentturnevidence1"),
+                ),
+                excluded(
+                    EvidenceSource::NativeTrace,
+                    Some("sha256:projectexcluded0001"),
+                ),
+            )),
+            &[IsolationAxis::ParentTurns],
+        );
+        assert_eq!(judgment, ProofJudgment::Failed);
+        assert_ne!(judgment, ProofJudgment::NotProven);
+    }
+
+    #[test]
+    fn unknown_verifier_integrity_is_verification_and_generic_unknown_is_unclassified() {
+        let prior = identity("s0");
+        let admission = Admission {
+            phase: TransitionPhase::Admissible,
+            reason: "in scope".to_string(),
+            cause: Some(AdmissionCause::InScope),
+        };
+        let trace = transition_trace(TraceInput {
+            actor: "agent-a",
+            requested: "complete",
+            prior: &prior,
+            admission: &admission,
+            scope: &[],
+            expected: &[],
+            observed: &[],
+            evidence_hash: None,
+            judgment: ProofJudgment::Unknown,
+            reason: "isolation was not observed",
+            proof_cause: Some(ProofCause::VerifierIntegrity),
+        });
+        assert_eq!(trace.blocker_class.as_deref(), Some("verification"));
+        assert_ne!(trace.blocker_class.as_deref(), Some("state"));
+        let generic = classify_blocker(&admission, ProofJudgment::Unknown, None);
+        assert_eq!(generic, None);
+        let stale = classify_blocker(&admission, ProofJudgment::Stale, None);
+        assert_eq!(stale, Some(BlockerClass::State));
+        assert_ne!(stale, generic);
+    }
+
+    #[test]
+    fn classification_follows_the_typed_cause_and_ignores_prose() {
+        let prior = identity("s0");
+        let admission = Admission {
+            phase: TransitionPhase::Rejected,
+            reason: "exclusive scope conflicts with agent-b".to_string(),
+            cause: Some(AdmissionCause::ExclusiveConflict),
+        };
+        let before = admission.clone();
+        let trace = transition_trace(TraceInput {
+            actor: "agent-a",
+            requested: "edit",
+            prior: &prior,
+            admission: &admission,
+            scope: &[],
+            expected: &[],
+            observed: &[],
+            evidence_hash: None,
+            judgment: ProofJudgment::NotProven,
+            reason: "conflict",
+            proof_cause: None,
+        });
+        assert_eq!(admission, before);
+        assert_eq!(trace.blocker_class.as_deref(), Some("coordination"));
+        assert_eq!(trace.required_capability.as_deref(), Some("claim_lease"));
+        let mut reworded = admission.clone();
+        reworded.reason = "the weather is nice and nothing is exclusive".to_string();
+        assert_eq!(
+            classify_blocker(&reworded, ProofJudgment::NotProven, None),
+            Some(BlockerClass::Coordination)
+        );
+        let mut untyped = admission.clone();
+        untyped.cause = None;
+        untyped.reason = "exclusive lease forbidden budget state".to_string();
+        assert_eq!(
+            classify_blocker(&untyped, ProofJudgment::NotProven, None),
+            None
+        );
+        let gap = capability_gap(BlockerClass::Inference);
+        assert!(gap.escalation_required);
+        assert_eq!(gap.provider_class, "frontier");
+        assert_eq!(
+            admit_operation_surface(
+                "design.review",
+                &BTreeSet::from(["src/main.rs".to_string()])
+            )
+            .phase,
+            TransitionPhase::Rejected
+        );
+        assert_eq!(
+            admit_operation_surface(
+                "design.review",
+                &BTreeSet::from(["docs/architecture/governed-transitions.md".to_string()])
+            )
+            .phase,
+            TransitionPhase::Admissible
+        );
     }
 }

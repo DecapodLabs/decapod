@@ -46,6 +46,43 @@ An authorization issued against one state is stale after that state changes.
 Exclusive scope overlap, an expired lease, a forbidden path, a file-touch
 overrun, and unproven prerequisites are rejected rather than scheduled around.
 
+Verifier integrity is a separate judgment from a passing observation.
+`judge_completion_with_verifier` keeps the ordinary completion judgment when no
+isolation axis is required, and it does not read the envelope. When an axis is
+required, a passing receipt becomes `proven` only if a `VerifierEnvelope` is
+bound to the current head, rules fingerprint, and verifier, its
+`canonical_input_hash` equals the completion evidence `inputs_hash`, and that
+axis is `proven_excluded` by its own native trace or external observation with
+a usable evidence reference. A source label alone is not proof. Evidence for
+one axis does not establish another. A self-report, a harness name, an absent
+source, or a trusted source without a usable reference leaves that axis
+`unknown`. Observed inheritance with its own evidence reference is
+`not_proven`, not `failed`. A missing or malformed subject digest is
+`unknown`. A well-formed subject digest that differs from `inputs_hash` is
+`not_proven`, because the governing identity still matches. Unknown isolation
+stays `unknown`.
+
+A runtime capability attestation is likewise evidence, not a harness identity.
+`attest_capability` returns `unknown` for a self-report, a harness name, an
+absent source, or a native or external source without a usable evidence
+reference, even when the observed support says `proven`. A usable reference
+bound to another governing identity is `stale`. A fresh usable reference keeps
+`proven`, `unavailable`, or `unknown`. `unknown` is not `unavailable`, and
+`stale` is not `unknown`. Decapod checks the reference and the identity. It
+does not open the observation, and no harness adapter constructs these
+attestations. The project capability registry is a different record.
+
+`classify_blocker` reads the typed admission cause and an optional proof cause.
+It does not read the reason string. An unknown judgment is not automatically
+`state`. Verifier-integrity `unknown` is `verification`. An unknown judgment
+with no typed cause records no blocker class. `capability_gap` names a
+capability for a known class and is recorded on the existing transition trace.
+It does not choose the next action. `inference` is the only class whose
+provider is `frontier`. `admit_operation_surface` admits or rejects a mutation
+from the operation class: `design.review` may write documentation and
+`.decapod` evidence, `implementation` remains subject to scope admission, and
+`publication` may not mutate files. An unknown class stays `unknown`.
+
 ## State Machines
 
 A todo records the accepted work and its lifecycle. Task status, assignment,
@@ -266,7 +303,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (42 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
+- Repository signal fingerprint: `019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

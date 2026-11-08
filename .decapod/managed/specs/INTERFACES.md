@@ -16,7 +16,20 @@ Omitting the root is an error, not a successful verification.
 re-hashes the files named by a verification row and binds that digest to the
 snapshot. The row's status field is not accepted as proof. Governed-transition
 decisions are appended to the `traces` stream that `decapod flight-recorder`
-already renders.
+already renders. When the transition is not admissible and proven, that payload
+includes `blocker_class` and `required_capability`. Those fields describe the
+blocker. They are not an instruction to the harness.
+
+`judge_completion_with_verifier` is the completion judgment plus an optional
+list of isolation axes. An empty list preserves `judge_completion` and ignores
+the envelope. `judge_verifier_integrity` checks each required axis against that
+axis's evidence reference and checks `canonical_input_hash` against the
+completion `inputs_hash`. `attest_capability` keeps observed support only when
+the attestation carries a usable evidence reference and a current identity.
+`admit_operation_surface` answers whether an operation class may write the
+given paths. None of these functions is a new RPC, and none selects work. A
+missing blocker class means the cause is unclassified. It does not mean
+`state`.
 
 ## Claim scope acceptance
 
@@ -1143,8 +1156,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (42 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
+- Repository signal fingerprint: `019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

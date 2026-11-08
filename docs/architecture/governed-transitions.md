@@ -83,6 +83,91 @@ judgment, so the row alone cannot clear the proof gate.
 The flight recorder renders that stream. The event is provenance, not a second
 canonical state.
 
+## Verifier integrity
+
+A passing observation and an independently constrained verifier are different
+claims. `VerifierEnvelope` records the subject, the digest of the inputs the
+verifier reviewed, the harness identity and version, the verifier identity, and
+one `IsolationAttestation` for each axis: parent turns, project instructions,
+user instructions, filesystem scope, tool scope, and network scope. Each
+attestation has its own observation (`proven_excluded`, `observed_inherited`,
+or `unknown`), its own evidence source, and its own evidence reference.
+
+`effective_isolation` reads only that axis. A self-report, a harness name, or
+an absent source is `unknown`. A native trace or an external observation
+without a usable evidence reference is also `unknown`. A reference on one axis
+does not establish any other axis. Decapod checks that the reference is
+present and well formed. It does not open the trace body, and no harness
+adapter currently constructs these attestations.
+
+`judge_verifier_integrity` binds the envelope to the current `StateIdentity`
+and to the completion evidence `inputs_hash`. An incomplete identity, or a
+missing or malformed subject digest, is `unknown`. A different governing
+identity is `stale`. A well-formed subject digest that differs from
+`inputs_hash` is `not_proven`: the identity still matches, so the verifier
+reviewed a different artifact rather than a stale state. An empty isolation
+requirement is `proven` only after that subject binding matches. Observed
+inheritance on a required axis, backed by its own evidence reference, is
+`not_proven`, not `failed`. Any remaining unknown required axis is `unknown`.
+The judgment is `proven` only when every required axis is `proven_excluded`
+under its own native or external evidence reference.
+
+`judge_completion_with_verifier` calls `judge_completion` first. An empty
+requirement returns that judgment unchanged and does not read the envelope.
+A base judgment other than `proven` is also returned unchanged: failed
+evidence stays `failed`, and a missing proof stays `not_proven`. A `proven`
+base with a required axis and no envelope is `unknown`. A `proven` base with
+an envelope is then judged by `judge_verifier_integrity`. A semantic reviewer
+can supply evidence. It does not by itself satisfy an integrity requirement.
+
+## Runtime capability evidence
+
+`CapabilityAttestation` is not the project capability registry in
+`capabilities.rs`. It records one runtime capability id, the observed support
+(`proven`, `unavailable`, `unknown`, or `stale`), the evidence source, an
+evidence reference, the governing identity, and a limitation string.
+
+`attest_capability` returns `unknown` for a self-report, a harness name, an
+absent source, or a native or external source that lacks a usable evidence
+reference. That is true even when `observed` says `proven`. An incomplete
+identity is `unknown`. A usable native or external reference bound to a
+different identity is `stale`. A fresh usable reference keeps `proven`,
+`unavailable`, or `unknown` as observed. `unknown` is not `unavailable`, and
+`stale` is not `unknown`. Decapod does not open the referenced observation.
+`advisory_harness_capability` ignores the harness string and returns an
+unknown, harness-named attestation. Codex, Claude, Grok, and Antigravity are
+identities, not evidence.
+
+## Blocker classification
+
+`classify_blocker` names why a transition is not yet safe to treat as proven.
+It reads `AdmissionCause` and, when supplied, `ProofCause`. The human-readable
+reason string is not read. `capability_gap` names a capability and a provider
+class for that blocker. The trace records `blocker_class` and
+`required_capability` only when a class is known. Neither function changes
+admission or selects the next action. There is no `capability.resolve`
+operation. The class is advisory telemetry.
+
+An admissible `proven` transition records no blocker. Typed causes map as
+follows: incomplete governing identity and stale authorization are `state`;
+an expired lease and an exclusive conflict are `coordination`; a file-touch
+budget, a forbidden path, and an unproven prerequisite are `policy`. A `stale`
+proof judgment on an otherwise in-scope attempt is `state`, because the kernel
+has established an identity mismatch. `not_proven` and `failed` on that attempt
+are `verification`. `ProofCause::VerifierIntegrity` with an `unknown` judgment
+is `verification`. An `unknown` judgment with no typed cause, and a rejected
+or stale admission with no typed cause, record no blocker class. `inference`
+is available through `capability_gap` for a problem that still needs semantic
+judgment. Its provider class is `frontier` and `escalation_required` is true.
+Every other class names a runtime capability and does not require escalation.
+
+`admit_operation_surface` maps an operation class to a mutation surface.
+`design.review` may write `docs/**` and `.decapod/**` and may not write
+`src/**` or `Cargo.toml`; any other path stays `unknown`. `implementation` is
+admissible at this surface and remains subject to `admit`. `publication` may
+record evidence and may not mutate files. An unrecognized class stays
+`unknown`. The harness's phase name is not the operation class.
+
 Publication eligibility is `decide_publication` / `project_report_publication`.
 The projection field `publication_ready` is that decision. The boolean in an
 agent-written report is ignored. Stale, failed, unproven, and unknown reports
@@ -137,7 +222,8 @@ phase as already satisfied.
 
 `transition_trace` / `trace_json` is the payload for op `govern.transition`.
 It records the actor, prior state, rules, verifier, admission, scope, expected
-and observed effects, evidence hash, outcome, reason, and freshness. It does
+and observed effects, evidence hash, outcome, reason, freshness, and, when a
+blocker remains, `blocker_class` and `required_capability`. It does
 not record notes or a passes flag. The flight recorder remains a renderer over
 events. The trace is provenance. Canonical state stays in the repository and
 the datastore.
