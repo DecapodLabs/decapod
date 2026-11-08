@@ -1759,6 +1759,14 @@ fn ensure_readme_badge(
     seed: Option<&SpecsSeed>,
 ) -> Result<String, error::DecapodError> {
     let readme_path = target_dir.join("README.md");
+    if fs::symlink_metadata(&readme_path)
+        .is_ok_and(|metadata| metadata.file_type().is_symlink())
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "refusing to update symlinked README: {}",
+            readme_path.display()
+        )));
+    }
     let (content, existed) = match fs::read_to_string(&readme_path) {
         Ok(existing) => (existing, true),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
@@ -1791,7 +1799,16 @@ fn ensure_readme_badge(
         let insert_at = lines
             .iter()
             .position(|line| line.starts_with("# ") || line.starts_with("<h1"))
-            .map(|idx| idx + 1)
+            .map(|idx| {
+                if lines[idx].starts_with("<h1") {
+                    lines[idx..]
+                        .iter()
+                        .position(|line| line.contains("</h1>"))
+                        .map_or(lines.len(), |end| idx + end + 1)
+                } else {
+                    idx + 1
+                }
+            })
             .unwrap_or(0);
         lines.insert(insert_at, badge_line.as_str());
     }
@@ -1868,10 +1885,8 @@ pub fn scaffold_project_entrypoints(
 
     // #1023: project README badge, version-matched to this Decapod release.
     if opts.readme_badge && !opts.dry_run {
-        match ensure_readme_badge(&opts.target_dir, opts.specs_seed.as_ref()) {
-            Ok(action) => eprintln!("README badge: {action}"),
-            Err(e) => eprintln!("warning: Failed to update README badge: {e}"),
-        }
+        let action = ensure_readme_badge(&opts.target_dir, opts.specs_seed.as_ref())?;
+        eprintln!("README badge: {action}");
     }
 
     let mut cfg_created = 0usize;

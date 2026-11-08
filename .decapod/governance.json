@@ -813,6 +813,11 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "pr1554-initial-repair",
+      "summary": "Preserve README during validation scaffolding and reject missing required specs",
+      "input_digest": "sha256:57d188aff40ad29948912ae3d6a34b1a389bdf5a441ea893a2fe4874349c4c08"
     }
   ],
   "intents": {

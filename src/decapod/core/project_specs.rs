@@ -825,7 +825,10 @@ pub fn verify_specs_manifest(
     for spec in LOCAL_PROJECT_SPECS {
         let path = project_root.join(spec.path);
         if !path.exists() {
-            continue;
+            return Err(error::DecapodError::ValidationError(format!(
+                "required living spec missing: {}",
+                spec.path
+            )));
         }
         let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
         let content_hash = hash_text(&body);

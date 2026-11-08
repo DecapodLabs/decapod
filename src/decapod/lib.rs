@@ -1608,7 +1608,7 @@ fn init_with_from_config(
         agents: has("AGENTS.md"),
         specs: config.init.specs,
         ci: config.init.ci,
-        readme_badge: config.init.readme_badge,
+        readme_badge: false,
         diagram_style: config.init.diagram_style,
         product_name: config.repo.product_name.clone(),
         product_summary: config.repo.product_summary.clone(),
