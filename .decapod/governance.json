@@ -645,6 +645,14 @@
       "proof_refs": [
         "src/decapod/core/todo.rs"
       ]
+    },
+    {
+      "id": "wip-1469-custody-2",
+      "summary": "Preserve in-progress src/decapod/core/workspace.rs for review. The earlier 36-test plugin result predates later changes. Current admission, recovery, integration boundaries, living-spec refresh, full validation and PR readiness remain unverified. Original PR and uncommitted source checkout remain preserved.",
+      "input_digest": "sha256:2885a5319442ec535c5f27ea5e2784cff0c2cc4c8ff4ed7fceee000a3d3ebf87",
+      "proof_refs": [
+        "src/decapod/core/workspace.rs"
+      ]
     }
   ],
   "intents": {

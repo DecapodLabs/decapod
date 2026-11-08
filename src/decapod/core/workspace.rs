@@ -240,6 +240,17 @@ pub fn prune_stale_worktree_config(repo_root: &Path) -> Result<usize, DecapodErr
 
 /// Get workspace status
 pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, DecapodError> {
+    let caller = std::env::var("DECAPOD_AGENT_ID")
+        .ok()
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| "unknown".to_string());
+    get_workspace_status_for_caller(repo_root, Some(&caller))
+}
+
+fn get_workspace_status_for_caller(
+    repo_root: &Path,
+    caller: Option<&str>,
+) -> Result<WorkspaceStatus, DecapodError> {
     let git = check_git_status(repo_root)?;
     let container = check_container_status(repo_root)?;
 
@@ -268,13 +279,33 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
             .push("Run `decapod workspace ensure` and cd into the created worktree".to_string());
     }
 
-    let authoring_state = authoring_state_for_status(repo_root, &git);
+    let authoring_state = authoring_state_for_status(repo_root, &git, caller);
     let git_ready = !git.is_main_repo && !git.is_protected && git.in_worktree;
-    let can_work = match authoring_state {
-        Some(crate::core::fleet_coord::AuthoringState::Admissible) => git_ready,
-        Some(_) => false,
-        None => !git.is_main_repo && !git.is_protected,
+    let managed = git.in_worktree && is_canonical_decapod_workspace_path(repo_root);
+    let can_work = if managed {
+        git_ready
+            && matches!(
+                authoring_state,
+                Some(crate::core::fleet_coord::AuthoringState::Admissible)
+            )
+    } else {
+        !git.is_main_repo && !git.is_protected
     };
+    if managed && !can_work && !git.is_protected {
+        let detail = match authoring_state {
+            Some(state) => format!("{state:?}"),
+            None => "admission evidence unavailable".to_string(),
+        };
+        blockers.push(Blocker {
+            kind: BlockerKind::Unauthorized,
+            message: format!(
+                "Managed workspace is not authoring-admissible ({detail}). Missing, unreadable, or stale admission evidence does not grant can_work."
+            ),
+            resolve_hint: "Claim the branch task, then run `decapod workspace ensure` so the checkout binding is current.".to_string(),
+        });
+        required_actions
+            .push("Run `decapod workspace ensure` after the task lease is current".to_string());
+    }
     let root_isolation = git
         .is_main_repo
         .then(|| root_isolation(repo_root))
@@ -294,6 +325,7 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
 fn authoring_state_for_status(
     repo_root: &Path,
     git: &GitStatus,
+    caller: Option<&str>,
 ) -> Option<crate::core::fleet_coord::AuthoringState> {
     if !git.in_worktree || !is_canonical_decapod_workspace_path(repo_root) {
         return None;
@@ -304,16 +336,9 @@ fn authoring_state_for_status(
     if !store.join(crate::core::schemas::LOCAL_DB_NAME).exists() {
         return None;
     }
-    let observed = observe_checkout(repo_root);
-    todo::read_authoring_admission(
-        &store,
-        &observed.repository_id,
-        &observed.worktree_id,
-        &observed.branch,
-        observed.registered,
-    )
-    .ok()
-    .map(|admission| admission.state)
+    todo::read_authoring_admission_with_caller(&store, repo_root, caller)
+        .ok()
+        .map(|admission| admission.state)
 }
 
 fn check_git_status(repo_root: &Path) -> Result<GitStatus, DecapodError> {
@@ -675,7 +700,7 @@ pub fn ensure_workspace(
         ))
     })?;
 
-    let mut status = get_workspace_status(repo_root)?;
+    let mut status = get_workspace_status_for_caller(repo_root, Some(agent_id))?;
     let upgrade_container = config.as_ref().map(|c| c.use_container).unwrap_or(false);
     let assigned_todos =
         ensure_assigned_open_tasks(repo_root, agent_id, &status.git.current_branch)?;
@@ -699,30 +724,8 @@ pub fn ensure_workspace(
     }
 
     if status.git.in_worktree && is_canonical_decapod_workspace_path(repo_root) {
-        if let Ok(main) = get_main_repo_root(repo_root) {
-            let store = main.join(".decapod/data");
-            if store.join(crate::core::schemas::LOCAL_DB_NAME).exists() {
-                let observed = observe_checkout(repo_root);
-                if let Ok(admission) = todo::admit_checkout_binding(
-                    &store,
-                    &observed.repository_id,
-                    &observed.worktree_id,
-                    &observed.branch,
-                    observed.registered,
-                ) {
-                    if matches!(
-                        admission.state,
-                        crate::core::fleet_coord::AuthoringState::SharedCheckout
-                            | crate::core::fleet_coord::AuthoringState::Stale
-                    ) {
-                        return Err(DecapodError::ValidationError(format!(
-                            "AUTHORING_NOT_ADMITTED: {admission:?}"
-                        )));
-                    }
-                    status = get_workspace_status(repo_root)?;
-                }
-            }
-        }
+        admit_managed_workspace(&store_root, repo_root, agent_id)?;
+        status = get_workspace_status_for_caller(repo_root, Some(agent_id))?;
     }
 
     if status.can_work
@@ -833,6 +836,10 @@ pub fn ensure_workspace(
     )?;
     refresh_workspace_release_surfaces(&worktree_path)?;
 
+    if is_canonical_decapod_workspace_path(&worktree_path) {
+        admit_managed_workspace(&store_root, &worktree_path, agent_id)?;
+    }
+
     // 2. Ensure container (if requested)
     if config.use_container {
         let mut ownership =
@@ -845,7 +852,7 @@ pub fn ensure_workspace(
 
         // Return blocker telling agent to enter container
         // We re-read status but override the blocker/container info
-        status = get_workspace_status(&worktree_path)?;
+        status = get_workspace_status_for_caller(&worktree_path, Some(agent_id))?;
         let container_command = container_workspace_launch_command(
             &main_repo,
             &worktree_path,
@@ -866,9 +873,19 @@ pub fn ensure_workspace(
     }
 
     // Return the exact pre-setup ownership inventory, including ignored paths.
-    let mut result = get_workspace_status(&worktree_path)?;
+    let mut result = get_workspace_status_for_caller(&worktree_path, Some(agent_id))?;
     result.root_isolation = Some(source_inventory);
     Ok(result)
+}
+
+fn admit_managed_workspace(store: &Path, checkout: &Path, agent: &str) -> Result<(), DecapodError> {
+    let admission = todo::admit_checkout_binding(store, checkout, agent)?;
+    if admission.state != crate::core::fleet_coord::AuthoringState::Admissible {
+        return Err(DecapodError::ValidationError(format!(
+            "AUTHORING_NOT_ADMITTED: {admission:?}"
+        )));
+    }
+    Ok(())
 }
 
 fn create_worktree(
@@ -1245,6 +1262,9 @@ fn git_output(path: &Path, args: &[&str]) -> Option<String> {
 
 fn canonical_dir(path: &Path) -> Option<PathBuf> {
     let canonical = std::fs::canonicalize(path).ok()?;
+    if !path.is_absolute() || path != canonical {
+        return None;
+    }
     let meta = std::fs::symlink_metadata(&canonical).ok()?;
     if meta.file_type().is_symlink() || !meta.is_dir() {
         None
