@@ -707,6 +707,14 @@
       "proof_refs": [
         "v0131_merge"
       ]
+    },
+    {
+      "id": "ckpt-final-v0131-1794097354",
+      "summary": "Final checkpoint after v0.131.0 merge; re-reviewed three canonical specs as unchanged-with-reason; specs.refresh with signal 896b9ee9...",
+      "input_digest": "sha256:55a67e967b1e90152ad9d734a8bab62d23c58cfefea373ff3edfd27103db1970",
+      "proof_refs": [
+        "final_v0131"
+      ]
     }
   ],
   "intents": {
@@ -745,24 +753,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the current contract against the governed-transition judgment, canonical state snapshot, and proof reconstruction. The prose matches the implementation.",
-          "reviewed_code_fingerprint": "f877bcaa85918acff695d8c3cde0da1fdd755f4b25efceb03edf6d074513d272",
+          "reason": "No authored architecture change in this PR set; merged master v0.131.0; only the regenerated repo signal fingerprint line",
+          "reviewed_code_fingerprint": "896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a",
           "spec_material_hash": "35697f40069a3b915e9959a3dfae96da24779b4c3e85b78a79b78911636e4eea"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the current contract against the governed-transition judgment, canonical state snapshot, and proof reconstruction. The prose matches the implementation.",
-          "reviewed_code_fingerprint": "f877bcaa85918acff695d8c3cde0da1fdd755f4b25efceb03edf6d074513d272",
+          "reason": "No authored content change in this PR set; merged master v0.131.0; only regenerated repo signal fingerprint line",
+          "reviewed_code_fingerprint": "896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a",
           "spec_material_hash": "590f81aa227ed6ad6a39adf9a111f36ed8413b3a127b32cde1fd208160871b22"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Security contract prose is unchanged. The attestation refresh only records the new repository fingerprint.",
-          "reviewed_code_fingerprint": "f877bcaa85918acff695d8c3cde0da1fdd755f4b25efceb03edf6d074513d272",
+          "reason": "No authored security change in this PR set; merged master v0.131.0; only the regenerated repo signal fingerprint line",
+          "reviewed_code_fingerprint": "896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -774,7 +782,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794094004Z"
+      "updated_at": "1794097325Z"
     },
     "trajectory": {
       "active_boundaries": [
