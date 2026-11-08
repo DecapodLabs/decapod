@@ -1490,6 +1490,11 @@
       "id": "fix1544-operations-sqlite-prose",
       "summary": "Restore the #1536 SQLite runtime prose in OPERATIONS.md that the v0.130.0-era seed had accidentally dropped when rebasing onto v0.130.1; only the refreshed attestation fingerprint differs from master",
       "input_digest": "sha256:a51ccb1fa2983f5be52d034291576bc67a5a27965d8f3d9923acefece38b9a85"
+    },
+    {
+      "id": "fix-vega-spec-reviews",
+      "summary": "Re-record ARCHITECTURE (updated), INTERFACES (unchanged-with-reason), SECURITY (unchanged-with-reason) spec reviews at clean-tree fingerprint 515b558e after v0.131.0 rebase and specs.refresh; clears STALE_SPEC_REVIEW",
+      "input_digest": "sha256:fe57bfbc8cb18e5648665e0c5915e02f9470fc0c43e73b91a6599ac5eaa22971"
     }
   ],
   "intents": {
@@ -1530,22 +1535,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Material update stands: Repository-declared local proof section documents the named-executable native format rejection (#1544); re-reviewed against the current clean-tree fingerprint after the v0.130.1 projection regen",
-          "reviewed_code_fingerprint": "4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3",
+          "reason": "Material update: the vega-native toolchain was removed entirely (resolves dependabot #5, #6); ARCHITECTURE.md updated to reflect removal; re-reviewed against current clean-tree fingerprint 83b268db",
+          "reviewed_code_fingerprint": "515b558eba3a7791ad8ae47f97a670103ef740bdcf9f938e99ad62e267ee5b3f",
           "spec_material_hash": "90fea94969cbcae7abcf34ffc569abe2ce309184968264761102b303daf05e6e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No prose change from #1544; INTERFACES.md does not document the rejection message text. Re-reviewed against the current clean-tree fingerprint after the v0.130.1 projection regen",
-          "reviewed_code_fingerprint": "4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3",
+          "reason": "No prose change from vega-native removal; INTERFACES.md does not document the removed modules. Re-reviewed against current clean-tree fingerprint 83b268db",
+          "reviewed_code_fingerprint": "515b558eba3a7791ad8ae47f97a670103ef740bdcf9f938e99ad62e267ee5b3f",
           "spec_material_hash": "b0b006e30f3daa0640ee220aeced9c12b530f26516cd6e57107896726d4dfba5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No prose change from #1544; the rejection remains a hard gate with more diagnostic detail only. Re-reviewed against the current clean-tree fingerprint after the v0.130.1 projection regen",
-          "reviewed_code_fingerprint": "4cedaf57f75ef4a5769831741af03ba404aa22d1093038abb21ba7b4e85d09e3",
+          "reason": "No prose change from vega-native removal; the security posture is improved by removing vulnerable code. Re-reviewed against current clean-tree fingerprint 83b268db",
+          "reviewed_code_fingerprint": "515b558eba3a7791ad8ae47f97a670103ef740bdcf9f938e99ad62e267ee5b3f",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -1557,7 +1562,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794042826Z"
+      "updated_at": "1794097136Z"
     },
     "trajectory": {
       "active_boundaries": [
