@@ -618,6 +618,11 @@
       "id": "ck-pr1564-019",
       "summary": "Refresh GEMINI.md entrypoint fingerprint projection via project-check --refresh-specs",
       "input_digest": "sha256:95a16255eb083079133739faa0359be49db8c11b6523930bab45246c10739628"
+    },
+    {
+      "id": "ck-pr1564-020",
+      "summary": "Record plan init and spec review dispositions (ARCHITECTURE updated; INTERFACES and SECURITY unchanged-with-reason) after stable projection refresh",
+      "input_digest": "sha256:a9e80996ffdd9a0630152841076e6159b88077e3d121bcd690e2a5e9e221a330"
     }
   ],
   "intents": {
@@ -689,6 +694,50 @@
     }
   },
   "sections": {
+    "plan": {
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
+      "intent": "Land the state.resolve publication-eligibility regression tests on a fresh PR identity with per-commit checkpoints, refreshed projections, and honest spec review dispositions so all GitHub Actions and Buildkite checks pass.",
+      "phases": [],
+      "proof_hooks": [],
+      "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "ARCHITECTURE.md materially documents the state.resolve/state.diff governed-state projection and publication-eligibility semantics added in this PR; reviewed against current source.",
+          "reviewed_code_fingerprint": "93b07b750dd60d2bc9c8b28590fc73c38787b46335d8a015a649fbf6f277522b",
+          "spec_material_hash": "c70b549eb1e3915aca0fe666a8aae4ea4f28a5873ea8e330c86b8daf3af8ad4f"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "INTERFACES.md has no material content change in this PR (attestation/fingerprint refresh only); state.resolve eligibility is internal RPC behavior documented in ARCHITECTURE.md.",
+          "reviewed_code_fingerprint": "93b07b750dd60d2bc9c8b28590fc73c38787b46335d8a015a649fbf6f277522b",
+          "spec_material_hash": "b01b699680818592767fc4ae7b487c02d5906d7f3da36a0891386af2d711ba8a"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "SECURITY.md has no material content change in this PR (attestation/fingerprint refresh only); no security-relevant behavior change beyond the documented state.resolve eligibility gating.",
+          "reviewed_code_fingerprint": "93b07b750dd60d2bc9c8b28590fc73c38787b46335d8a015a649fbf6f277522b",
+          "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
+        }
+      ],
+      "state": "DRAFT",
+      "stop_conditions": [],
+      "title": "Fix PR #1564 CI: restore state.resolve regression tests with governed checkpoints and spec reviews",
+      "todo_ids": [
+        "bugs_01m6x6q0k31mak82"
+      ],
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1794130262Z"
+    },
     "trajectory": {
       "active_boundaries": [
         "Repository validation and tracked proof artifacts"
@@ -790,37 +839,41 @@
       },
       "decapod_release": "0.132.0",
       "drift_findings": [],
-      "elapsed_ms": 13168,
+      "elapsed_ms": 13066,
       "epoch_ref": "ve_4b4802498c17c573",
       "fail_count": 0,
       "failures": [],
       "gate_timings": [
         {
-          "elapsed_ms": 1287,
+          "elapsed_ms": 1272,
           "name": "validate_project_specs_docs"
         },
         {
-          "elapsed_ms": 874,
+          "elapsed_ms": 878,
           "name": "validate_validation_rules"
         },
         {
-          "elapsed_ms": 768,
+          "elapsed_ms": 766,
           "name": "validate_markdown_primitives_roundtrip_gate"
         },
         {
-          "elapsed_ms": 706,
+          "elapsed_ms": 686,
           "name": "validate_machine_contract"
         },
         {
-          "elapsed_ms": 277,
+          "elapsed_ms": 279,
           "name": "validate_canon_mutation"
         },
         {
-          "elapsed_ms": 262,
+          "elapsed_ms": 275,
+          "name": "validate_no_legacy_namespaces"
+        },
+        {
+          "elapsed_ms": 267,
           "name": "validate_watcher_purity"
         },
         {
-          "elapsed_ms": 259,
+          "elapsed_ms": 262,
           "name": "validate_knowledge_integrity"
         },
         {
@@ -828,23 +881,19 @@
           "name": "validate_policy_integrity"
         },
         {
-          "elapsed_ms": 247,
+          "elapsed_ms": 243,
           "name": "validate_risk_map_violations"
         },
         {
-          "elapsed_ms": 239,
+          "elapsed_ms": 217,
           "name": "validate_lineage_hard_gate"
         },
         {
-          "elapsed_ms": 195,
-          "name": "validate_no_legacy_namespaces"
-        },
-        {
-          "elapsed_ms": 178,
+          "elapsed_ms": 184,
           "name": "validate_obligations"
         },
         {
-          "elapsed_ms": 121,
+          "elapsed_ms": 125,
           "name": "validate_legacy_jsonl_retired"
         },
         {
@@ -852,80 +901,84 @@
           "name": "validate_schema_determinism"
         },
         {
-          "elapsed_ms": 108,
+          "elapsed_ms": 98,
           "name": "validate_federation_gates"
         },
         {
-          "elapsed_ms": 87,
+          "elapsed_ms": 86,
           "name": "validate_embedded_self_contained"
-        },
-        {
-          "elapsed_ms": 67,
-          "name": "validate_repomap_determinism"
         },
         {
           "elapsed_ms": 66,
           "name": "validate_archive_integrity"
         },
         {
-          "elapsed_ms": 37,
+          "elapsed_ms": 58,
+          "name": "validate_repomap_determinism"
+        },
+        {
+          "elapsed_ms": 39,
           "name": "validate_control_plane_contract"
         },
         {
-          "elapsed_ms": 33,
+          "elapsed_ms": 31,
           "name": "validate_interface_contract_bootstrap"
         },
         {
-          "elapsed_ms": 30,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
-          "elapsed_ms": 26,
+          "elapsed_ms": 27,
           "name": "validate_gatekeeper_gate"
         },
         {
-          "elapsed_ms": 19,
-          "name": "validate_lcm_rebuild_gate"
+          "elapsed_ms": 25,
+          "name": "validate_generated_artifact_whitelist"
+        },
+        {
+          "elapsed_ms": 20,
+          "name": "validate_override_authority"
         },
         {
           "elapsed_ms": 18,
+          "name": "validate_lcm_immutability"
+        },
+        {
+          "elapsed_ms": 17,
           "name": "validate_health_purity"
         },
         {
           "elapsed_ms": 17,
-          "name": "validate_override_authority"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_repo_map"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_entrypoint_invariants"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_project_config_toml"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_knowledge_promotions_if_present"
-        },
-        {
-          "elapsed_ms": 17,
-          "name": "validate_lcm_immutability"
+          "name": "validate_lcm_rebuild_gate"
         },
         {
           "elapsed_ms": 16,
           "name": "validate_watcher_audit"
         },
         {
-          "elapsed_ms": 12,
-          "name": "validate_context_capsules_if_present"
+          "elapsed_ms": 15,
+          "name": "validate_validation_receipt_if_present"
+        },
+        {
+          "elapsed_ms": 15,
+          "name": "validate_project_config_toml"
+        },
+        {
+          "elapsed_ms": 15,
+          "name": "validate_entrypoint_invariants"
+        },
+        {
+          "elapsed_ms": 15,
+          "name": "validate_trajectory_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 15,
+          "name": "validate_knowledge_promotions_if_present"
+        },
+        {
+          "elapsed_ms": 14,
+          "name": "validate_recursive_improvement_passes_if_present"
         },
         {
           "elapsed_ms": 12,
-          "name": "validate_context_capsule_policy_contract"
+          "name": "validate_repo_map"
         },
         {
           "elapsed_ms": 12,
@@ -933,15 +986,7 @@
         },
         {
           "elapsed_ms": 12,
-          "name": "validate_recursive_improvement_passes_if_present"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_eval_gate_if_required"
-        },
-        {
-          "elapsed_ms": 12,
-          "name": "validate_database_schema_versions"
+          "name": "validate_state_commit_gate"
         },
         {
           "elapsed_ms": 12,
@@ -949,43 +994,15 @@
         },
         {
           "elapsed_ms": 12,
-          "name": "validate_validation_receipt_if_present"
+          "name": "validate_git_push_pr_gate"
         },
         {
-          "elapsed_ms": 12,
-          "name": "validate_health_cache_integrity"
-        },
-        {
-          "elapsed_ms": 11,
-          "name": "validate_trajectory_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 11,
+          "elapsed_ms": 10,
           "name": "validate_project_scoped_state"
         },
         {
-          "elapsed_ms": 11,
-          "name": "validate_tooling_gate"
-        },
-        {
           "elapsed_ms": 10,
-          "name": "validate_git_workspace_context"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_heartbeat_invocation_gate"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_git_protected_branch"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 10,
-          "name": "validate_coplayer_policy_tightening"
+          "name": "validate_database_schema_versions"
         },
         {
           "elapsed_ms": 10,
@@ -993,39 +1010,71 @@
         },
         {
           "elapsed_ms": 10,
-          "name": "validate_internalization_artifacts_if_present"
+          "name": "validate_heartbeat_invocation_gate"
         },
         {
           "elapsed_ms": 10,
-          "name": "validate_risk_map"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_state_commit_gate"
-        },
-        {
-          "elapsed_ms": 9,
           "name": "validate_docs_templates_bucket"
         },
         {
-          "elapsed_ms": 9,
+          "elapsed_ms": 10,
+          "name": "validate_health_cache_integrity"
+        },
+        {
+          "elapsed_ms": 10,
           "name": "validate_root_dockerfile_seed_detection"
         },
         {
-          "elapsed_ms": 9,
-          "name": "validate_git_push_pr_gate"
+          "elapsed_ms": 10,
+          "name": "validate_tooling_gate"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_git_protected_branch"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_coplayer_policy_tightening"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_stale_workspaces"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_plan_governed_execution_gate"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_git_workspace_context"
         },
         {
           "elapsed_ms": 9,
-          "name": "validate_stale_workspaces"
+          "name": "validate_context_capsules_if_present"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_context_capsule_policy_contract"
+        },
+        {
+          "elapsed_ms": 8,
+          "name": "validate_eval_gate_if_required"
+        },
+        {
+          "elapsed_ms": 8,
+          "name": "validate_risk_map"
+        },
+        {
+          "elapsed_ms": 8,
+          "name": "validate_internalization_artifacts_if_present"
         }
       ],
-      "git_revision": "e1e3e380b2d8b5dde3176216f400862234f1146b",
+      "git_revision": "2e4c7a7dae173d919f8c6de66e98839dddec8732",
       "kind": "validation_receipt",
       "parallelism": 1,
-      "pass_count": 191,
+      "pass_count": 192,
       "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:e20f57f99eea4fdf457912e4d804ebe8b94b31a534d9c6ff6a1ce4d10692a184",
+      "receipt_hash": "sha256:b91c4f1c8f3f34d50f516d80eb570d6908ac8bb2d6ca62f260c053f1a241466a",
       "repo_signal_fingerprint": "93b07b750dd60d2bc9c8b28590fc73c38787b46335d8a015a649fbf6f277522b",
       "schema_version": "1.0.0",
       "status": "ok",
