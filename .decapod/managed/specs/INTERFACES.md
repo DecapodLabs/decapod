@@ -21,11 +21,15 @@ includes `blocker_class` and `required_capability`. Those fields describe the
 blocker. They are not an instruction to the harness.
 
 `judge_completion_with_verifier` is the completion judgment plus an optional
-list of isolation axes. An empty list preserves `judge_completion`.
-`judge_verifier_integrity` answers only the envelope. `attest_capability`
-answers one `CapabilityAttestation` against the current identity.
+list of isolation axes. An empty list preserves `judge_completion` and ignores
+the envelope. `judge_verifier_integrity` checks each required axis against that
+axis's evidence reference and checks `canonical_input_hash` against the
+completion `inputs_hash`. `attest_capability` keeps observed support only when
+the attestation carries a usable evidence reference and a current identity.
 `admit_operation_surface` answers whether an operation class may write the
-given paths. None of these functions is a new RPC, and none selects work.
+given paths. None of these functions is a new RPC, and none selects work. A
+missing blocker class means the cause is unclassified. It does not mean
+`state`.
 
 ## Claim scope acceptance
 
