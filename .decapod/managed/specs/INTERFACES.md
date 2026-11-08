@@ -1,5 +1,23 @@
 # Interfaces
 
+## Publication projection
+
+`interop.project` validation reports expose `proof_judgment` alongside
+`publication_ready`. Eligibility comes from `project_report_publication`.
+A report that only sets `publication_ready` or `passes` stays ineligible.
+A fresh pass with a non-empty head and a receipt digest can be `proven`.
+Stale rules or verifier identity, a failed status, missing canonical state,
+and a corrupt status stay distinct and are not publishable.
+
+`state commit verify` requires the scope-record bytes and an expected root.
+Omitting the root is an error, not a successful verification.
+
+`state.resolve` remains the canonical snapshot. `judge_stored_verification`
+re-hashes the files named by a verification row and binds that digest to the
+snapshot. The row's status field is not accepted as proof. Governed-transition
+decisions are appended to the `traces` stream that `decapod flight-recorder`
+already renders.
+
 ## Claim scope acceptance
 
 `todo add --scope 'paths:["src/a.rs"]'` declares the files an exclusive claim
@@ -768,11 +786,7 @@ rationale; that record does not authenticate the human or prove semantic truth.
 Agents directly author semantic prose in `.decapod/managed/specs/*.md` inside
 their isolated workspace. Generated attestations, capability blocks, overlays,
 fingerprints, and manifests remain CLI-owned, as does all other machine-owned
-control-plane state. The generated specs manifest lives at
-`.decapod/managed/.manifest.json` (#1079), outside the living-spec directory;
-the legacy `.decapod/managed/specs/.manifest.json` location is read-only
-compatibility for existing repositories and is removed on the next refresh.
-Supported refresh is `rpc --op specs.refresh` or
+control-plane state. Supported refresh is `rpc --op specs.refresh` or
 `validate --refresh-specs`; there is no top-level `specs.refresh` command.
 Refresh preserves authored content and refuses `SPEC_REFRESH_AUTHORED_CONTENT_LOSS`
 before writing any specification or manifest. A material authored change remains
@@ -1129,8 +1143,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d3a56466c77191039603c020b4306f1dd6a283f085a29932925a2146a8949a27`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (42 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
+- Repository signal fingerprint: `896b9ee979dc3688bf18a2c59adab3cc92a3bec972e8adff676d2209a224033a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (42 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1185,20 +1199,6 @@ pre-#1531 serialized identity and digests.
 retain authored configuration even under `--force`; explicit arguments still change
 it. The generated GitHub validation workflow fetches complete history and supplies
 immutable `CHANGE_EVENT`, `CHANGE_BASE` and `CHANGE_HEAD` to CI-local validation.
-
-### README badge on init (#1023) and specs manifest location (#1079)
-
-`init` and `init with` accept `--no-readme-badge`; the persisted
-`[init] readme_badge` setting in `.decapod/config.toml` defaults to `true` and
-preserves an authored value when the flag is omitted. When enabled, scaffolding
-inserts the version-matched badge
-`[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v<release>-dc2626)](https://github.com/DecapodLabs/decapod)`
-directly below the first top-level heading of the root `README.md` (creating a
-minimal `# <product name>` README when absent), is idempotent, and never writes
-during `--dry-run`. The specs manifest lives at `.decapod/managed/.manifest.json`;
-the legacy `.decapod/managed/specs/.manifest.json` path is read as a fallback and
-removed on refresh, and scaffolding preserves `generated_at` when every other
-manifest field matches.
 
 ## Local CPU companion and model-free startup protocol
 

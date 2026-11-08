@@ -490,6 +490,37 @@ pub struct InteropProjectResult {
     pub projection: serde_json::Value,
 }
 
+// State Subsystem
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StateResolveParams {
+    pub workunit_id: Option<String>,
+    pub trajectory_run_id: Option<String>,
+    pub intent_id: Option<String>,
+    pub obligation_id: Option<String>,
+    pub include_proof_details: Option<bool>,
+    pub include_obligation_graph: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StateResolveResult {
+    pub resolution: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StateDiffParams {
+    pub from_state_commit: Option<String>,
+    pub to_state_commit: Option<String>,
+    pub from_revision: Option<String>,
+    pub to_revision: Option<String>,
+    pub from_workunit_id: Option<String>,
+    pub to_workunit_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StateDiffResult {
+    pub diff: serde_json::Value,
+}
+
 pub fn default_request_id() -> String {
     crate::core::ulid::new_ulid()
 }
@@ -961,6 +992,42 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 stability: "alpha".to_string(),
                 cost: "low".to_string(),
             },
+            Capability {
+                name: "state.resolve".to_string(),
+                description:
+                    "Resolve authoritative governed state projection from canonical sources"
+                        .to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "state.diff".to_string(),
+                description:
+                    "Compute governed-state diff between two states/state commits/revisions"
+                        .to_string(),
+                stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "interop.manifest".to_string(),
+                description: "Return the built-in interop manifest".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "interop.negotiate".to_string(),
+                description: "Negotiate interop compatibility with another Decapod instance"
+                    .to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "interop.project".to_string(),
+                description: "Project a manifest against the current repository's interop profile"
+                    .to_string(),
+                stability: "alpha".to_string(),
+                cost: "medium".to_string(),
+            },
         ],
         subsystems: vec![
             SubsystemInfo {
@@ -1040,6 +1107,20 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                     "orientation".to_string(),
                     "validate".to_string(),
                     "budget".to_string(),
+                ],
+            },
+            SubsystemInfo {
+                name: "state".to_string(),
+                status: "active".to_string(),
+                ops: vec!["resolve".to_string(), "diff".to_string()],
+            },
+            SubsystemInfo {
+                name: "interop".to_string(),
+                status: "active".to_string(),
+                ops: vec![
+                    "manifest".to_string(),
+                    "negotiate".to_string(),
+                    "project".to_string(),
                 ],
             },
         ],

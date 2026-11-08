@@ -43,6 +43,7 @@ pub mod fs_permissions;
 pub mod gatekeeper;
 pub mod governance_artifacts;
 pub mod governance_document;
+pub mod governed_transition;
 pub mod group_broker;
 pub mod http_transport;
 pub mod init_reconciliation;
@@ -64,6 +65,7 @@ pub mod readiness_evidence;
 pub mod readiness_profile;
 pub mod release_archive;
 pub mod repository_profile;
+pub mod state;
 // The standalone helper and runtime share one classifier module per crate.
 pub use readiness_profile::source::workflow_owned::release_classifier::implementation as release_metadata;
 pub mod release_projection_drift;

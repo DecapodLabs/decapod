@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.131.0](https://github.com/DecapodLabs/decapod/compare/v0.130.2...v0.131.0) - 2026-11-07
+
+### Other
+
+- record the publication repair in the audit
+- *(governance)* record the unchanged security spec review
+- *(governance)* bind the trajectory to the governed plan
+- *(governance)* record current spec reviews
+- record .decapod/managed/Dockerfile.decapod
+- record GEMINI.md
+- record CODEX.md
+- record CLAUDE.md
+- record AGENTS.md
+- record tests/unit/core/work_claim_tests.rs
+- record tests/unit/core/projection_tests.rs
+- record tests/created_branch_workflow_policy.rs
+- record src/decapod/lib.rs
+- record src/decapod/core/validation_rules.rs
+- record src/decapod/core/validate.rs
+- record src/decapod/core/todo.rs
+- record src/decapod/core/state_commit.rs
+- record src/decapod/core/state.rs
+- record src/decapod/core/rpc.rs
+- record src/decapod/core/projection.rs
+- record src/decapod/core/mod.rs
+- record src/decapod/core/governed_transition.rs
+- record docs/audits/governed-state-machine-audit.md
+- record docs/architecture/governed-transitions.md
+- record docs/architecture/governed-execution.md
+- record .decapod/managed/specs/VALIDATION.md
+- record .decapod/managed/specs/SEMANTICS.md
+- record .decapod/managed/specs/SECURITY.md
+- record .decapod/managed/specs/README.md
+- record .decapod/managed/specs/OPERATIONS.md
+- record .decapod/managed/specs/INTERFACES.md
+- record .decapod/managed/specs/INTENT.md
+- record .decapod/managed/specs/ARCHITECTURE.md
+- record .decapod/managed/specs/.manifest.json
+- *(governance)* begin the governed-transition pull request
+
 ## [0.130.2](https://github.com/DecapodLabs/decapod/compare/v0.130.1...v0.130.2) - 2026-11-07
 
 ### Fixed

@@ -280,6 +280,12 @@ pub fn prove(input: &StateCommitInput, repo_root: &Path) -> Result<StateCommitOu
 }
 
 pub fn verify(scope_record_bytes: &[u8], expected_root: &str) -> Result<String, String> {
+    if scope_record_bytes.is_empty() || expected_root.trim().is_empty() {
+        return Err(
+            "STATE_COMMIT verification failed: missing scope record or expected root; ambiguous input is not success"
+                .to_string(),
+        );
+    }
     let mut hasher = Sha256::new();
     hasher.update(scope_record_bytes);
     let actual_hash = format!("{:x}", hasher.finalize());
@@ -291,4 +297,31 @@ pub fn verify(scope_record_bytes: &[u8], expected_root: &str) -> Result<String, 
     } else {
         Ok(actual_hash)
     }
+}
+
+/// A matching scope-record hash proves those bytes. It does not authorize a
+/// later head, rule set, or verifier. Mismatched or incomplete identity is
+/// stale or unknown, never current.
+pub fn freshness(
+    committed_head: &str,
+    committed_rules: &str,
+    committed_verifier: &str,
+    current_head: &str,
+    current_rules: &str,
+    current_verifier: &str,
+) -> &'static str {
+    use crate::core::governed_transition::{StateIdentity, commit_freshness};
+    commit_freshness(
+        &StateIdentity {
+            head: committed_head.to_string(),
+            rules_fingerprint: committed_rules.to_string(),
+            verifier: committed_verifier.to_string(),
+        },
+        &StateIdentity {
+            head: current_head.to_string(),
+            rules_fingerprint: current_rules.to_string(),
+            verifier: current_verifier.to_string(),
+        },
+    )
+    .as_str()
 }
