@@ -703,6 +703,14 @@ pub fn scopes_overlap(a: &str, b: &str) -> bool {
     a.eq_ignore_ascii_case(b)
 }
 
+/// Explicit shared-resource scopes protect custody of those resources. They
+/// do not represent an isolated source checkout or grant source authoring.
+pub fn is_shared_resource_scope(scope: &str) -> bool {
+    ["integration", "release", "deployment"]
+        .iter()
+        .any(|name| scope.trim().eq_ignore_ascii_case(name))
+}
+
 /// True when two non-empty categories collide (domain claim conflict).
 pub fn categories_overlap(a: &str, b: &str) -> bool {
     let a = a.trim();
@@ -754,14 +762,19 @@ pub fn detect_overlaps(
             ));
         }
         if scopes_overlap(candidate_scope, &claim.scope) {
-            out.push(ClaimOverlap::advisory(
+            let mut overlap = ClaimOverlap::advisory(
                 claim.task_id.clone(),
                 claim.agent_id.clone(),
                 "scope_overlap",
                 "scope",
                 candidate_scope,
                 claim.scope.clone(),
-            ));
+            );
+            if is_shared_resource_scope(candidate_scope) {
+                overlap.enforced = true;
+                overlap.reason = "shared_resource_reserved".to_string();
+            }
+            out.push(overlap);
         }
         let candidate_paths = claim_paths(candidate_scope, candidate_dir);
         let existing_paths = claim_paths(&claim.scope, &claim.dir_path);

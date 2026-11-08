@@ -685,6 +685,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "wip-1469-custody-second-1",
+      "summary": "Preserve in-progress src/decapod/core/fleet_coord.rs. Focused tests and earlier Clippy have passed, but removed-checkout recovery, operation-level shared-resource enforcement, complete validation and publication readiness remain unproven.",
+      "input_digest": "sha256:cf8a8f4bc8d56b2bcd79610413cd461809cab768f56c1c371b998e66cf39d996",
+      "proof_refs": [
+        "src/decapod/core/fleet_coord.rs"
+      ]
     }
   ],
   "intents": {
@@ -735,14 +743,42 @@
       "active_boundaries": [
         "Preserve prior PR commits and original uncommitted work; do not merge or waive checks"
       ],
-      "artifact_hash": "sha256:ef6bb5fdb8d4b22dfb2e15db0b555ac68449a0007ad8893db5a8bbe470be394e",
+      "artifact_hash": "sha256:da2fd27f15d888f92caffcb24a275b32c02fc95bff77df03ac9d898079127b87",
       "checks": [
+        {
+          "name": "bootstrap-order-repaired",
+          "status": "passed"
+        },
         {
           "name": "current-candidate",
           "status": "partial"
         },
         {
+          "name": "earlier-bootstrap-orientation",
+          "status": "failed"
+        },
+        {
+          "name": "earlier-clippy",
+          "status": "failed"
+        },
+        {
+          "name": "final-candidate-validation",
+          "status": "partial"
+        },
+        {
+          "name": "intermediate-fleet-16-tests",
+          "status": "passed"
+        },
+        {
+          "name": "intermediate-todo-39-tests",
+          "status": "passed"
+        },
+        {
           "name": "original-plugin-suite",
+          "status": "passed"
+        },
+        {
+          "name": "post-lint-clippy-before-fencing-edit",
           "status": "passed"
         }
       ],
@@ -766,10 +802,17 @@
             "intent_id": "intent:run-1469-authoring-custody",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:run-1469-authoring-custody",
+            "event_id": "event:5",
+            "intent_id": "intent:run-1469-authoring-custody",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-1469-authoring-custody": {
@@ -797,6 +840,25 @@
                   "src/decapod/core, tests, living specifications and generated governance"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [],
+                "proof_refs": [
+                  "intermediate-fleet-16-tests",
+                  "intermediate-todo-39-tests",
+                  "bootstrap-order-repaired",
+                  "earlier-bootstrap-orientation",
+                  "earlier-clippy",
+                  "post-lint-clippy-before-fencing-edit",
+                  "final-candidate-validation"
+                ],
+                "scope": [
+                  "src/decapod/core, tests, living specifications and generated governance"
+                ],
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
