@@ -901,6 +901,14 @@
       "proof_refs": [
         "GEMINI.md"
       ]
+    },
+    {
+      "id": "reconcile-1469-version-only-inventory",
+      "summary": "Reconcile reviewed source inventory after accepted 0.130.0 to 0.132.0 package version changes, preserving the entire CI graph and all gates; see trajectory comparison.",
+      "input_digest": "sha256:b3cf66928fd8252392b2e0148b8b9714d28db1d77eae6dc9dfa6468d6f278d75",
+      "proof_refs": [
+        ".decapod/config.toml"
+      ]
     }
   ],
   "intents": {
@@ -951,7 +959,7 @@
       "active_boundaries": [
         "Preserve prior PR commits and original uncommitted work; do not merge or waive checks"
       ],
-      "artifact_hash": "sha256:0aec3cdb7b988aaf2f4b451eaa826d11f9463874442ae2057ada868396736315",
+      "artifact_hash": "sha256:22039e8f5e193f3bbff0cdc72147fbbed53faa835aea1b3b69113d45e7df1222",
       "checks": [
         {
           "name": "accepted-base-freshness-test",
@@ -991,6 +999,10 @@
         },
         {
           "name": "intermediate-todo-39-tests",
+          "status": "passed"
+        },
+        {
+          "name": "inventory-version-drift-reviewed",
           "status": "passed"
         },
         {
@@ -1044,10 +1056,17 @@
             "intent_id": "intent:run-1469-authoring-custody",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:run-1469-authoring-custody",
+            "event_id": "event:7",
+            "intent_id": "intent:run-1469-authoring-custody",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "run-1469-authoring-custody": {
@@ -1114,6 +1133,21 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Read-only git archive of d66d7a95 produced the previously pinned inventory 026d0003; d66d7a95 through accepted master changes discovered source files only in Cargo.toml and Cargo.lock, replacing Decapod 0.130.0 with 0.132.0. Candidate versus accepted master changes none of the discovered proof sources. The installed controller reports inventory 8dc60263 for the unchanged 0.132.0 source contract. Reconcile the reviewed pin; this is not validation or acceptance of an unsupported adapter."
+                ],
+                "proof_refs": [
+                  "inventory-version-drift-reviewed"
+                ],
+                "scope": [
+                  "src/decapod/core, tests, living specifications and generated governance"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -1122,7 +1156,8 @@
       "declared_commands": [],
       "evidence": [
         "Full validation on 5477b73f stopped with PROOF_PROFILE_RECONCILIATION_REQUIRED. The same discovered inventory digest appears in the main checkout. Project-check reported container workspace required and generated release-bound surfaces; these are not publication proof.",
-        "Original PR head preserved at 6e842a09662e549297f63461358a44712c154647 and pushed on the task-scoped replacement branch. Original plugin suite passed 36 tests before subsequent modifications; no current exact-candidate proof. Admission and event-replay repairs in progress. Original dirty checkout and failed CI preserved."
+        "Original PR head preserved at 6e842a09662e549297f63461358a44712c154647 and pushed on the task-scoped replacement branch. Original plugin suite passed 36 tests before subsequent modifications; no current exact-candidate proof. Admission and event-replay repairs in progress. Original dirty checkout and failed CI preserved.",
+        "Read-only git archive of d66d7a95 produced the previously pinned inventory 026d0003; d66d7a95 through accepted master changes discovered source files only in Cargo.toml and Cargo.lock, replacing Decapod 0.130.0 with 0.132.0. Candidate versus accepted master changes none of the discovered proof sources. The installed controller reports inventory 8dc60263 for the unchanged 0.132.0 source contract. Reconcile the reviewed pin; this is not validation or acceptance of an unsupported adapter."
       ],
       "inspected_files": [
         "src/decapod/core/fleet_coord.rs",
