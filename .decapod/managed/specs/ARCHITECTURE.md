@@ -50,6 +50,52 @@ tool semantics, coordination, policy, verification, and mechanical work, and
 frontier only for inference. No second state machine, harness adapter, or
 capability router was added.
 
+## Governed state projection and diff subsystem
+
+The `state` subsystem provides two additive RPC capabilities for governed-state observability:
+
+### state.resolve
+
+Projects the authoritative governed state from canonical Decapod sources:
+- Workunit manifest and trajectory cookies
+- Custody state (decisions, knowledge, failed paths)
+- Governance document and obligation graph
+- Proof configuration and validation receipts
+- State commit and Git identity
+
+Returns a `StateResolution` containing:
+- `revision`: Current Git revision and commit metadata
+- `objective`: Active workunit intent and status
+- `acceptance`: Task acceptance criteria and status
+- `scope`: Repository scope and constraints
+- `custody`: Decisions, knowledge candidates, failed paths, blockers
+- `dependencies`: Dependency graph with status
+- `changed_surfaces`: Changed code surfaces
+- `validation`: Validation status and proof freshness
+- `unresolved_obligations`: Pending obligations
+- `publication`: Publication eligibility and required actions
+- `admissible_actions`: Derived next actions from governance state
+- `provenance`: Source identity and verifier integrity
+
+### state.diff
+
+Computes a semantic diff between two governed states, accepting:
+- State commit IDs (from `state.resolve` or `state_commit`)
+- Git revisions
+- Workunit IDs
+
+Returns a `StateDiff` with:
+- `added`/`removed`/`changed` for each projection field
+- `proof_state_changes`: Changes in proof freshness and verifier integrity
+- `obligation_changes`: Added/removed/resolved obligations
+- `blocker_changes`: Added/removed/resolved blockers
+- `dependency_changes`: Added/removed/status-changed dependencies
+- `publication_transition`: Publication eligibility delta
+- `admissible_actions_delta`: Changed admissible actions
+
+Both operations are read-only, deterministic, and fail-closed. They derive state exclusively from canonical sources with no shadow state.
+
+
 ## Claim scope command coverage
 
 The `claim_boundaries` module in `tests/cli_contracts.rs` runs distinct CLI

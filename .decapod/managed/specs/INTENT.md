@@ -81,6 +81,45 @@ with the project when a conversation, process, model, or agent harness changes.
 It connects human intent to agent work, tool execution, produced artifacts, and
 the evidence and decisions needed for delivery.
 
+## Governed state observability
+
+The `state` subsystem adds authoritative governed-state projection and diff as
+additive RPC capabilities. This addresses the need for agents to observe the
+current governed state without modifying it.
+
+### state.resolve
+
+Projects the current governed state from all canonical Decapod sources. This
+replaces ad-hoc state inspection with a single deterministic read model.
+
+Inputs (all optional):
+- `workunit_id`: Specific workunit to resolve
+- `trajectory_run_id`: Specific trajectory run
+- `intent_id`: Specific intent
+- `obligation_id`: Specific obligation
+- `include_proof_details`: Include detailed proof state
+- `include_obligation_graph`: Include full obligation graph
+
+Output: `StateResolution` with complete governed state including revision,
+objective, acceptance, scope, custody, decisions, failed paths, blockers,
+dependencies, changed surfaces, validation/proof state, unresolved obligations,
+publication eligibility, admissible actions, and provenance.
+
+### state.diff
+
+Computes semantic diff between two governed states. Accepts:
+- `from_state_commit` / `to_state_commit`: State commit IDs
+- `from_revision` / `to_revision`: Git revisions
+- `from_workunit_id` / `to_workunit_id`: Workunit IDs
+
+Output: `StateDiff` with added/removed/changed for each projection, proof state
+changes, obligation changes, blocker changes, dependency changes, publication
+transition, and admissible actions delta.
+
+Both operations are read-only, deterministic, and fail-closed. No shadow state
+is introduced; state derives exclusively from canonical sources.
+
+
 ## Human and agent experience
 
 The human installs and initializes Decapod in the project:
