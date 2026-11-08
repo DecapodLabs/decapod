@@ -693,6 +693,14 @@
       "proof_refs": [
         ".decapod/governance.json"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-evidence-binding",
+      "summary": "Bind each isolation axis and capability attestation to its own evidence reference, and classify blockers from typed causes.",
+      "input_digest": "sha256:6e10cbb157640407945de4dff429bc1c08bfebd5e7480c76bc2b49dd290d0ba8",
+      "proof_refs": [
+        "src/decapod/core/governed_transition.rs"
+      ]
     }
   ],
   "intents": {
