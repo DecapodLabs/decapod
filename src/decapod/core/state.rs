@@ -514,7 +514,7 @@ pub struct PublicationTransition {
 // Input Parameters
 // ============================================================================
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct StateResolveParams {
     pub workunit_id: Option<String>,
     pub trajectory_run_id: Option<String>,
