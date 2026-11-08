@@ -749,6 +749,14 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "ck-vi-intent-fp",
+      "summary": "Bind the INTENT attestation to the current repository signal.",
+      "input_digest": "sha256:d330293f309f0864c6a4a5b97fe2c5a75f5fd41000fbd86cbefb50fa45714863",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
