@@ -643,6 +643,14 @@
       "proof_refs": [
         ".decapod/managed/Dockerfile.decapod"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-agents",
+      "summary": "Record the v0.131.0 release pin and entrypoint fingerprint.",
+      "input_digest": "sha256:d1a30e4cbbde2518a18567cc6162b4c86f7558d7ab815bfb56beb1cd7cf8b3c5",
+      "proof_refs": [
+        "AGENTS.md"
+      ]
     }
   ],
   "intents": {
