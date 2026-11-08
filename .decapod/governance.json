@@ -757,6 +757,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTENT.md"
       ]
+    },
+    {
+      "id": "ck-vi-semantics-fp",
+      "summary": "Bind the SEMANTICS attestation to the current repository signal.",
+      "input_digest": "sha256:cfbe2fbaf6b1176e7f43ba5c2fab89b5db599a9b4b94fbcac8cab611c3dd18dc",
+      "proof_refs": [
+        ".decapod/managed/specs/SEMANTICS.md"
+      ]
     }
   ],
   "intents": {
