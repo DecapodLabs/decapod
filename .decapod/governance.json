@@ -659,6 +659,14 @@
       "proof_refs": [
         "CLAUDE.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-codex",
+      "summary": "Record the v0.131.0 release pin and entrypoint fingerprint.",
+      "input_digest": "sha256:2e3d2ef2af97adca7a6ced9cbe1a8587a9a5902526a5f30882476d91c2694a9a",
+      "proof_refs": [
+        "CODEX.md"
+      ]
     }
   ],
   "intents": {
