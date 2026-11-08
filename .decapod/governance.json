@@ -673,6 +673,11 @@
       "id": "ck-pr1564-030",
       "summary": "chore(specs): refresh VALIDATION.md attestation for state.resolve PR #1564",
       "input_digest": "sha256:84010837c909b0a903fc729b02637c0fad8cb2c774e7c4c9646b64659dcf8b1a"
+    },
+    {
+      "id": "ck-pr1564-031",
+      "summary": "chore(governance): re-record publication spec reviews after attestation refresh for PR #1564",
+      "input_digest": "sha256:a67fe2f620665be70d4a68feb3c1ec32fed5b290ac19a691b751428b96da12b2"
     }
   ],
   "intents": {
@@ -757,24 +762,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "ARCHITECTURE.md materially documents the state.resolve/state.diff governed-state projection and publication-eligibility semantics added in this PR; reviewed against current source.",
-          "reviewed_code_fingerprint": "93b07b750dd60d2bc9c8b28590fc73c38787b46335d8a015a649fbf6f277522b",
+          "reason": "Attestation fingerprint refresh only after test doc-comment commit; authored prose unchanged from reviewed content",
+          "reviewed_code_fingerprint": "76d2dbf974d1276725230028549c5873e257f89ca38080a5c771dc93e0bf42d1",
           "spec_material_hash": "c70b549eb1e3915aca0fe666a8aae4ea4f28a5873ea8e330c86b8daf3af8ad4f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "INTERFACES.md has no material content change in this PR (attestation/fingerprint refresh only); state.resolve eligibility is internal RPC behavior documented in ARCHITECTURE.md.",
-          "reviewed_code_fingerprint": "93b07b750dd60d2bc9c8b28590fc73c38787b46335d8a015a649fbf6f277522b",
+          "reason": "Attestation fingerprint refresh only after test doc-comment commit; authored prose unchanged from reviewed content",
+          "reviewed_code_fingerprint": "76d2dbf974d1276725230028549c5873e257f89ca38080a5c771dc93e0bf42d1",
           "spec_material_hash": "b01b699680818592767fc4ae7b487c02d5906d7f3da36a0891386af2d711ba8a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "SECURITY.md has no material content change in this PR (attestation/fingerprint refresh only); no security-relevant behavior change beyond the documented state.resolve eligibility gating.",
-          "reviewed_code_fingerprint": "93b07b750dd60d2bc9c8b28590fc73c38787b46335d8a015a649fbf6f277522b",
+          "reason": "Attestation fingerprint refresh only after test doc-comment commit; authored prose unchanged from reviewed content",
+          "reviewed_code_fingerprint": "76d2dbf974d1276725230028549c5873e257f89ca38080a5c771dc93e0bf42d1",
           "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
@@ -786,7 +791,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794130262Z"
+      "updated_at": "1794136547Z"
     },
     "trajectory": {
       "active_boundaries": [
