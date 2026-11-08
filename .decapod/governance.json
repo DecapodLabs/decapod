@@ -633,6 +633,11 @@
       "id": "ck-pr1564-022",
       "summary": "chore(specs): refresh .manifest.json attestation for state.resolve PR #1564",
       "input_digest": "sha256:204f3580059ed90a5a879c9e782f050bbd8624894ff732ebcdb07b95e5e660bd"
+    },
+    {
+      "id": "ck-pr1564-023",
+      "summary": "chore(specs): refresh ARCHITECTURE.md attestation for state.resolve PR #1564",
+      "input_digest": "sha256:b2dba18be3266b8de4e727c0b805b5e39afbbce7274dde8b63119f7507f7c408"
     }
   ],
   "intents": {
