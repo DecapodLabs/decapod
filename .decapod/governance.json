@@ -603,6 +603,14 @@
       "proof_refs": [
         "src/decapod/core/todo.rs"
       ]
+    },
+    {
+      "id": "ck-1469-status-admission",
+      "summary": "Observe checkouts with bounded Git and refuse a shared or stale checkout during workspace ensure.",
+      "input_digest": "sha256:2e875488cd726c05d4d6f2850e5dea676848c980b62ce54c8514285a326aa3a5",
+      "proof_refs": [
+        "src/decapod/core/workspace.rs"
+      ]
     }
   ],
   "legacy_digests": {

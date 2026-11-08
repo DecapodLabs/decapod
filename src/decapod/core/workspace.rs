@@ -41,6 +41,10 @@ pub struct WorkspaceStatus {
     pub container: ContainerStatus,
     /// Blockers preventing work
     pub blockers: Vec<Blocker>,
+    /// Authoritative authoring admission. Absent means this status was built
+    /// before a checkout was judged.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub authoring_state: Option<crate::core::fleet_coord::AuthoringState>,
     /// Required actions before working
     pub required_actions: Vec<String>,
     /// Dirty source files are retained in place; workspaces use committed Git objects only.
@@ -264,7 +268,13 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
             .push("Run `decapod workspace ensure` and cd into the created worktree".to_string());
     }
 
-    let can_work = !git.is_main_repo && !git.is_protected;
+    let authoring_state = authoring_state_for_status(repo_root, &git);
+    let git_ready = !git.is_main_repo && !git.is_protected && git.in_worktree;
+    let can_work = match authoring_state {
+        Some(crate::core::fleet_coord::AuthoringState::Admissible) => git_ready,
+        Some(_) => false,
+        None => !git.is_main_repo && !git.is_protected,
+    };
     let root_isolation = git
         .is_main_repo
         .then(|| root_isolation(repo_root))
@@ -277,7 +287,33 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
         blockers,
         required_actions,
         root_isolation,
+        authoring_state,
     })
+}
+
+fn authoring_state_for_status(
+    repo_root: &Path,
+    git: &GitStatus,
+) -> Option<crate::core::fleet_coord::AuthoringState> {
+    if !git.in_worktree || !is_canonical_decapod_workspace_path(repo_root) {
+        return None;
+    }
+    let store = get_main_repo_root(repo_root)
+        .ok()
+        .map(|root| root.join(".decapod/data"))?;
+    if !store.join(crate::core::schemas::LOCAL_DB_NAME).exists() {
+        return None;
+    }
+    let observed = observe_checkout(repo_root);
+    todo::read_authoring_admission(
+        &store,
+        &observed.repository_id,
+        &observed.worktree_id,
+        &observed.branch,
+        observed.registered,
+    )
+    .ok()
+    .map(|admission| admission.state)
 }
 
 fn check_git_status(repo_root: &Path) -> Result<GitStatus, DecapodError> {
@@ -660,6 +696,33 @@ pub fn ensure_workspace(
             status.git.current_branch,
             render_todo_refs(&assigned_todos)
         )));
+    }
+
+    if status.git.in_worktree && is_canonical_decapod_workspace_path(repo_root) {
+        if let Ok(main) = get_main_repo_root(repo_root) {
+            let store = main.join(".decapod/data");
+            if store.join(crate::core::schemas::LOCAL_DB_NAME).exists() {
+                let observed = observe_checkout(repo_root);
+                if let Ok(admission) = todo::admit_checkout_binding(
+                    &store,
+                    &observed.repository_id,
+                    &observed.worktree_id,
+                    &observed.branch,
+                    observed.registered,
+                ) {
+                    if matches!(
+                        admission.state,
+                        crate::core::fleet_coord::AuthoringState::SharedCheckout
+                            | crate::core::fleet_coord::AuthoringState::Stale
+                    ) {
+                        return Err(DecapodError::ValidationError(format!(
+                            "AUTHORING_NOT_ADMITTED: {admission:?}"
+                        )));
+                    }
+                    status = get_workspace_status(repo_root)?;
+                }
+            }
+        }
     }
 
     if status.can_work
@@ -1172,7 +1235,7 @@ fn git_output(path: &Path, args: &[&str]) -> Option<String> {
         .arg("-C")
         .arg(path)
         .args(args)
-        .output()
+        .bounded_output(CONTROL_TIMEOUT)
         .ok()?;
     if !output.status.success() {
         return None;
