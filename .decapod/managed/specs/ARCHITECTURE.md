@@ -95,7 +95,6 @@ Returns a `StateDiff` with:
 
 Both operations are read-only, deterministic, and fail-closed. They derive state exclusively from canonical sources with no shadow state.
 
-
 ## Claim scope command coverage
 
 The `claim_boundaries` module in `tests/cli_contracts.rs` runs distinct CLI

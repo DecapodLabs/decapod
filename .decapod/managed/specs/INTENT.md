@@ -119,7 +119,6 @@ transition, and admissible actions delta.
 Both operations are read-only, deterministic, and fail-closed. No shadow state
 is introduced; state derives exclusively from canonical sources.
 
-
 ## Human and agent experience
 
 The human installs and initializes Decapod in the project:
