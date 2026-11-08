@@ -595,6 +595,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-operations-fp",
+      "summary": "Bind the OPERATIONS attestation to the current repository signal.",
+      "input_digest": "sha256:3edcda2205e77514cf13dd0bc556dc66508bb27b7fe41bbf78b89bea8055fb4c",
+      "proof_refs": [
+        ".decapod/managed/specs/OPERATIONS.md"
+      ]
     }
   ],
   "intents": {
