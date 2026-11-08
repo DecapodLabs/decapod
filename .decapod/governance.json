@@ -749,6 +749,14 @@
       "proof_refs": [
         ".decapod/managed/specs/ARCHITECTURE.md"
       ]
+    },
+    {
+      "id": "wip-1469-custody-second-9",
+      "summary": "Preserve in-progress .decapod/managed/specs/INTERFACES.md. Focused tests and earlier Clippy have passed, but removed-checkout recovery, operation-level shared-resource enforcement, complete validation and publication readiness remain unproven.",
+      "input_digest": "sha256:c698e0755d684bbab322283a247db44cc821760041d0603396235fedf8c476bc",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {

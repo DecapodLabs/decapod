@@ -11,9 +11,21 @@ usable and must propagate non-admissible outcomes. A lease renewal or handoff
 requires a current generation and owner; reading a stale binding cannot refresh
 it. Recovery cannot delete a different live checkout's binding. The explicit
 `todo release-checkout --worktree-id <id>` operation checks the binding owner
-against the current agent and records the release before another task can bind.
-Owner handoff, a removed original worktree and event replay still require
-separate recovery proof; an agent cannot silently discard an older binding.
+against the current agent, rejects release after custody has moved to another
+agent, and records the release before another task can bind.
+`todo recover-checkout-bindings` explicitly replays the bounded canonical binding
+events to restore a missing table or missing rows. It rejects conflicting rows,
+malformed history, an already-current projection, and unavailable history; it
+never overwrites another binding. Owner handoff, a removed original worktree and
+event replay still require separate execution proof; an agent cannot silently
+discard an older binding or infer it from a branch name.
+
+The exact task scopes `integration`, `release` and `deployment` reserve their
+respective shared coordination resource; those reservations do not grant source
+authoring permission or block unrelated isolated worktrees. This reservation is
+not itself proof that every integration, release or deployment adapter enforces
+it. Those operation boundaries and combined-candidate proof remain separate
+requirements.
 
 ## Publication projection
 
