@@ -797,6 +797,14 @@
       "proof_refs": [
         ".decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "ck-vi-security-fp",
+      "summary": "Bind the SECURITY attestation to the current repository signal.",
+      "input_digest": "sha256:61ddcc4f3aec6e3ae1c3dfaa6f0bf13e3398f62dffed0ce0bead34c8c868e53d",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
