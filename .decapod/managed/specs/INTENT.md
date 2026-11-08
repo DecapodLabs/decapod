@@ -23,11 +23,13 @@ The harness chooses what to attempt and the agent performs the work. Decapod
 resolves canonical state, decides whether the attempt is admissible, and judges
 whether the resulting claim is proven. It does not choose the next action. A
 passing verifier is not, by itself, an independently constrained verifier.
-Isolation is `proven_excluded` only when a native trace or an external
-observation shows the input was absent. A self-report or a harness name remains
-`unknown`. `not_proven` stays distinct from `failed`, and `unknown` stays
-distinct from `proven`. A runtime capability bound to a different governing
-identity is `stale` and does not satisfy a freshness-sensitive requirement.
+Each isolation axis needs its own usable evidence reference. A native-trace
+label, a self-report, or a harness name does not prove that axis, and evidence
+for one axis does not prove another. The verifier must also have reviewed the
+same input digest as the completion evidence. `not_proven` stays distinct from
+`failed`, and `unknown` stays distinct from `proven`. A capability is `stale`
+only when a usable evidence reference is bound to a different governing
+identity. An unknown judgment is not automatically a state blocker.
 
 Concurrent local agents and worktrees must retain their own caller identity in
 results, task ownership and audit evidence while sharing canonical storage.
