@@ -212,6 +212,65 @@ The product is a local-first command-line runtime with a structured process RPC
 surface. Agents invoke it at decision and state-transition boundaries. Durable
 repository records provide continuity instead of a resident orchestration service.
 
+
+## State Subsystem
+
+The `state` subsystem provides two additive RPC capabilities for governed-state observability:
+
+### state.resolve
+
+Projects the authoritative governed state from canonical Decapod sources:
+- Workunit manifest and trajectory cookies
+- Custody state (decisions, knowledge, failed paths)
+- Governance document and obligation graph
+- Proof configuration and validation receipts
+- State commit and Git identity
+
+Returns a `StateResolution` containing:
+- `revision`: Current Git revision and commit metadata
+- `objective`: Active workunit intent and status
+- `acceptance`: Task acceptance criteria and status
+- `scope`: Repository scope and constraints
+- `custody`: Decisions, knowledge candidates, failed paths, blockers
+- `dependencies`: Dependency graph with status
+- `changed_surfaces`: Changed code surfaces
+- `validation`: Validation status and proof freshness
+- `unresolved_obligations`: Pending obligations
+- `publication`: Publication eligibility and required actions
+- `admissible_actions`: Derived next actions from governance state
+- `provenance`: Source identity and verifier integrity
+
+### state.diff
+
+Computes a semantic diff between two governed states, accepting:
+- State commit IDs (from `state.resolve` or `state_commit`)
+- Git revisions
+- Workunit IDs
+
+Returns a `StateDiff` with:
+- `added`/`removed`/`changed` for each projection field
+- `proof_state_changes`: Changes in proof freshness and verifier integrity
+- `obligation_changes`: Added/removed/resolved obligations
+- `blocker_changes`: Added/removed/resolved blockers
+- `dependency_changes`: Added/removed/status-changed dependencies
+- `publication_transition`: Publication eligibility delta
+- `admissible_actions_delta`: Changed admissible actions
+
+Both operations are read-only, deterministic, and fail-closed. They derive state exclusively from canonical sources with no shadow state.
+
+### Regression Tests
+
+The `state` subsystem includes regression tests in `tests/unit/state_eligibility_tests.rs` that verify the correctness of publication eligibility decisions:
+
+- **Missing proof result**: Reports not eligible when proof results are absent
+- **Failed proof result**: Reports not eligible when proof status is "fail"
+- **Missing state commit**: Reports not eligible when state commit artifact is absent
+- **Valid complete setup**: Reports eligible when all requirements are satisfied
+- **Empty proof plan**: Handles gracefully (no required proofs = eligible if other conditions met)
+
+These tests ensure the governed-state projection never reports publication eligibility without sufficient, current, valid, and properly bound evidence.
+
+
 ## Current Facts
 
 - Rust implements the `decapod` binary and its supporting library
@@ -807,8 +866,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
+- Repository signal fingerprint: `fcf98add742053dc31854722b1a17a3b19307e12f29b0ed6b5dadc9b03ccc520`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (219 files), `tests/` (213 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

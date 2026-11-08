@@ -538,6 +538,11 @@
       "id": "ck-pr1564-003",
       "summary": "Add regression tests for state.resolve publication eligibility in tests/unit/state_eligibility_tests.rs",
       "input_digest": "sha256:5f4f388abefe28928d1b8f9e9d7bd2582d0941e5283aecbe9120de2aa875630c"
+    },
+    {
+      "id": "ck-pr1564-004",
+      "summary": "Document state.resolve/state.diff governed-state subsystem in ARCHITECTURE.md",
+      "input_digest": "sha256:6505866323ede5e305946710aa26c9ade2321bf95ee1a10010e731ae8429753a"
     }
   ],
   "legacy_digests": {
