@@ -1558,57 +1558,68 @@
       "stop_conditions": [],
       "title": "Issue #1533: Fix crates.io version check User-Agent and crate.max_version parse; make session-acquire auto-install opt-in",
       "todo_ids": [
-        "bugs_01m6q7cbwbjxpk3d"
+        "bugs_01m6vw427p7yz46p"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794097136Z"
+      "updated_at": "1794097136Z",
+      "todo": "bugs_01m6vw427p7yz46p"
     },
     "trajectory": {
-      "active_boundaries": [
-        "Current claimed task and isolated work branch"
-      ],
-      "artifact_hash": "sha256:bd0126b4fda2c4fdd41d4d699c9e50c7ad51c8c9c6e44da6327fea11c4542f82",
-      "checks": [],
-      "current_phase": "intent",
-      "custody": {
-        "events": [
-          {
-            "event_id": "event:2",
-            "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
-            "kind": "created",
-            "sequence": 2
-          },
-          {
-            "event_id": "event:3",
-            "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
-            "kind": "refined",
-            "sequence": 3
-          }
-        ],
-        "knowledge_candidates": [],
-        "next_sequence": 3,
-        "schema_version": "1.0.0",
-        "trajectories": {}
-      },
-      "declared_commands": [],
-      "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "schema_version": "1.1.0",
+      "run_id": "branch_01M6W9HXH16D6HCZ9ZM6K6N20V",
       "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
-      "modified_files": [],
+      "task_id": "bugs_01m6vw427p7yz46p",
+      "original_intent": "Remove unused vega-native toolchain and all vega modules (solves dependabot alerts #5, #6)",
+      "derived_intent": "Remove unused vega-native toolchain and all vega modules (solves dependabot alerts #5, #6)",
+      "destination": "pull request",
+      "current_phase": "intent",
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
+      ],
+      "active_boundaries": [
+        "Current claimed task and isolated work branch"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M6Q7DN2806XPGQJA6GFEHASD",
-      "schema_version": "1.1.0",
-      "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6q7cbwbjxpk3d",
+      "inspected_files": [],
+      "modified_files": [],
+      "declared_commands": [],
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "checks": [],
+      "evidence": [],
+      "shortcut_risk_signals": [],
+      "unresolved_assumptions": [],
+      "blockers": [],
+      "custody": {
+        "schema_version": "1.0.0",
+        "intents": {},
+        "events": [
+          {
+            "event_id": "event:1",
+            "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
+            "kind": "created",
+            "sequence": 1
+          },
+          {
+            "event_id": "event:2",
+            "intent_id": "intent:change_01M6Q7DMYY95KQ09ZA83VBHBKF",
+            "kind": "refined",
+            "sequence": 2
+          }
+        ],
+        "trajectories": {},
+        "summaries": {},
+        "knowledge_candidates": [],
+        "next_sequence": 3
+      },
+      "loops": [],
+      "proof_status": "not_run",
+      "verdicts": {
+        "claims": []
+      },
+      "artifact_hash": "sha256:109c15d5b7d13f7e4190026eb83ef3ddca4d125e53b393c65cbb7f71c6272b55"
     }
   },
   "legacy_digests": {
