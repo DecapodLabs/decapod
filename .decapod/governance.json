@@ -733,6 +733,14 @@
       "proof_refs": [
         ".decapod/managed/specs/INTERFACES.md"
       ]
+    },
+    {
+      "id": "ck-verifier-integrity-intent-evidence",
+      "summary": "State that each isolation axis and capability needs its own evidence reference.",
+      "input_digest": "sha256:c98f504abd386da5350083f48a87bc6b074528c670f133f6d80d965c0e7edf94",
+      "proof_refs": [
+        ".decapod/managed/specs/INTENT.md"
+      ]
     }
   ],
   "intents": {
