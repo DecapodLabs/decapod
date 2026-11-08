@@ -741,6 +741,14 @@
       "proof_refs": [
         "tests/unit/core/fleet_coord_tests.rs"
       ]
+    },
+    {
+      "id": "wip-1469-custody-second-8",
+      "summary": "Preserve in-progress .decapod/managed/specs/ARCHITECTURE.md. Focused tests and earlier Clippy have passed, but removed-checkout recovery, operation-level shared-resource enforcement, complete validation and publication readiness remain unproven.",
+      "input_digest": "sha256:995d632bfc6da2419d7e6ba5753a17e7c2d54518b68667fdb549fbf7df4bb6ac",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md"
+      ]
     }
   ],
   "intents": {

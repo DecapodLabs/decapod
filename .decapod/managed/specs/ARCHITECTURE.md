@@ -20,6 +20,15 @@ authority. A clean textual merge is not semantic verification. Binding replay,
 stale-generation recovery and legacy migration must be verified before this
 candidate can establish the full #1469 contract.
 
+The checkout table is a projection of `authoring.bind` and `authoring.release`
+events in the existing TODO stream. Mutating those bindings and recording the
+corresponding task-journal checkpoint share a transaction. Admission compares
+the table to a bounded event replay; missing, conflicting or malformed records
+fail closed. Explicit recovery reconstructs absent rows without overwriting
+conflicting records. Replay is limited to 10,000 events and 16 KiB per event;
+exceeding those limits is a blocker, not an empty projection. Lost history or a
+fully lost datastore cannot be reconstructed from Git or claimed as custody.
+
 ## Governed transition judgment
 
 `src/decapod/core/governed_transition.rs` is the kernel that decides whether an
