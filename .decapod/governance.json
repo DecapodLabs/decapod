@@ -845,6 +845,14 @@
       "proof_refs": [
         ".decapod/managed/specs/README.md"
       ]
+    },
+    {
+      "id": "wip-1469-generated-8",
+      "summary": "Preserve Decapod 0.132.0 project-check generated .decapod/managed/specs/SECURITY.md. Full validation remains blocked by source-inventory reconciliation and required container proof; no publication readiness is asserted.",
+      "input_digest": "sha256:46d9ada1773ab4c922bc227ba6306e6029e6f7f10bb32ab6d6c62cd71c6030f2",
+      "proof_refs": [
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
