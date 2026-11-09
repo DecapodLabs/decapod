@@ -123,7 +123,13 @@ fn add_isolated_worktree(main: &Path, name: &str, _branch: &str) -> PathBuf {
     const ACTOR: &str = "projection-test";
     let add = run_decapod(
         main,
-        &["todo", "add", &format!("Verify managed spec projection for {name}"), "--format", "json"],
+        &[
+            "todo",
+            "add",
+            &format!("Verify managed spec projection for {name}"),
+            "--format",
+            "json",
+        ],
         &[("DECAPOD_AGENT_ID", ACTOR)],
     );
     assert!(
@@ -131,8 +137,7 @@ fn add_isolated_worktree(main: &Path, name: &str, _branch: &str) -> PathBuf {
         "task creation failed: {}",
         String::from_utf8_lossy(&add.stderr)
     );
-    let task: serde_json::Value =
-        serde_json::from_slice(&add.stdout).expect("task JSON");
+    let task: serde_json::Value = serde_json::from_slice(&add.stdout).expect("task JSON");
     let id = task["id"].as_str().expect("task id");
     let claim = run_decapod(
         main,
