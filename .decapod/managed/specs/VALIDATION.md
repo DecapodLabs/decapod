@@ -657,6 +657,14 @@ targets: its real CLI/validation processes repeatedly passed alone but exhausted
 the same 300-second budget under sibling load. Serialization preserves all cases,
 commands and finite per-target limits; current execution must verify the repair.
 
+The `group_broker` Bazel target likewise runs exclusively relative to sibling
+targets. CI recorded its final two burst clients reaching the production
+120-second request deadline under concurrent target load, after earlier clients
+completed sequentially. Scheduling isolation preserves both 20-client burst
+tests, durable-result assertions, uncertain-outcome/replay checks and all
+production deadlines. This configuration change requires fresh complete core
+suite execution; an isolated historical pass alone does not establish readiness.
+
 Source-owned shell, checkout, setup, release, and dependency-policy regressions
 must exercise the actual authored helper or workflow body. Tool setup verifies
 pinned official bytes and exact version output before adding tools to PATH.

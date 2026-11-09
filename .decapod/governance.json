@@ -566,6 +566,14 @@
       "proof_refs": [
         "Mirror rules_shell/protobuf/rules_java archives match integrity from BCR metadata whose bytes match committed registryFileHashes"
       ]
+    },
+    {
+      "id": "intent-reconciliation-1574-broker-isolation",
+      "summary": "Isolate deadline-sensitive broker acceptance from sibling Bazel test load while retaining the full burst and proof",
+      "input_digest": "sha256:15755e66264445801c8e786e5a5cb8895af106f47e82147bb89390c0d2cc98a4",
+      "proof_refs": [
+        "Bazel query confirms group_broker is exclusive; original CI client deadline evidence recorded; full fresh core execution required"
+      ]
     }
   ],
   "intents": {
@@ -646,10 +654,14 @@
         "No secondary authority, scheduler, persistence, semantic proof or publication permission from reconciliation",
         "Preserve original branch history and all unrelated worktrees and ownership"
       ],
-      "artifact_hash": "sha256:3f879a0ca88ecb630e5708a6c827eb136fd7172c573783990341bea99b5abcb5",
+      "artifact_hash": "sha256:a71aaefa7595db157689ccf847dee98cbcebd1667775ceda1bb60111677157f8",
       "checks": [
         {
           "name": "accepted source inventory reconciliation",
+          "status": "passed"
+        },
+        {
+          "name": "broker Bazel exclusive scheduling query",
           "status": "passed"
         },
         {
@@ -681,6 +693,10 @@
           "status": "passed"
         },
         {
+          "name": "previous core suite",
+          "status": "failed"
+        },
+        {
           "name": "prior full validation",
           "status": "failed"
         },
@@ -697,7 +713,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "infrastructure-repair",
+      "current_phase": "ci-repair",
       "custody": {
         "events": [
           {
@@ -746,10 +762,17 @@
             "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ZJRE0M6E1MFA6N2EN6JZ40": {
@@ -901,6 +924,32 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "command": "bazelisk --batch query exclusive group_broker target",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "CI42582853632 core job129045840472 failed broker_no_sqlite_busy_surfaced_under_concurrent_mutators: final clients17/19 reached120068/120109ms while preceding clients serialized under sibling-target load. Isolate group_broker target using existing exclusive scheduling; retain20 concurrent clients, all tests/assertions, production120s deadline and finite target budgets.",
+                  "bazelisk --batch query attr(tags,exclusive,//:group_broker) returned //:group_broker and exit0 outside sandbox; sandbox query itself found target but process-inspection cleanup was denied. Existing source/test/docs implementation remains unchanged. Config inventory explicitly reconciled for this sole scheduling delta. Fresh CI still required."
+                ],
+                "proof_refs": [
+                  "broker Bazel exclusive scheduling query",
+                  "previous core suite"
+                ],
+                "scope": [
+                  ".config/build",
+                  ".decapod/managed/specs",
+                  "docs",
+                  "intent-reconciliation-1574",
+                  "src/decapod",
+                  "tests/intent_reconciliation_rpc.rs"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -909,6 +958,7 @@
       "declared_commands": [
         "Official GitHub release downloads with explicit download query; SHA256 verification against original upstream pins",
         "Verify official mirror archives against lock-bound BCR metadata",
+        "bazelisk --batch query exclusive group_broker target",
         "decapod govern plan review-spec",
         "decapod rpc --op agent.init",
         "decapod rpc --op specs.refresh",
@@ -919,6 +969,7 @@
       "destination": "pull request",
       "evidence": [
         "All seven source/test/docs files match original candidate bytes; generated repo fingerprint matches 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9. Five authored specs describe behavior/security. Architecture, Interfaces and Security reviewed updated against frozen source.",
+        "CI42582853632 core job129045840472 failed broker_no_sqlite_busy_surfaced_under_concurrent_mutators: final clients17/19 reached120068/120109ms while preceding clients serialized under sibling-target load. Isolate group_broker target using existing exclusive scheduling; retain20 concurrent clients, all tests/assertions, production120s deadline and finite target budgets.",
         "Candidate52bd0ee0 exercised downloader configuration; GHA setup/contracts passed original dependency fetch stage then failed HTTP504 on rules_shell0.6.1 and protobuf33.4, including explicit query. Cancelled superseded local validation after recording failure; no passing proof claimed.",
         "Direct GitHub rules_rust URL returned504 inside and outside sandbox; official mirror404. GitHub API and same release URL with ?download=1 returned 67439334 bytes matching original BCR SHA256071a6e582cf2f2797820266f3265dbb2727b447486366d9ecc177da1523b11ad. supply-chain query returned36325 bytes matching original release SHA2560e89367f1cb6d93a5a1afea4b55b11ea6b28f63f653b47154153677ca7d4afea. Add official-host-only query retry with original fallback, unchanged version/integrity/toolchain/graph.",
         "Explicitly reconciled reviewed inventory only for bazelrc and new downloader config. Existing source executor/carrier/workflow files unchanged. Source implementation remains identical to original #1570. Full validation must execute on the newly checkpointed candidate before PR or merge.",
@@ -928,7 +979,8 @@
         "Immutable verify-checkpoints --base-branch 15b69ce43fc56440d498d52d8726f89d499615fe --head-ref f8a6200fe23080cf4dd3d2be077254c4b7ab7612 --target-base master --publication-material returned status ok; 135 prior unresolved baseline obligations preserved, 138 total after lifecycle carry-forward.",
         "Live origin/master and PR base remain 15b69ce43fc56440d498d52d8726f89d499615fe; PR #1570 head remains 0b5405e61ca781f17b6f86d92ff3d1be046732e0.",
         "Native task bugs_01m6zjqskamsdwx8 claimed exclusively by codex-1574; managed workspace created from accepted base. Existing autogenerated trajectory retained after init correctly rejected replacing an uncommitted journal.",
-        "Official Bazel mirror returned rules_shell0.6.1,protobuf33.4,rules_java9.1.0 bytes. For each module fetched BCR source.json, verified its SHA256 against committed MODULE.bazel.lock registryFileHashes, then verified downloaded archive against its original integrity. Prior rules_cc0.2.17 and bazel_features1.50.0 official mirror bytes also matched upstream digests. Added mirror as first route, retaining GitHub query and original fallback; no version, integrity, lock, compiler, source executor, workflow or check-graph change."
+        "Official Bazel mirror returned rules_shell0.6.1,protobuf33.4,rules_java9.1.0 bytes. For each module fetched BCR source.json, verified its SHA256 against committed MODULE.bazel.lock registryFileHashes, then verified downloaded archive against its original integrity. Prior rules_cc0.2.17 and bazel_features1.50.0 official mirror bytes also matched upstream digests. Added mirror as first route, retaining GitHub query and original fallback; no version, integrity, lock, compiler, source executor, workflow or check-graph change.",
+        "bazelisk --batch query attr(tags,exclusive,//:group_broker) returned //:group_broker and exit0 outside sandbox; sandbox query itself found target but process-inspection cleanup was denied. Existing source/test/docs implementation remains unchanged. Config inventory explicitly reconciled for this sole scheduling delta. Fresh CI still required."
       ],
       "inspected_files": [
         ".config/build/bazelrc",
@@ -947,6 +999,7 @@
       "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
       "modified_files": [
         ".config/build/bazelrc",
+        ".config/build/decapod.BUILD.bzl",
         ".config/build/downloader.cfg",
         ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
