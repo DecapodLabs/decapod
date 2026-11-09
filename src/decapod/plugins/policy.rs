@@ -819,7 +819,7 @@ pub(crate) fn authorize_rbac_exception(
         use std::os::unix::fs::OpenOptionsExt;
         options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
     }
-    let mut file = options.open(&path)?;
+    let file = options.open(&path)?;
     if !file.metadata()?.is_file() {
         return Err(error::DecapodError::Config(
             "RBAC_POLICY_INVALID: configuration is not a regular file".into(),
