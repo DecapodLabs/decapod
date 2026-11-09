@@ -781,6 +781,15 @@ inode identity. Lock files remain beside canonical storage and are never unlinke
 This avoids both Linux and Darwin sun_path limits without shortening test roots
 or masking permission/protocol failures. Empty runtime directories are reusable.
 
+## Intent Traceability Read Model
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+`core/intent_reconcile.rs` derives a read-only reconciliation view from
+`plan_governance`, `core/project_specs`, the spec manifest, and current
+repository code fingerprints. It stores no secondary project authority and
+requires no persistent database migration or agent scheduler. The calling
+harness remains responsible for interpreting findings and proposing repairs.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -807,8 +816,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `73bbeda852fd30834a4289d4dc517baf18dfcf3f98713df729052fc1ae4a2e5d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (222 files), `tests/` (214 files)
+- Repository signal fingerprint: `02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (223 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

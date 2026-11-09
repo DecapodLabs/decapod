@@ -272,6 +272,15 @@ pub struct SpecsRefreshResult {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct IntentReconcileParams {}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct IntentReconcileResult {
+    pub report: crate::core::intent_reconcile::ReconciliationReport,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ConstitutionMigrateParams {
     pub target_version: String,
 }
@@ -888,6 +897,12 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                     "Update the project specs manifest to acknowledge current codebase state"
                         .to_string(),
                 stability: "stable".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "intent.reconcile".to_string(),
+                description: "Inspect intent-to-spec links, code freshness, and unresolved obligations without changing governance state".to_string(),
+                stability: "beta".to_string(),
                 cost: "low".to_string(),
             },
             Capability {

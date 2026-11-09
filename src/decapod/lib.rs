@@ -3054,7 +3054,10 @@ fn should_auto_clock_in(command: &Command) -> bool {
 
 fn is_storage_independent_command(command: &Command) -> bool {
     match command {
-        Command::Rpc(rpc_cli) => rpc_cli.op.as_deref() == Some("specs.refresh"),
+        Command::Rpc(rpc_cli) => matches!(
+            rpc_cli.op.as_deref(),
+            Some("specs.refresh" | "intent.reconcile")
+        ),
         // Maintenance commands operate on the canonical store through the
         // Dactyl contract and must not run startup migrations or presence
         // clock-in before they acquire their own bounded coordination lock.
@@ -3260,6 +3263,7 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "context.bindings"
             | "constitution.get"
             | "schema.get"
+            | "intent.reconcile"
             | "store.upsert"
             | "store.query"
             | "validate.run"
@@ -3331,6 +3335,7 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "context.bindings"
             | "constitution.get"
             | "schema.get"
+            | "intent.reconcile"
             | "store.upsert"
             | "store.query"
             | "validate.run"
@@ -7668,6 +7673,7 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "context.capsule.query"
             | "constitution.get"
             | "schema.get"
+            | "intent.reconcile"
             | "specs.refresh"
             | "interop.manifest"
             | "interop.negotiate"
@@ -11492,6 +11498,28 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_intent_reconcile(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let _params: IntentReconcileParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
+        let report = crate::core::intent_reconcile::reconcile(ctx.project_root)?;
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(IntentReconcileResult { report }).map_err(|e| {
+                    error::DecapodError::ValidationError(format!("Serialization failed: {e}"))
+                })?,
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
     pub(crate) fn handle_specs_refresh(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let _params: SpecsRefreshParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
@@ -11731,6 +11759,17 @@ mod rpc_handlers {
     }
 }
 
+#[cfg(test)]
+#[test]
+fn intent_reconciliation_rpc_does_not_require_mutation_custody() {
+    assert!(!rpc_op_requires_worktree("intent.reconcile"));
+    assert!(rpc_op_bypasses_session("intent.reconcile"));
+    assert!(rpc_op_skips_mandate_enforcement("intent.reconcile"));
+    assert!(!rpc_op_requires_constitutional_awareness(
+        "intent.reconcile"
+    ));
+}
+
 /// Run RPC command
 fn rpc_validation_exit_status(op: &str, success: bool) -> Result<(), error::DecapodError> {
     if op == "validate.run" && !success {
@@ -11876,6 +11915,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         "constitution.migrate" => rpc_handlers::handle_constitution_migrate(&rpc_ctx)?,
         "agent.registry.query" => rpc_handlers::handle_agent_registry_query(&rpc_ctx)?,
         "specs.refresh" => rpc_handlers::handle_specs_refresh(&rpc_ctx)?,
+        "intent.reconcile" => rpc_handlers::handle_intent_reconcile(&rpc_ctx)?,
         "schema.get" => rpc_handlers::handle_schema_get(&rpc_ctx)?,
         "store.upsert" => rpc_handlers::handle_store_upsert(&rpc_ctx)?,
         "store.query" => rpc_handlers::handle_store_query(&rpc_ctx)?,

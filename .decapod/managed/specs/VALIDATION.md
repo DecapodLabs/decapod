@@ -657,6 +657,14 @@ targets: its real CLI/validation processes repeatedly passed alone but exhausted
 the same 300-second budget under sibling load. Serialization preserves all cases,
 commands and finite per-target limits; current execution must verify the repair.
 
+The `group_broker` Bazel target likewise runs exclusively relative to sibling
+targets. CI recorded its final two burst clients reaching the production
+120-second request deadline under concurrent target load, after earlier clients
+completed sequentially. Scheduling isolation preserves both 20-client burst
+tests, durable-result assertions, uncertain-outcome/replay checks and all
+production deadlines. This configuration change requires fresh complete core
+suite execution; an isolated historical pass alone does not establish readiness.
+
 Source-owned shell, checkout, setup, release, and dependency-policy regressions
 must exercise the actual authored helper or workflow body. Tool setup verifies
 pinned official bytes and exact version output before adding tools to PATH.
@@ -977,6 +985,31 @@ remains the normal release sequence. This code does not repair a provider that
 never receives a postmerge event. Missing external trigger delivery remains a
 separate operational blocker, and validation does not authorize distribution.
 
+## Intent Reconciliation Acceptance Boundary
+
+Repeated hosted HTTP504 failures fetching pinned Bazel release archives are
+repaired by `.config/build/downloader.cfg`: try Bazel's official mirror, then
+the same official GitHub release URL with an explicit download query, retaining
+the original URL as a fallback. `rules_cc`, `bazel_features`, `rules_shell`,
+`protobuf` and `rules_java` mirror archives and `rules_rust` and `supply-chain`
+query-route archives were verified against upstream pins. Version selection, integrity
+checks, compiler requirements, source execution and the complete test graph
+remain unchanged; fresh exact-candidate validation must exercise the repair.
+
+The accepted v0.133.0 source inventory differs from the last reviewed profile
+only by the package version in `Cargo.toml` and `Cargo.lock`. The explicit
+required-profile review declaration is reconciled to that complete inventory;
+the finite workflow graph, adapters, provider selection and proof requirements
+remain unchanged. This review pin is configuration, not execution evidence.
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+The read-only reconciliation report must detect missing/orphaned/duplicate
+requirement references, missing proof-spec mappings, stale code fingerprints,
+and unresolved human questions. A matching manifest or reference is not
+semantic proof; `intent.reconcile` cannot satisfy validation obligations,
+approve spec changes, or authorize publication. Unit tests must exercise
+these negative cases and preserve existing proof and publication gates.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -1025,8 +1058,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `73bbeda852fd30834a4289d4dc517baf18dfcf3f98713df729052fc1ae4a2e5d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (222 files), `tests/` (214 files)
+- Repository signal fingerprint: `02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (223 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

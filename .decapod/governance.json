@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "24164460c936cb42d7cf302acac80e74cfa8ef71",
+    "accepted_commit": "15b69ce43fc56440d498d52d8726f89d499615fe",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -192,6 +192,15 @@
         "id": "sample-size",
         "owner": "Decapod research maintainers",
         "question": "How many tasks and agent/tool combinations are needed to separate custody effects from model variance?",
+        "status": "open"
+      },
+      "claim:kernel-bootstrap-custody": {
+        "falsifier": "Distinct independent tasks cannot author in isolated checkouts, incompatible bindings coexist, stale handoffs succeed, or missing prompt input is reported as evaluated.",
+        "proof_refs": [
+          "tests/kernel_bootstrap.rs",
+          "tests/plugins/todo.rs"
+        ],
+        "statement": "Independent task source overlap does not reserve a repository; task and observed checkout custody remain exclusive with fenced handoff and typed evaluation recovery.",
         "status": "open"
       },
       "claim:measured-latency-reduction": {
@@ -445,6 +454,7 @@
       "plan:3109ff52b1ce422e": "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
       "plan:7f9060fac006b60a": "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof.",
       "trajectory:01e30f48c2e7df81": "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
+      "trajectory:0369d7ba53eadf4c": "Candidate-assisted normal admission is not independent publication proof",
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
@@ -513,70 +523,75 @@
       "trajectory:e765d893d1533fc1": "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
       "trajectory:e99e15278c8de6ad": "User explicitly authorizes functional acceptance replacingresearchqualification, not fabricatedsuccess/accuracy. Fixedcasebytes97b4667e frozen before firstmodelrun, nofitting/threshold/model/calibration/tolerancechange. Actualcontractchecksrun beforeobservationconstruction; three meaningful positives, negative/uncertain/manipulated/declared-proof and failed/stale controls. Sharedproduction code andstrictfinalreducer rederiveoutcomes; oldstudiesfailures preserved. Issue1445andbroader1052/1069/1070/1398/1024updated; closeonlyfullyresolved1445. Sourceconfigreview0e9afdd8 unchanged8runargs; no newprereq/task/branch. Preserve originaltask/branch andfullfinalvalidationgates.",
       "trajectory:ec49216a39e5bf93": "The config decision is cooperative; its author and agent labels are not authenticated.",
+      "trajectory:ecfec9650d4ed288": "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
   },
   "change": {
-    "id": "change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
-    "base_commit": "24164460c936cb42d7cf302acac80e74cfa8ef71",
+    "id": "change_01M6ZJRDXYRP08025VEC9QTNA1",
+    "base_commit": "15b69ce43fc56440d498d52d8726f89d499615fe",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "kernel-bootstrap-custody": {
-      "statement": "Independent task source overlap does not reserve a repository; task and observed checkout custody remain exclusive with fenced handoff and typed evaluation recovery.",
-      "falsifier": "Distinct independent tasks cannot author in isolated checkouts, incompatible bindings coexist, stale handoffs succeed, or missing prompt input is reported as evaluated.",
-      "status": "open",
-      "proof_refs": [
-        "tests/kernel_bootstrap.rs",
-        "tests/plugins/todo.rs"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "publication-admission-20261108",
-      "summary": "Record present managed-workspace admission and independent source-inventory comparison; no retrospective task admission or publication readiness asserted",
-      "input_digest": "sha256:0a5d1a12596ae141957e7be898fb86fda2d687d4b832147d1058c3c929252ffd",
+      "id": "intent-reconciliation-1574-implementation",
+      "summary": "Reconstruct PR #1570 implementation with fresh task-bound governance and reviewed canonical specs",
+      "input_digest": "sha256:413201b0925a2c9b9681ed50590b15c7ccd8980688964d2ece7e88a464a44ce4",
       "proof_refs": [
-        "git:24164460c936cb42d7cf302acac80e74cfa8ef71",
-        "git:65be930ec8df2c25878a7e7db37443a5d4bc3717"
+        "Seven source/test/docs files byte-identical to 0b5405e61ca781f17b6f86d92ff3d1be046732e0; source fingerprint 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9"
       ]
     },
     {
-      "id": "kernel-publication-continuation",
-      "summary": "Carry preserved implementation into current admitted workspace and reconcile maintainer-reviewed accepted release inventory; independent publication validation remains pending",
-      "input_digest": "sha256:b86bee913dc3ac472beceb4e3dde211d63a74b02cc2db0daca5ce06b7accbd78",
+      "id": "intent-reconciliation-1574-profile-repair",
+      "summary": "Reconcile accepted v0.133.0 inventory review without changing required proof graph",
+      "input_digest": "sha256:dc76d472cc40ed4bd9d39187ce4fe5e458b2a693a0edb4c3deac4a6577ab5660",
       "proof_refs": [
-        "git:65be930ec8df2c25878a7e7db37443a5d4bc3717"
+        "119 discovered inputs byte-match immutable accepted master; only release package versions differ from edb30569 inventory"
       ]
     },
     {
-      "id": "release-entrypoint-refresh",
-      "summary": "Refresh four generated 0.131.0 entrypoints to installed 0.132.0 release following actual independent standalone validation failure; preserve configuration and required checks",
-      "input_digest": "sha256:7b93cac6db16983f5e0367e42fff9c067e0da04e8674a84fa8eaa0584b938409",
+      "id": "intent-reconciliation-1574-download-repair",
+      "summary": "Retry pinned Bazel release downloads on the same official host without weakening integrity or execution proof",
+      "input_digest": "sha256:5faa06ae0f12030a52566716126d7d8971920f620d71ceac9a80877892fe27ad",
       "proof_refs": [
-        "https://buildkite.com/decapodlabs/decapod/builds/5757"
+        "Original rules_rust and supply-chain archives verified byte-for-byte by pinned SHA256 through explicit-download-query route; full source execution remains required"
+      ]
+    },
+    {
+      "id": "intent-reconciliation-1574-official-mirror",
+      "summary": "Use verified official Bazel mirror before GitHub fallbacks for pinned release archives",
+      "input_digest": "sha256:23a023cfa456b14d1d8199357ebdee23822806cddde269521e21281e0b6f9800",
+      "proof_refs": [
+        "Mirror rules_shell/protobuf/rules_java archives match integrity from BCR metadata whose bytes match committed registryFileHashes"
+      ]
+    },
+    {
+      "id": "intent-reconciliation-1574-broker-isolation",
+      "summary": "Isolate deadline-sensitive broker acceptance from sibling Bazel test load while retaining the full burst and proof",
+      "input_digest": "sha256:15755e66264445801c8e786e5a5cb8895af106f47e82147bb89390c0d2cc98a4",
+      "proof_refs": [
+        "Bazel query confirms group_broker is exclusive; original CI client deadline evidence recorded; full fresh core execution required"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6": {
+    "intent:change_01M6ZJRDXYRP08025VEC9QTNA1": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "intent-reconciliation-1574"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
+      "id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Repair independent task concurrency, checkout custody and recovery across supported backends\n\nImplement user-requested governance repair for issues 1469, 1480, 878; preserve Dactyl/Propodus authority boundaries and require separate local/cloud evidence.",
-      "refined_intent": "Repair independent task concurrency, checkout custody and recovery across supported backends\n\nImplement user-requested governance repair for issues 1469, 1480, 878; preserve Dactyl/Propodus authority boundaries and require separate local/cloud evidence.",
+      "raw_intent": "Reconstruct PR #1570 with valid governance for issue #1574\n\nRecover intent.reconcile from candidate 0b5405e61ca781f17b6f86d92ff3d1be046732e0 onto accepted master in a fresh managed workspace; preserve behavior, create fresh plan/trajectory/spec reviews and per-commit checkpoints; validate exact candidate and publish replacement PR only after required proof passes.",
+      "refined_intent": "Reconstruct PR #1570 with valid governance for issue #1574\n\nRecover intent.reconcile from candidate 0b5405e61ca781f17b6f86d92ff3d1be046732e0 onto accepted master in a fresh managed workspace; preserve behavior, create fresh plan/trajectory/spec reviews and per-commit checkpoints; validate exact candidate and publish replacement PR only after required proof passes.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -584,192 +599,439 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": null,
+        "file_touch_budget": 27,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Publish preserved kernel repair from 65be930e in a genuinely admitted worktree; reconcile only the independently reviewed accepted-release inventory declaration; preserve executor, required checks, SaaS architecture and independent publication authority.",
+      "intent": "Recover the implementation of intent.reconcile from 0b5405e61ca781f17b6f86d92ff3d1be046732e0 onto accepted master 15b69ce43fc56440d498d52d8726f89d499615fe without importing invalid governance history. Preserve sessionless read-only behavior, canonical specification ownership, stable REQ markers, missing/orphan/duplicate/malformed findings, fingerprint comparisons, unresolved intent, stale review detection, semantic_alignment not_proven, and existing publication boundaries. Publish a replacement PR for issue #1574 only with exact-candidate validation and every required CI check passing. Repair the verified HTTP504 release-download infrastructure defect without changing pinned versions, digests, source executor or required graph; then merge the replacement after exact-candidate proof passes under the renewed human authorization.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Source and documentation diff equivalence against original PR #1570",
+        "Current-content-bound Interfaces, Architecture and Security reviews",
+        "decapod govern artifacts verify-checkpoints against immutable accepted base and final candidate",
+        "decapod validate with configured complete Rust and provider checks"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed final source and .config/build downloader configuration. The authored read-model section remains accurate: existing canonical plan/spec authority, ephemeral report, no scheduler or secondary persistence. Infrastructure retry changes only official release URL transport, preserving source executor and the full proof graph.",
+          "reviewed_code_fingerprint": "02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9",
+          "spec_material_hash": "11a4280adbbf26427123e93671593796d32c252263451951572f93221de9127d"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed final source and download-only infrastructure delta. The authored intent.reconcile RPC section still matches empty-only params, sessionless read-only behavior, observable report fields and semantic_alignment not_proven; no interface or publication authority changed by the Bazel retry configuration.",
+          "reviewed_code_fingerprint": "02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9",
+          "spec_material_hash": "8237575826dc886b4dd0cf76851525ca88e8a5a2e701158bcdf5ce3ce1ab1e99"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed final source and official-mirror retry configuration. Authored Security account now records mirror.bazel.build plus github.com only, no credentials, unchanged original repository-rule archive digests and lockfile enforcement. Independently fetched BCR source metadata matches committed registryFileHashes and rules_shell/protobuf/rules_java mirror archives match those integrity pins. Sessionless reconciliation trust boundaries, not_proven semantics and publication authority remain unchanged.",
+          "reviewed_code_fingerprint": "02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9",
+          "spec_material_hash": "dbf1da6eb06b14d73b212eb65aafcbba96a67b28ca8f3651d875babc8e8d17f1"
+        }
+      ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Repair independent task concurrency, checkout custody and recovery across supported backends",
+      "stop_conditions": [
+        "Human decision gate, unavailable external authority or denied access"
+      ],
+      "title": "Reconstruct advisory intent reconciliation from PR #1570",
       "todo_ids": [
-        "bend_01m6yw46e8yd4463"
+        "bugs_01m6zjqskamsdwx8"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794190927Z"
+      "updated_at": "1794211173Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "No secondary authority, scheduler, persistence, semantic proof or publication permission from reconciliation",
+        "Preserve original branch history and all unrelated worktrees and ownership"
       ],
-      "artifact_hash": "sha256:7a97d85fca5245221f670aeec42bdec203e68fc0e1e0e8f4a80cfe0535b8dd93",
+      "artifact_hash": "sha256:a71aaefa7595db157689ccf847dee98cbcebd1667775ceda1bb60111677157f8",
       "checks": [
         {
-          "name": "accepted_candidate_inventory_equal",
+          "name": "accepted source inventory reconciliation",
           "status": "passed"
         },
         {
-          "name": "independent_publication",
+          "name": "broker Bazel exclusive scheduling query",
+          "status": "passed"
+        },
+        {
+          "name": "first exact-candidate validation",
           "status": "failed"
         },
         {
-          "name": "preserved_implementation_bytes",
+          "name": "immutable checkpoint verification f8a6200f",
+          "status": "passed"
+        },
+        {
+          "name": "live reference verification",
+          "status": "passed"
+        },
+        {
+          "name": "native todo claim",
+          "status": "passed"
+        },
+        {
+          "name": "official mirror immutable archive verification",
+          "status": "passed"
+        },
+        {
+          "name": "original pinned archive transport verification",
+          "status": "passed"
+        },
+        {
+          "name": "original source/test/docs byte equivalence",
+          "status": "passed"
+        },
+        {
+          "name": "previous core suite",
+          "status": "failed"
+        },
+        {
+          "name": "prior full validation",
+          "status": "failed"
+        },
+        {
+          "name": "prior source suite and hosted governance checkpoints",
+          "status": "passed"
+        },
+        {
+          "name": "query-only candidate full readiness",
+          "status": "failed"
+        },
+        {
+          "name": "specification review",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "ci-repair",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6Z1ATPH4QM61T7E4FG1Y59G",
+            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6Z1ATPH4QM61T7E4FG1Y59G",
+            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M6Z1ATPH4QM61T7E4FG1Y59G",
+            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6Z1ATPH4QM61T7E4FG1Y59G": {
+          "branch_01M6ZJRE0M6E1MFA6N2EN6JZ40": {
             "evidence_only": true,
-            "id": "branch_01M6Z1ATPH4QM61T7E4FG1Y59G",
-            "intent_id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
+            "id": "branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "reconstruction",
+                "command": "git fetch origin master feat/intent-reconciliation-contract",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  ".decapod/config.toml"
+                  "AGENTS.md",
+                  "CONTRIBUTING.md",
+                  ".decapod/config.toml",
+                  "Live origin/master and PR base remain 15b69ce43fc56440d498d52d8726f89d499615fe; PR #1570 head remains 0b5405e61ca781f17b6f86d92ff3d1be046732e0.",
+                  "Native task bugs_01m6zjqskamsdwx8 claimed exclusively by codex-1574; managed workspace created from accepted base. Existing autogenerated trajectory retained after init correctly rejected replacing an uncommitted journal."
                 ],
                 "proof_refs": [
-                  "accepted_candidate_inventory_equal",
-                  "independent_publication"
+                  "live reference verification",
+                  "native todo claim"
                 ],
                 "scope": [
-                  "root"
+                  "intent-reconciliation-1574"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "verification",
-                "command": "decapod validate",
+                "action": "checkpoint",
+                "command": "git apply original source/test diff without importing commit history or governance",
                 "custody_event_id": "event:5",
                 "observations": [
-                  ".decapod/config.toml",
-                  "docs/architecture/concurrency-custody.md",
-                  "git:65be930ec8df2c25878a7e7db37443a5d4bc3717"
+                  "src/decapod/core/intent_reconcile.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/lib.rs",
+                  "tests/intent_reconciliation_rpc.rs",
+                  "src/decapod/core/intent_reconcile.rs",
+                  "src/decapod/core/mod.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/lib.rs",
+                  "tests/intent_reconciliation_rpc.rs",
+                  "docs/agent/api-index.md",
+                  "docs/book/src/concepts/intent.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "All seven source/test/docs files match original candidate bytes; generated repo fingerprint matches 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9. Five authored specs describe behavior/security. Architecture, Interfaces and Security reviewed updated against frozen source.",
+                  "Full Rust suite and publication readiness remain unexecuted for this new candidate; original CI results are historical only."
                 ],
                 "proof_refs": [
-                  "preserved_implementation_bytes"
+                  "original source/test/docs byte equivalence",
+                  "specification review"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "docs",
+                  "intent-reconciliation-1574",
+                  "src/decapod",
+                  "tests/intent_reconciliation_rpc.rs"
                 ],
                 "sequence": 5,
-                "validation_findings": [
-                  "Candidate-assisted normal admission is not independent publication proof"
-                ]
+                "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "validation-repair",
+                "command": "decapod validate",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "AGENTS.md",
-                  "CLAUDE.md",
-                  "CODEX.md",
-                  "GEMINI.md",
-                  "https://buildkite.com/decapodlabs/decapod/builds/5757"
+                  "src/decapod/core/readiness_profile.rs",
+                  "assets/tools/source_ci_profile.rs",
+                  ".github/actions/source-ci-profile/action.yml",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "First validate failed PROOF_PROFILE_RECONCILIATION_REQUIRED before execution. All 119 discovered source inputs match accepted base. Relative to the last config review commit edb30569 only Cargo.toml/Cargo.lock package version changed 0.132.0 to 0.133.0. Reviewed finite catalog, carrier and unchanged required graph; backed up config and explicitly reconciled authored review digest to sha256:d8c65ab6901a57c4df55f3914dd0eeaecbf7338177233831854ade1304e53361. agent.init now reports proof_pending/not_run. No checks or provider requirements removed.",
+                  "Immutable verify-checkpoints --base-branch 15b69ce43fc56440d498d52d8726f89d499615fe --head-ref f8a6200fe23080cf4dd3d2be077254c4b7ab7612 --target-base master --publication-material returned status ok; 135 prior unresolved baseline obligations preserved, 138 total after lifecycle carry-forward."
                 ],
                 "proof_refs": [
-                  "independent_publication"
+                  "first exact-candidate validation",
+                  "immutable checkpoint verification f8a6200f",
+                  "accepted source inventory reconciliation"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "docs",
+                  "intent-reconciliation-1574",
+                  "src/decapod",
+                  "tests/intent_reconciliation_rpc.rs"
                 ],
                 "sequence": 6,
-                "validation_findings": [
-                  "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved."
-                ]
+                "validation_findings": []
+              },
+              {
+                "action": "infrastructure-repair",
+                "command": "Official GitHub release downloads with explicit download query; SHA256 verification against original upstream pins",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".config/build/bazelrc",
+                  ".config/build/downloader.cfg",
+                  ".config/build/bazelrc",
+                  ".config/build/downloader.cfg",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Human renewed explicit creation/CI-repair/merge authority, preserving existing todo and change identity. CI42579141327 attempt4 terminal failed HTTP504, failed jobs retried attempt5. Buildkite5974 all source/test/governance jobs passed except setup archive504. No required proof waived.",
+                  "Direct GitHub rules_rust URL returned504 inside and outside sandbox; official mirror404. GitHub API and same release URL with ?download=1 returned 67439334 bytes matching original BCR SHA256071a6e582cf2f2797820266f3265dbb2727b447486366d9ecc177da1523b11ad. supply-chain query returned36325 bytes matching original release SHA2560e89367f1cb6d93a5a1afea4b55b11ea6b28f63f653b47154153677ca7d4afea. Add official-host-only query retry with original fallback, unchanged version/integrity/toolchain/graph.",
+                  "Explicitly reconciled reviewed inventory only for bazelrc and new downloader config. Existing source executor/carrier/workflow files unchanged. Source implementation remains identical to original #1570. Full validation must execute on the newly checkpointed candidate before PR or merge."
+                ],
+                "proof_refs": [
+                  "prior source suite and hosted governance checkpoints",
+                  "prior full validation",
+                  "original pinned archive transport verification"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "docs",
+                  "intent-reconciliation-1574",
+                  "src/decapod",
+                  "tests/intent_reconciliation_rpc.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "infrastructure-repair",
+                "command": "Verify official mirror archives against lock-bound BCR metadata",
+                "custody_event_id": "event:8",
+                "observations": [
+                  ".config/build/downloader.cfg",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Candidate52bd0ee0 exercised downloader configuration; GHA setup/contracts passed original dependency fetch stage then failed HTTP504 on rules_shell0.6.1 and protobuf33.4, including explicit query. Cancelled superseded local validation after recording failure; no passing proof claimed.",
+                  "Official Bazel mirror returned rules_shell0.6.1,protobuf33.4,rules_java9.1.0 bytes. For each module fetched BCR source.json, verified its SHA256 against committed MODULE.bazel.lock registryFileHashes, then verified downloaded archive against its original integrity. Prior rules_cc0.2.17 and bazel_features1.50.0 official mirror bytes also matched upstream digests. Added mirror as first route, retaining GitHub query and original fallback; no version, integrity, lock, compiler, source executor, workflow or check-graph change."
+                ],
+                "proof_refs": [
+                  "query-only candidate full readiness",
+                  "official mirror immutable archive verification"
+                ],
+                "scope": [
+                  ".config/build",
+                  ".decapod/managed/specs",
+                  "docs",
+                  "intent-reconciliation-1574",
+                  "src/decapod",
+                  "tests/intent_reconciliation_rpc.rs"
+                ],
+                "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "command": "bazelisk --batch query exclusive group_broker target",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "CI42582853632 core job129045840472 failed broker_no_sqlite_busy_surfaced_under_concurrent_mutators: final clients17/19 reached120068/120109ms while preceding clients serialized under sibling-target load. Isolate group_broker target using existing exclusive scheduling; retain20 concurrent clients, all tests/assertions, production120s deadline and finite target budgets.",
+                  "bazelisk --batch query attr(tags,exclusive,//:group_broker) returned //:group_broker and exit0 outside sandbox; sandbox query itself found target but process-inspection cleanup was denied. Existing source/test/docs implementation remains unchanged. Config inventory explicitly reconciled for this sole scheduling delta. Fresh CI still required."
+                ],
+                "proof_refs": [
+                  "broker Bazel exclusive scheduling query",
+                  "previous core suite"
+                ],
+                "scope": [
+                  ".config/build",
+                  ".decapod/managed/specs",
+                  "docs",
+                  "intent-reconciliation-1574",
+                  "src/decapod",
+                  "tests/intent_reconciliation_rpc.rs"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "decapod validate"
+        "Official GitHub release downloads with explicit download query; SHA256 verification against original upstream pins",
+        "Verify official mirror archives against lock-bound BCR metadata",
+        "bazelisk --batch query exclusive group_broker target",
+        "decapod govern plan review-spec",
+        "decapod rpc --op agent.init",
+        "decapod rpc --op specs.refresh",
+        "decapod validate",
+        "git apply original source/test diff without importing commit history or governance",
+        "git fetch origin master feat/intent-reconciliation-contract"
       ],
       "destination": "pull request",
       "evidence": [
-        "git:65be930ec8df2c25878a7e7db37443a5d4bc3717",
-        "https://buildkite.com/decapodlabs/decapod/builds/5757"
+        "All seven source/test/docs files match original candidate bytes; generated repo fingerprint matches 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9. Five authored specs describe behavior/security. Architecture, Interfaces and Security reviewed updated against frozen source.",
+        "CI42582853632 core job129045840472 failed broker_no_sqlite_busy_surfaced_under_concurrent_mutators: final clients17/19 reached120068/120109ms while preceding clients serialized under sibling-target load. Isolate group_broker target using existing exclusive scheduling; retain20 concurrent clients, all tests/assertions, production120s deadline and finite target budgets.",
+        "Candidate52bd0ee0 exercised downloader configuration; GHA setup/contracts passed original dependency fetch stage then failed HTTP504 on rules_shell0.6.1 and protobuf33.4, including explicit query. Cancelled superseded local validation after recording failure; no passing proof claimed.",
+        "Direct GitHub rules_rust URL returned504 inside and outside sandbox; official mirror404. GitHub API and same release URL with ?download=1 returned 67439334 bytes matching original BCR SHA256071a6e582cf2f2797820266f3265dbb2727b447486366d9ecc177da1523b11ad. supply-chain query returned36325 bytes matching original release SHA2560e89367f1cb6d93a5a1afea4b55b11ea6b28f63f653b47154153677ca7d4afea. Add official-host-only query retry with original fallback, unchanged version/integrity/toolchain/graph.",
+        "Explicitly reconciled reviewed inventory only for bazelrc and new downloader config. Existing source executor/carrier/workflow files unchanged. Source implementation remains identical to original #1570. Full validation must execute on the newly checkpointed candidate before PR or merge.",
+        "First validate failed PROOF_PROFILE_RECONCILIATION_REQUIRED before execution. All 119 discovered source inputs match accepted base. Relative to the last config review commit edb30569 only Cargo.toml/Cargo.lock package version changed 0.132.0 to 0.133.0. Reviewed finite catalog, carrier and unchanged required graph; backed up config and explicitly reconciled authored review digest to sha256:d8c65ab6901a57c4df55f3914dd0eeaecbf7338177233831854ade1304e53361. agent.init now reports proof_pending/not_run. No checks or provider requirements removed.",
+        "Full Rust suite and publication readiness remain unexecuted for this new candidate; original CI results are historical only.",
+        "Human renewed explicit creation/CI-repair/merge authority, preserving existing todo and change identity. CI42579141327 attempt4 terminal failed HTTP504, failed jobs retried attempt5. Buildkite5974 all source/test/governance jobs passed except setup archive504. No required proof waived.",
+        "Immutable verify-checkpoints --base-branch 15b69ce43fc56440d498d52d8726f89d499615fe --head-ref f8a6200fe23080cf4dd3d2be077254c4b7ab7612 --target-base master --publication-material returned status ok; 135 prior unresolved baseline obligations preserved, 138 total after lifecycle carry-forward.",
+        "Live origin/master and PR base remain 15b69ce43fc56440d498d52d8726f89d499615fe; PR #1570 head remains 0b5405e61ca781f17b6f86d92ff3d1be046732e0.",
+        "Native task bugs_01m6zjqskamsdwx8 claimed exclusively by codex-1574; managed workspace created from accepted base. Existing autogenerated trajectory retained after init correctly rejected replacing an uncommitted journal.",
+        "Official Bazel mirror returned rules_shell0.6.1,protobuf33.4,rules_java9.1.0 bytes. For each module fetched BCR source.json, verified its SHA256 against committed MODULE.bazel.lock registryFileHashes, then verified downloaded archive against its original integrity. Prior rules_cc0.2.17 and bazel_features1.50.0 official mirror bytes also matched upstream digests. Added mirror as first route, retaining GitHub query and original fallback; no version, integrity, lock, compiler, source executor, workflow or check-graph change.",
+        "bazelisk --batch query attr(tags,exclusive,//:group_broker) returned //:group_broker and exit0 outside sandbox; sandbox query itself found target but process-inspection cleanup was denied. Existing source/test/docs implementation remains unchanged. Config inventory explicitly reconciled for this sole scheduling delta. Fresh CI still required."
       ],
       "inspected_files": [
+        ".config/build/bazelrc",
+        ".config/build/downloader.cfg",
         ".decapod/config.toml",
-        "Cargo.lock",
-        "Cargo.toml"
-      ],
-      "intent_id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
-      "modified_files": [
-        ".decapod/config.toml",
+        ".github/actions/source-ci-profile/action.yml",
         "AGENTS.md",
-        "CLAUDE.md",
-        "CODEX.md",
-        "GEMINI.md",
-        "docs/architecture/concurrency-custody.md"
+        "CONTRIBUTING.md",
+        "assets/tools/source_ci_profile.rs",
+        "src/decapod/core/intent_reconcile.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs",
+        "tests/intent_reconciliation_rpc.rs"
+      ],
+      "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+      "modified_files": [
+        ".config/build/bazelrc",
+        ".config/build/decapod.BUILD.bzl",
+        ".config/build/downloader.cfg",
+        ".decapod/config.toml",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/agent/api-index.md",
+        "docs/book/src/concepts/intent.md",
+        "src/decapod/core/intent_reconcile.rs",
+        "src/decapod/core/mod.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs",
+        "tests/intent_reconciliation_rpc.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        ".config/build",
+        ".decapod/managed/specs",
+        "docs",
+        "intent-reconciliation-1574",
+        "src/decapod",
+        "tests/intent_reconciliation_rpc.rs"
       ],
-      "run_id": "branch_01M6Z1ATPH4QM61T7E4FG1Y59G",
+      "run_id": "branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bend_01m6yw46e8yd4463",
+      "task_id": "bugs_01m6zjqskamsdwx8",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Candidate-assisted normal admission is not independent publication proof",
-        "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
