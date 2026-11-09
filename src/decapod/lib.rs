@@ -2699,6 +2699,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 GovernCommand::Artifacts(ArtifactsCli {
                     command:
                         ArtifactsCommand::VerifyCheckpoints {
+                            format,
                             base_branch,
                             head_ref,
                             target_base,
@@ -2706,17 +2707,14 @@ pub fn run() -> Result<(), error::DecapodError> {
                         },
                 }),
         }) => {
-            verify_checkpoints_with_target(
+            run_checkpoint_inspection(
                 &decapod_root_option?,
                 &base_branch,
                 &head_ref,
                 target_base.as_deref(),
                 publication_material,
+                &format,
             )?;
-            println!(
-                "{}",
-                serde_json::json!({"status": "ok", "base_ref": base_branch, "head_ref": head_ref})
-            );
         }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
@@ -7808,6 +7806,56 @@ fn verify_checkpoints_with_target(
     }
 }
 
+/// JSON diagnosis and strict text validation use the same history assessment.
+/// Neither a successful observation nor a recovery suggestion is publication proof.
+fn run_checkpoint_inspection(
+    root: &Path,
+    base: &str,
+    head: &str,
+    target: Option<&str>,
+    publication_material: bool,
+    format: &str,
+) -> Result<(), error::DecapodError> {
+    if format != "json" {
+        verify_checkpoints_with_target(root, base, head, target, publication_material)?;
+        println!(
+            "{}",
+            serde_json::json!({"status": "ok", "base_ref": base, "head_ref": head})
+        );
+        return Ok(());
+    }
+    let named_target =
+        target.or_else(|| (!base.bytes().all(|b| b.is_ascii_hexdigit())).then_some(base));
+    let report =
+        core::governance_document::inspect_checkpoint_history(root, base, head, named_target);
+    let report = match report {
+        Ok(report) => report,
+        Err(error) => {
+            println!(
+                "{}",
+                serde_json::json!({"schema":"decapod.checkpoint-history.v1", "scope":"checkpoint_history", "history_proven":false,"publication_ready":false,"status":"invalid_or_unavailable","error":error.to_string()})
+            );
+            return Err(error);
+        }
+    };
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&report)
+            .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?
+    );
+    report.require_proven()?;
+    if publication_material {
+        verify_checkpoints_with_target(
+            root,
+            &report.base_commit,
+            &report.head_commit,
+            target,
+            true,
+        )?;
+    }
+    Ok(())
+}
+
 fn run_govern_command(
     govern_cli: GovernCli,
     project_store: &Store,
@@ -7985,6 +8033,19 @@ fn run_govern_command(
                         .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
                 );
             }
+            ArtifactsCommand::RecordHistoryRecovery { source_ref, reason } => {
+                let document = core::governance_document::record_history_recovery(
+                    workspace_root,
+                    &source_ref,
+                    &reason,
+                    &current_agent_id(),
+                )?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?
+                );
+            }
             ArtifactsCommand::Status => {
                 let document = core::governance_document::load(workspace_root)?;
                 println!(
@@ -7994,22 +8055,20 @@ fn run_govern_command(
                 );
             }
             ArtifactsCommand::VerifyCheckpoints {
+                format,
                 base_branch,
                 head_ref,
                 target_base,
                 publication_material,
             } => {
-                verify_checkpoints_with_target(
+                run_checkpoint_inspection(
                     workspace_root,
                     &base_branch,
                     &head_ref,
                     target_base.as_deref(),
                     publication_material,
+                    &format,
                 )?;
-                println!(
-                    "{}",
-                    serde_json::json!({"status": "ok", "base_ref": base_branch, "head_ref": head_ref})
-                );
             }
             ArtifactsCommand::Inventory {
                 base_branch,

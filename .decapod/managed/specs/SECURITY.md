@@ -518,8 +518,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (223 files), `tests/` (215 files)
+- Repository signal fingerprint: `a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -773,3 +773,17 @@ dependency, lease, shared-claim trust or approval gates and do not establish
 verified isolated-worktree custody. Tests cover disjoint/intersecting/parent paths,
 malformed declarations, unchanged shared-claim trust and journaled scopes;
 source declarations are not a claim that tests have run.
+
+## Historical gap observations do not confer authority
+
+History inspection is read-only and remains reachable without claiming a task.
+Recording recovery is a governed mutation in the current actor's verified
+checkout, not an administrator capability. It cannot authorize an exception,
+replace a prior checkpoint, alter another actor's task, or certify earlier
+history. It requires a distinct workstream with source ancestry rooted in the
+accepted target. Ordinary resolution retains a digest/reference to the archived
+observation; it does not make the old missing checkpoint pass verification.
+A human-intent reference or local core label is not independently verified
+maintainer authority. Offline exception authorization and project-scoped database
+maintenance need separate accepted contracts; Propodus #88 owns future connected
+authority. No such capability is silently enabled here.

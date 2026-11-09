@@ -1058,8 +1058,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (223 files), `tests/` (215 files)
+- Repository signal fingerprint: `a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1355,3 +1355,23 @@ the entrypoints, managed Dockerfile and manifest with official 0.123.7 repairs
 those generated inputs but is not a passing test result. This merged candidate
 requires fresh exact-head execution evidence. Trust administration remains outside
 this PR and unresolved in issue 1480.
+
+## Historical recovery regression contract
+
+The unit history assessor and strict verifier share the same per-commit logic.
+Negative fixtures cover multiple missing commits, late tip checkpoints, changed
+parent evidence, malformed governance, unavailable refs and self-asserted
+exception declarations. The real `workbranch_governance` CLI fixture creates
+two actors through separate sessions and tasks in actual linked worktrees; it
+reproduces missing history and `SPEC_REVIEW_REQUIRED`, follows the documented
+recovery/review commands, and verifies the fresh publication material while
+preserving original commits/custody. It denies foreign-checkout mutations and
+resolution of an unarchived observation. Passing this gate is not full native,
+Buildkite, hosted security or cloud-profile proof. Full exact-candidate validation
+remains mandatory, and unsupported exception/maintenance capabilities stay absent.
+
+### Workbranch fixture admission
+
+`tests/workbranch_governance.rs` exercises custody through the actual actor-bound CLI. A manual Git worktree does not become authoring-admissible merely because `agent.init` observes it: `workspace ensure` must verify and bind the checkout first. A session release deliberately clears task assignments, so resumption requires a fresh task claim and authoring admission. Negative fixtures assert that observation preserves inherited governance and that foreign or nonexistent branch-task bindings cannot be admitted. These preconditions preserve the existing custody contract; passing fixtures do not replace independent exact-candidate publication proof.
+
+The existing Laya post-proof judgment remains distinct from deterministic source evidence. This governance recovery change introduces no worker-runtime migration or new model-proof contract.

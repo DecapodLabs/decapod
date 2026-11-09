@@ -35,7 +35,7 @@ missing blocker class means the cause is unclassified. It does not mean
 
 `todo add --scope 'paths:["src/a.rs"]'` declares the files an exclusive claim
 coordinates. Distinct callers can claim disjoint files in the same canonical
-repository; overlapping scopes retain typed conflict results. The real CLI
+repository; logical source overlap is coordination metadata rather than an authoring lock. Task custody and observed writable-checkout custody remain exclusive. The real CLI
 regressions check both claim acknowledgements and subsequent `todo get` data.
 Shared-claim acknowledgement preserves the existing primary assignment and
 adds only secondary membership. Enabling the option solely in a worktree
@@ -1167,8 +1167,8 @@ for inspection, and does not mutate spec or governance records. Its
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (223 files), `tests/` (215 files)
+- Repository signal fingerprint: `a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1474,3 +1474,22 @@ unevaluated requests and nonzero exit. Recovery requests complete-original-promp
 evaluation without human approval for invocation correction. `allow` and `block`
 retain their policy meaning and exit semantics. Compatibility `/query` / `/batch`
 transport remains unchanged; native RPC/hosted proof is not inferred from it.
+
+## Checkpoint history inspection and recovery
+
+`govern artifacts verify-checkpoints --format json` returns the versioned
+`decapod.checkpoint-history.v1` assessment. `scope=checkpoint_history` and
+`publication_ready=false` prevent confusing this gate with complete readiness.
+`history_proven`, `inspection_complete`, exact base/head commits, verified
+commits and per-commit findings expose proven, unproven-history, invalid-history
+and unavailable outcomes. Each finding names its commit, tree, obligation,
+recovery and material digest when knowable. An incomplete assessment is explicit.
+
+`govern artifacts record-history-recovery --source-ref <ref> --reason <text>`
+requires a fresh admitted workstream at its accepted base. It records current
+actor/custody, immutable source identities and gap assessment, with
+`historical_proof=not_proven` and `exception_authorized=false`. It neither copies
+source nor changes its ownership/history. Identical calls are idempotent;
+conflicting context is rejected. `resolve-obligation` requires the recovery
+observation to be archived in Git before retiring its active obligation.
+Publication still independently verifies every commit in the new range.

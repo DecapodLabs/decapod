@@ -174,6 +174,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `ConstitutionLinksQuery`
 ### Operation: `ConstitutionLinksNavigate`
 ### Operation: `SpecsRefresh`
+### Operation: `IntentReconcile`
 ### Operation: `ConstitutionMigrate`
 ### Operation: `AgentRegistryQuery`
 ### Operation: `SchemaGet`
@@ -283,6 +284,20 @@ inputs, summary, or proof references return `GOVERNANCE_CHECKPOINT_ID_CONFLICT`
 without replacing history. Record changed work with a new ID. This check runs
 under the existing governance-document lock; independent history verification
 still rejects erased or rewritten records in authored commits.
+
+Historical inspection is available without task acquisition:
+`verify-checkpoints --base-branch <accepted> --head-ref <source> --target-base <target> --format json`
+reports exact commits, material obligations and recovery dispositions. A missing
+historical checkpoint remains unproven; a new tip checkpoint cannot prove it.
+The report always says `publication_ready=false` because it is not full validation.
+To recover work, preserve the source branch, acquire a new task and a fresh
+workspace from the accepted target, then use
+`record-history-recovery --source-ref <immutable-source> --reason <rationale>`.
+This records present-time gap custody, not an authorized exception. Review and
+reauthor selected source, review specs, checkpoint and commit the observation.
+Only after that archive exists may `resolve-obligation` record the current
+recovery disposition with evidence references. Preserve the old unproven
+history; never fabricate its checkpoints or treat a decision label as authority.
 `inventory --claims-note "..."` records a current-PR checkpoint, not a fake claim
 or a policy-history append. `inventory --compact` performs lossless legacy
 normalization. Neither surface repairs malformed evidence by overwriting it.

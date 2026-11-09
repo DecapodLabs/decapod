@@ -385,8 +385,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (223 files), `tests/` (215 files)
+- Repository signal fingerprint: `a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -405,3 +405,21 @@ job requires that output and the master branch before it can be scheduled.
 GitHub-compatible environment variables or missing Buildkite markers alone do
 not establish native ownership. Imported builds retain a generic site artifact
 and validation custody, without starting the GitHub Pages deployment job.
+
+## Recover work from immutable checkpoint gaps
+
+First use `govern artifacts verify-checkpoints --base-branch <accepted-sha>
+--head-ref <source-sha> --target-base <branch> --format json`. Preserve the source
+branch/task and returned failures. A later checkpoint cannot prove a checkpoint
+existed in an earlier immutable commit. Unavailable input is not a proven gap.
+
+Create and claim a new task, use normal `workspace ensure` from the accepted
+target, and enter its returned verified checkout. Before advancing that branch,
+run `govern artifacts record-history-recovery --source-ref <source-sha> --reason
+<reviewed-rationale>`. Review/reauthor selected source without importing old
+governance or invalid ancestry. Run `govern plan review-spec` for current
+interfaces/architecture/security, refresh projections, then stage, checkpoint
+and commit the present observation. Resolve its returned `history-recovery:<sha>`
+obligation with the archived observation and relevant current evidence references;
+checkpoint/commit that resolution and run complete independent validation.
+This recovers current work. It leaves old history unproven and enables no waiver.

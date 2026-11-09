@@ -816,8 +816,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (223 files), `tests/` (215 files)
+- Repository signal fingerprint: `a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1040,3 +1040,15 @@ as cloud authorization. The released compatibility task/event profile remains;
 resource reservation, filesystem bindings, lease handoff and validated remote
 completion are unsupported there. Local labels cannot grant cloud roles or
 entitlements. Native RPC and hosted integration need their separate proofs.
+
+## Immutable history recovery assessment
+
+`core/governance_document/checkpoint_history.rs` contains the per-commit checker
+shared by strict checkpoint admission and read-only JSON assessment. It binds
+resolved base/head identities, classifies affected obligations and retains the
+strict material, identity, parent-record and imported-lineage requirements.
+`governance_document::record_history_recovery` records an observation in the
+fresh workstream's carried obligations, under the existing document lock.
+The source commit, tree and governance blob remain immutable; no database,
+scheduler or second history authority is introduced. Source reauthoring and
+current independent proof are distinct from reconstruction of past evidence.
