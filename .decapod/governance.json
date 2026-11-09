@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "15b69ce43fc56440d498d52d8726f89d499615fe",
+    "accepted_commit": "1d865efdf9846b88a8911ff0ee34c16d75d6cdc9",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -170,6 +170,14 @@
       "claim:full-proof-preserved": {
         "falsifier": "Any missing, failed, stale, mismatched or skipped required proof can produce readiness, or an original check command is omitted",
         "statement": "All currently applicable source checks, per-check receipts, exact-source bindings and final freshness remain required under bounded transport and same-checkout grouping",
+        "status": "open"
+      },
+      "claim:governance-recovery-liveness": {
+        "falsifier": "A tip checkpoint retroactively proves an uncheckpointed commit, an unauthorized or stale exception changes admission, or the documented supported recovery cannot reach its declared result.",
+        "proof_refs": [
+          "src/decapod/core/governance_document.rs"
+        ],
+        "statement": "Missing immutable checkpoint evidence is precisely discoverable and has an explicit authorized recovery outcome without being reclassified as independently proven history.",
         "status": "open"
       },
       "claim:governed-context:question:task-class-benefit": {
@@ -462,6 +470,7 @@
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
       "trajectory:280aab34e7c0084a": "Source-built generator is used solely for report-prescribed Markdown regeneration and grants no kernel authority. No native build or scientific test executed on132because source docs proof failed. All earlier failed reports retained. Return to official1191 plain validate on exact repaired candidate; no bootstrap exception or manual shadow preflight.",
+      "trajectory:306f3433d7e5e778": "Final candidate and provider proof remain required; local macOS failures are not waived.",
       "trajectory:30ef4cc2d51da604": "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification.",
       "trajectory:331b4335c37f48d2": "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback.",
       "trajectory:3a8cce72f404c6a2": "Explicit latest user decision replaces only research qualification prerequisite, retains all deterministic and functional required active-model gates. Original task/custody/branch preserved; current remoteHEADfef84896/master7371ad25, clean. Prior12modelrequests all actual singletonreject; constructed baseline discloses nonexecution and unassessed trajectory so not a meaningful ready positive. Need faithful production-shaped known-outcome cases, shared code, unchanged model/calibration/tolerances, preserve failures and no cherry-picking.",
@@ -473,6 +482,7 @@
       "trajectory:4d4fa5c9f32018c3": "Focused tests and live GET are diagnostic; full released-controller validation remains required.",
       "trajectory:4daee12c8c51710b": "Fullvalidate5635stoppedbefore native because public docs workflow2290failed generatedconfigschema. Followed actualreport source-built docs build via reviewed existing docs-repairscript; no candidatecontrollergovernance. GitHubClippydiagnostic found single needlessborrow newly extracted sharedfunction. Fixwithoutlint suppression, preservefailedreport, rerunexactcandidate. No previousnativepassisclaimedforthisnewcode.",
       "trajectory:50af5d188a338fdf": "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement.",
+      "trajectory:54138daaebe9eade": "A declared human decision reference is provenance, not authenticated publication authority; candidate-only exception records cannot waive proof.",
       "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
       "trajectory:5fe8315a1e8b30f0": "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
       "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
@@ -530,100 +540,49 @@
     }
   },
   "change": {
-    "id": "change_01M6ZB193NCTA203GG9009RRFZ",
-    "base_commit": "15b69ce43fc56440d498d52d8726f89d499615fe",
+    "id": "change_01M70TTTX321F6YDAXGR61AVFF",
+    "base_commit": "1d865efdf9846b88a8911ff0ee34c16d75d6cdc9",
     "target_base": "origin/master"
   },
   "claims": {
-    "governance-recovery-liveness": {
-      "statement": "Missing immutable checkpoint evidence is precisely discoverable and has an explicit authorized recovery outcome without being reclassified as independently proven history.",
-      "falsifier": "A tip checkpoint retroactively proves an uncheckpointed commit, an unauthorized or stale exception changes admission, or the documented supported recovery cannot reach its declared result.",
-      "status": "open",
+    "aptitude-seed-idempotence": {
+      "statement": "Repeated initialization inserts only missing default prompt pairs and preserves all existing IDs, disabled defaults and custom duplicate rows.",
+      "falsifier": "Any changed existing prompt row or additional copy of an existing default refutes the claim.",
+      "status": "supported",
       "proof_refs": [
-        "src/decapod/core/governance_document.rs"
+        "/private/tmp/seed134-isolated-concurrency.log",
+        "/private/tmp/seed134-isolated-correctness.log"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "history-recovery-reviewed-implementation",
-      "summary": "Preserve immutable gaps with typed diagnostics and fresh governed reauthoring; audited 36 reports; final independent proof remains required.",
-      "input_digest": "sha256:7e02dbd05a7d0d82f4dbe34172aef6ee6008f67b61fe622bdda17a1efc8d6db7"
-    },
-    {
-      "id": "ci-custody-fixture-reconciliation",
-      "summary": "Reconcile inherited workbranch fixtures through actor-bound CLI, verified checkout admission and fresh custody after session release; document clean-master unit comparison and external workflow evidence.",
-      "input_digest": "sha256:b1a069e17836768d938947932be472c132312f16dc97ceb334a4ef264b1bdde3"
-    },
-    {
-      "id": "standalone-worker-accepted-release-pin",
-      "summary": "Align only standalone worker local Decapod version pin with accepted 0.133.0; locked metadata accepts corrected graph, all other dependencies and mandatory worker recipes preserved; native proof remains pending.",
-      "input_digest": "sha256:128f20ba8b9b17b7a8a7c203b0bb4901bbf0115b40f353488e00947907a31d16"
-    },
-    {
-      "id": "current-laya-recovery-scope",
-      "summary": "Keep the accepted governance recovery focused on current Laya and custody fixtures; withdraw unrelated worker maintenance without rewriting historical commits or claiming publication readiness.",
-      "input_digest": "sha256:273161b3aaccd531910086b5151e9f1107c7ef18c52892856897bbef590b469a"
-    },
-    {
-      "id": "rebase-accepted-1331",
-      "summary": "Rebase onto accepted 7035a854, refresh official 0.133.1 projections, retain unchanged kernel implementation and record 72+10 passing regressions",
-      "input_digest": "sha256:6f532bfa89892616358fa961b135dd8ecf2037a002cc634c09e6cc267e135dd7",
+      "id": "seeds-v01340",
+      "summary": "Port independently measured idempotent aptitude seed fix onto accepted v0.134.0. Clean isolated build passes both public-initializer regressions and 64-connection race; retain initial shared-target failure and original adverse benchmark tails.",
+      "input_digest": "sha256:a7ebc2c3b6951be7515413fa650bd6fcc5dc1c51eaa10476f8c9d0fcb932fe61",
       "proof_refs": [
-        "tests/unit/core/governance_document_tests.rs",
-        "tests/workbranch_governance.rs"
-      ]
-    },
-    {
-      "id": "accepted-1331-retained-replay-b3a3bc70",
-      "summary": "Present-time replay of b3a3bc70 onto accepted 7035a854 with complete journal and parent checkpoint preservation; original history retained in archive refs",
-      "input_digest": "sha256:9cfaa19cbd8e4e48fd656e5502565d301ef2883a0e2e1836ca17f2cdb1dc1236"
-    },
-    {
-      "id": "accepted-1331-retained-replay-03d1d638",
-      "summary": "Present-time replay of 03d1d638 onto accepted 7035a854 with complete journal and parent checkpoint preservation; original history retained in archive refs",
-      "input_digest": "sha256:e4fc04f76d1a0c17714a788fa5c27bb3886870b97c6eae2d604bf5ef434350ce"
-    },
-    {
-      "id": "accepted-1331-retained-replay-d3e2bc9f",
-      "summary": "Present-time replay of d3e2bc9f onto accepted 7035a854 with complete journal and parent checkpoint preservation; original history retained in archive refs",
-      "input_digest": "sha256:0617d2d3208c154504572a6fe3ff630339aaa2d57b0b1d54b7fbee48e47a9dad"
-    },
-    {
-      "id": "accepted-1331-retained-replay-c3a2b206",
-      "summary": "Present-time replay of c3a2b206 onto accepted 7035a854 with complete journal and parent checkpoint preservation; original history retained in archive refs",
-      "input_digest": "sha256:eb32c943fff2c08f3a23001396be37b4e3af1334deaa979307f1194dbec0abe1"
-    },
-    {
-      "id": "accepted-1331-retained-replay-770940fd",
-      "summary": "Present-time replay of 770940fd onto accepted 7035a854 with complete journal and parent checkpoint preservation; original history retained in archive refs",
-      "input_digest": "sha256:6f532bfa89892616358fa961b135dd8ecf2037a002cc634c09e6cc267e135dd7"
-    },
-    {
-      "id": "generated-intent-rpc-index",
-      "summary": "Regenerate operation index after accepted IntentReconcile merge; resolve observed documentation drift without source or gate changes",
-      "input_digest": "sha256:d7c6d84577367c635a0280eeac222b5e473c2d4ec89dab8940c778702f814c39",
-      "proof_refs": [
-        "docs/agent/command-contracts.md"
+        "/private/tmp/seed134-isolated-concurrency.log",
+        "/private/tmp/seed134-isolated-correctness.log",
+        "docs/datastore-v2/aptitude-measurements.json"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M6ZB193NCTA203GG9009RRFZ": {
+    "intent:change_01M70TTTX321F6YDAXGR61AVFF": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "aptitude"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+      "id": "intent:change_01M70TTTX321F6YDAXGR61AVFF",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Audit governance liveness and repair historical evidence recovery\n\nAudit all 36 worldofgeese issues since 2026-09-01 and PR1566; implement one focused supported recovery contract preserving proof, identity, custody, datastore and cloud boundaries.",
-      "refined_intent": "Audit governance liveness and repair historical evidence recovery\n\nAudit all 36 worldofgeese issues since 2026-09-01 and PR1566; implement one focused supported recovery contract preserving proof, identity, custody, datastore and cloud boundaries.",
+      "raw_intent": "Avoid duplicate aptitude default prompts during initialization\n\nIndependent datastore v2 increment: measure repeated aptitude initialization and prevent fresh random default prompt IDs from inserting duplicate configuration. Preserve every existing custom, disabled and usage row; prove atomic seeding under concurrent callers. No cloud schema or historical deletion.",
+      "refined_intent": "Avoid duplicate aptitude default prompts during initialization\n\nIndependent datastore v2 increment: measure repeated aptitude initialization and prevent fresh random default prompt IDs from inserting duplicate configuration. Preserve every existing custom, disabled and usage row; prove atomic seeding under concurrent callers. No cloud schema or historical deletion.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -636,380 +595,177 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Publish the accepted governance-history recovery and reconciled custody fixtures. Keep the current Laya contract unchanged; withdraw obsolete standalone-worker maintenance from the final source delta. Preserve all historical checkpoints, failed proof and normal publisher policy; any review-only draft exception requires explicit human direction.",
+      "intent": "Port the independently measured aptitude seed fix onto accepted v0.134.0. Repeated initialization must preserve existing defaults, disabled rows and custom duplicates while preventing newly generated default duplicates. No historical deletion or latency improvement claim; validate before publishing.",
       "phases": [],
       "proof_hooks": [
-        "cargo test --locked --test workbranch_governance"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current merged architecture preserves accepted intent-reconciliation advisory boundary and original immutable gap recovery semantics; accepted mirror infrastructure remains separate from governance recovery",
-          "reviewed_code_fingerprint": "a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289",
-          "spec_material_hash": "8b08790bd5f8ae0386517c584b0844e1048f6df035acd6dbdc5eaed451b7e17b"
+          "reason": "Reviewed current architecture: atomic conditional seed statements prevent future duplicates without historical deletion, new schema constraints or authority changes.",
+          "reviewed_code_fingerprint": "9fd968b601c73b506d616ef2068119e058ab1dfb24c1a099a91acb9dd875dbaf",
+          "spec_material_hash": "d4c6dddf1da7c3340662820940abe464bef9f6099bfe08bee45881c5eb14b6a4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rebased on accepted 7035a854, preserving both intent.reconcile advisory interface and checkpoint-history recovery interface; no implementation changes to existing recovery CLI",
-          "reviewed_code_fingerprint": "a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289",
-          "spec_material_hash": "e16d67c516143c9f47e44d34d329f906b0e0c5cfe854797543d1f5bc2ab9c56f"
+          "reason": "Reviewed current initializer and custom prompt interfaces: only absent default context/text pairs are seeded; existing IDs, disabled rows and custom duplicates remain; no public RPC, uniqueness rule or proof encoding changes.",
+          "reviewed_code_fingerprint": "9fd968b601c73b506d616ef2068119e058ab1dfb24c1a099a91acb9dd875dbaf",
+          "spec_material_hash": "c33ed37c050a8c58b66a01e809e420d53c182f4aa0804fa4bc18678ffdfcc54e"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved accepted no-self-authorization and prompt-intent boundaries along with original recovery custody and no-retrospective-proof guarantees; no policy or trust changes",
-          "reviewed_code_fingerprint": "a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289",
-          "spec_material_hash": "325a66454da5f43b05f157a41d5496fa09786208ed9dddd09ccfc8f7cc577bc1"
+          "reason": "Reviewed local storage mutation paths and the existing security contract. No credentials, tenant scope, authorization, command admission, custody, proof encodings or hosted execution boundary changes. Parameterized execution and existing broker audit remain required.",
+          "reviewed_code_fingerprint": "9fd968b601c73b506d616ef2068119e058ab1dfb24c1a099a91acb9dd875dbaf",
+          "spec_material_hash": "c279b112d21c44780d91ac6a15dec7a077bca10e24f991b0026ad5210e6353c3"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Recover governed work from immutable checkpoint gaps without inventing historical proof",
+      "title": "Avoid duplicate aptitude default prompts during initialization",
       "todo_ids": [
-        "code_01m6zb0krk7p4w7k"
+        "perf_01m6zvyp09faprsk"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794215320Z"
+      "updated_at": "1794251078Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Current product is Laya; no runtime migration, obsolete worker repair, Dactyl/Propodus or source publication-policy weakening in the final delta.",
-        "No historical exception authority, database capability implementation, datastore or SaaS changes.",
-        "No production changes beyond accepted 5557b015 design; no auth, custody, provider, required-check or datastore changes.",
-        "Only standalone worker local path package version 0.130.0 to accepted 0.133.0; complete 119-input comparison reviewed, no dependency edges or required checks changed."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:73fdd96c4066a7e8f8e64a7d0ec92ccf1d2ed31d34fad6eb492fb027c43a7164",
+      "artifact_hash": "sha256:2ca94b627e64484f3c8a7aac24f08e9ba378e0be3d687d790d6979b707a1f5b5",
       "checks": [
         {
-          "name": "actual_cli_recovery_and_spec_review",
+          "name": "isolated-seed-preservation",
           "status": "passed"
         },
         {
-          "name": "baseline_failure_comparison",
+          "name": "seed-race",
           "status": "passed"
         },
         {
-          "name": "bootstrap_interlock",
-          "status": "passed"
-        },
-        {
-          "name": "ccd4_buildkite_41",
-          "status": "passed"
-        },
-        {
-          "name": "ccd4_full_publisher",
+          "name": "shared-target-seed-test",
           "status": "failed"
-        },
-        {
-          "name": "contract_integrations_43",
-          "status": "passed"
-        },
-        {
-          "name": "documentation-sync",
-          "status": "failed"
-        },
-        {
-          "name": "final_candidate_rechecks",
-          "status": "partial"
-        },
-        {
-          "name": "focused_governance_72",
-          "status": "passed"
-        },
-        {
-          "name": "format_and_strict_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "full_local_unit_suite",
-          "status": "failed"
-        },
-        {
-          "name": "history_recovery_regressions",
-          "status": "passed"
-        },
-        {
-          "name": "independent_publication",
-          "status": "unavailable"
-        },
-        {
-          "name": "issue_inventory",
-          "status": "passed"
-        },
-        {
-          "name": "normal_full_publication",
-          "status": "failed"
-        },
-        {
-          "name": "rebased-formatting",
-          "status": "passed"
-        },
-        {
-          "name": "rebased-governance-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "rebased-strict-clippy",
-          "status": "passed"
-        },
-        {
-          "name": "rebased-workbranch-cli",
-          "status": "passed"
-        },
-        {
-          "name": "remote_ccd4_ci_41",
-          "status": "passed"
-        },
-        {
-          "name": "workbranch_reconciliation",
-          "status": "passed"
-        },
-        {
-          "name": "worker_locked_metadata",
-          "status": "passed"
-        },
-        {
-          "name": "worker_unit_tests",
-          "status": "partial"
         }
       ],
-      "current_phase": "review_preparation",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+            "intent_id": "intent:change_01M70TTTX321F6YDAXGR61AVFF",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+            "intent_id": "intent:change_01M70TTTX321F6YDAXGR61AVFF",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
+            "detail": "trajectory:branch_01M70TTV10W2J95NJRJ13X9BWK",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+            "intent_id": "intent:change_01M70TTTX321F6YDAXGR61AVFF",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
+            "detail": "trajectory:branch_01M70TTV10W2J95NJRJ13X9BWK",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+            "intent_id": "intent:change_01M70TTTX321F6YDAXGR61AVFF",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
+            "detail": "trajectory:branch_01M70TTV10W2J95NJRJ13X9BWK",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+            "intent_id": "intent:change_01M70TTTX321F6YDAXGR61AVFF",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
+            "detail": "trajectory:branch_01M70TTV10W2J95NJRJ13X9BWK",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+            "intent_id": "intent:change_01M70TTTX321F6YDAXGR61AVFF",
             "kind": "trajectory_step_recorded",
             "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6ZB196Q7989BE8ZKJEYWA8A": {
+          "branch_01M70TTV10W2J95NJRJ13X9BWK": {
             "evidence_only": true,
-            "id": "branch_01M6ZB196Q7989BE8ZKJEYWA8A",
-            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+            "id": "branch_01M70TTV10W2J95NJRJ13X9BWK",
+            "intent_id": "intent:change_01M70TTTX321F6YDAXGR61AVFF",
             "steps": [
               {
-                "action": "investigation",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/governance_document.rs",
-                  "src/decapod/core/task_journal.rs",
-                  "src/decapod/plan_governance.rs",
-                  "https://github.com/DecapodLabs/decapod/pull/1566"
+                  "src/decapod/plugins/aptitude.rs",
+                  "tests/aptitude_initialization.rs",
+                  "tests/unit/plugins/aptitude_seed_tests.rs",
+                  "Ported own material patch from preserved commit 9ae236fa onto accepted 1d865efd; accepted aptitude bytes unchanged. Original Buildkite 6143 failed, no publication claimed.",
+                  "Original benchmark docs/datastore-v2/aptitude-measurements.json prevents 512 inserts and 118784 bytes of fixture growth; adverse latency tails retained, no latency qualification claimed."
                 ],
-                "proof_refs": [
-                  "issue_inventory"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "root"
+                  "aptitude"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "A declared human decision reference is provenance, not authenticated publication authority; candidate-only exception records cannot waive proof."
-                ]
+                "validation_findings": []
               },
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "docs/architecture/governance-liveness-audit.md",
-                  "src/decapod/core/governance_document/checkpoint_history.rs",
-                  "tests/workbranch_governance.rs",
-                  "tests/unit/core/governance_document_tests.rs; tests/workbranch_governance.rs; docs/architecture/governance-liveness-audit.md"
+                  "/private/tmp/seed134-correctness.log: tests observed old duplicate-insertion behavior while index and seed branches concurrently reused one Cargo target. Rerunning in a fresh workspace-local target; no failure dismissed as passed."
                 ],
                 "proof_refs": [
-                  "history_recovery_regressions",
-                  "actual_cli_recovery_and_spec_review",
-                  "full_local_unit_suite",
-                  "final_candidate_rechecks",
-                  "independent_publication"
+                  "shared-target-seed-test"
                 ],
                 "scope": [
-                  "root"
+                  "aptitude"
                 ],
                 "sequence": 5,
-                "validation_findings": [
-                  "Final candidate and provider proof remain required; local macOS failures are not waived."
-                ]
+                "validation_findings": []
               },
               {
-                "action": "publication_preparation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "tests/workbranch_governance.rs",
-                  "docs/architecture/governance-liveness-audit.md",
-                  "tests/workbranch_governance.rs; docs/architecture/governance-liveness-audit.md; issues #1571 #1572 #1573"
+                  "/private/tmp/seed134-isolated-correctness.log: clean workspace-local target compiled v0.134.0; both public initializer regression tests passed, including disabled and duplicate custom history. Prior shared-target failure remains recorded and is consistent with cross-branch artifact reuse."
                 ],
                 "proof_refs": [
-                  "workbranch_reconciliation",
-                  "focused_governance_72",
-                  "contract_integrations_43",
-                  "bootstrap_interlock",
-                  "format_and_strict_clippy",
-                  "full_local_unit_suite",
-                  "baseline_failure_comparison",
-                  "independent_publication"
+                  "isolated-seed-preservation"
                 ],
                 "scope": [
-                  "root"
+                  "aptitude"
                 ],
                 "sequence": 6,
                 "validation_findings": []
               },
               {
-                "action": "publication_recovery",
+                "action": "validation",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "assets/tools/vega-native/Cargo.lock",
-                  "assets/tools/vega-native/Cargo.lock; docs/architecture/governance-liveness-audit.md; exact-candidate ccd4cd0b independent publisher diagnostic RUST_WORKER_FAILED"
+                  "/private/tmp/seed134-isolated-concurrency.log: production seed statements under 64 independent SQLite connections yield one row per default and preserve explicit custom duplicates."
                 ],
                 "proof_refs": [
-                  "ccd4_buildkite_41",
-                  "ccd4_full_publisher",
-                  "worker_locked_metadata",
-                  "worker_unit_tests"
+                  "seed-race"
                 ],
                 "scope": [
-                  "root"
+                  "aptitude"
                 ],
                 "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "review_preparation",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "docs/architecture/governance-liveness-audit.md; accepted-controller PUBLICATION_NOT_READY and rust_worker::preserve_accepted policy"
-                ],
-                "proof_refs": [
-                  "remote_ccd4_ci_41",
-                  "normal_full_publication"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "72 governance tests passed on v0.133.1 accepted target 7035a854; original recovery Rust/test bytes unchanged by rebase",
-                  "All 120 independently discovered inventory hashes match accepted master 7035a854 exactly; only Cargo.toml/Cargo.lock differ from accepted e344110f before the accepted v0.133.1 release. Reviewed inventory declaration reconciled to that accepted inventory, without changing check definitions or executor.",
-                  "Pre-rebase complete history preserved in archive/governance-liveness-before-rebase-8d1da88; current accepted mirror and broker-isolation changes inherited unchanged"
-                ],
-                "proof_refs": [
-                  "rebased-governance-regressions"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "10/10 workbranch tests passed, including real CLI recovery/spec review and normal custody admission; strict all-target/all-feature Clippy passed under accepted v0.133.1 source"
-                ],
-                "proof_refs": [
-                  "rebased-workbranch-cli",
-                  "rebased-strict-clippy",
-                  "rebased-formatting"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "docs/agent/command-contracts.md",
-                  "New CI execution reached docs proof; generator added missing IntentReconcile operation inherited from accepted #1576. Generated command-contract index refreshed; kernel code unchanged."
-                ],
-                "proof_refs": [
-                  "documentation-sync"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 11,
                 "validation_findings": []
               }
             ]
@@ -1019,50 +775,33 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "10/10 workbranch tests passed, including real CLI recovery/spec review and normal custody admission; strict all-target/all-feature Clippy passed under accepted v0.133.1 source",
-        "72 governance tests passed on v0.133.1 accepted target 7035a854; original recovery Rust/test bytes unchanged by rebase",
-        "All 120 independently discovered inventory hashes match accepted master 7035a854 exactly; only Cargo.toml/Cargo.lock differ from accepted e344110f before the accepted v0.133.1 release. Reviewed inventory declaration reconciled to that accepted inventory, without changing check definitions or executor.",
-        "New CI execution reached docs proof; generator added missing IntentReconcile operation inherited from accepted #1576. Generated command-contract index refreshed; kernel code unchanged.",
-        "Pre-rebase complete history preserved in archive/governance-liveness-before-rebase-8d1da88; current accepted mirror and broker-isolation changes inherited unchanged",
-        "assets/tools/vega-native/Cargo.lock; docs/architecture/governance-liveness-audit.md; exact-candidate ccd4cd0b independent publisher diagnostic RUST_WORKER_FAILED",
-        "docs/architecture/governance-liveness-audit.md; accepted-controller PUBLICATION_NOT_READY and rust_worker::preserve_accepted policy",
-        "https://github.com/DecapodLabs/decapod/pull/1566",
-        "tests/unit/core/governance_document_tests.rs; tests/workbranch_governance.rs; docs/architecture/governance-liveness-audit.md",
-        "tests/workbranch_governance.rs; docs/architecture/governance-liveness-audit.md; issues #1571 #1572 #1573"
+        "/private/tmp/seed134-correctness.log: tests observed old duplicate-insertion behavior while index and seed branches concurrently reused one Cargo target. Rerunning in a fresh workspace-local target; no failure dismissed as passed.",
+        "/private/tmp/seed134-isolated-concurrency.log: production seed statements under 64 independent SQLite connections yield one row per default and preserve explicit custom duplicates.",
+        "/private/tmp/seed134-isolated-correctness.log: clean workspace-local target compiled v0.134.0; both public initializer regression tests passed, including disabled and duplicate custom history. Prior shared-target failure remains recorded and is consistent with cross-branch artifact reuse.",
+        "Original benchmark docs/datastore-v2/aptitude-measurements.json prevents 512 inserts and 118784 bytes of fixture growth; adverse latency tails retained, no latency qualification claimed.",
+        "Ported own material patch from preserved commit 9ae236fa onto accepted 1d865efd; accepted aptitude bytes unchanged. Original Buildkite 6143 failed, no publication claimed."
       ],
       "inspected_files": [
-        "docs/architecture/governance-liveness-audit.md",
-        "src/decapod/core/governance_document.rs",
-        "src/decapod/core/task_journal.rs",
-        "src/decapod/plan_governance.rs"
+        "src/decapod/plugins/aptitude.rs"
       ],
-      "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+      "intent_id": "intent:change_01M70TTTX321F6YDAXGR61AVFF",
       "modified_files": [
-        "assets/tools/vega-native/Cargo.lock",
-        "docs/agent/command-contracts.md",
-        "docs/architecture/governance-liveness-audit.md",
-        "src/decapod/core/governance_document/checkpoint_history.rs",
-        "tests/workbranch_governance.rs"
+        "tests/aptitude_initialization.rs",
+        "tests/unit/plugins/aptitude_seed_tests.rs"
       ],
       "next_transitions": [
-        "Attempt supported draft publication after exact checkpoint; retain failed or unavailable independent proof.",
-        "Checkpoint exact candidate and obtain independent accepted-controller validation.",
-        "Checkpoint minimal locked-build repair and rerun exact-candidate supported draft publisher.",
-        "Preserve the blocked readiness result and prepare the focused branch for explicit review-only draft authorization.",
+        "Commit candidate and run full decapod validate before publication.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        "aptitude"
       ],
-      "run_id": "branch_01M6ZB196Q7989BE8ZKJEYWA8A",
+      "run_id": "branch_01M70TTV10W2J95NJRJ13X9BWK",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m6zb0krk7p4w7k",
+      "task_id": "perf_01m6zvyp09faprsk",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "A declared human decision reference is provenance, not authenticated publication authority; candidate-only exception records cannot waive proof.",
-        "Final candidate and provider proof remain required; local macOS failures are not waived."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

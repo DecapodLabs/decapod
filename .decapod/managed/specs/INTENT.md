@@ -296,8 +296,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
+- Repository signal fingerprint: `9fd968b601c73b506d616ef2068119e058ab1dfb24c1a099a91acb9dd875dbaf`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (217 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -450,3 +450,11 @@ lack their own checkpoints. The supported outcome is a new, properly admitted
 workstream with a present-time gap observation and fresh proof, while the
 original source history remains unproven. This change adds no trust elevation,
 human-approval assertion, database maintenance privilege or publication waiver.
+
+## Bounded default prompt initialization
+
+Repeated aptitude initialization must not create new copies of an existing
+default or re-enable it through another row. Restore a genuinely missing default
+while preserving all historical and custom prompt rows. Storage evidence in
+`docs/datastore-v2/aptitude-seeding.md` concerns avoided future fixture growth;
+existing data compaction and a tail-latency improvement remain unproven.

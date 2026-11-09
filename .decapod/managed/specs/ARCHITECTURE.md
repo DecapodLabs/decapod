@@ -828,8 +828,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
+- Repository signal fingerprint: `9fd968b601c73b506d616ef2068119e058ab1dfb24c1a099a91acb9dd875dbaf`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (217 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1064,3 +1064,12 @@ fresh workstream's carried obligations, under the existing document lock.
 The source commit, tree and governance blob remain immutable; no database,
 scheduler or second history authority is introduced. Source reauthoring and
 current independent proof are distinct from reconstruction of past evidence.
+
+## Aptitude default configuration lifecycle
+
+`plugins/aptitude.rs::seed_default_agent_prompts` uses one atomic conditional
+INSERT per default `(context,prompt_text)` pair. The existing context index
+bounds the existence lookup; fresh random IDs alone never deduplicated earlier
+seeds. This prevents future duplicate startup writes without deleting history,
+adding constraints on custom prompts or changing governance authority. Existing
+rows, disabled flags, priority, usage and stable identity remain intact.

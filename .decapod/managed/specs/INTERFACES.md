@@ -1181,8 +1181,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
+- Repository signal fingerprint: `9fd968b601c73b506d616ef2068119e058ab1dfb24c1a099a91acb9dd875dbaf`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (217 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1507,3 +1507,11 @@ source nor changes its ownership/history. Identical calls are idempotent;
 conflicting context is rejected. `resolve-obligation` requires the recovery
 observation to be archived in Git before retiring its active obligation.
 Publication still independently verifies every commit in the new range.
+
+## Default prompt identity
+
+Initialization treats a default `(context,prompt_text)` pair as already present
+regardless of its active flag, priority or usage. It preserves historical IDs and
+custom rows; explicit custom insertion can still create identical text. Only a
+missing default is inserted. No CLI/RPC schema, identifier format, cloud allowlist
+or database uniqueness constraint changes.
