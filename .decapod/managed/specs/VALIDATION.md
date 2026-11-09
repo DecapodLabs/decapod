@@ -1,5 +1,16 @@
 # Validation
 
+## macOS bounded-reader recovery (#1571)
+
+The accepted v0.133.2 before-fix regression
+`core::validation_epoch::input::tests::bounded_epoch_preserves_ordinary_epoch_digest`
+failed with `ENOTDIR`. Descriptor-relative macOS enumeration must make the same
+bounded and ordinary digests agree while retaining symlink/FIFO rejection and
+all input bounds. The macOS iterator regressions also require independent cursors,
+no pathname substitution, safe ownership after dropping the original handle, and
+correct non-following file/directory/link classification. These are local input
+safety checks, not evidence of cloud, hosted CI or publication readiness.
+
 ## Claim boundary delivery checks
 
 The required CLI target runs the two `claim_boundaries` regressions with
@@ -1070,8 +1081,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
+- Repository signal fingerprint: `b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (225 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
