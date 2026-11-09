@@ -644,6 +644,16 @@
         "/private/tmp/pr1589-lifecycle-repair-tests.log",
         "/private/tmp/pr1589-supabase-final-suite.log"
       ]
+    },
+    {
+      "id": "ci-http-fixture-blocking-repair",
+      "summary": "Make accepted HTTP fixture sockets explicitly blocking under unchanged read timeout; delayed-header regression passes, with current content-bound security review correctly unchanged.",
+      "input_digest": "sha256:8fe0281d9af3dfae764c6a7e3235dba1059f5d879ebe9af61601b9d27dc1074c",
+      "proof_refs": [
+        "/private/tmp/pr1589-accepted-socket-probe.log",
+        "/private/tmp/pr1589-http-fixture-repair.log",
+        "/private/tmp/pr1589-publication-material-repair.log"
+      ]
     }
   ],
   "intents": {
@@ -684,22 +694,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Material branch-level event storage and Laya helper changes remain documented. CI repair modifies only fixture setup/teardown, with no new production retry mechanism.",
-          "reviewed_code_fingerprint": "367a8c94397d37050a1858a2ae6b88834a0ebf50eb283e987833ec2cf7bad257",
+          "reason": "Branch material datastore and optional Laya architecture reviewed; HTTP and process/socket repairs remain fixture-only and add no production retry or transport mechanism.",
+          "reviewed_code_fingerprint": "26e407795dbe195236453dc47627f175f8a24e7d36047e16a00a72e9024633e1",
           "spec_material_hash": "aca2b9332b2f0f39f9377bb30175b7f857ec39562b2530d98648a033f15ef142"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Branch-level optional Laya setup/init changes and historical data compatibility remain reviewed against current source; fixture corrections change no public API.",
-          "reviewed_code_fingerprint": "367a8c94397d37050a1858a2ae6b88834a0ebf50eb283e987833ec2cf7bad257",
+          "reason": "Branch Laya CLI/init and compatibility interfaces reviewed; explicit blocking mode affects only HTTP test fixture request handling.",
+          "reviewed_code_fingerprint": "26e407795dbe195236453dc47627f175f8a24e7d36047e16a00a72e9024633e1",
           "spec_material_hash": "f84bad49056ac0cd09d0c34e27a27c8b6c0b7706ce3f75591d47bb963aaa6974"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Semantic security content is identical to accepted master3cda3f14. Fixture-only bounded ETXTBSY and socket teardown waits leave production live-peer, container custody and authorization checks intact.",
-          "reviewed_code_fingerprint": "367a8c94397d37050a1858a2ae6b88834a0ebf50eb283e987833ec2cf7bad257",
+          "reason": "SECURITY semantic body equals accepted3cda3f14. Fixture-only execution readiness, socket teardown and HTTP blocking fixes retain all production authorization, live-peer and custody protections.",
+          "reviewed_code_fingerprint": "26e407795dbe195236453dc47627f175f8a24e7d36047e16a00a72e9024633e1",
           "spec_material_hash": "2a7ed5e559e71e6c8ff54801816f6f36ccfdebb745fc1c97607deea8d96c4779"
         }
       ],
@@ -712,13 +722,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794266596Z"
+      "updated_at": "1794266781Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:487d588bdbfb5c65d660f6b46bac7112bec7367ca1717f251f30d8c26e44c52d",
+      "artifact_hash": "sha256:28c83f5f7745a8f25352983aca72f158ccf8090e5281b784fc78eeafe819cf3c",
       "checks": [
         {
           "name": "canonical-snapshot-fixtures",
@@ -734,6 +744,10 @@
         },
         {
           "name": "ci-lock-inputs",
+          "status": "passed"
+        },
+        {
+          "name": "ci-publication-material",
           "status": "passed"
         },
         {
@@ -794,6 +808,10 @@
         },
         {
           "name": "release-alignment",
+          "status": "passed"
+        },
+        {
+          "name": "supabase-http-fixtures",
           "status": "passed"
         },
         {
@@ -937,10 +955,17 @@
             "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 18,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M70TT9YCVF9GDEN1NF0KHM96": {
@@ -1209,6 +1234,25 @@
                 ],
                 "sequence": 17,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "tests/cloud_supabase_boundary.rs",
+                  "/private/tmp/pr1589-publication-material-repair.log: exact immutable base3cda3f14/head5800aa7c/targetmaster publication-material gate status ok; no guard removed, historical chain remains proven.",
+                  "/private/tmp/pr1589-http-fixture-repair.log: 18 passed, including delayed headers. /private/tmp/pr1589-accepted-socket-probe.log reproduces inherited nonblocking behavior: immediate WouldBlock before explicit blocking, ~100ms configured timeout afterward.",
+                  "Final full library run currently passes repaired lifecycle and socket cases. Linux held-writer test remains provider-only; retain explicit scope."
+                ],
+                "proof_refs": [
+                  "ci-publication-material",
+                  "supabase-http-fixtures"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 18,
+                "validation_findings": []
               }
             ]
           }
@@ -1237,11 +1281,14 @@
         "/private/tmp/index134-v01342-final-tests.log: 1603 passed, 1 failed, 8 ignored. Unchanged socket cleanup test saw transient BROKER_ENDPOINT_LIVE after listener drop; isolated identical-binary recheck passes. Preserve run failure; no test skipped or production socket protection changed.",
         "/private/tmp/index134-v01342-final-tests.log: projection golden replay test passes with explicit supabase-cloud feature after replay-only artifact fixture repair. This does not claim model/runtime registration evidence.",
         "/private/tmp/index134-v01342-merge-tests.log: 1604 library tests passed, 8 ignored; datastore 6 passed 1 ignored; CLI 36 passed 1 ignored.",
+        "/private/tmp/pr1589-http-fixture-repair.log: 18 passed, including delayed headers. /private/tmp/pr1589-accepted-socket-probe.log reproduces inherited nonblocking behavior: immediate WouldBlock before explicit blocking, ~100ms configured timeout afterward.",
         "/private/tmp/pr1589-lifecycle-repair-tests.log: seven lifecycle/runtime tests pass. Linux-only held-writer ETXTBSY regression is defined but requires Linux provider execution; host success is not Linux proof.",
+        "/private/tmp/pr1589-publication-material-repair.log: exact immutable base3cda3f14/head5800aa7c/targetmaster publication-material gate status ok; no guard removed, historical chain remains proven.",
         "Both configuration and complete historical receipt roundtrips pass; /private/tmp/index134-legacy-receipt-tests.log",
         "Fetched accepted 3cda3f14 including PR #1585 and release v0.134.2; installed published 0.134.2 only through session acquire; restored original configuration and update preference. Regenerated release-bound entrypoints and Dockerfile with installed 0.134.2. Reviewed proof-source changes limited to accepted Cargo versions; hosted workflow/helper/executor definitions unchanged; reconciled source digest sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb.",
         "Fetched b4939469 / v0.134.1 after operator update. Retirement checkpoint records verified v0.134.0 source before integrating the new accepted target; final candidate proof remains pending.",
         "Final feature-enabled suite reported one socket test failure; identical isolated recheck passes (/private/tmp/index134-v01342-socket-recheck.log). Preserve failure rather than claim an entirely passing run; final verdict pending.",
+        "Final full library run currently passes repaired lifecycle and socket cases. Linux held-writer test remains provider-only; retain explicit scope.",
         "Final projection replay golden vectors pass in feature-enabled binary. Prior merged-source complete library/storage/CLI suites pass; final feature-run failure prevents claiming universal green status.",
         "Four pre-refactor production projection hashes replay exactly; /private/tmp/index134-laya-helper-tests.log",
         "GitHub job129495429987: 1607 library tests passed, one lifecycle fixture spawn failed ETXTBSY before container mutation. No Supabase data/auth failure. Fixture now establishes side-effect-free successful exec with bounded ETXTBSY-only retry; Linux regression holds a real writer.",
@@ -1267,6 +1314,7 @@
       ],
       "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
       "modified_files": [
+        "tests/cloud_supabase_boundary.rs",
         "tests/datastore_efficiency.rs",
         "tests/unit/core/container_runtime_tests.rs",
         "tests/unit/core/laya_readiness_tests.rs"

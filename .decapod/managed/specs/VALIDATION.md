@@ -1081,7 +1081,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `367a8c94397d37050a1858a2ae6b88834a0ebf50eb283e987833ec2cf7bad257`
+- Repository signal fingerprint: `26e407795dbe195236453dc47627f175f8a24e7d36047e16a00a72e9024633e1`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1468,3 +1468,5 @@ PR #1589 integrates accepted v0.134.2 journal/RBAC changes and preserves the act
 Lifecycle tests execute their temporary shell runtime only after a bounded, side-effect-free listing proves the fixture inode has no open writers. The probe retries Linux `ETXTBSY` only, for at most two seconds; other failures remain fatal. A Linux regression holds an actual write descriptor, verifies the kernel refusal, then releases it and requires successful execution. Production container mutation and error handling are unchanged. Publication reviews classify SECURITY.md as unchanged relative to the accepted PR base when its semantic content is identical, regardless of accepted upstream additions; current code fingerprints still bind that explicit review.
 
 The socket lifecycle fixture likewise permits a bounded `AddrInUse` interval after closing its own listeners: a parallel fork may retain the descriptor until exec. Its live-peer refusal and replacement-owner assertions still run first, and stale cleanup must succeed within two seconds. Production stale-socket removal continues refusing live peers; no retry policy is added to production operations.
+
+Supabase HTTP fixtures explicitly restore blocking mode on accepted connections before applying the existing five-second read timeout. This is necessary when the platform inherits the nonblocking listener flag. A delayed-header regression verifies that the fixture waits for a valid request instead of failing immediately with `WouldBlock`; production HTTP transport is unchanged.
