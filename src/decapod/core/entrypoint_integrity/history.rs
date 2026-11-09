@@ -333,7 +333,8 @@ fn commit_path_violation_at(
     }
     // A staged migration may contain only the immutable accepted-base
     // canonical template; the final tip must carry current candidate bytes.
-    if accepted_base_template_transition(accepted_base, &commit, head, surface, &content, run_git)? {
+    if accepted_base_template_transition(accepted_base, &commit, head, surface, &content, run_git)?
+    {
         return Ok(None);
     }
     // Preserve the existing binary-body rule for ordinary consumer histories
