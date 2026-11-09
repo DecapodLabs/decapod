@@ -1813,8 +1813,9 @@ fn workbranch_old_merged_branch_is_not_mistaken_for_a_fresh_boundary() {
     git(root.path(), &["merge", "--ff-only", "old-merged-work"]).unwrap();
     git(root.path(), &["checkout", "old-merged-work"]).unwrap();
     let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
-    let error = initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap_err();
-    assert!(error.to_string().contains("RESET_REQUIRED"), "{error}");
+    let unchanged =
+        initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap().unwrap();
+    assert_eq!(unchanged.change.as_ref().unwrap().id, "old-merged-change");
     assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
 }
 

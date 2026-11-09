@@ -1182,9 +1182,11 @@ pub(crate) fn initialize_workbranch_at(
             return Ok(Some(previous));
         }
         if !starts_at_base {
-            return Err(invalid(
-                "GOVERNANCE_PR_RESET_REQUIRED: inherited accepted context is not a fresh branch boundary; create a new workspace from the target base or explicitly begin a PR. Existing work was preserved",
-            ));
+            // A branch that already carries work must not be forced into a
+            // fresh workstream by repository initialization. Keep its exact
+            // governance bytes; explicit task, spec and publication gates still
+            // decide whether subsequent work is admissible and proven.
+            return Ok(Some(previous));
         }
         if previous.change.is_none() && context.is_none() {
             return Ok(Some(previous));
