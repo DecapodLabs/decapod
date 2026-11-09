@@ -256,7 +256,13 @@ fn parse_changed_files(raw: &[u8]) -> (Vec<ChangedFile>, bool, Vec<Finding>) {
     let mut changes = Vec::new();
     let mut complete = true;
     let mut findings = Vec::new();
-    let mut parts = raw.split_terminator(|byte| *byte == 0);
+    let mut fields: Vec<&[u8]> = raw.split(|byte| *byte == 0).collect();
+    // The terminal NUL denotes an empty trailing field; interior empty
+    // fields are invalid and must remain visible to the parser.
+    if raw.last() == Some(&0) {
+        fields.pop();
+    }
+    let mut parts = fields.into_iter();
     if !raw.is_empty() && raw.last() != Some(&0) {
         complete = false;
         findings.push(finding(
