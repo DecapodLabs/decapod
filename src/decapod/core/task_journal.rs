@@ -715,10 +715,10 @@ fn check_complete_suffix(
     conn: &Connection,
     journal: &Journal,
     through: u64,
-    skip: Option<&str>,
+    skip: Option<&BTreeSet<String>>,
 ) -> Result<(), DecapodError> {
     for (id, head) in &journal.heads {
-        if skip == Some(id.as_str()) {
+        if skip.is_some_and(|ids| ids.contains(id)) {
             continue;
         }
         let incomplete: bool = conn.query_row(
@@ -949,23 +949,45 @@ pub(super) fn checkpoint(
     checkpoint_with_gap(conn, actor, None)
 }
 
-/// Explicit, reviewed repair for a historical uncheckpointed domain-event
-/// suffix (#1534). `gap` is `(task_id, reason)`: the reviewed reason and the
-/// accepted event range are recorded as a `task.journal.gap_accepted` event,
-/// then a transition checkpoint for the current projection is appended, so
-/// the journal becomes complete again without inventing history.
+/// Explicit, reviewed repair for historical uncheckpointed domain-event
+/// suffixes (#1534, #1581). Each accepted task gets its own durable evidence
+/// range and transition checkpoint. All preconditions and non-exempt heads are
+/// checked before the first write; the caller owns the enclosing transaction.
 pub(super) fn checkpoint_with_gap(
     conn: &Connection,
     actor: &str,
     gap: Option<(&str, &str)>,
 ) -> Result<serde_json::Value, DecapodError> {
+    let gaps: Vec<(String, String)> = gap
+        .map(|(id, reason)| vec![(id.to_owned(), reason.to_owned())])
+        .unwrap_or_default();
+    checkpoint_with_gaps(conn, actor, &gaps)
+}
+
+pub(super) fn checkpoint_with_gaps(
+    conn: &Connection,
+    actor: &str,
+    gaps: &[(String, String)],
+) -> Result<serde_json::Value, DecapodError> {
     require_transaction(conn)?;
+    if gaps.len() > MAX_TASKS {
+        return Err(invalid("historical-gap selection exceeds bounded task limit"));
+    }
     let current = capture(conn)?;
     let source_watermark = watermark(conn)?;
     let mut journal = read_journal(conn, None)?;
-    let gap_task = gap.map(|(id, _)| id);
-    let mut accepted: Option<serde_json::Value> = None;
-    if let Some((id, reason)) = gap {
+    let mut gap_task_ids = BTreeSet::new();
+    let mut reviewed = Vec::with_capacity(gaps.len());
+
+    // Preflight every task, its suffix, and its live projection before writing
+    // any acceptance event. A duplicate ID or unrelated divergence aborts all.
+    for (id, reason) in gaps {
+        if id.trim().is_empty() || reason.trim().is_empty() || reason.len() > 2048 {
+            return Err(invalid("historical-gap task ID and bounded reviewed reason are required"));
+        }
+        if !gap_task_ids.insert(id.clone()) {
+            return Err(invalid(format!("duplicate historical-gap task {id}")));
+        }
         let head = journal.heads.get(id).ok_or_else(|| {
             invalid(format!(
                 "no checkpointed history for {id}; --accept-historical-gap only repairs journaled tasks"
@@ -981,7 +1003,32 @@ pub(super) fn checkpoint_with_gap(
                 "no uncheckpointed domain-event suffix to accept for {id}"
             )));
         }
-        let (from_seq, through_seq) = (from_seq.unwrap_or(0), through_seq.unwrap_or(0));
+        let projection = current.get(id).cloned().ok_or_else(|| {
+            invalid("baseline cannot replace divergent or missing journaled state")
+        })?;
+        reviewed.push((
+            id.clone(),
+            reason.clone(),
+            count,
+            from_seq.unwrap_or(0),
+            through_seq.unwrap_or(0),
+            projection,
+        ));
+    }
+
+    check_complete_suffix(conn, &journal, source_watermark, Some(&gap_task_ids))?;
+    for (id, head) in &journal.heads {
+        let diverged = current.get(id).map(digest).transpose()?.as_deref()
+            != Some(head.projection_digest.as_str());
+        if diverged && !gap_task_ids.contains(id) {
+            return Err(invalid(
+                "baseline cannot replace divergent or missing journaled state",
+            ));
+        }
+    }
+
+    let mut accepted = Vec::with_capacity(reviewed.len());
+    for (id, reason, count, from_seq, through_seq, projection) in &reviewed {
         events::append_on_conn(
             conn,
             events::TODO,
@@ -1002,35 +1049,6 @@ pub(super) fn checkpoint_with_gap(
                 }
             }),
         )?;
-        accepted = Some(serde_json::json!({
-            "task_id": id, "reason": reason,
-            "accepted_from_seq": from_seq, "accepted_through_seq": through_seq,
-            "accepted_event_count": count,
-        }));
-    }
-    check_complete_suffix(conn, &journal, source_watermark, gap_task)?;
-    // The reviewed gap task always gets a transition for the current
-    // projection, so its head watermark moves past the accepted suffix and
-    // later verify calls succeed. Collect first to keep the heads borrow.
-    let gap_projection = match gap {
-        Some((id, _)) => Some((
-            id.to_owned(),
-            current.get(id).cloned().ok_or_else(|| {
-                invalid("baseline cannot replace divergent or missing journaled state")
-            })?,
-        )),
-        None => None,
-    };
-    for (id, head) in &journal.heads {
-        let diverged = current.get(id).map(digest).transpose()?.as_deref()
-            != Some(head.projection_digest.as_str());
-        if diverged && gap_task != Some(id.as_str()) {
-            return Err(invalid(
-                "baseline cannot replace divergent or missing journaled state",
-            ));
-        }
-    }
-    if let Some((_id, projection)) = &gap_projection {
         append_checkpoint(
             conn,
             &mut journal,
@@ -1039,6 +1057,13 @@ pub(super) fn checkpoint_with_gap(
             "historical_gap_accepted",
             actor,
         )?;
+        accepted.push(serde_json::json!({
+            "task_id": id,
+            "reason": reason,
+            "accepted_from_seq": from_seq,
+            "accepted_through_seq": through_seq,
+            "accepted_event_count": count,
+        }));
     }
     for (id, projection) in &current {
         if !journal.heads.contains_key(id) {
@@ -1053,8 +1078,11 @@ pub(super) fn checkpoint_with_gap(
         }
     }
     let mut result = report(conn, &journal)?;
-    if let Some(accepted) = accepted {
-        result["accepted_historical_gap"] = accepted;
+    if !accepted.is_empty() {
+        if accepted.len() == 1 {
+            result["accepted_historical_gap"] = accepted[0].clone();
+        }
+        result["accepted_historical_gaps"] = serde_json::Value::Array(accepted);
     }
     Ok(result)
 }
