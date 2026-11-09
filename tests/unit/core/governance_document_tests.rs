@@ -1921,7 +1921,11 @@ fn workbranch_explicit_creation_proof_works_without_branch_reflog() {
         .is_empty()
     );
     let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
-    assert!(initialize_workbranch(root.path(), "master", Some(&branch_context())).is_err());
+    let error = initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap_err();
+    assert!(
+        error.to_string().contains("GOVERNANCE_BRANCH_CREATION_PROOF_REQUIRED"),
+        "{error}"
+    );
     assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
     let next = initialize_workbranch_at(
         root.path(),
@@ -1933,6 +1937,22 @@ fn workbranch_explicit_creation_proof_works_without_branch_reflog() {
     .unwrap();
     assert_ne!(next.change.as_ref().unwrap().id, "accepted-change");
     assert_eq!(next.change.unwrap().base_commit, created_base);
+}
+
+#[test]
+fn workbranch_without_reflog_preserves_committed_existing_work() {
+    let root = accepted_branch_repo();
+    git(root.path(), &["config", "core.logAllRefUpdates", "false"]).unwrap();
+    git(root.path(), &["checkout", "-b", "existing-without-reflog"]).unwrap();
+    fs::write(root.path().join("continued.rs"), "pub fn continue_work() {}\n").unwrap();
+    git(root.path(), &["add", "continued.rs"]).unwrap();
+    commit(root.path(), "existing work on unreflogged branch");
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    let unchanged = initialize_workbranch(root.path(), "master", Some(&branch_context()))
+        .unwrap()
+        .unwrap();
+    assert_eq!(unchanged.change.unwrap().id, "accepted-change");
+    assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
 }
 
 #[test]

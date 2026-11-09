@@ -1182,10 +1182,20 @@ pub(crate) fn initialize_workbranch_at(
             return Ok(Some(previous));
         }
         if !starts_at_base {
-            // A branch that already carries work must not be forced into a
-            // fresh workstream by repository initialization. Keep its exact
-            // governance bytes; explicit task, spec and publication gates still
-            // decide whether subsequent work is admissible and proven.
+            // At an unchanged accepted base, a missing creation reflog is not
+            // evidence of a fresh branch. Require an explicit fork commit
+            // instead of silently admitting an unproven initialization.
+            if created_base.is_none()
+                && context.is_some()
+                && reflog.is_empty()
+                && head == base
+            {
+                return Err(invalid(
+                    "GOVERNANCE_BRANCH_CREATION_PROOF_REQUIRED: pass the captured fork commit when the branch creation reflog is unavailable",
+                ));
+            }
+            // Existing branches with their own commits retain their journal.
+            // Neither a missing reflog nor inherited acceptance can erase work.
             return Ok(Some(previous));
         }
         if previous.change.is_none() && context.is_none() {
