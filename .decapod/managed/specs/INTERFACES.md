@@ -1163,6 +1163,20 @@ gaps. It accepts an empty parameter object, requires no session or worktree
 for inspection, and does not mutate spec or governance records. Its
 `semantic_alignment: not_proven` field is deliberately never a success proof.
 
+## Immutable Intent Change-Impact RPC
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+`intent.reconcile` accepts an optional `base_commit` string containing an
+exact 40/64-hex Git commit ID. When present, report schema 1.1.0 adds
+`change_impact` with immutable base/head identities, sorted changed files
+and rename predecessors, authored-material versus generated-only spec deltas,
+REQ identifiers explicitly cited in changed authored specs, unmapped
+implementation paths, completeness, advisory review/evidence flags and
+structured findings. Uncommitted bytes are excluded from this Git comparison.
+Invalid symbolic, absent or non-ancestor bases return a validation error.
+The original empty-parameter report stays version 1.0.0 without an impact
+field. Nothing in this operation authorizes a mutation, approval or completion.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation

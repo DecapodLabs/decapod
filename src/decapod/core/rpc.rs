@@ -273,7 +273,11 @@ pub struct SpecsRefreshResult {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct IntentReconcileParams {}
+pub struct IntentReconcileParams {
+    /// Optional full immutable Git base commit for bounded source/spec impact.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_commit: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct IntentReconcileResult {

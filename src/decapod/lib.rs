@@ -11501,9 +11501,12 @@ mod rpc_handlers {
     pub(crate) fn handle_intent_reconcile(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
-        let _params: IntentReconcileParams = serde_json::from_value(ctx.request.params.clone())
+        let params: IntentReconcileParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
-        let report = crate::core::intent_reconcile::reconcile(ctx.project_root)?;
+        let report = crate::core::intent_reconcile::reconcile_with_base(
+            ctx.project_root,
+            params.base_commit.as_deref(),
+        )?;
         Ok(success_response(
             ctx.request.id.clone(),
             ctx.request.op.clone(),

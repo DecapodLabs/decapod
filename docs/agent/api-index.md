@@ -56,6 +56,7 @@ unsatisfied execution or publication gates still require resolution.
 ### Reconcile Intent as the Code Evolves
 
 Use `decapod rpc --op intent.reconcile --params '{}'` to inspect the current
+  - Optional `base_commit` (full immutable Git OID) adds a bounded base-to-HEAD change-impact view: changed code paths remain unmapped unless explicit evidence exists; authored spec deltas and review needs remain advisory.
 human-intent binding, authored requirement references across canonical living
 specs, manifest freshness, and existing spec-review evidence. The response is
 advisory, always reports semantic alignment as `not_proven`, and never edits

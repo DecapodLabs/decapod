@@ -1010,6 +1010,18 @@ semantic proof; `intent.reconcile` cannot satisfy validation obligations,
 approve spec changes, or authorize publication. Unit tests must exercise
 these negative cases and preserve existing proof and publication gates.
 
+## Immutable Impact Negative Acceptance
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+Unit and RPC tests must preserve existing empty-params compatibility while
+proving exact-commit ancestry, deterministic NUL-safe add/modify/delete/rename
+classification, authored-spec versus generated-projection distinctions, and
+bounded uncertainty on malformed, non-UTF8 or excessive paths. A code change
+without reviewed authored specs remains observable and explicitly unmapped.
+Human-intent questions, requirement markers, stable hashes and changed-source
+inventory are advisory: none may satisfy a proof gate or change
+`semantic_alignment: not_proven`.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
