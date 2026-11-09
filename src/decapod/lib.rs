@@ -2357,7 +2357,8 @@ pub fn run() -> Result<(), error::DecapodError> {
     let command = match parsed_cli.command {
         Command::Eval(eval_cli) => return core::agent_eval::run_agent_eval_cli(eval_cli),
         Command::ProjectCheckWorker(validate_cli) => {
-            if validate_cli.snapshot_prepare
+            if validate_cli.bypass_validation
+                || validate_cli.snapshot_prepare
                 || validate_cli.snapshot_resume.is_some()
                 || validate_cli.snapshot_adopt.is_some()
                 || validate_cli.provider_artifacts.is_some()
@@ -6169,6 +6170,64 @@ fn run_validate_command(
     project_store: &Store,
     scope: ValidationScope,
 ) -> Result<(), error::DecapodError> {
+    if validate_cli.bypass_validation {
+        // A scoped, audited local exception. The publisher, worker, replay
+        // verifier and CI still require genuine proof; no passing validation
+        // receipt or publication-ready claim is minted by this path.
+        if scope != ValidationScope::PublicationReadiness
+            || validate_cli.snapshot_prepare
+            || validate_cli.snapshot_resume.is_some()
+            || validate_cli.snapshot_adopt.is_some()
+            || validate_cli.provider_artifacts.is_some()
+        {
+            return Err(error::DecapodError::ValidationError(
+                "RBAC_VALIDATION_BYPASS_SCOPE: unsupported validation scope or snapshot handoff".into(),
+            ));
+        }
+        let reason = validate_cli.bypass_reason.as_deref().unwrap_or_default();
+        if reason.trim().is_empty() || reason.len() > 2048 {
+            return Err(error::DecapodError::ValidationError(
+                "RBAC_VALIDATION_BYPASS_REASON: a bounded reviewed reason is required".into(),
+            ));
+        }
+        let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_default();
+        let config_digest = crate::plugins::policy::authorize_rbac_exception(
+            &project_store.root,
+            &actor,
+            "validate.bypass",
+        )?;
+        crate::core::events::append(
+            &project_store.root,
+            crate::core::events::VERIFICATION,
+            &serde_json::json!({
+                "ts": crate::core::time::now_epoch_z(),
+                "event_id": crate::core::ulid::new_ulid(),
+                "event_type": "validation.bypassed",
+                "status": "bypassed",
+                "actor": actor,
+                "payload": {
+                    "scope": scope.label(),
+                    "reason": reason,
+                    "config_digest": config_digest,
+                    "identity_assurance": "cooperative_not_authenticated",
+                    "proof_ready": false,
+                    "publication_ready": false
+                }
+            }),
+        )?;
+        if validate_cli.format == "json" {
+            println!("{}", serde_json::json!({
+                "status": "bypassed", "scope": scope.label(),
+                "proof_ready": false, "publication_ready": false,
+                "actor": actor, "reason": reason, "config_digest": config_digest
+            }));
+        } else {
+            println!(
+                "Validation bypass recorded for actor {actor}: {reason}. No proof or publication readiness granted."
+            );
+        }
+        return Ok(());
+    }
     let enabled = crate::cli::DecapodProjectConfig::load(workspace_root)?
         .proof
         .validation_buildkite_preflights;
