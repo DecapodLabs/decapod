@@ -1107,17 +1107,33 @@ fn provider_material_fixture() -> TempDir {
 fn accepted_identity_continuation_preserves_exact_base_and_current_candidate() {
     let dir = provider_material_fixture();
     let accepted = git(dir.path(), &["rev-parse", "HEAD"]);
-    git(dir.path(), &["checkout", "-b", "continued-work"]).unwrap();
+    git(dir.path(), &["checkout", "-b", "continued-work"]);
     write(dir.path(), "api/contract.rs", "pub fn continued() {}\n");
     git(dir.path(), &["add", "."]);
-    git(dir.path(), &["commit", "-qm", "continue same candidate work"]);
+    git(
+        dir.path(),
+        &["commit", "-qm", "continue same candidate work"],
+    );
     let head = git(dir.path(), &["rev-parse", "HEAD"]);
-    assert!(!crate::core::governance_document::inspect_checkpoint_history(
-        dir.path(), &accepted, &head, Some("master")
-    ).unwrap().history_proven);
-    assert!(crate::core::governance_document::verify_pr_continuation_for_target(
-        dir.path(), &accepted, &head, "master"
-    ).is_ok());
+    assert!(
+        !crate::core::governance_document::inspect_checkpoint_history(
+            dir.path(),
+            &accepted,
+            &head,
+            Some("master")
+        )
+        .unwrap()
+        .history_proven
+    );
+    assert!(
+        crate::core::governance_document::verify_pr_continuation_for_target(
+            dir.path(),
+            &accepted,
+            &head,
+            "master"
+        )
+        .is_ok()
+    );
 }
 
 #[test]

@@ -1842,10 +1842,18 @@ pub fn verify_pr_continuation_for_target(
     head_ref: &str,
     target_base: &str,
 ) -> Result<(), DecapodError> {
-    let base = git(root, &["rev-parse", "--verify", &format!("{base_ref}^{{commit}}")])?;
-    let head = git(root, &["rev-parse", "--verify", &format!("{head_ref}^{{commit}}")])?;
+    let base = git(
+        root,
+        &["rev-parse", "--verify", &format!("{base_ref}^{{commit}}")],
+    )?;
+    let head = git(
+        root,
+        &["rev-parse", "--verify", &format!("{head_ref}^{{commit}}")],
+    )?;
     if base == head {
-        return Err(invalid("GOVERNANCE_EMPTY_CHANGE: no candidate delta against accepted base"));
+        return Err(invalid(
+            "GOVERNANCE_EMPTY_CHANGE: no candidate delta against accepted base",
+        ));
     }
     let ancestor = crate::core::entrypoint_integrity::history_git(
         root,
@@ -1853,7 +1861,9 @@ pub fn verify_pr_continuation_for_target(
     )
     .ok_or_else(|| invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE"))?;
     if !ancestor.status.success() {
-        return Err(invalid("GOVERNANCE_PR_BASE_MISMATCH: accepted base is not an ancestor"));
+        return Err(invalid(
+            "GOVERNANCE_PR_BASE_MISMATCH: accepted base is not an ancestor",
+        ));
     }
     let base_doc = git(root, &["show", &format!("{base}:{GOVERNANCE_PATH}")])
         .ok()
@@ -1864,15 +1874,22 @@ pub fn verify_pr_continuation_for_target(
     if let (Some(accepted), Some(current)) = (
         base_doc.as_ref().and_then(|doc| doc.change.as_ref()),
         head_doc.change.as_ref(),
-    ) && accepted.id == current.id {
-        let prior = base_doc.as_ref().ok_or_else(|| invalid("GOVERNANCE_ACCEPTED_BASE_MISSING"))?;
+    ) && accepted.id == current.id
+    {
+        let prior = base_doc
+            .as_ref()
+            .ok_or_else(|| invalid("GOVERNANCE_ACCEPTED_BASE_MISSING"))?;
         if prior.checkpoints.len() > head_doc.checkpoints.len()
-            || prior.checkpoints.iter().zip(&head_doc.checkpoints).any(|(a, b)| {
-                a.id != b.id
-                    || a.input_digest != b.input_digest
-                    || a.summary != b.summary
-                    || a.proof_refs != b.proof_refs
-            })
+            || prior
+                .checkpoints
+                .iter()
+                .zip(&head_doc.checkpoints)
+                .any(|(a, b)| {
+                    a.id != b.id
+                        || a.input_digest != b.input_digest
+                        || a.summary != b.summary
+                        || a.proof_refs != b.proof_refs
+                })
         {
             return Err(invalid(
                 "GOVERNANCE_ACCEPTED_CHECKPOINT_CHANGED: accepted checkpoint evidence must remain immutable",

@@ -849,7 +849,13 @@ fn fresh_empty_init_can_begin_without_a_bootstrap_commit() {
 fn inherited_accepted_change_continues_without_rewriting_history() {
     let root = repo();
     begin_pr(root.path(), "accepted-label", "master").unwrap();
-    checkpoint(root.path(), "accepted-proof", "Accepted baseline work", vec![]).unwrap();
+    checkpoint(
+        root.path(),
+        "accepted-proof",
+        "Accepted baseline work",
+        vec![],
+    )
+    .unwrap();
     git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
     commit(root.path(), "accepted baseline");
     let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
@@ -872,8 +878,12 @@ fn inherited_accepted_change_continues_without_rewriting_history() {
     git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
     commit(root.path(), "tamper accepted checkpoint");
     let head = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
-    assert!(verify_pr_continuation_for_target(root.path(), &base, &head, "master")
-        .unwrap_err().to_string().contains("GOVERNANCE_ACCEPTED_CHECKPOINT_CHANGED"));
+    assert!(
+        verify_pr_continuation_for_target(root.path(), &base, &head, "master")
+            .unwrap_err()
+            .to_string()
+            .contains("GOVERNANCE_ACCEPTED_CHECKPOINT_CHANGED")
+    );
 }
 
 #[test]
@@ -1813,8 +1823,9 @@ fn workbranch_old_merged_branch_is_not_mistaken_for_a_fresh_boundary() {
     git(root.path(), &["merge", "--ff-only", "old-merged-work"]).unwrap();
     git(root.path(), &["checkout", "old-merged-work"]).unwrap();
     let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
-    let unchanged =
-        initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap().unwrap();
+    let unchanged = initialize_workbranch(root.path(), "master", Some(&branch_context()))
+        .unwrap()
+        .unwrap();
     assert_eq!(unchanged.change.as_ref().unwrap().id, "old-merged-change");
     assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
 }
