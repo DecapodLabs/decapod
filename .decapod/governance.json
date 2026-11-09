@@ -623,23 +623,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed one-line path-dependency lock repair; existing worker recipe, runtime implementation, model contract, source execution and reader architecture remain unchanged",
-          "reviewed_code_fingerprint": "b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604",
+          "reason": "Current PR adds no new architectural authority beyond accepted v0.134.1; local journal batch, RBAC exceptions, and Laya remain under the existing broker and post-proof boundaries",
+          "reviewed_code_fingerprint": "18b631052a623b66b9ede2ea875b2fc0c911f40001829ebca0958d5d81a8a8d2",
           "spec_material_hash": "042e62b5a21b33e93d2a0db5a0d1615acb620b3cc4e136caec1a5c3d9b6dc2ee"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Path dependency version maintenance changes no public interface; accepted recipe and all required commands remain identical",
-          "reviewed_code_fingerprint": "b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604",
-          "spec_material_hash": "054ffdddc0e083e8f34fd3ecfcfe4cd3508edd75b112fe857fb086cff29f8fa4"
+          "reason": "Reviewed repeatable historical gap selection, atomic journal acceptance, RBAC-only local exception and explicit Laya gating",
+          "reviewed_code_fingerprint": "18b631052a623b66b9ede2ea875b2fc0c911f40001829ebca0958d5d81a8a8d2",
+          "spec_material_hash": "3b9387a0c7c5948ca3525bf84e59eba80f4c0d91315668ad57d933b59a41fd59"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Locked resolution now matches accepted root version; no new dependency pin, checksum, authority, feature or skipped/removed check. Existing proof and custody boundaries remain mandatory.",
-          "reviewed_code_fingerprint": "b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604",
-          "spec_material_hash": "058f444fd13fffe4dfaa7b5ff6fb4c3bf06062220fd53647403ab076517c802c"
+          "reason": "Reviewed default-deny cooperative actor-label roles, proof-preserving local exceptions and exact executable identity checks",
+          "reviewed_code_fingerprint": "18b631052a623b66b9ede2ea875b2fc0c911f40001829ebca0958d5d81a8a8d2",
+          "spec_material_hash": "2a7ed5e559e71e6c8ff54801816f6f36ccfdebb745fc1c97607deea8d96c4779"
         }
       ],
       "state": "DRAFT",

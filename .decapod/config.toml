@@ -57,6 +57,19 @@ expected_exit_code = 0
 protected_paths = []
 approval_categories = ["destructive_operations"]
 
+# Exceptional operations are denied unless explicitly granted here.
+# Actor labels are cooperative; protect this policy with human code review.
+[governance.rbac]
+journal_repair_roles = ["maintainer"]
+validation_bypass_roles = []
+
+[governance.rbac.actor_roles]
+operator = ["maintainer"]
+
+# Laya is strictly opt-in. Only 'required' runs post-proof inference.
+[laya]
+mode = "disabled"
+
 [proof]
 validation_buildkite_preflights = true
 commands = []

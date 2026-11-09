@@ -17,6 +17,16 @@ fn readiness_document(run: &str) -> serde_json::Value {
             "evidence_path": format!("/private/tmp/decapod-readiness-{run}"),
             "ready": true, "proof_ready": true, "scope": "repository_local_readiness",
             "blockers": [], "stage_dispositions": [{"stage": "rust-tests", "disposition": "real"}],
+            "laya_readiness": {
+                "schema": "decapod.laya-readiness.v1", "mode": "disabled", "decision": "disabled",
+                "request_id": format!("sha256:laya-request-{run}"),
+                "binding": {
+                    "evidence_digest": format!("sha256:laya-evidence-{run}"),
+                    "material": {"head_revision": "head", "accepted_base_revision": "base"},
+                    "configuration_digest": "laya-config", "governance_digest": "governance",
+                    "proof_plan_digest": "plan"
+                }
+            },
             "vega_readiness": {
                 "schema": "decapod.vega-readiness.v1", "mode": "disabled", "decision": "disabled",
                 "request_id": format!("sha256:request-{run}"),
@@ -65,6 +75,10 @@ fn validation_replay_retains_material_policy_and_failure_changes() {
         "/readiness/ready",
         "/readiness/proof_ready",
         "/readiness/scope",
+        "/readiness/laya_readiness/mode",
+        "/readiness/laya_readiness/decision",
+        "/readiness/laya_readiness/binding/material/head_revision",
+        "/readiness/laya_readiness/binding/configuration_digest",
         "/readiness/vega_readiness/mode",
         "/readiness/vega_readiness/decision",
         "/readiness/vega_readiness/binding/material/head_revision",
@@ -104,6 +118,26 @@ fn validation_replay_retains_material_policy_and_failure_changes() {
     let mut malformed = baseline.clone();
     malformed["readiness"]["evidence_path"] = serde_json::Value::Null;
     assert_ne!(expected, super::normalize_validation_document(&malformed));
+}
+
+#[test]
+fn future_named_readiness_receipt_masks_only_execution_fields() {
+    let mut first = readiness_document("first");
+    let mut second = readiness_document("second");
+    for (document, run) in [(&mut first, "first"), (&mut second, "second")] {
+        document["readiness"]["next_readiness"] = serde_json::json!({
+            "request_id": format!("request-{run}"),
+            "binding": {
+                "evidence_digest": format!("evidence-{run}"),
+                "governance_digest": "stable-policy"
+            },
+            "decision": "ready"
+        });
+    }
+    let expected = super::normalize_validation_document(&first);
+    assert_eq!(expected, super::normalize_validation_document(&second));
+    second["readiness"]["next_readiness"]["decision"] = "blocked".into();
+    assert_ne!(expected, super::normalize_validation_document(&second));
 }
 
 #[test]

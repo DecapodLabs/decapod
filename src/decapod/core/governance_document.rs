@@ -1182,9 +1182,17 @@ pub(crate) fn initialize_workbranch_at(
             return Ok(Some(previous));
         }
         if !starts_at_base {
-            return Err(invalid(
-                "GOVERNANCE_PR_RESET_REQUIRED: inherited accepted context is not a fresh branch boundary; create a new workspace from the target base or explicitly begin a PR. Existing work was preserved",
-            ));
+            // At an unchanged accepted base, a missing creation reflog is not
+            // evidence of a fresh branch. Require an explicit fork commit
+            // instead of silently admitting an unproven initialization.
+            if created_base.is_none() && context.is_some() && reflog.is_empty() && head == base {
+                return Err(invalid(
+                    "GOVERNANCE_BRANCH_CREATION_PROOF_REQUIRED: pass the captured fork commit when the branch creation reflog is unavailable",
+                ));
+            }
+            // Existing branches with their own commits retain their journal.
+            // Neither a missing reflog nor inherited acceptance can erase work.
+            return Ok(Some(previous));
         }
         if previous.change.is_none() && context.is_none() {
             return Ok(Some(previous));
@@ -1811,13 +1819,98 @@ fn verify_base_binding(
     }
     if let Ok(content) = git(root, &["show", &format!("{base_ref}:{GOVERNANCE_PATH}")]) {
         let baseline = parse(content.as_bytes())?;
-        if baseline.change.as_ref().map(|prior| prior.id.as_str()) == Some(change.id.as_str()) {
+        // A continuing branch may inherit the accepted change label.
+        // Provenance, not a globally unique label, establishes the boundary.
+        if let Some(prior) = baseline.change.as_ref()
+            && prior.id == change.id
+            && (prior.base_commit != change.base_commit
+                || normalized_base_label(&prior.target_base)
+                    != normalized_base_label(&change.target_base))
+        {
             return Err(invalid(
-                "GOVERNANCE_PR_RESET_REQUIRED: merged PR identity was reused; explicitly begin a new PR",
+                "GOVERNANCE_ACCEPTED_IDENTITY_CONFLICT: inherited change provenance differs from accepted base",
             ));
         }
     }
     Ok(())
+}
+
+/// Admit current publication material on a branch that inherits its accepted
+/// change label, without claiming historical checkpoint proof it does not have.
+///
+/// The exact accepted base and candidate head remain bound by immutable Git,
+/// current spec reviews and the independent validation/CI graph. The accepted
+/// checkpoint catalog may be extended but cannot be erased or rewritten.
+/// New workstreams still require strict per-commit checkpoints.
+pub fn verify_pr_continuation_for_target(
+    root: &Path,
+    base_ref: &str,
+    head_ref: &str,
+    target_base: &str,
+) -> Result<(), DecapodError> {
+    let base = git(
+        root,
+        &["rev-parse", "--verify", &format!("{base_ref}^{{commit}}")],
+    )?;
+    let head = git(
+        root,
+        &["rev-parse", "--verify", &format!("{head_ref}^{{commit}}")],
+    )?;
+    if base == head {
+        return Err(invalid(
+            "GOVERNANCE_EMPTY_CHANGE: no candidate delta against accepted base",
+        ));
+    }
+    let ancestor = crate::core::entrypoint_integrity::history_git(
+        root,
+        &["merge-base", "--is-ancestor", &base, &head],
+    )
+    .ok_or_else(|| invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE"))?;
+    if !ancestor.status.success() {
+        return Err(invalid(
+            "GOVERNANCE_PR_BASE_MISMATCH: accepted base is not an ancestor",
+        ));
+    }
+    let base_doc = git(root, &["show", &format!("{base}:{GOVERNANCE_PATH}")])
+        .ok()
+        .map(|bytes| parse(bytes.as_bytes()))
+        .transpose()?;
+    let head_doc = parse(git(root, &["show", &format!("{head}:{GOVERNANCE_PATH}")])?.as_bytes())?;
+    verify_base_binding(root, &head_doc, &base, &head, Some(target_base))?;
+    if let (Some(accepted), Some(current)) = (
+        base_doc.as_ref().and_then(|doc| doc.change.as_ref()),
+        head_doc.change.as_ref(),
+    ) && accepted.id == current.id
+    {
+        let prior = base_doc
+            .as_ref()
+            .ok_or_else(|| invalid("GOVERNANCE_ACCEPTED_BASE_MISSING"))?;
+        if prior.checkpoints.len() > head_doc.checkpoints.len()
+            || prior
+                .checkpoints
+                .iter()
+                .zip(&head_doc.checkpoints)
+                .any(|(a, b)| {
+                    a.id != b.id
+                        || a.input_digest != b.input_digest
+                        || a.summary != b.summary
+                        || a.proof_refs != b.proof_refs
+                })
+        {
+            return Err(invalid(
+                "GOVERNANCE_ACCEPTED_CHECKPOINT_CHANGED: accepted checkpoint evidence must remain immutable",
+            ));
+        }
+        if serde_json::to_value(&prior.baseline).map_err(|e| invalid(e.to_string()))?
+            != serde_json::to_value(&head_doc.baseline).map_err(|e| invalid(e.to_string()))?
+        {
+            return Err(invalid(
+                "GOVERNANCE_ACCEPTED_BASELINE_CHANGED: accepted policy and unresolved obligations must be preserved",
+            ));
+        }
+        return Ok(());
+    }
+    verify_pr_checkpoints_inner(root, &base, &head, Some(target_base))
 }
 
 pub fn verify_pr_checkpoints_for_target(
