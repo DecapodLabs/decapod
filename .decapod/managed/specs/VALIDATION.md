@@ -1081,7 +1081,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `26e407795dbe195236453dc47627f175f8a24e7d36047e16a00a72e9024633e1`
+- Repository signal fingerprint: `9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1470,3 +1470,5 @@ Lifecycle tests execute their temporary shell runtime only after a bounded, side
 The socket lifecycle fixture likewise permits a bounded `AddrInUse` interval after closing its own listeners: a parallel fork may retain the descriptor until exec. Its live-peer refusal and replacement-owner assertions still run first, and stale cleanup must succeed within two seconds. Production stale-socket removal continues refusing live peers; no retry policy is added to production operations.
 
 Supabase HTTP fixtures explicitly restore blocking mode on accepted connections before applying the existing five-second read timeout. This is necessary when the platform inherits the nonblocking listener flag. A delayed-header regression verifies that the fixture waits for a valid request instead of failing immediately with `WouldBlock`; production HTTP transport is unchanged.
+
+The delayed-header regression uses the approved Tokio networking API with a five-second overall deadline, while the fixture server deliberately uses blocking reads under its existing read timeout. No lint-policy exception or production networking change is required.

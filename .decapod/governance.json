@@ -654,6 +654,16 @@
         "/private/tmp/pr1589-http-fixture-repair.log",
         "/private/tmp/pr1589-publication-material-repair.log"
       ]
+    },
+    {
+      "id": "approved-async-http-regression",
+      "summary": "Use approved bounded Tokio client for delayed-header fixture regression; final HTTP18 cases and all-target Clippy pass, complete Supabase suite passes with external profiles explicitly unexecuted.",
+      "input_digest": "sha256:b4d8ecb809633d006fe9f3b8566b9eeaf8e991f3e34096621e6a703b8ffe98b3",
+      "proof_refs": [
+        "/private/tmp/pr1589-clippy-async-final.log",
+        "/private/tmp/pr1589-http-async-final.log",
+        "/private/tmp/pr1589-supabase-final-suite.log"
+      ]
     }
   ],
   "intents": {
@@ -694,22 +704,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Branch material datastore and optional Laya architecture reviewed; HTTP and process/socket repairs remain fixture-only and add no production retry or transport mechanism.",
-          "reviewed_code_fingerprint": "26e407795dbe195236453dc47627f175f8a24e7d36047e16a00a72e9024633e1",
+          "reason": "Current branch material event/Laya architecture reviewed. Final CI repair remains fixture-only, with approved Tokio regression client and bounded kernel readiness waits.",
+          "reviewed_code_fingerprint": "9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379",
           "spec_material_hash": "aca2b9332b2f0f39f9377bb30175b7f857ec39562b2530d98648a033f15ef142"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Branch Laya CLI/init and compatibility interfaces reviewed; explicit blocking mode affects only HTTP test fixture request handling.",
-          "reviewed_code_fingerprint": "26e407795dbe195236453dc47627f175f8a24e7d36047e16a00a72e9024633e1",
+          "reason": "Material optional Laya and legacy-data interfaces remain reviewed; fixture-only Tokio client does not change production RPC or timeout contracts.",
+          "reviewed_code_fingerprint": "9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379",
           "spec_material_hash": "f84bad49056ac0cd09d0c34e27a27c8b6c0b7706ce3f75591d47bb963aaa6974"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "SECURITY semantic body equals accepted3cda3f14. Fixture-only execution readiness, socket teardown and HTTP blocking fixes retain all production authorization, live-peer and custody protections.",
-          "reviewed_code_fingerprint": "26e407795dbe195236453dc47627f175f8a24e7d36047e16a00a72e9024633e1",
+          "reason": "Security semantic content equals accepted3cda3f14. No lint-policy exceptions or production container, socket, auth or transport changes; updated fixture code is bound by this current review.",
+          "reviewed_code_fingerprint": "9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379",
           "spec_material_hash": "2a7ed5e559e71e6c8ff54801816f6f36ccfdebb745fc1c97607deea8d96c4779"
         }
       ],
@@ -722,13 +732,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794266781Z"
+      "updated_at": "1794266966Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:28c83f5f7745a8f25352983aca72f158ccf8090e5281b784fc78eeafe819cf3c",
+      "artifact_hash": "sha256:c599a40368afe6d289adfad52b2e14c5e45050bff5143d4f9d2ed24f851e9450",
       "checks": [
         {
           "name": "canonical-snapshot-fixtures",
@@ -741,6 +751,10 @@
         {
           "name": "ci-governance-head6c6d",
           "status": "failed"
+        },
+        {
+          "name": "ci-governance-repaired",
+          "status": "passed"
         },
         {
           "name": "ci-lock-inputs",
@@ -764,6 +778,10 @@
         },
         {
           "name": "event-suite",
+          "status": "passed"
+        },
+        {
+          "name": "final-all-target-clippy",
           "status": "passed"
         },
         {
@@ -808,6 +826,10 @@
         },
         {
           "name": "release-alignment",
+          "status": "passed"
+        },
+        {
+          "name": "supabase-consumer-local",
           "status": "passed"
         },
         {
@@ -962,10 +984,17 @@
             "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 18
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:19",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 19
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 18,
+        "next_sequence": 19,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M70TT9YCVF9GDEN1NF0KHM96": {
@@ -1253,6 +1282,25 @@
                 ],
                 "sequence": 18,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:19",
+                "observations": [
+                  "/private/tmp/pr1589-supabase-final-suite.log: complete CI consumer command passes, 1604 library and33 integration tests; 8 optional library and2 external service profiles ignored. Final fixture-only Tokio adjustment separately passes all18 HTTP boundary tests in /private/tmp/pr1589-http-async-final.log.",
+                  "/private/tmp/pr1589-clippy-async-final.log: all-target Clippy with warnings denied passes after replacing raw blocking regression client with approved Tokio API, no lint exemption.",
+                  "/private/tmp/pr1589-publication-material-final.log: immutable head157e9493/current accepted3cda3f14 gate passes; final Tokio-only follow-up will repeat exact committed-head gate before push."
+                ],
+                "proof_refs": [
+                  "supabase-consumer-local",
+                  "final-all-target-clippy",
+                  "ci-governance-repaired"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 19,
+                "validation_findings": []
               }
             ]
           }
@@ -1281,9 +1329,12 @@
         "/private/tmp/index134-v01342-final-tests.log: 1603 passed, 1 failed, 8 ignored. Unchanged socket cleanup test saw transient BROKER_ENDPOINT_LIVE after listener drop; isolated identical-binary recheck passes. Preserve run failure; no test skipped or production socket protection changed.",
         "/private/tmp/index134-v01342-final-tests.log: projection golden replay test passes with explicit supabase-cloud feature after replay-only artifact fixture repair. This does not claim model/runtime registration evidence.",
         "/private/tmp/index134-v01342-merge-tests.log: 1604 library tests passed, 8 ignored; datastore 6 passed 1 ignored; CLI 36 passed 1 ignored.",
+        "/private/tmp/pr1589-clippy-async-final.log: all-target Clippy with warnings denied passes after replacing raw blocking regression client with approved Tokio API, no lint exemption.",
         "/private/tmp/pr1589-http-fixture-repair.log: 18 passed, including delayed headers. /private/tmp/pr1589-accepted-socket-probe.log reproduces inherited nonblocking behavior: immediate WouldBlock before explicit blocking, ~100ms configured timeout afterward.",
         "/private/tmp/pr1589-lifecycle-repair-tests.log: seven lifecycle/runtime tests pass. Linux-only held-writer ETXTBSY regression is defined but requires Linux provider execution; host success is not Linux proof.",
+        "/private/tmp/pr1589-publication-material-final.log: immutable head157e9493/current accepted3cda3f14 gate passes; final Tokio-only follow-up will repeat exact committed-head gate before push.",
         "/private/tmp/pr1589-publication-material-repair.log: exact immutable base3cda3f14/head5800aa7c/targetmaster publication-material gate status ok; no guard removed, historical chain remains proven.",
+        "/private/tmp/pr1589-supabase-final-suite.log: complete CI consumer command passes, 1604 library and33 integration tests; 8 optional library and2 external service profiles ignored. Final fixture-only Tokio adjustment separately passes all18 HTTP boundary tests in /private/tmp/pr1589-http-async-final.log.",
         "Both configuration and complete historical receipt roundtrips pass; /private/tmp/index134-legacy-receipt-tests.log",
         "Fetched accepted 3cda3f14 including PR #1585 and release v0.134.2; installed published 0.134.2 only through session acquire; restored original configuration and update preference. Regenerated release-bound entrypoints and Dockerfile with installed 0.134.2. Reviewed proof-source changes limited to accepted Cargo versions; hosted workflow/helper/executor definitions unchanged; reconciled source digest sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb.",
         "Fetched b4939469 / v0.134.1 after operator update. Retirement checkpoint records verified v0.134.0 source before integrating the new accepted target; final candidate proof remains pending.",

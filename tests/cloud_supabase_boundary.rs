@@ -592,18 +592,20 @@ mod enabled {
         }
     }
 
-    #[test]
-    fn request_fixture_waits_for_delayed_headers() {
+    #[tokio::test]
+    async fn request_fixture_waits_for_delayed_headers() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
         let (endpoint, server) = server(200, json!({"rows": []}));
-        let mut stream =
-            std::net::TcpStream::connect(endpoint.strip_prefix("http://").unwrap()).unwrap();
-        stream
-            .set_read_timeout(Some(Duration::from_secs(5)))
-            .unwrap();
-        std::thread::sleep(Duration::from_millis(30));
-        stream.write_all(b"POST /query HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer synthetic-bearer-secret\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}").unwrap();
-        let mut response = String::new();
-        stream.read_to_string(&mut response).unwrap();
+        let response = tokio::time::timeout(Duration::from_secs(5), async {
+            let mut stream = tokio::net::TcpStream::connect(
+                endpoint.strip_prefix("http://").unwrap(),
+            ).await.unwrap();
+            tokio::time::sleep(Duration::from_millis(30)).await;
+            stream.write_all(b"POST /query HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer synthetic-bearer-secret\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}").await.unwrap();
+            let mut response = String::new();
+            stream.read_to_string(&mut response).await.unwrap();
+            response
+        }).await.expect("fixture response exceeded its budget");
         assert!(response.starts_with("HTTP/1.1 200 Fixture"));
         assert_eq!(server.join().unwrap(), json!({}));
     }
