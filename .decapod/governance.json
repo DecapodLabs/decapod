@@ -553,6 +553,14 @@
         "docs/architecture/bazel-dependency-delivery.md",
         "tests/bazel_repository_cache_test.py"
       ]
+    },
+    {
+      "id": "dependency-delivery-spec-review",
+      "summary": "Complete current-content interface/security review and record passing independent carrier rejection regression; hosted readiness remains unavailable",
+      "input_digest": "sha256:9b9d75ca4e2ee095231308588c945e14d22f727e014d29355bb9809e06551e89",
+      "proof_refs": [
+        "docs/architecture/bazel-dependency-delivery.md"
+      ]
     }
   ],
   "intents": {
@@ -599,6 +607,20 @@
           "reason": "Archive-only cache boundary, accepted master writer, independent controller release and separate Laya policy transition are explicitly documented",
           "reviewed_code_fingerprint": "1d5250568753652aa1456a45b57c67e2a2b2cdd452a24a4a6600a6b2d64f579f",
           "spec_material_hash": "d29f4df499326b190d34f252eabae19585bd9200396e6350c99119651e983dd7"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Archive caching changes delivery inside an existing CI carrier only. No CLI, RPC, datastore or source-check invocation interface changes; pinned versions, lockfiles and measured custody interfaces remain unchanged.",
+          "reviewed_code_fingerprint": "1d5250568753652aa1456a45b57c67e2a2b2cdd452a24a4a6600a6b2d64f579f",
+          "spec_material_hash": "4ed30194ed0898db303c501005f1d9a3b2981353d9b036148a59077a2fd53cfb"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Cache restores only SHA256 archive bytes verified by Bazel; accepted-master save and existing provider authorization preserve authority. No credential, tenant, task custody or publication authority changes; independent controller acceptance remains required.",
+          "reviewed_code_fingerprint": "1d5250568753652aa1456a45b57c67e2a2b2cdd452a24a4a6600a6b2d64f579f",
+          "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
         }
       ],
       "state": "APPROVED",
@@ -611,13 +633,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794213144Z"
+      "updated_at": "1794213366Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3de71232d88a690925ae2c0f1bbbef92f66e1c375ab7a21e3e550f2fac27ff5a",
+      "artifact_hash": "sha256:f50cd9650f2435ce6f7133afcf27e349c4d2f84442b3f635e76e3d34f7926ca5",
       "blockers": [
         "Full accepted-baseline hosted proof unavailable; no cache result is publication evidence",
         "Independent acceptance/release of changed carrier required; installed 0.133.0 cannot certify it"
@@ -626,6 +648,10 @@
         {
           "name": "accepted-baseline-full-ci",
           "status": "unavailable"
+        },
+        {
+          "name": "controller-carrier-rejection-regression",
+          "status": "passed"
         },
         {
           "name": "formatting",
@@ -683,10 +709,17 @@
             "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6ZP2HF23PEN3F1B7SEFQRW1",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ZP2HF23PEN3F1B7SEFQRW1": {
@@ -758,6 +791,25 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Accepted 0.133.0 source regression executed: 1 passed, changed carrier remains CONTROLLER_CONTRACT_UNSUPPORTED"
+                ],
+                "proof_refs": [
+                  "controller-carrier-rejection-regression"
+                ],
+                "scope": [
+                  ".config",
+                  ".github",
+                  "assets/tools,tests",
+                  "docs",
+                  "tools"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -767,6 +819,7 @@
       "destination": "pull request",
       "evidence": [
         "52 source policy tests passed; three Linux-only runner fixtures failed on macOS and reproduced unchanged in clean accepted 15b69ce4 source snapshot",
+        "Accepted 0.133.0 source regression executed: 1 passed, changed carrier remains CONTROLLER_CONTRACT_UNSUPPORTED",
         "Cargo.lock, MODULE.bazel.lock, Bazel module versions, project policy and accepted source helpers unchanged from 15b69ce4",
         "tests/bazel_repository_cache_test.py: two tests passed with pinned Bazel 9.3.0, including zero-request warm reuse during 504 and corrupt-cache failure"
       ],
