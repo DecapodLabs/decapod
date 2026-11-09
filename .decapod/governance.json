@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "854703b40e97946eb1c40ac8b0e4c602a6f0af66",
+    "accepted_commit": "1d865efdf9846b88a8911ff0ee34c16d75d6cdc9",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -378,6 +378,78 @@
         "statement": "Configured validation can create, fast-forward or reuse its exact governed workspace branch without asking the human for a separate local policy receipt; unrelated writes, altered requests and provider/executable denials remain blocked.",
         "status": "open"
       },
+      "claim:vega-agent-readiness-guidance": {
+        "falsifier": "Failed or stale proof produces PR instructions, rejection or abstention produces PR instructions, disabled mode changes delivery authority, or boolean model output is presented as a textual defect explanation.",
+        "statement": "The optional Vega post-validation result instructs the agent: accepted current required proof and accepted Vega allow an already authorized PR; rejection requires requirement/evidence review and further work; abstention requires resolving the reported gap; failed or stale required proof always requires repair and revalidation. No result grants merge or release authority.",
+        "status": "open"
+      },
+      "claim:vega-current-run-scientific-collection": {
+        "falsifier": "Missing/replayed/mixed/unsafe/malformed phases, altered frozen inputs/labels, inconsistent decisions, numerical disagreement, failed adverse controls, absent positive coverage, hidden oracle mismatches or an abstaining verdict permit publication readiness.",
+        "proof_refs": [
+          "/private/tmp/vega-1191-validation-20261020T081406Z.json"
+        ],
+        "statement": "Eight reviewed Rust runs preserve three fixed numerical fixtures and six pairs of fixed production-path functional cases. The mandatory current-run aggregate rechecks identity, exports, raw response interpretation, every adverse/control result and genuine positive approval on each backend. Original oracle agreement is reported separately from delegated safe-abstention qualification; collection alone never authorizes publication.",
+        "status": "open"
+      },
+      "claim:vega-late-report-failure": {
+        "falsifier": "A late final-report filesystem error leaves ready=true, exit_code0 or create_authorized_pr instructions, overwrites existing evidence, or loses unsupported-controller recovery guidance.",
+        "statement": "Every validation execution error revokes publication readiness and PR guidance, including final verdict write or sync failure after completed proof and accepted Vega; completed proof and earlier evidence remain diagnostic only.",
+        "status": "open"
+      },
+      "claim:vega-native-acceptance": {
+        "falsifier": "Publication occurs without complete current source/native/numerical/functional proof, without positive approval on both backends, with unsafe adverse outcomes, or by presenting agent-authored functional labels as independently calibrated domain accuracy.",
+        "proof_refs": [
+          "https://github.com/DecapodLabs/decapod/issues/1445"
+        ],
+        "statement": "Current functional delivery requires actual native Metal/CPU inference, unchanged separate Rust numerical comparisons, installation/fallback checks, meaningful model approvals and safe negative/uncertain controls. Maintainer-authorized qualification supersedes the prior research prerequisite without passing it; all old failures and domain-accuracy limits remain preserved.",
+        "status": "open"
+      },
+      "claim:vega-package-input-lock": {
+        "falsifier": "Bazel still rejects the normalized Cargo manifest input, dependencies/required checks are changed to hide the mismatch, the lock exceeds existing discovery bounds, or metadata regeneration is represented as executed tests.",
+        "proof_refs": [
+          "/private/tmp/vega-040d-buildkite-setup.log"
+        ],
+        "statement": "The reviewed crate packaging exclusion is reflected by normal Bazel module metadata regeneration; only the normalized Cargo.toml input hash changed, without dependency additions, expanded discovery limits or weakened checks.",
+        "status": "open"
+      },
+      "claim:vega-plan-obligations": {
+        "falsifier": "An explicit deferred obligation, phase acceptance gate or adverse plan fact disappears from the assessment; overflow produces a partial assessment instead of abstention; stale governance authorizes publication.",
+        "statement": "The bounded post-validation assessment preserves declared proof hooks, unresolved questions, contradictions, stop conditions and phase gates as well as intent; none is silently omitted or truncated to fit model input.",
+        "status": "open"
+      },
+      "claim:vega-positive-singleton": {
+        "falsifier": "A disabled or repinned accepted required policy, failed/stale check, adverse projection omission, changed binding, negative/ambiguous/OOD/abstaining result can establish readiness.",
+        "proof_refs": [
+          "src/decapod/core/validation_runtime.rs",
+          "src/decapod/core/vega_readiness.rs"
+        ],
+        "statement": "Required vega may permit readiness only after deterministic proof and exact freshness, accepted policy integrity and a positive singleton yes without abstention/OOD; failed, stale, uncertain or changed identities remain blocked.",
+        "status": "open"
+      },
+      "claim:vega-production-projection-evaluation": {
+        "falsifier": "Replay uses another prompt builder, drops adverse obligations, dispatches on failed/stale/missing proof, accepts malformed responses, invents executed checks, hides oracle disagreements or authorizes publication from unsigned fixture evidence.",
+        "proof_refs": [
+          "https://github.com/DecapodLabs/decapod/issues/1445"
+        ],
+        "statement": "Live assessment and replay share validation-results.v3 projection, request/response checks and the final readiness predicate. Complete deterministic proof precedes inference. Fixed functional observations come from executed bounded candidate checks but unsigned replay never grants custody or publication. Exposed v2 and zero-unit research admission stay historical, not passing accuracy or current research prerequisites.",
+        "status": "open"
+      },
+      "claim:vega-public-review-source-audit": {
+        "falsifier": "Audit leaks selected verdict/rationale or future checks into input, labels wrong-commit/edited requirements as eligible, equates variants with independent ground truth, suppresses native checks, or claims historical statistical qualification passed.",
+        "proof_refs": [
+          "tests/fixtures/vega-public-review-sources/final-admission-review.json"
+        ],
+        "statement": "Historical public review records remain pinned/audited Rust diagnostic inputs, not a qualified readiness study. Review verdicts/rationale, future CI, conflicting identities and incomplete source histories cannot become independent readiness truth. Maintainer-authorized functional qualification does not claim that the old study or risk criterion passed.",
+        "status": "open"
+      },
+      "claim:vega1445-readiness-role-qualification": {
+        "falsifier": "Qualification passes an always-abstaining/rejecting model, lacks approval on either backend, accepts unmet obligations/manipulation, accepts malformed inference, hides an oracle mismatch, changes model/input/threshold/tolerances, or grants readiness to failed/stale/abstaining work.",
+        "proof_refs": [
+          "https://github.com/DecapodLabs/decapod/issues/1445"
+        ],
+        "statement": "The maintainer replaced the statistical qualification with functional integration and delegated safe-abstention interpretation. Both actual backends must approve meaningful ready work; every adverse/control case and numerical comparison must pass. A ready control may validly abstain, preserving its frozen expected-accept mismatch and blocking that assessed work. Domain accuracy and old research success remain unestablished.",
+        "status": "open"
+      },
       "claim:workunit-journal-recovery": {
         "falsifier": "Concurrent mutations lose updates, stale prepared state overwrites the journal, a retry overwrites a divergent projection, or replay refreshes a retained passing proof artifact.",
         "proof_refs": [
@@ -440,8 +512,10 @@
       "trajectory:92d20e7a29fe6436": "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
       "trajectory:9cae7985f5372144": "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
       "trajectory:9ccc878a4150c313": "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
+      "trajectory:9dc5e300bb3bd67b": "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked.",
       "trajectory:9ec958ffca8a0a63": "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
       "trajectory:ac23859f7db4e13e": "Preserve explicit cancellation and all remote sourcepass evidence. Late final report failure must dominate earlier readiness; this repair changes no scientific threshold or model result. Sourcepass is not nativeverification. Continue official validate exactnewcandidate on originalbranch; no new ownership, manual tests, forcepush, PR while acceptance fails, merge or release.",
+      "trajectory:acca78c440a4be4f": "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership.",
       "trajectory:ad78b8b133b57577": "Only released119 snapshot blocker retired: merged fix is officially published1191. Native/parity/calibration acceptance remains unverified and required recipe remains nonaccepting until actual evidence; authored inputs and frozen criteria unchanged.",
       "trajectory:afd7f835abf45cbd": "Native full graph still requires actual platform capabilities; current Mac does not by itself establish Linux or four-archive release execution",
       "trajectory:b2b784d1dd82ea8a": "Mac-only offline metadata does not prove cached dependency resolution on every platform; normalized lock references are not version-only proof reuse",
@@ -466,158 +540,142 @@
     }
   },
   "change": {
-    "id": "change_01M71C02B3MSRQY464Y79Z99F0",
-    "base_commit": "854703b40e97946eb1c40ac8b0e4c602a6f0af66",
+    "id": "change_01M7136X1WJ16STGBM3F1FKKN2",
+    "base_commit": "1d865efdf9846b88a8911ff0ee34c16d75d6cdc9",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "laya-only-active-contract": {
-      "statement": "Laya is the sole active optional post-validation evaluator; retired model references are absent from tracked active source, documentation, fixtures and paths. Historical governance resolution IDs are retained as an explicit accepted-compaction boundary.",
-      "falsifier": "Any active tracked interface or path still refers to a retired evaluator, or a non-Laya model field remains in validation output.",
-      "status": "supported",
-      "proof_refs": [
-        "/private/tmp/laya-only-final-tests.log",
-        "/private/tmp/laya-only-source-scan.json"
-      ]
-    }
-  },
-  "resolutions": {
-    "claim:vega-agent-readiness-guidance": {
-      "obligation_digest": "sha256:bf8cc625d934a02a2e04fb857e61a491f791f62625f6485bb269acd4661d5df4",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "claim:vega-current-run-scientific-collection": {
-      "obligation_digest": "sha256:c8062a46f1a26c35d64635c74d3fa5180ff42f07e583aa526884cde38552402f",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "claim:vega-late-report-failure": {
-      "obligation_digest": "sha256:0d26c9033c29748511f32eee0f9ec252327d58c769ff9b9bb3857fce750f8692",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "claim:vega-native-acceptance": {
-      "obligation_digest": "sha256:b255347853431cfb7e974ea4a9f3849207e8543bc5f3c79d78521508d153857f",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "claim:vega-package-input-lock": {
-      "obligation_digest": "sha256:d05322b533f3da146a467092475b34add9fc57f2fbbcc38fb2f4a0f7b161e4a6",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "claim:vega-plan-obligations": {
-      "obligation_digest": "sha256:802639c639e8e89228532485de71369cfd297b42fc3e95f8687d9d6ce87c7b1f",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "claim:vega-positive-singleton": {
-      "obligation_digest": "sha256:f7268f73f41a738b6f3632aa7047866f89868f58b7cdf46e113165dd62ecc49f",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "claim:vega-production-projection-evaluation": {
-      "obligation_digest": "sha256:137d6a7c23f96f30a3b4c4942c005758bdfa77452a9b2d1800cac43066a9575f",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "claim:vega-public-review-source-audit": {
-      "obligation_digest": "sha256:db30319b2271d3f3cfd772dc6415d416f54f733184151a17377b1a2bfe921a2c",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "claim:vega1445-readiness-role-qualification": {
-      "obligation_digest": "sha256:27764fb5f2da0746445f8fc23493e7e4eb6c5faf5cd2075b3e07498ef1573aa4",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "trajectory:43470fe9583c1d8f": {
-      "obligation_digest": "sha256:43470fe9583c1d8fabbbc8d83b6feedaddffad66b8d0e80b8defc8919df1fb65",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "trajectory:9dc5e300bb3bd67b": {
-      "obligation_digest": "sha256:9dc5e300bb3bd67b79d4c925d5e469225c1d122fa8457d7c74fac17bedd34122",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    },
-    "trajectory:acca78c440a4be4f": {
-      "obligation_digest": "sha256:acca78c440a4be4fd6ee8dbae3ab7ce7c73e0f7ec0db816de6300d21f2ab086d",
-      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
-      "proof_refs": [
-        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
-        "intent:todo:refa_01m71bsrx503b1dv"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "laya-only-contract",
-      "summary": "Remove retired assessment compatibility, corpora and obsolete documentation; retain Laya-only model output and explicit local binding version2; preserve raw history and current audit-resolution identifiers.",
-      "input_digest": "sha256:881f1ad9db17a1674eebe9cd3bb9e677cfe516f52805b41677a2e0bfed1a0c07",
-      "proof_refs": [
-        "/private/tmp/laya-only-bazel-strict.log",
-        "/private/tmp/laya-only-clippy.log",
-        "/private/tmp/laya-only-final-tests.log",
-        "/private/tmp/laya-only-source-scan.json"
-      ]
+      "id": "cicd_01m712xqxeaejw0n",
+      "summary": "Reproducible packages.default: BTreeMap in the constitution build script, Darwin build-dir remap in the flake, rebuild check in the Nix flake workflow, docs and ARCHITECTURE",
+      "input_digest": "sha256:35f36a3d775b91815cbffda68ba11434355d8ed76a9bab05fa20b50867c2c951"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r2",
+      "summary": "Reviewed source inventory renewed for flake.nix, the Nix flake workflow and the build script",
+      "input_digest": "sha256:1c93b7a835d24fc05021e81d7db18e3e8c8a8cbd5ad966fd8c626fef14b06e78"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r3",
+      "summary": "Workflow change dropped (compiled CI contract); docs and ARCHITECTURE adjusted; source inventory renewed",
+      "input_digest": "sha256:eafae54993dfecee51a8524c782e03b79dce266da32f89b5cc198fd637fb3381"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r4",
+      "summary": "Spec reviews (ARCHITECTURE updated; INTERFACES and SECURITY unchanged with reason) and the refreshed spec manifest",
+      "input_digest": "sha256:4e6f59a86592ecfa45969f04c80d6a4b3a59da778bfd5a4eadc5c8f61acc13e3"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r5",
+      "summary": "Local project-check validation epoch for the candidate",
+      "input_digest": "sha256:2a14292b8dba8c7a020ae01ac00829da294323b9aae8084b4b394561ed49289c"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r6",
+      "summary": "Rebased on 3cda3f14; projections and entrypoints for Decapod 0.134.2; source inventory renewed",
+      "input_digest": "sha256:391e0f354011e8ce3a0a9c6028306914c6723bc122fc5ccda02d4c9579ddfc51"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r7",
+      "summary": "New trajectory run for the 0.134.2 validation epoch",
+      "input_digest": "sha256:8089991ac4dc9052dcede9d7f8d9ab4126f56a2146e81825778adad068325580"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r8",
+      "summary": "Docs and ARCHITECTURE state the platform results: x86_64-linux byte-identical; aarch64-darwin LC_UUID remainder under upstream Nix",
+      "input_digest": "sha256:1cce2f0209ee40e25b8394b3f191f2ad54989a84c972c29b39e98870e5045749"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r9",
+      "summary": "Spec manifest refresh",
+      "input_digest": "sha256:a3963d661d89a237cdb93a9f1426dbfd29235dfd9ccd66b3712516dee016bc8c"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r10",
+      "summary": "Spec reviews of INTERFACES and SECURITY renewed on the rebased candidate",
+      "input_digest": "sha256:82d8da69ff71d80b86467cb718601059eb67d8c8595e70f52bebc84c4a8b1954"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r11",
+      "summary": "Trajectory correction of the run counts",
+      "input_digest": "sha256:2214c94d58c1d2a2ee5835ac3598abdbbf591f9725bb779ece05e68a466e3392"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r12",
+      "summary": "Rebased on b64eb5d3; Decapod 0.135.0 projections, spec reviews and a new trajectory run",
+      "input_digest": "sha256:bd62b7af0d143beb073cf8d9105e09cf5f4a15846bc310fc67f9ed088b4064b1"
+    },
+    {
+      "id": "cicd_01m712xqxeaejw0n-r13",
+      "summary": "Trajectory record of the rebase on b64eb5d3",
+      "input_digest": "sha256:278cdd69f5eec0065516dd8aeb75ed83abc734ad54364516d1e3b10f5c7b57f4"
     }
   ],
   "intents": {
-    "intent:change_01M71C02B3MSRQY464Y79Z99F0": {
+    "intent:cicd_01m712xqxeaejw0n-v0134-2": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Change only the build script's map types, the flake package's build environment, the Nix doc and ARCHITECTURE; no runtime behavior change; no workflow change (the nix-flake.yml contract is compiled)"
       ],
       "constraints": [
-        "root"
+        "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
+      "id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Laya-only runtime and source cleanup\n\nRemove all remaining retired evaluator code, configuration and receipt compatibility, obsolete fixtures and documentation. Preserve Laya-only optional post-validation assessment, deterministic proof encodings and explicit typed compatibility boundaries. User requests a fresh governed worktree after published release availability.",
-      "refined_intent": "Laya-only runtime and source cleanup\n\nRemove all remaining retired evaluator code, configuration and receipt compatibility, obsolete fixtures and documentation. Preserve Laya-only optional post-validation assessment, deterministic proof encodings and explicit typed compatibility boundaries. User requests a fresh governed worktree after published release availability.",
+      "raw_intent": "Tao (worldofgeese): address DecapodLabs/decapod#1176 with a PR; the maintainer invited PRs on 2026-11-09.",
+      "refined_intent": "Make two Nix builds of packages.default from the same locked inputs byte-identical: BTreeMap in the constitution build script, and the flake maps the Darwin build directory to /build.",
       "status": "refined",
       "updated_sequence": 3
+    }
+  },
+  "epochs": {
+    "ve_a27ce2a9e82bb0f7": {
+      "constitution_hash": "sha256:75642928345065a3501411f71d0927ed8e1bbae5aef5d5048c8a0837d8c62ffa",
+      "constitution_version": "embedded-docs@0.133.2",
+      "epoch_id": "ve_a27ce2a9e82bb0f7",
+      "evaluator_identity": "decapod-validate@0.133.2",
+      "evaluator_set_hash": "sha256:b8cd8a64307bc962bb8a113aba4276b834b94dc068cb2d0220e538ccfa6a1838",
+      "generated_specs_fingerprint": "b4d2046a9d170b25dc22155c533509555fb740b5d3ca747343391d335fb61225",
+      "generated_specs_manifest_hash": "sha256:e773346bf7c85934d784c4beda042d4c43d78c8b33ca35bc8106739f948b1667",
+      "material_hashes": {
+        "constitution:core/DECAPOD": "sha256:75642928345065a3501411f71d0927ed8e1bbae5aef5d5048c8a0837d8c62ffa",
+        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:7e68e39443436ab0f70ada668028413dcb6f5691c33b359236bf56b7dfaa239d",
+        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:f991becb1a54dc14965099fd113526d0345b007f02bb3a3102c9ed7f1f4da6c0",
+        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:5bf016d9c1721933c9dc8bdab988edcf9f6d8160ff2378e8d953057b5401a466",
+        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:cc3d0f697a54616370640fa31923f5c1ed5305e5ce92996c1c843204caa77a4e",
+        "generated_spec:.decapod/managed/specs/README.md": "sha256:9dda81b54aa6fc088b548326b21dbaed4633addaa7e048f6fba7b386118181a9",
+        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:28831bfc97c748e2d79a7366f7ac25a30790a166587e62dccd8d66c8d4e475a2",
+        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:ca11f9d82d43f6da19f6c9cf96fa8bf2190df7f085839e6a6349f9110a84c87c",
+        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:6e8e204a5efcef2cf431978f659ad33599f74c2991d808c37f208e0a001b4981",
+        "generated_specs_fingerprint": "b4d2046a9d170b25dc22155c533509555fb740b5d3ca747343391d335fb61225",
+        "generated_specs_manifest": "sha256:e773346bf7c85934d784c4beda042d4c43d78c8b33ca35bc8106739f948b1667",
+        "governance_context": "sha256:bbee294269c171428667bd8f7563d1e7111ce1d5c890336bb6c6bc9f8a522219",
+        "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:95bb0112e673fb293049bdeaff2cdb4c0d6f0178ca9414fe7afa28591821bb93",
+        "governance_material:AGENTS.md": "sha256:fc27e5cc95fc4e39d1f8368bc8478a777b22aa16af3289d920c99a709f20b186",
+        "governance_material:CLAUDE.md": "sha256:d877cdf13ed82e5fa6b59304e3c8972a6425e37582751d62f2db4dfb21d22d94",
+        "governance_material:CODEX.md": "sha256:fe2b9aff64bb898c72a1040a78d3dfff8240258f4a7b7494e2dbb878feaada01",
+        "governance_material:GEMINI.md": "sha256:fa663b9d6c2131458d712654bd2517e81f47819f1cbf6ffea969efce837bc2a4",
+        "governance_section:claims": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "governance_section:plan": "sha256:72fe8d08c9cf365bdf2b6722ba71a17debdcc8a0410d478a1008fb3f57c144c6",
+        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:777bd65c273c06f2b62659ffec5f9ef52cd65ac16f31d77f43339e8d21086a77",
+        "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:c88239849af81b0d0aeb155060f4f746e78a8473d20bdf6cee7bf493c4c1e22a",
+        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:054ffdddc0e083e8f34fd3ecfcfe4cd3508edd75b112fe857fb086cff29f8fa4",
+        "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:56fc9413434e36829379d533a3f2c055652e03c9d34b5a0c5ac4867bace079af",
+        "living_spec_material:.decapod/managed/specs/README.md": "sha256:b438399f5c0f241858ccea303abbd1076a8728d2560509e7a15e012dd698765c",
+        "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:c279b112d21c44780d91ac6a15dec7a077bca10e24f991b0026ad5210e6353c3",
+        "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:f8e8795b50e92eb0a30a06548e8cb84a7283aad77d2d7c6e92bf40c2c18f8ace",
+        "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:3200c47e19cdffd62f6984bdef669be41ce54e76814d29913eb27ff57d27d742",
+        "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
+        "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
+      },
+      "proof_rubric": "decapod-validate/current-proof-v1",
+      "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
+      "schema_version": "1.0.0",
+      "validation_profile": "default",
+      "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
   },
   "sections": {
@@ -628,9 +686,12 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Use only Laya for optional post-validation assessment. Remove retired evaluator compatibility DTOs, report fields, guidance aliases, unused fixtures, stale documentation and package exclusions. Adopt explicit Laya runtime-binding version2 with typed re-registration failure for older bindings. Preserve documented opaque user configuration extensions, generic historical replay normalization, proof bytes and Git history. Resolve retired ledger obligations through supported CLI; retained historical resolution IDs require accepted compaction, never manual deletion. Verify active source/path absence, Laya CLI/configuration behavior, private runtime custody, projection goldens and exact-candidate validation.",
+      "intent": "Two Nix builds of packages.default from the same locked inputs must be byte-identical, so a consumer can check a cached binary with nix build --rebuild (DecapodLabs/decapod#1176; maintainer invited a PR 2026-11-09). Root causes found on aarch64-darwin: the constitution build script serializes HashMaps, whose order changes per build, into the embedded JSON; and on Darwin the random Nix build directory is embedded in panic locations. Fix: BTreeMap in assets/build/compress_constitution.rs; the flake maps NIX_BUILD_TOP to /build; the Nix flake workflow checks nix build --rebuild; docs and ARCHITECTURE record it. codegen-units = 1 was tested and is neither needed nor sufficient.",
       "phases": [],
       "proof_hooks": [
+        "nix build --rebuild of packages.default on aarch64-darwin is byte-identical",
+        "the Nix flake workflow (rebuild step) passes on x86_64-linux and aarch64-darwin runners",
+        "rustfmt --check of the build script",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
@@ -638,138 +699,186 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Materially remove retired model machinery and research claims; sole optional Laya path, common projector, generic replay and private binding version2 match current source.",
-          "reviewed_code_fingerprint": "d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091",
-          "spec_material_hash": "0b86d1dc4eb7158c85628908dadfc194cc9ea51d68256c74e30b5d5e327ce47c"
+          "reason": "Current Facts records that packages.default is reproducible on x86_64-linux, the remaining aarch64-darwin LC_UUID difference under upstream Nix, the BTreeMap rule of the constitution build script and the flake's /build remap (#1176); reviewed on base b64eb5d3",
+          "reviewed_code_fingerprint": "75e25142cfa30673df73c695d975b6e5f453c798551bf8ebb92bb2e256b011b0",
+          "spec_material_hash": "9aa1a5289aca0ff67892fe90e049191de84da222d68b2941b5e87974e91ccd2a"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current validation report has only Laya model field; old DTO/guidance API removed. Current setup/init preserve Laya and opaque user tables; v2 binding re-registration is explicit.",
-          "reviewed_code_fingerprint": "d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091",
+          "reason": "Reviewed on base b64eb5d3: the change touches only the map types of the constitution build script (assets/build/compress_constitution.rs) and the Nix package's build environment (flake.nix), plus the Nix doc; the interfaces and the security model that INTERFACES.md describes do not change",
+          "reviewed_code_fingerprint": "75e25142cfa30673df73c695d975b6e5f453c798551bf8ebb92bb2e256b011b0",
           "spec_material_hash": "4515647c945b367aec9b8ca84014d9b6a3e5e7f949c5a4a27ebe904962edc0ef"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Replace obsolete evaluator trust text with current Laya policy and private runtime custody; generic historical replay and canonical proof encodings unchanged. Historical audit IDs are preserved pending accepted compaction.",
-          "reviewed_code_fingerprint": "d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091",
+          "reason": "Reviewed on base b64eb5d3: the change touches only the map types of the constitution build script (assets/build/compress_constitution.rs) and the Nix package's build environment (flake.nix), plus the Nix doc; the interfaces and the security model that SECURITY.md describes do not change",
+          "reviewed_code_fingerprint": "75e25142cfa30673df73c695d975b6e5f453c798551bf8ebb92bb2e256b011b0",
           "spec_material_hash": "99c7faf55d9a02d0607f62d311b5ace056ad457dbad41799b0f4255d3830102e"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Laya-only runtime and source cleanup",
+      "title": "Make packages.default reproducible (#1176)",
       "todo_ids": [
-        "refa_01m71bsrx503b1dv"
+        "cicd_01m712xqxeaejw0n"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794270799Z"
+      "updated_at": "1794273506Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "No historical Git commit, event identity or canonical proof bytes rewritten; no operator production access used."
+        "Change only the build script's map types, the flake package's build environment, the Nix doc and ARCHITECTURE; no runtime behavior change; no workflow change (the nix-flake.yml contract is compiled)"
       ],
-      "artifact_hash": "sha256:32cad21e322553421c71043662f86281926f3b0d8023d722c62239556d978a4f",
+      "artifact_hash": "sha256:2b1eefcd99002963a44418ba0c6e3120577e3a03f3ddede9b3a564d7f8c64711",
       "checks": [
         {
-          "name": "active-source-absence",
+          "name": "ld64-flag-S-fixes-darwin-uuid",
+          "status": "failed"
+        },
+        {
+          "name": "ld64-flag-reproducible-fixes-darwin-uuid",
+          "status": "failed"
+        },
+        {
+          "name": "nix-rebuild-aarch64-darwin-github-runner",
+          "status": "failed"
+        },
+        {
+          "name": "nix-rebuild-aarch64-darwin-local-lix",
           "status": "passed"
         },
         {
-          "name": "clippy-all-targets",
+          "name": "nix-rebuild-x86_64-linux-github-runner",
           "status": "passed"
         },
         {
-          "name": "final-local-tests",
-          "status": "passed"
-        },
-        {
-          "name": "initial-library-and-config",
-          "status": "passed"
-        },
-        {
-          "name": "strict-bazel-lock",
+          "name": "rustfmt-build-script",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M71C02DXB9T0EJKFXWCA5HRC",
+            "detail": "trajectory:cicd_01m712xqxeaejw0n-v0134-2",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M71C02DXB9T0EJKFXWCA5HRC",
+            "detail": "trajectory:cicd_01m712xqxeaejw0n-v0134-2",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:cicd_01m712xqxeaejw0n-v0134-2",
+            "event_id": "event:6",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:cicd_01m712xqxeaejw0n-v0134-2",
+            "event_id": "event:7",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M71C02DXB9T0EJKFXWCA5HRC": {
+          "cicd_01m712xqxeaejw0n-v0134-2": {
             "evidence_only": true,
-            "id": "branch_01M71C02DXB9T0EJKFXWCA5HRC",
-            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
+            "id": "cicd_01m712xqxeaejw0n-v0134-2",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "validation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "/private/tmp/laya-only-initial-tests.log: 1602 library tests passed,8 ignored;36 init/config tests passed,1 ignored. Four production projection hashes preserved; generic replay normalizer unchanged.",
-                  "Retired carried obligations were resolved through CLI with accepted-source and task-intent references. Historical resolution IDs remain in current audit data until accepted compaction; source and documentation scan excludes only that explicit audit boundary."
+                  "assets/build/compress_constitution.rs",
+                  "flake.nix",
+                  "docs/book/src/reference/nix.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "Previous run branch_01M7136X45BSSTPPP82GJKFGZD (0.133.2 epoch) holds the full investigation. Fork runners: upstream master's rebuild fails on ubuntu-latest and macos-latest (run 42714037038); with the fix ubuntu-latest passes (runs 42714041770, 42716643725, 42718176457); macos-latest differed once in 48 bytes (LC_UUID plus one signature page hash, no other byte or string) and passed once."
                 ],
                 "proof_refs": [
-                  "initial-library-and-config"
+                  "nix-rebuild-aarch64-darwin-local-lix",
+                  "nix-rebuild-x86_64-linux-github-runner",
+                  "nix-rebuild-aarch64-darwin-github-runner",
+                  "rustfmt-build-script"
                 ],
                 "scope": [
-                  "root"
+                  "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
                 ],
                 "sequence": 4,
+                "validation_findings": [
+                  "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace"
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "docs/book/src/reference/nix.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "GitHub macOS runners (upstream Nix): rebuilds of the fixed package differ only in LC_UUID (16 bytes at 1848) and one code-signature page hash (32 bytes), in 5 of 7 runs (runs 42714041770, 42719375943, 42720518141, 42722006292); -Wl,-S and -Wl,-reproducible do not fix it (run 42724278925). ld64-954.16 computeContentUUID hashes the pre-strip output (stab regions excluded, symbol and string tables included). Local Lix 2.95.4 rebuilds are byte-identical (5 of 5). x86_64-linux: master fails, fix passes (runs 42714037038, 42714041770, 42716643725, 42718176457, 42720518141)."
+                ],
+                "proof_refs": [
+                  "nix-rebuild-aarch64-darwin-github-runner",
+                  "ld64-flag-S-fixes-darwin-uuid",
+                  "ld64-flag-reproducible-fixes-darwin-uuid"
+                ],
+                "scope": [
+                  "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
+                ],
+                "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
+                "action": "validation",
+                "custody_event_id": "event:6",
                 "observations": [
-                  "/private/tmp/laya-only-final-tests.log:1602 library tests passed,8 ignored;16 native-consumer tests passed;36 init/config tests passed,1 ignored. Runtime-version rejection preserves bytes and explicit re-registration succeeds; four production projection hashes remain unchanged.",
-                  "/private/tmp/laya-only-clippy.log: all-target clippy with warnings denied passed.",
-                  "/private/tmp/laya-only-bazel-strict.log: strict lockfile_mode=error succeeds after generated dependency lock update.",
-                  "/private/tmp/laya-only-source-scan.json: no active tracked text or path matches; ledger resolution identifiers are the documented remaining archive boundary.",
-                  "Custody expired after workspace provisioning narrowed lease to30minutes. Same owner reclaimed generation2, renewed86400seconds and explicitly rebound the checkout; workspace status can_work=true. No raw control-plane state edits."
+                  "Correction of earlier counts, checked against the run records: local Lix rebuilds with the fix are byte-identical in 3 of 3 runs (not 5 of 5). GitHub macOS rebuilds with the fix differ in 8 of 10 runs (not 5 of 7); where located (runs 42716643725, 42719375943 runs 1 and 3, 42722006292) only LC_UUID and one signature page hash differ. With -Wl,-S or -Wl,-reproducible, all 4 runs differ (bytes not located). ubuntu-latest with the fix: 4 of 4 identical; master: differs."
                 ],
-                "proof_refs": [
-                  "final-local-tests",
-                  "clippy-all-targets",
-                  "strict-bazel-lock",
-                  "active-source-absence"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "root"
+                  "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
                 ],
-                "sequence": 5,
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Rebased on upstream master b64eb5d3 (Decapod 0.135.0) with the verified v0.135.0 release binary (sha256 6a984a73057a74dc...): 0.135.0 projections, renewed source inventory, and fresh spec reviews (ARCHITECTURE updated; INTERFACES and SECURITY unchanged with reason). project-check --refresh-specs: 206 pass, 0 fail."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
+                ],
+                "sequence": 7,
                 "validation_findings": []
               }
             ]
@@ -777,31 +886,293 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [
-        "/private/tmp/laya-only-bazel-strict.log: strict lockfile_mode=error succeeds after generated dependency lock update.",
-        "/private/tmp/laya-only-clippy.log: all-target clippy with warnings denied passed.",
-        "/private/tmp/laya-only-final-tests.log:1602 library tests passed,8 ignored;16 native-consumer tests passed;36 init/config tests passed,1 ignored. Runtime-version rejection preserves bytes and explicit re-registration succeeds; four production projection hashes remain unchanged.",
-        "/private/tmp/laya-only-initial-tests.log: 1602 library tests passed,8 ignored;36 init/config tests passed,1 ignored. Four production projection hashes preserved; generic replay normalizer unchanged.",
-        "/private/tmp/laya-only-source-scan.json: no active tracked text or path matches; ledger resolution identifiers are the documented remaining archive boundary.",
-        "Custody expired after workspace provisioning narrowed lease to30minutes. Same owner reclaimed generation2, renewed86400seconds and explicitly rebound the checkout; workspace status can_work=true. No raw control-plane state edits.",
-        "Retired carried obligations were resolved through CLI with accepted-source and task-intent references. Historical resolution IDs remain in current audit data until accepted compaction; source and documentation scan excludes only that explicit audit boundary."
+        "Correction of earlier counts, checked against the run records: local Lix rebuilds with the fix are byte-identical in 3 of 3 runs (not 5 of 5). GitHub macOS rebuilds with the fix differ in 8 of 10 runs (not 5 of 7); where located (runs 42716643725, 42719375943 runs 1 and 3, 42722006292) only LC_UUID and one signature page hash differ. With -Wl,-S or -Wl,-reproducible, all 4 runs differ (bytes not located). ubuntu-latest with the fix: 4 of 4 identical; master: differs.",
+        "GitHub macOS runners (upstream Nix): rebuilds of the fixed package differ only in LC_UUID (16 bytes at 1848) and one code-signature page hash (32 bytes), in 5 of 7 runs (runs 42714041770, 42719375943, 42720518141, 42722006292); -Wl,-S and -Wl,-reproducible do not fix it (run 42724278925). ld64-954.16 computeContentUUID hashes the pre-strip output (stab regions excluded, symbol and string tables included). Local Lix 2.95.4 rebuilds are byte-identical (5 of 5). x86_64-linux: master fails, fix passes (runs 42714037038, 42714041770, 42716643725, 42718176457, 42720518141).",
+        "Previous run branch_01M7136X45BSSTPPP82GJKFGZD (0.133.2 epoch) holds the full investigation. Fork runners: upstream master's rebuild fails on ubuntu-latest and macos-latest (run 42714037038); with the fix ubuntu-latest passes (runs 42714041770, 42716643725, 42718176457); macos-latest differed once in 48 bytes (LC_UUID plus one signature page hash, no other byte or string) and passed once.",
+        "Rebased on upstream master b64eb5d3 (Decapod 0.135.0) with the verified v0.135.0 release binary (sha256 6a984a73057a74dc...): 0.135.0 projections, renewed source inventory, and fresh spec reviews (ARCHITECTURE updated; INTERFACES and SECURITY unchanged with reason). project-check --refresh-specs: 206 pass, 0 fail."
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
-      "modified_files": [],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+      "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+      "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        "assets/build/compress_constitution.rs",
+        "docs/book/src/reference/nix.md",
+        "flake.nix"
       ],
       "repo_scope": [
-        "root"
+        "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
       ],
-      "run_id": "branch_01M71C02DXB9T0EJKFXWCA5HRC",
+      "run_id": "cicd_01m712xqxeaejw0n-v0134-2",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "refa_01m71bsrx503b1dv",
+      "task_id": "cicd_01m712xqxeaejw0n",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace"
+      ]
+    },
+    "validation": {
+      "ci_prediction": {
+        "confidence": "medium",
+        "recommendations": [
+          "Review the reported validation warnings before relying on the CI result.",
+          "Use `decapod validate -v --format json` to inspect the affected gate output."
+        ],
+        "result": "review"
+      },
+      "decapod_release": "0.133.2",
+      "drift_findings": [],
+      "elapsed_ms": 5384,
+      "epoch_ref": "ve_a27ce2a9e82bb0f7",
+      "fail_count": 0,
+      "failures": [],
+      "gate_timings": [
+        {
+          "elapsed_ms": 1266,
+          "name": "validate_project_specs_docs"
+        },
+        {
+          "elapsed_ms": 1061,
+          "name": "validate_machine_contract"
+        },
+        {
+          "elapsed_ms": 502,
+          "name": "validate_validation_rules"
+        },
+        {
+          "elapsed_ms": 279,
+          "name": "validate_markdown_primitives_roundtrip_gate"
+        },
+        {
+          "elapsed_ms": 206,
+          "name": "validate_stale_workspaces"
+        },
+        {
+          "elapsed_ms": 205,
+          "name": "validate_no_legacy_namespaces"
+        },
+        {
+          "elapsed_ms": 199,
+          "name": "validate_git_workspace_context"
+        },
+        {
+          "elapsed_ms": 100,
+          "name": "validate_obligations"
+        },
+        {
+          "elapsed_ms": 96,
+          "name": "validate_legacy_jsonl_retired"
+        },
+        {
+          "elapsed_ms": 77,
+          "name": "validate_repomap_determinism"
+        },
+        {
+          "elapsed_ms": 45,
+          "name": "validate_archive_integrity"
+        },
+        {
+          "elapsed_ms": 42,
+          "name": "validate_git_push_pr_gate"
+        },
+        {
+          "elapsed_ms": 39,
+          "name": "validate_git_protected_branch"
+        },
+        {
+          "elapsed_ms": 30,
+          "name": "validate_schema_determinism"
+        },
+        {
+          "elapsed_ms": 29,
+          "name": "validate_federation_gates"
+        },
+        {
+          "elapsed_ms": 29,
+          "name": "validate_control_plane_contract"
+        },
+        {
+          "elapsed_ms": 25,
+          "name": "validate_lineage_hard_gate"
+        },
+        {
+          "elapsed_ms": 23,
+          "name": "validate_embedded_self_contained"
+        },
+        {
+          "elapsed_ms": 20,
+          "name": "validate_gatekeeper_gate"
+        },
+        {
+          "elapsed_ms": 20,
+          "name": "validate_generated_artifact_whitelist"
+        },
+        {
+          "elapsed_ms": 18,
+          "name": "validate_recursive_improvement_passes_if_present"
+        },
+        {
+          "elapsed_ms": 17,
+          "name": "validate_knowledge_integrity"
+        },
+        {
+          "elapsed_ms": 16,
+          "name": "validate_interface_contract_bootstrap"
+        },
+        {
+          "elapsed_ms": 15,
+          "name": "validate_research_claims_if_present"
+        },
+        {
+          "elapsed_ms": 15,
+          "name": "validate_knowledge_promotions_if_present"
+        },
+        {
+          "elapsed_ms": 15,
+          "name": "validate_trajectory_artifacts_if_present"
+        },
+        {
+          "elapsed_ms": 15,
+          "name": "validate_health_purity"
+        },
+        {
+          "elapsed_ms": 14,
+          "name": "validate_context_capsule_policy_contract"
+        },
+        {
+          "elapsed_ms": 14,
+          "name": "validate_database_schema_versions"
+        },
+        {
+          "elapsed_ms": 14,
+          "name": "validate_validation_receipt_if_present"
+        },
+        {
+          "elapsed_ms": 14,
+          "name": "validate_watcher_audit"
+        },
+        {
+          "elapsed_ms": 14,
+          "name": "validate_policy_integrity"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_context_capsules_if_present"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_plan_governed_execution_gate"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_lcm_immutability"
+        },
+        {
+          "elapsed_ms": 13,
+          "name": "validate_risk_map"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_workunit_manifests_if_present"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_repo_map"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_health_cache_integrity"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_risk_map_violations"
+        },
+        {
+          "elapsed_ms": 12,
+          "name": "validate_entrypoint_invariants"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_lcm_rebuild_gate"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_state_commit_gate"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_override_authority"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_eval_gate_if_required"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_project_config_toml"
+        },
+        {
+          "elapsed_ms": 11,
+          "name": "validate_watcher_purity"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_root_dockerfile_seed_detection"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_project_scoped_state"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_spec_drift"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_heartbeat_invocation_gate"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_coplayer_policy_tightening"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_canon_mutation"
+        },
+        {
+          "elapsed_ms": 10,
+          "name": "validate_docs_templates_bucket"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_tooling_gate"
+        },
+        {
+          "elapsed_ms": 9,
+          "name": "validate_internalization_artifacts_if_present"
+        }
+      ],
+      "git_revision": "40740abe58e8c0f308405ef8f6abe6dbca5efb9d",
+      "kind": "validation_receipt",
+      "parallelism": 1,
+      "pass_count": 205,
+      "prediction_uses_warnings": true,
+      "receipt_hash": "sha256:3572f4f18cf2b83701aded5957aa1e631ccda79e49711e398aed9cba0af6ba09",
+      "repo_signal_fingerprint": "b4d2046a9d170b25dc22155c533509555fb740b5d3ca747343391d335fb61225",
+      "schema_version": "1.0.0",
+      "status": "ok",
+      "temporary_artifacts_cleaned": 0,
+      "trajectory_artifact_hash": "sha256:c2235193700b8e42623ca1e50a577b5ba623d94ad0ed7d93c8a45bbf0f9e2578",
+      "trajectory_run_id": "branch_01M7136X45BSSTPPP82GJKFGZD",
+      "warn_count": 5,
+      "warnings": [
+        "Risk map missing (run `decapod riskmap init`)",
+        "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v4' while current scaffolding is 'scaffold-v5'; living spec content remains authoritative.",
+        "Stale workspaces preserved for explicit review: <external-path> (unregistered_workspace: workspace ownership is unverified; --force does not authorize deleting unrelated directories. Inspect and preserve or remove this directory explicitly), <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (active_claim: abandoned invocation container reconciled; active task files preserved)",
+        "Watcher audit trail missing (run `decapod govern watcher run`)",
+        "Workspace branch 'agent/pi-dktaohan/cicd_01m712xqxeaejw0n-reproducible-build' has unpushed commits or does not exist on origin. Branch pushes and iteration are allowed before preflight; hold PR creation until intent is converged, the branch is mergeable, and full `decapod validate` succeeds against the exact current candidate and accepted target."
+      ]
     }
   },
   "legacy_digests": {

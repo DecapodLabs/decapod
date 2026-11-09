@@ -89,6 +89,13 @@
             # Cargo.lock; no Git-source output hash is needed for vendoring.
             cargoLock.lockFile = ./Cargo.lock;
 
+            # Reproducible builds (#1176): on Darwin the build directory is random
+            # (/nix/var/nix/b/<id>), and rustc embeds it in panic locations. Map it
+            # to /build, the fixed path of the Linux sandbox.
+            preBuild = ''
+              export RUSTFLAGS="--remap-path-prefix=$NIX_BUILD_TOP=/build''${RUSTFLAGS:+ $RUSTFLAGS}"
+            '';
+
             # Dactyl loads the host SQLite runtime dynamically; there is no
             # bundled SQLite or direct database-driver dependency here. The
             # package still carries the flake's sqlite in its runtime closure
