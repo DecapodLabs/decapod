@@ -551,6 +551,14 @@
       "proof_refs": [
         "git:65be930ec8df2c25878a7e7db37443a5d4bc3717"
       ]
+    },
+    {
+      "id": "release-entrypoint-refresh",
+      "summary": "Refresh four generated 0.131.0 entrypoints to installed 0.132.0 release following actual independent standalone validation failure; preserve configuration and required checks",
+      "input_digest": "sha256:7b93cac6db16983f5e0367e42fff9c067e0da04e8674a84fa8eaa0584b938409",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/5757"
+      ]
     }
   ],
   "intents": {
@@ -601,7 +609,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0af738468d8a3fe5d9a51909fdcb5f3139b7ddf31cbbdc73ae83251f2708a8cf",
+      "artifact_hash": "sha256:7a97d85fca5245221f670aeec42bdec203e68fc0e1e0e8f4a80cfe0535b8dd93",
       "checks": [
         {
           "name": "accepted_candidate_inventory_equal",
@@ -609,7 +617,7 @@
         },
         {
           "name": "independent_publication",
-          "status": "unavailable"
+          "status": "failed"
         },
         {
           "name": "preserved_implementation_bytes",
@@ -644,10 +652,17 @@
             "intent_id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6Z1ATPH4QM61T7E4FG1Y59G",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6Z1ATPH4QM61T7E4FG1Y59G": {
@@ -692,6 +707,27 @@
                 "validation_findings": [
                   "Candidate-assisted normal admission is not independent publication proof"
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  "https://buildkite.com/decapodlabs/decapod/builds/5757"
+                ],
+                "proof_refs": [
+                  "independent_publication"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved."
+                ]
               }
             ]
           }
@@ -702,7 +738,8 @@
       ],
       "destination": "pull request",
       "evidence": [
-        "git:65be930ec8df2c25878a7e7db37443a5d4bc3717"
+        "git:65be930ec8df2c25878a7e7db37443a5d4bc3717",
+        "https://buildkite.com/decapodlabs/decapod/builds/5757"
       ],
       "inspected_files": [
         ".decapod/config.toml",
@@ -712,6 +749,10 @@
       "intent_id": "intent:change_01M6Z1ATKTQ0HDPVYR1CVZH4B6",
       "modified_files": [
         ".decapod/config.toml",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
         "docs/architecture/concurrency-custody.md"
       ],
       "next_transitions": [
@@ -726,7 +767,8 @@
       "task_id": "bend_01m6yw46e8yd4463",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Candidate-assisted normal admission is not independent publication proof"
+        "Candidate-assisted normal admission is not independent publication proof",
+        "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved."
       ]
     }
   },
