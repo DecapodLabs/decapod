@@ -219,7 +219,7 @@ pub(super) fn verify_remote(
         "Remote publication object fetch",
     )?;
     verify_committed_bundle(repo, &head)?;
-    crate::core::governance_document::verify_pr_checkpoints_for_target(
+    crate::core::governance_document::verify_pr_continuation_for_target(
         repo,
         &base,
         &head,

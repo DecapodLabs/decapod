@@ -846,6 +846,37 @@ fn fresh_empty_init_can_begin_without_a_bootstrap_commit() {
 }
 
 #[test]
+fn inherited_accepted_change_continues_without_rewriting_history() {
+    let root = repo();
+    begin_pr(root.path(), "accepted-label", "master").unwrap();
+    checkpoint(root.path(), "accepted-proof", "Accepted baseline work", vec![]).unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root.path(), "accepted baseline");
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    git(root.path(), &["checkout", "-b", "continuation"]).unwrap();
+    fs::write(root.path().join("source.rs"), "fn current_change() {}\n").unwrap();
+    git(root.path(), &["add", "source.rs"]).unwrap();
+    commit(root.path(), "continuing work without historical checkpoint");
+    let head = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+
+    let report = inspect_checkpoint_history(root.path(), &base, &head, Some("master")).unwrap();
+    assert!(!report.history_proven);
+    assert!(!report.publication_ready);
+    verify_pr_continuation_for_target(root.path(), &base, &head, "master").unwrap();
+    assert!(verify_pr_continuation_for_target(root.path(), &head, &head, "master").is_err());
+    assert!(verify_pr_continuation_for_target(root.path(), &base, &head, "other").is_err());
+
+    let mut changed = load(root.path()).unwrap().unwrap();
+    changed.checkpoints[0].summary = "forged accepted summary".into();
+    save(root.path(), &changed).unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root.path(), "tamper accepted checkpoint");
+    let head = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    assert!(verify_pr_continuation_for_target(root.path(), &base, &head, "master")
+        .unwrap_err().to_string().contains("GOVERNANCE_ACCEPTED_CHECKPOINT_CHANGED"));
+}
+
+#[test]
 fn accepted_pr_identity_cannot_be_reused() {
     let root = repo();
     begin_pr(root.path(), "one", "master").unwrap();
@@ -867,7 +898,7 @@ fn accepted_pr_identity_cannot_be_reused() {
         verify_pr_checkpoints(root.path(), &accepted, "HEAD")
             .unwrap_err()
             .to_string()
-            .contains("RESET_REQUIRED")
+            .contains("CHECKPOINT_MISSING")
     );
 }
 
