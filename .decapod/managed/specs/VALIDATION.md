@@ -1,5 +1,17 @@
 # Validation
 
+## Bazel dependency delivery boundary
+
+The separate archive-cache carrier in `.github/actions/source-ci-profile/action.yml`
+restores only content-addressed SHA-256 downloads. It preserves pinned versions,
+lockfiles, independently accepted executors and required checks. Cache hits are
+inputs, never proof. `tests/bazel_repository_cache_test.py` exercises real pinned
+Bazel reuse during a fixture outage and rejects corrupt entries. Hosted cache
+persistence and complete accepted-baseline execution still need independent
+evidence; controller 0.133.0 cannot admit changed carrier bytes. See
+`docs/architecture/bazel-dependency-delivery.md` for the acceptance transition.
+Laya policy and PR #1575 remain separate from this infrastructure change.
+
 ## Claim boundary delivery checks
 
 The required CLI target runs the two `claim_boundaries` regressions with
@@ -1025,8 +1037,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `73bbeda852fd30834a4289d4dc517baf18dfcf3f98713df729052fc1ae4a2e5d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (222 files), `tests/` (214 files)
+- Repository signal fingerprint: `1d5250568753652aa1456a45b57c67e2a2b2cdd452a24a4a6600a6b2d64f579f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (222 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
