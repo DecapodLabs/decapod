@@ -763,6 +763,88 @@ pub(crate) fn basic_shared_claim_policy_digest(
         .then(|| format!("sha256:{:x}", Sha256::digest(&bytes))))
 }
 
+/// Resolve a human-authored exceptional permission from the main repository's
+/// bounded, regular configuration. This is cooperative actor-label RBAC; it is
+/// not cryptographic authentication and never establishes proof readiness.
+pub(crate) fn authorize_rbac_exception(
+    root: &Path,
+    actor: &str,
+    permission: &str,
+) -> Result<String, error::DecapodError> {
+    use sha2::{Digest, Sha256};
+    use std::io::Read;
+
+    if !matches!(permission, "todo.journal.repair" | "validate.bypass") {
+        return Err(error::DecapodError::ValidationError(
+            "RBAC_PERMISSION_UNKNOWN: no exceptional grant exists".into(),
+        ));
+    }
+    const MAX_CONFIG_BYTES: u64 = 1024 * 1024;
+    let project_root = root
+        .parent()
+        .filter(|parent| {
+            root.file_name().is_some_and(|name| name == "data")
+                && parent.file_name().is_some_and(|name| name == ".decapod")
+        })
+        .and_then(Path::parent)
+        .unwrap_or(root);
+    let main_root = crate::core::workspace::get_main_repo_root(project_root).map_err(|_| {
+        error::DecapodError::Config(
+            "RBAC_POLICY_ROOT_UNAVAILABLE: cannot resolve main repository".into(),
+        )
+    })?;
+    let verified_root = crate::core::workspace::get_main_repo_root(&main_root).map_err(|_| {
+        error::DecapodError::Config(
+            "RBAC_POLICY_ROOT_UNAVAILABLE: cannot verify main repository".into(),
+        )
+    })?;
+    if main_root.canonicalize()? != verified_root.canonicalize()? {
+        return Err(error::DecapodError::Config(
+            "RBAC_POLICY_ROOT_UNAVAILABLE: inconsistent main repository".into(),
+        ));
+    }
+    let path = main_root.join(".decapod/config.toml");
+    let metadata = std::fs::symlink_metadata(&path).map_err(|_| {
+        error::DecapodError::Config("RBAC_POLICY_UNAVAILABLE: missing main configuration".into())
+    })?;
+    if !metadata.is_file() || metadata.len() > MAX_CONFIG_BYTES {
+        return Err(error::DecapodError::Config(
+            "RBAC_POLICY_INVALID: configuration must be a bounded regular file".into(),
+        ));
+    }
+    let mut options = std::fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+    }
+    let mut file = options.open(&path)?;
+    if !file.metadata()?.is_file() {
+        return Err(error::DecapodError::Config(
+            "RBAC_POLICY_INVALID: configuration is not a regular file".into(),
+        ));
+    }
+    let mut bytes = Vec::new();
+    file.take(MAX_CONFIG_BYTES + 1).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > MAX_CONFIG_BYTES {
+        return Err(error::DecapodError::Config(
+            "RBAC_POLICY_INVALID: configuration exceeds 1 MiB".into(),
+        ));
+    }
+    let config: crate::cli::DecapodProjectConfig =
+        toml::from_str(std::str::from_utf8(&bytes).map_err(|_| {
+            error::DecapodError::Config("RBAC_POLICY_INVALID: configuration is not UTF-8".into())
+        })?)
+        .map_err(|e| error::DecapodError::Config(format!("RBAC_POLICY_INVALID: {e}")))?;
+    if !config.governance.rbac.allows(actor, permission) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "RBAC_PERMISSION_DENIED: actor '{actor}' lacks '{permission}' in the main repository .decapod/config.toml"
+        )));
+    }
+    Ok(format!("sha256:{:x}", Sha256::digest(bytes)))
+}
+
 fn configured_approval_categories_at_project(
     main_root: &Path,
 ) -> Result<Vec<String>, error::DecapodError> {
