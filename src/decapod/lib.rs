@@ -1638,6 +1638,8 @@ fn init_with_from_config(
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
+        existing_rbac: config.governance.rbac.clone(),
+        existing_laya: config.laya.clone(),
         laya_decisions: Some(config.laya.mode == core::laya_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
         backend: if config.repo.effective_backend().is_cloud() {
@@ -1747,6 +1749,8 @@ fn preserve_unspecified_init_options(
     init.existing_repository_contract = existing.existing_repository_contract;
     init.existing_ci_attested = existing.existing_ci_attested;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
+    init.existing_rbac = existing.existing_rbac;
+    init.existing_laya = existing.existing_laya;
 }
 
 fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjectConfig {
@@ -1830,6 +1834,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             protected_paths,
             approval_categories,
             allow_basic_shared_claims: init.existing_allow_basic_shared_claims,
+            rbac: init.existing_rbac.clone(),
         },
         proof: proof::ProjectProofConfig {
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
@@ -1862,7 +1867,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             declared_sources: declared_context_sources,
         },
         vega: core::legacy_vega::Configuration::default(),
-        laya: core::laya_readiness::Configuration::default(),
+        laya: init.existing_laya.clone(),
     }
 }
 
@@ -2358,7 +2363,8 @@ pub fn run() -> Result<(), error::DecapodError> {
     let command = match parsed_cli.command {
         Command::Eval(eval_cli) => return core::agent_eval::run_agent_eval_cli(eval_cli),
         Command::ProjectCheckWorker(validate_cli) => {
-            if validate_cli.snapshot_prepare
+            if validate_cli.bypass_validation
+                || validate_cli.snapshot_prepare
                 || validate_cli.snapshot_resume.is_some()
                 || validate_cli.snapshot_adopt.is_some()
                 || validate_cli.provider_artifacts.is_some()
@@ -2519,6 +2525,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_rust_workers: None,
                             existing_ci_attested: None,
                             existing_allow_basic_shared_claims: false,
+                            existing_rbac: crate::cli::GovernanceRbac::default(),
+                            existing_laya: crate::core::laya_readiness::Configuration::default(),
                             laya_decisions: init_group.laya_decisions,
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
@@ -6177,6 +6185,68 @@ fn run_validate_command(
     project_store: &Store,
     scope: ValidationScope,
 ) -> Result<(), error::DecapodError> {
+    if validate_cli.bypass_validation {
+        // A scoped, audited local exception. The publisher, worker, replay
+        // verifier and CI still require genuine proof; no passing validation
+        // receipt or publication-ready claim is minted by this path.
+        if scope != ValidationScope::PublicationReadiness
+            || validate_cli.snapshot_prepare
+            || validate_cli.snapshot_resume.is_some()
+            || validate_cli.snapshot_adopt.is_some()
+            || validate_cli.provider_artifacts.is_some()
+        {
+            return Err(error::DecapodError::ValidationError(
+                "RBAC_VALIDATION_BYPASS_SCOPE: unsupported validation scope or snapshot handoff"
+                    .into(),
+            ));
+        }
+        let reason = validate_cli.bypass_reason.as_deref().unwrap_or_default();
+        if reason.trim().is_empty() || reason.len() > 2048 {
+            return Err(error::DecapodError::ValidationError(
+                "RBAC_VALIDATION_BYPASS_REASON: a bounded reviewed reason is required".into(),
+            ));
+        }
+        let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_default();
+        let config_digest = crate::plugins::policy::authorize_rbac_exception(
+            &project_store.root,
+            &actor,
+            "validate.bypass",
+        )?;
+        crate::core::events::append(
+            &project_store.root,
+            crate::core::events::VERIFICATION,
+            &serde_json::json!({
+                "ts": crate::core::time::now_epoch_z(),
+                "event_id": crate::core::ulid::new_ulid(),
+                "event_type": "validation.bypassed",
+                "status": "bypassed",
+                "actor": actor,
+                "payload": {
+                    "scope": scope.label(),
+                    "reason": reason,
+                    "config_digest": config_digest,
+                    "identity_assurance": "cooperative_not_authenticated",
+                    "proof_ready": false,
+                    "publication_ready": false
+                }
+            }),
+        )?;
+        if validate_cli.format == "json" {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "bypassed", "scope": scope.label(),
+                    "proof_ready": false, "publication_ready": false,
+                    "actor": actor, "reason": reason, "config_digest": config_digest
+                })
+            );
+        } else {
+            println!(
+                "Validation bypass recorded for actor {actor}: {reason}. No proof or publication readiness granted."
+            );
+        }
+        return Ok(());
+    }
     let enabled = crate::cli::DecapodProjectConfig::load(workspace_root)?
         .proof
         .validation_buildkite_preflights;

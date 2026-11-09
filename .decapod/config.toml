@@ -57,13 +57,26 @@ expected_exit_code = 0
 protected_paths = []
 approval_categories = ["destructive_operations"]
 
+# Exceptional operations are denied unless explicitly granted here.
+# Actor labels are cooperative; protect this policy with human code review.
+[governance.rbac]
+journal_repair_roles = ["maintainer"]
+validation_bypass_roles = []
+
+[governance.rbac.actor_roles]
+operator = ["maintainer"]
+
+# Laya is strictly opt-in. Only 'required' runs post-proof inference.
+[laya]
+mode = "disabled"
+
 [proof]
 validation_buildkite_preflights = true
 commands = []
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:e0b0873a065a249d4437a51f724280047ea7592806d6f2abb049846ca1b2420c"
+reviewed_sources_digest = "sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb"
 
 [custody]
 isolation = "container"
@@ -165,6 +178,3 @@ checks = [
   { check = { provider = "buildkite", workflow = ".github/workflows/docs_sync.yml", job = "sync-docs", matrix = {  }, profile = "decapod.pr-readiness.v1/docs-drift" }, step_key = "gha-cc87b5ff8dab6c39-sync-docs" },
 ]
 
-# Optional post-validation evaluation; deterministic proof needs no model.
-[laya]
-mode = "disabled"

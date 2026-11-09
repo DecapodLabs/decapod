@@ -542,7 +542,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `89c084fc24d937bb66967deeba33f0ca88e2f9f41f458264f30d319a65a5c93e`
+- Repository signal fingerprint: `7a3dc27ed4c525e99b65d9612f64fdb19e38fa3d94b339516bc4ab5197fc42ce`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -811,3 +811,21 @@ A human-intent reference or local core label is not independently verified
 maintainer authority. Offline exception authorization and project-scoped database
 maintenance need separate accepted contracts; Propodus #88 owns future connected
 authority. No such capability is silently enabled here.
+
+## Exceptional RBAC and self-verification custody
+
+The main repository's `[governance.rbac]` configuration declares separate
+default-deny permissions for reviewed task-journal repair and explicit local
+validation exceptions. Invalid, oversized, absent, symlinked or ambiguously
+resolved main policy fails closed. Audited operations record actor label,
+reviewed rationale and configuration digest. `DECAPOD_AGENT_ID` and local
+reserved actor labels remain cooperative assertions, not cryptographic human
+or cloud authentication; protect policy edits through human review.
+
+A validation exception leaves proof and publication readiness false, and
+cannot supply `validate_passes`, bypass CI or authorize publication. The
+Nix-wrapped verification path permits only the exact canonical currently
+running executable, never arbitrary similarly named executables. Readiness
+hash normalization strips only per-run IDs and evidence digests, preserving
+material, policy, decision and blocker semantics. Laya requires explicit
+post-proof configuration and cannot waive deterministic validation.

@@ -236,30 +236,61 @@ pub fn capture_execution_custody(
 }
 
 /// Explicitly establish current-state baselines; legacy events are not replayed.
-/// `gap` is the reviewed `Some((task_id, reason))` historical-gap repair (#1534).
+/// Compatibility entrypoint for a single reviewed historical gap.
 pub fn task_journal_checkpoint(
     root: &Path,
     gap: Option<(String, String)>,
+) -> Result<JsonValue, error::DecapodError> {
+    task_journal_checkpoint_many(root, gap.into_iter().collect())
+}
+
+/// Accept multiple independently reviewed historical gaps atomically (#1581).
+pub fn task_journal_checkpoint_many(
+    root: &Path,
+    gaps: Vec<(String, String)>,
 ) -> Result<JsonValue, error::DecapodError> {
     let broker = DbBroker::new(root);
     if broker.is_cloud() {
         return Err(error::DecapodError::NotImplemented("task journal requires the local canonical task schema; cloud mode never falls back locally".into()));
     }
+    let actor = mutation_actor(None);
+    let rbac_digest = if gaps.is_empty() {
+        None
+    } else {
+        Some(policy::authorize_rbac_exception(
+            root,
+            &actor,
+            "todo.journal.repair",
+        )?)
+    };
     broker.with_transaction(
         &todo_db_path(root),
-        &mutation_actor(None),
+        &actor,
         None,
         "todo.journal.checkpoint",
         |conn| {
             ensure_schema(conn)?;
-            match &gap {
-                Some((id, reason)) => task_journal::checkpoint_with_gap(
+            let result = task_journal::checkpoint_with_gaps(conn, &actor, &gaps)?;
+            if let Some(config_digest) = &rbac_digest {
+                crate::core::events::append_on_conn(
                     conn,
-                    &mutation_actor(None),
-                    Some((id.as_str(), reason.as_str())),
-                ),
-                None => task_journal::checkpoint(conn, &mutation_actor(None)),
+                    crate::core::events::TODO,
+                    &serde_json::json!({
+                        "ts": now_iso(),
+                        "event_id": crate::core::ulid::new_ulid(),
+                        "event_type": "policy.rbac.exception_used",
+                        "status": "success",
+                        "actor": actor,
+                        "payload": {
+                            "permission": "todo.journal.repair",
+                            "config_digest": config_digest,
+                            "task_ids": gaps.iter().map(|(id, _)| id).collect::<Vec<_>>(),
+                            "identity_assurance": "cooperative_not_authenticated"
+                        }
+                    }),
+                )?;
             }
+            Ok(result)
         },
     )
 }
@@ -310,13 +341,11 @@ pub fn task_journal_restore(
 pub enum TodoJournalCommand {
     /// Observe current state as an explicit versioned baseline.
     Checkpoint {
-        /// Explicitly accept a historical uncheckpointed domain-event suffix
-        /// for this task (#1534): records the reviewed reason and event range
-        /// as a task.journal.gap_accepted event, then appends a baseline for
-        /// the current projection.
+        /// Accept a reviewed historical gap for a task. Repeat this flag for
+        /// multiple tasks; all gap receipts and checkpoints commit atomically.
         #[clap(long)]
-        accept_historical_gap: Option<String>,
-        /// Reviewed reason required together with --accept-historical-gap.
+        accept_historical_gap: Vec<String>,
+        /// Reviewed reason required with any --accept-historical-gap.
         #[clap(long)]
         reason: Option<String>,
     },
@@ -7942,21 +7971,24 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
                 accept_historical_gap,
                 reason,
             } => {
-                let gap = match (accept_historical_gap, reason) {
-                    (Some(id), Some(reason)) => Some((id.clone(), reason.clone())),
-                    (Some(_), None) => {
+                let gaps = match (accept_historical_gap.is_empty(), reason) {
+                    (false, Some(reason)) if !reason.trim().is_empty() => accept_historical_gap
+                        .iter()
+                        .map(|id| (id.clone(), reason.clone()))
+                        .collect(),
+                    (false, _) => {
                         return Err(error::DecapodError::ValidationError(
                             "--reason is required with --accept-historical-gap".into(),
                         ));
                     }
-                    (None, Some(_)) => {
+                    (true, Some(_)) => {
                         return Err(error::DecapodError::ValidationError(
                             "--accept-historical-gap is required with --reason".into(),
                         ));
                     }
-                    (None, None) => None,
+                    (true, None) => Vec::new(),
                 };
-                task_journal_checkpoint(root, gap)?
+                task_journal_checkpoint_many(root, gaps)?
             }
             TodoJournalCommand::Verify => task_journal_verify(root)?,
             TodoJournalCommand::Restore {

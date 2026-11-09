@@ -846,7 +846,48 @@ fn fresh_empty_init_can_begin_without_a_bootstrap_commit() {
 }
 
 #[test]
-fn accepted_pr_identity_cannot_be_reused() {
+fn inherited_accepted_change_continues_without_rewriting_history() {
+    let root = repo();
+    begin_pr(root.path(), "accepted-label", "master").unwrap();
+    checkpoint(
+        root.path(),
+        "accepted-proof",
+        "Accepted baseline work",
+        vec![],
+    )
+    .unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root.path(), "accepted baseline");
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    git(root.path(), &["checkout", "-b", "continuation"]).unwrap();
+    fs::write(root.path().join("source.rs"), "fn current_change() {}\n").unwrap();
+    git(root.path(), &["add", "source.rs"]).unwrap();
+    commit(root.path(), "continuing work without historical checkpoint");
+    let head = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+
+    let report = inspect_checkpoint_history(root.path(), &base, &head, Some("master")).unwrap();
+    assert!(!report.history_proven);
+    assert!(!report.publication_ready);
+    verify_pr_continuation_for_target(root.path(), &base, &head, "master").unwrap();
+    assert!(verify_pr_continuation_for_target(root.path(), &head, &head, "master").is_err());
+    assert!(verify_pr_continuation_for_target(root.path(), &base, &head, "other").is_err());
+
+    let mut changed = load(root.path()).unwrap().unwrap();
+    changed.checkpoints[0].summary = "forged accepted summary".into();
+    save(root.path(), &changed).unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root.path(), "tamper accepted checkpoint");
+    let head = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    assert!(
+        verify_pr_continuation_for_target(root.path(), &base, &head, "master")
+            .unwrap_err()
+            .to_string()
+            .contains("GOVERNANCE_ACCEPTED_CHECKPOINT_CHANGED")
+    );
+}
+
+#[test]
+fn accepted_change_identity_can_continue_with_new_checkpointed_material() {
     let root = repo();
     begin_pr(root.path(), "one", "master").unwrap();
     checkpoint(root.path(), "first", "Accepted work", vec![]).unwrap();
@@ -857,18 +898,15 @@ fn accepted_pr_identity_cannot_be_reused() {
     checkpoint(
         root.path(),
         "second",
-        "More work without new identity",
+        "More work with inherited identity and new checkpoint",
         vec![],
     )
     .unwrap();
     git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
-    commit(root.path(), "reused");
-    assert!(
-        verify_pr_checkpoints(root.path(), &accepted, "HEAD")
-            .unwrap_err()
-            .to_string()
-            .contains("RESET_REQUIRED")
-    );
+    commit(root.path(), "continued");
+    // Reusing an accepted label is admissible when provenance and actual
+    // per-commit checkpoint evidence are preserved.
+    verify_pr_checkpoints(root.path(), &accepted, "HEAD").unwrap();
 }
 
 #[test]
@@ -1785,8 +1823,10 @@ fn workbranch_old_merged_branch_is_not_mistaken_for_a_fresh_boundary() {
     git(root.path(), &["merge", "--ff-only", "old-merged-work"]).unwrap();
     git(root.path(), &["checkout", "old-merged-work"]).unwrap();
     let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
-    let error = initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap_err();
-    assert!(error.to_string().contains("RESET_REQUIRED"), "{error}");
+    let unchanged = initialize_workbranch(root.path(), "master", Some(&branch_context()))
+        .unwrap()
+        .unwrap();
+    assert_eq!(unchanged.change.as_ref().unwrap().id, "old-merged-change");
     assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
 }
 
@@ -1881,7 +1921,13 @@ fn workbranch_explicit_creation_proof_works_without_branch_reflog() {
         .is_empty()
     );
     let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
-    assert!(initialize_workbranch(root.path(), "master", Some(&branch_context())).is_err());
+    let error = initialize_workbranch(root.path(), "master", Some(&branch_context())).unwrap_err();
+    assert!(
+        error
+            .to_string()
+            .contains("GOVERNANCE_BRANCH_CREATION_PROOF_REQUIRED"),
+        "{error}"
+    );
     assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
     let next = initialize_workbranch_at(
         root.path(),
@@ -1893,6 +1939,26 @@ fn workbranch_explicit_creation_proof_works_without_branch_reflog() {
     .unwrap();
     assert_ne!(next.change.as_ref().unwrap().id, "accepted-change");
     assert_eq!(next.change.unwrap().base_commit, created_base);
+}
+
+#[test]
+fn workbranch_without_reflog_preserves_committed_existing_work() {
+    let root = accepted_branch_repo();
+    git(root.path(), &["config", "core.logAllRefUpdates", "false"]).unwrap();
+    git(root.path(), &["checkout", "-b", "existing-without-reflog"]).unwrap();
+    fs::write(
+        root.path().join("continued.rs"),
+        "pub fn continue_work() {}\n",
+    )
+    .unwrap();
+    git(root.path(), &["add", "continued.rs"]).unwrap();
+    commit(root.path(), "existing work on unreflogged branch");
+    let before = fs::read(root.path().join(GOVERNANCE_PATH)).unwrap();
+    let unchanged = initialize_workbranch(root.path(), "master", Some(&branch_context()))
+        .unwrap()
+        .unwrap();
+    assert_eq!(unchanged.change.unwrap().id, "accepted-change");
+    assert_eq!(fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(), before);
 }
 
 #[test]

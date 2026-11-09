@@ -2753,8 +2753,11 @@ fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodErr
     Ok(())
 }
 
-/// Require the normalized document in the PR delta and a valid checkpoint for
-/// every authored commit. Receipt/trajectory binding is checked independently by
+/// Require the normalized document in the PR delta and current-governance
+/// admission against the accepted base. Fresh workstreams retain strict commit
+/// history; inherited accepted context uses current exact-head proof, without
+/// upgrading absent historical checkpoints. Receipt/trajectory binding is
+/// checked independently by
 /// [`verify_validation_artifacts_for_publish`].
 pub fn ensure_required_governance_artifacts_in_pr(
     repo_root: &Path,
@@ -2841,12 +2844,12 @@ pub fn ensure_required_governance_artifacts_in_pr(
         .collect();
     if !missing.is_empty() {
         return Err(DecapodError::ValidationError(format!(
-            "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Every project PR must update the normalized governance document and preserve checkpoint coverage of each authored commit.",
+            "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Current publication material must include the normalized governance document.",
             missing.join(", ")
         )));
     }
 
-    crate::core::governance_document::verify_pr_checkpoints_for_target(
+    crate::core::governance_document::verify_pr_continuation_for_target(
         repo_root,
         &base_ref,
         "HEAD",

@@ -11,6 +11,7 @@ use crate::plugins::{
 
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
 #[derive(Parser, Debug)]
@@ -59,6 +60,13 @@ pub(crate) struct ValidateCli {
     /// Raw provider artifacts for independent ID, digest and execution verification.
     #[clap(long, value_name = "DIRECTORY", requires = "snapshot_resume")]
     pub provider_artifacts: Option<std::path::PathBuf>,
+    /// Explicitly decline local validation under a reviewed repository RBAC
+    /// exception. Does not create a passing proof or publication readiness.
+    #[clap(long, requires = "bypass_reason")]
+    pub bypass_validation: bool,
+    /// Human-reviewed explanation, recorded in the append-only audit stream.
+    #[clap(long = "bypass-reason", requires = "bypass_validation")]
+    pub bypass_reason: Option<String>,
 }
 
 #[derive(clap::Args, Debug)]
@@ -416,6 +424,12 @@ pub(crate) struct InitWithCli {
     /// Preserve the configured shared-claim policy during reinitialization.
     #[clap(skip)]
     pub existing_allow_basic_shared_claims: bool,
+    /// Preserve human-authored exceptional grants during init refresh.
+    #[clap(skip)]
+    pub existing_rbac: GovernanceRbac,
+    /// Preserve reviewed post-proof Laya configuration during init refresh.
+    #[clap(skip)]
+    pub existing_laya: crate::core::laya_readiness::Configuration,
     /// Require optional Laya readiness decisions after deterministic validation passes.
     /// Omission preserves the existing setting; runtime/model setup is separate.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
@@ -522,6 +536,48 @@ pub struct GovernanceConfig {
     /// Cooperative opt-in for basic-trust secondary shared claims. False by default.
     #[serde(default, skip_serializing_if = "is_false")]
     pub allow_basic_shared_claims: bool,
+    /// Human-authored, fail-closed role grants for exceptional operations.
+    #[serde(default, skip_serializing_if = "GovernanceRbac::is_default")]
+    pub rbac: GovernanceRbac,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(deny_unknown_fields)]
+pub struct GovernanceRbac {
+    /// Explicit actor labels to permitted roles. Labels are cooperative local
+    /// identities, not proof of OS or Git provider authentication.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub actor_roles: BTreeMap<String, Vec<String>>,
+    /// Role names allowed to accept reviewed task-journal gaps.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub journal_repair_roles: Vec<String>,
+    /// Role names allowed to explicitly decline local validation.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub validation_bypass_roles: Vec<String>,
+}
+
+impl GovernanceRbac {
+    pub fn is_default(&self) -> bool {
+        self.actor_roles.is_empty()
+            && self.journal_repair_roles.is_empty()
+            && self.validation_bypass_roles.is_empty()
+    }
+
+    pub fn allows(&self, actor: &str, permission: &str) -> bool {
+        if actor.is_empty() || actor.trim() != actor {
+            return false;
+        }
+        let required = match permission {
+            "todo.journal.repair" => &self.journal_repair_roles,
+            "validate.bypass" => &self.validation_bypass_roles,
+            _ => return false,
+        };
+        !required.is_empty()
+            && self
+                .actor_roles
+                .get(actor)
+                .is_some_and(|assigned| assigned.iter().any(|role| required.contains(role)))
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

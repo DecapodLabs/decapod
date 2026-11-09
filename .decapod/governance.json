@@ -610,6 +610,30 @@
       "proof_refs": [
         "/private/tmp/index134-final-lib-repaired.log"
       ]
+    },
+    {
+      "id": "accepted-v01342-release-alignment",
+      "summary": "Merge accepted master 3cda3f14 and PR1585; regenerate release-bound fingerprints with installed published Decapod0.134.2; preserve Laya-only interface and fix projection replay fixture for large Supabase debug binaries.",
+      "input_digest": "sha256:e2f8bafe8213e19b273ec0a2c10fc60b348984f18f42547b2dce77c82c5155ad",
+      "proof_refs": [
+        "/private/tmp/index134-v01342-bazel-strict.log",
+        "/private/tmp/index134-v01342-capabilities.json",
+        "/private/tmp/index134-v01342-clippy.log",
+        "/private/tmp/index134-v01342-final-tests.log",
+        "/private/tmp/index134-v01342-merge-tests.log"
+      ]
+    },
+    {
+      "id": "accepted-v01342-final-verification",
+      "summary": "Record final installed-release fingerprint alignment and exact verification outcomes, including isolated passing socket recheck without relabeling failed feature suite.",
+      "input_digest": "sha256:8a1161bcd889a87cec3286cf65908e697de5a47d2f0c74e2a4f928d481addb5d",
+      "proof_refs": [
+        "/private/tmp/index134-v01342-capabilities.json",
+        "/private/tmp/index134-v01342-clippy.log",
+        "/private/tmp/index134-v01342-final-tests.log",
+        "/private/tmp/index134-v01342-merge-tests.log",
+        "/private/tmp/index134-v01342-socket-recheck.log"
+      ]
     }
   ],
   "intents": {
@@ -650,23 +674,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed retired Vega module removal and shared Laya helper ownership; canonical fixture repair changes no production custody checks.",
-          "reviewed_code_fingerprint": "89c084fc24d937bb66967deeba33f0ca88e2f9f41f458264f30d319a65a5c93e",
+          "reason": "Merged accepted 0.134.2 journal and RBAC changes while preserving Laya helper ownership and datastore physical revision 2.",
+          "reviewed_code_fingerprint": "7a3dc27ed4c525e99b65d9612f64fdb19e38fa3d94b339516bc4ab5197fc42ce",
           "spec_material_hash": "aca2b9332b2f0f39f9377bb30175b7f857ec39562b2530d98648a033f15ef142"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed passive legacy JSON and runtime-label preservation with unchanged Laya production projection golden vectors.",
-          "reviewed_code_fingerprint": "89c084fc24d937bb66967deeba33f0ca88e2f9f41f458264f30d319a65a5c93e",
-          "spec_material_hash": "b9f92087fbbe6da27f6d4145903425983ae857bb1f6cfd56e88ef8b4ff5a4e63"
+          "reason": "Retains new exceptional-operation RBAC configuration, initialization preservation and Laya-only optional evaluator surface; generated docs reflect merged source.",
+          "reviewed_code_fingerprint": "7a3dc27ed4c525e99b65d9612f64fdb19e38fa3d94b339516bc4ab5197fc42ce",
+          "spec_material_hash": "f84bad49056ac0cd09d0c34e27a27c8b6c0b7706ce3f75591d47bb963aaa6974"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Canonical test fixture paths and typed capability assertions preserve fail-closed production guards and private runtime protections.",
-          "reviewed_code_fingerprint": "89c084fc24d937bb66967deeba33f0ca88e2f9f41f458264f30d319a65a5c93e",
-          "spec_material_hash": "058f444fd13fffe4dfaa7b5ff6fb4c3bf06062220fd53647403ab076517c802c"
+          "reason": "Includes accepted root-authorized RBAC grant boundary; historical DTO and Laya private runtime limits unchanged. Synthetic projection fixture carries no executable-registration claim.",
+          "reviewed_code_fingerprint": "7a3dc27ed4c525e99b65d9612f64fdb19e38fa3d94b339516bc4ab5197fc42ce",
+          "spec_material_hash": "2a7ed5e559e71e6c8ff54801816f6f36ccfdebb745fc1c97607deea8d96c4779"
         }
       ],
       "state": "APPROVED",
@@ -678,13 +702,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794259905Z"
+      "updated_at": "1794264308Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:47e9e99b4285db26426b731ed4c96cb37166ce45541277c696fe4a7e481e6eb3",
+      "artifact_hash": "sha256:41c106bc740c98d65bcb5123a33a03cf7ca5ad8760362b27d3834865f9724fc4",
       "checks": [
         {
           "name": "canonical-snapshot-fixtures",
@@ -747,12 +771,36 @@
           "status": "failed"
         },
         {
+          "name": "release-alignment",
+          "status": "passed"
+        },
+        {
+          "name": "supabase-projection-fixture",
+          "status": "passed"
+        },
+        {
           "name": "v01341-cli-config",
           "status": "passed"
         },
         {
           "name": "v01341-storage",
           "status": "passed"
+        },
+        {
+          "name": "v01342-clippy",
+          "status": "passed"
+        },
+        {
+          "name": "v01342-merged-suite",
+          "status": "passed"
+        },
+        {
+          "name": "v01342-strict-lock",
+          "status": "passed"
+        },
+        {
+          "name": "v01342-supabase-library",
+          "status": "failed"
         }
       ],
       "current_phase": "validation",
@@ -832,10 +880,31 @@
             "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M70TT9YCVF9GDEN1NF0KHM96": {
@@ -1009,6 +1078,66 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "tests/unit/core/laya_readiness_tests.rs",
+                  "Fetched accepted 3cda3f14 including PR #1585 and release v0.134.2; installed published 0.134.2 only through session acquire; restored original configuration and update preference. Regenerated release-bound entrypoints and Dockerfile with installed 0.134.2. Reviewed proof-source changes limited to accepted Cargo versions; hosted workflow/helper/executor definitions unchanged; reconciled source digest sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb.",
+                  "Previous bb204834 Supabase consumer test failed because debug test executable exceeded real runtime size allowance. Replay-only projection test now supplies explicit fixture artifact identity, preserving four independent expected hashes and production 512 MiB guard; final suite pending."
+                ],
+                "proof_refs": [
+                  "supabase-projection-fixture"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 13,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "/private/tmp/index134-v01342-capabilities.json confirms installed and latest version 0.134.2; generated AGENTS/CLAUDE/CODEX/GEMINI release headers and managed Dockerfile now pin 0.134.2. /private/tmp/index134-v01342-final-preview.log: proof_pending with reconciled source inventory; no stale SHA declaration.",
+                  "/private/tmp/index134-v01342-merge-tests.log: 1604 library tests passed, 8 ignored; datastore 6 passed 1 ignored; CLI 36 passed 1 ignored.",
+                  "/private/tmp/index134-v01342-bazel-strict.log exits 0 with lockfile_mode=error; package version normalization preserves generated dependency lock validity.",
+                  "/private/tmp/index134-v01342-clippy.log: all-target clippy with warnings denied passed.",
+                  "/private/tmp/index134-v01342-final-tests.log: projection golden replay test passes with explicit supabase-cloud feature after replay-only artifact fixture repair. This does not claim model/runtime registration evidence.",
+                  "Final feature-enabled suite reported one socket test failure; identical isolated recheck passes (/private/tmp/index134-v01342-socket-recheck.log). Preserve failure rather than claim an entirely passing run; final verdict pending."
+                ],
+                "proof_refs": [
+                  "release-alignment",
+                  "v01342-merged-suite",
+                  "v01342-strict-lock",
+                  "v01342-clippy",
+                  "supabase-projection-fixture",
+                  "v01342-supabase-library"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 14,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "/private/tmp/index134-v01342-final-tests.log: 1603 passed, 1 failed, 8 ignored. Unchanged socket cleanup test saw transient BROKER_ENDPOINT_LIVE after listener drop; isolated identical-binary recheck passes. Preserve run failure; no test skipped or production socket protection changed.",
+                  "Final projection replay golden vectors pass in feature-enabled binary. Prior merged-source complete library/storage/CLI suites pass; final feature-run failure prevents claiming universal green status."
+                ],
+                "proof_refs": [
+                  "v01342-supabase-library"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 15,
+                "validation_findings": []
               }
             ]
           }
@@ -1031,18 +1160,30 @@
         "/private/tmp/index134-retirement-01341-datastore.log: 6 passed; /private/tmp/index134-retirement-01341-init.log: 36 passed, 1 ignored. Actual merged v0.134.1 source.",
         "/private/tmp/index134-retirement-final-init.log: 36 passed, 1 preexisting ignored; Laya opt-in, default-disabled setup surface and refresh preservation pass.",
         "/private/tmp/index134-retirement-laya.log: 2 Laya deterministic tests passed; 4 external-model/development profiles explicitly ignored. No model accuracy or hosted proof claimed.",
+        "/private/tmp/index134-v01342-bazel-strict.log exits 0 with lockfile_mode=error; package version normalization preserves generated dependency lock validity.",
+        "/private/tmp/index134-v01342-capabilities.json confirms installed and latest version 0.134.2; generated AGENTS/CLAUDE/CODEX/GEMINI release headers and managed Dockerfile now pin 0.134.2. /private/tmp/index134-v01342-final-preview.log: proof_pending with reconciled source inventory; no stale SHA declaration.",
+        "/private/tmp/index134-v01342-clippy.log: all-target clippy with warnings denied passed.",
+        "/private/tmp/index134-v01342-final-tests.log: 1603 passed, 1 failed, 8 ignored. Unchanged socket cleanup test saw transient BROKER_ENDPOINT_LIVE after listener drop; isolated identical-binary recheck passes. Preserve run failure; no test skipped or production socket protection changed.",
+        "/private/tmp/index134-v01342-final-tests.log: projection golden replay test passes with explicit supabase-cloud feature after replay-only artifact fixture repair. This does not claim model/runtime registration evidence.",
+        "/private/tmp/index134-v01342-merge-tests.log: 1604 library tests passed, 8 ignored; datastore 6 passed 1 ignored; CLI 36 passed 1 ignored.",
         "Both configuration and complete historical receipt roundtrips pass; /private/tmp/index134-legacy-receipt-tests.log",
+        "Fetched accepted 3cda3f14 including PR #1585 and release v0.134.2; installed published 0.134.2 only through session acquire; restored original configuration and update preference. Regenerated release-bound entrypoints and Dockerfile with installed 0.134.2. Reviewed proof-source changes limited to accepted Cargo versions; hosted workflow/helper/executor definitions unchanged; reconciled source digest sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb.",
         "Fetched b4939469 / v0.134.1 after operator update. Retirement checkpoint records verified v0.134.0 source before integrating the new accepted target; final candidate proof remains pending.",
+        "Final feature-enabled suite reported one socket test failure; identical isolated recheck passes (/private/tmp/index134-v01342-socket-recheck.log). Preserve failure rather than claim an entirely passing run; final verdict pending.",
+        "Final projection replay golden vectors pass in feature-enabled binary. Prior merged-source complete library/storage/CLI suites pass; final feature-run failure prevents claiming universal green status.",
         "Four pre-refactor production projection hashes replay exactly; /private/tmp/index134-laya-helper-tests.log",
         "Old Cargo manifest fingerprint stopped setup/core/contracts before compilation; regenerated using bazel mod deps --lockfile_mode=update; log /private/tmp/index134-bazel-lock-update.log",
         "Operator explicitly directed removal of assets/tools/vega-native, exclusive optional Laya post-validation evaluation, inclusion in this active branch and immediate PR publication when verified. Supersedes prior Vega worker retention requirement.",
         "Original synthetic benchmark: docs/datastore-v2/measurements.json; physical savings 1650688 bytes at 100K events, WAL savings 2241280 bytes per 512 appends. Timing and hosted limits retained.",
         "Ported material patch from own preserved commits 3ea461bc and 37fdd674 onto accepted 1d865efd; no source patch conflicts or changed accepted storage files.",
+        "Previous bb204834 Supabase consumer test failed because debug test executable exceeded real runtime size allowance. Replay-only projection test now supplies explicit fixture artifact identity, preserving four independent expected hashes and production 512 MiB guard; final suite pending.",
         "Previous v0.133.2 Buildkite 6113 failed missing content-bound spec review; current interfaces, architecture and security explicitly reviewed. Fresh validation required.",
         "Resolved accepted b4939469 merge by preserving this active journal and both branches authored specs; removed obsolete lock-maintenance requirement with the retired workspace. No history reset or forced push.",
         "Supported session flow updated verifier to 0.134.1; temporary auto-update opt-in was backed up and restored. Runtime backup files stay ignored outside source artifacts."
       ],
       "inspected_files": [
+        "Cargo.lock",
+        "Cargo.toml",
         "MODULE.bazel.lock",
         "src/decapod/core/events.rs",
         "src/decapod/core/migration.rs",
@@ -1050,7 +1191,8 @@
       ],
       "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
       "modified_files": [
-        "tests/datastore_efficiency.rs"
+        "tests/datastore_efficiency.rs",
+        "tests/unit/core/laya_readiness_tests.rs"
       ],
       "next_transitions": [
         "Commit exact candidate and run full decapod validate before publication.",

@@ -839,16 +839,8 @@ exit status for projection conflict:
   `todo journal verify` checks the journal without restoring state;
   `todo journal restore --expected-current-digest <digest>` requires the observed
   live projection precondition and refuses divergent authority
-- `todo journal checkpoint --accept-historical-gap <task-id> --reason "<text>"`
-  is the supported repair for a historical uncheckpointed domain-event suffix
-  (#1534): verify/checkpoint fail closed with `TASK_JOURNAL_INCOMPLETE_HISTORY`
-  on such a suffix. The repair records the reviewed reason and the accepted
-  event range as a `task.journal.gap_accepted` event (exempt from the
-  complete-suffix check like other journal bookkeeping), then appends a
-  transition checkpoint for the current projection so later `verify` passes.
-  Historical events are preserved, never replayed; the flag is rejected for
-  tasks with no checkpointed history or with no suffix to accept, and
-  `--reason` is required
+- `todo journal checkpoint --accept-historical-gap <task-id> --accept-historical-gap <other-id> --reason "<reviewed rationale>"` accepts multiple reviewed historical uncheckpointed suffixes (#1534, #1581). Every selected task must have a checkpoint head and a real suffix. Duplicate IDs, unrelated gaps and unrelated divergent projections block the operation before mutation. One broker transaction records a `task.journal.gap_accepted` event and a new transition checkpoint for every accepted task; on failure nothing commits. Historical events remain intact; the reviewed reason and `todo.journal.repair` permission in the main repository's `[governance.rbac]` are mandatory.
+- `validate --bypass-validation --bypass-reason "<reviewed exception>"` requires a separate `validate.bypass` role, records `validation.bypassed` with `proof_ready=false` and `publication_ready=false`, and never satisfies QA replay, CI, or publication. Ordinary `validate` still executes mandatory checks. `[laya] mode = "disabled"` is the default, with required mode acting only after deterministic proof.
 - `govern workunit checkpoint --task-id <id> --operation-id <id>` records a
   versioned checkpoint; optional `--expected-generation` fences a known head
 - `govern workunit journal-status --task-id <id>` reports integrity and projection
@@ -1181,7 +1173,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `89c084fc24d937bb66967deeba33f0ca88e2f9f41f458264f30d319a65a5c93e`
+- Repository signal fingerprint: `7a3dc27ed4c525e99b65d9612f64fdb19e38fa3d94b339516bc4ab5197fc42ce`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

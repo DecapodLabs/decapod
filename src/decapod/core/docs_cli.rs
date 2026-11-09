@@ -663,7 +663,21 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
 }
 
 fn shared_claim_config_contract() -> &'static str {
-    r#"## Cooperative shared-claim policy
+    r#"## RBAC exceptions and Laya
+
+`[governance.rbac]` declares `actor_roles`, `journal_repair_roles`
+and `validation_bypass_roles`, all empty/denied by default. The main
+repository config is the sole source for a bounded policy read. Journal
+repair requires an explicitly granted role and records the policy fingerprint
+with the reviewed repairs. `validate --bypass-validation --bypass-reason`
+requires its own role and leaves proof and publication readiness false.
+These actor labels are cooperative identities, not authenticated users.
+
+`[laya] mode = "disabled"` is the default. Set `mode = "required"`
+and install the reviewed profile to opt in to post-proof Laya judgment.
+Required accepted policy cannot be silently disabled.
+
+## Cooperative shared-claim policy
 
 `[governance].allow_basic_shared_claims` defaults to `false`. A project may set
 it to `true` in the main repository's `.decapod/config.toml` to allow a
