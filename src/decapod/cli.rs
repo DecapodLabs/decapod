@@ -424,6 +424,12 @@ pub(crate) struct InitWithCli {
     /// Preserve the configured shared-claim policy during reinitialization.
     #[clap(skip)]
     pub existing_allow_basic_shared_claims: bool,
+    /// Preserve human-authored exceptional grants during init refresh.
+    #[clap(skip)]
+    pub existing_rbac: GovernanceRbac,
+    /// Preserve reviewed post-proof Laya configuration during init refresh.
+    #[clap(skip)]
+    pub existing_laya: crate::core::laya_readiness::Configuration,
     /// Require Vega readiness decisions after deterministic validation passes.
     /// Omission preserves the existing setting; runtime/model setup is separate.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
