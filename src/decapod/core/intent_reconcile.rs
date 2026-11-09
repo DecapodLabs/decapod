@@ -1,6 +1,8 @@
 //! Read-only intent-to-spec traceability. A link is an authored claim, never proof.
 //! The harness proposes changes; the kernel reports observable gaps and freshness.
-use crate::core::bounded_process::{BoundedCommand, CONTROL_TIMEOUT};
+use crate::core::bounded_process::{
+    BoundedCommand, Cancellation, ProcessLimits, Termination, CONTROL_TIMEOUT,
+};
 use crate::core::error::DecapodError;
 use crate::core::project_specs::{
     self, LOCAL_PROJECT_SPECS, LOCAL_PROJECT_SPECS_INTENT, LOCAL_PROJECT_SPECS_VALIDATION,
@@ -156,16 +158,31 @@ pub struct ChangeImpactReport {
     pub findings: Vec<Finding>,
 }
 
-fn git_output(root: &Path, args: &[&str]) -> Result<Vec<u8>, DecapodError> {
-    let output = Command::new("git")
+fn git_command(root: &Path, args: &[&str]) -> Command {
+    let mut command = Command::new("git");
+    command
         .arg("--no-replace-objects")
+        .arg("--no-optional-locks")
         .arg("-C")
         .arg(root)
-        .args(args)
-        .env_remove("GIT_INDEX_FILE")
-        .env_remove("GIT_WORK_TREE")
-        .env_remove("GIT_DIR")
-        .env_remove("GIT_REPLACE_REF_BASE")
+        .args(args);
+    for key in [
+        "GIT_INDEX_FILE",
+        "GIT_WORK_TREE",
+        "GIT_DIR",
+        "GIT_REPLACE_REF_BASE",
+        "GIT_OBJECT_DIRECTORY",
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+        "GIT_CONFIG_COUNT",
+        "GIT_CONFIG_PARAMETERS",
+    ] {
+        command.env_remove(key);
+    }
+    command
+}
+
+fn git_output(root: &Path, args: &[&str]) -> Result<Vec<u8>, DecapodError> {
+    let output = git_command(root, args)
         .bounded_output(CONTROL_TIMEOUT)
         .map_err(|error| {
             DecapodError::ValidationError(format!(
@@ -180,12 +197,54 @@ fn git_output(root: &Path, args: &[&str]) -> Result<Vec<u8>, DecapodError> {
     Ok(output.stdout)
 }
 
+/// A large diff returns an incomplete observation, never unbounded allocation
+/// or a misleadingly empty set of changed paths.
+fn bounded_git_diff(
+    root: &Path,
+    base_commit: &str,
+    head_commit: &str,
+) -> Result<Option<Vec<u8>>, DecapodError> {
+    let capture = git_command(
+        root,
+        &[
+            "diff",
+            "--name-status",
+            "-z",
+            "-M",
+            "--no-ext-diff",
+            "--no-textconv",
+            base_commit,
+            head_commit,
+            "--",
+        ],
+    )
+    .bounded_capture(
+        ProcessLimits {
+            timeout: CONTROL_TIMEOUT,
+            max_output_bytes: MAX_DIFF_BYTES,
+        },
+        &Cancellation::default(),
+    )
+    .map_err(|error| {
+        DecapodError::ValidationError(format!(
+            "IMPACT_GIT_UNAVAILABLE: bounded change inspection failed: {error}"
+        ))
+    })?;
+    match capture.termination {
+        Termination::OutputLimit => Ok(None),
+        Termination::Exited if capture.output.status.success() => Ok(Some(capture.output.stdout)),
+        _ => Err(DecapodError::ValidationError(
+            "IMPACT_GIT_UNAVAILABLE: Git diff failed, timed out or was cancelled".into(),
+        )),
+    }
+}
+
 fn immutable_oid(value: &str) -> bool {
     matches!(value.len(), 40 | 64) && value.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
 fn utf8_path(bytes: &[u8]) -> Option<String> {
-    if bytes.len() > MAX_PATH_BYTES {
+    if bytes.is_empty() || bytes.len() > MAX_PATH_BYTES {
         return None;
     }
     std::str::from_utf8(bytes).ok().map(str::to_owned)
@@ -313,32 +372,18 @@ fn inspect_change_impact(root: &Path, requested_base: &str) -> Result<ChangeImpa
         .map_err(|_| DecapodError::ValidationError(
             "IMPACT_BASE_NOT_ANCESTOR: base_commit is not an ancestor of HEAD".into(),
         ))?;
-    let raw = git_output(
-        root,
-        &[
-            "diff",
-            "--name-status",
-            "-z",
-            "-M",
-            "--no-ext-diff",
-            "--no-textconv",
-            &base_commit,
-            &head_commit,
-            "--",
-        ],
-    )?;
-    let (changed_files, mut complete, mut findings) = if raw.len() <= MAX_DIFF_BYTES {
-        parse_changed_files(&raw)
-    } else {
-        (
+    let raw = bounded_git_diff(root, &base_commit, &head_commit)?;
+    let (changed_files, mut complete, mut findings) = match raw {
+        Some(bytes) => parse_changed_files(&bytes),
+        None => (
             Vec::new(),
             false,
             vec![finding(
                 "impact_output_limit",
                 "git_diff",
-                "Git diff exceeded bounded output; no complete change inventory is available",
+                "Git diff exceeded the bounded output budget",
             )],
-        )
+        ),
     };
     let specs = project_specs::material_specs_change_between_refs(
         root,
@@ -797,6 +842,8 @@ mod tests {
 
     fn git_fixture(root: &Path, args: &[&str]) -> String {
         let output = Command::new("git")
+            .arg("-c")
+            .arg("commit.gpgsign=false")
             .current_dir(root)
             .args(args)
             .output()
@@ -871,6 +918,13 @@ mod tests {
         let (_, complete, findings) = parse_changed_files(b"A\0src/\xff.rs\0");
         assert!(!complete);
         assert!(findings.iter().any(|item| item.code == "unsupported_git_path"));
+        let (_, complete, findings) = parse_changed_files(b"A\0\0");
+        assert!(!complete);
+        assert!(findings.iter().any(|item| item.code == "unsupported_git_path"));
+
+        let (_, complete, findings) = parse_changed_files(b"M\0src/unfinished.rs");
+        assert!(!complete);
+        assert!(findings.iter().any(|item| item.code == "incomplete_git_diff"));
     }
 
     #[test]
@@ -946,6 +1000,28 @@ mod tests {
             .generated_only_spec_paths
             .contains(&LOCAL_PROJECT_SPECS_INTENT.to_string()));
         assert!(report.referenced_requirement_ids.is_empty());
+    }
+
+
+    #[test]
+    fn unstaged_worktree_edit_cannot_enter_immutable_diff() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        git_fixture(root, &["init", "-b", "master"]);
+        git_fixture(root, &["config", "user.name", "Decapod Test"]);
+        git_fixture(root, &["config", "user.email", "test@example.invalid"]);
+        scaffold(root);
+        git_fixture(root, &["add", "."]);
+        git_fixture(root, &["commit", "-m", "baseline"]);
+        let base = git_fixture(root, &["rev-parse", "HEAD"]);
+        fs::write(root.join("src/main.rs"), "fn main() { println!(\"uncommitted\"); }\n").unwrap();
+        let report = inspect_change_impact(root, &base).unwrap();
+        assert!(report.complete);
+        assert_eq!(report.base_commit, report.head_commit);
+        assert!(report.changed_files.is_empty());
+        assert!(report.unmapped_implementation_paths.is_empty());
+        assert!(!report.review_needed);
+        assert!(!report.evidence_needed);
     }
 
 }
