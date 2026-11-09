@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.133.2](https://github.com/DecapodLabs/decapod/compare/v0.133.1...v0.133.2) - 2026-11-09
+
+### Fixed
+
+- *(build)* align standalone worker with accepted Decapod release
+- *(governance)* recover work without inventing historical proof
+
+### Other
+
+- include accepted intent reconciliation in generated RPC index
+- reconcile governance candidate with accepted v0.133.1
+- *(governance)* keep recovery focused on current Laya contract
+- *(governance)* reconcile fixtures with verified checkout custody
+
 ## [0.133.1](https://github.com/DecapodLabs/decapod/compare/v0.133.0...v0.133.1) - 2026-11-09
 
 ### Added
