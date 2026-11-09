@@ -17,9 +17,10 @@ decision or authorize validation/publication; `semantic_alignment` remains
 
 ## Shared policy command regression
 
-The Bazel release-download retry configuration stays on the official
-`github.com` host, adds no credentials or third-party mirror, and preserves
-every repository rule's original pinned archive digest. An alternate URL or
+The Bazel release-download retry configuration uses only the official
+`mirror.bazel.build` and `github.com` hosts, adds no credentials, and preserves
+every repository rule's original pinned archive digest. Mirror samples were
+checked against registry metadata bound by the committed Bazel lock. An alternate URL or
 successful transfer cannot authorize different bytes or replace execution
 evidence. Existing lockfile enforcement and publication gates remain required.
 

@@ -558,6 +558,14 @@
       "proof_refs": [
         "Original rules_rust and supply-chain archives verified byte-for-byte by pinned SHA256 through explicit-download-query route; full source execution remains required"
       ]
+    },
+    {
+      "id": "intent-reconciliation-1574-official-mirror",
+      "summary": "Use verified official Bazel mirror before GitHub fallbacks for pinned release archives",
+      "input_digest": "sha256:23a023cfa456b14d1d8199357ebdee23822806cddde269521e21281e0b6f9800",
+      "proof_refs": [
+        "Mirror rules_shell/protobuf/rules_java archives match integrity from BCR metadata whose bytes match committed registryFileHashes"
+      ]
     }
   ],
   "intents": {
@@ -615,9 +623,9 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final code and download configuration. Authored Security prose now also states official github.com-only retry, no credentials or third-party mirrors, unchanged pinned archive integrity and lockfile enforcement; sessionless inspection access, unresolved-question exposure and non-authoritative provenance remain bounded by existing mutation/publication gates.",
+          "reason": "Reviewed final source and official-mirror retry configuration. Authored Security account now records mirror.bazel.build plus github.com only, no credentials, unchanged original repository-rule archive digests and lockfile enforcement. Independently fetched BCR source metadata matches committed registryFileHashes and rules_shell/protobuf/rules_java mirror archives match those integrity pins. Sessionless reconciliation trust boundaries, not_proven semantics and publication authority remain unchanged.",
           "reviewed_code_fingerprint": "02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9",
-          "spec_material_hash": "6de2e6288499bcb9d0eb77da19a2f2a3c5bf2a27316311420a5b15ddd9b9f2e7"
+          "spec_material_hash": "dbf1da6eb06b14d73b212eb65aafcbba96a67b28ca8f3651d875babc8e8d17f1"
         }
       ],
       "state": "APPROVED",
@@ -630,7 +638,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794210859Z"
+      "updated_at": "1794211173Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -638,7 +646,7 @@
         "No secondary authority, scheduler, persistence, semantic proof or publication permission from reconciliation",
         "Preserve original branch history and all unrelated worktrees and ownership"
       ],
-      "artifact_hash": "sha256:cc08c8ac9df953d065fe8b26d3e4021667dcf5521b9ad16b81a83e7671693f10",
+      "artifact_hash": "sha256:3f879a0ca88ecb630e5708a6c827eb136fd7172c573783990341bea99b5abcb5",
       "checks": [
         {
           "name": "accepted source inventory reconciliation",
@@ -661,6 +669,10 @@
           "status": "passed"
         },
         {
+          "name": "official mirror immutable archive verification",
+          "status": "passed"
+        },
+        {
           "name": "original pinned archive transport verification",
           "status": "passed"
         },
@@ -675,6 +687,10 @@
         {
           "name": "prior source suite and hosted governance checkpoints",
           "status": "passed"
+        },
+        {
+          "name": "query-only candidate full readiness",
+          "status": "failed"
         },
         {
           "name": "specification review",
@@ -723,10 +739,17 @@
             "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ZJRE0M6E1MFA6N2EN6JZ40": {
@@ -851,6 +874,33 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "infrastructure-repair",
+                "command": "Verify official mirror archives against lock-bound BCR metadata",
+                "custody_event_id": "event:8",
+                "observations": [
+                  ".config/build/downloader.cfg",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Candidate52bd0ee0 exercised downloader configuration; GHA setup/contracts passed original dependency fetch stage then failed HTTP504 on rules_shell0.6.1 and protobuf33.4, including explicit query. Cancelled superseded local validation after recording failure; no passing proof claimed.",
+                  "Official Bazel mirror returned rules_shell0.6.1,protobuf33.4,rules_java9.1.0 bytes. For each module fetched BCR source.json, verified its SHA256 against committed MODULE.bazel.lock registryFileHashes, then verified downloaded archive against its original integrity. Prior rules_cc0.2.17 and bazel_features1.50.0 official mirror bytes also matched upstream digests. Added mirror as first route, retaining GitHub query and original fallback; no version, integrity, lock, compiler, source executor, workflow or check-graph change."
+                ],
+                "proof_refs": [
+                  "query-only candidate full readiness",
+                  "official mirror immutable archive verification"
+                ],
+                "scope": [
+                  ".config/build",
+                  ".decapod/managed/specs",
+                  "docs",
+                  "intent-reconciliation-1574",
+                  "src/decapod",
+                  "tests/intent_reconciliation_rpc.rs"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -858,6 +908,7 @@
       },
       "declared_commands": [
         "Official GitHub release downloads with explicit download query; SHA256 verification against original upstream pins",
+        "Verify official mirror archives against lock-bound BCR metadata",
         "decapod govern plan review-spec",
         "decapod rpc --op agent.init",
         "decapod rpc --op specs.refresh",
@@ -868,6 +919,7 @@
       "destination": "pull request",
       "evidence": [
         "All seven source/test/docs files match original candidate bytes; generated repo fingerprint matches 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9. Five authored specs describe behavior/security. Architecture, Interfaces and Security reviewed updated against frozen source.",
+        "Candidate52bd0ee0 exercised downloader configuration; GHA setup/contracts passed original dependency fetch stage then failed HTTP504 on rules_shell0.6.1 and protobuf33.4, including explicit query. Cancelled superseded local validation after recording failure; no passing proof claimed.",
         "Direct GitHub rules_rust URL returned504 inside and outside sandbox; official mirror404. GitHub API and same release URL with ?download=1 returned 67439334 bytes matching original BCR SHA256071a6e582cf2f2797820266f3265dbb2727b447486366d9ecc177da1523b11ad. supply-chain query returned36325 bytes matching original release SHA2560e89367f1cb6d93a5a1afea4b55b11ea6b28f63f653b47154153677ca7d4afea. Add official-host-only query retry with original fallback, unchanged version/integrity/toolchain/graph.",
         "Explicitly reconciled reviewed inventory only for bazelrc and new downloader config. Existing source executor/carrier/workflow files unchanged. Source implementation remains identical to original #1570. Full validation must execute on the newly checkpointed candidate before PR or merge.",
         "First validate failed PROOF_PROFILE_RECONCILIATION_REQUIRED before execution. All 119 discovered source inputs match accepted base. Relative to the last config review commit edb30569 only Cargo.toml/Cargo.lock package version changed 0.132.0 to 0.133.0. Reviewed finite catalog, carrier and unchanged required graph; backed up config and explicitly reconciled authored review digest to sha256:d8c65ab6901a57c4df55f3914dd0eeaecbf7338177233831854ade1304e53361. agent.init now reports proof_pending/not_run. No checks or provider requirements removed.",
@@ -875,7 +927,8 @@
         "Human renewed explicit creation/CI-repair/merge authority, preserving existing todo and change identity. CI42579141327 attempt4 terminal failed HTTP504, failed jobs retried attempt5. Buildkite5974 all source/test/governance jobs passed except setup archive504. No required proof waived.",
         "Immutable verify-checkpoints --base-branch 15b69ce43fc56440d498d52d8726f89d499615fe --head-ref f8a6200fe23080cf4dd3d2be077254c4b7ab7612 --target-base master --publication-material returned status ok; 135 prior unresolved baseline obligations preserved, 138 total after lifecycle carry-forward.",
         "Live origin/master and PR base remain 15b69ce43fc56440d498d52d8726f89d499615fe; PR #1570 head remains 0b5405e61ca781f17b6f86d92ff3d1be046732e0.",
-        "Native task bugs_01m6zjqskamsdwx8 claimed exclusively by codex-1574; managed workspace created from accepted base. Existing autogenerated trajectory retained after init correctly rejected replacing an uncommitted journal."
+        "Native task bugs_01m6zjqskamsdwx8 claimed exclusively by codex-1574; managed workspace created from accepted base. Existing autogenerated trajectory retained after init correctly rejected replacing an uncommitted journal.",
+        "Official Bazel mirror returned rules_shell0.6.1,protobuf33.4,rules_java9.1.0 bytes. For each module fetched BCR source.json, verified its SHA256 against committed MODULE.bazel.lock registryFileHashes, then verified downloaded archive against its original integrity. Prior rules_cc0.2.17 and bazel_features1.50.0 official mirror bytes also matched upstream digests. Added mirror as first route, retaining GitHub query and original fallback; no version, integrity, lock, compiler, source executor, workflow or check-graph change."
       ],
       "inspected_files": [
         ".config/build/bazelrc",

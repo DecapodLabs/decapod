@@ -980,10 +980,11 @@ separate operational blocker, and validation does not authorize distribution.
 ## Intent Reconciliation Acceptance Boundary
 
 Repeated hosted HTTP504 failures fetching pinned Bazel release archives are
-repaired by `.config/build/downloader.cfg`: try the same official GitHub
-release URL with an explicit download query, retaining the original URL as a
-fallback. The original `rules_rust` and `supply-chain` archive hashes were
-verified against upstream pins through this route. Version selection, integrity
+repaired by `.config/build/downloader.cfg`: try Bazel's official mirror, then
+the same official GitHub release URL with an explicit download query, retaining
+the original URL as a fallback. `rules_cc`, `bazel_features`, `rules_shell`,
+`protobuf` and `rules_java` mirror archives and `rules_rust` and `supply-chain`
+query-route archives were verified against upstream pins. Version selection, integrity
 checks, compiler requirements, source execution and the complete test graph
 remain unchanged; fresh exact-candidate validation must exercise the repair.
 
