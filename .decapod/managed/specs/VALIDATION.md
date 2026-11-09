@@ -1387,3 +1387,43 @@ remains mandatory, and unsupported exception/maintenance capabilities stay absen
 `tests/workbranch_governance.rs` exercises custody through the actual actor-bound CLI. A manual Git worktree does not become authoring-admissible merely because `agent.init` observes it: `workspace ensure` must verify and bind the checkout first. A session release deliberately clears task assignments, so resumption requires a fresh task claim and authoring admission. Negative fixtures assert that observation preserves inherited governance and that foreign or nonexistent branch-task bindings cannot be admitted. These preconditions preserve the existing custody contract; passing fixtures do not replace independent exact-candidate publication proof.
 
 The existing Laya post-proof judgment remains distinct from deterministic source evidence. This governance recovery change introduces no worker-runtime migration or new model-proof contract.
+## Reviewed journal repair, validation exceptions, and replay stability (#1581–#1583)
+
+A task journal may contain multiple independently identified, uncheckpointed
+domain-event suffixes. A repair request can name all reviewed task IDs in one
+invocation, with a bounded human-authored reason. Before any acceptance is
+written, the implementation must confirm that each selected ID has a
+checkpointed predecessor and an uncheckpointed domain-event range, that no
+selected ID repeats, and that no unselected task has an uncheckpointed suffix or
+divergent live projection. One canonical database transaction records an
+acceptance event and a new transition checkpoint for each selected task.
+Failure anywhere in preflight or write must preserve the prior event count
+and all prior checkpoint heads. No historical event is deleted or synthesized.
+
+Exceptional repair and optional local-validation bypass require distinct
+permissions in the **main repository** configuration. Roles and actor labels
+are exact and default-denied. The authorization reader must reject an
+unresolvable root, missing policy, symlinks, non-regular policy files,
+oversized content, invalid TOML and unauthorized actors. A policy digest
+binds the authorizing configuration to the audit event. Local actor labels
+are cooperative claims and must not be represented as authenticated people.
+Ordinary validation remains mandatory. An explicitly permitted bypass records
+its reason, reports `bypassed` and leaves both proof readiness and publication
+readiness false; it cannot mint accepted verification or native proof.
+
+Verification self-execution must accept the canonical identity of the
+currently running Decapod executable, including Nix's `.decapod-wrapped`,
+but reject arbitrary executables even when named `decapod-*`.
+Readiness replay normalization may mask per-run `request_id` and
+`binding.evidence_digest` for each recognized readiness receipt, including
+Laya. It must retain material input revisions, model and governance policy
+bindings, mode, decision and blockers in the digest. The default Laya mode is
+disabled; required mode needs explicit reviewed configuration and cannot
+be disabled in violation of accepted policy. Two identical executions must
+hash identically; changed material decisions must not.
+
+Regression coverage exercises batch atomicity, unrelated-gap rejection,
+wrong-actor denial, Nix self-identity and lookalikes, CLI exception
+requirements, disabled Laya defaults, and replay identity stability.
+These test definitions are falsifiable requirements; successful execution
+is established only by CI receipts for the exact candidate commit.

@@ -942,6 +942,7 @@ pub(super) fn verify(conn: &Connection) -> Result<serde_json::Value, DecapodErro
     report(conn, &journal)
 }
 
+#[cfg(test)]
 pub(super) fn checkpoint(
     conn: &Connection,
     actor: &str,
@@ -953,6 +954,7 @@ pub(super) fn checkpoint(
 /// suffixes (#1534, #1581). Each accepted task gets its own durable evidence
 /// range and transition checkpoint. All preconditions and non-exempt heads are
 /// checked before the first write; the caller owns the enclosing transaction.
+#[cfg(test)]
 pub(super) fn checkpoint_with_gap(
     conn: &Connection,
     actor: &str,
