@@ -1,5 +1,20 @@
 # Security
 
+## Advisory intent reconciliation access
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+`intent.reconcile` is a sessionless local inspection RPC over the existing
+repository plan, canonical specs and source fingerprints. It bypasses mutation
+custody and startup datastore writes, accepts only an empty parameter object,
+and adds no network access, credential access or persistence. Filesystem read
+permissions remain the access boundary. Reports expose repository paths,
+requirement IDs, hashes and unresolved plan questions; callers must treat those
+questions as repository content when sharing output. A digest is provenance for
+observed bytes, not authenticated human approval. Markers, matching hashes and
+review records cannot establish semantic correctness, resolve a pending human
+decision or authorize validation/publication; `semantic_alignment` remains
+`not_proven`. The existing mutation and publication gates remain authoritative.
+
 ## Shared policy command regression
 
 `tests/cli_contracts.rs::claim_boundaries` verifies that candidate-only policy
@@ -496,8 +511,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `73bbeda852fd30834a4289d4dc517baf18dfcf3f98713df729052fc1ae4a2e5d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (222 files), `tests/` (214 files)
+- Repository signal fingerprint: `02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (223 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

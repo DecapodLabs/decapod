@@ -18,3 +18,45 @@ Agents often dive into implementation before fully understanding the human opera
 ## Versioned Specifications
 
 Because Decapod is repo-native, your specifications are versioned alongside your code. This creates a permanent, auditable link between a feature's requirements and its implementation, which is invaluable for long-term maintenance and multi-agent handover.
+
+## Continuous Intent Reconciliation
+
+The human request is retained in the governed plan; agent-authored project specifications
+express the current understanding of the product. Changes to source code cannot silently
+authorize a change to that intent. The coding harness generates code and proposed spec
+updates; Decapod reports observable mismatches and retains existing governance/proof gates.
+
+Read the advisory report at any point:
+
+```bash
+decapod rpc --op intent.reconcile --params '{}'
+```
+
+This read-only reconciliation operation uses the existing repo fingerprint,
+spec manifest, authored Markdown, and governed plan. It reports outdated manifest
+snapshots, missing canonical specs, unresolved human questions, and stale bound
+spec reviews. Hash agreement establishes input freshness, not semantic correctness.
+
+For stable cross-document traceability, the agent may place an exact standalone
+marker before a requirement in the authored portion of
+`.decapod/managed/specs/INTENT.md`:
+
+```markdown
+<!-- decapod:requirement REQ-OFFLINE-EDIT -->
+Offline editing remains available without connectivity.
+```
+
+Use that same marker in the authored sections of the relevant architecture,
+interface, semantics, security, operations, or validation document. Only
+`INTENT.md` defines an ID; another document merely references it.
+IDs must be `REQ-` followed by uppercase letters, digits, hyphens or
+underscores, at most 64 bytes total. Never put markers in generated blocks or
+code fences. Missing, duplicate, invalid, orphaned, and unvalidated references
+remain visible. A reference is an agent-authored traceability assertion, never
+evidence that code satisfies the requirement or that a test passed.
+
+This first reconciliation contract is advisory: it does not write specs or code,
+approve changes, execute tests, or certify semantic alignment. Agents resolve
+the findings in their isolated workspace and use the configured validation
+and publication process for acceptance. A reported `not_proven` is
+not a test failure and cannot be treated as `proven`.

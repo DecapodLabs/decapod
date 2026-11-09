@@ -53,6 +53,15 @@ coordination and execution gates are satisfied. Missing state never establishes
 ownership or proves that no collision exists. Real ambiguity, conflicts, and
 unsatisfied execution or publication gates still require resolution.
 
+### Reconcile Intent as the Code Evolves
+
+Use `decapod rpc --op intent.reconcile --params '{}'` to inspect the current
+human-intent binding, authored requirement references across canonical living
+specs, manifest freshness, and existing spec-review evidence. The response is
+advisory, always reports semantic alignment as `not_proven`, and never edits
+project meaning or waives configured validation gates. See
+[Intent](../book/src/concepts/intent.md) for the optional `REQ-*` marker contract.
+
 ### Before Any Agent Action
 
 Run the side-effect-free prompt safety gate before repository reads, tool calls, or any other Decapod operation, once at agent startup and after every new prompt:

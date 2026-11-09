@@ -1152,12 +1152,23 @@ event_id stays unique. Historical 1.0 events deserialize with an empty caller
 field rather than inventing prior attribution. Policy continues to run in each
 isolated caller subprocess, with task-specific checks using the actual claimant.
 
+## Intent Reconciliation RPC
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+`decapod rpc --op intent.reconcile --params '{}'` returns an advisory,
+versioned reconciliation report. It exposes the governed-plan intent digest,
+unresolved questions, current code fingerprint and last spec refresh identity,
+canonical authored spec hashes, explicit `REQ-*` references, and observable
+gaps. It accepts an empty parameter object, requires no session or worktree
+for inspection, and does not mutate spec or governance records. Its
+`semantic_alignment: not_proven` field is deliberately never a success proof.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `73bbeda852fd30834a4289d4dc517baf18dfcf3f98713df729052fc1ae4a2e5d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (222 files), `tests/` (214 files)
+- Repository signal fingerprint: `02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (223 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
