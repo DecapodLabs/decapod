@@ -979,6 +979,14 @@ separate operational blocker, and validation does not authorize distribution.
 
 ## Intent Reconciliation Acceptance Boundary
 
+Repeated hosted HTTP504 failures fetching pinned Bazel release archives are
+repaired by `.config/build/downloader.cfg`: try the same official GitHub
+release URL with an explicit download query, retaining the original URL as a
+fallback. The original `rules_rust` and `supply-chain` archive hashes were
+verified against upstream pins through this route. Version selection, integrity
+checks, compiler requirements, source execution and the complete test graph
+remain unchanged; fresh exact-candidate validation must exercise the repair.
+
 The accepted v0.133.0 source inventory differs from the last reviewed profile
 only by the package version in `Cargo.toml` and `Cargo.lock`. The explicit
 required-profile review declaration is reconciled to that complete inventory;

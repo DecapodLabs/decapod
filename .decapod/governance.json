@@ -550,6 +550,14 @@
       "proof_refs": [
         "119 discovered inputs byte-match immutable accepted master; only release package versions differ from edb30569 inventory"
       ]
+    },
+    {
+      "id": "intent-reconciliation-1574-download-repair",
+      "summary": "Retry pinned Bazel release downloads on the same official host without weakening integrity or execution proof",
+      "input_digest": "sha256:5faa06ae0f12030a52566716126d7d8971920f620d71ceac9a80877892fe27ad",
+      "proof_refs": [
+        "Original rules_rust and supply-chain archives verified byte-for-byte by pinned SHA256 through explicit-download-query route; full source execution remains required"
+      ]
     }
   ],
   "intents": {
@@ -575,14 +583,12 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 24,
-        "forbidden_paths": [
-          ".decapod/data"
-        ]
+        "file_touch_budget": 27,
+        "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Recover the implementation of intent.reconcile from 0b5405e61ca781f17b6f86d92ff3d1be046732e0 onto accepted master 15b69ce43fc56440d498d52d8726f89d499615fe without importing invalid governance history. Preserve sessionless read-only behavior, canonical specification ownership, stable REQ markers, missing/orphan/duplicate/malformed findings, fingerprint comparisons, unresolved intent, stale review detection, semantic_alignment not_proven, and existing publication boundaries. Publish a replacement PR for issue #1574 only with exact-candidate validation and every required CI check passing.",
+      "intent": "Recover the implementation of intent.reconcile from 0b5405e61ca781f17b6f86d92ff3d1be046732e0 onto accepted master 15b69ce43fc56440d498d52d8726f89d499615fe without importing invalid governance history. Preserve sessionless read-only behavior, canonical specification ownership, stable REQ markers, missing/orphan/duplicate/malformed findings, fingerprint comparisons, unresolved intent, stale review detection, semantic_alignment not_proven, and existing publication boundaries. Publish a replacement PR for issue #1574 only with exact-candidate validation and every required CI check passing. Repair the verified HTTP504 release-download infrastructure defect without changing pinned versions, digests, source executor or required graph; then merge the replacement after exact-candidate proof passes under the renewed human authorization.",
       "phases": [],
       "proof_hooks": [
         "Source and documentation diff equivalence against original PR #1570",
@@ -595,23 +601,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed core/intent_reconcile.rs reconcile and its project_specs/plan_governance dependencies. It reads the existing canonical plan, eight canonical specs, manifest and source fingerprint into an ephemeral report. The authored read-model section records no secondary datastore, spec authority, scheduler or orchestration, and keeps interpretation/repair with the harness.",
+          "reason": "Reviewed final source and .config/build downloader configuration. The authored read-model section remains accurate: existing canonical plan/spec authority, ephemeral report, no scheduler or secondary persistence. Infrastructure retry changes only official release URL transport, preserving source executor and the full proof graph.",
           "reviewed_code_fingerprint": "02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9",
           "spec_material_hash": "11a4280adbbf26427123e93671593796d32c252263451951572f93221de9127d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed IntentReconcileParams deny_unknown_fields, handle_intent_reconcile, capability registration and lib.rs startup/session/worktree/mandate exemptions against final source fingerprint. Authored RPC section now describes empty parameters, sessionless local inspection, report fields, no spec/governance mutation, and semantic_alignment not_proven; no proof/publication gate changed.",
+          "reason": "Reviewed final source and download-only infrastructure delta. The authored intent.reconcile RPC section still matches empty-only params, sessionless read-only behavior, observable report fields and semantic_alignment not_proven; no interface or publication authority changed by the Bazel retry configuration.",
           "reviewed_code_fingerprint": "02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9",
           "spec_material_hash": "8237575826dc886b4dd0cf76851525ca88e8a5a2e701158bcdf5ce3ce1ab1e99"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final RPC and startup exemptions plus reconcile file reads: sessionless local filesystem permission boundary, empty-only params, no network/credentials/datastore writes introduced. New authored Security section documents paths/hashes/requirement IDs and unresolved-question exposure, unauthenticated provenance, pending human decisions and unchanged mutation/publication authority. No human approval is inferred from a marker, hash or report.",
+          "reason": "Reviewed final code and download configuration. Authored Security prose now also states official github.com-only retry, no credentials or third-party mirrors, unchanged pinned archive integrity and lockfile enforcement; sessionless inspection access, unresolved-question exposure and non-authoritative provenance remain bounded by existing mutation/publication gates.",
           "reviewed_code_fingerprint": "02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9",
-          "spec_material_hash": "aacd6bd1dd91a0e159e253b7e3a850128af2a9ab947a6aa88307d6a266a2b500"
+          "spec_material_hash": "6de2e6288499bcb9d0eb77da19a2f2a3c5bf2a27316311420a5b15ddd9b9f2e7"
         }
       ],
       "state": "APPROVED",
@@ -624,7 +630,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794208850Z"
+      "updated_at": "1794210859Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -632,7 +638,7 @@
         "No secondary authority, scheduler, persistence, semantic proof or publication permission from reconciliation",
         "Preserve original branch history and all unrelated worktrees and ownership"
       ],
-      "artifact_hash": "sha256:880b1118dd8c3f3aa5dbb6681e46b21ed60633b95d19c6d88f0cfaab691c8356",
+      "artifact_hash": "sha256:cc08c8ac9df953d065fe8b26d3e4021667dcf5521b9ad16b81a83e7671693f10",
       "checks": [
         {
           "name": "accepted source inventory reconciliation",
@@ -655,7 +661,19 @@
           "status": "passed"
         },
         {
+          "name": "original pinned archive transport verification",
+          "status": "passed"
+        },
+        {
           "name": "original source/test/docs byte equivalence",
+          "status": "passed"
+        },
+        {
+          "name": "prior full validation",
+          "status": "failed"
+        },
+        {
+          "name": "prior source suite and hosted governance checkpoints",
           "status": "passed"
         },
         {
@@ -663,7 +681,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "validation-repair",
+      "current_phase": "infrastructure-repair",
       "custody": {
         "events": [
           {
@@ -698,10 +716,17 @@
             "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ZJRE0M6E1MFA6N2EN6JZ40": {
@@ -795,12 +820,44 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "infrastructure-repair",
+                "command": "Official GitHub release downloads with explicit download query; SHA256 verification against original upstream pins",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".config/build/bazelrc",
+                  ".config/build/downloader.cfg",
+                  ".config/build/bazelrc",
+                  ".config/build/downloader.cfg",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Human renewed explicit creation/CI-repair/merge authority, preserving existing todo and change identity. CI42579141327 attempt4 terminal failed HTTP504, failed jobs retried attempt5. Buildkite5974 all source/test/governance jobs passed except setup archive504. No required proof waived.",
+                  "Direct GitHub rules_rust URL returned504 inside and outside sandbox; official mirror404. GitHub API and same release URL with ?download=1 returned 67439334 bytes matching original BCR SHA256071a6e582cf2f2797820266f3265dbb2727b447486366d9ecc177da1523b11ad. supply-chain query returned36325 bytes matching original release SHA2560e89367f1cb6d93a5a1afea4b55b11ea6b28f63f653b47154153677ca7d4afea. Add official-host-only query retry with original fallback, unchanged version/integrity/toolchain/graph.",
+                  "Explicitly reconciled reviewed inventory only for bazelrc and new downloader config. Existing source executor/carrier/workflow files unchanged. Source implementation remains identical to original #1570. Full validation must execute on the newly checkpointed candidate before PR or merge."
+                ],
+                "proof_refs": [
+                  "prior source suite and hosted governance checkpoints",
+                  "prior full validation",
+                  "original pinned archive transport verification"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "docs",
+                  "intent-reconciliation-1574",
+                  "src/decapod",
+                  "tests/intent_reconciliation_rpc.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Official GitHub release downloads with explicit download query; SHA256 verification against original upstream pins",
         "decapod govern plan review-spec",
         "decapod rpc --op agent.init",
         "decapod rpc --op specs.refresh",
@@ -811,13 +868,18 @@
       "destination": "pull request",
       "evidence": [
         "All seven source/test/docs files match original candidate bytes; generated repo fingerprint matches 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9. Five authored specs describe behavior/security. Architecture, Interfaces and Security reviewed updated against frozen source.",
+        "Direct GitHub rules_rust URL returned504 inside and outside sandbox; official mirror404. GitHub API and same release URL with ?download=1 returned 67439334 bytes matching original BCR SHA256071a6e582cf2f2797820266f3265dbb2727b447486366d9ecc177da1523b11ad. supply-chain query returned36325 bytes matching original release SHA2560e89367f1cb6d93a5a1afea4b55b11ea6b28f63f653b47154153677ca7d4afea. Add official-host-only query retry with original fallback, unchanged version/integrity/toolchain/graph.",
+        "Explicitly reconciled reviewed inventory only for bazelrc and new downloader config. Existing source executor/carrier/workflow files unchanged. Source implementation remains identical to original #1570. Full validation must execute on the newly checkpointed candidate before PR or merge.",
         "First validate failed PROOF_PROFILE_RECONCILIATION_REQUIRED before execution. All 119 discovered source inputs match accepted base. Relative to the last config review commit edb30569 only Cargo.toml/Cargo.lock package version changed 0.132.0 to 0.133.0. Reviewed finite catalog, carrier and unchanged required graph; backed up config and explicitly reconciled authored review digest to sha256:d8c65ab6901a57c4df55f3914dd0eeaecbf7338177233831854ade1304e53361. agent.init now reports proof_pending/not_run. No checks or provider requirements removed.",
         "Full Rust suite and publication readiness remain unexecuted for this new candidate; original CI results are historical only.",
+        "Human renewed explicit creation/CI-repair/merge authority, preserving existing todo and change identity. CI42579141327 attempt4 terminal failed HTTP504, failed jobs retried attempt5. Buildkite5974 all source/test/governance jobs passed except setup archive504. No required proof waived.",
         "Immutable verify-checkpoints --base-branch 15b69ce43fc56440d498d52d8726f89d499615fe --head-ref f8a6200fe23080cf4dd3d2be077254c4b7ab7612 --target-base master --publication-material returned status ok; 135 prior unresolved baseline obligations preserved, 138 total after lifecycle carry-forward.",
         "Live origin/master and PR base remain 15b69ce43fc56440d498d52d8726f89d499615fe; PR #1570 head remains 0b5405e61ca781f17b6f86d92ff3d1be046732e0.",
         "Native task bugs_01m6zjqskamsdwx8 claimed exclusively by codex-1574; managed workspace created from accepted base. Existing autogenerated trajectory retained after init correctly rejected replacing an uncommitted journal."
       ],
       "inspected_files": [
+        ".config/build/bazelrc",
+        ".config/build/downloader.cfg",
         ".decapod/config.toml",
         ".github/actions/source-ci-profile/action.yml",
         "AGENTS.md",
@@ -831,6 +893,8 @@
       ],
       "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
       "modified_files": [
+        ".config/build/bazelrc",
+        ".config/build/downloader.cfg",
         ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
@@ -849,6 +913,7 @@
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
+        ".config/build",
         ".decapod/managed/specs",
         "docs",
         "intent-reconciliation-1574",
