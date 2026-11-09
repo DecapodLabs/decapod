@@ -3335,6 +3335,7 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "context.bindings"
             | "constitution.get"
             | "schema.get"
+            | "intent.reconcile"
             | "store.upsert"
             | "store.query"
             | "validate.run"

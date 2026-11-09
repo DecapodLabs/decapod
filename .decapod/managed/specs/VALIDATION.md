@@ -977,6 +977,16 @@ remains the normal release sequence. This code does not repair a provider that
 never receives a postmerge event. Missing external trigger delivery remains a
 separate operational blocker, and validation does not authorize distribution.
 
+## Intent Reconciliation Acceptance Boundary
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+The read-only reconciliation report must detect missing/orphaned/duplicate
+requirement references, missing proof-spec mappings, stale code fingerprints,
+and unresolved human questions. A matching manifest or reference is not
+semantic proof; `intent.reconcile` cannot satisfy validation obligations,
+approve spec changes, or authorize publication. Unit tests must exercise
+these negative cases and preserve existing proof and publication gates.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -1020,16 +1030,6 @@ Generated capability obligations: `persistent-state` is declared for this projec
 - Concurrency conflict tests
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
-
-## Intent Reconciliation Acceptance Boundary
-
-<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
-The read-only reconciliation report must detect missing/orphaned/duplicate
-requirement references, missing proof-spec mappings, stale code fingerprints,
-and unresolved human questions. A matching manifest or reference is not
-semantic proof; `intent.reconcile` cannot satisfy validation obligations,
-approve spec changes, or authorize publication. Unit tests must exercise
-these negative cases and preserve existing proof and publication gates.
 
 <!-- decapod:codebase-attestation:start -->
 

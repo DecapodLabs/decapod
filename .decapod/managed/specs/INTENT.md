@@ -253,6 +253,16 @@ custody, receipt-independent prerequisites and required Buildkite execution
 remain governed by their existing contracts. Retired Dagger configuration must
 fail explicitly rather than silently discarding a required check.
 
+## Continuous Intent Traceability
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+The agent must preserve the human-originated change intent while proposing
+updates to living specifications and implementation. Explicit requirement
+identities may be attached to authored specs across changes. The read-only
+reconciliation report exposes missing or orphaned references, unresolved
+questions, and outdated source/spec snapshots without declaring semantic
+alignment or granting publication authority.
+
 <!-- decapod:declared-capabilities:start -->
 
 ## Declared Capability Surfaces
@@ -271,16 +281,6 @@ These declarations select authoring and proof obligations; they do not attest im
 - `scheduled-jobs`
 
 <!-- decapod:declared-capabilities:end -->
-
-## Continuous Intent Traceability
-
-<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
-The agent must preserve the human-originated change intent while proposing
-updates to living specifications and implementation. Explicit requirement
-identities may be attached to authored specs across changes. The read-only
-reconciliation report exposes missing or orphaned references, unresolved
-questions, and outdated source/spec snapshots without declaring semantic
-alignment or granting publication authority.
 
 <!-- decapod:codebase-attestation:start -->
 
