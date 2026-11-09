@@ -254,6 +254,15 @@ pub fn task_journal_checkpoint_many(
         return Err(error::DecapodError::NotImplemented("task journal requires the local canonical task schema; cloud mode never falls back locally".into()));
     }
     let actor = mutation_actor(None);
+    let rbac_digest = if gaps.is_empty() {
+        None
+    } else {
+        Some(policy::authorize_rbac_exception(
+            root,
+            &actor,
+            "todo.journal.repair",
+        )?)
+    };
     broker.with_transaction(
         &todo_db_path(root),
         &actor,
@@ -261,7 +270,27 @@ pub fn task_journal_checkpoint_many(
         "todo.journal.checkpoint",
         |conn| {
             ensure_schema(conn)?;
-            task_journal::checkpoint_with_gaps(conn, &actor, &gaps)
+            let result = task_journal::checkpoint_with_gaps(conn, &actor, &gaps)?;
+            if let Some(config_digest) = &rbac_digest {
+                crate::core::events::append_on_conn(
+                    conn,
+                    crate::core::events::TODO,
+                    &serde_json::json!({
+                        "ts": now_iso(),
+                        "event_id": crate::core::ulid::new_ulid(),
+                        "event_type": "policy.rbac.exception_used",
+                        "status": "success",
+                        "actor": actor,
+                        "payload": {
+                            "permission": "todo.journal.repair",
+                            "config_digest": config_digest,
+                            "task_ids": gaps.iter().map(|(id, _)| id).collect::<Vec<_>>(),
+                            "identity_assurance": "cooperative_not_authenticated"
+                        }
+                    }),
+                )?;
+            }
+            Ok(result)
         },
     )
 }
