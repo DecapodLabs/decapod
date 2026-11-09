@@ -253,6 +253,9 @@ fn utf8_path(bytes: &[u8]) -> Option<String> {
 /// Parse Git's NUL-delimited name/status output. Refuse to call partial output
 /// complete: malformed, non-UTF8 and oversized paths remain visible as findings.
 fn parse_changed_files(raw: &[u8]) -> (Vec<ChangedFile>, bool, Vec<Finding>) {
+    if raw.is_empty() {
+        return (Vec::new(), true, Vec::new());
+    }
     let mut changes = Vec::new();
     let mut complete = true;
     let mut findings = Vec::new();
