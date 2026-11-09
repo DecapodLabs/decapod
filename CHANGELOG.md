@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.134.2](https://github.com/DecapodLabs/decapod/compare/v0.134.1...v0.134.2) - 2026-11-09
+
+### Added
+
+- *(validate)* audited RBAC-only bypass explicitly remains unproven
+- *(policy)* authorize exceptional operations from bounded main-repo RBAC
+- *(policy)* typed fail-closed RBAC grants and explicit validation exception CLI
+- *(todo)* repeatable reviewed-gap CLI in one broker transaction
+
+### Fixed
+
+- *(governance)* rebind final source review after branch-proof repair
+- *(governance)* require explicit branch fork proof when reflog is absent
+- *(ci)* bind reviewed specs to current source fingerprint
+- *(ci)* refresh accepted release projections and diagnose stale spec bindings
+- *(ci)* restore test compilation and rustfmt consistency
+- *(governance)* preserve continued branch state on workspace initialization
+- *(governance)* admit accepted-context continuation on existing PR without rewriting history
+- *(projections)* synchronize manifest and living-spec attestations with candidate source
+- *(projections)* commit Decapod-generated release 0.134.0 entrypoints and Dockerfile
+- *(governance)* explicitly review actual interface, architecture and security scope
+- *(governance)* drop unused production journal wrappers and author material validation contract
+- *(docs)* generate RBAC and Laya reference from source contract
+- *(init)* compile typed policy config and preserve grants during refresh
+- *(init)* retain exceptional policy and Laya configuration in init options
+- *(verify)* reject arbitrary decapod-prefixed executables
+- *(todo)* require configured RBAC role for reviewed gap repair and audit it
+- *(verify)* normalize per-run identity in every readiness receipt
+- *(verify)* authorize exact running Nix-wrapped executable
+- *(todo)* atomically accept multiple reviewed journal gaps
+
+### Other
+
+- *(ci)* rustfmt governance branch-proof regressions
+- *(ci)* align spec-review diagnostics with rustfmt
+- *(master)* reconcile v0.134.1 release and PR #1587 into #1585
+- *(governance)* preserve strict checkpoint proof across accepted-label continuation
+- apply exact rustfmt CI diff across governance repair
+- *(policy)* keep bounded RBAC reader warning-clean
+- *(policy)* RBAC permission isolation, bypass CLI, and Laya default
+- *(agent)* retain typed Laya schema and RBAC policy contract
+- explain auditable RBAC exceptions and Laya opt-in
+- explicitly gate Laya, journal repair and validation exceptions
+- *(verify)* two-run Laya and future receipt normalization
+- *(todo)* prove multi-gap repair atomicity and replay
+
 ## [0.134.1](https://github.com/DecapodLabs/decapod/compare/v0.134.0...v0.134.1) - 2026-11-09
 
 ### Fixed
