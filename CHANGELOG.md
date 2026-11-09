@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.133.0](https://github.com/DecapodLabs/decapod/compare/v0.132.0...v0.133.0) - 2026-11-09
+
+### Fixed
+
+- *(ci)* scope template migration to Decapod lineage and update custody tests
+- *(ci)* correct entrypoint transition argument and rustfmt output
+- *(kernel)* regenerate candidate canonical agent entrypoints
+- *(kernel)* bind template migration to accepted-source history
+- *(kernel)* admit independent tasks with fenced checkout custody
+
+### Other
+
+- *(core)* authenticate second workspace actor with own session
+- *(ci)* apply rustfmt to authored-spec comparison
+- *(core)* compare authored spec material across managed workspace admission
+- *(ci)* bound CLI fixture broker idle for parallel runner budgets
+- *(ci)* apply rustfmt to managed workspace regression fixture
+- *(ci)* prove spec projection with task-bound worktrees and parallel agents
+- *(ci)* apply rustfmt to custody regression updates
+- *(ci)* reconcile generated RPC operation index
+- *(ci)* conform history transition to rustfmt multiline condition
+- *(governance)* refresh release-bound agent entrypoints
+
 ## [0.132.0](https://github.com/DecapodLabs/decapod/compare/v0.131.0...v0.132.0) - 2026-11-08
 
 ### Added
