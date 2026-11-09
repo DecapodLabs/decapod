@@ -1070,8 +1070,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8409d6e902d37d4b4332c4cfda74e1e747543eeed95eeaad6867b9ab4dcd5373`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (216 files)
+- Repository signal fingerprint: `94939756f752d0d2e9e75aa1f5e721762f55b3ea1235ea31e0fe5f2f9eea479e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (223 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1398,3 +1398,7 @@ assertion in normal CI. Migration and event unit suites supplement these checks.
 Disposable native PostgreSQL baseline evidence does not qualify hosted Supabase,
 64 exclusive claimants or complete client/backend parity. Publication still
 requires the full exact-candidate profile. The v0.134.0 proof-source inventory differs from the previously reviewed v0.133.2 inventory only in accepted Cargo package versions; workflow, action, helper and executor definitions are unchanged.
+
+## Retired Vega execution requirement
+
+The operator explicitly revoked the Vega native worker requirement for this active branch. The entire native tree and entrypoint are deleted and the repository worker declaration removed; the previously failed worker remains failed historical evidence. All deterministic source-CI, datastore preservation, golden-vector and migration checks remain required. Laya configuration/CLI regression tests cover opt-in, default disablement and preservation. The generic accepted-worker policy guard remains unchanged; older installed controllers may still report the deliberately retired Vega obligation until this reviewed transition is accepted.

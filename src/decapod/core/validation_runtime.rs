@@ -585,10 +585,6 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     let accepted_entries = git(options, budget, &["ls-tree", "-z", &base, "--", CONFIG])?;
     if !accepted_entries.is_empty() {
         let accepted_bytes = git(options, budget, &["show", &format!("{base}:{CONFIG}")])?;
-        super::vega_readiness::verify_policy_acceptance(
-            &super::vega_readiness::configuration_from_bytes(&configuration_bytes)?,
-            &super::vega_readiness::configuration_from_bytes(&accepted_bytes)?,
-        )?;
         super::laya_readiness::verify_policy_acceptance(
             &super::laya_readiness::configuration_from_bytes(&configuration_bytes)?,
             &super::laya_readiness::configuration_from_bytes(&accepted_bytes)?,

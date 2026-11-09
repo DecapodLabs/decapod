@@ -24,7 +24,6 @@ exclude = [
     "assets/*.mp4",
     "tests/fixtures/*",
     "tests/golden_vectors/*",
-    "assets/tools/vega-native",
 ]
 
 [lib]

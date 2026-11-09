@@ -296,8 +296,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8409d6e902d37d4b4332c4cfda74e1e747543eeed95eeaad6867b9ab4dcd5373`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (216 files)
+- Repository signal fingerprint: `94939756f752d0d2e9e75aa1f5e721762f55b3ea1235ea31e0fe5f2f9eea479e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (223 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -460,3 +460,7 @@ Its benchmark reports disk allocation, fixture-only reclamation, WAL and latency
 separately. It does not establish full cloud parity, hosted capacity, new retention
 permissions or the overall 30% storage goal. Subsequent changes require independent
 measurements and compatibility proof, as sequenced in `docs/datastore-v2/architecture.md`.
+
+## Operator-directed Vega retirement
+
+This active datastore increment also removes the entire retired `assets/tools/vega-native` tree and its standalone entrypoint, as explicitly requested by the operator. Laya alone is the optional post-validation evaluator; default deterministic validation needs no model, Metal toolchain or scientific Vega worker. Historical observations are preserved as history and do not assert present requirements.

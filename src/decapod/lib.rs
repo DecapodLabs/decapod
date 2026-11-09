@@ -1638,7 +1638,7 @@ fn init_with_from_config(
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
-        vega_decisions: Some(config.vega.mode == core::vega_readiness::Mode::Required),
+        laya_decisions: Some(config.laya.mode == core::laya_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
         backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
@@ -1728,8 +1728,8 @@ fn preserve_unspecified_init_options(
     if !explicit("validation_buildkite_preflights") {
         init.validation_buildkite_preflights = existing.validation_buildkite_preflights;
     }
-    if !explicit("vega_decisions") {
-        init.vega_decisions = existing.vega_decisions;
+    if !explicit("laya_decisions") {
+        init.laya_decisions = existing.laya_decisions;
     }
     if !explicit("backend") {
         init.backend = existing.backend;
@@ -1862,6 +1862,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             declared_sources: declared_context_sources,
         },
         vega: core::vega_readiness::Configuration::default(),
+        laya: core::laya_readiness::Configuration::default(),
     }
 }
 
@@ -2000,9 +2001,9 @@ fn enrich_repo_context_interactive(
         &proof_default,
     )?;
     apply_init_proof_command_input(init, &proof_input);
-    init.vega_decisions = Some(prompt_yes_no(
-        "Require Vega readiness decisions after validation? (Each maintainer installs the runtime and pinned model data separately.)",
-        init.vega_decisions.unwrap_or(false),
+    init.laya_decisions = Some(prompt_yes_no(
+        "Require optional Laya readiness decisions after validation? (Each maintainer installs the runtime and pinned model data separately.)",
+        init.laya_decisions.unwrap_or(false),
     )?);
     init.validation_buildkite_preflights = Some(prompt_yes_no(
         "Use Buildkite on the current workspace branch for the full required proof suite? (No runs the full suite natively in Decapod.)",
@@ -2518,7 +2519,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_rust_workers: None,
                             existing_ci_attested: None,
                             existing_allow_basic_shared_claims: false,
-                            vega_decisions: init_group.vega_decisions,
+                            laya_decisions: init_group.laya_decisions,
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
                             backend: init_group.backend,
@@ -2621,18 +2622,21 @@ pub fn run() -> Result<(), error::DecapodError> {
             let mut config = config_from_init_with(&init_with, repo_ctx);
             if let Some(existing) = existing_config.as_ref() {
                 config.vega = existing.vega.clone();
+                config.laya = existing.laya.clone();
             }
-            if let Some(enabled) = init_with.vega_decisions {
-                config.vega.mode = if enabled {
-                    core::vega_readiness::Mode::Required
+            if let Some(enabled) = init_with.laya_decisions {
+                config.laya.mode = if enabled {
+                    core::laya_readiness::Mode::Required
                 } else {
-                    core::vega_readiness::Mode::Disabled
+                    core::laya_readiness::Mode::Disabled
                 };
                 if enabled
-                    && config.vega.model_manifest_digest.is_empty()
-                    && config.vega.installation.is_none()
+                    && config.laya.model_manifest_digest.is_empty()
+                    && config.laya.installation.is_none()
                 {
-                    config.vega.model_manifest_digest = core::vega_setup::baseline_digest()?;
+                    config.laya.model_manifest_digest =
+                        core::laya_assets::manifest_digest(&core::laya_assets::baseline())
+                            .map_err(io::Error::other)?;
                 }
             }
             write_project_config(&target_dir, &config, init_with.dry_run)?;
@@ -2727,30 +2731,34 @@ pub fn run() -> Result<(), error::DecapodError> {
             run_release_command(release_cli, &project_root)?;
         }
         Command::Setup(setup_cli) => match setup_cli.command {
-            SetupCommand::Vega {
+            SetupCommand::Laya {
                 cache_directory,
                 runtime,
                 cpu_runtime,
                 check_updates,
-                refresh,
                 offline,
-                rollback,
             } => {
-                let report = core::vega_setup::run(&core::vega_setup::SetupOptions {
-                    cache_directory,
-                    runtime,
-                    cpu_runtime,
-                    check_updates,
-                    refresh,
-                    offline,
-                    rollback,
-                })?;
-                let report_json = serde_json::to_string_pretty(&report).map_err(|e| {
+                let report = if check_updates {
+                    serde_json::to_value(core::laya_setup::check_updates(
+                        cache_directory.as_deref(),
+                    )?)
+                } else {
+                    serde_json::to_value(core::laya_setup::run(&core::laya_setup::SetupOptions {
+                        cache_directory,
+                        runtime,
+                        cpu_runtime,
+                        offline,
+                    })?)
+                }
+                .map_err(|e| {
                     error::DecapodError::ValidationError(format!(
-                        "vega setup report serialization failed: {e}"
+                        "Laya setup report serialization failed: {e}"
                     ))
                 })?;
-                println!("{report_json}");
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                );
             }
             SetupCommand::Hook {
                 commit_msg,

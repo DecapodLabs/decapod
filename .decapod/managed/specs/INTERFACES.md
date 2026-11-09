@@ -1181,8 +1181,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8409d6e902d37d4b4332c4cfda74e1e747543eeed95eeaad6867b9ab4dcd5373`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (216 files)
+- Repository signal fingerprint: `94939756f752d0d2e9e75aa1f5e721762f55b3ea1235ea31e0fe5f2f9eea479e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (223 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1519,3 +1519,7 @@ Older stores missing the unique tree receive it additively; duplicate sequences
 fail with the original typed storage error and rollback, without normalization.
 Native PostgreSQL uses Propodus's own migrations; the SQLite index migration is
 never sent through cloud RPC.
+
+## Laya-only optional setup and initialization
+
+`setup laya` replaces the retired `setup vega` command, with explicit cache, runtime, CPU companion, offline and update-check options. `--laya-decisions[=true|false]` replaces the old init selector. Disabled is the default; explicit selection pins the reviewed Laya manifest. Init refresh preserves Laya backend, fallback and runtime bindings, and retains legacy Vega settings for explicit migration rather than silently activating another evaluator.

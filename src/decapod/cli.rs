@@ -260,10 +260,10 @@ pub(crate) struct InitGroupCli {
     /// Proof command in `name=command` form (repeatable/comma-separated).
     #[clap(long = "proof-command", value_delimiter = ',')]
     pub proof_commands: Vec<String>,
-    /// Require Vega readiness decisions after deterministic validation passes.
+    /// Require optional Laya readiness decisions after deterministic validation passes.
     /// Omission preserves the existing setting; runtime/model setup is separate.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
-    pub vega_decisions: Option<bool>,
+    pub laya_decisions: Option<bool>,
     /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
@@ -416,10 +416,10 @@ pub(crate) struct InitWithCli {
     /// Preserve the configured shared-claim policy during reinitialization.
     #[clap(skip)]
     pub existing_allow_basic_shared_claims: bool,
-    /// Require Vega readiness decisions after deterministic validation passes.
+    /// Require optional Laya readiness decisions after deterministic validation passes.
     /// Omission preserves the existing setting; runtime/model setup is separate.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
-    pub vega_decisions: Option<bool>,
+    pub laya_decisions: Option<bool>,
     /// Select Buildkite workspace-branch validation (false: native Decapod).
     /// Both providers execute the full required proof suite; omission preserves existing settings.
     #[clap(long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
@@ -465,6 +465,11 @@ pub struct DecapodProjectConfig {
         skip_serializing_if = "crate::core::vega_readiness::Configuration::is_default"
     )]
     pub vega: crate::core::vega_readiness::Configuration,
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
+    )]
+    pub laya: crate::core::laya_readiness::Configuration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -803,6 +808,7 @@ impl Default for DecapodProjectConfig {
             tracker: TrackerConfig::default(),
             context: DeclaredContextConfig::default(),
             vega: crate::core::vega_readiness::Configuration::default(),
+            laya: crate::core::laya_readiness::Configuration::default(),
         }
     }
 }
@@ -862,24 +868,19 @@ pub(crate) struct SetupCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum SetupCommand {
-    /// Explicitly install, verify or refresh the external vega model cache.
-    Vega {
+    /// Explicitly install or verify the optional external Laya model cache.
+    Laya {
         #[clap(long)]
         cache_directory: Option<PathBuf>,
-        /// Register this maintainer's installed worker without committing its path.
+        /// Register this maintainer's installed Laya worker outside Git.
         #[clap(long, conflicts_with = "check_updates")]
         runtime: Option<PathBuf>,
-        /// Register a separate CPU-only worker for machines missing GPU libraries.
         #[clap(long, requires = "runtime", conflicts_with = "check_updates")]
         cpu_runtime: Option<PathBuf>,
-        #[clap(long, conflicts_with_all = ["refresh", "offline", "rollback"])]
+        #[clap(long, conflicts_with = "offline")]
         check_updates: bool,
-        #[clap(long, conflicts_with_all = ["check_updates", "offline", "rollback"])]
-        refresh: bool,
-        #[clap(long, conflicts_with_all = ["check_updates", "refresh"])]
+        #[clap(long)]
         offline: bool,
-        #[clap(long, conflicts_with_all = ["check_updates", "refresh"])]
-        rollback: Option<String>,
     },
     /// Install or uninstall repository git hooks
     Hook {

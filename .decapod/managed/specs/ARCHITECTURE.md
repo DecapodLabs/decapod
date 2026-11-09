@@ -828,8 +828,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8409d6e902d37d4b4332c4cfda74e1e747543eeed95eeaad6867b9ab4dcd5373`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (216 files)
+- Repository signal fingerprint: `94939756f752d0d2e9e75aa1f5e721762f55b3ea1235ea31e0fe5f2f9eea479e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (223 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1077,3 +1077,7 @@ without normalization. No historical payload, identity or hash is rewritten.
 Freed pages are reusable; file shrink requires separately controlled maintenance.
 The measured catalog and unresolved cross-backend contracts live in
 `docs/datastore-v2/`; native Propodus RPC supports only a partial task model.
+
+## Current evaluator boundary
+
+The retired native Vega workspace, vendored kernels, independent native entrypoint and orphan backbone source are removed. This repository no longer declares `proof.rust_workers` for Vega. Generic physical worker verification remains available for other explicitly configured applications. Laya retains its existing protocol, shared bounded projection and private runtime custody helpers; no model/proof encoding is renamed. Deterministic proof remains authoritative, followed only by explicitly enabled Laya assessment.

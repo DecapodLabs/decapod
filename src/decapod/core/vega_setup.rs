@@ -224,10 +224,6 @@ pub fn manifest_digest(manifest: &InstallManifest) -> io::Result<String> {
     ))
 }
 
-pub(crate) fn baseline_digest() -> io::Result<String> {
-    manifest_digest(&baseline())
-}
-
 fn json_digest(value: &Value) -> io::Result<String> {
     Ok(hash(&serde_json::to_vec(value).map_err(io::Error::other)?))
 }

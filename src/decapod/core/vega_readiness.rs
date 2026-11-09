@@ -395,6 +395,7 @@ fn digest<T: Serialize>(value: &T) -> io::Result<String> {
     evidence::digest(value).map_err(io::Error::other)
 }
 
+#[cfg(test)]
 pub(crate) fn configuration_from_bytes(bytes: &[u8]) -> io::Result<Configuration> {
     if bytes.len() > 1024 * 1024 {
         return Err(invalid("vega_configuration_overflow"));
@@ -429,6 +430,7 @@ pub(crate) fn configuration_from_bytes(bytes: &[u8]) -> io::Result<Configuration
 /// Required accepted policy is authority, not a setting a candidate may weaken
 /// or replace with its own executable. New optional use can add a gate, but a
 /// required policy change needs an independently accepted policy transition.
+#[cfg(test)]
 pub(crate) fn verify_policy_acceptance(
     candidate: &Configuration,
     accepted: &Configuration,
