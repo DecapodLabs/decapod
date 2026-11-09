@@ -2,7 +2,7 @@
   "schema_version": "1.1.0",
   "template_version": "scaffold-v4",
   "generated_at": "1794253993Z",
-  "repo_signal_fingerprint": "5c4146824ea90f2f367df0ae4b481a88d37d628f13710c32946628e8442c204a",
+  "repo_signal_fingerprint": "18b631052a623b66b9ede2ea875b2fc0c911f40001829ebca0958d5d81a8a8d2",
   "declared_capabilities": [
     "agent-helper",
     "authentication",

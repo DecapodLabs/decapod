@@ -624,21 +624,21 @@
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "Current PR adds no new architectural authority beyond accepted v0.134.1; local journal batch, RBAC exceptions, and Laya remain under the existing broker and post-proof boundaries",
-          "reviewed_code_fingerprint": "5c4146824ea90f2f367df0ae4b481a88d37d628f13710c32946628e8442c204a",
+          "reviewed_code_fingerprint": "18b631052a623b66b9ede2ea875b2fc0c911f40001829ebca0958d5d81a8a8d2",
           "spec_material_hash": "042e62b5a21b33e93d2a0db5a0d1615acb620b3cc4e136caec1a5c3d9b6dc2ee"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Reviewed repeatable historical gap selection, atomic journal acceptance, RBAC-only local exception and explicit Laya gating",
-          "reviewed_code_fingerprint": "5c4146824ea90f2f367df0ae4b481a88d37d628f13710c32946628e8442c204a",
+          "reviewed_code_fingerprint": "18b631052a623b66b9ede2ea875b2fc0c911f40001829ebca0958d5d81a8a8d2",
           "spec_material_hash": "3b9387a0c7c5948ca3525bf84e59eba80f4c0d91315668ad57d933b59a41fd59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "Reviewed default-deny cooperative actor-label roles, proof-preserving local exceptions and exact executable identity checks",
-          "reviewed_code_fingerprint": "5c4146824ea90f2f367df0ae4b481a88d37d628f13710c32946628e8442c204a",
+          "reviewed_code_fingerprint": "18b631052a623b66b9ede2ea875b2fc0c911f40001829ebca0958d5d81a8a8d2",
           "spec_material_hash": "2a7ed5e559e71e6c8ff54801816f6f36ccfdebb745fc1c97607deea8d96c4779"
         }
       ],
