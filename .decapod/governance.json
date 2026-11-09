@@ -578,6 +578,11 @@
       "id": "accepted-1331-retained-replay-b3a3bc70",
       "summary": "Present-time replay of b3a3bc70 onto accepted 7035a854 with complete journal and parent checkpoint preservation; original history retained in archive refs",
       "input_digest": "sha256:9cfaa19cbd8e4e48fd656e5502565d301ef2883a0e2e1836ca17f2cdb1dc1236"
+    },
+    {
+      "id": "accepted-1331-retained-replay-03d1d638",
+      "summary": "Present-time replay of 03d1d638 onto accepted 7035a854 with complete journal and parent checkpoint preservation; original history retained in archive refs",
+      "input_digest": "sha256:e4fc04f76d1a0c17714a788fa5c27bb3886870b97c6eae2d604bf5ef434350ce"
     }
   ],
   "intents": {

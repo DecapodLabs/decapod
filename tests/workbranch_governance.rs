@@ -1,6 +1,6 @@
 //! Normal agent/workspace entrypoints must never expose the last accepted PR as
 //! the current task. These tests exercise actual Git worktrees and CLI calls.
-use decapod::core::{governance_document as governance, todo, workspace};
+use decapod::core::{governance_document as governance, todo};
 use serde_json::{Value, json};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -23,14 +23,13 @@ fn git(root: &Path, args: &[&str]) -> String {
     String::from_utf8(out.stdout).unwrap().trim().into()
 }
 fn cli(root: &Path, args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(args)
-        .current_dir(root)
-        .env("DECAPOD_AGENT_ID", AGENT)
-        .env_remove("DECAPOD_SESSION_PASSWORD")
-        .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
-        .output()
-        .unwrap()
+    recovery_cli(root, AGENT, args)
+}
+
+fn admit(root: &Path) {
+    success(cli(root, &["workspace", "ensure"]));
+    let status = success(cli(root, &["workspace", "status"]));
+    assert_eq!(status["workspace"]["can_work"], true, "{status}");
 }
 fn success(out: Output) -> Value {
     assert!(
@@ -151,17 +150,19 @@ fn workspace_ensure_seeds_current_context_and_repeat_is_noop() {
     // The workspace creation event supplies its exact base even when Git does
     // not retain a branch-creation reflog.
     git(root.path(), &["config", "core.logAllRefUpdates", "false"]);
-    let config = workspace::WorkspaceConfig {
-        branch: Some(format!("agent/current/{id}")),
-        use_container: false,
-        base_image: None,
-        base_branch: Some("master".into()),
-    };
-    let status = workspace::ensure_workspace(root.path(), Some(config), AGENT).unwrap();
-    let path = status.git.worktree_path.unwrap();
+    let status = success(cli(
+        root.path(),
+        &[
+            "workspace",
+            "ensure",
+            "--branch",
+            &format!("agent/current/{id}"),
+        ],
+    ));
+    let path = PathBuf::from(status["worktree_path"].as_str().unwrap());
     assert_fresh(&path, &id);
     let before = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
-    workspace::ensure_workspace(&path, None, AGENT).unwrap();
+    admit(&path);
     success(cli(&path, &["rpc", "--op", "agent.init"]));
     assert_eq!(
         before,
@@ -174,18 +175,30 @@ fn workspace_ensure_seeds_current_context_and_repeat_is_noop() {
 }
 
 #[test]
-fn agent_init_seeds_manual_worktree_but_status_does_not() {
+fn manual_worktree_observation_preserves_history_until_explicit_admission() {
     let (root, id) = fixture();
     let path = manual_worktree(root.path(), &id);
     let before = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
-    success(cli(&path, &["workspace", "status"]));
+    let status = success(cli(&path, &["workspace", "status"]));
+    assert_eq!(status["workspace"]["can_work"], false);
     success(cli(&path, &["govern", "artifacts", "status"]));
     assert_eq!(
         before,
         fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap()
     );
     success(cli(&path, &["rpc", "--op", "agent.init"]));
+    assert_eq!(
+        before,
+        fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap()
+    );
+    admit(&path);
     assert_fresh(&path, &id);
+    let admitted = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
+    success(cli(&path, &["rpc", "--op", "agent.init"]));
+    assert_eq!(
+        admitted,
+        fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap()
+    );
     assert_eq!(
         before,
         fs::read(root.path().join(governance::GOVERNANCE_PATH)).unwrap()
@@ -196,6 +209,7 @@ fn agent_init_seeds_manual_worktree_but_status_does_not() {
 fn validation_preflight_initializes_without_fabricating_success() {
     let (root, id) = fixture();
     let path = manual_worktree(root.path(), &id);
+    admit(&path);
     // Deliberately fail a real gate after initialization. No success receipt may
     // appear simply because a template was generated.
     fs::remove_file(path.join("AGENTS.md")).unwrap();
@@ -211,6 +225,7 @@ fn successful_validation_issues_new_bound_receipt_after_template_generation() {
 
     let (root, id) = fixture();
     let path = manual_worktree(root.path(), &id);
+    admit(&path);
     success(cli(&path, &["rpc", "--op", "agent.init"]));
     let fresh = assert_fresh(&path, &id);
     success(cli(&path, &["govern", "plan", "approve"]));
@@ -298,6 +313,11 @@ fn agent_init_cannot_use_its_own_task_to_reset_another_agents_branch() {
     let path = manual_worktree(root.path(), other);
     let before = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
     let output = cli(&path, &["rpc", "--op", "agent.init"]);
+    success(output);
+    let status = success(cli(&path, &["workspace", "status"]));
+    assert_eq!(status["workspace"]["can_work"], false);
+    let output = cli(&path, &["workspace", "ensure"]);
+    assert!(!output.status.success());
     let message = format!(
         "{}{}",
         String::from_utf8_lossy(&output.stdout),
@@ -372,7 +392,7 @@ fn explicit_begin_pr_refuses_protected_worktree_branch() {
 }
 
 #[test]
-fn agent_init_establishes_session_before_initializing_current_context() {
+fn released_session_requires_fresh_task_custody_before_authoring_resumes() {
     let (root, id) = fixture();
     success(cli(root.path(), &["session", "release"]));
     todo::claim_task(
@@ -383,9 +403,21 @@ fn agent_init_establishes_session_before_initializing_current_context() {
     )
     .unwrap();
     let path = manual_worktree(root.path(), &id);
-    let output = cli(&path, &["rpc", "--op", "agent.init"]);
-    assert!(String::from_utf8_lossy(&output.stderr).contains("auto-acquired"));
-    success(output);
+    admit(&path);
+    let before = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
+    success(cli(&path, &["session", "release"]));
+    // Session release deliberately releases its task assignments too. An
+    // observation must not silently reacquire that custody or reuse the binding.
+    let status = success(cli(&path, &["workspace", "status"]));
+    assert_eq!(status["workspace"]["can_work"], false);
+    success(cli(&path, &["rpc", "--op", "agent.init"]));
+    assert_eq!(
+        before,
+        fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap()
+    );
+    success(cli(&path, &["todo", "claim", "--id", &id]));
+    admit(&path);
+    success(cli(&path, &["rpc", "--op", "agent.init"]));
     assert_fresh(&path, &id);
 }
 
@@ -395,13 +427,18 @@ fn agent_init_does_not_substitute_unrelated_task_for_missing_branch_identity() {
     let path = manual_worktree(root.path(), "code_01k0000000000000");
     let before = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
     let output = cli(&path, &["rpc", "--op", "agent.init"]);
+    success(output);
+    let status = success(cli(&path, &["workspace", "status"]));
+    assert_eq!(status["workspace"]["can_work"], false);
+    let output = cli(&path, &["workspace", "ensure"]);
+    assert!(!output.status.success());
     let message = format!(
         "{}{}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(
-        message.contains("GOVERNANCE_WORK_CONTEXT_REQUIRED"),
+        message.contains("WORKSPACE_BRANCH_NOT_TODO_SCOPED"),
         "{message}"
     );
     assert_eq!(

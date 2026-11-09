@@ -1369,3 +1369,7 @@ preserving original commits/custody. It denies foreign-checkout mutations and
 resolution of an unarchived observation. Passing this gate is not full native,
 Buildkite, hosted security or cloud-profile proof. Full exact-candidate validation
 remains mandatory, and unsupported exception/maintenance capabilities stay absent.
+
+### Workbranch fixture admission
+
+`tests/workbranch_governance.rs` exercises custody through the actual actor-bound CLI. A manual Git worktree does not become authoring-admissible merely because `agent.init` observes it: `workspace ensure` must verify and bind the checkout first. A session release deliberately clears task assignments, so resumption requires a fresh task claim and authoring admission. Negative fixtures assert that observation preserves inherited governance and that foreign or nonexistent branch-task bindings cannot be admitted. These preconditions preserve the existing custody contract; passing fixtures do not replace independent exact-candidate publication proof.

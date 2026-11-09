@@ -233,3 +233,104 @@ path with the independently captured 0.132.0 inventory identifies only the
 already-accepted Cargo.toml/Cargo.lock release-version changes. The declaration
 was deliberately reconciled after that complete review. No executor, source-CI
 helper, workflow, required check or capability authorization was changed.
+
+## CI and fixture reconciliation after `5557b015`
+
+The original recovery implementation and historical references are preserved.
+Accepted master `15b69ce43fc56440d498d52d8726f89d499615fe`, tested from a clean
+source snapshot with a separate Cargo target directory, reproduces the seven
+original workbranch failures (2 passed, 7 failed). The original candidate added
+a passing recovery fixture (3 passed, 7 failed). After correcting only fixture
+setup and expectations, all ten tests pass. No production custody or actor
+resolution code changed.
+
+The fixtures now use the actor-bound CLI for `workspace ensure`, rather than
+calling a library operation while its ambient caller identity is absent.
+`agent.init` and status are observations in an unadmitted manual worktree; they
+must preserve inherited governance until explicit checkout admission. Foreign
+and nonexistent branch-task contexts are rejected by `workspace ensure`, not
+by expecting a read-only observation to mutate or acquire custody. Finally,
+`session release` intentionally clears task assignments. The supported resume
+sequence is a fresh task claim followed by authoring admission, not reuse of
+the old binding. The negative assertions and actual prerequisite-receipt checks
+remain in `tests/workbranch_governance.rs`.
+
+The previous 41 unit failures divide into these observed causes:
+
+| Cause | Failures | Disposition |
+| --- | ---: | --- |
+| Bounded epoch directory enumeration | 21 | Twelve execution-checkpoint, three bounded-input and six workunit tests share the macOS descriptor-enumeration failure, including assertions masked by the earlier input error; retained in #1571. |
+| Noncanonical temporary paths | 15 | Snapshot/host-adoption fixtures supply an alias where the production boundary requires a canonical root. Rerun with `TMPDIR=/private/tmp`; do not relax canonical identity. |
+| Permission/recovery diagnostics | 2 | Host-specific fs-permission recovery expectations; unrelated production paths are unchanged. |
+| Vega cache identity/permissions | 2 | Temporary-path/cache fixture constraints; unchanged by history recovery. |
+| Independently reviewed toolchain inventory | 1 | Supplemental-worker fixture fails before execution; no successful worker proof is inferred. |
+
+The macOS epoch reader is deliberately deferred. Its shared `RepoSignalIo`
+contract returns `fs::ReadDir`; a descriptor-owned Darwin enumeration repair
+needs an independently tested iterator/ownership change. Replacing it with an
+unverified pathname or disabling the bounded reader is not an admissible
+minimal fix to this recovery PR.
+
+### External workflow registration
+
+All five configured source workflows match the existing `agent/**` push. Native
+GitHub runs for exact head `5557b01553c083ee95085d24959fc4553e508a39` completed:
+Deploy Docs, Constitution Sync, Documentation Sync and Decapod Validate passed;
+CI failed, including HTTP 504 while fetching pinned `rules_rust`. Those native
+results do not satisfy the configured Buildkite contract.
+
+The active Buildkite repository webhook received this exact push/ref at
+2026-11-09T05:45:11.988Z and returned HTTP 200. A complete later exact-head check
+registry still exposes only build 5952, the passed push execution for
+`.github/workflows/decapod-validate.yml`. The other four workflows have no
+discoverable Buildkite bindings. Thus source trigger conditions and GitHub
+event delivery are demonstrated; downstream importer selection/registration
+and any unregistered build associations require private service inspection.
+
+Public metadata identifies the existing GitHub Actions trigger settings at
+`/decapodlabs/decapod/settings/triggers/01a0bcf1-5df5-7ebf-a2f3-936b1aae82eb`.
+The supported Buildkite CLI reports no stored credentials for `decapodlabs` in
+this environment. An authorized service administrator must inspect the existing
+trigger against the five already-reviewed workflows; this PR changes neither
+service identity nor required workflow/check definitions. Evidence is recorded
+in #1573. HTTP 403 remains an external quota condition, not a provider-client
+engineering change or a passing result.
+
+### Publication boundary
+
+`AGENTS.md` rule 7 and the installed `decapod validate` command contract expressly
+hold creation of every PR, including drafts, until full exact-candidate
+validation succeeds. The supported `workspace publish` path enforces this
+readiness boundary before PR creation. Neither a draft label, a successful
+push-only check, native GitHub success nor a prerequisite receipt waives it.
+
+### Reconciled local results
+
+Both full unit suites used `TMPDIR=/private/tmp` and `--test-threads=1`; the
+accepted checkout remained clean and used a separate Cargo target directory to
+avoid artifact reuse between source snapshots. Accepted master reports
+**1,613 passed, 26 failed, 8 ignored**; this candidate reports **1,620 passed,
+25 failed, 8 ignored**. Every remaining candidate failure is also present on
+accepted master. The sole baseline-only failure is the shared-directory mode
+fixture already corrected in `5557b015` to verify the mode actually established
+by the host. No new unit failure was introduced.
+
+Compared with the earlier noncanonical run, all fifteen canonical-root failures
+and the supplemental toolchain-inventory failure now pass. The remaining
+twenty-five failures are twenty-one bounded epoch reader cases, two permission/
+recovery cases, and two Vega cache cases. These remain failed; no platform
+validation or proof boundary was relaxed.
+
+Final focused commands and outcomes for the fixture reconciliation:
+
+- `cargo fmt --all -- --check`: passed.
+- `cargo clippy --locked --all-targets --all-features -- -D warnings`: passed.
+- `cargo test --locked --lib core::governance_document::tests:: -- --test-threads=1`: 72 passed.
+- `cargo test --locked --test workbranch_governance -- --test-threads=1`: 10 passed, including actual CLI recovery/spec review.
+- `cargo test --locked --test kernel_bootstrap --test workspace_interlock -- --test-threads=1`: two passed.
+- `cargo test --locked --test contract_conformance --test spec_conformance --test constitution_claims --test substrate_integrity -- --test-threads=1`: 43 passed across the four suites.
+
+Rust test invocations above used the same canonical temporary directory. They
+are local regression evidence, not hosted publication authority. All historical
+proof distinctions, datastore boundaries and required CI identities remain
+unchanged.
