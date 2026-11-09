@@ -188,6 +188,8 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `AssuranceEvaluate`
 ### Operation: `InteropManifest`
 ### Operation: `InteropNegotiate`
+### Operation: `StateResolve`
+### Operation: `StateDiff`
 
 # Runtime Checkpoints and Recovery
 
