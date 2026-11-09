@@ -979,6 +979,12 @@ separate operational blocker, and validation does not authorize distribution.
 
 ## Intent Reconciliation Acceptance Boundary
 
+The accepted v0.133.0 source inventory differs from the last reviewed profile
+only by the package version in `Cargo.toml` and `Cargo.lock`. The explicit
+required-profile review declaration is reconciled to that complete inventory;
+the finite workflow graph, adapters, provider selection and proof requirements
+remain unchanged. This review pin is configuration, not execution evidence.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 The read-only reconciliation report must detect missing/orphaned/duplicate
 requirement references, missing proof-spec mappings, stale code fingerprints,

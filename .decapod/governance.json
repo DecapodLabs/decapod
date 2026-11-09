@@ -542,6 +542,14 @@
       "proof_refs": [
         "Seven source/test/docs files byte-identical to 0b5405e61ca781f17b6f86d92ff3d1be046732e0; source fingerprint 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9"
       ]
+    },
+    {
+      "id": "intent-reconciliation-1574-profile-repair",
+      "summary": "Reconcile accepted v0.133.0 inventory review without changing required proof graph",
+      "input_digest": "sha256:dc76d472cc40ed4bd9d39187ce4fe5e458b2a693a0edb4c3deac4a6577ab5660",
+      "proof_refs": [
+        "119 discovered inputs byte-match immutable accepted master; only release package versions differ from edb30569 inventory"
+      ]
     }
   ],
   "intents": {
@@ -624,8 +632,20 @@
         "No secondary authority, scheduler, persistence, semantic proof or publication permission from reconciliation",
         "Preserve original branch history and all unrelated worktrees and ownership"
       ],
-      "artifact_hash": "sha256:4c3445a781b38683c137db8e1bc06d6cd78a5ea897cfbf726c9350eaeef892cc",
+      "artifact_hash": "sha256:880b1118dd8c3f3aa5dbb6681e46b21ed60633b95d19c6d88f0cfaab691c8356",
       "checks": [
+        {
+          "name": "accepted source inventory reconciliation",
+          "status": "passed"
+        },
+        {
+          "name": "first exact-candidate validation",
+          "status": "failed"
+        },
+        {
+          "name": "immutable checkpoint verification f8a6200f",
+          "status": "passed"
+        },
         {
           "name": "live reference verification",
           "status": "passed"
@@ -643,7 +663,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "checkpoint",
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
@@ -671,10 +691,17 @@
             "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ZJRE0M6E1MFA6N2EN6JZ40": {
@@ -740,6 +767,34 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation-repair",
+                "command": "decapod validate",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/readiness_profile.rs",
+                  "assets/tools/source_ci_profile.rs",
+                  ".github/actions/source-ci-profile/action.yml",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "First validate failed PROOF_PROFILE_RECONCILIATION_REQUIRED before execution. All 119 discovered source inputs match accepted base. Relative to the last config review commit edb30569 only Cargo.toml/Cargo.lock package version changed 0.132.0 to 0.133.0. Reviewed finite catalog, carrier and unchanged required graph; backed up config and explicitly reconciled authored review digest to sha256:d8c65ab6901a57c4df55f3914dd0eeaecbf7338177233831854ade1304e53361. agent.init now reports proof_pending/not_run. No checks or provider requirements removed.",
+                  "Immutable verify-checkpoints --base-branch 15b69ce43fc56440d498d52d8726f89d499615fe --head-ref f8a6200fe23080cf4dd3d2be077254c4b7ab7612 --target-base master --publication-material returned status ok; 135 prior unresolved baseline obligations preserved, 138 total after lifecycle carry-forward."
+                ],
+                "proof_refs": [
+                  "first exact-candidate validation",
+                  "immutable checkpoint verification f8a6200f",
+                  "accepted source inventory reconciliation"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "docs",
+                  "intent-reconciliation-1574",
+                  "src/decapod",
+                  "tests/intent_reconciliation_rpc.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -747,28 +802,36 @@
       },
       "declared_commands": [
         "decapod govern plan review-spec",
+        "decapod rpc --op agent.init",
         "decapod rpc --op specs.refresh",
+        "decapod validate",
         "git apply original source/test diff without importing commit history or governance",
         "git fetch origin master feat/intent-reconciliation-contract"
       ],
       "destination": "pull request",
       "evidence": [
         "All seven source/test/docs files match original candidate bytes; generated repo fingerprint matches 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9. Five authored specs describe behavior/security. Architecture, Interfaces and Security reviewed updated against frozen source.",
+        "First validate failed PROOF_PROFILE_RECONCILIATION_REQUIRED before execution. All 119 discovered source inputs match accepted base. Relative to the last config review commit edb30569 only Cargo.toml/Cargo.lock package version changed 0.132.0 to 0.133.0. Reviewed finite catalog, carrier and unchanged required graph; backed up config and explicitly reconciled authored review digest to sha256:d8c65ab6901a57c4df55f3914dd0eeaecbf7338177233831854ade1304e53361. agent.init now reports proof_pending/not_run. No checks or provider requirements removed.",
         "Full Rust suite and publication readiness remain unexecuted for this new candidate; original CI results are historical only.",
+        "Immutable verify-checkpoints --base-branch 15b69ce43fc56440d498d52d8726f89d499615fe --head-ref f8a6200fe23080cf4dd3d2be077254c4b7ab7612 --target-base master --publication-material returned status ok; 135 prior unresolved baseline obligations preserved, 138 total after lifecycle carry-forward.",
         "Live origin/master and PR base remain 15b69ce43fc56440d498d52d8726f89d499615fe; PR #1570 head remains 0b5405e61ca781f17b6f86d92ff3d1be046732e0.",
         "Native task bugs_01m6zjqskamsdwx8 claimed exclusively by codex-1574; managed workspace created from accepted base. Existing autogenerated trajectory retained after init correctly rejected replacing an uncommitted journal."
       ],
       "inspected_files": [
         ".decapod/config.toml",
+        ".github/actions/source-ci-profile/action.yml",
         "AGENTS.md",
         "CONTRIBUTING.md",
+        "assets/tools/source_ci_profile.rs",
         "src/decapod/core/intent_reconcile.rs",
+        "src/decapod/core/readiness_profile.rs",
         "src/decapod/core/rpc.rs",
         "src/decapod/lib.rs",
         "tests/intent_reconciliation_rpc.rs"
       ],
       "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
