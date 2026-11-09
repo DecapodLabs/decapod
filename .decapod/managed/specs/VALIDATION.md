@@ -1355,3 +1355,17 @@ the entrypoints, managed Dockerfile and manifest with official 0.123.7 repairs
 those generated inputs but is not a passing test result. This merged candidate
 requires fresh exact-head execution evidence. Trust administration remains outside
 this PR and unresolved in issue 1480.
+
+## Historical recovery regression contract
+
+The unit history assessor and strict verifier share the same per-commit logic.
+Negative fixtures cover multiple missing commits, late tip checkpoints, changed
+parent evidence, malformed governance, unavailable refs and self-asserted
+exception declarations. The real `workbranch_governance` CLI fixture creates
+two actors through separate sessions and tasks in actual linked worktrees; it
+reproduces missing history and `SPEC_REVIEW_REQUIRED`, follows the documented
+recovery/review commands, and verifies the fresh publication material while
+preserving original commits/custody. It denies foreign-checkout mutations and
+resolution of an unarchived observation. Passing this gate is not full native,
+Buildkite, hosted security or cloud-profile proof. Full exact-candidate validation
+remains mandatory, and unsupported exception/maintenance capabilities stay absent.

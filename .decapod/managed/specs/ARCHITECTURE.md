@@ -1040,3 +1040,15 @@ as cloud authorization. The released compatibility task/event profile remains;
 resource reservation, filesystem bindings, lease handoff and validated remote
 completion are unsupported there. Local labels cannot grant cloud roles or
 entitlements. Native RPC and hosted integration need their separate proofs.
+
+## Immutable history recovery assessment
+
+`core/governance_document/checkpoint_history.rs` contains the per-commit checker
+shared by strict checkpoint admission and read-only JSON assessment. It binds
+resolved base/head identities, classifies affected obligations and retains the
+strict material, identity, parent-record and imported-lineage requirements.
+`governance_document::record_history_recovery` records an observation in the
+fresh workstream's carried obligations, under the existing document lock.
+The source commit, tree and governance blob remain immutable; no database,
+scheduler or second history authority is introduced. Source reauthoring and
+current independent proof are distinct from reconstruction of past evidence.

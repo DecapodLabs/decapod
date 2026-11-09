@@ -405,3 +405,21 @@ job requires that output and the master branch before it can be scheduled.
 GitHub-compatible environment variables or missing Buildkite markers alone do
 not establish native ownership. Imported builds retain a generic site artifact
 and validation custody, without starting the GitHub Pages deployment job.
+
+## Recover work from immutable checkpoint gaps
+
+First use `govern artifacts verify-checkpoints --base-branch <accepted-sha>
+--head-ref <source-sha> --target-base <branch> --format json`. Preserve the source
+branch/task and returned failures. A later checkpoint cannot prove a checkpoint
+existed in an earlier immutable commit. Unavailable input is not a proven gap.
+
+Create and claim a new task, use normal `workspace ensure` from the accepted
+target, and enter its returned verified checkout. Before advancing that branch,
+run `govern artifacts record-history-recovery --source-ref <source-sha> --reason
+<reviewed-rationale>`. Review/reauthor selected source without importing old
+governance or invalid ancestry. Run `govern plan review-spec` for current
+interfaces/architecture/security, refresh projections, then stage, checkpoint
+and commit the present observation. Resolve its returned `history-recovery:<sha>`
+obligation with the archived observation and relevant current evidence references;
+checkpoint/commit that resolution and run complete independent validation.
+This recovers current work. It leaves old history unproven and enables no waiver.

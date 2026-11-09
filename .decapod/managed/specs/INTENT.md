@@ -432,3 +432,11 @@ Recovery and publication retain trust, exact approval, fencing and independent
 proof requirements. Unsupported cloud profiles remain explicit and cannot fall
 back to local authority. See `docs/architecture/concurrency-custody.md` for the
 implemented boundaries and remaining hosted/native integration limits.
+
+## Governed recovery without retrospective proof
+
+Agents must be able to continue legitimate work when earlier immutable commits
+lack their own checkpoints. The supported outcome is a new, properly admitted
+workstream with a present-time gap observation and fresh proof, while the
+original source history remains unproven. This change adds no trust elevation,
+human-approval assertion, database maintenance privilege or publication waiver.

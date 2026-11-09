@@ -773,3 +773,17 @@ dependency, lease, shared-claim trust or approval gates and do not establish
 verified isolated-worktree custody. Tests cover disjoint/intersecting/parent paths,
 malformed declarations, unchanged shared-claim trust and journaled scopes;
 source declarations are not a claim that tests have run.
+
+## Historical gap observations do not confer authority
+
+History inspection is read-only and remains reachable without claiming a task.
+Recording recovery is a governed mutation in the current actor's verified
+checkout, not an administrator capability. It cannot authorize an exception,
+replace a prior checkpoint, alter another actor's task, or certify earlier
+history. It requires a distinct workstream with source ancestry rooted in the
+accepted target. Ordinary resolution retains a digest/reference to the archived
+observation; it does not make the old missing checkpoint pass verification.
+A human-intent reference or local core label is not independently verified
+maintainer authority. Offline exception authorization and project-scoped database
+maintenance need separate accepted contracts; Propodus #88 owns future connected
+authority. No such capability is silently enabled here.

@@ -409,3 +409,348 @@ fn agent_init_does_not_substitute_unrelated_task_for_missing_branch_identity() {
         fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap()
     );
 }
+
+fn recovery_cli(root: &Path, actor: &str, args: &[&str]) -> Output {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    for (key, _) in std::env::vars_os() {
+        let key_text = key.to_string_lossy();
+        if key_text.starts_with("DECAPOD_") || key_text.starts_with("GIT_") {
+            command.env_remove(key);
+        }
+    }
+    command
+        .args(args)
+        .current_dir(root)
+        .env("DECAPOD_AGENT_ID", actor)
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .output()
+        .unwrap()
+}
+
+fn recovery_commit(root: &Path, actor: &str, id: &str) -> String {
+    git(root, &["add", "-A"]);
+    success(recovery_cli(
+        root,
+        actor,
+        &[
+            "govern",
+            "artifacts",
+            "checkpoint",
+            "--id",
+            id,
+            "--summary",
+            "Present-time recovery evidence; no retrospective proof",
+        ],
+    ));
+    git(root, &["add", governance::GOVERNANCE_PATH]);
+    git(root, &["commit", "-m", id]);
+    git(root, &["rev-parse", "HEAD"])
+}
+
+#[test]
+fn actual_cli_reauthors_gapped_history_with_fresh_custody_and_no_retrospective_proof() {
+    let (root, source_task) = fixture();
+    let root = root.path();
+    let base = git(root, &["rev-parse", "master"]);
+    let source_branch = format!("agent/{AGENT}/{source_task}-failed-history");
+    let source_workspace = success(recovery_cli(
+        root,
+        AGENT,
+        &["workspace", "ensure", "--branch", &source_branch],
+    ));
+    let source_path = PathBuf::from(source_workspace["worktree_path"].as_str().unwrap());
+    fs::create_dir_all(source_path.join("src")).unwrap();
+    fs::write(
+        source_path.join("src/recovered.rs"),
+        "pub fn answer() -> u8 { 41 }\n",
+    )
+    .unwrap();
+    recovery_commit(&source_path, AGENT, "source-baseline");
+    fs::write(
+        source_path.join("src/recovered.rs"),
+        "pub fn answer() -> u8 { 42 }\n",
+    )
+    .unwrap();
+    git(&source_path, &["add", "src/recovered.rs"]);
+    git(
+        &source_path,
+        &["commit", "-m", "deliberate historical checkpoint gap"],
+    );
+    let source_head = git(&source_path, &["rev-parse", "HEAD"]);
+    let source_tree = git(&source_path, &["rev-parse", "HEAD^{tree}"]);
+    let failed = recovery_cli(
+        root,
+        "unassigned-history-observer",
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base,
+            "--head-ref",
+            &source_head,
+            "--target-base",
+            "master",
+            "--format",
+            "json",
+        ],
+    );
+    assert!(!failed.status.success());
+    let diagnosis: Value = serde_json::from_slice(&failed.stdout).unwrap();
+    assert_eq!(diagnosis["disposition"], "unproven_history");
+    assert_eq!(diagnosis["findings"][0]["commit"], source_head);
+    assert_eq!(
+        diagnosis["findings"][0]["prior_event_can_be_regenerated"],
+        false
+    );
+
+    let receiver = "history-recovery-independent-agent";
+    // Establish the second actor through its own actual session, never by
+    // copying the source actor's credentials or using an operator label.
+    assert!(
+        recovery_cli(root, receiver, &["session", "acquire"])
+            .status
+            .success()
+    );
+    let task = success(recovery_cli(
+        root,
+        receiver,
+        &[
+            "todo",
+            "add",
+            "Reauthor reviewed source with fresh proof",
+            "--scope",
+            "src,tests",
+            "--format",
+            "json",
+        ],
+    ));
+    let task_id = task["id"].as_str().unwrap();
+    let claim = success(recovery_cli(
+        root,
+        receiver,
+        &["todo", "claim", "--id", task_id, "--format", "json"],
+    ));
+    assert_eq!(claim["result"]["assigned_to"], receiver);
+    let branch = format!("agent/{receiver}/{task_id}-fresh-history");
+    let destination = success(recovery_cli(
+        root,
+        receiver,
+        &["workspace", "ensure", "--branch", &branch],
+    ));
+    assert_eq!(destination["can_work"], true);
+    let path = PathBuf::from(destination["worktree_path"].as_str().unwrap());
+    assert_ne!(path, source_path);
+    let foreign = recovery_cli(
+        &path,
+        AGENT,
+        &[
+            "govern",
+            "artifacts",
+            "record-history-recovery",
+            "--source-ref",
+            &source_head,
+            "--reason",
+            "not my checkout",
+        ],
+    );
+    assert!(!foreign.status.success());
+    let args = [
+        "govern",
+        "artifacts",
+        "record-history-recovery",
+        "--source-ref",
+        source_head.as_str(),
+        "--reason",
+        "Preserve old evidence; reauthor and obtain fresh proof",
+    ];
+    let observation = success(recovery_cli(&path, receiver, &args));
+    let id = format!("history-recovery:{source_head}");
+    assert_eq!(
+        observation["baseline"]["unresolved"][&id]["actor"],
+        receiver
+    );
+    assert_eq!(
+        observation["baseline"]["unresolved"][&id]["exception_authorized"],
+        false
+    );
+    let repeat = success(recovery_cli(&path, receiver, &args));
+    assert_eq!(
+        repeat["baseline"]["unresolved"][&id],
+        observation["baseline"]["unresolved"][&id]
+    );
+    let premature = recovery_cli(
+        &path,
+        receiver,
+        &[
+            "govern",
+            "artifacts",
+            "resolve-obligation",
+            "--id",
+            &id,
+            "--resolution",
+            "current observation",
+            "--proof-ref",
+            &format!("git:{source_head}"),
+        ],
+    );
+    assert!(!premature.status.success());
+    assert!(String::from_utf8_lossy(&premature.stderr).contains("NOT_ARCHIVED"));
+
+    // Review and reauthor selected source bytes in the new, verified checkout.
+    // Do not merge/cherry-pick the invalid governance history or generated files.
+    fs::create_dir_all(path.join("src")).unwrap();
+    let reviewed_source = git(
+        &source_path,
+        &["show", &format!("{source_head}:src/recovered.rs")],
+    );
+    fs::write(
+        path.join("src/recovered.rs"),
+        format!("{reviewed_source}\n"),
+    )
+    .unwrap();
+    let intent = path.join(".decapod/managed/specs/INTENT.md");
+    fs::write(&intent, format!("{}\n## Recovery fixture outcome\n\nThis consumer reauthors a reviewed Rust function in a fresh admitted workstream. The historical source remains unproven; current checkpoints and explicit spec reviews are required.\n", fs::read_to_string(&intent).unwrap())).unwrap();
+    success(recovery_cli(
+        &path,
+        receiver,
+        &["govern", "plan", "approve"],
+    ));
+    success(recovery_cli(
+        &path,
+        receiver,
+        &["rpc", "--op", "specs.refresh"],
+    ));
+    let archived = recovery_commit(&path, receiver, "observed-gap-and-reauthored-work");
+    let missing_review = recovery_cli(
+        &path,
+        receiver,
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base,
+            "--head-ref",
+            &archived,
+            "--target-base",
+            "master",
+            "--publication-material",
+        ],
+    );
+    assert!(!missing_review.status.success());
+    assert!(
+        String::from_utf8_lossy(&missing_review.stderr).contains("SPEC_REVIEW_REQUIRED"),
+        "{}",
+        String::from_utf8_lossy(&missing_review.stderr)
+    );
+    // A missing review has an actual, reachable resolution before checkpoint
+    // verification. Recording review does not require passing publication first.
+    for spec in ["INTERFACES", "ARCHITECTURE", "SECURITY"] {
+        success(recovery_cli(
+            &path,
+            receiver,
+            &[
+                "govern",
+                "plan",
+                "review-spec",
+                "--path",
+                &format!(".decapod/managed/specs/{spec}.md"),
+                "--disposition",
+                "unchanged-with-reason",
+                "--reason",
+                "Reviewed the single Rust fixture function against the unchanged consumer contract",
+            ],
+        ));
+    }
+    success(recovery_cli(
+        &path,
+        receiver,
+        &[
+            "govern",
+            "artifacts",
+            "resolve-obligation",
+            "--id",
+            &id,
+            "--resolution",
+            "Reviewed current reauthored work; old history remains unproven; full independent publication proof is still required",
+            "--proof-ref",
+            &format!("git:{archived}"),
+            "--proof-ref",
+            &format!("git:{source_head}"),
+        ],
+    ));
+    let final_head = recovery_commit(&path, receiver, "fresh-governed-recovery");
+    let passed = success(recovery_cli(
+        &path,
+        receiver,
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base,
+            "--head-ref",
+            &final_head,
+            "--target-base",
+            "master",
+            "--format",
+            "json",
+        ],
+    ));
+    assert_eq!(passed["history_proven"], true);
+    assert_eq!(passed["publication_ready"], false);
+    success(recovery_cli(
+        &path,
+        receiver,
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base,
+            "--head-ref",
+            &final_head,
+            "--target-base",
+            "master",
+            "--publication-material",
+        ],
+    ));
+    assert_eq!(git(&source_path, &["rev-parse", "HEAD"]), source_head);
+    assert_eq!(
+        git(&source_path, &["rev-parse", "HEAD^{tree}"]),
+        source_tree
+    );
+    assert!(
+        !recovery_cli(
+            &source_path,
+            AGENT,
+            &[
+                "govern",
+                "artifacts",
+                "verify-checkpoints",
+                "--base-branch",
+                &base,
+                "--head-ref",
+                &source_head,
+                "--target-base",
+                "master",
+            ]
+        )
+        .status
+        .success()
+    );
+    let retained = git(
+        &path,
+        &[
+            "show",
+            &format!("{archived}:{}", governance::GOVERNANCE_PATH),
+        ],
+    );
+    let retained: Value = serde_json::from_str(&retained).unwrap();
+    assert_eq!(
+        retained["baseline"]["unresolved"][&id]["historical_proof"],
+        "not_proven"
+    );
+    assert_eq!(git(root, &["rev-parse", "master"]), base);
+}

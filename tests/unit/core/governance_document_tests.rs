@@ -824,10 +824,14 @@ fn shared_directory_child() {
     let data = root.join(".decapod/data");
     fs::create_dir_all(&data).unwrap();
     fs::set_permissions(&data, fs::Permissions::from_mode(0o2770)).unwrap();
+    // Some host filesystems clear setgid at chmod time. Assert preservation of
+    // the actual established mode, including setgid wherever the host retains it.
+    let established = fs::metadata(&data).unwrap().permissions().mode() & 0o7777;
+    assert_eq!(established & 0o777, 0o770);
     write_section(&root, "plan", &plan("group writable datastore preserved")).unwrap();
     assert_eq!(
         fs::metadata(data).unwrap().permissions().mode() & 0o7777,
-        0o2770
+        established
     );
 }
 
@@ -2118,4 +2122,289 @@ fn governance_save_rejects_unreadable_size_without_replacing_prior_document() {
         fs::read(root.path().join(GOVERNANCE_PATH)).unwrap(),
         original
     );
+}
+
+#[test]
+fn history_assessment_lists_each_missing_commit_and_tip_cannot_prove_the_past() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    begin_pr(root.path(), "gapped-series", "master").unwrap();
+    let first = history_checkpoint_commit(root.path(), "first");
+    let mut missing = Vec::new();
+    for value in ["one", "two"] {
+        fs::write(root.path().join("source.rs"), value).unwrap();
+        git(root.path(), &["add", "source.rs"]).unwrap();
+        commit(root.path(), "authored without checkpoint");
+        missing.push(git(root.path(), &["rev-parse", "HEAD"]).unwrap());
+    }
+    let tip = history_checkpoint_commit(root.path(), "late-tip");
+    let before = git(root.path(), &["status", "--porcelain"]).unwrap();
+    let report = inspect_checkpoint_history(root.path(), &base, &tip, Some("master")).unwrap();
+    assert!(!report.history_proven);
+    assert!(!report.publication_ready);
+    assert_eq!(report.disposition, HistoryDisposition::UnprovenHistory);
+    assert_eq!(report.verified_commits, vec![first, tip]);
+    assert_eq!(report.findings.len(), 2);
+    for (finding, expected) in report.findings.iter().zip(missing) {
+        assert_eq!(finding.commit, expected);
+        assert_eq!(finding.code, "GOVERNANCE_CHECKPOINT_MISSING");
+        assert!(!finding.prior_event_can_be_regenerated);
+        assert!(
+            finding
+                .expected_input_digest
+                .as_ref()
+                .unwrap()
+                .starts_with("sha256:")
+        );
+        assert_eq!(
+            finding.tree,
+            git(root.path(), &["rev-parse", &format!("{expected}^{{tree}}")]).unwrap()
+        );
+        assert!(finding.recovery.contains("fresh claimed workspace"));
+    }
+    assert!(report.require_proven().is_err());
+    assert!(verify_pr_checkpoints(root.path(), &base, "HEAD").is_err());
+    assert_eq!(
+        before,
+        git(root.path(), &["status", "--porcelain"]).unwrap()
+    );
+}
+
+#[test]
+fn history_recovery_is_present_observation_not_a_waiver_and_is_archived_before_resolution() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    git(root.path(), &["checkout", "-b", "failed-work"]).unwrap();
+    begin_pr(root.path(), "failed-change", "master").unwrap();
+    history_checkpoint_commit(root.path(), "first");
+    fs::write(root.path().join("source.rs"), "reviewed later\n").unwrap();
+    git(root.path(), &["add", "source.rs"]).unwrap();
+    commit(root.path(), "missing checkpoint");
+    let source = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    let preserved = git(
+        root.path(),
+        &["show", &format!("{source}:{GOVERNANCE_PATH}")],
+    )
+    .unwrap();
+    // Model the new accepted-base branch. The real CLI fixture additionally
+    // obtains its own task, session and verified checkout admission.
+    git(root.path(), &["checkout", "-b", "fresh-work", "master"]).unwrap();
+    begin_pr(root.path(), "fresh-change", "master").unwrap();
+    let observed = record_history_recovery(
+        root.path(),
+        "failed-work",
+        "Review source with fresh proof",
+        "fixture-actor",
+    )
+    .unwrap();
+    let id = format!("history-recovery:{source}");
+    let gap = &observed.baseline.unresolved[&id];
+    assert_eq!(gap["source_commit"], source);
+    assert_eq!(gap["actor"], "fixture-actor");
+    assert_eq!(gap["historical_proof"], "not_proven");
+    assert_eq!(gap["exception_authorized"], false);
+    assert_eq!(gap["authority"], "current_task_custody_only");
+    let repeat = record_history_recovery(
+        root.path(),
+        "failed-work",
+        "Review source with fresh proof",
+        "fixture-actor",
+    )
+    .unwrap();
+    assert_eq!(repeat.baseline.unresolved[&id], *gap);
+    assert!(
+        record_history_recovery(
+            root.path(),
+            "failed-work",
+            "A different reason",
+            "fixture-actor"
+        )
+        .is_err()
+    );
+    assert!(
+        record_history_recovery(
+            root.path(),
+            "failed-work",
+            "Review source with fresh proof",
+            "other-actor"
+        )
+        .is_err()
+    );
+    assert!(
+        record_history_recovery(root.path(), "missing-ref", "reason", "fixture-actor").is_err()
+    );
+    assert!(record_history_recovery(root.path(), "failed-work", "", "fixture-actor").is_err());
+    assert!(record_history_recovery(root.path(), "failed-work", "reason", "unknown").is_err());
+    assert!(
+        resolve_obligation(
+            root.path(),
+            &id,
+            "Current recovery will use fresh proof",
+            vec![format!("git:{source}")]
+        )
+        .unwrap_err()
+        .to_string()
+        .contains("NOT_ARCHIVED")
+    );
+    fs::write(root.path().join("source.rs"), "reviewed later\n").unwrap();
+    let archived = history_checkpoint_commit(root.path(), "present-gap-observation");
+    let repeated_archived = record_history_recovery(
+        root.path(),
+        "failed-work",
+        "Review source with fresh proof",
+        "fixture-actor",
+    )
+    .unwrap();
+    assert_eq!(
+        repeated_archived.baseline.unresolved[&id],
+        observed.baseline.unresolved[&id]
+    );
+    resolve_obligation(
+        root.path(),
+        &id,
+        "Reviewed reauthored material; old history remains unproven",
+        vec![format!("git:{archived}"), format!("git:{source}")],
+    )
+    .unwrap();
+    let final_head = history_checkpoint_commit(root.path(), "current-proof");
+    let recovered =
+        inspect_checkpoint_history(root.path(), &base, &final_head, Some("master")).unwrap();
+    assert!(recovered.history_proven);
+    assert!(!recovered.publication_ready); // Other publication gates still apply.
+    assert!(verify_pr_checkpoints(root.path(), &base, &source).is_err());
+    assert_eq!(
+        git(
+            root.path(),
+            &["show", &format!("{source}:{GOVERNANCE_PATH}")]
+        )
+        .unwrap(),
+        preserved
+    );
+    let old_observation = parse(
+        git(
+            root.path(),
+            &["show", &format!("{archived}:{GOVERNANCE_PATH}")],
+        )
+        .unwrap()
+        .as_bytes(),
+    )
+    .unwrap();
+    assert_eq!(
+        old_observation.baseline.unresolved[&id]["historical_proof"],
+        "not_proven"
+    );
+    assert!(
+        record_history_recovery(root.path(), "failed-work", "reason", "fixture-actor").is_err()
+    );
+}
+
+#[test]
+fn history_assessment_does_not_convert_malformed_or_changed_evidence_to_a_recoverable_checkpoint() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    begin_pr(root.path(), "series", "master").unwrap();
+    history_checkpoint_commit(root.path(), "first");
+    let mut document = load(root.path()).unwrap().unwrap();
+    document.checkpoints[0].summary = "rewritten evidence".into();
+    save(root.path(), &document).unwrap();
+    history_checkpoint_commit(root.path(), "rewritten");
+    let report = inspect_checkpoint_history(root.path(), &base, "HEAD", Some("master")).unwrap();
+    assert_eq!(report.disposition, HistoryDisposition::InvalidHistory);
+    assert!(
+        report
+            .findings
+            .iter()
+            .any(|finding| finding.detail.contains("HISTORY_CHANGED"))
+    );
+    assert!(report.require_proven().is_err());
+    assert!(
+        inspect_checkpoint_history(
+            root.path(),
+            "refs/heads/no-such-base",
+            "HEAD",
+            Some("master")
+        )
+        .is_err()
+    );
+}
+
+#[test]
+fn history_assessment_marks_missing_head_record_and_malformed_head_without_claiming_complete_inspection()
+ {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    let report = inspect_checkpoint_history(root.path(), &base, "HEAD", Some("master")).unwrap();
+    assert_eq!(report.disposition, HistoryDisposition::UnprovenHistory);
+    assert!(!report.inspection_complete);
+    assert_eq!(
+        report.findings[0].obligation,
+        HistoryObligation::CanonicalRecord
+    );
+    assert!(report.require_proven().is_err());
+    fs::create_dir_all(root.path().join(".decapod")).unwrap();
+    fs::write(root.path().join(GOVERNANCE_PATH), "malformed JSON").unwrap();
+    git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
+    commit(root.path(), "malformed governance fixture");
+    let report = inspect_checkpoint_history(root.path(), &base, "HEAD", Some("master")).unwrap();
+    assert_eq!(report.disposition, HistoryDisposition::InvalidHistory);
+    assert!(!report.inspection_complete);
+    assert!(report.require_proven().is_err());
+}
+
+#[test]
+fn candidate_local_exception_claims_never_satisfy_missing_checkpoint_evidence() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    begin_pr(root.path(), "series", "master").unwrap();
+    history_checkpoint_commit(root.path(), "first");
+    fs::write(root.path().join("source.rs"), "uncheckpointed change").unwrap();
+    git(root.path(), &["add", "source.rs"]).unwrap();
+    commit(root.path(), "gap");
+    let missing = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    // Deliberately forged declaration in a disposable negative fixture. It is
+    // not an authenticated approval and has no authority over immutable proof.
+    let mut document = load(root.path()).unwrap().unwrap();
+    document.baseline.policy.insert(
+        "history_exceptions".into(),
+        json!([{
+            "commit":missing, "actor":"operator", "approved":true,
+            "exception_authorized":true, "reason":"self-asserted authorization"
+        }]),
+    );
+    save(root.path(), &document).unwrap();
+    history_checkpoint_commit(root.path(), "claimed-exception");
+    let report = inspect_checkpoint_history(root.path(), &base, "HEAD", Some("master")).unwrap();
+    assert!(!report.history_proven);
+    assert!(
+        report
+            .findings
+            .iter()
+            .any(|finding| finding.commit == missing)
+    );
+    assert!(report.require_proven().is_err());
+}
+
+#[test]
+fn checkpoint_assessment_ignores_git_replace_objects_instead_of_accepting_substitute_proof() {
+    let root = repo();
+    let base = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    begin_pr(root.path(), "series", "master").unwrap();
+    history_checkpoint_commit(root.path(), "first");
+    fs::write(root.path().join("source.rs"), "missing checkpoint material").unwrap();
+    git(root.path(), &["add", "source.rs"]).unwrap();
+    commit(root.path(), "gap");
+    let missing = git(root.path(), &["rev-parse", "HEAD"]).unwrap();
+    let later = history_checkpoint_commit(root.path(), "later-proof");
+    // Fixture-only replacement is deliberately untrusted. Both the shared
+    // checker and material reader must use the original immutable objects.
+    git(root.path(), &["replace", &missing, &later]).unwrap();
+    let report = inspect_checkpoint_history(root.path(), &base, &later, Some("master")).unwrap();
+    assert!(!report.history_proven);
+    assert!(
+        report
+            .findings
+            .iter()
+            .any(|finding| finding.commit == missing)
+    );
+    assert!(verify_pr_checkpoints(root.path(), &base, &later).is_err());
 }

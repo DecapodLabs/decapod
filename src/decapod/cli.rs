@@ -997,10 +997,21 @@ pub(crate) enum ArtifactsCommand {
         #[clap(long = "proof-ref", required = true)]
         proof_refs: Vec<String>,
     },
+    /// Preserve a present-time history-gap observation in a fresh admitted workstream.
+    /// Does not copy source, rewrite history, authorize an exception, or create past proof.
+    RecordHistoryRecovery {
+        #[clap(long)]
+        source_ref: String,
+        #[clap(long)]
+        reason: String,
+    },
     /// Read the governance document without modifying repository state
     Status,
     /// Verify checkpoint coverage of every authored commit in a PR
     VerifyCheckpoints {
+        /// Emit a complete read-only history assessment, including recovery guidance.
+        #[clap(long, default_value = "text", value_parser = ["text", "json"])]
+        format: String,
         #[clap(long = "base-branch")]
         base_branch: String,
         #[clap(long = "head-ref", default_value = "HEAD")]

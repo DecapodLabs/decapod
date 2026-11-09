@@ -530,68 +530,72 @@
     }
   },
   "change": {
-    "id": "change_01M6ZJRDXYRP08025VEC9QTNA1",
+    "id": "change_01M6ZB193NCTA203GG9009RRFZ",
     "base_commit": "15b69ce43fc56440d498d52d8726f89d499615fe",
     "target_base": "origin/master"
   },
+  "claims": {
+    "governance-recovery-liveness": {
+      "statement": "Missing immutable checkpoint evidence is precisely discoverable and has an explicit authorized recovery outcome without being reclassified as independently proven history.",
+      "falsifier": "A tip checkpoint retroactively proves an uncheckpointed commit, an unauthorized or stale exception changes admission, or the documented supported recovery cannot reach its declared result.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/governance_document.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
-      "id": "intent-reconciliation-1574-implementation",
-      "summary": "Reconstruct PR #1570 implementation with fresh task-bound governance and reviewed canonical specs",
-      "input_digest": "sha256:413201b0925a2c9b9681ed50590b15c7ccd8980688964d2ece7e88a464a44ce4",
+      "id": "history-recovery-reviewed-implementation",
+      "summary": "Preserve immutable gaps with typed diagnostics and fresh governed reauthoring; audited 36 reports; final independent proof remains required.",
+      "input_digest": "sha256:7e02dbd05a7d0d82f4dbe34172aef6ee6008f67b61fe622bdda17a1efc8d6db7"
+    },
+    {
+      "id": "ci-custody-fixture-reconciliation",
+      "summary": "Reconcile inherited workbranch fixtures through actor-bound CLI, verified checkout admission and fresh custody after session release; document clean-master unit comparison and external workflow evidence.",
+      "input_digest": "sha256:b1a069e17836768d938947932be472c132312f16dc97ceb334a4ef264b1bdde3"
+    },
+    {
+      "id": "standalone-worker-accepted-release-pin",
+      "summary": "Align only standalone worker local Decapod version pin with accepted 0.133.0; locked metadata accepts corrected graph, all other dependencies and mandatory worker recipes preserved; native proof remains pending.",
+      "input_digest": "sha256:128f20ba8b9b17b7a8a7c203b0bb4901bbf0115b40f353488e00947907a31d16"
+    },
+    {
+      "id": "current-laya-recovery-scope",
+      "summary": "Keep the accepted governance recovery focused on current Laya and custody fixtures; withdraw unrelated worker maintenance without rewriting historical commits or claiming publication readiness.",
+      "input_digest": "sha256:273161b3aaccd531910086b5151e9f1107c7ef18c52892856897bbef590b469a"
+    },
+    {
+      "id": "rebase-accepted-1331",
+      "summary": "Rebase onto accepted 7035a854, refresh official 0.133.1 projections, retain unchanged kernel implementation and record 72+10 passing regressions",
+      "input_digest": "sha256:6f532bfa89892616358fa961b135dd8ecf2037a002cc634c09e6cc267e135dd7",
       "proof_refs": [
-        "Seven source/test/docs files byte-identical to 0b5405e61ca781f17b6f86d92ff3d1be046732e0; source fingerprint 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9"
+        "tests/unit/core/governance_document_tests.rs",
+        "tests/workbranch_governance.rs"
       ]
     },
     {
-      "id": "intent-reconciliation-1574-profile-repair",
-      "summary": "Reconcile accepted v0.133.0 inventory review without changing required proof graph",
-      "input_digest": "sha256:dc76d472cc40ed4bd9d39187ce4fe5e458b2a693a0edb4c3deac4a6577ab5660",
-      "proof_refs": [
-        "119 discovered inputs byte-match immutable accepted master; only release package versions differ from edb30569 inventory"
-      ]
-    },
-    {
-      "id": "intent-reconciliation-1574-download-repair",
-      "summary": "Retry pinned Bazel release downloads on the same official host without weakening integrity or execution proof",
-      "input_digest": "sha256:5faa06ae0f12030a52566716126d7d8971920f620d71ceac9a80877892fe27ad",
-      "proof_refs": [
-        "Original rules_rust and supply-chain archives verified byte-for-byte by pinned SHA256 through explicit-download-query route; full source execution remains required"
-      ]
-    },
-    {
-      "id": "intent-reconciliation-1574-official-mirror",
-      "summary": "Use verified official Bazel mirror before GitHub fallbacks for pinned release archives",
-      "input_digest": "sha256:23a023cfa456b14d1d8199357ebdee23822806cddde269521e21281e0b6f9800",
-      "proof_refs": [
-        "Mirror rules_shell/protobuf/rules_java archives match integrity from BCR metadata whose bytes match committed registryFileHashes"
-      ]
-    },
-    {
-      "id": "intent-reconciliation-1574-broker-isolation",
-      "summary": "Isolate deadline-sensitive broker acceptance from sibling Bazel test load while retaining the full burst and proof",
-      "input_digest": "sha256:15755e66264445801c8e786e5a5cb8895af106f47e82147bb89390c0d2cc98a4",
-      "proof_refs": [
-        "Bazel query confirms group_broker is exclusive; original CI client deadline evidence recorded; full fresh core execution required"
-      ]
+      "id": "accepted-1331-retained-replay-b3a3bc70",
+      "summary": "Present-time replay of b3a3bc70 onto accepted 7035a854 with complete journal and parent checkpoint preservation; original history retained in archive refs",
+      "input_digest": "sha256:9cfaa19cbd8e4e48fd656e5502565d301ef2883a0e2e1836ca17f2cdb1dc1236"
     }
   ],
   "intents": {
-    "intent:change_01M6ZJRDXYRP08025VEC9QTNA1": {
+    "intent:change_01M6ZB193NCTA203GG9009RRFZ": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "intent-reconciliation-1574"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+      "id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Reconstruct PR #1570 with valid governance for issue #1574\n\nRecover intent.reconcile from candidate 0b5405e61ca781f17b6f86d92ff3d1be046732e0 onto accepted master in a fresh managed workspace; preserve behavior, create fresh plan/trajectory/spec reviews and per-commit checkpoints; validate exact candidate and publish replacement PR only after required proof passes.",
-      "refined_intent": "Reconstruct PR #1570 with valid governance for issue #1574\n\nRecover intent.reconcile from candidate 0b5405e61ca781f17b6f86d92ff3d1be046732e0 onto accepted master in a fresh managed workspace; preserve behavior, create fresh plan/trajectory/spec reviews and per-commit checkpoints; validate exact candidate and publish replacement PR only after required proof passes.",
+      "raw_intent": "Audit governance liveness and repair historical evidence recovery\n\nAudit all 36 worldofgeese issues since 2026-09-01 and PR1566; implement one focused supported recovery contract preserving proof, identity, custody, datastore and cloud boundaries.",
+      "refined_intent": "Audit governance liveness and repair historical evidence recovery\n\nAudit all 36 worldofgeese issues since 2026-09-01 and PR1566; implement one focused supported recovery contract preserving proof, identity, custody, datastore and cloud boundaries.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -599,439 +603,409 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 27,
+        "file_touch_budget": null,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Recover the implementation of intent.reconcile from 0b5405e61ca781f17b6f86d92ff3d1be046732e0 onto accepted master 15b69ce43fc56440d498d52d8726f89d499615fe without importing invalid governance history. Preserve sessionless read-only behavior, canonical specification ownership, stable REQ markers, missing/orphan/duplicate/malformed findings, fingerprint comparisons, unresolved intent, stale review detection, semantic_alignment not_proven, and existing publication boundaries. Publish a replacement PR for issue #1574 only with exact-candidate validation and every required CI check passing. Repair the verified HTTP504 release-download infrastructure defect without changing pinned versions, digests, source executor or required graph; then merge the replacement after exact-candidate proof passes under the renewed human authorization.",
+      "intent": "Publish the accepted governance-history recovery and reconciled custody fixtures. Keep the current Laya contract unchanged; withdraw obsolete standalone-worker maintenance from the final source delta. Preserve all historical checkpoints, failed proof and normal publisher policy; any review-only draft exception requires explicit human direction.",
       "phases": [],
       "proof_hooks": [
-        "Source and documentation diff equivalence against original PR #1570",
-        "Current-content-bound Interfaces, Architecture and Security reviews",
-        "decapod govern artifacts verify-checkpoints against immutable accepted base and final candidate",
-        "decapod validate with configured complete Rust and provider checks"
+        "cargo test --locked --test workbranch_governance"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final source and .config/build downloader configuration. The authored read-model section remains accurate: existing canonical plan/spec authority, ephemeral report, no scheduler or secondary persistence. Infrastructure retry changes only official release URL transport, preserving source executor and the full proof graph.",
-          "reviewed_code_fingerprint": "02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9",
-          "spec_material_hash": "11a4280adbbf26427123e93671593796d32c252263451951572f93221de9127d"
+          "reason": "Current merged architecture preserves accepted intent-reconciliation advisory boundary and original immutable gap recovery semantics; accepted mirror infrastructure remains separate from governance recovery",
+          "reviewed_code_fingerprint": "a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289",
+          "spec_material_hash": "8b08790bd5f8ae0386517c584b0844e1048f6df035acd6dbdc5eaed451b7e17b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final source and download-only infrastructure delta. The authored intent.reconcile RPC section still matches empty-only params, sessionless read-only behavior, observable report fields and semantic_alignment not_proven; no interface or publication authority changed by the Bazel retry configuration.",
-          "reviewed_code_fingerprint": "02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9",
-          "spec_material_hash": "8237575826dc886b4dd0cf76851525ca88e8a5a2e701158bcdf5ce3ce1ab1e99"
+          "reason": "Rebased on accepted 7035a854, preserving both intent.reconcile advisory interface and checkpoint-history recovery interface; no implementation changes to existing recovery CLI",
+          "reviewed_code_fingerprint": "a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289",
+          "spec_material_hash": "e16d67c516143c9f47e44d34d329f906b0e0c5cfe854797543d1f5bc2ab9c56f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final source and official-mirror retry configuration. Authored Security account now records mirror.bazel.build plus github.com only, no credentials, unchanged original repository-rule archive digests and lockfile enforcement. Independently fetched BCR source metadata matches committed registryFileHashes and rules_shell/protobuf/rules_java mirror archives match those integrity pins. Sessionless reconciliation trust boundaries, not_proven semantics and publication authority remain unchanged.",
-          "reviewed_code_fingerprint": "02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9",
-          "spec_material_hash": "dbf1da6eb06b14d73b212eb65aafcbba96a67b28ca8f3651d875babc8e8d17f1"
+          "reason": "Preserved accepted no-self-authorization and prompt-intent boundaries along with original recovery custody and no-retrospective-proof guarantees; no policy or trust changes",
+          "reviewed_code_fingerprint": "a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289",
+          "spec_material_hash": "325a66454da5f43b05f157a41d5496fa09786208ed9dddd09ccfc8f7cc577bc1"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Human decision gate, unavailable external authority or denied access"
-      ],
-      "title": "Reconstruct advisory intent reconciliation from PR #1570",
+      "stop_conditions": [],
+      "title": "Recover governed work from immutable checkpoint gaps without inventing historical proof",
       "todo_ids": [
-        "bugs_01m6zjqskamsdwx8"
+        "code_01m6zb0krk7p4w7k"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794211173Z"
+      "updated_at": "1794215320Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "No secondary authority, scheduler, persistence, semantic proof or publication permission from reconciliation",
-        "Preserve original branch history and all unrelated worktrees and ownership"
+        "Current product is Laya; no runtime migration, obsolete worker repair, Dactyl/Propodus or source publication-policy weakening in the final delta.",
+        "No historical exception authority, database capability implementation, datastore or SaaS changes.",
+        "No production changes beyond accepted 5557b015 design; no auth, custody, provider, required-check or datastore changes.",
+        "Only standalone worker local path package version 0.130.0 to accepted 0.133.0; complete 119-input comparison reviewed, no dependency edges or required checks changed."
       ],
-      "artifact_hash": "sha256:a71aaefa7595db157689ccf847dee98cbcebd1667775ceda1bb60111677157f8",
+      "artifact_hash": "sha256:fb9471354daa61be330ed336770641dd2247c606174109987f49dc6cbe12cc18",
       "checks": [
         {
-          "name": "accepted source inventory reconciliation",
+          "name": "actual_cli_recovery_and_spec_review",
           "status": "passed"
         },
         {
-          "name": "broker Bazel exclusive scheduling query",
+          "name": "baseline_failure_comparison",
           "status": "passed"
         },
         {
-          "name": "first exact-candidate validation",
+          "name": "bootstrap_interlock",
+          "status": "passed"
+        },
+        {
+          "name": "ccd4_buildkite_41",
+          "status": "passed"
+        },
+        {
+          "name": "ccd4_full_publisher",
           "status": "failed"
         },
         {
-          "name": "immutable checkpoint verification f8a6200f",
+          "name": "contract_integrations_43",
           "status": "passed"
         },
         {
-          "name": "live reference verification",
+          "name": "final_candidate_rechecks",
+          "status": "partial"
+        },
+        {
+          "name": "focused_governance_72",
           "status": "passed"
         },
         {
-          "name": "native todo claim",
+          "name": "format_and_strict_clippy",
           "status": "passed"
         },
         {
-          "name": "official mirror immutable archive verification",
-          "status": "passed"
-        },
-        {
-          "name": "original pinned archive transport verification",
-          "status": "passed"
-        },
-        {
-          "name": "original source/test/docs byte equivalence",
-          "status": "passed"
-        },
-        {
-          "name": "previous core suite",
+          "name": "full_local_unit_suite",
           "status": "failed"
         },
         {
-          "name": "prior full validation",
-          "status": "failed"
-        },
-        {
-          "name": "prior source suite and hosted governance checkpoints",
+          "name": "history_recovery_regressions",
           "status": "passed"
         },
         {
-          "name": "query-only candidate full readiness",
+          "name": "independent_publication",
+          "status": "unavailable"
+        },
+        {
+          "name": "issue_inventory",
+          "status": "passed"
+        },
+        {
+          "name": "normal_full_publication",
           "status": "failed"
         },
         {
-          "name": "specification review",
+          "name": "rebased-formatting",
           "status": "passed"
+        },
+        {
+          "name": "rebased-governance-regressions",
+          "status": "passed"
+        },
+        {
+          "name": "rebased-strict-clippy",
+          "status": "passed"
+        },
+        {
+          "name": "rebased-workbranch-cli",
+          "status": "passed"
+        },
+        {
+          "name": "remote_ccd4_ci_41",
+          "status": "passed"
+        },
+        {
+          "name": "workbranch_reconciliation",
+          "status": "passed"
+        },
+        {
+          "name": "worker_locked_metadata",
+          "status": "passed"
+        },
+        {
+          "name": "worker_unit_tests",
+          "status": "partial"
         }
       ],
-      "current_phase": "ci-repair",
+      "current_phase": "review_preparation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
             "kind": "trajectory_step_recorded",
             "sequence": 8
           },
           {
-            "detail": "trajectory:branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
             "event_id": "event:9",
-            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6ZJRE0M6E1MFA6N2EN6JZ40": {
+          "branch_01M6ZB196Q7989BE8ZKJEYWA8A": {
             "evidence_only": true,
-            "id": "branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
-            "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+            "id": "branch_01M6ZB196Q7989BE8ZKJEYWA8A",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
             "steps": [
               {
-                "action": "reconstruction",
-                "command": "git fetch origin master feat/intent-reconciliation-contract",
+                "action": "investigation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "AGENTS.md",
-                  "CONTRIBUTING.md",
-                  ".decapod/config.toml",
-                  "Live origin/master and PR base remain 15b69ce43fc56440d498d52d8726f89d499615fe; PR #1570 head remains 0b5405e61ca781f17b6f86d92ff3d1be046732e0.",
-                  "Native task bugs_01m6zjqskamsdwx8 claimed exclusively by codex-1574; managed workspace created from accepted base. Existing autogenerated trajectory retained after init correctly rejected replacing an uncommitted journal."
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/plan_governance.rs",
+                  "https://github.com/DecapodLabs/decapod/pull/1566"
                 ],
                 "proof_refs": [
-                  "live reference verification",
-                  "native todo claim"
+                  "issue_inventory"
                 ],
                 "scope": [
-                  "intent-reconciliation-1574"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "A declared human decision reference is provenance, not authenticated publication authority; candidate-only exception records cannot waive proof."
+                ]
               },
               {
-                "action": "checkpoint",
-                "command": "git apply original source/test diff without importing commit history or governance",
+                "action": "verification",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/intent_reconcile.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/lib.rs",
-                  "tests/intent_reconciliation_rpc.rs",
-                  "src/decapod/core/intent_reconcile.rs",
-                  "src/decapod/core/mod.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/lib.rs",
-                  "tests/intent_reconciliation_rpc.rs",
-                  "docs/agent/api-index.md",
-                  "docs/book/src/concepts/intent.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "All seven source/test/docs files match original candidate bytes; generated repo fingerprint matches 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9. Five authored specs describe behavior/security. Architecture, Interfaces and Security reviewed updated against frozen source.",
-                  "Full Rust suite and publication readiness remain unexecuted for this new candidate; original CI results are historical only."
+                  "docs/architecture/governance-liveness-audit.md",
+                  "src/decapod/core/governance_document/checkpoint_history.rs",
+                  "tests/workbranch_governance.rs",
+                  "tests/unit/core/governance_document_tests.rs; tests/workbranch_governance.rs; docs/architecture/governance-liveness-audit.md"
                 ],
                 "proof_refs": [
-                  "original source/test/docs byte equivalence",
-                  "specification review"
+                  "history_recovery_regressions",
+                  "actual_cli_recovery_and_spec_review",
+                  "full_local_unit_suite",
+                  "final_candidate_rechecks",
+                  "independent_publication"
                 ],
                 "scope": [
-                  ".decapod/managed/specs",
-                  "docs",
-                  "intent-reconciliation-1574",
-                  "src/decapod",
-                  "tests/intent_reconciliation_rpc.rs"
+                  "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
+                "validation_findings": [
+                  "Final candidate and provider proof remain required; local macOS failures are not waived."
+                ]
               },
               {
-                "action": "validation-repair",
-                "command": "decapod validate",
+                "action": "publication_preparation",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "src/decapod/core/readiness_profile.rs",
-                  "assets/tools/source_ci_profile.rs",
-                  ".github/actions/source-ci-profile/action.yml",
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "First validate failed PROOF_PROFILE_RECONCILIATION_REQUIRED before execution. All 119 discovered source inputs match accepted base. Relative to the last config review commit edb30569 only Cargo.toml/Cargo.lock package version changed 0.132.0 to 0.133.0. Reviewed finite catalog, carrier and unchanged required graph; backed up config and explicitly reconciled authored review digest to sha256:d8c65ab6901a57c4df55f3914dd0eeaecbf7338177233831854ade1304e53361. agent.init now reports proof_pending/not_run. No checks or provider requirements removed.",
-                  "Immutable verify-checkpoints --base-branch 15b69ce43fc56440d498d52d8726f89d499615fe --head-ref f8a6200fe23080cf4dd3d2be077254c4b7ab7612 --target-base master --publication-material returned status ok; 135 prior unresolved baseline obligations preserved, 138 total after lifecycle carry-forward."
+                  "tests/workbranch_governance.rs",
+                  "docs/architecture/governance-liveness-audit.md",
+                  "tests/workbranch_governance.rs; docs/architecture/governance-liveness-audit.md; issues #1571 #1572 #1573"
                 ],
                 "proof_refs": [
-                  "first exact-candidate validation",
-                  "immutable checkpoint verification f8a6200f",
-                  "accepted source inventory reconciliation"
+                  "workbranch_reconciliation",
+                  "focused_governance_72",
+                  "contract_integrations_43",
+                  "bootstrap_interlock",
+                  "format_and_strict_clippy",
+                  "full_local_unit_suite",
+                  "baseline_failure_comparison",
+                  "independent_publication"
                 ],
                 "scope": [
-                  ".decapod/managed/specs",
-                  "docs",
-                  "intent-reconciliation-1574",
-                  "src/decapod",
-                  "tests/intent_reconciliation_rpc.rs"
+                  "root"
                 ],
                 "sequence": 6,
                 "validation_findings": []
               },
               {
-                "action": "infrastructure-repair",
-                "command": "Official GitHub release downloads with explicit download query; SHA256 verification against original upstream pins",
+                "action": "publication_recovery",
                 "custody_event_id": "event:7",
                 "observations": [
-                  ".config/build/bazelrc",
-                  ".config/build/downloader.cfg",
-                  ".config/build/bazelrc",
-                  ".config/build/downloader.cfg",
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "Human renewed explicit creation/CI-repair/merge authority, preserving existing todo and change identity. CI42579141327 attempt4 terminal failed HTTP504, failed jobs retried attempt5. Buildkite5974 all source/test/governance jobs passed except setup archive504. No required proof waived.",
-                  "Direct GitHub rules_rust URL returned504 inside and outside sandbox; official mirror404. GitHub API and same release URL with ?download=1 returned 67439334 bytes matching original BCR SHA256071a6e582cf2f2797820266f3265dbb2727b447486366d9ecc177da1523b11ad. supply-chain query returned36325 bytes matching original release SHA2560e89367f1cb6d93a5a1afea4b55b11ea6b28f63f653b47154153677ca7d4afea. Add official-host-only query retry with original fallback, unchanged version/integrity/toolchain/graph.",
-                  "Explicitly reconciled reviewed inventory only for bazelrc and new downloader config. Existing source executor/carrier/workflow files unchanged. Source implementation remains identical to original #1570. Full validation must execute on the newly checkpointed candidate before PR or merge."
+                  "assets/tools/vega-native/Cargo.lock",
+                  "assets/tools/vega-native/Cargo.lock; docs/architecture/governance-liveness-audit.md; exact-candidate ccd4cd0b independent publisher diagnostic RUST_WORKER_FAILED"
                 ],
                 "proof_refs": [
-                  "prior source suite and hosted governance checkpoints",
-                  "prior full validation",
-                  "original pinned archive transport verification"
+                  "ccd4_buildkite_41",
+                  "ccd4_full_publisher",
+                  "worker_locked_metadata",
+                  "worker_unit_tests"
                 ],
                 "scope": [
-                  ".decapod/managed/specs",
-                  "docs",
-                  "intent-reconciliation-1574",
-                  "src/decapod",
-                  "tests/intent_reconciliation_rpc.rs"
+                  "root"
                 ],
                 "sequence": 7,
                 "validation_findings": []
               },
               {
-                "action": "infrastructure-repair",
-                "command": "Verify official mirror archives against lock-bound BCR metadata",
+                "action": "review_preparation",
                 "custody_event_id": "event:8",
                 "observations": [
-                  ".config/build/downloader.cfg",
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/SECURITY.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Candidate52bd0ee0 exercised downloader configuration; GHA setup/contracts passed original dependency fetch stage then failed HTTP504 on rules_shell0.6.1 and protobuf33.4, including explicit query. Cancelled superseded local validation after recording failure; no passing proof claimed.",
-                  "Official Bazel mirror returned rules_shell0.6.1,protobuf33.4,rules_java9.1.0 bytes. For each module fetched BCR source.json, verified its SHA256 against committed MODULE.bazel.lock registryFileHashes, then verified downloaded archive against its original integrity. Prior rules_cc0.2.17 and bazel_features1.50.0 official mirror bytes also matched upstream digests. Added mirror as first route, retaining GitHub query and original fallback; no version, integrity, lock, compiler, source executor, workflow or check-graph change."
+                  "docs/architecture/governance-liveness-audit.md; accepted-controller PUBLICATION_NOT_READY and rust_worker::preserve_accepted policy"
                 ],
                 "proof_refs": [
-                  "query-only candidate full readiness",
-                  "official mirror immutable archive verification"
+                  "remote_ccd4_ci_41",
+                  "normal_full_publication"
                 ],
                 "scope": [
-                  ".config/build",
-                  ".decapod/managed/specs",
-                  "docs",
-                  "intent-reconciliation-1574",
-                  "src/decapod",
-                  "tests/intent_reconciliation_rpc.rs"
+                  "root"
                 ],
                 "sequence": 8,
                 "validation_findings": []
               },
               {
-                "action": "ci-repair",
-                "command": "bazelisk --batch query exclusive group_broker target",
+                "action": "trajectory.record",
                 "custody_event_id": "event:9",
                 "observations": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "CI42582853632 core job129045840472 failed broker_no_sqlite_busy_surfaced_under_concurrent_mutators: final clients17/19 reached120068/120109ms while preceding clients serialized under sibling-target load. Isolate group_broker target using existing exclusive scheduling; retain20 concurrent clients, all tests/assertions, production120s deadline and finite target budgets.",
-                  "bazelisk --batch query attr(tags,exclusive,//:group_broker) returned //:group_broker and exit0 outside sandbox; sandbox query itself found target but process-inspection cleanup was denied. Existing source/test/docs implementation remains unchanged. Config inventory explicitly reconciled for this sole scheduling delta. Fresh CI still required."
+                  "72 governance tests passed on v0.133.1 accepted target 7035a854; original recovery Rust/test bytes unchanged by rebase",
+                  "All 120 independently discovered inventory hashes match accepted master 7035a854 exactly; only Cargo.toml/Cargo.lock differ from accepted e344110f before the accepted v0.133.1 release. Reviewed inventory declaration reconciled to that accepted inventory, without changing check definitions or executor.",
+                  "Pre-rebase complete history preserved in archive/governance-liveness-before-rebase-8d1da88; current accepted mirror and broker-isolation changes inherited unchanged"
                 ],
                 "proof_refs": [
-                  "broker Bazel exclusive scheduling query",
-                  "previous core suite"
+                  "rebased-governance-regressions"
                 ],
                 "scope": [
-                  ".config/build",
-                  ".decapod/managed/specs",
-                  "docs",
-                  "intent-reconciliation-1574",
-                  "src/decapod",
-                  "tests/intent_reconciliation_rpc.rs"
+                  "root"
                 ],
                 "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "10/10 workbranch tests passed, including real CLI recovery/spec review and normal custody admission; strict all-target/all-feature Clippy passed under accepted v0.133.1 source"
+                ],
+                "proof_refs": [
+                  "rebased-workbranch-cli",
+                  "rebased-strict-clippy",
+                  "rebased-formatting"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "Official GitHub release downloads with explicit download query; SHA256 verification against original upstream pins",
-        "Verify official mirror archives against lock-bound BCR metadata",
-        "bazelisk --batch query exclusive group_broker target",
-        "decapod govern plan review-spec",
-        "decapod rpc --op agent.init",
-        "decapod rpc --op specs.refresh",
-        "decapod validate",
-        "git apply original source/test diff without importing commit history or governance",
-        "git fetch origin master feat/intent-reconciliation-contract"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "All seven source/test/docs files match original candidate bytes; generated repo fingerprint matches 02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9. Five authored specs describe behavior/security. Architecture, Interfaces and Security reviewed updated against frozen source.",
-        "CI42582853632 core job129045840472 failed broker_no_sqlite_busy_surfaced_under_concurrent_mutators: final clients17/19 reached120068/120109ms while preceding clients serialized under sibling-target load. Isolate group_broker target using existing exclusive scheduling; retain20 concurrent clients, all tests/assertions, production120s deadline and finite target budgets.",
-        "Candidate52bd0ee0 exercised downloader configuration; GHA setup/contracts passed original dependency fetch stage then failed HTTP504 on rules_shell0.6.1 and protobuf33.4, including explicit query. Cancelled superseded local validation after recording failure; no passing proof claimed.",
-        "Direct GitHub rules_rust URL returned504 inside and outside sandbox; official mirror404. GitHub API and same release URL with ?download=1 returned 67439334 bytes matching original BCR SHA256071a6e582cf2f2797820266f3265dbb2727b447486366d9ecc177da1523b11ad. supply-chain query returned36325 bytes matching original release SHA2560e89367f1cb6d93a5a1afea4b55b11ea6b28f63f653b47154153677ca7d4afea. Add official-host-only query retry with original fallback, unchanged version/integrity/toolchain/graph.",
-        "Explicitly reconciled reviewed inventory only for bazelrc and new downloader config. Existing source executor/carrier/workflow files unchanged. Source implementation remains identical to original #1570. Full validation must execute on the newly checkpointed candidate before PR or merge.",
-        "First validate failed PROOF_PROFILE_RECONCILIATION_REQUIRED before execution. All 119 discovered source inputs match accepted base. Relative to the last config review commit edb30569 only Cargo.toml/Cargo.lock package version changed 0.132.0 to 0.133.0. Reviewed finite catalog, carrier and unchanged required graph; backed up config and explicitly reconciled authored review digest to sha256:d8c65ab6901a57c4df55f3914dd0eeaecbf7338177233831854ade1304e53361. agent.init now reports proof_pending/not_run. No checks or provider requirements removed.",
-        "Full Rust suite and publication readiness remain unexecuted for this new candidate; original CI results are historical only.",
-        "Human renewed explicit creation/CI-repair/merge authority, preserving existing todo and change identity. CI42579141327 attempt4 terminal failed HTTP504, failed jobs retried attempt5. Buildkite5974 all source/test/governance jobs passed except setup archive504. No required proof waived.",
-        "Immutable verify-checkpoints --base-branch 15b69ce43fc56440d498d52d8726f89d499615fe --head-ref f8a6200fe23080cf4dd3d2be077254c4b7ab7612 --target-base master --publication-material returned status ok; 135 prior unresolved baseline obligations preserved, 138 total after lifecycle carry-forward.",
-        "Live origin/master and PR base remain 15b69ce43fc56440d498d52d8726f89d499615fe; PR #1570 head remains 0b5405e61ca781f17b6f86d92ff3d1be046732e0.",
-        "Native task bugs_01m6zjqskamsdwx8 claimed exclusively by codex-1574; managed workspace created from accepted base. Existing autogenerated trajectory retained after init correctly rejected replacing an uncommitted journal.",
-        "Official Bazel mirror returned rules_shell0.6.1,protobuf33.4,rules_java9.1.0 bytes. For each module fetched BCR source.json, verified its SHA256 against committed MODULE.bazel.lock registryFileHashes, then verified downloaded archive against its original integrity. Prior rules_cc0.2.17 and bazel_features1.50.0 official mirror bytes also matched upstream digests. Added mirror as first route, retaining GitHub query and original fallback; no version, integrity, lock, compiler, source executor, workflow or check-graph change.",
-        "bazelisk --batch query attr(tags,exclusive,//:group_broker) returned //:group_broker and exit0 outside sandbox; sandbox query itself found target but process-inspection cleanup was denied. Existing source/test/docs implementation remains unchanged. Config inventory explicitly reconciled for this sole scheduling delta. Fresh CI still required."
+        "10/10 workbranch tests passed, including real CLI recovery/spec review and normal custody admission; strict all-target/all-feature Clippy passed under accepted v0.133.1 source",
+        "72 governance tests passed on v0.133.1 accepted target 7035a854; original recovery Rust/test bytes unchanged by rebase",
+        "All 120 independently discovered inventory hashes match accepted master 7035a854 exactly; only Cargo.toml/Cargo.lock differ from accepted e344110f before the accepted v0.133.1 release. Reviewed inventory declaration reconciled to that accepted inventory, without changing check definitions or executor.",
+        "Pre-rebase complete history preserved in archive/governance-liveness-before-rebase-8d1da88; current accepted mirror and broker-isolation changes inherited unchanged",
+        "assets/tools/vega-native/Cargo.lock; docs/architecture/governance-liveness-audit.md; exact-candidate ccd4cd0b independent publisher diagnostic RUST_WORKER_FAILED",
+        "docs/architecture/governance-liveness-audit.md; accepted-controller PUBLICATION_NOT_READY and rust_worker::preserve_accepted policy",
+        "https://github.com/DecapodLabs/decapod/pull/1566",
+        "tests/unit/core/governance_document_tests.rs; tests/workbranch_governance.rs; docs/architecture/governance-liveness-audit.md",
+        "tests/workbranch_governance.rs; docs/architecture/governance-liveness-audit.md; issues #1571 #1572 #1573"
       ],
       "inspected_files": [
-        ".config/build/bazelrc",
-        ".config/build/downloader.cfg",
-        ".decapod/config.toml",
-        ".github/actions/source-ci-profile/action.yml",
-        "AGENTS.md",
-        "CONTRIBUTING.md",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/intent_reconcile.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/lib.rs",
-        "tests/intent_reconciliation_rpc.rs"
+        "docs/architecture/governance-liveness-audit.md",
+        "src/decapod/core/governance_document.rs",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/plan_governance.rs"
       ],
-      "intent_id": "intent:change_01M6ZJRDXYRP08025VEC9QTNA1",
+      "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
       "modified_files": [
-        ".config/build/bazelrc",
-        ".config/build/decapod.BUILD.bzl",
-        ".config/build/downloader.cfg",
-        ".decapod/config.toml",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/agent/api-index.md",
-        "docs/book/src/concepts/intent.md",
-        "src/decapod/core/intent_reconcile.rs",
-        "src/decapod/core/mod.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/lib.rs",
-        "tests/intent_reconciliation_rpc.rs"
+        "assets/tools/vega-native/Cargo.lock",
+        "docs/architecture/governance-liveness-audit.md",
+        "src/decapod/core/governance_document/checkpoint_history.rs",
+        "tests/workbranch_governance.rs"
       ],
       "next_transitions": [
+        "Attempt supported draft publication after exact checkpoint; retain failed or unavailable independent proof.",
+        "Checkpoint exact candidate and obtain independent accepted-controller validation.",
+        "Checkpoint minimal locked-build repair and rerun exact-candidate supported draft publisher.",
+        "Preserve the blocked readiness result and prepare the focused branch for explicit review-only draft authorization.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".config/build",
-        ".decapod/managed/specs",
-        "docs",
-        "intent-reconciliation-1574",
-        "src/decapod",
-        "tests/intent_reconciliation_rpc.rs"
+        "root"
       ],
-      "run_id": "branch_01M6ZJRE0M6E1MFA6N2EN6JZ40",
+      "run_id": "branch_01M6ZB196Q7989BE8ZKJEYWA8A",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6zjqskamsdwx8",
+      "task_id": "code_01m6zb0krk7p4w7k",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "A declared human decision reference is provenance, not authenticated publication authority; candidate-only exception records cannot waive proof.",
+        "Final candidate and provider proof remain required; local macOS failures are not waived."
+      ]
     }
   },
   "legacy_digests": {
