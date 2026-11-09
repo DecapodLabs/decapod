@@ -1,5 +1,14 @@
 # Validation
 
+## Required path-dependency lock maintenance
+
+The supplemental worker keeps its accepted manifest, recipe, features and required
+checks. Its lock records the current Decapod path dependency as 0.134.0, matching
+the accepted root manifest. This single-line maintenance preserves all third-party
+versions/checksums and restores full offline locked dependency resolution. It is
+not a policy migration or model-readiness claim; all configured worker tests and
+runs must still execute successfully before publication.
+
 ## macOS bounded-reader recovery (#1571)
 
 The accepted v0.133.2 before-fix regression

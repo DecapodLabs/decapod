@@ -573,6 +573,14 @@
         "src/decapod/core/validation_epoch/input/mac_directory.rs",
         "tests/intent_reconciliation_rpc.rs"
       ]
+    },
+    {
+      "id": "required-path-dependency-lock",
+      "summary": "Reconcile only accepted Decapod path dependency version in required worker lock; preserve every recipe and third-party pin; locked offline graph resolution passed",
+      "input_digest": "sha256:66e2eac492cde508204d3dc25ec7adff5ed15b4177b9d95e34a19af22cc5026f",
+      "proof_refs": [
+        "assets/tools/vega-native/Cargo.lock"
+      ]
     }
   ],
   "intents": {
@@ -605,36 +613,36 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix #1571 with fd-relative directory streaming; preserve identity, symlink rejection, bounds, digests, authorization and publication gates",
+      "intent": "Ship the pinned macOS directory-reader repair and the minimal accepted-release path-dependency lock maintenance needed to execute existing publication gates; no policy or runtime redesign",
       "phases": [],
       "proof_hooks": [
-        "Existing bounded digest regressions and pinned directory replacement/independent cursor tests"
+        "Existing full independent readiness contract, unchanged worker recipe, locked dependency resolution and fresh CI on final candidate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged accepted v0.134.0 intent-impact documentation with the unchanged descriptor-relative macOS reader; confirmed no source or hashing semantic changes from the original repair",
+          "reason": "Reviewed one-line path-dependency lock repair; existing worker recipe, runtime implementation, model contract, source execution and reader architecture remain unchanged",
           "reviewed_code_fingerprint": "b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604",
           "spec_material_hash": "042e62b5a21b33e93d2a0db5a0d1615acb620b3cc4e136caec1a5c3d9b6dc2ee"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Accepted v0.134.0 optional intent base parameter remains intact. The #1571 change remains private reader I/O only, with no new CLI, RPC, schema or datastore interface.",
+          "reason": "Path dependency version maintenance changes no public interface; accepted recipe and all required commands remain identical",
           "reviewed_code_fingerprint": "b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604",
           "spec_material_hash": "054ffdddc0e083e8f34fd3ecfcfe4cd3508edd75b112fe857fb086cff29f8fa4"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved accepted immutable intent projection authority boundaries and existing fd ownership, no-follow, deadline and input-budget invariants; no new authorization or publication exceptions",
+          "reason": "Locked resolution now matches accepted root version; no new dependency pin, checksum, authority, feature or skipped/removed check. Existing proof and custody boundaries remain mandatory.",
           "reviewed_code_fingerprint": "b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604",
           "spec_material_hash": "058f444fd13fffe4dfaa7b5ff6fb4c3bf06062220fd53647403ab076517c802c"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [],
       "title": "Pinned macOS epoch directory enumeration",
       "todo_ids": [
@@ -642,13 +650,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794250848Z"
+      "updated_at": "1794254000Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9c010423056fc5456d53bcc77f3be9e819d67ff775cb90dcffac537ab814646d",
+      "artifact_hash": "sha256:3ab410b2c5e2c7e554abfd89a95daf4b998c94f6ea311e209a2ad92eeaa2f2c4",
       "checks": [
         {
           "name": "1340-formatting",
@@ -688,6 +696,10 @@
         },
         {
           "name": "formatting",
+          "status": "passed"
+        },
+        {
+          "name": "required-lock-resolution",
           "status": "passed"
         },
         {
@@ -737,10 +749,17 @@
             "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M6ZV2AZPCK66JSA2TPWH562K",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ZV2AZPCK66JSA2TPWH562K": {
@@ -831,6 +850,24 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "assets/tools/vega-native/Cargo.lock",
+                  "User continuation requires completing publication work. Minimal worker lock change updates only the Decapod path dependency 0.130.0 to accepted 0.134.0; complete cargo metadata --locked --offline succeeds. No third-party versions, checksums, recipes, features or required checks changed."
+                ],
+                "proof_refs": [
+                  "required-lock-resolution"
+                ],
+                "scope": [
+                  "src/decapod/core/project_specs",
+                  "src/decapod/core/validation_epoch",
+                  "tests"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -846,7 +883,8 @@
         "Before-fix accepted v0.133.2 reader regression failed ENOTDIR; after-fix all 8 targeted reader/stream tests passed. No source-CI profile, gate, transport or datastore algorithm changed.",
         "Broad unit suite: 1649 passed, 4 failed, 8 ignored. Four failing permission/cache cases also failed in the preserved accepted 15b69ce4 baseline run; their implementation and test files are unchanged in current b0af0c28.",
         "Fresh v0.134.0 results: 8 reader regressions, 11 intent unit tests, 2 intent RPC integration tests, strict all-target/all-feature Clippy and formatting passed. Documentation generation produced no drift.",
-        "Requested rebase onto accepted 1d865efd / v0.134.0; original 46053619 and its genuine results preserved in archive/macos-epoch-before-1340-46053619. Reader Rust bytes unchanged."
+        "Requested rebase onto accepted 1d865efd / v0.134.0; original 46053619 and its genuine results preserved in archive/macos-epoch-before-1340-46053619. Reader Rust bytes unchanged.",
+        "User continuation requires completing publication work. Minimal worker lock change updates only the Decapod path dependency 0.130.0 to accepted 0.134.0; complete cargo metadata --locked --offline succeeds. No third-party versions, checksums, recipes, features or required checks changed."
       ],
       "inspected_files": [
         "src/decapod/core/project_specs.rs",
@@ -854,6 +892,7 @@
       ],
       "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
       "modified_files": [
+        "assets/tools/vega-native/Cargo.lock",
         "src/decapod/core/project_specs.rs",
         "src/decapod/core/validation_epoch/input.rs",
         "src/decapod/core/validation_epoch/input/mac_directory.rs"
@@ -862,6 +901,7 @@
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
+        "assets/tools/vega-native/Cargo.lock",
         "src/decapod/core/project_specs",
         "src/decapod/core/validation_epoch",
         "tests"
