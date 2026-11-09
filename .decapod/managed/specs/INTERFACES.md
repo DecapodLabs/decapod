@@ -1167,8 +1167,8 @@ for inspection, and does not mutate spec or governance records. Its
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `02a963a8eea47a854516f1df3e035e5451bc6b352d3bd2b9bd806f96a83e5bd9`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (223 files), `tests/` (215 files)
+- Repository signal fingerprint: `a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
