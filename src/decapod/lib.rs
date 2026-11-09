@@ -6189,7 +6189,8 @@ fn run_validate_command(
             || validate_cli.provider_artifacts.is_some()
         {
             return Err(error::DecapodError::ValidationError(
-                "RBAC_VALIDATION_BYPASS_SCOPE: unsupported validation scope or snapshot handoff".into(),
+                "RBAC_VALIDATION_BYPASS_SCOPE: unsupported validation scope or snapshot handoff"
+                    .into(),
             ));
         }
         let reason = validate_cli.bypass_reason.as_deref().unwrap_or_default();
@@ -6224,11 +6225,14 @@ fn run_validate_command(
             }),
         )?;
         if validate_cli.format == "json" {
-            println!("{}", serde_json::json!({
-                "status": "bypassed", "scope": scope.label(),
-                "proof_ready": false, "publication_ready": false,
-                "actor": actor, "reason": reason, "config_digest": config_digest
-            }));
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "bypassed", "scope": scope.label(),
+                    "proof_ready": false, "publication_ready": false,
+                    "actor": actor, "reason": reason, "config_digest": config_digest
+                })
+            );
         } else {
             println!(
                 "Validation bypass recorded for actor {actor}: {reason}. No proof or publication readiness granted."

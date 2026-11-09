@@ -328,9 +328,8 @@ fn authorize_binary(
             .and_then(|exe| std::fs::canonicalize(exe).ok())
             .zip(std::fs::canonicalize(command).ok())
             .is_some_and(|(current, requested)| current == requested);
-    let is_allowed = sealed_default
-        || allowed_bins.iter().any(|b| b == &bin)
-        || is_self_verification;
+    let is_allowed =
+        sealed_default || allowed_bins.iter().any(|b| b == &bin) || is_self_verification;
     if !is_allowed {
         return Err(error::DecapodError::ValidationError(format!(
             "External action denied: capability '{}' does not allow binary '{}'",
@@ -795,24 +794,33 @@ mod verification_self_execution_tests {
         let current = std::env::current_exe().unwrap();
         let wrapped = temp.path().join(".decapod-wrapped");
         std::os::unix::fs::symlink(&current, &wrapped).unwrap();
-        assert!(authorize_binary(
-            &store,
-            ExternalCapability::VerificationExec,
-            wrapped.to_str().unwrap()
-        ).is_ok());
+        assert!(
+            authorize_binary(
+                &store,
+                ExternalCapability::VerificationExec,
+                wrapped.to_str().unwrap()
+            )
+            .is_ok()
+        );
         std::fs::remove_file(&wrapped).unwrap();
         std::fs::write(&wrapped, b"not decapod").unwrap();
-        assert!(authorize_binary(
-            &store,
-            ExternalCapability::VerificationExec,
-            wrapped.to_str().unwrap()
-        ).is_err());
+        assert!(
+            authorize_binary(
+                &store,
+                ExternalCapability::VerificationExec,
+                wrapped.to_str().unwrap()
+            )
+            .is_err()
+        );
         let arbitrary = temp.path().join("decapod-malicious");
         std::fs::write(&arbitrary, b"not decapod").unwrap();
-        assert!(authorize_binary(
-            &store,
-            ExternalCapability::VerificationExec,
-            arbitrary.to_str().unwrap()
-        ).is_err());
+        assert!(
+            authorize_binary(
+                &store,
+                ExternalCapability::VerificationExec,
+                arbitrary.to_str().unwrap()
+            )
+            .is_err()
+        );
     }
 }

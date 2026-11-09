@@ -7972,12 +7972,10 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
                 reason,
             } => {
                 let gaps = match (accept_historical_gap.is_empty(), reason) {
-                    (false, Some(reason)) if !reason.trim().is_empty() => {
-                        accept_historical_gap
-                            .iter()
-                            .map(|id| (id.clone(), reason.clone()))
-                            .collect()
-                    }
+                    (false, Some(reason)) if !reason.trim().is_empty() => accept_historical_gap
+                        .iter()
+                        .map(|id| (id.clone(), reason.clone()))
+                        .collect(),
                     (false, _) => {
                         return Err(error::DecapodError::ValidationError(
                             "--reason is required with --accept-historical-gap".into(),

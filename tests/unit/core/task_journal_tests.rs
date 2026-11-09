@@ -1562,14 +1562,18 @@ fn batch_historical_gap_repair_is_atomic_and_closes_every_reviewed_suffix() {
     let before_records = records(&conn);
     let only_one = vec![(TASK.to_owned(), "reviewed release".to_owned())];
     assert_conflict(
-        transaction(&conn, || checkpoint_with_gaps(&conn, "journal-test", &only_one))
-            .unwrap_err(),
+        transaction(&conn, || {
+            checkpoint_with_gaps(&conn, "journal-test", &only_one)
+        })
+        .unwrap_err(),
         "TASK_JOURNAL_INCOMPLETE_HISTORY",
     );
     let duplicate = vec![only_one[0].clone(), only_one[0].clone()];
     assert_conflict(
-        transaction(&conn, || checkpoint_with_gaps(&conn, "journal-test", &duplicate))
-            .unwrap_err(),
+        transaction(&conn, || {
+            checkpoint_with_gaps(&conn, "journal-test", &duplicate)
+        })
+        .unwrap_err(),
         "duplicate historical-gap task",
     );
     let invalid_batch = vec![
@@ -1577,8 +1581,10 @@ fn batch_historical_gap_repair_is_atomic_and_closes_every_reviewed_suffix() {
         ("missing-task".to_owned(), "reviewed release".to_owned()),
     ];
     assert_conflict(
-        transaction(&conn, || checkpoint_with_gaps(&conn, "journal-test", &invalid_batch))
-            .unwrap_err(),
+        transaction(&conn, || {
+            checkpoint_with_gaps(&conn, "journal-test", &invalid_batch)
+        })
+        .unwrap_err(),
         "no checkpointed history",
     );
     assert_eq!(event_count(&conn), before_events);
@@ -1588,21 +1594,20 @@ fn batch_historical_gap_repair_is_atomic_and_closes_every_reviewed_suffix() {
         (TASK.to_owned(), "reviewed old release".to_owned()),
         (DEPENDENCY.to_owned(), "reviewed old claim".to_owned()),
     ];
-    let result = transaction(&conn, || {
-        checkpoint_with_gaps(&conn, "journal-test", &both)
-    })
-    .unwrap();
+    let result = transaction(&conn, || checkpoint_with_gaps(&conn, "journal-test", &both)).unwrap();
     let accepted = result["accepted_historical_gaps"].as_array().unwrap();
     assert_eq!(accepted.len(), 2);
     assert_eq!(accepted[0]["task_id"], TASK);
     assert_eq!(accepted[0]["reason"], "reviewed old release");
     assert_eq!(accepted[1]["task_id"], DEPENDENCY);
     assert_eq!(accepted[1]["reason"], "reviewed old claim");
-    let gap_count: i64 = conn.query_row(
-        "SELECT count(*) FROM events WHERE stream='todo' AND event_type=?1",
-        [EVENT_TYPE_GAP_ACCEPTED],
-        |row| row.get(0),
-    ).unwrap();
+    let gap_count: i64 = conn
+        .query_row(
+            "SELECT count(*) FROM events WHERE stream='todo' AND event_type=?1",
+            [EVENT_TYPE_GAP_ACCEPTED],
+            |row| row.get(0),
+        )
+        .unwrap();
     assert_eq!(gap_count, 2);
     for id in [TASK, DEPENDENCY] {
         let checkpoints: Vec<_> = records(&conn)

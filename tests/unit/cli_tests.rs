@@ -361,16 +361,16 @@ fn exceptional_rbac_grants_are_explicit_per_actor_and_permission() {
 fn validation_bypass_cli_requires_an_explicit_reason() {
     use super::{Cli, Command};
     use clap::Parser;
-    assert!(Cli::try_parse_from([
-        "decapod", "validate", "--bypass-validation"
-    ]).is_err());
-    assert!(Cli::try_parse_from([
-        "decapod", "validate", "--bypass-reason", "exception"
-    ]).is_err());
+    assert!(Cli::try_parse_from(["decapod", "validate", "--bypass-validation"]).is_err());
+    assert!(Cli::try_parse_from(["decapod", "validate", "--bypass-reason", "exception"]).is_err());
     let parsed = Cli::try_parse_from([
-        "decapod", "validate", "--bypass-validation",
-        "--bypass-reason", "reviewed local exception",
-    ]).unwrap();
+        "decapod",
+        "validate",
+        "--bypass-validation",
+        "--bypass-reason",
+        "reviewed local exception",
+    ])
+    .unwrap();
     assert!(matches!(parsed.command, Command::Validate(c)
         if c.bypass_validation && c.bypass_reason.as_deref() == Some("reviewed local exception")));
 }
@@ -378,7 +378,10 @@ fn validation_bypass_cli_requires_an_explicit_reason() {
 #[test]
 fn laya_is_disabled_without_explicit_repository_policy() {
     let config = super::DecapodProjectConfig::default();
-    assert_eq!(config.laya.mode, crate::core::laya_readiness::Mode::Disabled);
+    assert_eq!(
+        config.laya.mode,
+        crate::core::laya_readiness::Mode::Disabled
+    );
     let serialized = toml::to_string(&config).unwrap();
     assert!(!serialized.contains("[laya]"));
 }

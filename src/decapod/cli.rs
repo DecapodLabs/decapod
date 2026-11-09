@@ -573,9 +573,10 @@ impl GovernanceRbac {
             _ => return false,
         };
         !required.is_empty()
-            && self.actor_roles.get(actor).is_some_and(|assigned| {
-                assigned.iter().any(|role| required.contains(role))
-            })
+            && self
+                .actor_roles
+                .get(actor)
+                .is_some_and(|assigned| assigned.iter().any(|role| required.contains(role)))
     }
 }
 

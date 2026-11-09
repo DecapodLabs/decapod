@@ -971,7 +971,9 @@ pub(super) fn checkpoint_with_gaps(
 ) -> Result<serde_json::Value, DecapodError> {
     require_transaction(conn)?;
     if gaps.len() > MAX_TASKS {
-        return Err(invalid("historical-gap selection exceeds bounded task limit"));
+        return Err(invalid(
+            "historical-gap selection exceeds bounded task limit",
+        ));
     }
     let current = capture(conn)?;
     let source_watermark = watermark(conn)?;
@@ -983,7 +985,9 @@ pub(super) fn checkpoint_with_gaps(
     // any acceptance event. A duplicate ID or unrelated divergence aborts all.
     for (id, reason) in gaps {
         if id.trim().is_empty() || reason.trim().is_empty() || reason.len() > 2048 {
-            return Err(invalid("historical-gap task ID and bounded reviewed reason are required"));
+            return Err(invalid(
+                "historical-gap task ID and bounded reviewed reason are required",
+            ));
         }
         if !gap_task_ids.insert(id.clone()) {
             return Err(invalid(format!("duplicate historical-gap task {id}")));
