@@ -12,7 +12,11 @@ fn intent_reconcile_rpc_reports_gaps_without_mutating_specs() {
         .args(["init", "-b", "master"])
         .output()
         .expect("git init");
-    assert!(git.status.success(), "{}", String::from_utf8_lossy(&git.stderr));
+    assert!(
+        git.status.success(),
+        "{}",
+        String::from_utf8_lossy(&git.stderr)
+    );
 
     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(root)
@@ -27,7 +31,11 @@ fn intent_reconcile_rpc_reports_gaps_without_mutating_specs() {
         ])
         .output()
         .expect("decapod init");
-    assert!(init.status.success(), "{}", String::from_utf8_lossy(&init.stderr));
+    assert!(
+        init.status.success(),
+        "{}",
+        String::from_utf8_lossy(&init.stderr)
+    );
 
     let path = root.join(".decapod/managed/specs/INTENT.md");
     let before = fs::read(&path).unwrap();
@@ -45,7 +53,16 @@ fn intent_reconcile_rpc_reports_gaps_without_mutating_specs() {
     );
     let response: Value = serde_json::from_slice(&result.stdout).unwrap();
     assert_eq!(response["success"], true);
-    assert_eq!(response["result"]["report"]["semantic_alignment"], "not_proven");
-    assert!(response["result"]["report"]["specs"].as_array().unwrap().len() >= 7);
+    assert_eq!(
+        response["result"]["report"]["semantic_alignment"],
+        "not_proven"
+    );
+    assert!(
+        response["result"]["report"]["specs"]
+            .as_array()
+            .unwrap()
+            .len()
+            >= 7
+    );
     assert_eq!(fs::read(path).unwrap(), before);
 }

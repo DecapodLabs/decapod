@@ -108,7 +108,10 @@ fn authored_requirement_ids(body: &str, path: &str, findings: &mut Vec<Finding>)
             _ => findings.push(finding(
                 "invalid_requirement_marker",
                 path,
-                format!("Line {} must use <!-- decapod:requirement REQ-ID -->", index + 1),
+                format!(
+                    "Line {} must use <!-- decapod:requirement REQ-ID -->",
+                    index + 1
+                ),
             )),
         }
     }
@@ -147,8 +150,7 @@ pub fn reconcile(project_root: &Path) -> Result<ReconciliationReport, DecapodErr
             }
             (
                 "governed_plan".to_string(),
-                (!plan.intent.trim().is_empty())
-                    .then(|| project_specs::hash_text(&plan.intent)),
+                (!plan.intent.trim().is_empty()).then(|| project_specs::hash_text(&plan.intent)),
                 Some(format!("{:?}", plan.state).to_ascii_lowercase()),
             )
         }
@@ -169,7 +171,11 @@ pub fn reconcile(project_root: &Path) -> Result<ReconciliationReport, DecapodErr
     for spec in LOCAL_PROJECT_SPECS {
         let path = project_root.join(spec.path);
         if !path.exists() {
-            findings.push(finding("missing_spec", spec.path, "Canonical spec file is missing"));
+            findings.push(finding(
+                "missing_spec",
+                spec.path,
+                "Canonical spec file is missing",
+            ));
             spec_observations.push(SpecObservation {
                 path: spec.path.to_string(),
                 material_hash: None,
@@ -184,7 +190,10 @@ pub fn reconcile(project_root: &Path) -> Result<ReconciliationReport, DecapodErr
             if spec.path == LOCAL_PROJECT_SPECS_INTENT {
                 defined.insert(id.clone());
             } else {
-                links.entry(id.clone()).or_default().insert(spec.path.to_string());
+                links
+                    .entry(id.clone())
+                    .or_default()
+                    .insert(spec.path.to_string());
             }
         }
         let matches_manifest = manifest.as_ref().and_then(|m| {
@@ -271,8 +280,7 @@ pub fn reconcile(project_root: &Path) -> Result<ReconciliationReport, DecapodErr
     if let Some(plan) = plan.as_ref() {
         for review in &plan.spec_reviews {
             let current = spec_observations.iter().find(|s| s.path == review.path);
-            let stale = current
-                .and_then(|s| s.material_hash.as_deref())
+            let stale = current.and_then(|s| s.material_hash.as_deref())
                 != Some(review.spec_material_hash.as_str())
                 || review.reviewed_code_fingerprint != fingerprint;
             if stale {
@@ -362,14 +370,27 @@ mod tests {
         let report = reconcile(root).unwrap();
         assert_eq!(report.semantic_alignment, "not_proven");
         assert_eq!(report.requirements.len(), 2);
-        let offline = report.requirements.iter().find(|r| r.id == "REQ-OFFLINE").unwrap();
+        let offline = report
+            .requirements
+            .iter()
+            .find(|r| r.id == "REQ-OFFLINE")
+            .unwrap();
         assert!(offline.validation_declared);
-        assert!(offline.spec_paths.contains(&project_specs::LOCAL_PROJECT_SPECS_ARCHITECTURE.to_string()));
+        assert!(
+            offline
+                .spec_paths
+                .contains(&project_specs::LOCAL_PROJECT_SPECS_ARCHITECTURE.to_string())
+        );
         assert!(has(&report, "duplicate_requirement_marker"));
         assert!(has(&report, "orphan_requirement_reference"));
         assert!(has(&report, "missing_spec_mapping"));
         assert!(has(&report, "missing_validation_mapping"));
-        assert!(!report.requirements.iter().any(|r| r.id == "REQ-IN-FENCE" || r.id == "REQ-GENERATED"));
+        assert!(
+            !report
+                .requirements
+                .iter()
+                .any(|r| r.id == "REQ-IN-FENCE" || r.id == "REQ-GENERATED")
+        );
     }
 
     #[test]
@@ -384,7 +405,11 @@ mod tests {
         );
         assert_eq!(ids, vec!["REQ-GOOD"]);
         assert_eq!(findings.len(), 2);
-        assert!(findings.iter().all(|f| f.code == "invalid_requirement_marker"));
+        assert!(
+            findings
+                .iter()
+                .all(|f| f.code == "invalid_requirement_marker")
+        );
     }
 
     #[test]
@@ -394,7 +419,8 @@ mod tests {
         scaffold(root);
         let fingerprint = project_specs::repo_signal_fingerprint(root).unwrap();
         let spec_hash = project_specs::spec_input_hash(root).unwrap();
-        fs::write(root.join(project_specs::LOCAL_PROJECT_SPECS_MANIFEST),
+        fs::write(
+            root.join(project_specs::LOCAL_PROJECT_SPECS_MANIFEST),
             serde_json::json!({
                 "schema_version":"1.1.0",
                 "template_version":"scaffold-v5",
@@ -402,12 +428,18 @@ mod tests {
                 "repo_signal_fingerprint":fingerprint,
                 "spec_input_hash":spec_hash,
                 "files":[]
-            }).to_string(),
-        ).unwrap();
+            })
+            .to_string(),
+        )
+        .unwrap();
         let before = reconcile(root).unwrap();
         assert_eq!(before.code_changed_since_refresh, Some(false));
         assert_eq!(before.spec_inputs_match_manifest, Some(true));
-        fs::write(root.join("src/main.rs"), "fn main() { println!(\"changed\"); }\n").unwrap();
+        fs::write(
+            root.join("src/main.rs"),
+            "fn main() { println!(\"changed\"); }\n",
+        )
+        .unwrap();
         let after = reconcile(root).unwrap();
         assert_eq!(after.code_changed_since_refresh, Some(true));
         assert!(has(&after, "code_changed_since_refresh"));
@@ -420,19 +452,23 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let root = tmp.path();
         scaffold(root);
-        plan_governance::init_plan(root, InitPlanInput {
-            title: "offline mode".into(),
-            intent: "Offline edits remain usable".into(),
-            todo_ids: vec![],
-            proof_hooks: vec![],
-            unknowns: vec!["conflict semantics".into()],
-            human_questions: vec!["Who may override?".into()],
-            stop_conditions: vec![],
-            unresolved_contradictions: vec!["shared writer ambiguity".into()],
-            deferred_questions: vec![],
-            constraints: ScopeConstraints::default(),
-            phases: vec![],
-        }).unwrap();
+        plan_governance::init_plan(
+            root,
+            InitPlanInput {
+                title: "offline mode".into(),
+                intent: "Offline edits remain usable".into(),
+                todo_ids: vec![],
+                proof_hooks: vec![],
+                unknowns: vec!["conflict semantics".into()],
+                human_questions: vec!["Who may override?".into()],
+                stop_conditions: vec![],
+                unresolved_contradictions: vec!["shared writer ambiguity".into()],
+                deferred_questions: vec![],
+                constraints: ScopeConstraints::default(),
+                phases: vec![],
+            },
+        )
+        .unwrap();
         let report = reconcile(root).unwrap();
         assert_eq!(report.intent_source, "governed_plan");
         assert!(report.intent_hash.is_some());

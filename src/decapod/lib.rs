@@ -3054,7 +3054,10 @@ fn should_auto_clock_in(command: &Command) -> bool {
 
 fn is_storage_independent_command(command: &Command) -> bool {
     match command {
-        Command::Rpc(rpc_cli) => matches!(rpc_cli.op.as_deref(), Some("specs.refresh" | "intent.reconcile")),
+        Command::Rpc(rpc_cli) => matches!(
+            rpc_cli.op.as_deref(),
+            Some("specs.refresh" | "intent.reconcile")
+        ),
         // Maintenance commands operate on the canonical store through the
         // Dactyl contract and must not run startup migrations or presence
         // clock-in before they acquire their own bounded coordination lock.
@@ -11504,9 +11507,11 @@ mod rpc_handlers {
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            Some(serde_json::to_value(IntentReconcileResult { report }).map_err(|e| {
-                error::DecapodError::ValidationError(format!("Serialization failed: {e}"))
-            })?),
+            Some(
+                serde_json::to_value(IntentReconcileResult { report }).map_err(|e| {
+                    error::DecapodError::ValidationError(format!("Serialization failed: {e}"))
+                })?,
+            ),
             vec![],
             None,
             vec![],
@@ -11759,7 +11764,9 @@ fn intent_reconciliation_rpc_does_not_require_mutation_custody() {
     assert!(!rpc_op_requires_worktree("intent.reconcile"));
     assert!(rpc_op_bypasses_session("intent.reconcile"));
     assert!(rpc_op_skips_mandate_enforcement("intent.reconcile"));
-    assert!(!rpc_op_requires_constitutional_awareness("intent.reconcile"));
+    assert!(!rpc_op_requires_constitutional_awareness(
+        "intent.reconcile"
+    ));
 }
 
 /// Run RPC command
