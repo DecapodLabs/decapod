@@ -1185,11 +1185,7 @@ pub(crate) fn initialize_workbranch_at(
             // At an unchanged accepted base, a missing creation reflog is not
             // evidence of a fresh branch. Require an explicit fork commit
             // instead of silently admitting an unproven initialization.
-            if created_base.is_none()
-                && context.is_some()
-                && reflog.is_empty()
-                && head == base
-            {
+            if created_base.is_none() && context.is_some() && reflog.is_empty() && head == base {
                 return Err(invalid(
                     "GOVERNANCE_BRANCH_CREATION_PROOF_REQUIRED: pass the captured fork commit when the branch creation reflog is unavailable",
                 ));
