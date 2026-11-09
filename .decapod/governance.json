@@ -917,6 +917,16 @@
       "proof_refs": [
         ".decapod/managed/specs/.manifest.json"
       ]
+    },
+    {
+      "id": "review-1469-custody-specs",
+      "summary": "Record reviewed interfaces, architecture and security boundaries; Buildkite 5732 reported missing content-bound review and remains failed.",
+      "input_digest": "sha256:b8017473465739975e46ba0ed6daff230e355de7a9f3251761318a89909fc765",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
@@ -953,6 +963,29 @@
         "Exact candidate decapod validate with required CI, workspace, custody and integration regression evidence"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Reviewed the checkout identity, journal projection, cooperative caller trust and distinct integration proof boundaries against the current implementation and recorded remaining gaps.",
+          "reviewed_code_fingerprint": "96fbe8ef10694ae0dc166a716ff50d71d2c0a2256a0ad0d599c6079fe594f26e",
+          "spec_material_hash": "a70ab22b22672c52a3ee245d34749bfc9489e0822fafa58995ee08c87e9ed77d"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed checkout admission, status, lease fencing, replay and explicit remaining shared-operation and RPC transport limits against current implementation and executed regressions.",
+          "reviewed_code_fingerprint": "96fbe8ef10694ae0dc166a716ff50d71d2c0a2256a0ad0d599c6079fe594f26e",
+          "spec_material_hash": "434351f09cd09c53e2b288fc471341489a1156a48c7f4c27837f00d51ed0b997"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed cooperative caller identity and replay boundaries against checkout admission. This change grants no authenticated principal or cross-datastore ownership guarantee; the existing security limits remain accurate.",
+          "reviewed_code_fingerprint": "96fbe8ef10694ae0dc166a716ff50d71d2c0a2256a0ad0d599c6079fe594f26e",
+          "spec_material_hash": "f6255ef903e9f229b7e26ab2601ec707e9f340072eae2db95a4e0cac266e6b6d"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Harden concurrent authoring custody",
@@ -961,7 +994,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794175900Z"
+      "updated_at": "1794182521Z"
     },
     "trajectory": {
       "active_boundaries": [
