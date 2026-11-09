@@ -298,8 +298,7 @@ pub(super) fn verify_spec_reviews(repo: &Path, base: &str) -> Result<(), Decapod
         {
             return Err(failure(format!(
                 "STALE_SPEC_REVIEW: {path} or code changed after review (observed_code_fingerprint={fingerprint}; reviewed_code_fingerprint={}; observed_spec_hash={hash}; reviewed_spec_hash={}). Re-review current bytes through `decapod govern plan review-spec`, refresh projections, and validate.",
-                review.reviewed_code_fingerprint,
-                review.spec_material_hash
+                review.reviewed_code_fingerprint, review.spec_material_hash
             )));
         }
     }
