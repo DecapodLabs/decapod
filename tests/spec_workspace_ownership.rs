@@ -119,14 +119,49 @@ fn setup_protected_repo(default_branch: &str) -> (TempDir, PathBuf) {
     (tmp, dir)
 }
 
-fn add_isolated_worktree(main: &Path, name: &str, branch: &str) -> PathBuf {
-    let wt = main.join(".decapod").join("workspaces").join(name);
-    fs::create_dir_all(wt.parent().unwrap()).expect("workspaces dir");
-    git(
+fn add_isolated_worktree(main: &Path, name: &str, _branch: &str) -> PathBuf {
+    const ACTOR: &str = "projection-test";
+    let add = run_decapod(
         main,
-        &["worktree", "add", "-b", branch, wt.to_str().unwrap()],
+        &["todo", "add", &format!("Verify managed spec projection for {name}"), "--format", "json"],
+        &[("DECAPOD_AGENT_ID", ACTOR)],
     );
-    wt
+    assert!(
+        add.status.success(),
+        "task creation failed: {}",
+        String::from_utf8_lossy(&add.stderr)
+    );
+    let task: serde_json::Value =
+        serde_json::from_slice(&add.stdout).expect("task JSON");
+    let id = task["id"].as_str().expect("task id");
+    let claim = run_decapod(
+        main,
+        &["todo", "claim", "--id", id, "--format", "json"],
+        &[("DECAPOD_AGENT_ID", ACTOR)],
+    );
+    assert!(
+        claim.status.success(),
+        "task claim failed: {}",
+        String::from_utf8_lossy(&claim.stderr)
+    );
+    let branch = format!("agent/{ACTOR}/{id}-{name}");
+    let ensure = run_decapod(
+        main,
+        &["workspace", "ensure", "--branch", &branch],
+        &[("DECAPOD_AGENT_ID", ACTOR)],
+    );
+    assert!(
+        ensure.status.success(),
+        "workspace admission failed: {}",
+        String::from_utf8_lossy(&ensure.stderr)
+    );
+    let admitted: serde_json::Value =
+        serde_json::from_slice(&ensure.stdout).expect("workspace JSON");
+    PathBuf::from(
+        admitted["worktree_path"]
+            .as_str()
+            .expect("managed worktree path"),
+    )
 }
 
 fn assert_root_untouched(root: &Path, before: &BTreeMap<String, Vec<u8>>, dirt: &str) {
@@ -194,12 +229,12 @@ fn run_dirty_root_case(default_branch: &str) {
     let _ = run_decapod(
         &wt,
         &["session", "acquire"],
-        &[("DECAPOD_AGENT_ID", "unknown")],
+        &[("DECAPOD_AGENT_ID", "projection-test")],
     );
     let wt_refresh = run_decapod(
         &wt,
         &["rpc", "--op", "specs.refresh"],
-        &[("DECAPOD_AGENT_ID", "unknown")],
+        &[("DECAPOD_AGENT_ID", "projection-test")],
     );
     assert!(
         wt_refresh.status.success(),
@@ -237,7 +272,7 @@ fn specs_refresh_does_not_depend_on_the_local_database() {
     let session = run_decapod(
         &wt,
         &["session", "acquire"],
-        &[("DECAPOD_AGENT_ID", "unknown")],
+        &[("DECAPOD_AGENT_ID", "projection-test")],
     );
     assert!(
         session.status.success(),
@@ -248,7 +283,7 @@ fn specs_refresh_does_not_depend_on_the_local_database() {
     let refresh = run_decapod(
         &wt,
         &["rpc", "--op", "specs.refresh"],
-        &[("DECAPOD_AGENT_ID", "unknown")],
+        &[("DECAPOD_AGENT_ID", "projection-test")],
     );
     assert!(
         refresh.status.success(),
