@@ -7,6 +7,29 @@ use std::{
     process::Command,
 };
 
+fn resolve_decapod_bin() -> PathBuf {
+    let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+    if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+        return path;
+    }
+    if let Ok(runfiles) = std::env::var("RUNFILES_DIR") {
+        let path = Path::new(&runfiles).join("_main/decapod");
+        if path.is_file() {
+            return path;
+        }
+    }
+    if let Some(parent) = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(Path::to_path_buf))
+    {
+        let path = parent.join("decapod");
+        if path.is_file() {
+            return path;
+        }
+    }
+    PathBuf::from(cargo_bin)
+}
+
 fn git(root: &Path, args: &[&str]) {
     let out = Command::new("git")
         .args(args)
@@ -20,7 +43,7 @@ fn git(root: &Path, args: &[&str]) {
     );
 }
 fn cli(root: &Path, actor: &str, args: &[&str]) -> Value {
-    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let out = Command::new(resolve_decapod_bin())
         .args(args)
         .current_dir(root)
         .env("DECAPOD_AGENT_ID", actor)
@@ -116,7 +139,7 @@ fn independent_tasks_bootstrap_and_bind_observed_worktrees() {
             &a,
         ],
     );
-    let forged = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let forged = Command::new(resolve_decapod_bin())
         .args([
             "govern",
             "policy",
@@ -172,7 +195,7 @@ fn independent_tasks_bootstrap_and_bind_observed_worktrees() {
         )["status"],
         "ok"
     );
-    let secondary = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let secondary = Command::new(resolve_decapod_bin())
         .args([
             "workspace",
             "ensure",
@@ -212,7 +235,7 @@ fn independent_tasks_bootstrap_and_bind_observed_worktrees() {
         "alpha",
         &["todo", "claim", "--id", &c, "--format", "json"],
     );
-    let wrong_destination = Command::new(env!("CARGO_BIN_EXE_decapod"))
+    let wrong_destination = Command::new(resolve_decapod_bin())
         .args([
             "workspace",
             "ensure",

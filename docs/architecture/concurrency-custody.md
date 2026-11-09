@@ -143,3 +143,12 @@ separate proof requirements. The installed governance controller rejected
 trajectory recording from the authorized external maintenance worktree with
 `SCOPE_VIOLATION`; no task admission, approval, checkpoint or readiness receipt
 was fabricated to hide that limit.
+
+Independent full validation with the installed controller returned exit 1 at
+`READINESS_BLOCKED: PROOF_PROFILE_RECONCILIATION_REQUIRED`, before provider proof
+execution. The source inventory/reviewed profile requires governed
+reconciliation; trajectory/checkpoint recording separately rejects this external
+maintenance path. No declaration was repinned and no candidate-built validator
+was substituted to manufacture publication readiness. The new regression test is
+automatically discovered by the existing Cargo/Bazel integration-test setup and
+resolves its executable using the repository's runfiles-safe convention.
