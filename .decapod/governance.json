@@ -644,25 +644,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current merged architecture preserves accepted intent-reconciliation advisory boundary and original immutable gap recovery semantics; accepted mirror infrastructure remains separate from governance recovery",
-          "reviewed_code_fingerprint": "a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289",
-          "spec_material_hash": "8b08790bd5f8ae0386517c584b0844e1048f6df035acd6dbdc5eaed451b7e17b"
+          "reason": "Reviewed current broker, canonical task projection and post-proof readiness architecture; this repair adds no separate datastore, daemon or decision authority",
+          "reviewed_code_fingerprint": "e85fbd83475673ae6da655f014db6d69974dcf5fc6445c6afd6d52c0259fa9b5",
+          "spec_material_hash": "6540f054c627b95aecaebaa4891e9e0b089fa55eaf124b91771c076810855495"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rebased on accepted 7035a854, preserving both intent.reconcile advisory interface and checkpoint-history recovery interface; no implementation changes to existing recovery CLI",
-          "reviewed_code_fingerprint": "a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289",
-          "spec_material_hash": "e16d67c516143c9f47e44d34d329f906b0e0c5cfe854797543d1f5bc2ab9c56f"
+          "reason": "Reviewed repeatable historical gap selection, atomic journal acceptance, RBAC-only local exception and explicit Laya gating",
+          "reviewed_code_fingerprint": "e85fbd83475673ae6da655f014db6d69974dcf5fc6445c6afd6d52c0259fa9b5",
+          "spec_material_hash": "3b9387a0c7c5948ca3525bf84e59eba80f4c0d91315668ad57d933b59a41fd59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved accepted no-self-authorization and prompt-intent boundaries along with original recovery custody and no-retrospective-proof guarantees; no policy or trust changes",
-          "reviewed_code_fingerprint": "a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289",
-          "spec_material_hash": "325a66454da5f43b05f157a41d5496fa09786208ed9dddd09ccfc8f7cc577bc1"
+          "reason": "Reviewed default-deny cooperative actor-label roles, proof-preserving local exceptions and exact executable identity checks",
+          "reviewed_code_fingerprint": "e85fbd83475673ae6da655f014db6d69974dcf5fc6445c6afd6d52c0259fa9b5",
+          "spec_material_hash": "69a595fb1b3335af85be66da29b89c8d535334b94883d43e80207f7786505ca8"
         }
       ],
       "state": "APPROVED",
