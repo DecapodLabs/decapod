@@ -1,7 +1,7 @@
 //! Read-only intent-to-spec traceability. A link is an authored claim, never proof.
 //! The harness proposes changes; the kernel reports observable gaps and freshness.
 use crate::core::bounded_process::{
-    BoundedCommand, Cancellation, ProcessLimits, Termination, CONTROL_TIMEOUT,
+    BoundedCommand, CONTROL_TIMEOUT, Cancellation, ProcessLimits, Termination,
 };
 use crate::core::error::DecapodError;
 use crate::core::project_specs::{
@@ -128,7 +128,6 @@ fn authored_requirement_ids(body: &str, path: &str, findings: &mut Vec<Finding>)
     }
     markers
 }
-
 
 #[derive(Debug, Clone, Serialize)]
 pub struct ChangedFile {
@@ -281,9 +280,10 @@ fn parse_changed_files(raw: &[u8]) -> (Vec<ChangedFile>, bool, Vec<Finding>) {
             "M" => ("modified", false),
             "D" => ("deleted", false),
             "T" => ("type_changed", false),
-            value if value.len() > 1
-                && value.starts_with('R')
-                && value[1..].bytes().all(|b| b.is_ascii_digit()) =>
+            value
+                if value.len() > 1
+                    && value.starts_with('R')
+                    && value[1..].bytes().all(|b| b.is_ascii_digit()) =>
             {
                 ("renamed", true)
             }
@@ -299,13 +299,21 @@ fn parse_changed_files(raw: &[u8]) -> (Vec<ChangedFile>, bool, Vec<Finding>) {
         };
         let Some(first) = parts.next() else {
             complete = false;
-            findings.push(finding("incomplete_git_diff", "git_diff", "Change has no path"));
+            findings.push(finding(
+                "incomplete_git_diff",
+                "git_diff",
+                "Change has no path",
+            ));
             break;
         };
         let second = if rename { parts.next() } else { None };
         if rename && second.is_none() {
             complete = false;
-            findings.push(finding("incomplete_git_diff", "git_diff", "Rename has no destination"));
+            findings.push(finding(
+                "incomplete_git_diff",
+                "git_diff",
+                "Rename has no destination",
+            ));
             break;
         }
         let (previous_path, path_bytes) = if let Some(destination) = second {
@@ -354,7 +362,10 @@ fn parse_changed_files(raw: &[u8]) -> (Vec<ChangedFile>, bool, Vec<Finding>) {
     (changes, complete, findings)
 }
 
-fn inspect_change_impact(root: &Path, requested_base: &str) -> Result<ChangeImpactReport, DecapodError> {
+fn inspect_change_impact(
+    root: &Path,
+    requested_base: &str,
+) -> Result<ChangeImpactReport, DecapodError> {
     if !immutable_oid(requested_base) {
         return Err(DecapodError::ValidationError(
             "IMPACT_BASE_NOT_IMMUTABLE: base_commit must be a full 40/64-byte hex commit ID".into(),
@@ -369,18 +380,26 @@ fn inspect_change_impact(root: &Path, requested_base: &str) -> Result<ChangeImpa
     }
     let head_bytes = git_output(root, &["rev-parse", "--verify", "HEAD^{commit}"])?;
     let head_commit = String::from_utf8(head_bytes)
-        .map_err(|_| DecapodError::ValidationError("IMPACT_HEAD_INVALID: non-UTF8 commit ID".into()))?
+        .map_err(|_| {
+            DecapodError::ValidationError("IMPACT_HEAD_INVALID: non-UTF8 commit ID".into())
+        })?
         .trim()
         .to_ascii_lowercase();
     if !immutable_oid(&head_commit) || head_commit.len() != base_commit.len() {
         return Err(DecapodError::ValidationError(
-            "IMPACT_HEAD_INVALID: HEAD is not an immutable commit of the same Git hash format".into(),
+            "IMPACT_HEAD_INVALID: HEAD is not an immutable commit of the same Git hash format"
+                .into(),
         ));
     }
-    git_output(root, &["merge-base", "--is-ancestor", &base_commit, &head_commit])
-        .map_err(|_| DecapodError::ValidationError(
+    git_output(
+        root,
+        &["merge-base", "--is-ancestor", &base_commit, &head_commit],
+    )
+    .map_err(|_| {
+        DecapodError::ValidationError(
             "IMPACT_BASE_NOT_ANCESTOR: base_commit is not an ancestor of HEAD".into(),
-        ))?;
+        )
+    })?;
     let raw = bounded_git_diff(root, &base_commit, &head_commit)?;
     let (changed_files, mut complete, mut findings) = match raw {
         Some(bytes) => parse_changed_files(&bytes),
@@ -394,11 +413,8 @@ fn inspect_change_impact(root: &Path, requested_base: &str) -> Result<ChangeImpa
             )],
         ),
     };
-    let specs = project_specs::material_specs_change_between_refs(
-        root,
-        &base_commit,
-        &head_commit,
-    )?;
+    let specs =
+        project_specs::material_specs_change_between_refs(root, &base_commit, &head_commit)?;
     let mut material_spec_paths = specs.material_changed_paths;
     material_spec_paths.sort();
     let mut generated_only_spec_paths = specs.fingerprint_only_changed_paths;
@@ -416,7 +432,11 @@ fn inspect_change_impact(root: &Path, requested_base: &str) -> Result<ChangeImpa
                 }
                 Err(_) => {
                     complete = false;
-                    findings.push(finding("unsupported_spec_encoding", path, "Spec is not UTF-8"));
+                    findings.push(finding(
+                        "unsupported_spec_encoding",
+                        path,
+                        "Spec is not UTF-8",
+                    ));
                 }
             },
             Err(_) => {
@@ -456,9 +476,8 @@ fn inspect_change_impact(root: &Path, requested_base: &str) -> Result<ChangeImpa
         ));
     }
     let needs_evidence = !changed_files.is_empty() || !material_spec_paths.is_empty() || !complete;
-    let needs_review = !unmapped_implementation_paths.is_empty()
-        || !material_spec_paths.is_empty()
-        || !complete;
+    let needs_review =
+        !unmapped_implementation_paths.is_empty() || !material_spec_paths.is_empty() || !complete;
     Ok(ChangeImpactReport {
         base_commit,
         head_commit,
@@ -664,7 +683,9 @@ pub fn reconcile_with_base(
         }
     }
 
-    let change_impact = base_commit.map(|base| inspect_change_impact(project_root, base)).transpose()?;
+    let change_impact = base_commit
+        .map(|base| inspect_change_impact(project_root, base))
+        .transpose()?;
 
     Ok(ReconciliationReport {
         schema_version: if change_impact.is_some() {
@@ -877,7 +898,11 @@ mod tests {
         git_fixture(root, &["add", "."]);
         git_fixture(root, &["commit", "-m", "baseline"]);
         let base = git_fixture(root, &["rev-parse", "HEAD"]);
-        fs::write(root.join("src/main.rs"), "fn main() { println!(\"change\"); }\n").unwrap();
+        fs::write(
+            root.join("src/main.rs"),
+            "fn main() { println!(\"change\"); }\n",
+        )
+        .unwrap();
         fs::write(
             root.join(LOCAL_PROJECT_SPECS_INTENT),
             "# Intent\n<!-- decapod:requirement REQ-IMPACT -->\nBounded inspection.\n",
@@ -889,21 +914,47 @@ mod tests {
         assert!(report.complete);
         assert!(report.review_needed);
         assert!(report.evidence_needed);
-        assert!(report.unmapped_implementation_paths.contains(&"src/main.rs".to_string()));
-        assert!(report.material_spec_paths.contains(&LOCAL_PROJECT_SPECS_INTENT.to_string()));
-        assert!(report.referenced_requirement_ids.contains(&"REQ-IMPACT".to_string()));
-        assert!(report.findings.iter().any(|item| item.code == "implementation_mapping_unproven"));
-        assert!(!report.findings.iter().any(|item| item.code == "authored_spec_review_needed"));
+        assert!(
+            report
+                .unmapped_implementation_paths
+                .contains(&"src/main.rs".to_string())
+        );
+        assert!(
+            report
+                .material_spec_paths
+                .contains(&LOCAL_PROJECT_SPECS_INTENT.to_string())
+        );
+        assert!(
+            report
+                .referenced_requirement_ids
+                .contains(&"REQ-IMPACT".to_string())
+        );
+        assert!(
+            report
+                .findings
+                .iter()
+                .any(|item| item.code == "implementation_mapping_unproven")
+        );
+        assert!(
+            !report
+                .findings
+                .iter()
+                .any(|item| item.code == "authored_spec_review_needed")
+        );
     }
 
     #[test]
     fn renamed_and_odd_paths_do_not_disappear() {
-        let data = b"R100\0src/old name.rs\0src/new name.rs\0A\0src/tab\tname.rs\0D\0src/removed.rs\0";
+        let data =
+            b"R100\0src/old name.rs\0src/new name.rs\0A\0src/tab\tname.rs\0D\0src/removed.rs\0";
         let (changed, complete, findings) = parse_changed_files(data);
         assert!(complete);
         assert!(findings.is_empty());
         assert_eq!(changed.len(), 3);
-        let renamed = changed.iter().find(|file| file.change == "renamed").unwrap();
+        let renamed = changed
+            .iter()
+            .find(|file| file.change == "renamed")
+            .unwrap();
         assert_eq!(renamed.previous_path.as_deref(), Some("src/old name.rs"));
         assert_eq!(renamed.path, "src/new name.rs");
         assert!(renamed.implementation);
@@ -926,14 +977,26 @@ mod tests {
 
         let (_, complete, findings) = parse_changed_files(b"A\0src/\xff.rs\0");
         assert!(!complete);
-        assert!(findings.iter().any(|item| item.code == "unsupported_git_path"));
+        assert!(
+            findings
+                .iter()
+                .any(|item| item.code == "unsupported_git_path")
+        );
         let (_, complete, findings) = parse_changed_files(b"A\0\0");
         assert!(!complete);
-        assert!(findings.iter().any(|item| item.code == "unsupported_git_path"));
+        assert!(
+            findings
+                .iter()
+                .any(|item| item.code == "unsupported_git_path")
+        );
 
         let (_, complete, findings) = parse_changed_files(b"M\0src/unfinished.rs");
         assert!(!complete);
-        assert!(findings.iter().any(|item| item.code == "incomplete_git_diff"));
+        assert!(
+            findings
+                .iter()
+                .any(|item| item.code == "incomplete_git_diff")
+        );
     }
 
     #[test]
@@ -956,7 +1019,6 @@ mod tests {
         assert!(!empty.evidence_needed);
     }
 
-
     #[test]
     fn non_ancestor_base_is_rejected_without_reporting_empty_impact() {
         let tmp = tempfile::tempdir().unwrap();
@@ -973,7 +1035,11 @@ mod tests {
         git_fixture(root, &["commit", "-m", "other branch"]);
         let foreign = git_fixture(root, &["rev-parse", "HEAD"]);
         git_fixture(root, &["checkout", "master"]);
-        fs::write(root.join("src/main.rs"), "fn main() { println!(\"master\"); }\n").unwrap();
+        fs::write(
+            root.join("src/main.rs"),
+            "fn main() { println!(\"master\"); }\n",
+        )
+        .unwrap();
         git_fixture(root, &["add", "."]);
         git_fixture(root, &["commit", "-m", "master branch"]);
         let error = inspect_change_impact(root, &foreign).unwrap_err();
@@ -1005,12 +1071,13 @@ mod tests {
         let report = inspect_change_impact(root, &base).unwrap();
         assert!(report.complete);
         assert!(report.material_spec_paths.is_empty());
-        assert!(report
-            .generated_only_spec_paths
-            .contains(&LOCAL_PROJECT_SPECS_INTENT.to_string()));
+        assert!(
+            report
+                .generated_only_spec_paths
+                .contains(&LOCAL_PROJECT_SPECS_INTENT.to_string())
+        );
         assert!(report.referenced_requirement_ids.is_empty());
     }
-
 
     #[test]
     fn unstaged_worktree_edit_cannot_enter_immutable_diff() {
@@ -1023,7 +1090,11 @@ mod tests {
         git_fixture(root, &["add", "."]);
         git_fixture(root, &["commit", "-m", "baseline"]);
         let base = git_fixture(root, &["rev-parse", "HEAD"]);
-        fs::write(root.join("src/main.rs"), "fn main() { println!(\"uncommitted\"); }\n").unwrap();
+        fs::write(
+            root.join("src/main.rs"),
+            "fn main() { println!(\"uncommitted\"); }\n",
+        )
+        .unwrap();
         let report = inspect_change_impact(root, &base).unwrap();
         assert!(report.complete);
         assert_eq!(report.base_commit, report.head_commit);
@@ -1032,5 +1103,4 @@ mod tests {
         assert!(!report.review_needed);
         assert!(!report.evidence_needed);
     }
-
 }

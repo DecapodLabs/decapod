@@ -101,20 +101,44 @@ fn intent_reconcile_rpc_immutable_base_reports_code_change_as_unproven() {
         ])
         .output()
         .expect("decapod init");
-    assert!(init.status.success(), "{:?}", String::from_utf8_lossy(&init.stderr));
+    assert!(
+        init.status.success(),
+        "{:?}",
+        String::from_utf8_lossy(&init.stderr)
+    );
     git(&["add", "-A"]);
-    git(&["-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null",
-        "commit", "-m", "baseline"]);
+    git(&[
+        "-c",
+        "commit.gpgsign=false",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "commit",
+        "-m",
+        "baseline",
+    ]);
     let base = git(&["rev-parse", "HEAD"]);
     fs::create_dir_all(root.join("src")).unwrap();
     fs::write(root.join("src/intent_impact.rs"), "pub fn changed() {}\n").unwrap();
     git(&["add", "src/intent_impact.rs"]);
-    git(&["-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null",
-        "commit", "-m", "implementation without spec authoring"]);
+    git(&[
+        "-c",
+        "commit.gpgsign=false",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "commit",
+        "-m",
+        "implementation without spec authoring",
+    ]);
     let params = serde_json::json!({"base_commit": base}).to_string();
     let result = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(root)
-        .args(["rpc", "--op", "intent.reconcile", "--params", params.as_str()])
+        .args([
+            "rpc",
+            "--op",
+            "intent.reconcile",
+            "--params",
+            params.as_str(),
+        ])
         .env_remove("DECAPOD_SESSION_PASSWORD")
         .output()
         .expect("intent reconcile with immutable base");
@@ -130,18 +154,32 @@ fn intent_reconcile_rpc_immutable_base_reports_code_change_as_unproven() {
     let impact = &response["result"]["report"]["change_impact"];
     assert_eq!(impact["complete"], true);
     assert_eq!(impact["review_needed"], true);
-    assert!(impact["unmapped_implementation_paths"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|p| p.as_str() == Some("src/intent_impact.rs")));
-    assert_eq!(response["result"]["report"]["semantic_alignment"], "not_proven");
+    assert!(
+        impact["unmapped_implementation_paths"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|p| p.as_str() == Some("src/intent_impact.rs"))
+    );
+    assert_eq!(
+        response["result"]["report"]["semantic_alignment"],
+        "not_proven"
+    );
 
     let rejected = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(root)
-        .args(["rpc", "--op", "intent.reconcile", "--params", r#"{"base_commit":"HEAD"}"#])
+        .args([
+            "rpc",
+            "--op",
+            "intent.reconcile",
+            "--params",
+            r#"{"base_commit":"HEAD"}"#,
+        ])
         .env_remove("DECAPOD_SESSION_PASSWORD")
         .output()
         .expect("reject moving base");
-    assert!(!rejected.status.success(), "a symbolic base must never be accepted");
+    assert!(
+        !rejected.status.success(),
+        "a symbolic base must never be accepted"
+    );
 }
