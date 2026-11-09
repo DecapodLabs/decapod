@@ -530,9 +530,7 @@ fn committed_history(
         }
     }
     // A staged old template cannot remain at the immutable final candidate.
-    if oid_with(SOURCE_ROOT, run_git)?.is_some()
-        && ancestor_with(SOURCE_ROOT, &head, run_git)?
-    {
+    if oid_with(SOURCE_ROOT, run_git)?.is_some() && ancestor_with(SOURCE_ROOT, &head, run_git)? {
         for surface in super::ENTRYPOINT_FILES {
             let committed = blob_with(&head, surface, run_git)?;
             let canonical =

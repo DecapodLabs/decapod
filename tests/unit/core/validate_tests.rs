@@ -336,7 +336,9 @@ fn unbound_worktree_is_not_admitted_for_validation_by_path_alone() {
 
     // A linked Git worktree at a managed path is insufficient by itself:
     // authoring requires the current task lease and a verified checkout binding.
-    assert!(crate::workspace::is_canonical_decapod_workspace_path(&wt_path));
+    assert!(crate::workspace::is_canonical_decapod_workspace_path(
+        &wt_path
+    ));
     assert!(!is_decapod_isolated_worktree(&main_root, &wt_path));
     assert!(
         !is_decapod_isolated_worktree(&wt_path, &wt_path),
