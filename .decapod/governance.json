@@ -634,6 +634,16 @@
         "/private/tmp/index134-v01342-merge-tests.log",
         "/private/tmp/index134-v01342-socket-recheck.log"
       ]
+    },
+    {
+      "id": "ci-fixture-and-review-repair",
+      "summary": "Repair ETXTBSY test runtime readiness and bounded socket fixture teardown; record accurate unchanged SECURITY review against accepted base, preserving all production guards and historical checkpoint chain.",
+      "input_digest": "sha256:3f683e3da1bd1e8d8b4a47376ffbcf365c01aaee028d2585bdb55410574f9015",
+      "proof_refs": [
+        "/private/tmp/pr1589-history-before-repair.json",
+        "/private/tmp/pr1589-lifecycle-repair-tests.log",
+        "/private/tmp/pr1589-supabase-final-suite.log"
+      ]
     }
   ],
   "intents": {
@@ -674,22 +684,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged accepted 0.134.2 journal and RBAC changes while preserving Laya helper ownership and datastore physical revision 2.",
-          "reviewed_code_fingerprint": "7a3dc27ed4c525e99b65d9612f64fdb19e38fa3d94b339516bc4ab5197fc42ce",
+          "reason": "Material branch-level event storage and Laya helper changes remain documented. CI repair modifies only fixture setup/teardown, with no new production retry mechanism.",
+          "reviewed_code_fingerprint": "367a8c94397d37050a1858a2ae6b88834a0ebf50eb283e987833ec2cf7bad257",
           "spec_material_hash": "aca2b9332b2f0f39f9377bb30175b7f857ec39562b2530d98648a033f15ef142"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retains new exceptional-operation RBAC configuration, initialization preservation and Laya-only optional evaluator surface; generated docs reflect merged source.",
-          "reviewed_code_fingerprint": "7a3dc27ed4c525e99b65d9612f64fdb19e38fa3d94b339516bc4ab5197fc42ce",
+          "reason": "Branch-level optional Laya setup/init changes and historical data compatibility remain reviewed against current source; fixture corrections change no public API.",
+          "reviewed_code_fingerprint": "367a8c94397d37050a1858a2ae6b88834a0ebf50eb283e987833ec2cf7bad257",
           "spec_material_hash": "f84bad49056ac0cd09d0c34e27a27c8b6c0b7706ce3f75591d47bb963aaa6974"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Includes accepted root-authorized RBAC grant boundary; historical DTO and Laya private runtime limits unchanged. Synthetic projection fixture carries no executable-registration claim.",
-          "reviewed_code_fingerprint": "7a3dc27ed4c525e99b65d9612f64fdb19e38fa3d94b339516bc4ab5197fc42ce",
+          "reason": "Semantic security content is identical to accepted master3cda3f14. Fixture-only bounded ETXTBSY and socket teardown waits leave production live-peer, container custody and authorization checks intact.",
+          "reviewed_code_fingerprint": "367a8c94397d37050a1858a2ae6b88834a0ebf50eb283e987833ec2cf7bad257",
           "spec_material_hash": "2a7ed5e559e71e6c8ff54801816f6f36ccfdebb745fc1c97607deea8d96c4779"
         }
       ],
@@ -702,13 +712,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794264308Z"
+      "updated_at": "1794266596Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:41c106bc740c98d65bcb5123a33a03cf7ca5ad8760362b27d3834865f9724fc4",
+      "artifact_hash": "sha256:487d588bdbfb5c65d660f6b46bac7112bec7367ca1717f251f30d8c26e44c52d",
       "checks": [
         {
           "name": "canonical-snapshot-fixtures",
@@ -719,8 +729,16 @@
           "status": "passed"
         },
         {
+          "name": "ci-governance-head6c6d",
+          "status": "failed"
+        },
+        {
           "name": "ci-lock-inputs",
           "status": "passed"
+        },
+        {
+          "name": "ci-supabase-head6c6d",
+          "status": "failed"
         },
         {
           "name": "clippy-all-targets",
@@ -756,6 +774,10 @@
         },
         {
           "name": "legacy-decoding",
+          "status": "passed"
+        },
+        {
+          "name": "lifecycle-fixture-host",
           "status": "passed"
         },
         {
@@ -901,10 +923,24 @@
             "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M70TT9YCVF9GDEN1NF0KHM96": {
@@ -1138,6 +1174,41 @@
                 ],
                 "sequence": 15,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "tests/unit/core/container_runtime_tests.rs",
+                  "tests/unit/core/container_runtime_tests.rs",
+                  "GitHub job129495429987: 1607 library tests passed, one lifecycle fixture spawn failed ETXTBSY before container mutation. No Supabase data/auth failure. Fixture now establishes side-effect-free successful exec with bounded ETXTBSY-only retry; Linux regression holds a real writer.",
+                  "GitHub job129498781351: SPEC_REVIEW_DISPOSITION_MISMATCH for SECURITY.md. Semantic body equals accepted3cda3f14; corrected explicit review to unchanged-with-reason, bound current code fingerprint. Guard and historical checkpoints unchanged."
+                ],
+                "proof_refs": [
+                  "ci-supabase-head6c6d",
+                  "ci-governance-head6c6d"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 16,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "/private/tmp/pr1589-lifecycle-repair-tests.log: seven lifecycle/runtime tests pass. Linux-only held-writer ETXTBSY regression is defined but requires Linux provider execution; host success is not Linux proof.",
+                  "Socket fixture now waits at most2s for AddrInUse after closing its own listeners, preserving live-peer refusal and replacement-owner assertions. Production remove_stale is unchanged. Final full Supabase command repeats after this test-only source change."
+                ],
+                "proof_refs": [
+                  "lifecycle-fixture-host"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 17,
+                "validation_findings": []
               }
             ]
           }
@@ -1166,12 +1237,15 @@
         "/private/tmp/index134-v01342-final-tests.log: 1603 passed, 1 failed, 8 ignored. Unchanged socket cleanup test saw transient BROKER_ENDPOINT_LIVE after listener drop; isolated identical-binary recheck passes. Preserve run failure; no test skipped or production socket protection changed.",
         "/private/tmp/index134-v01342-final-tests.log: projection golden replay test passes with explicit supabase-cloud feature after replay-only artifact fixture repair. This does not claim model/runtime registration evidence.",
         "/private/tmp/index134-v01342-merge-tests.log: 1604 library tests passed, 8 ignored; datastore 6 passed 1 ignored; CLI 36 passed 1 ignored.",
+        "/private/tmp/pr1589-lifecycle-repair-tests.log: seven lifecycle/runtime tests pass. Linux-only held-writer ETXTBSY regression is defined but requires Linux provider execution; host success is not Linux proof.",
         "Both configuration and complete historical receipt roundtrips pass; /private/tmp/index134-legacy-receipt-tests.log",
         "Fetched accepted 3cda3f14 including PR #1585 and release v0.134.2; installed published 0.134.2 only through session acquire; restored original configuration and update preference. Regenerated release-bound entrypoints and Dockerfile with installed 0.134.2. Reviewed proof-source changes limited to accepted Cargo versions; hosted workflow/helper/executor definitions unchanged; reconciled source digest sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb.",
         "Fetched b4939469 / v0.134.1 after operator update. Retirement checkpoint records verified v0.134.0 source before integrating the new accepted target; final candidate proof remains pending.",
         "Final feature-enabled suite reported one socket test failure; identical isolated recheck passes (/private/tmp/index134-v01342-socket-recheck.log). Preserve failure rather than claim an entirely passing run; final verdict pending.",
         "Final projection replay golden vectors pass in feature-enabled binary. Prior merged-source complete library/storage/CLI suites pass; final feature-run failure prevents claiming universal green status.",
         "Four pre-refactor production projection hashes replay exactly; /private/tmp/index134-laya-helper-tests.log",
+        "GitHub job129495429987: 1607 library tests passed, one lifecycle fixture spawn failed ETXTBSY before container mutation. No Supabase data/auth failure. Fixture now establishes side-effect-free successful exec with bounded ETXTBSY-only retry; Linux regression holds a real writer.",
+        "GitHub job129498781351: SPEC_REVIEW_DISPOSITION_MISMATCH for SECURITY.md. Semantic body equals accepted3cda3f14; corrected explicit review to unchanged-with-reason, bound current code fingerprint. Guard and historical checkpoints unchanged.",
         "Old Cargo manifest fingerprint stopped setup/core/contracts before compilation; regenerated using bazel mod deps --lockfile_mode=update; log /private/tmp/index134-bazel-lock-update.log",
         "Operator explicitly directed removal of assets/tools/vega-native, exclusive optional Laya post-validation evaluation, inclusion in this active branch and immediate PR publication when verified. Supersedes prior Vega worker retention requirement.",
         "Original synthetic benchmark: docs/datastore-v2/measurements.json; physical savings 1650688 bytes at 100K events, WAL savings 2241280 bytes per 512 appends. Timing and hosted limits retained.",
@@ -1179,6 +1253,7 @@
         "Previous bb204834 Supabase consumer test failed because debug test executable exceeded real runtime size allowance. Replay-only projection test now supplies explicit fixture artifact identity, preserving four independent expected hashes and production 512 MiB guard; final suite pending.",
         "Previous v0.133.2 Buildkite 6113 failed missing content-bound spec review; current interfaces, architecture and security explicitly reviewed. Fresh validation required.",
         "Resolved accepted b4939469 merge by preserving this active journal and both branches authored specs; removed obsolete lock-maintenance requirement with the retired workspace. No history reset or forced push.",
+        "Socket fixture now waits at most2s for AddrInUse after closing its own listeners, preserving live-peer refusal and replacement-owner assertions. Production remove_stale is unchanged. Final full Supabase command repeats after this test-only source change.",
         "Supported session flow updated verifier to 0.134.1; temporary auto-update opt-in was backed up and restored. Runtime backup files stay ignored outside source artifacts."
       ],
       "inspected_files": [
@@ -1187,11 +1262,13 @@
         "MODULE.bazel.lock",
         "src/decapod/core/events.rs",
         "src/decapod/core/migration.rs",
-        "src/decapod/core/schemas.rs"
+        "src/decapod/core/schemas.rs",
+        "tests/unit/core/container_runtime_tests.rs"
       ],
       "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
       "modified_files": [
         "tests/datastore_efficiency.rs",
+        "tests/unit/core/container_runtime_tests.rs",
         "tests/unit/core/laya_readiness_tests.rs"
       ],
       "next_transitions": [

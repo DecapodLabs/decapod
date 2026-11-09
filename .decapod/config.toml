@@ -177,4 +177,3 @@ pipeline_trigger = { contract = "buildkite-gha-0.102.7", workflow_name = "Docume
 checks = [
   { check = { provider = "buildkite", workflow = ".github/workflows/docs_sync.yml", job = "sync-docs", matrix = {  }, profile = "decapod.pr-readiness.v1/docs-drift" }, step_key = "gha-cc87b5ff8dab6c39-sync-docs" },
 ]
-
