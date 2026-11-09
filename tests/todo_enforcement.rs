@@ -387,12 +387,33 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         .expect("git checkout original branch");
 
     // Independent tasks may coordinate from the same logical repository dir.
-    // Only their actual writable checkouts require exclusive custody.
+    // Authenticate the second actor independently: the primary actor's session
+    // password must not be usable as another agent's credential.
+    let other_session = Command::new(resolve_decapod_bin())
+        .args(["session", "acquire"])
+        .current_dir(&dir)
+        .env("DECAPOD_AGENT_ID", "other-agent")
+        .output()
+        .expect("acquire other-agent session");
+    assert!(
+        other_session.status.success(),
+        "other-agent session acquisition failed: {}",
+        String::from_utf8_lossy(&other_session.stderr)
+    );
+    let other_output = String::from_utf8_lossy(&other_session.stdout);
+    let other_password = other_output
+        .lines()
+        .find_map(|line| line.strip_prefix("Password: "))
+        .expect("other-agent session password")
+        .trim()
+        .to_string();
+
+    // Only actual writable checkouts require exclusive custody.
     let second_agent = Command::new(resolve_decapod_bin())
         .args(["workspace", "ensure"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", "other-agent")
-        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("DECAPOD_SESSION_PASSWORD", &other_password)
         .env("DECAPOD_CLAIM_AUTORUN", "0")
         .output()
         .expect("workspace ensure");
