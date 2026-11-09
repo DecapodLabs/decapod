@@ -311,15 +311,29 @@ fn normalize_json_value(value: &serde_json::Value) -> serde_json::Value {
 /// decisions, scopes, blockers and unknown fields must still affect replay.
 fn normalize_validation_document(value: &serde_json::Value) -> serde_json::Value {
     let mut normalized = normalize_json_value(value);
-    for pointer in [
-        "/readiness/evidence_path",
-        "/readiness/vega_readiness/request_id",
-        "/readiness/vega_readiness/binding/evidence_digest",
-    ] {
-        if let Some(field) = normalized.pointer_mut(pointer)
-            && field.is_string()
-        {
-            *field = serde_json::Value::String("<execution-evidence>".into());
+    if let Some(field) = normalized.pointer_mut("/readiness/evidence_path")
+        && field.is_string()
+    {
+        *field = serde_json::Value::String("<execution-evidence>".into());
+    }
+    // Mask only execution identity fields in named readiness receipts.
+    // New receipt implementations get the same replay contract without
+    // hiding their material, mode, decision, blockers, or unknown fields.
+    if let Some(receipts) = normalized
+        .get_mut("readiness")
+        .and_then(serde_json::Value::as_object_mut)
+    {
+        for (name, receipt) in receipts {
+            if !name.ends_with("_readiness") || !receipt.is_object() {
+                continue;
+            }
+            for pointer in ["/request_id", "/binding/evidence_digest"] {
+                if let Some(field) = receipt.pointer_mut(pointer)
+                    && field.is_string()
+                {
+                    *field = serde_json::Value::String("<execution-evidence>".into());
+                }
+            }
         }
     }
     normalized
