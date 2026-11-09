@@ -1638,6 +1638,8 @@ fn init_with_from_config(
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
+        existing_rbac: config.governance.rbac.clone(),
+        existing_laya: config.laya.clone(),
         vega_decisions: Some(config.vega.mode == core::vega_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
         backend: if config.repo.effective_backend().is_cloud() {
@@ -1747,6 +1749,8 @@ fn preserve_unspecified_init_options(
     init.existing_repository_contract = existing.existing_repository_contract;
     init.existing_ci_attested = existing.existing_ci_attested;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
+    init.existing_rbac = existing.existing_rbac;
+    init.existing_laya = existing.existing_laya;
 }
 
 fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjectConfig {
@@ -1830,6 +1834,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             protected_paths,
             approval_categories,
             allow_basic_shared_claims: init.existing_allow_basic_shared_claims,
+            rbac: init.existing_rbac.clone(),
         },
         proof: proof::ProjectProofConfig {
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
@@ -1862,6 +1867,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             declared_sources: declared_context_sources,
         },
         vega: core::vega_readiness::Configuration::default(),
+        laya: init.existing_laya.clone(),
     }
 }
 
@@ -2519,6 +2525,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_rust_workers: None,
                             existing_ci_attested: None,
                             existing_allow_basic_shared_claims: false,
+                            existing_rbac: crate::cli::GovernanceRbac::default(),
+                            existing_laya: crate::core::laya_readiness::Configuration::default(),
                             vega_decisions: init_group.vega_decisions,
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
