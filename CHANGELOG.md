@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.133.1](https://github.com/DecapodLabs/decapod/compare/v0.133.0...v0.133.1) - 2026-11-09
+
+### Added
+
+- *(intent)* reconstruct governed intent reconciliation contract
+
+### Fixed
+
+- *(ci)* isolate broker deadline acceptance from sibling tests
+- *(build)* prefer verified official Bazel release mirror
+- *(build)* retry pinned GitHub release downloads
+- *(proof)* reconcile accepted release source inventory
+
 ## [0.133.0](https://github.com/DecapodLabs/decapod/compare/v0.132.0...v0.133.0) - 2026-11-09
 
 ### Fixed
