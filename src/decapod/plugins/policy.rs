@@ -57,7 +57,32 @@ pub enum RiskmapSubcommand {
 }
 
 pub fn run_policy_cli(store: &Store, cli: PolicyCli) -> Result<(), error::DecapodError> {
+    run_policy_cli_as(store, cli, &crate::current_agent_id())
+}
+
+/// Trusted in-process caller form. CLI labels never select this identity.
+pub fn run_policy_cli_as(
+    store: &Store,
+    cli: PolicyCli,
+    caller: &str,
+) -> Result<(), error::DecapodError> {
+    if DbBroker::new(&store.root).is_cloud() {
+        return Err(error::DecapodError::NotImplemented("LOCAL_POLICY_PROFILE_UNSUPPORTED: local trust/approvals do not authorize Supabase repository operations".into()));
+    }
+    crate::core::todo::initialize_todo_db(&store.root)?;
     initialize_policy_db(&store.root)?;
+    let observing = matches!(
+        &cli.command,
+        PolicyCommand::Eval { .. }
+            | PolicyCommand::Riskmap {
+                command: RiskmapSubcommand::Verify
+            }
+    );
+    if !observing {
+        // --actor records the approving decision, never the executing identity.
+        // In particular its default 'operator' must not promote a basic caller.
+        enforce_broker_mutation_policy(&store.root, caller, "policy.control")?;
+    }
     match cli.command {
         PolicyCommand::Eval { command, path } => {
             let risk_map_path = store.root.join("RISKMAP.json");
@@ -850,7 +875,14 @@ pub(crate) fn exact_target_approval_ids_on_conn(
                 "HANDOFF_APPROVAL_LIMIT: too many target approvals".into(),
             ));
         }
-        if approval_expiry_is_live(expiry.as_deref()) {
+        let bounded = expiry.as_deref().and_then(parse_expiry).is_some_and(|end| {
+            let now = now_iso()
+                .trim_end_matches('Z')
+                .parse::<i64>()
+                .unwrap_or_default();
+            end > now && end <= now.saturating_add(86_400)
+        });
+        if bounded && approval_expiry_is_live(expiry.as_deref()) {
             ids.push(id);
         }
     }

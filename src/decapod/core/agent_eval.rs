@@ -21,7 +21,7 @@ pub fn schema() -> serde_json::Value {
         "input": {
             "prompt": "string via --prompt or stdin via --stdin"
         },
-        "statuses": ["allow", "block"],
+        "statuses": ["allow", "block", "invalid_input", "error"],
         "contract": {
             "run_at": ["agent_startup", "after_each_prompt"],
             "allow_exit_code": 0,
@@ -545,26 +545,35 @@ pub fn evaluate_prompt(prompt: &str) -> EvalResult {
 }
 
 pub(crate) fn run_agent_eval_cli(cli: AgentEvalCli) -> Result<(), error::DecapodError> {
-    let prompt = match (cli.prompt, cli.stdin) {
-        (Some(_), true) => {
-            return Err(error::DecapodError::ValidationError(
-                "decapod eval accepts exactly one input source: --prompt or --stdin".to_string(),
-            ));
+    let invalid = |code: &str, status: &str| {
+        if cli.format == "json" {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "schema_version": SCHEMA_VERSION, "status": status,
+                    "evaluated": false, "code": code,
+                    "recovery": {"action": "evaluate_complete_original_prompt", "human_approval_required": false,
+                        "argv": ["decapod", "eval", "--stdin", "--format", "json"]},
+                    "action": "No policy decision was made. Correct the invocation and evaluate the complete original prompt; continue only after successful allow."
+                })
+            );
         }
-        (Some(prompt), false) => prompt,
-        (None, true) => read_stdin_prompt()?,
-        (None, false) if !io::stdin().is_terminal() => read_stdin_prompt()?,
-        (None, false) => {
-            return Err(error::DecapodError::ValidationError(
-                "decapod eval requires --prompt <text> or input piped with --stdin".to_string(),
-            ));
-        }
+        error::DecapodError::ValidationError(format!(
+            "{code}: no policy decision; evaluate the complete original prompt successfully before continuing"
+        ))
     };
-
+    let prompt =
+        match (cli.prompt, cli.stdin) {
+            (Some(_), true) => return Err(invalid("PROMPT_EVAL_INPUT_CONFLICT", "invalid_input")),
+            (Some(prompt), false) => prompt,
+            (None, true) => read_stdin_prompt()
+                .map_err(|_| invalid("PROMPT_EVAL_INPUT_UNAVAILABLE", "error"))?,
+            (None, false) if !io::stdin().is_terminal() => read_stdin_prompt()
+                .map_err(|_| invalid("PROMPT_EVAL_INPUT_UNAVAILABLE", "error"))?,
+            (None, false) => return Err(invalid("PROMPT_EVAL_INPUT_MISSING", "invalid_input")),
+        };
     if prompt.trim().is_empty() {
-        return Err(error::DecapodError::ValidationError(
-            "decapod eval cannot evaluate an empty prompt".to_string(),
-        ));
+        return Err(invalid("PROMPT_EVAL_INPUT_EMPTY", "invalid_input"));
     }
 
     let result = evaluate_prompt(&prompt);

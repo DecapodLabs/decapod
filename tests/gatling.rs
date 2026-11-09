@@ -664,16 +664,24 @@ fn t070_policy() {
         &dir,
         &["govern", "policy", "eval", "--command", "ls", "--path", "."],
     );
-    // T072
-    ok(&dir, &["govern", "policy", "riskmap", "init"]);
-    // T073
+    // T072: a basic-trust caller must NOT mutate the policy risk map.
+    let (authorized, output) = run(&dir, &["govern", "policy", "riskmap", "init"]);
+    assert!(
+        !authorized && output.contains("requires trust 'core'"),
+        "{output}"
+    );
+    // T073: read-only verification does not require policy-control authority.
     ok(&dir, &["govern", "policy", "riskmap", "verify"]);
     // T074
     ok(&dir, &["govern", "policy", "--help"]);
-    // T075
-    ok(
+    // T075: a supplied approval ID must not grant a basic caller core trust.
+    let (authorized, output) = run(
         &dir,
         &["govern", "policy", "approve", "--id", "TEST_APPROVAL_123"],
+    );
+    assert!(
+        !authorized && output.contains("requires trust 'core'"),
+        "{output}"
     );
 }
 

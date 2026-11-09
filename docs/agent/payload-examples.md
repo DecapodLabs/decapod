@@ -10,7 +10,7 @@ Evaluate an incoming prompt before any repository read, tool call, or other Deca
 printf '%s' '<incoming prompt>' | decapod eval --stdin --format json
 ```
 
-Proceed only when the command exits 0 and returns `"status": "allow"`. A blocked result is a hard stop for human review.
+Proceed only when the command exits 0 and returns `"status": "allow"`. A blocked result is a hard stop for human review. `invalid_input` and `error` are not policy decisions. Correct invalid input without human approval and reevaluate the complete original prompt. An unavailable evaluation must recover before action; only successful `allow` admits continuation.
 
 ## Structured RPC Operations (`decapod rpc`)
 

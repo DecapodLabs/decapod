@@ -11,6 +11,7 @@ fn run_authenticated(root: &Path, args: &[&str], password: &str) -> Output {
         .current_dir(root)
         .env("DECAPOD_AGENT_ID", "workunit-recovery-test")
         .env("DECAPOD_SESSION_PASSWORD", password)
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .args(args)
         .output()

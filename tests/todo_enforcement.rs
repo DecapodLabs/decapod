@@ -386,25 +386,47 @@ fn test_workspace_ensure_requires_claimed_todo_and_scopes_naming() {
         .output()
         .expect("git checkout original branch");
 
-    // A second agent auto-creating a coordination todo on the same repo dir
-    // collides with the first exclusive claim (path_overlap). Runtime fails closed.
-    let no_todo_again = Command::new(resolve_decapod_bin())
+    // Independent tasks may coordinate from the same logical repository dir.
+    // Authenticate the second actor independently: the primary actor's session
+    // password must not be usable as another agent's credential.
+    let other_session = Command::new(resolve_decapod_bin())
+        .args(["session", "acquire"])
+        .current_dir(&dir)
+        .env("DECAPOD_AGENT_ID", "other-agent")
+        .output()
+        .expect("acquire other-agent session");
+    assert!(
+        other_session.status.success(),
+        "other-agent session acquisition failed: {}",
+        String::from_utf8_lossy(&other_session.stderr)
+    );
+    let other_output = String::from_utf8_lossy(&other_session.stdout);
+    let other_password = other_output
+        .lines()
+        .find_map(|line| line.strip_prefix("Password: "))
+        .expect("other-agent session password")
+        .trim()
+        .to_string();
+
+    // Only actual writable checkouts require exclusive custody.
+    let second_agent = Command::new(resolve_decapod_bin())
         .args(["workspace", "ensure"])
         .current_dir(&dir)
         .env("DECAPOD_AGENT_ID", "other-agent")
-        .env("DECAPOD_SESSION_PASSWORD", &password)
+        .env("DECAPOD_SESSION_PASSWORD", &other_password)
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
         .output()
         .expect("workspace ensure");
     assert!(
-        !no_todo_again.status.success(),
-        "second agent exclusive coordination claim on the same dir must fail closed"
+        second_agent.status.success(),
+        "independent agent must obtain a distinct managed worktree: {}",
+        String::from_utf8_lossy(&second_agent.stderr)
     );
-    let second_stderr = String::from_utf8_lossy(&no_todo_again.stderr);
-    assert!(
-        second_stderr.contains("WORKSPACE_TODO_CLAIM_CONFLICT")
-            || second_stderr.contains("path_overlap")
-            || second_stderr.contains(r#""status":"conflict""#),
-        "expected exclusive claim conflict for overlapping dir custody, got: {second_stderr}"
+    let second: serde_json::Value =
+        serde_json::from_slice(&second_agent.stdout).expect("second workspace JSON");
+    assert_ne!(
+        second["worktree_path"], auto_json["worktree_path"],
+        "independent agents must not bind one writable checkout"
     );
 
     let (task_id, task_hash) =

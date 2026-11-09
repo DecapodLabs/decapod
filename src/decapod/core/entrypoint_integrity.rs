@@ -236,8 +236,11 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
         let Some(Ok(declared_release)) = marker_value(first, RELEASE_MARKER) else {
             continue;
         };
-        // Only auto-heal files whose body is still the governed template.
-        if canonical_template(surface).as_deref() != Some(payload) {
+        // Accept only the current or exact previously accepted canonical
+        // safety body. A self-computed fingerprint cannot authorize other edits.
+        let previous_template = assets::previous_prompt_safety_template(surface);
+        let migrating_previous = previous_template.as_deref() == Some(payload);
+        if canonical_template(surface).as_deref() != Some(payload) && !migrating_previous {
             continue;
         }
 
@@ -248,6 +251,9 @@ pub fn refresh_entrypoint_metadata(project_root: &Path) -> Result<usize, error::
             && fingerprint_for_payload(surface, &declared_release, payload) == declared_fingerprint;
         let legacy_binary_marker =
             matches!(marker_value(second, LEGACY_BINARY_MARKER), Some(Ok(_)));
+        if migrating_previous && !fingerprint_valid_for_declared {
+            continue;
+        }
         let release_mismatch = declared_release != RELEASE_VERSION;
 
         // Rewrite when on-disk pin is stale relative to the evaluating binary:

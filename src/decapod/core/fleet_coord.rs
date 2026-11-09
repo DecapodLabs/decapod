@@ -118,6 +118,9 @@ pub struct ClaimOverlap {
     pub surface: String,
     pub expected: String,
     pub observed: String,
+    /// Logical source overlap is advisory; only named mutable resources exclude.
+    #[serde(default)]
+    pub enforced: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -588,7 +591,7 @@ pub fn categories_overlap(a: &str, b: &str) -> bool {
 /// Detect overlaps between a candidate claim and currently active exclusive claims.
 pub fn detect_overlaps(
     candidate_task_id: &str,
-    candidate_agent: &str,
+    _candidate_agent: &str,
     candidate_scope: &str,
     candidate_category: &str,
     candidate_dir: &str,
@@ -598,9 +601,6 @@ pub fn detect_overlaps(
     let mut out = Vec::new();
     for claim in active {
         if claim.task_id == candidate_task_id {
-            continue;
-        }
-        if claim.agent_id == candidate_agent {
             continue;
         }
         // Yielded and expired leases do not block new exclusive claims.
@@ -621,6 +621,7 @@ pub fn detect_overlaps(
             out.push(ClaimOverlap {
                 task_id: claim.task_id.clone(),
                 agent_id: claim.agent_id.clone(),
+                enforced: false,
                 reason: "category_overlap".to_string(),
                 surface: "category".to_string(),
                 expected: candidate_category.to_string(),
@@ -631,6 +632,10 @@ pub fn detect_overlaps(
             out.push(ClaimOverlap {
                 task_id: claim.task_id.clone(),
                 agent_id: claim.agent_id.clone(),
+                enforced: candidate_scope
+                    .trim()
+                    .to_ascii_lowercase()
+                    .starts_with("resource:"),
                 reason: "scope_overlap".to_string(),
                 surface: "scope".to_string(),
                 expected: candidate_scope.to_string(),
@@ -651,6 +656,7 @@ pub fn detect_overlaps(
             out.push(ClaimOverlap {
                 task_id: claim.task_id.clone(),
                 agent_id: claim.agent_id.clone(),
+                enforced: false,
                 reason: "path_overlap".to_string(),
                 surface: "dir_path".to_string(),
                 expected: candidate_dir.to_string(),
@@ -691,13 +697,11 @@ pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<Cl
     let mut out = Vec::new();
     for (i, left) in live.iter().enumerate() {
         for right in live.iter().skip(i + 1) {
-            if left.agent_id == right.agent_id {
-                continue;
-            }
             if categories_overlap(&left.category, &right.category) {
                 out.push(ClaimOverlap {
                     task_id: right.task_id.clone(),
                     agent_id: right.agent_id.clone(),
+                    enforced: false,
                     reason: "category_overlap".to_string(),
                     surface: "category".to_string(),
                     expected: left.category.clone(),
@@ -708,6 +712,11 @@ pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<Cl
                 out.push(ClaimOverlap {
                     task_id: right.task_id.clone(),
                     agent_id: right.agent_id.clone(),
+                    enforced: left
+                        .scope
+                        .trim()
+                        .to_ascii_lowercase()
+                        .starts_with("resource:"),
                     reason: "scope_overlap".to_string(),
                     surface: "scope".to_string(),
                     expected: left.scope.clone(),
@@ -726,6 +735,7 @@ pub fn detect_fleet_overlaps(active: &[ActiveClaimView], now_ts: &str) -> Vec<Cl
                 out.push(ClaimOverlap {
                     task_id: right.task_id.clone(),
                     agent_id: right.agent_id.clone(),
+                    enforced: false,
                     reason: "path_overlap".to_string(),
                     surface: "dir_path".to_string(),
                     expected: left.dir_path.clone(),

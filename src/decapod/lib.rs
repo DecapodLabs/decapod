@@ -3085,6 +3085,11 @@ fn command_requires_worktree(command: &Command) -> bool {
         return false;
     }
     match command {
+        // Policy observation and an already-authorized recovery actor must be
+        // usable before source authoring. Policy still enforces trust/approval.
+        Command::Govern(GovernCli {
+            command: GovernCommand::Policy(_),
+        }) => false,
         Command::Govern(GovernCli {
             command:
                 GovernCommand::Artifacts(ArtifactsCli {
@@ -3225,6 +3230,13 @@ fn enforce_worktree_requirement(
                 status.git.current_branch
             )));
         }
+        let main = crate::core::workspace::get_main_repo_root(&current_dir)?;
+        crate::core::todo::check_authoring(
+            &main.join(".decapod/data"),
+            &current_dir,
+            &current_agent_id(),
+            false,
+        )?;
         return Ok(());
     }
 
@@ -3293,6 +3305,13 @@ fn enforce_worktree_requirement_for_rpc(
                 worktree_path.display()
             )));
         }
+        let main = crate::core::workspace::get_main_repo_root(&current_dir)?;
+        crate::core::todo::check_authoring(
+            &main.join(".decapod/data"),
+            &current_dir,
+            &current_agent_id(),
+            false,
+        )?;
         return Ok(());
     }
 

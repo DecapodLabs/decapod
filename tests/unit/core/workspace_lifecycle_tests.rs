@@ -568,7 +568,7 @@ fn recovery_uses_creating_engine_despite_changed_default_and_never_falls_back() 
         let removed = temp.path().join("docker-removed");
         let id = "d".repeat(64);
         let record = serde_json::json!({"Id": id, "Config": {"Labels": {
-            "org.decapod.managed": "workspace", "org.decapod.workspace.path": target,
+            "org.decapod.managed": "workspace", "org.decapod.workspace.path": fs::canonicalize(&target).unwrap(),
             "org.decapod.invocation": invocation,
         }}})
         .to_string();

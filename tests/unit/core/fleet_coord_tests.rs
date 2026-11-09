@@ -161,7 +161,7 @@ fn detect_overlaps_skips_expired_yielded_and_same_agent() {
         &active,
         "100Z",
     );
-    assert!(overlaps.is_empty());
+    assert!(overlaps.iter().all(|o| !o.enforced));
 
     let overlaps = detect_overlaps(
         "t-new",

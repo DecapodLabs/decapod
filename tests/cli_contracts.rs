@@ -44,6 +44,7 @@ fn run_decapod(args: &[&str]) -> String {
     let initialized = Command::new(resolve_decapod_bin())
         .current_dir(fixture.path())
         .env("XDG_CONFIG_HOME", fixture.path().join(".config"))
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
         .env_remove("DECAPOD_SESSION_PASSWORD")
         .args(["init", "--force"])
         .output()
@@ -55,6 +56,7 @@ fn run_decapod(args: &[&str]) -> String {
     let output = Command::new(resolve_decapod_bin())
         .current_dir(fixture.path())
         .env("XDG_CONFIG_HOME", fixture.path().join(".config"))
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
         .env_remove("DECAPOD_SESSION_PASSWORD")
         .args(args)
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
@@ -218,6 +220,7 @@ mod claim_boundaries {
             .args(args)
             .env("DECAPOD_AGENT_ID", actor)
             .env("DECAPOD_CLAIM_AUTORUN", "0")
+            .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
             .env("XDG_CONFIG_HOME", root.join("machine-config"))
             .env("XDG_DATA_HOME", root.join("machine-data"))
             .env_remove("DECAPOD_SESSION_PASSWORD")
@@ -343,7 +346,7 @@ mod claim_boundaries {
     }
 
     #[test]
-    fn concurrent_disjoint_file_claims_preserve_callers_and_reject_overlap() {
+    fn concurrent_disjoint_file_claims_preserve_callers_and_allow_logical_overlap() {
         let fixture = fixture();
         let root = fixture.path();
         let a = add(root, "Amber parcel", r#"paths:["src/a.rs"]"#);
@@ -385,12 +388,14 @@ mod claim_boundaries {
         );
         assert_eq!(alpha["item"]["assigned_to"], "alpha");
         assert_eq!(beta["item"]["assigned_to"], "beta");
-        let denied = claim(root, &worktree, "gamma", &overlap, "exclusive");
-        let denied: Value =
-            serde_json::from_slice(&denied.stdout).expect("typed overlap rejection");
-        assert_eq!(denied["status"], "conflict");
-        assert_eq!(denied["result"]["overlap"], true);
-        assert_eq!(get(root, root, &overlap)["item"]["assigned_to"], "");
+        // Logical file overlap is advisory, not exclusive custody of a
+        // shared writable checkout. Both independent tasks can be claimed.
+        let admitted = claim(root, &worktree, "gamma", &overlap, "exclusive");
+        let admitted: Value =
+            serde_json::from_slice(&admitted.stdout).expect("typed claim outcome");
+        assert_eq!(admitted["status"], "ok");
+        assert_eq!(get(root, root, &overlap)["item"]["assigned_to"], "gamma");
+        assert_eq!(get(root, root, &a)["item"]["assigned_to"], "alpha");
     }
 
     #[test]

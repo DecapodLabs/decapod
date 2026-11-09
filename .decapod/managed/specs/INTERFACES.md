@@ -1156,8 +1156,8 @@ isolated caller subprocess, with task-specific checks using the actual claimant.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `019cc2714150cd169a5688d58203a88421422f32e163c032b63aac4fcfb35fb1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (221 files), `tests/` (213 files)
+- Repository signal fingerprint: `73bbeda852fd30834a4289d4dc517baf18dfcf3f98713df729052fc1ae4a2e5d`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (222 files), `tests/` (214 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1442,3 +1442,24 @@ This metadata is an agent recovery aid, not an imported receipt or readiness
 authority. The independent evidence, candidate and target binding and all
 required gates remain necessary; incomplete or failed execution cannot publish a
 successful completion bundle.
+
+## Concurrency and recoverable evaluation
+
+Task claims expose advisory source overlaps and `custody_pending` authoring
+state. `workspace ensure` verifies a claimed task's observed checkout before
+admitting authoring. Secondary ownership has an explicit independent-task
+recovery diagnostic, rather than borrowing the primary lease. `resource:<name>`
+is an explicit local mutable-resource reservation; the cloud task/event profile
+returns `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED` for that capability.
+
+Cross-owner handoff approvals bind task, current owner, lease generation and
+receiver, expire within the supported 24-hour window and are consumed only by
+successful transfer. Failed diagnostics supply current generation and the exact
+policy evaluation target without fabricating approval. The policy CLI's
+approving `--actor` is separate from its executing caller.
+
+Prompt evaluation returns `invalid_input` or `error` with `evaluated=false` for
+unevaluated requests and nonzero exit. Recovery requests complete-original-prompt
+evaluation without human approval for invocation correction. `allow` and `block`
+retain their policy meaning and exit semantics. Compatibility `/query` / `/batch`
+transport remains unchanged; native RPC/hosted proof is not inferred from it.

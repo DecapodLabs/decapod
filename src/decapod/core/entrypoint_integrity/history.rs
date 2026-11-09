@@ -295,6 +295,7 @@ fn normalize(content: &str) -> String {
 
 fn commit_path_violation_at(
     repo: &Path,
+    accepted_base: &str,
     commit: &str,
     status: char,
     surface: &str,
@@ -330,6 +331,12 @@ fn commit_path_violation_at(
     if normalize(&content) == normalize(&canonical) {
         return Ok(None);
     }
+    // A staged migration may contain only the immutable accepted-base
+    // canonical template; the final tip must carry current candidate bytes.
+    if accepted_base_template_transition(accepted_base, &commit, head, surface, &content, run_git)?
+    {
+        return Ok(None);
+    }
     // Preserve the existing binary-body rule for ordinary consumer histories
     // and current HEAD. A source-history mismatch never gets this fallback.
     if historical.is_none() {
@@ -348,6 +355,59 @@ fn commit_path_violation_at(
     Ok(Some(format!(
         "{commit}: entrypoint {surface} is not its canonical Decapod template (hand edit or stale body). Regenerate via Decapod; do not hand-edit."
     )))
+}
+
+/// Accept a release-bound, byte-exact accepted-source template only during
+/// transition to the changed candidate template. No arbitrary historical edits.
+fn exact_intermediate_template(
+    prior: &str,
+    current: &str,
+    source_at_commit: &str,
+    reviewed_prior: Option<&str>,
+    surface: &str,
+    release: &str,
+    observed: &str,
+) -> bool {
+    if prior == current || source_at_commit != current || reviewed_prior != Some(prior) {
+        return false;
+    }
+    let fingerprint = super::fingerprint_for_payload(surface, release, prior);
+    let canonical = format!(
+        "<!-- decapod-release: {release} -->\n<!-- decapod-fingerprint: {fingerprint} -->\n{prior}"
+    );
+    normalize(&canonical) == normalize(observed)
+}
+
+fn accepted_base_template_transition(
+    accepted_base: &str,
+    commit: &str,
+    head: &str,
+    surface: &str,
+    observed: &str,
+    run_git: &mut GitRunner<'_>,
+) -> Result<bool, String> {
+    // Unrelated consumer and synthetic repositories do not contain the
+    // published Decapod source root. The self-hosted migration transition
+    // does not apply there; ordinary entrypoint history rules still do.
+    if commit == head || oid_with(SOURCE_ROOT, run_git)?.is_none() {
+        return Ok(false);
+    }
+    if !ancestor_with(SOURCE_ROOT, head, run_git)? {
+        return Ok(false);
+    }
+    let prior = payload(&source_blob_with(accepted_base, ASSETS, run_git)?, surface)?;
+    let current = super::canonical_template(surface).ok_or("missing candidate template")?;
+    let at_commit = payload(&source_blob_with(commit, ASSETS, run_git)?, surface)?;
+    let release = version(&source_blob_with(commit, "Cargo.toml", run_git)?)?;
+    Ok(exact_intermediate_template(
+        &prior,
+        &current,
+        &at_commit,
+        super::assets::previous_prompt_safety_template(surface).as_deref(),
+        surface,
+        &release,
+        observed,
+    ))
 }
 
 /// Validate every entrypoint transition in the exact candidate's history.
@@ -456,6 +516,7 @@ fn committed_history(
             };
             if let Some(error) = commit_path_violation_at(
                 repo,
+                &base,
                 commit,
                 status.as_bytes()[0] as char,
                 surface,
@@ -465,6 +526,19 @@ fn committed_history(
                 failures.push(error);
             } else {
                 canonical_rewrites += 1;
+            }
+        }
+    }
+    // A staged old template cannot remain at the immutable final candidate.
+    if oid_with(SOURCE_ROOT, run_git)?.is_some() && ancestor_with(SOURCE_ROOT, &head, run_git)? {
+        for surface in super::ENTRYPOINT_FILES {
+            let committed = blob_with(&head, surface, run_git)?;
+            let canonical =
+                super::render_entrypoint(surface).ok_or("missing candidate template")?;
+            if normalize(&committed) != normalize(&canonical) {
+                failures.push(format!(
+                    "{head}: final entrypoint {surface} differs from candidate template"
+                ));
             }
         }
     }
@@ -497,7 +571,8 @@ fn commit_path_violation(repo: &Path, commit: &str, status: char, surface: &str)
     let Some(head) = oid(repo, "HEAD") else {
         return Some("cannot resolve current commit".into());
     };
-    commit_path_violation_at(repo, commit, status, surface, &head, &mut |args| {
+    let base = oid(repo, "HEAD^").unwrap_or_else(|| head.clone());
+    commit_path_violation_at(repo, &base, commit, status, surface, &head, &mut |args| {
         git(repo, args).ok_or_else(|| "Git read failed".into())
     })
     .unwrap_or_else(Some)
@@ -506,3 +581,55 @@ fn commit_path_violation(repo: &Path, commit: &str, status: char, surface: &str)
 #[cfg(test)]
 #[path = "history/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+mod safety_transition_tests {
+    use super::*;
+
+    #[test]
+    fn accepts_only_a_precisely_bound_accepted_base_transition() {
+        let prior = super::super::assets::previous_prompt_safety_template("AGENTS.md").unwrap();
+        let current = super::super::canonical_template("AGENTS.md").unwrap();
+        let release = "0.132.0";
+        let fingerprint = super::super::fingerprint_for_payload("AGENTS.md", release, &prior);
+        let canonical = format!(
+            "<!-- decapod-release: {release} -->\n<!-- decapod-fingerprint: {fingerprint} -->\n{prior}"
+        );
+        assert!(exact_intermediate_template(
+            &prior,
+            &current,
+            &current,
+            Some(&prior),
+            "AGENTS.md",
+            release,
+            &canonical
+        ));
+        assert!(!exact_intermediate_template(
+            &prior,
+            &current,
+            &prior,
+            Some(&prior),
+            "AGENTS.md",
+            release,
+            &canonical
+        ));
+        assert!(!exact_intermediate_template(
+            &prior,
+            &current,
+            &current,
+            None,
+            "AGENTS.md",
+            release,
+            &canonical
+        ));
+        assert!(!exact_intermediate_template(
+            &prior,
+            &current,
+            &current,
+            Some(&prior),
+            "AGENTS.md",
+            release,
+            &(canonical.clone() + "edited")
+        ));
+    }
+}
