@@ -240,8 +240,7 @@ fn run_dirty_root_case(default_branch: &str) {
         }
         let root_body = std::str::from_utf8(root_bytes).expect("root spec UTF-8");
         let worktree_bytes = wt_before.get(path).expect("worktree spec");
-        let worktree_body =
-            std::str::from_utf8(worktree_bytes).expect("worktree spec UTF-8");
+        let worktree_body = std::str::from_utf8(worktree_bytes).expect("worktree spec UTF-8");
         assert_eq!(
             decapod::core::project_specs::material_spec_body_hash(worktree_body),
             decapod::core::project_specs::material_spec_body_hash(root_body),
