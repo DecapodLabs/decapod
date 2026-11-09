@@ -877,7 +877,7 @@ fn inherited_accepted_change_continues_without_rewriting_history() {
 }
 
 #[test]
-fn accepted_pr_identity_cannot_be_reused() {
+fn accepted_change_identity_can_continue_with_new_checkpointed_material() {
     let root = repo();
     begin_pr(root.path(), "one", "master").unwrap();
     checkpoint(root.path(), "first", "Accepted work", vec![]).unwrap();
@@ -888,18 +888,15 @@ fn accepted_pr_identity_cannot_be_reused() {
     checkpoint(
         root.path(),
         "second",
-        "More work without new identity",
+        "More work with inherited identity and new checkpoint",
         vec![],
     )
     .unwrap();
     git(root.path(), &["add", GOVERNANCE_PATH]).unwrap();
-    commit(root.path(), "reused");
-    assert!(
-        verify_pr_checkpoints(root.path(), &accepted, "HEAD")
-            .unwrap_err()
-            .to_string()
-            .contains("CHECKPOINT_MISSING")
-    );
+    commit(root.path(), "continued");
+    // Reusing an accepted label is admissible when provenance and actual
+    // per-commit checkpoint evidence are preserved.
+    verify_pr_checkpoints(root.path(), &accepted, "HEAD").unwrap();
 }
 
 #[test]
