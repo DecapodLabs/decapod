@@ -114,7 +114,7 @@ fn intent_reconcile_rpc_immutable_base_reports_code_change_as_unproven() {
     let params = serde_json::json!({"base_commit": base}).to_string();
     let result = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .current_dir(root)
-        .args(["rpc", "--op", "intent.reconcile", "--params", &params])
+        .args(["rpc", "--op", "intent.reconcile", "--params", params.as_str()])
         .env_remove("DECAPOD_SESSION_PASSWORD")
         .output()
         .expect("intent reconcile with immutable base");
@@ -134,7 +134,7 @@ fn intent_reconcile_rpc_immutable_base_reports_code_change_as_unproven() {
         .as_array()
         .unwrap()
         .iter()
-        .any(|p| p == "src/intent_impact.rs"));
+        .any(|p| p.as_str() == Some("src/intent_impact.rs")));
     assert_eq!(response["result"]["report"]["semantic_alignment"], "not_proven");
 
     let rejected = Command::new(env!("CARGO_BIN_EXE_decapod"))

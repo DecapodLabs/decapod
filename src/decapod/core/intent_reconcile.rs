@@ -197,7 +197,15 @@ fn parse_changed_files(raw: &[u8]) -> (Vec<ChangedFile>, bool, Vec<Finding>) {
     let mut changes = Vec::new();
     let mut complete = true;
     let mut findings = Vec::new();
-    let mut parts = raw.split(|byte| *byte == 0).filter(|part| !part.is_empty());
+    let mut parts = raw.split_terminator(|byte| *byte == 0);
+    if !raw.is_empty() && raw.last() != Some(&0) {
+        complete = false;
+        findings.push(finding(
+            "incomplete_git_diff",
+            "git_diff",
+            "Git name/status output is missing a final NUL delimiter",
+        ));
+    }
     while let Some(raw_status) = parts.next() {
         let status = std::str::from_utf8(raw_status).unwrap_or("");
         let (kind, rename) = match status {
@@ -337,8 +345,10 @@ fn inspect_change_impact(root: &Path, requested_base: &str) -> Result<ChangeImpa
         &base_commit,
         &head_commit,
     )?;
-    let material_spec_paths = specs.material_changed_paths;
-    let generated_only_spec_paths = specs.fingerprint_only_changed_paths;
+    let mut material_spec_paths = specs.material_changed_paths;
+    material_spec_paths.sort();
+    let mut generated_only_spec_paths = specs.fingerprint_only_changed_paths;
+    generated_only_spec_paths.sort();
     let mut referenced = BTreeSet::new();
     for path in &material_spec_paths {
         // An absent/deleted spec has no head markers; absence never signals coverage.
@@ -392,6 +402,9 @@ fn inspect_change_impact(root: &Path, requested_base: &str) -> Result<ChangeImpa
         ));
     }
     let needs_evidence = !changed_files.is_empty() || !material_spec_paths.is_empty() || !complete;
+    let needs_review = !unmapped_implementation_paths.is_empty()
+        || !material_spec_paths.is_empty()
+        || !complete;
     Ok(ChangeImpactReport {
         base_commit,
         head_commit,
@@ -401,7 +414,7 @@ fn inspect_change_impact(root: &Path, requested_base: &str) -> Result<ChangeImpa
         generated_only_spec_paths,
         referenced_requirement_ids: referenced.into_iter().collect(),
         unmapped_implementation_paths,
-        review_needed: needs_evidence,
+        review_needed: needs_review,
         evidence_needed: needs_evidence,
         findings,
     })
@@ -878,6 +891,61 @@ mod tests {
         assert!(empty.complete);
         assert!(empty.changed_files.is_empty());
         assert!(!empty.evidence_needed);
+    }
+
+
+    #[test]
+    fn non_ancestor_base_is_rejected_without_reporting_empty_impact() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        git_fixture(root, &["init", "-b", "master"]);
+        git_fixture(root, &["config", "user.name", "Decapod Test"]);
+        git_fixture(root, &["config", "user.email", "test@example.invalid"]);
+        scaffold(root);
+        git_fixture(root, &["add", "."]);
+        git_fixture(root, &["commit", "-m", "base"]);
+        git_fixture(root, &["checkout", "-b", "other"]);
+        fs::write(root.join("src/other.rs"), "pub fn other() {}\n").unwrap();
+        git_fixture(root, &["add", "."]);
+        git_fixture(root, &["commit", "-m", "other branch"]);
+        let foreign = git_fixture(root, &["rev-parse", "HEAD"]);
+        git_fixture(root, &["checkout", "master"]);
+        fs::write(root.join("src/main.rs"), "fn main() { println!(\"master\"); }\n").unwrap();
+        git_fixture(root, &["add", "."]);
+        git_fixture(root, &["commit", "-m", "master branch"]);
+        let error = inspect_change_impact(root, &foreign).unwrap_err();
+        assert!(error.to_string().contains("IMPACT_BASE_NOT_ANCESTOR"));
+    }
+
+    #[test]
+    fn projection_only_edit_does_not_claim_authored_spec_mutation() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path();
+        git_fixture(root, &["init", "-b", "master"]);
+        git_fixture(root, &["config", "user.name", "Decapod Test"]);
+        git_fixture(root, &["config", "user.email", "test@example.invalid"]);
+        scaffold(root);
+        let spec = root.join(LOCAL_PROJECT_SPECS_INTENT);
+        let make = |digest: &str| {
+            format!(
+                "# Intent\n<!-- decapod:codebase-attestation:start -->\n\
+                 generated {digest}\n<!-- decapod:codebase-attestation:end -->\n"
+            )
+        };
+        fs::write(&spec, make("before")).unwrap();
+        git_fixture(root, &["add", "."]);
+        git_fixture(root, &["commit", "-m", "base"]);
+        let base = git_fixture(root, &["rev-parse", "HEAD"]);
+        fs::write(&spec, make("after")).unwrap();
+        git_fixture(root, &["add", "."]);
+        git_fixture(root, &["commit", "-m", "refresh projection"]);
+        let report = inspect_change_impact(root, &base).unwrap();
+        assert!(report.complete);
+        assert!(report.material_spec_paths.is_empty());
+        assert!(report
+            .generated_only_spec_paths
+            .contains(&LOCAL_PROJECT_SPECS_INTENT.to_string()));
+        assert!(report.referenced_requirement_ids.is_empty());
     }
 
 }
