@@ -1,5 +1,18 @@
 # Architecture
 
+## Bounded macOS epoch enumeration
+
+`core::validation_epoch::input::mac_directory` enumerates a pinned directory
+through `fdopendir`, using a new `openat` description for an independent cursor.
+Entry classification uses `fstatat` with `AT_SYMLINK_NOFOLLOW` relative to that
+same stream. Owned names and type flags feed the existing repository-signal
+walker; file selection, hashes, entry/depth/byte/time bounds and safe reads remain
+owned by their existing functions. macOS never reopens an observed pathname or
+uses `/dev/fd` for enumeration. Linux retains its `/proc/self/fd` reader. This
+internal iterator adjustment adds no public command, authorization or datastore
+contract. Regression coverage replaces an enumerated path with a hostile symlink
+and drops the original handle while verifying the stream remains pinned.
+
 ## Governed transition judgment
 
 `src/decapod/core/governed_transition.rs` is the kernel that decides whether an
@@ -828,8 +841,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `94939756f752d0d2e9e75aa1f5e721762f55b3ea1235ea31e0fe5f2f9eea479e`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (223 files), `tests/` (216 files)
+- Repository signal fingerprint: `e54d82e60d35b3c0559afcdd6a97e457d8a66481d8f67f0558166d745d7c61c1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (224 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

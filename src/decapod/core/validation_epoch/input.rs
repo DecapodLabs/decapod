@@ -2,7 +2,7 @@
 use super::EpochInput;
 use crate::core::{
     error::DecapodError,
-    project_specs::{self, RepoSignalIo},
+    project_specs::{self, RepoSignalEntries, RepoSignalIo},
 };
 use std::{
     fs,
@@ -10,6 +10,9 @@ use std::{
     path::{Component, Path, PathBuf},
     time::{Duration, Instant},
 };
+
+#[cfg(target_os = "macos")]
+mod mac_directory;
 
 pub(crate) struct BoundedEpochInput {
     root: PathBuf,
@@ -203,19 +206,32 @@ impl RepoSignalIo for BoundedEpochInput {
         }
         Ok(bytes)
     }
-    fn directory(&mut self, path: &Path) -> Result<(fs::File, fs::ReadDir), DecapodError> {
+    fn directory(&mut self, path: &Path) -> Result<(fs::File, RepoSignalEntries), DecapodError> {
         self.checkpoint()?;
         let directory = self.open(path, true)?;
-        #[cfg(unix)]
+        #[cfg(target_os = "macos")]
+        {
+            let entries = mac_directory::entries(&directory)?;
+            Ok((directory, entries))
+        }
+        #[cfg(all(unix, not(target_os = "macos")))]
         {
             use std::os::fd::AsRawFd;
-            // ReadDir stays tied to the held directory, not a replaceable path.
             #[cfg(target_os = "linux")]
             let handle_path = format!("/proc/self/fd/{}", directory.as_raw_fd());
             #[cfg(not(target_os = "linux"))]
             let handle_path = format!("/dev/fd/{}", directory.as_raw_fd());
-            let entries = fs::read_dir(handle_path)?;
-            Ok((directory, entries))
+            let entries = fs::read_dir(handle_path)?.map(|entry| {
+                let entry = entry?;
+                let kind = entry.file_type()?;
+                Ok(project_specs::RepoSignalEntry {
+                    name: entry.file_name(),
+                    is_dir: kind.is_dir(),
+                    is_file: kind.is_file(),
+                    is_symlink: kind.is_symlink(),
+                })
+            });
+            Ok((directory, Box::new(entries)))
         }
         #[cfg(not(unix))]
         {

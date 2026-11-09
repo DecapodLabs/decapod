@@ -583,6 +583,15 @@
         "/private/tmp/index134-retirement-final-init.log",
         "docs/agent/repository-readiness.md"
       ]
+    },
+    {
+      "id": "merge-v01341-retirement",
+      "summary": "Integrate accepted v0.134.1 and macOS reader repair while retaining active datastore/Vega-retirement journal. Current 6 storage and 36 CLI/config tests pass. Refresh release-bound projections with official 0.134.1; retain full deterministic source-CI profile and explicit optional Laya.",
+      "input_digest": "sha256:72da894a644cf6d18b27163dc9343cf9e962a17a8c8d9b6df6b03b7eda94220b",
+      "proof_refs": [
+        "/private/tmp/index134-retirement-01341-datastore.log",
+        "/private/tmp/index134-retirement-01341-init.log"
+      ]
     }
   ],
   "intents": {
@@ -623,23 +632,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Entire retired native Vega tree, standalone entrypoint and orphan backbone removed. No repository scientific-worker recipe remains. Deterministic proof remains authoritative; optional Laya alone runs after proof. Shared custody helpers remain to preserve existing Laya behavior.",
-          "reviewed_code_fingerprint": "94939756f752d0d2e9e75aa1f5e721762f55b3ea1235ea31e0fe5f2f9eea479e",
-          "spec_material_hash": "3fc5f4d565161bd6d7562e8924598d7876c94a9b412922a7649fb5b9d8a727a9"
+          "reason": "Retains accepted macOS reader repair and datastore contracts. Full obsolete native workspace and required recipe removed by explicit operator direction. Laya alone evaluates after deterministic proof when enabled.",
+          "reviewed_code_fingerprint": "e54d82e60d35b3c0559afcdd6a97e457d8a66481d8f67f0558166d745d7c61c1",
+          "spec_material_hash": "7f0a0877f818b87aa5e8e7f84e35e029f61148f353a9ba918888e3b31f0c3166"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Operator-directed retirement: setup and init now select Laya, disabled by default; refresh preserves explicit Laya policy and bindings. Old Vega setup is absent. Event/proof encoding and explicit legacy configuration migration behavior stay intact.",
-          "reviewed_code_fingerprint": "94939756f752d0d2e9e75aa1f5e721762f55b3ea1235ea31e0fe5f2f9eea479e",
+          "reason": "Reviewed final merged v0.134.1: optional Laya setup/init, default disablement and configuration preservation; no event/proof encoding changes. Deleted native Vega component has no supported build or setup route.",
+          "reviewed_code_fingerprint": "e54d82e60d35b3c0559afcdd6a97e457d8a66481d8f67f0558166d745d7c61c1",
           "spec_material_hash": "bca03fcbacd03c69b19721ee7f2e42bf2a3aa5af7986ca403d68f8ce60f0492c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No credential, tenant scope, local/cloud authority, storage durability or proof-encoding change. Laya accepted-policy protection and runtime/model pins are unchanged. Vega worker obligation is explicitly revoked by the operator, not silently treated as passed.",
-          "reviewed_code_fingerprint": "94939756f752d0d2e9e75aa1f5e721762f55b3ea1235ea31e0fe5f2f9eea479e",
-          "spec_material_hash": "c279b112d21c44780d91ac6a15dec7a077bca10e24f991b0026ad5210e6353c3"
+          "reason": "Accepted directory-reader, custody, authority and Laya runtime/model protections stay intact. Ignored session backups implement existing machine-state privacy requirements. Operator revoked the obsolete Vega obligation; no other proof requirement is waived.",
+          "reviewed_code_fingerprint": "e54d82e60d35b3c0559afcdd6a97e457d8a66481d8f67f0558166d745d7c61c1",
+          "spec_material_hash": "058f444fd13fffe4dfaa7b5ff6fb4c3bf06062220fd53647403ab076517c802c"
         }
       ],
       "state": "APPROVED",
@@ -651,13 +660,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794256557Z"
+      "updated_at": "1794257288Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a5cee259d7c727af717aefa60dd10b135a77f95920b35c239c4f565d83840bdd",
+      "artifact_hash": "sha256:9e6805bbfdef3befb60e349505822fa9c1df91867456c33ef9699dc89290b563",
       "checks": [
         {
           "name": "datastore-correctness",
@@ -686,6 +695,14 @@
         {
           "name": "prior-resume",
           "status": "failed"
+        },
+        {
+          "name": "v01341-cli-config",
+          "status": "passed"
+        },
+        {
+          "name": "v01341-storage",
+          "status": "passed"
         }
       ],
       "current_phase": "validation",
@@ -730,10 +747,17 @@
             "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M70TT9YCVF9GDEN1NF0KHM96": {
@@ -813,6 +837,24 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "/private/tmp/index134-retirement-01341-datastore.log: 6 passed; /private/tmp/index134-retirement-01341-init.log: 36 passed, 1 ignored. Actual merged v0.134.1 source.",
+                  "Supported session flow updated verifier to 0.134.1; temporary auto-update opt-in was backed up and restored. Runtime backup files stay ignored outside source artifacts.",
+                  "Resolved accepted b4939469 merge by preserving this active journal and both branches authored specs; removed obsolete lock-maintenance requirement with the retired workspace. No history reset or forced push."
+                ],
+                "proof_refs": [
+                  "v01341-storage",
+                  "v01341-cli-config"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -824,13 +866,16 @@
         "/private/tmp/index134-correctness.log: v0.134.0 six integration tests passed, including 64 independent SQLite writers and replay.",
         "/private/tmp/index134-migration.log: six passed; /private/tmp/index134-events.log: sixteen passed.",
         "/private/tmp/index134-resume-validate.log and readiness-fLXSmg: Buildkite proof verified; retired worker failed locked dependency resolution (parent Decapod 0.130.0 versus current 0.134.0). Removing obsolete worker by operator direction, not rewriting failure as success.",
+        "/private/tmp/index134-retirement-01341-datastore.log: 6 passed; /private/tmp/index134-retirement-01341-init.log: 36 passed, 1 ignored. Actual merged v0.134.1 source.",
         "/private/tmp/index134-retirement-final-init.log: 36 passed, 1 preexisting ignored; Laya opt-in, default-disabled setup surface and refresh preservation pass.",
         "/private/tmp/index134-retirement-laya.log: 2 Laya deterministic tests passed; 4 external-model/development profiles explicitly ignored. No model accuracy or hosted proof claimed.",
         "Fetched b4939469 / v0.134.1 after operator update. Retirement checkpoint records verified v0.134.0 source before integrating the new accepted target; final candidate proof remains pending.",
         "Operator explicitly directed removal of assets/tools/vega-native, exclusive optional Laya post-validation evaluation, inclusion in this active branch and immediate PR publication when verified. Supersedes prior Vega worker retention requirement.",
         "Original synthetic benchmark: docs/datastore-v2/measurements.json; physical savings 1650688 bytes at 100K events, WAL savings 2241280 bytes per 512 appends. Timing and hosted limits retained.",
         "Ported material patch from own preserved commits 3ea461bc and 37fdd674 onto accepted 1d865efd; no source patch conflicts or changed accepted storage files.",
-        "Previous v0.133.2 Buildkite 6113 failed missing content-bound spec review; current interfaces, architecture and security explicitly reviewed. Fresh validation required."
+        "Previous v0.133.2 Buildkite 6113 failed missing content-bound spec review; current interfaces, architecture and security explicitly reviewed. Fresh validation required.",
+        "Resolved accepted b4939469 merge by preserving this active journal and both branches authored specs; removed obsolete lock-maintenance requirement with the retired workspace. No history reset or forced push.",
+        "Supported session flow updated verifier to 0.134.1; temporary auto-update opt-in was backed up and restored. Runtime backup files stay ignored outside source artifacts."
       ],
       "inspected_files": [
         "src/decapod/core/events.rs",

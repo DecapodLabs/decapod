@@ -1,5 +1,16 @@
 # Validation
 
+## macOS bounded-reader recovery (#1571)
+
+The accepted v0.133.2 before-fix regression
+`core::validation_epoch::input::tests::bounded_epoch_preserves_ordinary_epoch_digest`
+failed with `ENOTDIR`. Descriptor-relative macOS enumeration must make the same
+bounded and ordinary digests agree while retaining symlink/FIFO rejection and
+all input bounds. The macOS iterator regressions also require independent cursors,
+no pathname substitution, safe ownership after dropping the original handle, and
+correct non-following file/directory/link classification. These are local input
+safety checks, not evidence of cloud, hosted CI or publication readiness.
+
 ## Claim boundary delivery checks
 
 The required CLI target runs the two `claim_boundaries` regressions with
@@ -1070,8 +1081,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `94939756f752d0d2e9e75aa1f5e721762f55b3ea1235ea31e0fe5f2f9eea479e`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (223 files), `tests/` (216 files)
+- Repository signal fingerprint: `e54d82e60d35b3c0559afcdd6a97e457d8a66481d8f67f0558166d745d7c61c1`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (224 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1402,3 +1413,5 @@ requires the full exact-candidate profile. The v0.134.0 proof-source inventory d
 ## Retired Vega execution requirement
 
 The operator explicitly revoked the Vega native worker requirement for this active branch. The entire native tree and entrypoint are deleted and the repository worker declaration removed; the previously failed worker remains failed historical evidence. All deterministic source-CI, datastore preservation, golden-vector and migration checks remain required. Laya configuration/CLI regression tests cover opt-in, default disablement and preservation. The generic accepted-worker policy guard remains unchanged; older installed controllers may still report the deliberately retired Vega obligation until this reviewed transition is accepted.
+
+The v0.134.1 merge preserves the accepted macOS descriptor-reader repair and removes the now-obsolete worker lock-maintenance obligation with the retired native workspace. The proof-source review changes only accepted Cargo package versions and the explicitly removed worker/source paths; hosted source-CI definitions stay intact. The earlier failed Vega execution is not recategorized as success.
