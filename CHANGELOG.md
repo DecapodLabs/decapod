@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.134.1](https://github.com/DecapodLabs/decapod/compare/v0.134.0...v0.134.1) - 2026-11-09
+
+### Fixed
+
+- *(build)* align required path-dependency lock with accepted release
+- *(validation)* enumerate pinned macOS directories without dev-fd paths
+
 ## [0.134.0](https://github.com/DecapodLabs/decapod/compare/v0.133.2...v0.134.0) - 2026-11-09
 
 ### Added
