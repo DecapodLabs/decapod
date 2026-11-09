@@ -1,5 +1,16 @@
 # Security
 
+## macOS directory stream ownership
+
+The bounded epoch reader opens an independent directory description relative to
+a held descriptor, transfers it to `fdopendir` only on success, and closes it
+through `closedir` on drop. Entries are classified with descriptor-relative
+`fstatat(AT_SYMLINK_NOFOLLOW)`; observed paths are not reopened. Existing root and
+ancestor no-follow checks, safe in-root file-link resolution, and resource bounds
+remain enforced. The private stream owns its cursor and copies each entry before
+the next `readdir`; EOF and read errors remain distinct. No trust, task custody,
+cloud authorization or validation gate changes.
+
 ## Advisory intent reconciliation access
 
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
@@ -531,8 +542,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
+- Repository signal fingerprint: `b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (225 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
