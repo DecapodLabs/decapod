@@ -161,7 +161,79 @@ pub fn all_migrations() -> Vec<Migration> {
             description: "Move assurance_attestations.jsonl into events stream=assurance and retire the file (#1180)",
             up: migrate_assurance_jsonl_to_events,
         },
+        Migration {
+            id: "events.compact_sequence_index.v002",
+            sequence: 1000,
+            scope: "global",
+            kind: "rust",
+            script_path: None,
+            min_version: "0.133.1",
+            target_version: "0.133.1",
+            description: "Remove the redundant event sequence index after proving its unique replacement",
+            up: migrate_compact_event_sequence_index,
+        },
     ]
+}
+
+fn migrate_compact_event_sequence_index(root: &Path) -> Result<(), error::DecapodError> {
+    let path = root.join("data").join(schemas::LOCAL_DB_NAME);
+    if !path.exists() {
+        return Ok(());
+    }
+    let conn = db::db_connect(&path.to_string_lossy())?;
+    conn.execute_batch("BEGIN IMMEDIATE")?;
+    let result = (|| {
+        // Older valid stores may predate the unique index even with their
+        // historical migration ledger current. Installing it is additive and
+        // never renumbers evidence; duplicates abort before any index removal.
+        conn.execute_batch(schemas::EVENTS_TABLE_SCHEMA_V2)?;
+        conn.execute_batch(schemas::EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX)?;
+        let valid: bool = conn.query_row(
+            "SELECT EXISTS(SELECT 1 FROM pragma_index_list('events') AS i
+             WHERE i.name='idx_events_stream_seq_unique' AND i.\"unique\"=1 AND i.partial=0
+             AND (SELECT COUNT(*) FROM pragma_index_xinfo(i.name) WHERE key=1)=2
+             AND NOT EXISTS(SELECT 1 FROM pragma_index_xinfo(i.name)
+                            WHERE key=1 AND (coll<>'BINARY' OR desc<>0))
+             AND (SELECT group_concat(name, ',') FROM
+                  (SELECT name FROM pragma_index_info(i.name) ORDER BY seqno))='stream,seq')",
+            [],
+            |row| row.get(0),
+        )?;
+        if !valid {
+            return Err(error::DecapodError::ValidationError(
+                "EVENT_INDEX_COMPACTION_UNSAFE: expected complete unique (stream, seq) index; no index was removed".into(),
+            ));
+        }
+        let redundant_safe: bool = conn.query_row(
+            "SELECT NOT EXISTS(SELECT 1 FROM sqlite_schema WHERE type='index'
+                               AND name='idx_events_stream_seq')
+             OR EXISTS(SELECT 1 FROM pragma_index_list('events') AS i
+                       WHERE i.name='idx_events_stream_seq' AND i.\"unique\"=0 AND i.partial=0
+                       AND (SELECT COUNT(*) FROM pragma_index_xinfo(i.name) WHERE key=1)=2
+                       AND NOT EXISTS(SELECT 1 FROM pragma_index_xinfo(i.name)
+                                      WHERE key=1 AND (coll<>'BINARY' OR desc<>0))
+                       AND (SELECT group_concat(name, ',') FROM
+                            (SELECT name FROM pragma_index_info(i.name) ORDER BY seqno))='stream,seq')",
+            [], |row| row.get(0),
+        )?;
+        if !redundant_safe {
+            return Err(error::DecapodError::ValidationError(
+                "EVENT_INDEX_COMPACTION_UNSAFE: redundant index has an unexpected definition; no index was removed".into(),
+            ));
+        }
+        conn.execute_batch("DROP INDEX IF EXISTS idx_events_stream_seq")?;
+        Ok(())
+    })();
+    match result {
+        Ok(()) => {
+            conn.execute_batch("COMMIT")?;
+            Ok(())
+        }
+        Err(error) => {
+            let _ = conn.execute_batch("ROLLBACK");
+            Err(error)
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

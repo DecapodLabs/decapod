@@ -30,6 +30,21 @@ CREATE INDEX IF NOT EXISTS idx_events_subject ON events(subject_kind, subject_id
 pub const EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX: &str =
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_events_stream_seq_unique ON events(stream, seq)";
 
+/// Physical event layout revision. Historical DDL above remains a migration
+/// fixture; current initialization avoids the duplicate non-unique sequence tree.
+pub const EVENTS_STORAGE_VERSION: u32 = 2;
+pub const EVENTS_TABLE_SCHEMA_V2: &str = "CREATE TABLE IF NOT EXISTS events (
+    event_id TEXT PRIMARY KEY,
+    ts TEXT NOT NULL,
+    seq INTEGER NOT NULL,
+    stream TEXT NOT NULL,
+    subject_kind TEXT,
+    subject_id TEXT,
+    event_type TEXT NOT NULL DEFAULT '',
+    payload TEXT NOT NULL,
+    actor TEXT NOT NULL DEFAULT 'decapod'
+); CREATE INDEX IF NOT EXISTS idx_events_subject ON events(subject_kind, subject_id);";
+
 /// Back-compat alias: historical per-stream DDL is no longer used for new tables.
 #[deprecated(note = "use EVENTS_TABLE_SCHEMA; streams share one events table")]
 pub const CANONICAL_EVENT_TABLE_SCHEMA: &str = EVENTS_TABLE_SCHEMA;

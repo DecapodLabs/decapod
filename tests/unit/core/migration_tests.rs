@@ -4,6 +4,54 @@ use std::collections::HashSet;
 use tempfile::tempdir;
 
 #[test]
+fn event_index_v2_upgrade_records_once_and_preserves_checkpoint_bytes() {
+    let root = tempdir().unwrap();
+    check_and_migrate(root.path()).unwrap();
+    crate::core::todo::initialize_todo_db(&root.path().join("data")).unwrap();
+    let path = root.path().join("data").join(schemas::LOCAL_DB_NAME);
+    let conn = Connection::open(&path).unwrap();
+    conn.execute_batch(schemas::EVENTS_TABLE_SCHEMA).unwrap();
+    let event = serde_json::json!({"event_id":"index-upgrade-proof", "event_type":"task.journal.checkpoint", "task_id":"feat_fixture00000001", "payload":{"task_revision":7,"proof_ref":"sha256:unchanged"}});
+    let seq = events::append_on_conn(&conn, events::TODO, &event).unwrap();
+    let before: String = conn
+        .query_row(
+            "SELECT payload FROM events WHERE event_id='index-upgrade-proof'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    // Reconstruct the immediately preceding applied ledger in this disposable
+    // fixture only; historical migration definitions remain unchanged.
+    let mut ledger = load_applied_migrations(root.path()).unwrap();
+    ledger
+        .entries
+        .retain(|m| m.id != "events.compact_sequence_index.v002");
+    store_applied_migrations(root.path(), &ledger).unwrap();
+    let first = check_and_migrate_with_backup_report(root.path(), |_| Ok(())).unwrap();
+    assert_eq!(
+        first.applied_migrations,
+        ["events.compact_sequence_index.v002"]
+    );
+    let second = check_and_migrate_with_backup_report(root.path(), |_| Ok(())).unwrap();
+    assert!(second.applied_migrations.is_empty());
+    let after: (u64, String) = conn
+        .query_row(
+            "SELECT seq,payload FROM events WHERE event_id='index-upgrade-proof'",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(after, (seq, before));
+    assert!(
+        conn.inspect_schema()
+            .unwrap()
+            .indexes
+            .iter()
+            .all(|i| i.name != "idx_events_stream_seq")
+    );
+}
+
+#[test]
 fn pending_migration_plan_is_versioned_and_ledger_aware() {
     let migrations = all_migrations();
     let mut applied = HashSet::new();

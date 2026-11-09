@@ -1181,8 +1181,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
+- Repository signal fingerprint: `8409d6e902d37d4b4332c4cfda74e1e747543eeed95eeaad6867b9ab4dcd5373`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1507,3 +1507,15 @@ source nor changes its ownership/history. Identical calls are idempotent;
 conflicting context is rejected. `resolve-obligation` requires the recovery
 observation to be archived in Git before retiring its active obligation.
 Publication still independently verifies every commit in the new range.
+
+## Event storage compatibility
+
+Event physical layout revision 2 adds no CLI/RPC fields and changes no proof
+encoding. Historical DDL remains available to migration fixtures; current
+initialization no longer creates `idx_events_stream_seq`. The full unique
+`idx_events_stream_seq_unique` continues enforcing stream-local order identity.
+`EVENT_INDEX_COMPACTION_UNSAFE` identifies altered prerequisite definitions.
+Older stores missing the unique tree receive it additively; duplicate sequences
+fail with the original typed storage error and rollback, without normalization.
+Native PostgreSQL uses Propodus's own migrations; the SQLite index migration is
+never sent through cloud RPC.

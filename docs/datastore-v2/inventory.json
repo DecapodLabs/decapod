@@ -1,0 +1,5004 @@
+{
+  "indexes": [
+    {
+      "columns": [
+        "context"
+      ],
+      "name": "idx_agent_prompts_context",
+      "table": "agent_prompts",
+      "unique": false
+    },
+    {
+      "columns": [
+        "last_seen"
+      ],
+      "name": "idx_agents_last_seen",
+      "table": "agents",
+      "unique": false
+    },
+    {
+      "columns": [
+        "status"
+      ],
+      "name": "idx_agents_status",
+      "table": "agents",
+      "unique": false
+    },
+    {
+      "columns": [
+        "action_fingerprint"
+      ],
+      "name": "idx_approvals_fingerprint",
+      "table": "approvals",
+      "unique": false
+    },
+    {
+      "columns": [
+        "name"
+      ],
+      "name": "idx_categories_name",
+      "table": "categories",
+      "unique": false
+    },
+    {
+      "columns": [
+        "session_id"
+      ],
+      "name": "idx_decisions_session",
+      "table": "decisions",
+      "unique": false
+    },
+    {
+      "columns": [
+        "tree_id"
+      ],
+      "name": "idx_decisions_tree",
+      "table": "decisions",
+      "unique": false
+    },
+    {
+      "columns": [
+        "stream",
+        "seq"
+      ],
+      "name": "idx_events_stream_seq_unique",
+      "table": "events",
+      "unique": true
+    },
+    {
+      "columns": [
+        "subject_kind",
+        "subject_id"
+      ],
+      "name": "idx_events_subject",
+      "table": "events",
+      "unique": false
+    },
+    {
+      "columns": [
+        "priority"
+      ],
+      "name": "idx_fed_nodes_priority",
+      "table": "nodes",
+      "unique": false
+    },
+    {
+      "columns": [
+        "scope"
+      ],
+      "name": "idx_fed_nodes_scope",
+      "table": "nodes",
+      "unique": false
+    },
+    {
+      "columns": [
+        "status"
+      ],
+      "name": "idx_fed_nodes_status",
+      "table": "nodes",
+      "unique": false
+    },
+    {
+      "columns": [
+        "node_type"
+      ],
+      "name": "idx_fed_nodes_type",
+      "table": "nodes",
+      "unique": false
+    },
+    {
+      "columns": [
+        "updated_at"
+      ],
+      "name": "idx_fed_nodes_updated",
+      "table": "nodes",
+      "unique": false
+    },
+    {
+      "columns": [
+        "status",
+        "merge_key",
+        "scope"
+      ],
+      "name": "idx_knowledge_active_merge_scope",
+      "table": "knowledge",
+      "unique": false
+    },
+    {
+      "columns": [
+        "created_at"
+      ],
+      "name": "idx_knowledge_created",
+      "table": "knowledge",
+      "unique": false
+    },
+    {
+      "columns": [
+        "merge_key"
+      ],
+      "name": "idx_knowledge_merge_key",
+      "table": "knowledge",
+      "unique": false
+    },
+    {
+      "columns": [
+        "status"
+      ],
+      "name": "idx_knowledge_status",
+      "table": "knowledge",
+      "unique": false
+    },
+    {
+      "columns": [
+        "kind"
+      ],
+      "name": "idx_lcm_originals_kind",
+      "table": "originals_index",
+      "unique": false
+    },
+    {
+      "columns": [
+        "ts"
+      ],
+      "name": "idx_lcm_originals_ts",
+      "table": "originals_index",
+      "unique": false
+    },
+    {
+      "columns": [
+        "scope"
+      ],
+      "name": "idx_lcm_summaries_scope",
+      "table": "summaries",
+      "unique": false
+    },
+    {
+      "columns": [
+        "source_id"
+      ],
+      "name": "idx_node_edges_source",
+      "table": "node_edges",
+      "unique": false
+    },
+    {
+      "columns": [
+        "target_id"
+      ],
+      "name": "idx_node_edges_target",
+      "table": "node_edges",
+      "unique": false
+    },
+    {
+      "columns": [
+        "edge_type"
+      ],
+      "name": "idx_node_edges_type",
+      "table": "node_edges",
+      "unique": false
+    },
+    {
+      "columns": [
+        "last_accessed_at"
+      ],
+      "name": "idx_preferences_access",
+      "table": "preferences",
+      "unique": false
+    },
+    {
+      "columns": [
+        "category"
+      ],
+      "name": "idx_preferences_category",
+      "table": "preferences",
+      "unique": false
+    },
+    {
+      "columns": [
+        "key"
+      ],
+      "name": "idx_preferences_key",
+      "table": "preferences",
+      "unique": false
+    },
+    {
+      "columns": [
+        "zone_name"
+      ],
+      "name": "idx_risk_zones_name",
+      "table": "risk_zones",
+      "unique": false
+    },
+    {
+      "columns": [
+        "status"
+      ],
+      "name": "idx_sessions_status",
+      "table": "sessions",
+      "unique": false
+    },
+    {
+      "columns": [
+        "tree_id"
+      ],
+      "name": "idx_sessions_tree",
+      "table": "sessions",
+      "unique": false
+    },
+    {
+      "columns": [
+        "depends_on_task_id"
+      ],
+      "name": "idx_task_dependencies_depends_on",
+      "table": "task_dependencies",
+      "unique": false
+    },
+    {
+      "columns": [
+        "task_id"
+      ],
+      "name": "idx_task_dependencies_task",
+      "table": "task_dependencies",
+      "unique": false
+    },
+    {
+      "columns": [
+        "task_id"
+      ],
+      "name": "idx_task_owners_task",
+      "table": "task_owners",
+      "unique": false
+    },
+    {
+      "columns": [
+        "task_id",
+        "agent_id"
+      ],
+      "name": "idx_task_owners_task_agent",
+      "table": "task_owners",
+      "unique": true
+    },
+    {
+      "columns": [
+        "tag"
+      ],
+      "name": "idx_task_tags_tag",
+      "table": "task_tags",
+      "unique": false
+    },
+    {
+      "columns": [
+        "last_verified_status"
+      ],
+      "name": "idx_task_verification_status",
+      "table": "task_verification",
+      "unique": false
+    },
+    {
+      "columns": [
+        "dir_path"
+      ],
+      "name": "idx_tasks_dir",
+      "table": "tasks",
+      "unique": false
+    },
+    {
+      "columns": [
+        "hash"
+      ],
+      "name": "idx_tasks_hash",
+      "table": "tasks",
+      "unique": false
+    },
+    {
+      "columns": [
+        "scope"
+      ],
+      "name": "idx_tasks_scope",
+      "table": "tasks",
+      "unique": false
+    },
+    {
+      "columns": [
+        "status"
+      ],
+      "name": "idx_tasks_status",
+      "table": "tasks",
+      "unique": false
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_agent_prompts_1",
+      "table": "agent_prompts",
+      "unique": true
+    },
+    {
+      "columns": [
+        "agent_id"
+      ],
+      "name": "sqlite_autoindex_agents_1",
+      "table": "agents",
+      "unique": true
+    },
+    {
+      "columns": [
+        "approval_id"
+      ],
+      "name": "sqlite_autoindex_approvals_1",
+      "table": "approvals",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_archives_1",
+      "table": "archives",
+      "unique": true
+    },
+    {
+      "columns": [
+        "worktree_id"
+      ],
+      "name": "sqlite_autoindex_authoring_bindings_1",
+      "table": "authoring_bindings",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_categories_1",
+      "table": "categories",
+      "unique": true
+    },
+    {
+      "columns": [
+        "name"
+      ],
+      "name": "sqlite_autoindex_categories_2",
+      "table": "categories",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_claims_1",
+      "table": "claims",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_cron_jobs_1",
+      "table": "cron_jobs",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_decisions_1",
+      "table": "decisions",
+      "unique": true
+    },
+    {
+      "columns": [
+        "event_id"
+      ],
+      "name": "sqlite_autoindex_events_1",
+      "table": "events",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_feedback_1",
+      "table": "feedback",
+      "unique": true
+    },
+    {
+      "columns": [
+        "claim_id"
+      ],
+      "name": "sqlite_autoindex_health_cache_1",
+      "table": "health_cache",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_knowledge_1",
+      "table": "knowledge",
+      "unique": true
+    },
+    {
+      "columns": [
+        "filename"
+      ],
+      "name": "sqlite_autoindex_legacy_event_imports_1",
+      "table": "legacy_event_imports",
+      "unique": true
+    },
+    {
+      "columns": [
+        "namespace",
+        "key"
+      ],
+      "name": "sqlite_autoindex_meta_1",
+      "table": "meta",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_node_edges_1",
+      "table": "node_edges",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_nodes_1",
+      "table": "nodes",
+      "unique": true
+    },
+    {
+      "columns": [
+        "edge_id"
+      ],
+      "name": "sqlite_autoindex_obligation_edges_1",
+      "table": "obligation_edges",
+      "unique": true
+    },
+    {
+      "columns": [
+        "from_id",
+        "to_id"
+      ],
+      "name": "sqlite_autoindex_obligation_edges_2",
+      "table": "obligation_edges",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_obligations_1",
+      "table": "obligations",
+      "unique": true
+    },
+    {
+      "columns": [
+        "content_hash"
+      ],
+      "name": "sqlite_autoindex_originals_index_1",
+      "table": "originals_index",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_preferences_1",
+      "table": "preferences",
+      "unique": true
+    },
+    {
+      "columns": [
+        "category",
+        "key"
+      ],
+      "name": "sqlite_autoindex_preferences_2",
+      "table": "preferences",
+      "unique": true
+    },
+    {
+      "columns": [
+        "event_id"
+      ],
+      "name": "sqlite_autoindex_proof_events_1",
+      "table": "proof_events",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_reflexes_1",
+      "table": "reflexes",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_risk_zones_1",
+      "table": "risk_zones",
+      "unique": true
+    },
+    {
+      "columns": [
+        "zone_name"
+      ],
+      "name": "sqlite_autoindex_risk_zones_2",
+      "table": "risk_zones",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_sessions_1",
+      "table": "sessions",
+      "unique": true
+    },
+    {
+      "columns": [
+        "summary_hash"
+      ],
+      "name": "sqlite_autoindex_summaries_1",
+      "table": "summaries",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_task_dependencies_1",
+      "table": "task_dependencies",
+      "unique": true
+    },
+    {
+      "columns": [
+        "task_id",
+        "depends_on_task_id"
+      ],
+      "name": "sqlite_autoindex_task_dependencies_2",
+      "table": "task_dependencies",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_task_owners_1",
+      "table": "task_owners",
+      "unique": true
+    },
+    {
+      "columns": [
+        "task_id",
+        "tag"
+      ],
+      "name": "sqlite_autoindex_task_tags_1",
+      "table": "task_tags",
+      "unique": true
+    },
+    {
+      "columns": [
+        "todo_id"
+      ],
+      "name": "sqlite_autoindex_task_verification_1",
+      "table": "task_verification",
+      "unique": true
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "name": "sqlite_autoindex_tasks_1",
+      "table": "tasks",
+      "unique": true
+    }
+  ],
+  "scope": "effective migration bootstrap plus explicitly invoked TODO, knowledge, LCM, health, aptitude, federation, cron, reflex, archive, feedback, policy, obligation and decision initializers; lazy broker request_dedupe is separately declared in entities.json",
+  "tables": [
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 26,
+            "sum_logical_value_bytes": 104
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "context",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 20,
+            "sum_logical_value_bytes": 52
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "prompt_text",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 100,
+            "sum_logical_value_bytes": 372
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "100",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "priority",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 3,
+            "sum_logical_value_bytes": 9
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": "1",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "active",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 1,
+            "sum_logical_value_bytes": 4
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": "0",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "usage_count",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 1,
+            "sum_logical_value_bytes": 4
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "last_shown_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 11,
+            "sum_logical_value_bytes": 44
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE agent_prompts (\n        id TEXT PRIMARY KEY,\n        context TEXT NOT NULL,\n        prompt_text TEXT NOT NULL,\n        priority INTEGER DEFAULT 100,\n        active INTEGER DEFAULT 1,\n        usage_count INTEGER DEFAULT 0,\n        last_shown_at TEXT,\n        created_at TEXT NOT NULL,\n        updated_at TEXT\n    )",
+      "foreign_keys": [],
+      "name": "agent_prompts",
+      "rows": 4,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "agent_id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'basic'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "trust_level",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "trust_granted_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'system'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "trust_granted_by",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "last_seen",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'active'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "status",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'[]'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "expertise_json",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'[]'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "category_claims_json",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE agents (\n    agent_id TEXT PRIMARY KEY,\n    trust_level TEXT NOT NULL DEFAULT 'basic',\n    trust_granted_at TEXT,\n    trust_granted_by TEXT NOT NULL DEFAULT 'system',\n    last_seen TEXT,\n    status TEXT NOT NULL DEFAULT 'active',\n    expertise_json TEXT NOT NULL DEFAULT '[]',\n    category_claims_json TEXT NOT NULL DEFAULT '[]',\n    updated_at TEXT NOT NULL\n)",
+      "foreign_keys": [],
+      "name": "agents",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "agent_id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "approval_id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "action_fingerprint",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "actor",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "ts",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "scope",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "expires_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE approvals (\n        approval_id TEXT PRIMARY KEY,\n        action_fingerprint TEXT NOT NULL,\n        actor TEXT NOT NULL,\n        ts TEXT NOT NULL,\n        scope TEXT NOT NULL,\n        expires_at TEXT\n    )",
+      "foreign_keys": [],
+      "name": "approvals",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "approval_id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "path",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "content_hash",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "summary_hash",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE archives (\n        id TEXT PRIMARY KEY,\n        path TEXT NOT NULL,\n        content_hash TEXT NOT NULL,\n        summary_hash TEXT NOT NULL,\n        created_at TEXT NOT NULL\n    )",
+      "foreign_keys": [],
+      "name": "archives",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "worktree_id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "task_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "agent_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "lease_generation",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "branch",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "repository_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE authoring_bindings (\n        worktree_id TEXT PRIMARY KEY, task_id TEXT NOT NULL, agent_id TEXT NOT NULL,\n        lease_generation INTEGER NOT NULL, branch TEXT NOT NULL,\n        repository_id TEXT NOT NULL, updated_at TEXT NOT NULL)",
+      "foreign_keys": [],
+      "name": "authoring_bindings",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "worktree_id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 26,
+            "sum_logical_value_bytes": 390
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "name",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 11,
+            "sum_logical_value_bytes": 90
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "description",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 32,
+            "sum_logical_value_bytes": 353
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "keywords",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 42,
+            "sum_logical_value_bytes": 451
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 11,
+            "sum_logical_value_bytes": 165
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE categories (\n        id TEXT PRIMARY KEY,\n        name TEXT NOT NULL UNIQUE,\n        description TEXT DEFAULT '',\n        keywords TEXT DEFAULT '',\n        created_at TEXT NOT NULL\n    )",
+      "foreign_keys": [],
+      "name": "categories",
+      "rows": 15,
+      "unique_constraints": [
+        [
+          "id"
+        ],
+        [
+          "name"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "subject",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "kind",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "provenance",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE claims (\n        id TEXT PRIMARY KEY,\n        subject TEXT NOT NULL,\n        kind TEXT NOT NULL,\n        provenance TEXT,\n        created_at TEXT NOT NULL\n    )",
+      "foreign_keys": [],
+      "name": "claims",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "name",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "description",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "schedule",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "command",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'active'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "status",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "last_run",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "next_run",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "tags",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "dir_path",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "scope",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE cron_jobs (\n        id TEXT PRIMARY KEY,\n        name TEXT NOT NULL,\n        description TEXT DEFAULT '',\n        schedule TEXT NOT NULL,\n        command TEXT NOT NULL,\n        status TEXT NOT NULL DEFAULT 'active',\n        last_run TEXT,\n        next_run TEXT,\n        tags TEXT DEFAULT '',\n        created_at TEXT NOT NULL,\n        updated_at TEXT,\n        dir_path TEXT NOT NULL,\n        scope TEXT NOT NULL\n    )",
+      "foreign_keys": [],
+      "name": "cron_jobs",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "session_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "question_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "tree_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "question_text",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "chosen_value",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "chosen_label",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "rationale",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "user_note",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "federation_node_id",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'decapod'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "actor",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE decisions (\n        id TEXT PRIMARY KEY,\n        session_id TEXT NOT NULL,\n        question_id TEXT NOT NULL,\n        tree_id TEXT NOT NULL,\n        question_text TEXT NOT NULL,\n        chosen_value TEXT NOT NULL,\n        chosen_label TEXT NOT NULL,\n        rationale TEXT DEFAULT '',\n        user_note TEXT DEFAULT '',\n        federation_node_id TEXT,\n        created_at TEXT NOT NULL,\n        actor TEXT NOT NULL DEFAULT 'decapod',\n        FOREIGN KEY(session_id) REFERENCES sessions(id)\n    )",
+      "foreign_keys": [
+        {
+          "columns": [
+            "session_id"
+          ],
+          "on_delete": "no_action",
+          "ref_columns": [
+            "id"
+          ],
+          "ref_table": "sessions"
+        }
+      ],
+      "name": "decisions",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "event_id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 26,
+            "sum_logical_value_bytes": 26564
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "ts",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 20,
+            "sum_logical_value_bytes": 30614
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "seq",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 4,
+            "sum_logical_value_bytes": 5000
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "stream",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 6,
+            "sum_logical_value_bytes": 6252
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "subject_kind",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 4,
+            "sum_logical_value_bytes": 6048
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "subject_id",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 20,
+            "sum_logical_value_bytes": 23240
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "event_type",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 23,
+            "sum_logical_value_bytes": 28496
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "payload",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 462,
+            "sum_logical_value_bytes": 306878
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'decapod'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "actor",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 13,
+            "sum_logical_value_bytes": 19894
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE events (\n    event_id TEXT PRIMARY KEY,\n    ts TEXT NOT NULL,\n    seq INTEGER NOT NULL,\n    stream TEXT NOT NULL,\n    subject_kind TEXT,\n    subject_id TEXT,\n    event_type TEXT NOT NULL DEFAULT '',\n    payload TEXT NOT NULL,\n    actor TEXT NOT NULL DEFAULT 'decapod'\n)",
+      "foreign_keys": [],
+      "name": "events",
+      "rows": 1546,
+      "unique_constraints": [
+        [
+          "stream",
+          "seq"
+        ],
+        [
+          "event_id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "source",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "text",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "links",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE feedback (\n        id TEXT PRIMARY KEY,\n        source TEXT NOT NULL,\n        text TEXT NOT NULL,\n        links TEXT,\n        created_at TEXT NOT NULL\n    )",
+      "foreign_keys": [],
+      "name": "feedback",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "claim_id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "computed_state",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "reason",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE health_cache (\n        claim_id TEXT PRIMARY KEY,\n        computed_state TEXT NOT NULL,\n        reason TEXT,\n        updated_at TEXT NOT NULL,\n        FOREIGN KEY(claim_id) REFERENCES claims(id)\n    )",
+      "foreign_keys": [
+        {
+          "columns": [
+            "claim_id"
+          ],
+          "on_delete": "no_action",
+          "ref_columns": [
+            "id"
+          ],
+          "ref_table": "claims"
+        }
+      ],
+      "name": "health_cache",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "claim_id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "title",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "content",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "provenance",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "claim_id",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "tags",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "dir_path",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "scope",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'active'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "status",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "merge_key",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "supersedes_id",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'persistent'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "ttl_policy",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "expires_ts",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE knowledge (\n        id TEXT PRIMARY KEY,\n        title TEXT NOT NULL,\n        content TEXT NOT NULL,\n        provenance TEXT NOT NULL,\n        claim_id TEXT,\n        tags TEXT DEFAULT '',\n        created_at TEXT NOT NULL,\n        updated_at TEXT,\n        dir_path TEXT NOT NULL,\n        scope TEXT NOT NULL,\n        status TEXT NOT NULL DEFAULT 'active',\n        merge_key TEXT DEFAULT '',\n        supersedes_id TEXT,\n        ttl_policy TEXT NOT NULL DEFAULT 'persistent',\n        expires_ts TEXT\n    )",
+      "foreign_keys": [],
+      "name": "knowledge",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "filename",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "content_hash",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "record_count",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "imported_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE legacy_event_imports (\n             filename TEXT PRIMARY KEY,\n             content_hash TEXT NOT NULL,\n             record_count INTEGER NOT NULL,\n             imported_at TEXT NOT NULL\n         )",
+      "foreign_keys": [],
+      "name": "legacy_event_imports",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "filename"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "namespace",
+          "not_null": true,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 10,
+            "sum_logical_value_bytes": 62
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "key",
+          "not_null": true,
+          "primary_key_position": 2,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 33,
+            "sum_logical_value_bytes": 175
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "value",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 306,
+            "sum_logical_value_bytes": 1715
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE meta (\n        namespace TEXT NOT NULL,\n        key TEXT NOT NULL,\n        value TEXT NOT NULL,\n        PRIMARY KEY(namespace, key)\n    )",
+      "foreign_keys": [],
+      "name": "meta",
+      "rows": 8,
+      "unique_constraints": [
+        [
+          "namespace",
+          "key"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "source_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "target_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "edge_type",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'{}'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "metadata",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'decapod'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "actor",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE node_edges (\n    id TEXT PRIMARY KEY,\n    source_id TEXT NOT NULL,\n    target_id TEXT NOT NULL,\n    edge_type TEXT NOT NULL,\n    metadata TEXT NOT NULL DEFAULT '{}',\n    created_at TEXT NOT NULL,\n    actor TEXT NOT NULL DEFAULT 'decapod'\n)",
+      "foreign_keys": [],
+      "name": "node_edges",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "node_type",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'active'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "status",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'notable'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "priority",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'agent_inferred'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "confidence",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "title",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "body",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'repo'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "scope",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "tags",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "effective_from",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "effective_to",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "dir_path",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'decapod'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "actor",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE nodes (\n        id TEXT PRIMARY KEY,\n        node_type TEXT NOT NULL,\n        status TEXT NOT NULL DEFAULT 'active',\n        priority TEXT NOT NULL DEFAULT 'notable',\n        confidence TEXT NOT NULL DEFAULT 'agent_inferred',\n        title TEXT NOT NULL,\n        body TEXT NOT NULL DEFAULT '',\n        scope TEXT NOT NULL DEFAULT 'repo',\n        tags TEXT NOT NULL DEFAULT '',\n        created_at TEXT NOT NULL,\n        updated_at TEXT NOT NULL,\n        effective_from TEXT,\n        effective_to TEXT,\n        dir_path TEXT NOT NULL,\n        actor TEXT NOT NULL DEFAULT 'decapod'\n    )",
+      "foreign_keys": [],
+      "name": "nodes",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "edge_id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "from_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "to_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'depends_on'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "kind",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE obligation_edges (\n        edge_id TEXT PRIMARY KEY,\n        from_id TEXT NOT NULL,\n        to_id TEXT NOT NULL,\n        kind TEXT NOT NULL DEFAULT 'depends_on',\n        created_at TEXT NOT NULL,\n        UNIQUE(from_id, to_id),\n        FOREIGN KEY(from_id) REFERENCES obligations(id) ON DELETE CASCADE,\n        FOREIGN KEY(to_id) REFERENCES obligations(id) ON DELETE CASCADE\n    )",
+      "foreign_keys": [
+        {
+          "columns": [
+            "to_id"
+          ],
+          "on_delete": "cascade",
+          "ref_columns": [
+            "id"
+          ],
+          "ref_table": "obligations"
+        },
+        {
+          "columns": [
+            "from_id"
+          ],
+          "on_delete": "cascade",
+          "ref_columns": [
+            "id"
+          ],
+          "ref_table": "obligations"
+        }
+      ],
+      "name": "obligation_edges",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "edge_id"
+        ],
+        [
+          "from_id",
+          "to_id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "intent_ref",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "risk_tier",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "required_proofs",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "state_commit_root",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'open'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "status",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "metadata",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE obligations (\n        id TEXT PRIMARY KEY,\n        intent_ref TEXT NOT NULL,\n        risk_tier TEXT NOT NULL,\n        required_proofs TEXT NOT NULL, -- JSON array of claim IDs or proof labels\n        state_commit_root TEXT,\n        status TEXT NOT NULL DEFAULT 'open', -- open, met, failed\n        created_at TEXT NOT NULL,\n        updated_at TEXT NOT NULL,\n        metadata TEXT -- JSON blob for extra info\n    )",
+      "foreign_keys": [],
+      "name": "obligations",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "content_hash",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "event_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "ts",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "actor",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "kind",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "byte_size",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "session_id",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE originals_index (\n        content_hash TEXT PRIMARY KEY,\n        event_id TEXT NOT NULL,\n        ts TEXT NOT NULL,\n        actor TEXT NOT NULL,\n        kind TEXT NOT NULL,\n        byte_size INTEGER NOT NULL,\n        session_id TEXT\n    )",
+      "foreign_keys": [],
+      "name": "originals_index",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "content_hash"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "category",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "key",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "value",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "context",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "source",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "100",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "confidence",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "last_accessed_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "0",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "access_count",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "INTEGER"
+        }
+      ],
+      "ddl": "CREATE TABLE preferences (\n        id TEXT PRIMARY KEY,\n        category TEXT NOT NULL,\n        key TEXT NOT NULL,\n        value TEXT NOT NULL,\n        context TEXT,\n        source TEXT NOT NULL,\n        confidence INTEGER DEFAULT 100,\n        created_at TEXT NOT NULL,\n        updated_at TEXT,\n        last_accessed_at TEXT,\n        access_count INTEGER DEFAULT 0,\n        UNIQUE(category, key)\n    )",
+      "foreign_keys": [],
+      "name": "preferences",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ],
+        [
+          "category",
+          "key"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "event_id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "claim_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "ts",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "surface",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "result",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "sla_seconds",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "INTEGER"
+        }
+      ],
+      "ddl": "CREATE TABLE proof_events (\n        event_id TEXT PRIMARY KEY,\n        claim_id TEXT NOT NULL,\n        ts TEXT NOT NULL,\n        surface TEXT NOT NULL,\n        result TEXT NOT NULL,\n        sla_seconds INTEGER NOT NULL,\n        FOREIGN KEY(claim_id) REFERENCES claims(id)\n    )",
+      "foreign_keys": [
+        {
+          "columns": [
+            "claim_id"
+          ],
+          "on_delete": "no_action",
+          "ref_columns": [
+            "id"
+          ],
+          "ref_table": "claims"
+        }
+      ],
+      "name": "proof_events",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "event_id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "name",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "description",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "trigger_type",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'{}'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "trigger_config",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "action_type",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "action_config",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'active'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "status",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "tags",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "dir_path",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "scope",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE reflexes (\n        id TEXT PRIMARY KEY,\n        name TEXT NOT NULL,\n        description TEXT DEFAULT '',\n        trigger_type TEXT NOT NULL,\n        trigger_config TEXT DEFAULT '{}',\n        action_type TEXT NOT NULL,\n        action_config TEXT NOT NULL,\n        status TEXT NOT NULL DEFAULT 'active',\n        tags TEXT DEFAULT '',\n        created_at TEXT NOT NULL,\n        updated_at TEXT,\n        dir_path TEXT NOT NULL,\n        scope TEXT NOT NULL\n    )",
+      "foreign_keys": [],
+      "name": "reflexes",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 26,
+            "sum_logical_value_bytes": 208
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "zone_name",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 20,
+            "sum_logical_value_bytes": 127
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "description",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 58,
+            "sum_logical_value_bytes": 369
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'basic'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "required_trust_level",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 8,
+            "sum_logical_value_bytes": 48
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "0",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "requires_approval",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 1,
+            "sum_logical_value_bytes": 8
+          },
+          "type": "BOOLEAN"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 11,
+            "sum_logical_value_bytes": 88
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE risk_zones (\n        id TEXT PRIMARY KEY,\n        zone_name TEXT NOT NULL UNIQUE,\n        description TEXT DEFAULT '',\n        required_trust_level TEXT NOT NULL DEFAULT 'basic',\n        requires_approval BOOLEAN NOT NULL DEFAULT 0,\n        created_at TEXT NOT NULL\n    )",
+      "foreign_keys": [],
+      "name": "risk_zones",
+      "rows": 8,
+      "unique_constraints": [
+        [
+          "id"
+        ],
+        [
+          "zone_name"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "tree_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "title",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "description",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'active'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "status",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "federation_node_id",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "completed_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "dir_path",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'repo'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "scope",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'decapod'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "actor",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE sessions (\n        id TEXT PRIMARY KEY,\n        tree_id TEXT NOT NULL,\n        title TEXT NOT NULL,\n        description TEXT DEFAULT '',\n        status TEXT NOT NULL DEFAULT 'active',\n        federation_node_id TEXT,\n        created_at TEXT NOT NULL,\n        updated_at TEXT NOT NULL,\n        completed_at TEXT,\n        dir_path TEXT NOT NULL,\n        scope TEXT NOT NULL DEFAULT 'repo',\n        actor TEXT NOT NULL DEFAULT 'decapod'\n    )",
+      "foreign_keys": [],
+      "name": "sessions",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "summary_hash",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "ts",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "scope",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "original_hashes",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "summary_text",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "token_estimate",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "INTEGER"
+        }
+      ],
+      "ddl": "CREATE TABLE summaries (\n        summary_hash TEXT PRIMARY KEY,\n        ts TEXT NOT NULL,\n        scope TEXT NOT NULL,\n        original_hashes TEXT NOT NULL,\n        summary_text TEXT NOT NULL,\n        token_estimate INTEGER NOT NULL\n    )",
+      "foreign_keys": [],
+      "name": "summaries",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "summary_hash"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "task_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "depends_on_task_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE task_dependencies (\n        id TEXT PRIMARY KEY,\n        task_id TEXT NOT NULL,\n        depends_on_task_id TEXT NOT NULL,\n        created_at TEXT NOT NULL,\n        UNIQUE(task_id, depends_on_task_id),\n        FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE,\n        FOREIGN KEY(depends_on_task_id) REFERENCES tasks(id) ON DELETE CASCADE\n    )",
+      "foreign_keys": [
+        {
+          "columns": [
+            "depends_on_task_id"
+          ],
+          "on_delete": "cascade",
+          "ref_columns": [
+            "id"
+          ],
+          "ref_table": "tasks"
+        },
+        {
+          "columns": [
+            "task_id"
+          ],
+          "on_delete": "cascade",
+          "ref_columns": [
+            "id"
+          ],
+          "ref_table": "tasks"
+        }
+      ],
+      "name": "task_dependencies",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "id"
+        ],
+        [
+          "task_id",
+          "depends_on_task_id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "task_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "agent_id",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "claimed_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'primary'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "claim_type",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE task_owners (\n        id TEXT PRIMARY KEY,\n        task_id TEXT NOT NULL,\n        agent_id TEXT NOT NULL,\n        claimed_at TEXT NOT NULL,\n        claim_type TEXT NOT NULL DEFAULT 'primary',\n        FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE\n    )",
+      "foreign_keys": [
+        {
+          "columns": [
+            "task_id"
+          ],
+          "on_delete": "cascade",
+          "ref_columns": [
+            "id"
+          ],
+          "ref_table": "tasks"
+        }
+      ],
+      "name": "task_owners",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "task_id",
+          "agent_id"
+        ],
+        [
+          "id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "task_id",
+          "not_null": true,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "tag",
+          "not_null": true,
+          "primary_key_position": 2,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE task_tags (\n    task_id TEXT NOT NULL,\n    tag TEXT NOT NULL,\n    PRIMARY KEY(task_id, tag),\n    FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE\n)",
+      "foreign_keys": [
+        {
+          "columns": [
+            "task_id"
+          ],
+          "on_delete": "cascade",
+          "ref_columns": [
+            "id"
+          ],
+          "ref_table": "tasks"
+        }
+      ],
+      "name": "task_tags",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "task_id",
+          "tag"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "todo_id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'[]'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "proof_plan",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "verification_artifacts",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "last_verified_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "last_verified_status",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "last_verified_notes",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "90",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "verification_policy_days",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        }
+      ],
+      "ddl": "CREATE TABLE task_verification (\n        todo_id TEXT PRIMARY KEY,\n        proof_plan TEXT NOT NULL DEFAULT '[]',\n        verification_artifacts TEXT,\n        last_verified_at TEXT,\n        last_verified_status TEXT,\n        last_verified_notes TEXT,\n        verification_policy_days INTEGER NOT NULL DEFAULT 90,\n        updated_at TEXT NOT NULL,\n        FOREIGN KEY(todo_id) REFERENCES tasks(id) ON DELETE CASCADE\n    )",
+      "foreign_keys": [
+        {
+          "columns": [
+            "todo_id"
+          ],
+          "on_delete": "cascade",
+          "ref_columns": [
+            "id"
+          ],
+          "ref_table": "tasks"
+        }
+      ],
+      "name": "task_verification",
+      "rows": 0,
+      "unique_constraints": [
+        [
+          "todo_id"
+        ]
+      ]
+    },
+    {
+      "columns": [
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "id",
+          "not_null": false,
+          "primary_key_position": 1,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 13,
+            "sum_logical_value_bytes": 325
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "hash",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 6,
+            "sum_logical_value_bytes": 150
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "title",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 15,
+            "sum_logical_value_bytes": 365
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "description",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 35,
+            "sum_logical_value_bytes": 875
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "tags",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 15,
+            "sum_logical_value_bytes": 375
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "owner",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 0,
+            "sum_logical_value_bytes": 0
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "due",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "ref",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 0,
+            "sum_logical_value_bytes": 0
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'open'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "status",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 4,
+            "sum_logical_value_bytes": 100
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "created_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 20,
+            "sum_logical_value_bytes": 500
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "updated_at",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 20,
+            "sum_logical_value_bytes": 500
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "completed_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "closed_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "dir_path",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 19,
+            "sum_logical_value_bytes": 475
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "scope",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 4,
+            "sum_logical_value_bytes": 100
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "parent_task_id",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "'medium'",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "priority",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 6,
+            "sum_logical_value_bytes": 150
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "depends_on",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 0,
+            "sum_logical_value_bytes": 0
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "blocks",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 0,
+            "sum_logical_value_bytes": 0
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "category",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 0,
+            "sum_logical_value_bytes": 0
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "component",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 0,
+            "sum_logical_value_bytes": 0
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "assigned_to",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 0,
+            "sum_logical_value_bytes": 0
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "assigned_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "0",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "one_shot",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 1,
+            "sum_logical_value_bytes": 25
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": null,
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "lease_expires_at",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": null,
+            "sum_logical_value_bytes": null
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "0",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "lease_generation",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 1,
+            "sum_logical_value_bytes": 25
+          },
+          "type": "INTEGER"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "lease_lifecycle",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 0,
+            "sum_logical_value_bytes": 0
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "''",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "intent_anchor",
+          "not_null": false,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 0,
+            "sum_logical_value_bytes": 0
+          },
+          "type": "TEXT"
+        },
+        {
+          "default_sql": "0",
+          "domain_limits": "not tightened by this increment; see table DDL for existing constraints",
+          "frequency": "production unmeasured; fixture counts only",
+          "name": "revision",
+          "not_null": true,
+          "primary_key_position": 0,
+          "proposed_change": "none",
+          "required_for_kernel_correctness": null,
+          "synthetic_observed": {
+            "max_utf8_or_blob_bytes": 2,
+            "sum_logical_value_bytes": 50
+          },
+          "type": "INTEGER"
+        }
+      ],
+      "ddl": "CREATE TABLE tasks (\n        id TEXT PRIMARY KEY,\n        hash TEXT NOT NULL,\n        title TEXT NOT NULL,\n        description TEXT DEFAULT '',\n        tags TEXT DEFAULT '',\n        owner TEXT DEFAULT '',\n        due TEXT,\n        ref TEXT DEFAULT '',\n        status TEXT NOT NULL DEFAULT 'open',\n        created_at TEXT NOT NULL,\n        updated_at TEXT NOT NULL,\n        completed_at TEXT,\n        closed_at TEXT,\n        dir_path TEXT NOT NULL,\n        scope TEXT NOT NULL,\n        parent_task_id TEXT,\n        priority TEXT DEFAULT 'medium',\n        depends_on TEXT DEFAULT '',\n        blocks TEXT DEFAULT '',\n        category TEXT DEFAULT '',\n        component TEXT DEFAULT '',\n        assigned_to TEXT DEFAULT '',\n        assigned_at TEXT,\n        one_shot INTEGER DEFAULT 0,\n        lease_expires_at TEXT,\n        lease_generation INTEGER DEFAULT 0,\n        lease_lifecycle TEXT DEFAULT '',\n        intent_anchor TEXT DEFAULT '',\n        revision INTEGER NOT NULL DEFAULT 0\n    )",
+      "foreign_keys": [],
+      "name": "tasks",
+      "rows": 25,
+      "unique_constraints": [
+        [
+          "id"
+        ]
+      ]
+    }
+  ]
+}

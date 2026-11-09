@@ -828,8 +828,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
+- Repository signal fingerprint: `8409d6e902d37d4b4332c4cfda74e1e747543eeed95eeaad6867b9ab4dcd5373`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1064,3 +1064,16 @@ fresh workstream's carried obligations, under the existing document lock.
 The source commit, tree and governance blob remain immutable; no database,
 scheduler or second history authority is introduced. Source reauthoring and
 current independent proof are distinct from reconstruction of past evidence.
+
+## Datastore physical revision 2
+
+Decapod retains one local SQLite authority and routes physical execution through
+Dactyl. `core/schemas.rs::EVENTS_TABLE_SCHEMA_V2` retains event columns and proof
+encodings while avoiding the duplicate nonunique `(stream,seq)` tree. The forward
+`events.compact_sequence_index.v002` migration verifies both index definitions
+under `BEGIN IMMEDIATE` and removes only the redundant tree. Missing uniqueness
+is established additively; duplicate historical sequences reject the upgrade
+without normalization. No historical payload, identity or hash is rewritten.
+Freed pages are reusable; file shrink requires separately controlled maintenance.
+The measured catalog and unresolved cross-backend contracts live in
+`docs/datastore-v2/`; native Propodus RPC supports only a partial task model.
