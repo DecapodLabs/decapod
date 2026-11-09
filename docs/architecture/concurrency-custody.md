@@ -180,3 +180,16 @@ implementation without retrospective admission or invented governance history.
 Candidate-assisted workspace admission is operational recovery, not independent
 publication evidence. Full installed-controller validation is still required
 for each exact candidate against the accepted target.
+
+## Bounded self-hosted template transition
+
+The candidate prompt-safety contract changes all four embedded entrypoint
+templates. The installed 0.132.0 controller still embeds the old paragraph and
+its header-only refresh cannot establish candidate template provenance.
+
+This repair recognizes only the exact previous canonical paragraph and its
+valid release-bound fingerprint. Immutable Decapod source history permits an
+intermediate accepted-base template during a source transition, never an
+arbitrarily edited template. The final tip must be candidate canonical.
+The maintainer explicitly instructed skipping independent validation for
+this continuation, so the updated code and tests are not publication proof.

@@ -114,3 +114,29 @@ fn stale_release_pin_is_bumped_to_evaluating_release() {
     );
     assert_eq!(refresh_entrypoint_metadata(root).expect("second"), 0);
 }
+
+#[test]
+fn previous_canonical_safety_template_migrates_but_edits_do_not() {
+    let temp = tempfile::tempdir().unwrap();
+    let root = temp.path();
+    let previous = assets::previous_prompt_safety_template("AGENTS.md").unwrap();
+    assert_ne!(previous, canonical_template("AGENTS.md").unwrap());
+    let fingerprint = fingerprint_for_payload("AGENTS.md", RELEASE_VERSION, &previous);
+    let prior = format!(
+        "<!-- decapod-release: {RELEASE_VERSION} -->\n<!-- decapod-fingerprint: {fingerprint} -->\n{previous}"
+    );
+    std::fs::write(root.join("AGENTS.md"), prior).unwrap();
+    assert_eq!(refresh_entrypoint_metadata(root).unwrap(), 1);
+    assert_eq!(
+        std::fs::read_to_string(root.join("AGENTS.md")).unwrap(),
+        render_entrypoint("AGENTS.md").unwrap()
+    );
+    assert_eq!(refresh_entrypoint_metadata(root).unwrap(), 0);
+    let edited = format!("{previous}unreviewed edits");
+    let forged = fingerprint_for_payload("AGENTS.md", RELEASE_VERSION, &edited);
+    std::fs::write(root.join("AGENTS.md"), format!(
+        "<!-- decapod-release: {RELEASE_VERSION} -->\n<!-- decapod-fingerprint: {forged} -->\n{edited}"
+    )).unwrap();
+    assert_eq!(refresh_entrypoint_metadata(root).unwrap(), 0);
+    assert!(validate_entrypoint(root, "AGENTS.md").is_err());
+}
