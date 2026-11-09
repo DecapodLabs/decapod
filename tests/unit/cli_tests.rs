@@ -337,3 +337,48 @@ fn workspace_publish_rpc_rejects_snapshot_adoption_instead_of_ignoring_it() {
     });
     assert!(serde_json::from_value::<crate::core::rpc::WorkspacePublishParams>(params).is_err());
 }
+
+#[test]
+fn exceptional_rbac_grants_are_explicit_per_actor_and_permission() {
+    let mut rbac = super::GovernanceRbac::default();
+    assert!(!rbac.allows("operator", "todo.journal.repair"));
+    assert!(!rbac.allows("operator", "validate.bypass"));
+    rbac.actor_roles
+        .insert("operator".into(), vec!["maintainer".into()]);
+    rbac.journal_repair_roles.push("maintainer".into());
+    assert!(rbac.allows("operator", "todo.journal.repair"));
+    assert!(!rbac.allows("operator", "validate.bypass"));
+    assert!(!rbac.allows("different-agent", "todo.journal.repair"));
+    assert!(!rbac.allows("operator", "unrecognized.operation"));
+    rbac.validation_bypass_roles.push("maintainer".into());
+    assert!(rbac.allows("operator", "validate.bypass"));
+    let encoded = toml::to_string(&rbac).unwrap();
+    let restored: super::GovernanceRbac = toml::from_str(&encoded).unwrap();
+    assert!(restored.allows("operator", "validate.bypass"));
+}
+
+#[test]
+fn validation_bypass_cli_requires_an_explicit_reason() {
+    use super::{Cli, Command};
+    use clap::Parser;
+    assert!(Cli::try_parse_from([
+        "decapod", "validate", "--bypass-validation"
+    ]).is_err());
+    assert!(Cli::try_parse_from([
+        "decapod", "validate", "--bypass-reason", "exception"
+    ]).is_err());
+    let parsed = Cli::try_parse_from([
+        "decapod", "validate", "--bypass-validation",
+        "--bypass-reason", "reviewed local exception",
+    ]).unwrap();
+    assert!(matches!(parsed.command, Command::Validate(c)
+        if c.bypass_validation && c.bypass_reason.as_deref() == Some("reviewed local exception")));
+}
+
+#[test]
+fn laya_is_disabled_without_explicit_repository_policy() {
+    let config = super::DecapodProjectConfig::default();
+    assert_eq!(config.laya.mode, crate::core::laya_readiness::Mode::Disabled);
+    let serialized = toml::to_string(&config).unwrap();
+    assert!(!serialized.contains("[laya]"));
+}
