@@ -330,7 +330,6 @@ fn authorize_binary(
             .is_some_and(|(current, requested)| current == requested);
     let is_allowed = sealed_default
         || allowed_bins.iter().any(|b| b == &bin)
-        || (capability == ExternalCapability::VerificationExec && bin.starts_with("decapod"))
         || is_self_verification;
     if !is_allowed {
         return Err(error::DecapodError::ValidationError(format!(
@@ -807,6 +806,13 @@ mod verification_self_execution_tests {
             &store,
             ExternalCapability::VerificationExec,
             wrapped.to_str().unwrap()
+        ).is_err());
+        let arbitrary = temp.path().join("decapod-malicious");
+        std::fs::write(&arbitrary, b"not decapod").unwrap();
+        assert!(authorize_binary(
+            &store,
+            ExternalCapability::VerificationExec,
+            arbitrary.to_str().unwrap()
         ).is_err());
     }
 }
