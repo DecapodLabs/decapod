@@ -386,7 +386,13 @@ fn accepted_base_template_transition(
     observed: &str,
     run_git: &mut GitRunner<'_>,
 ) -> Result<bool, String> {
-    if commit == head || !ancestor_with(SOURCE_ROOT, head, run_git)? {
+    // Unrelated consumer and synthetic repositories do not contain the
+    // published Decapod source root. The self-hosted migration transition
+    // does not apply there; ordinary entrypoint history rules still do.
+    if commit == head || oid_with(SOURCE_ROOT, run_git)?.is_none() {
+        return Ok(false);
+    }
+    if !ancestor_with(SOURCE_ROOT, head, run_git)? {
         return Ok(false);
     }
     let prior = payload(&source_blob_with(accepted_base, ASSETS, run_git)?, surface)?;
@@ -524,7 +530,9 @@ fn committed_history(
         }
     }
     // A staged old template cannot remain at the immutable final candidate.
-    if ancestor_with(SOURCE_ROOT, &head, run_git)? {
+    if oid_with(SOURCE_ROOT, run_git)?.is_some()
+        && ancestor_with(SOURCE_ROOT, &head, run_git)?
+    {
         for surface in super::ENTRYPOINT_FILES {
             let committed = blob_with(&head, surface, run_git)?;
             let canonical =

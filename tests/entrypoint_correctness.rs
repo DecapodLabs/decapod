@@ -1253,11 +1253,15 @@ fn test_feature_branch_rejects_hand_edited_entrypoint_commit() {
         !success,
         "hand-edited entrypoint commit must fail: {output}"
     );
+    // No verified task/worktree binding exists in this scratch source branch.
+    // The CLI must fail closed at its authoring gate, before execution.
     assert!(
-        output.contains("ENTRYPOINT_COMMIT_DISCIPLINE")
-            || output.contains("entrypoint_payload_modified"),
-        "expected entrypoint discipline or payload finding. Output:\n{output}"
+        output.contains("AUTHORING_ACTOR_REQUIRED"),
+        "unbound source checkout must not be admitted: {output}"
     );
+    // Independently prove the precise tampered payload is still rejected by
+    // the read-only entrypoint integrity primitive.
+    assert!(entrypoint_integrity::validate_entrypoint(&temp_path, "AGENTS.md").is_err());
 }
 
 #[cfg(unix)]
@@ -1296,13 +1300,22 @@ fn test_feature_branch_rejects_mode_only_entrypoint_touch() {
     let (success, output) =
         run_decapod_with_env(&temp_path, &["validate", "--format", "json"], &[]);
     assert!(!success, "mode-only entrypoint touch must fail: {output}");
+    // The CLI refuses the unbound checkout before it can claim validation.
     assert!(
-        output.contains("ENTRYPOINT_COMMIT_DISCIPLINE"),
-        "expected ENTRYPOINT_COMMIT_DISCIPLINE. Output:\n{output}"
+        output.contains("AUTHORING_ACTOR_REQUIRED"),
+        "unbound source checkout must not be admitted: {output}"
     );
+    // Preserve the executable-bit fixture for the immutable Git-history mode
+    // check, which is also covered by history::tests in the core suite.
+    let mode = Command::new("git")
+        .args(["ls-tree", "HEAD", "--", "CLAUDE.md"])
+        .current_dir(&temp_path)
+        .output()
+        .expect("read immutable commit mode");
+    assert!(mode.status.success());
     assert!(
-        output.contains("non-content touch") || output.contains("mode"),
-        "expected mode-only messaging. Output:\n{output}"
+        String::from_utf8_lossy(&mode.stdout).starts_with("100755 blob "),
+        "mode-only fixture must contain a committed executable-bit change"
     );
 }
 

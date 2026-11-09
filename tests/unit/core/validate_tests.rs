@@ -331,18 +331,21 @@ fn ci_prediction_preserves_actionable_validation_signals() {
 }
 
 #[test]
-fn isolated_worktree_detection_uses_owning_main_repo() {
+fn unbound_worktree_is_not_admitted_for_validation_by_path_alone() {
     let (_tmp, main_root, wt_path) = decapod_worktree_fixture();
 
-    assert!(is_decapod_isolated_worktree(&main_root, &wt_path));
+    // A linked Git worktree at a managed path is insufficient by itself:
+    // authoring requires the current task lease and a verified checkout binding.
+    assert!(crate::workspace::is_canonical_decapod_workspace_path(&wt_path));
+    assert!(!is_decapod_isolated_worktree(&main_root, &wt_path));
     assert!(
-        is_decapod_isolated_worktree(&wt_path, &wt_path),
-        "validation can pass the worktree as main_root; detection must still resolve the owner repo"
+        !is_decapod_isolated_worktree(&wt_path, &wt_path),
+        "a different main_root argument must never grant unbound checkout authority"
     );
 }
 
 #[test]
-fn issue_757_workspace_status_and_validate_agree_on_decapod_worktree() {
+fn issue_757_workspace_status_and_validate_agree_on_unbound_worktree() {
     let (_tmp, _main_root, wt_path) = decapod_worktree_fixture();
     let ctx = ValidationContext::new();
 
@@ -350,15 +353,13 @@ fn issue_757_workspace_status_and_validate_agree_on_decapod_worktree() {
         .expect("workspace status should resolve the isolated worktree");
     assert!(status.git.in_worktree);
     assert!(!status.git.is_main_repo);
-    assert!(status.can_work);
+    assert!(!status.can_work, "unbound worktree must fail closed");
 
     validate_git_workspace_context(&ctx, &wt_path, &wt_path).expect("workspace context validation");
 
-    assert_eq!(
-        ctx.fail_count.load(Ordering::Relaxed),
-        0,
-        "unexpected validation failures: {:?}",
-        ctx.fails.lock().unwrap()
+    assert!(
+        ctx.fail_count.load(Ordering::Relaxed) > 0,
+        "workspace validation must agree with authoring custody admission"
     );
 }
 

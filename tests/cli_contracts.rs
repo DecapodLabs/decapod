@@ -343,7 +343,7 @@ mod claim_boundaries {
     }
 
     #[test]
-    fn concurrent_disjoint_file_claims_preserve_callers_and_reject_overlap() {
+    fn concurrent_disjoint_file_claims_preserve_callers_and_allow_logical_overlap() {
         let fixture = fixture();
         let root = fixture.path();
         let a = add(root, "Amber parcel", r#"paths:["src/a.rs"]"#);
@@ -385,12 +385,14 @@ mod claim_boundaries {
         );
         assert_eq!(alpha["item"]["assigned_to"], "alpha");
         assert_eq!(beta["item"]["assigned_to"], "beta");
-        let denied = claim(root, &worktree, "gamma", &overlap, "exclusive");
-        let denied: Value =
-            serde_json::from_slice(&denied.stdout).expect("typed overlap rejection");
-        assert_eq!(denied["status"], "conflict");
-        assert_eq!(denied["result"]["overlap"], true);
-        assert_eq!(get(root, root, &overlap)["item"]["assigned_to"], "");
+        // Logical file overlap is advisory, not exclusive custody of a
+        // shared writable checkout. Both independent tasks can be claimed.
+        let admitted = claim(root, &worktree, "gamma", &overlap, "exclusive");
+        let admitted: Value =
+            serde_json::from_slice(&admitted.stdout).expect("typed claim outcome");
+        assert_eq!(admitted["status"], "ok");
+        assert_eq!(get(root, root, &overlap)["item"]["assigned_to"], "gamma");
+        assert_eq!(get(root, root, &a)["item"]["assigned_to"], "alpha");
     }
 
     #[test]
