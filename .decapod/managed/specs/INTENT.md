@@ -1,5 +1,12 @@
 # Intent
 
+## Current bounded-reader repair (#1571)
+
+Restore ordinary local validation liveness on macOS by enumerating pinned
+filesystem handles directly. The change must preserve digest equivalence,
+streaming bounds, no-follow identity checks, and genuine failure results. It adds
+no authorization exception, publication waiver, new datastore or cloud behavior.
+
 ## Rust consumer source-spelling coverage
 
 Consumer initialization must bind discovered build inputs to their actual
@@ -296,8 +303,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e85fbd83475673ae6da655f014db6d69974dcf5fc6445c6afd6d52c0259fa9b5`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
+- Repository signal fingerprint: `b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (225 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

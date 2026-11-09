@@ -580,12 +580,25 @@ fn hash_repo_signal(
     Ok(format!("{:x}", hasher.finalize()))
 }
 
+/// Normalized directory metadata; enumeration remains owned by the input reader.
+pub(crate) struct RepoSignalEntry {
+    pub name: std::ffi::OsString,
+    pub is_dir: bool,
+    pub is_file: bool,
+    pub is_symlink: bool,
+}
+
+pub(crate) type RepoSignalEntries = Box<dyn Iterator<Item = std::io::Result<RepoSignalEntry>>>;
+
 /// I/O owner for bounded epoch capture. The fingerprint algorithm and material
 /// selection stay here; callers only supply bounded reads and cancellation.
 pub(crate) trait RepoSignalIo {
     fn checkpoint(&mut self) -> Result<(), error::DecapodError>;
     fn read(&mut self, path: &Path) -> Result<Vec<u8>, error::DecapodError>;
-    fn directory(&mut self, path: &Path) -> Result<(fs::File, fs::ReadDir), error::DecapodError>;
+    fn directory(
+        &mut self,
+        path: &Path,
+    ) -> Result<(fs::File, RepoSignalEntries), error::DecapodError>;
     fn regular_file(&mut self, path: &Path) -> Result<bool, error::DecapodError>;
 }
 
@@ -617,12 +630,11 @@ pub(crate) fn repo_signal_fingerprint_with_io(
                 ));
             }
             let entry = entry?;
-            let name = entry.file_name();
+            let name = entry.name;
             let path = dir.join(&name);
             // Preserve the existing generated/runtime exclusions without
             // traversing large ignored build outputs merely to reject them.
-            let kind = entry.file_type()?;
-            if (kind.is_dir() || kind.is_symlink())
+            if (entry.is_dir || entry.is_symlink)
                 && matches!(
                     name.to_str(),
                     Some(".git" | ".decapod" | "target" | "node_modules" | ".venv")
@@ -630,12 +642,12 @@ pub(crate) fn repo_signal_fingerprint_with_io(
             {
                 continue;
             }
-            if (kind.is_symlink() && !io.regular_file(&path)?)
-                || (!kind.is_symlink() && !kind.is_dir() && !kind.is_file())
+            if (entry.is_symlink && !io.regular_file(&path)?)
+                || (!entry.is_symlink && !entry.is_dir && !entry.is_file)
             {
                 return Err(error::DecapodError::ValidationError("EPOCH_INPUT_UNSUPPORTED: source scan requires regular files and non-symlink directories".into()));
             }
-            if kind.is_dir() {
+            if entry.is_dir {
                 walk(root, &path, files, io, depth + 1, entries)?;
                 continue;
             }
