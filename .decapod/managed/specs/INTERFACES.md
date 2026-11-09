@@ -1442,3 +1442,24 @@ This metadata is an agent recovery aid, not an imported receipt or readiness
 authority. The independent evidence, candidate and target binding and all
 required gates remain necessary; incomplete or failed execution cannot publish a
 successful completion bundle.
+
+## Concurrency and recoverable evaluation
+
+Task claims expose advisory source overlaps and `custody_pending` authoring
+state. `workspace ensure` verifies a claimed task's observed checkout before
+admitting authoring. Secondary ownership has an explicit independent-task
+recovery diagnostic, rather than borrowing the primary lease. `resource:<name>`
+is an explicit local mutable-resource reservation; the cloud task/event profile
+returns `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED` for that capability.
+
+Cross-owner handoff approvals bind task, current owner, lease generation and
+receiver, expire within the supported 24-hour window and are consumed only by
+successful transfer. Failed diagnostics supply current generation and the exact
+policy evaluation target without fabricating approval. The policy CLI's
+approving `--actor` is separate from its executing caller.
+
+Prompt evaluation returns `invalid_input` or `error` with `evaluated=false` for
+unevaluated requests and nonzero exit. Recovery requests complete-original-prompt
+evaluation without human approval for invocation correction. `allow` and `block`
+retain their policy meaning and exit semantics. Compatibility `/query` / `/batch`
+transport remains unchanged; native RPC/hosted proof is not inferred from it.

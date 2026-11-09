@@ -1011,3 +1011,23 @@ dependency, lease, shared-claim trust or approval gates and do not establish
 verified isolated-worktree custody. Tests cover disjoint/intersecting/parent paths,
 malformed declarations, unchanged shared-claim trust and journaled scopes;
 source declarations are not a claim that tests have run.
+
+## Task custody and observed checkout admission
+
+The local claim/journal transaction in `core/todo.rs` retains exclusive task
+ownership, dependencies, revision and lease generation while treating source
+path/category overlap as metadata. Workspace creation selects the destination
+branch's task before examining another actor's source branch. The version-one
+`authoring_bindings` table lives in the existing canonical datastore, accessed
+through `DbBroker` and Dactyl. `core/authoring.rs` observes registered Git and
+filesystem identity, checks the live actor/lease, and commits binding plus audit
+atomically. The same physical checkout cannot acquire incompatible active task
+bindings, including under the same actor. Admission is rechecked at governed
+CLI/RPC authoring entrypoints; it is not an OS write sandbox.
+
+Repository-scoped cloud task state stays behind Dactyl and Propodus's trusted
+identity/authorization boundary. Host-local checkout identities are never sent
+as cloud authorization. The released compatibility task/event profile remains;
+resource reservation, filesystem bindings, lease handoff and validated remote
+completion are unsupported there. Local labels cannot grant cloud roles or
+entitlements. Native RPC and hosted integration need their separate proofs.

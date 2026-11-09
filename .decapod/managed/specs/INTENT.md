@@ -405,3 +405,20 @@ Dockerfile bytes and must not introduce whitespace that makes the independent
 projection check disagree with the actual validator. This focused #1397 delivery
 contributes to #1052/#1069/#1070; it does not by itself prove their full lifecycle,
 platform, hosted-custody or derived-release acceptance scope.
+
+## Independent task execution and kernel bootstrap
+
+Independent tasks must acquire custody before their worktrees exist, including
+basic-trust agents modifying overlapping logical source files. Task identity is
+not title similarity, a category, or a source directory. `core/todo.rs` keeps
+claims independent while `core/authoring.rs` admits the actual actor's observed
+checkout against a current lease. A named mutable resource still requires its
+own exclusive custody. Source overlap requires integration reconciliation and
+combined validation; it never proves completion by itself.
+
+A correctable prompt-evaluator invocation error must not become a policy denial
+or an allowance. The complete original prompt still needs successful evaluation.
+Recovery and publication retain trust, exact approval, fencing and independent
+proof requirements. Unsupported cloud profiles remain explicit and cannot fall
+back to local authority. See `docs/architecture/concurrency-custody.md` for the
+implemented boundaries and remaining hosted/native integration limits.

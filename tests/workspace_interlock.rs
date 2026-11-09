@@ -59,6 +59,7 @@ fn workspace_ensure_preserves_dirty_protected_branch_and_isolates_committed_base
         .expect("git commit");
 
     let init_out = Command::new(resolve_decapod_bin())
+        .env("DECAPOD_AGENT_ID", "interlock-agent")
         .args(["init", "--force"])
         .current_dir(dir)
         .output()
@@ -88,6 +89,7 @@ fn workspace_ensure_preserves_dirty_protected_branch_and_isolates_committed_base
     std::fs::write(dir.join("README.md"), "# changed\n").expect("mutate readme");
 
     let out = Command::new(resolve_decapod_bin())
+        .env("DECAPOD_AGENT_ID", "interlock-agent")
         .args(["workspace", "ensure"])
         .current_dir(dir)
         .output()

@@ -263,14 +263,16 @@ mod enabled {
                     serde_json::from_slice(&bytes[body_start..body_start + length]).unwrap();
                 if is_reconciliation {
                     assert_context(&request);
-                    assert!(
-                        request["sql"]
-                            .as_str()
-                            .unwrap()
-                            .contains("FROM events WHERE event_id = $1")
-                    );
-                    let body =
-                        json!({"columns": ["subject_id", "payload"], "rows": [], "affected_rows": 0}).to_string();
+                    let sql = request["sql"].as_str().unwrap();
+                    // Resource capability admission observes the authorized task
+                    // before submission; add reconciliation still reads its receipt.
+                    let body = if sql.contains("FROM tasks WHERE id = $1") {
+                        assert_eq!(request["params"], json!(["todo_proof1"]));
+                        task_rows(task_row("todo_proof1", "open", 1))
+                    } else {
+                        assert!(sql.contains("FROM events WHERE event_id = $1"));
+                        json!({"columns": ["subject_id", "payload"], "rows": [], "affected_rows": 0})
+                    }.to_string();
                     write!(stream, "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
                     continue;
                 }

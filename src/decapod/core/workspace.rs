@@ -264,7 +264,20 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
             .push("Run `decapod workspace ensure` and cd into the created worktree".to_string());
     }
 
-    let can_work = !git.is_main_repo && !git.is_protected;
+    let mut can_work = !git.is_main_repo && !git.is_protected;
+    if can_work && is_canonical_decapod_workspace_path(repo_root) {
+        let main = get_main_repo_root(repo_root)?;
+        if let Err(reason) = todo::check_authoring(
+            &main.join(".decapod/data"),
+            repo_root,
+            &crate::current_agent_id(),
+            false,
+        ) {
+            can_work = false;
+            blockers.push(Blocker { kind: BlockerKind::WorkspaceRequired, message: reason.to_string(),
+                resolve_hint: "Inspect current task/actor/lease and run workspace ensure to verify and bind this checkout; a claim alone does not admit authoring.".into() });
+        }
+    }
     let root_isolation = git
         .is_main_repo
         .then(|| root_isolation(repo_root))
@@ -500,6 +513,16 @@ fn claim_branch_scoped_open_tasks(
             assigned_todos.push(todo_ref);
             continue;
         }
+        if task
+            .owners
+            .iter()
+            .any(|owner| owner.agent_id == agent_id && owner.claim_type == "secondary")
+        {
+            return Err(DecapodError::ValidationError(format!(
+                "WORKSPACE_SECONDARY_CUSTODY: task {} retains primary custody with {}; create and claim an independent task, then request its own workspace. Secondary membership does not grant the primary lease or checkout.",
+                task.id, task.assigned_to
+            )));
+        }
         if !task.assigned_to.is_empty() {
             return Err(DecapodError::ValidationError(format!(
                 "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"switch to the agent that owns todo {} or choose a different todo-scoped workspace; Decapod is preventing cross-work while preserving the captured todo\" user_note=\"This branch already belongs to another agent's Decapod todo claim; use the owner or a different todo-scoped workspace.\"\nBranch '{}' is scoped to todo {} but it is already claimed by {}.",
@@ -640,9 +663,24 @@ pub fn ensure_workspace(
     })?;
 
     let mut status = get_workspace_status(repo_root)?;
+    if status.git.in_worktree
+        && config
+            .as_ref()
+            .and_then(|c| c.branch.as_deref())
+            .is_some_and(|branch| branch != status.git.current_branch)
+    {
+        return Err(DecapodError::ValidationError("WORKSPACE_DESTINATION_MISMATCH: this checkout is already on another branch; provision the independent task's separate workspace from the repository root".into()));
+    }
     let upgrade_container = config.as_ref().map(|c| c.use_container).unwrap_or(false);
-    let assigned_todos =
-        ensure_assigned_open_tasks(repo_root, agent_id, &status.git.current_branch)?;
+    let task_branch = if status.git.in_worktree {
+        status.git.current_branch.as_str()
+    } else {
+        config
+            .as_ref()
+            .and_then(|c| c.branch.as_deref())
+            .unwrap_or("")
+    };
+    let assigned_todos = ensure_assigned_open_tasks(repo_root, agent_id, task_branch)?;
 
     // If we're already in a valid worktree, on todo-scoped branch, and no upgrade needed, we're good.
     // Relaxation for Issue #586: Allow non-scoped branches in worktrees if using external tracker
@@ -667,6 +705,7 @@ pub fn ensure_workspace(
         && !status.git.is_protected
         && (!upgrade_container || status.container.in_container)
     {
+        todo::admit_authoring(&store_root, repo_root, agent_id)?;
         initialize_workbranch_governance(
             repo_root,
             agent_id,
@@ -762,6 +801,7 @@ pub fn ensure_workspace(
         create_worktree(repo_root, branch, agent_id, &todo_scope, &base_branch)?
     };
 
+    todo::admit_authoring(&store_root, &worktree_path, agent_id)?;
     initialize_workbranch_governance_at(
         &worktree_path,
         agent_id,
@@ -1165,6 +1205,112 @@ pub fn find_workspace_for_task(host_repo: &Path, task_id: &str) -> Option<PathBu
         .into_iter()
         .max_by_key(|(modified, _)| *modified)
         .map(|(_, path)| path)
+}
+
+/// Host-local observation, never a cloud repository authorization target.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CheckoutIdentity {
+    pub repository_id: String,
+    pub worktree_id: String,
+    pub branch: String,
+    pub registered: bool,
+}
+
+fn git_output(path: &Path, args: &[&str]) -> Option<String> {
+    let output = Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .args(args)
+        .bounded_output(CONTROL_TIMEOUT)
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
+fn canonical_dir(path: &Path) -> Option<PathBuf> {
+    let canonical = std::fs::canonicalize(path).ok()?;
+    let meta = std::fs::symlink_metadata(&canonical).ok()?;
+    if meta.file_type().is_symlink() || !meta.is_dir() {
+        None
+    } else {
+        Some(canonical)
+    }
+}
+
+fn directory_identity(path: &Path) -> Option<(u64, u64)> {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        let meta = std::fs::symlink_metadata(path).ok()?;
+        if meta.file_type().is_symlink() || !meta.is_dir() {
+            return None;
+        }
+        Some((meta.dev(), meta.ino()))
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = path;
+        None
+    }
+}
+
+fn registered_worktree(repo: &Path, canonical: &Path) -> bool {
+    let Some(listed) = git_output(repo, &["worktree", "list", "--porcelain"]) else {
+        return false;
+    };
+    listed.lines().any(|line| {
+        line.strip_prefix("worktree ")
+            .and_then(|path| std::fs::canonicalize(Path::new(path.trim())).ok())
+            .is_some_and(|path| path == canonical)
+    })
+}
+
+/// Observe a checkout. Aliases resolve to the same physical identity;
+/// missing paths and unregistered checkouts are not verified.
+pub fn observe_checkout(path: &Path) -> CheckoutIdentity {
+    let unknown = CheckoutIdentity {
+        repository_id: String::new(),
+        worktree_id: String::new(),
+        branch: String::new(),
+        registered: false,
+    };
+    let Some(canonical) = canonical_dir(path) else {
+        return unknown;
+    };
+    let Some((device, inode)) = directory_identity(&canonical) else {
+        return unknown;
+    };
+    let Some(common) = git_output(&canonical, &["rev-parse", "--git-common-dir"]) else {
+        return unknown;
+    };
+    let Some(git_dir) = git_output(&canonical, &["rev-parse", "--absolute-git-dir"]) else {
+        return unknown;
+    };
+    let common_path = if Path::new(&common).is_absolute() {
+        PathBuf::from(&common)
+    } else {
+        canonical.join(&common)
+    };
+    let Some(repository) = std::fs::canonicalize(&common_path).ok() else {
+        return unknown;
+    };
+    let git_dir_path = PathBuf::from(&git_dir);
+    let registered = registered_worktree(&canonical, &canonical);
+    let branch = git_output(&canonical, &["branch", "--show-current"]).unwrap_or_default();
+    CheckoutIdentity {
+        repository_id: repository.display().to_string(),
+        worktree_id: format!(
+            "{device}:{inode}:{:?}:{}",
+            std::fs::metadata(&canonical)
+                .ok()
+                .and_then(|m| m.created().ok()),
+            git_dir_path.display()
+        ),
+        branch,
+        registered,
+    }
 }
 
 pub fn get_main_repo_root(current_dir: &Path) -> Result<PathBuf, DecapodError> {
@@ -1707,6 +1853,16 @@ fn build_generated_branch_scope(todo_refs: &[AssignedTodoRef]) -> String {
         Some(primary) => format!("{scope}-{}", sanitize_todo_component(&primary.id)),
         None => scope,
     }
+}
+
+pub(crate) fn branch_names_task(branch: &str, id: &str, hash: &str) -> bool {
+    branch_contains_any_todo_id_or_hash(
+        branch,
+        &[AssignedTodoRef {
+            id: id.to_owned(),
+            hash: hash.to_owned(),
+        }],
+    )
 }
 
 fn branch_contains_any_todo_id_or_hash(branch: &str, todo_refs: &[AssignedTodoRef]) -> bool {
