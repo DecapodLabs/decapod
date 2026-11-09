@@ -344,7 +344,7 @@ fn event_identity_is_idempotent_and_conflicts_fail_closed() {
 }
 
 #[test]
-fn test_similar_active_task_consolidates_with_comment() {
+fn similar_titles_preserve_independent_task_identity() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
     initialize_todo_db(&root).unwrap();
@@ -368,7 +368,7 @@ fn test_similar_active_task_consolidates_with_comment() {
     let active_id = active["id"].as_str().unwrap();
     claim_task(&root, active_id, "agent-a", ClaimMode::Exclusive).unwrap();
 
-    let similar_args = TodoCommand::Add {
+    let distinct_args = TodoCommand::Add {
         title: "Repair similar task tag transfer for owners".to_string(),
         description: "New conversation asks for annotations on claimed work".to_string(),
         tags: "tasks,tags,comments,agent-routing".to_string(),
@@ -383,25 +383,87 @@ fn test_similar_active_task_consolidates_with_comment() {
         parent: None,
         one_shot: 0,
     };
-    let consolidated = add_task(&root, &similar_args).unwrap();
-    assert_eq!(consolidated["id"], active_id);
-    assert_eq!(consolidated["new_task_created"], false);
-    assert_eq!(consolidated["consolidated"], true);
-    assert_eq!(consolidated["consolidation"]["assigned_to"], "agent-a");
+    let distinct = add_task(&root, &distinct_args).unwrap();
+    assert_ne!(distinct["id"], active_id);
+    assert!(distinct.get("consolidated").is_none());
+
+    let similar_args = TodoCommand::Add {
+        title: "Fix duplicate todo label handoff routing".to_string(),
+        description: "Make the active owner see comments from related requests".to_string(),
+        tags: "todo,labels,agent-handoff".to_string(),
+        owner: "agent-b".to_string(),
+        due: None,
+        r#ref: "".to_string(),
+        scope: "".to_string(),
+        dir: Some(tmp.path().to_string_lossy().to_string()),
+        priority: "medium".to_string(),
+        depends_on: "".to_string(),
+        blocks: "".to_string(),
+        parent: None,
+        one_shot: 0,
+    };
+    let duplicate_title = add_task(&root, &similar_args).unwrap();
+    assert_ne!(duplicate_title["id"], active_id);
+    assert!(duplicate_title.get("consolidated").is_none());
 
     let open = list_tasks(&root, Some("open".to_string()), None, None, None, None).unwrap();
-    assert_eq!(
-        open.len(),
-        1,
-        "similar request should not create another open task"
-    );
-    let task = get_task(&root, active_id).unwrap().unwrap();
-    assert_eq!(task.comments.len(), 1);
-    assert_eq!(task.comments[0].kind, "fuzzy-consolidation");
+    assert_eq!(open.len(), 3);
     assert!(
-        task.comments[0]
-            .comment
-            .contains("Repair similar task tag transfer")
+        get_task(&root, active_id)
+            .unwrap()
+            .unwrap()
+            .comments
+            .is_empty()
+    );
+}
+
+#[test]
+fn same_category_tasks_keep_independent_custody() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().to_path_buf();
+    initialize_todo_db(&root).unwrap();
+    let add = |title: &str| {
+        add_task(
+            &root,
+            &TodoCommand::Add {
+                title: title.to_string(),
+                description: "distinct work".to_string(),
+                tags: String::new(),
+                owner: String::new(),
+                due: None,
+                r#ref: String::new(),
+                scope: String::new(),
+                dir: Some(tmp.path().to_string_lossy().to_string()),
+                priority: "normal".to_string(),
+                depends_on: String::new(),
+                blocks: String::new(),
+                parent: None,
+                one_shot: 0,
+            },
+        )
+        .unwrap()
+    };
+    let first = add("Fix the parser boundary");
+    let first_id = first["id"].as_str().unwrap();
+    let claimed = claim_task(&root, first_id, "agent-a", ClaimMode::Exclusive).unwrap();
+    assert_eq!(claimed["result"]["status"], "ok");
+    assert_eq!(
+        claimed["result"]["authoring_isolation"],
+        "custody_acquired_workspace_unproven"
+    );
+    let second = add("Fix the renderer boundary");
+    let second_id = second["id"].as_str().unwrap();
+    assert_ne!(first_id, second_id);
+    let second_row = get_task(&root, second_id).unwrap().unwrap();
+    assert!(
+        second_row.assigned_to.is_empty(),
+        "category routing must not seize custody"
+    );
+    let other = claim_task(&root, second_id, "agent-b", ClaimMode::Exclusive).unwrap();
+    assert_eq!(other["result"]["status"], "ok");
+    assert_eq!(
+        other["result"]["authoring_isolation"],
+        "custody_acquired_workspace_unproven"
     );
 }
 
@@ -1146,7 +1208,7 @@ fn expired_lease_is_reclaimable_by_another_agent() {
 }
 
 #[test]
-fn overlapping_exclusive_claims_are_rejected() {
+fn overlapping_source_claims_are_advisory() {
     let tmp = tempdir().unwrap();
     let root = tmp.path().to_path_buf();
     initialize_todo_db(&root).unwrap();
@@ -1174,16 +1236,20 @@ fn overlapping_exclusive_claims_are_rejected() {
 
     let second = claim_task(&root, &second_id, "agent-b", ClaimMode::Exclusive).unwrap();
     assert_eq!(
-        second["status"], "conflict",
-        "overlapping exclusive claim must conflict: {second}"
+        second["status"], "ok",
+        "logical overlap is not custody: {second}"
     );
-    assert_eq!(second["result"]["overlap"], true);
-    let overlaps = second["result"]["overlaps"].as_array().unwrap();
+    assert_eq!(
+        second["result"]["authoring_isolation"],
+        "custody_acquired_workspace_unproven"
+    );
+    let overlaps = second["result"]["advisory_overlaps"].as_array().unwrap();
     assert!(
-        overlaps
-            .iter()
-            .any(|o| o["reason"] == "path_overlap" || o["reason"] == "scope_overlap"),
-        "expected path or scope overlap, got {overlaps:?}"
+        overlaps.iter().any(|overlap| {
+            (overlap["reason"] == "path_overlap" || overlap["reason"] == "scope_overlap")
+                && overlap["enforced"] == false
+        }),
+        "expected advisory overlap, got {overlaps:?}"
     );
 }
 
@@ -1653,12 +1719,30 @@ fn handoff_checks_real_actor_and_preserves_owner_until_approved() {
         None,
         "recovery-caller",
     )
-    .unwrap();
-    assert_eq!(stale["status"], "error");
+    .unwrap_err();
+    assert!(stale.to_string().contains("approval"));
     assert_eq!(
         get_task(root, &id).unwrap().unwrap().assigned_to,
         "missing-owner"
     );
+    let exact =
+        decapod::core::todo::handoff_approval_target(&id, "missing-owner", "recovery-caller", 1);
+    policy::approve_action_with_expiry(
+        &store,
+        "todo.handoff",
+        Some(&exact),
+        "operator",
+        "global",
+        Some(&format!(
+            "{}Z",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+                + 900
+        )),
+    )
+    .unwrap();
     let handed = handoff_task_as(
         &store,
         &id,
@@ -1805,8 +1889,65 @@ fn operator_recovery_requires_exact_one_use_authority() {
         "unavailable-owner"
     );
 
-    let approval =
-        policy::approve_action(&store, "todo.handoff", Some(&id), "operator", "global").unwrap();
+    for (receiver, generation) in [("receiver", 0), ("another-receiver", 1)] {
+        let stale_target = decapod::core::todo::handoff_approval_target(
+            &id,
+            "unavailable-owner",
+            receiver,
+            generation,
+        );
+        let expiry = format!(
+            "{}Z",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+                + 900
+        );
+        policy::approve_action_with_expiry(
+            &store,
+            "todo.handoff",
+            Some(&stale_target),
+            "operator",
+            "global",
+            Some(&expiry),
+        )
+        .unwrap();
+        assert!(
+            handoff_task_as(
+                &store,
+                &id,
+                "receiver",
+                Some("unavailable-owner"),
+                "stale authority",
+                None,
+                "operator"
+            )
+            .is_err()
+        );
+        assert_eq!(
+            get_task(root, &id).unwrap().unwrap().assigned_to,
+            "unavailable-owner"
+        );
+    }
+    let exact =
+        decapod::core::todo::handoff_approval_target(&id, "unavailable-owner", "receiver", 1);
+    let approval = policy::approve_action_with_expiry(
+        &store,
+        "todo.handoff",
+        Some(&exact),
+        "operator",
+        "global",
+        Some(&format!(
+            "{}Z",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+                + 900
+        )),
+    )
+    .unwrap();
     let missing_owner =
         handoff_task_as(&store, &id, "receiver", None, "recover", None, "operator").unwrap_err();
     assert!(
@@ -2028,13 +2169,16 @@ fn explicit_file_claims_keep_basic_agents_disjoint_without_shared_grants() {
     assert!(!check_trust_level(root, "alpha", "verified").unwrap());
     assert!(claim_task(root, &a, "beta", ClaimMode::Shared).is_err());
     let overlap = add_scoped_task(root, "Copper parcel", r#"paths:["src/a.rs"]"#, dir);
+    let overlap_claim = claim_task(root, &overlap, "gamma", ClaimMode::Exclusive).unwrap();
+    assert_eq!(overlap_claim["status"], "ok", "{overlap_claim}");
     assert_eq!(
-        claim_task(root, &overlap, "gamma", ClaimMode::Exclusive).unwrap()["status"],
-        "conflict"
+        overlap_claim["result"]["authoring_isolation"],
+        "custody_acquired_workspace_unproven"
     );
+    let expected = std::fs::canonicalize(root).unwrap().join("src/a.rs");
     assert_eq!(
         get_work_claim(root, &a).unwrap().unwrap().paths,
-        vec![format!("{dir}/src/a.rs")]
+        vec![expected.display().to_string()]
     );
     rebuild_from_events(root).unwrap();
     assert_eq!(
@@ -2080,7 +2224,7 @@ fn explicit_scope_add_rejects_invalid_paths_and_existing_symlinks() {
 }
 
 #[test]
-fn explicit_scope_handoff_preserves_real_overlap_exclusion() {
+fn explicit_scope_handoff_treats_source_overlap_as_advisory() {
     let tmp = tempdir().unwrap();
     let root = tmp.path();
     initialize_todo_db(root).unwrap();
@@ -2112,7 +2256,7 @@ fn explicit_scope_handoff_preserves_real_overlap_exclusion() {
             "alpha"
         )
         .unwrap()["status"],
-        "conflict"
+        "ok"
     );
     assert_eq!(
         handoff_task_as(
@@ -2280,4 +2424,72 @@ fn basic_shared_claim_rolls_back_if_audit_append_fails() {
     assert!(claim_task(&root, &id, "member", ClaimMode::Shared).is_err());
     let task = get_task(&root, &id).unwrap().unwrap();
     assert!(!task.owners.iter().any(|owner| owner.agent_id == "member"));
+}
+
+#[test]
+fn concurrent_same_task_claims_commit_one_owner_and_one_success_event() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    initialize_todo_db(root).unwrap();
+    let id = add_scoped_task(root, "Copper parcel", "root", root.to_str().unwrap());
+    let barrier = Arc::new(Barrier::new(2));
+    let workers: Vec<_> = ["alpha", "beta"]
+        .into_iter()
+        .map(|actor| {
+            let root = root.to_owned();
+            let id = id.clone();
+            let barrier = barrier.clone();
+            std::thread::spawn(move || {
+                barrier.wait();
+                claim_task(&root, &id, actor, ClaimMode::Exclusive).unwrap()
+            })
+        })
+        .collect();
+    let results: Vec<_> = workers.into_iter().map(|w| w.join().unwrap()).collect();
+    assert_eq!(
+        results.iter().filter(|v| v["status"] == "ok").count(),
+        1,
+        "{results:?}"
+    );
+    let db = Connection::open(root.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let count:i64=db.query_row("SELECT count(*) FROM events WHERE stream='todo' AND event_type='task.claim' AND subject_id=?1",[&id],|r|r.get(0)).unwrap();
+    assert_eq!(count, 1);
+}
+
+#[test]
+fn named_resource_custody_excludes_even_the_same_agent() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    initialize_todo_db(root).unwrap();
+    let a = add_scoped_task(
+        root,
+        "Copper parcel",
+        "resource:release-production",
+        root.to_str().unwrap(),
+    );
+    let b = add_scoped_task(
+        root,
+        "Silver parcel",
+        "resource:release-production",
+        root.to_str().unwrap(),
+    );
+    let c = add_scoped_task(
+        root,
+        "Golden parcel",
+        "resource:integration-staging",
+        root.to_str().unwrap(),
+    );
+    assert_eq!(
+        claim_task(root, &a, "alpha", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+    for actor in ["alpha", "beta"] {
+        let blocked = claim_task(root, &b, actor, ClaimMode::Exclusive).unwrap();
+        assert_eq!(blocked["status"], "conflict");
+        assert_eq!(blocked["result"]["conflict_class"], "shared_resource");
+    }
+    assert_eq!(
+        claim_task(root, &c, "beta", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
 }

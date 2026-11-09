@@ -296,7 +296,7 @@ the receiver. Ordinary owner handoff can omit `--from`. A missing caller is a
 `govern policy eval --command todo.handoff --path <task-id>` reports the same
 handoff zone as mutation: verified trust and explicit approval by default,
 subject to the existing operator policy. Output also states the stronger
-cross-owner recovery conditions. Dependency, lease and overlap gates remain.
+cross-owner recovery conditions. Dependency and lease gates remain. Logical source overlap is advisory; named shared-resource reservations still exclude.
 
 Only the AI agent/harness interfaces with and executes Decapod after setup;
 the only Decapod command a user executes is `decapod init`. Humans provide
@@ -326,7 +326,8 @@ roles retain the existing local cooperative policy semantics; environment labels
 are not OS authentication, credentials, or proof against a hostile local process.
 No agent trust row is promoted by recovery.
 
-Cross-owner recovery requires an exact task-bound live approval even when a
+Cross-owner recovery requires a live approval bound to task, current owner, lease
+generation and receiver, with at most 24 hours remaining, even when a
 broader operator policy suppresses ordinary handoff prompts. Successful recovery
 consumes its exact approval records in the same transaction as the ownership
 change. Failed preconditions preserve both custody and approval. The event and
@@ -353,14 +354,14 @@ directory footprint; it is coordination metadata, not proof of actual edits or
 an OS write sandbox. The existing task journal and transfer carry the scope.
 Use 1–256 bounded ASCII relative paths; traversal, absolute paths, glob syntax and
 existing symlink traversal are rejected. Disjoint explicit footprints avoid the
-old repository-root path conflict. Equal paths and parent/child paths conflict.
+old repository-root path conflict. Equal paths and parent/child paths report integration risk; they do not exclude independently owned tasks.
 Explicit footprint comparison conservatively folds ASCII case on every platform
 to prevent case-only aliases on case-insensitive filesystems. Unicode paths are
 unsupported; retain a conservative directory claim instead. Case-only distinct
-Linux files may therefore serialize rather than risk an alias collision.
-A legacy or malformed scope retains conservative directory exclusion. Existing
+Linux files may therefore report an advisory alias risk.
+A legacy or malformed scope retains a conservative directory footprint for diagnostics. Existing
 broad claims must be resolved rather than silently narrowed by another caller.
-Category/dependency/lease/approval gates remain independent and unchanged.
+Categories remain routing metadata. Dependency, lease, approval and explicit resource-custody gates remain independent.
 File scopes do not create verified isolated-worktree custody or waive shared
 resource exclusion. Work-claim projections and fleet overlap diagnostics use
 the same footprint. Different explicit scopes are not fuzzy-merged as duplicate

@@ -343,6 +343,14 @@ impl DactylTodoStore {
     }
 
     fn claim_task_blocking(&self, id: &str, actor: String) -> Result<Task> {
+        if self.get_task_blocking(id)?.is_some_and(|task| {
+            task.scope
+                .trim()
+                .to_ascii_lowercase()
+                .starts_with("resource:")
+        }) {
+            return Err(crate::core::error::DecapodError::NotImplemented("RESOURCE_CUSTODY_PROFILE_UNSUPPORTED: the cloud task/event v1 profile does not reserve shared mutable resources".into()).into());
+        }
         let ts = Self::operation_timestamp();
         let event_id = crate::core::ulid::new_ulid().to_string();
         let payload = serde_json::json!({ "assigned_to": actor }).to_string();

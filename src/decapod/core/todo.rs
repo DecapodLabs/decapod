@@ -35,8 +35,11 @@ use std::fs::{self, OpenOptions};
 use std::io::{BufRead, BufReader, IsTerminal};
 use std::path::{Path, PathBuf};
 
+#[path = "authoring.rs"]
+mod authoring;
 #[path = "task_journal.rs"]
 mod task_journal;
+pub use authoring::{admit_authoring, check_authoring};
 
 /// Task IDs are selected under the same write transaction as their mutation.
 /// New-task discovery uses only this transaction's task.add event range.
@@ -1022,6 +1025,12 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_APPROVALS, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_INDEX, [])?;
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS authoring_bindings (
+        worktree_id TEXT PRIMARY KEY, task_id TEXT NOT NULL, agent_id TEXT NOT NULL,
+        lease_generation INTEGER NOT NULL, branch TEXT NOT NULL,
+        repository_id TEXT NOT NULL, updated_at TEXT NOT NULL);",
+    )?;
     seed_default_risk_zones(conn)?;
     // Houseboat 2 lease columns must exist even if meta was advanced without the ALTER.
     let _ = conn.execute("ALTER TABLE tasks ADD COLUMN lease_expires_at TEXT", []);
@@ -1432,154 +1441,6 @@ pub fn infer_component(title: &str, tags: &str) -> Option<String> {
         }
     }
     None
-}
-
-#[derive(Debug, Clone)]
-struct SimilarActiveTask {
-    task_id: String,
-    task_hash: String,
-    title: String,
-    assigned_to: String,
-    score: f64,
-}
-
-fn canonical_similarity_term(term: &str) -> &str {
-    match term {
-        "bug" | "bugfix" | "broken" | "error" | "errors" | "failure" | "failures" | "fix"
-        | "fixes" | "repair" | "regression" => "fix",
-        "agent" | "agents" | "owner" | "owned" | "ownership" | "assignee" | "assigned"
-        | "claim" | "claimed" | "handoff" | "handoffs" | "transfer" | "route" | "routing" => {
-            "ownership"
-        }
-        "comment" | "comments" | "note" | "notes" | "annotation" | "annotations" => "comment",
-        "duplicate" | "duplicates" | "similar" | "same" | "overlap" | "overlapping" => "similar",
-        "find" | "fuzzy" | "match" | "matching" | "search" => "search",
-        "label" | "labels" | "tag" | "tags" => "label",
-        "task" | "tasks" | "todo" | "todos" | "work" | "workitem" | "workitems" => "todo",
-        _ => term,
-    }
-}
-
-fn task_similarity_terms(title: &str, tags: &str) -> HashSet<String> {
-    const STOP_WORDS: &[&str] = &[
-        "about", "active", "also", "and", "another", "for", "from", "into", "new", "other", "that",
-        "the", "this", "with",
-    ];
-
-    format!("{title} {tags}")
-        .split(|c: char| !c.is_ascii_alphanumeric())
-        .map(str::trim)
-        .filter(|term| term.len() >= 3)
-        .map(str::to_ascii_lowercase)
-        .filter(|term| !STOP_WORDS.contains(&term.as_str()))
-        .map(|term| canonical_similarity_term(&term).to_string())
-        .collect()
-}
-
-fn fuzzy_task_similarity(title_a: &str, tags_a: &str, title_b: &str, tags_b: &str) -> f64 {
-    let terms_a = task_similarity_terms(title_a, tags_a);
-    let terms_b = task_similarity_terms(title_b, tags_b);
-    if terms_a.is_empty() || terms_b.is_empty() {
-        return 0.0;
-    }
-
-    let shared = terms_a.intersection(&terms_b).count();
-    if shared < 3 {
-        return 0.0;
-    }
-
-    let total = terms_a.union(&terms_b).count();
-    shared as f64 / total as f64
-}
-
-fn append_unique_tag(tags: &mut String, tag: &str) {
-    let exists = tags
-        .split(',')
-        .map(str::trim)
-        .any(|existing| existing == tag);
-    if exists {
-        return;
-    }
-
-    if !tags.trim().is_empty() {
-        tags.push(',');
-    }
-    tags.push_str(tag);
-}
-
-fn append_fuzzy_assignment_labels(tags: &mut String, similar: &SimilarActiveTask) {
-    append_unique_tag(tags, "fuzzy-similar");
-    append_unique_tag(tags, &format!("similar-task:{}", similar.task_id));
-    append_unique_tag(tags, &format!("similar-hash:{}", similar.task_hash));
-    append_unique_tag(tags, &format!("handoff-to:{}", similar.assigned_to));
-}
-
-fn find_similar_active_task(
-    conn: &Connection,
-    title: &str,
-    description: &str,
-    tags: &str,
-    creating_owner: &str,
-) -> Result<Option<SimilarActiveTask>, error::DecapodError> {
-    let mut stmt = conn
-        .prepare(
-            "SELECT id, hash, title, description, tags, assigned_to
-             FROM tasks
-             WHERE status NOT IN ('done', 'archived')
-               AND assigned_to != ''
-             ORDER BY created_at ASC",
-        )
-        .map_err(error::DecapodError::StorageError)?;
-    let rows = stmt
-        .query_map([], |row| {
-            Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, String>(1)?,
-                row.get::<_, String>(2)?,
-                row.get::<_, String>(3)?,
-                row.get::<_, String>(4)?,
-                row.get::<_, String>(5)?,
-            ))
-        })
-        .map_err(error::DecapodError::StorageError)?;
-
-    let mut best: Option<SimilarActiveTask> = None;
-    for row in rows {
-        let (
-            task_id,
-            task_hash,
-            candidate_title,
-            candidate_description,
-            candidate_tags,
-            assigned_to,
-        ) = row.map_err(error::DecapodError::StorageError)?;
-        if !creating_owner.is_empty() && assigned_to == creating_owner {
-            continue;
-        }
-
-        let source_text = format!("{title} {description}");
-        let candidate_text = format!("{candidate_title} {candidate_description}");
-        let score = fuzzy_task_similarity(&source_text, tags, &candidate_text, &candidate_tags);
-        if score < 0.42 {
-            continue;
-        }
-
-        let candidate = SimilarActiveTask {
-            task_id,
-            task_hash,
-            title: candidate_title,
-            assigned_to,
-            score,
-        };
-        if best.as_ref().is_none_or(|current| {
-            candidate.score > current.score
-                || (candidate.score == current.score && candidate.task_id < current.task_id)
-        }) {
-            best = Some(candidate);
-        }
-    }
-
-    Ok(best)
 }
 
 pub fn infer_category(title: &str, tags: &str) -> Option<String> {
@@ -2937,21 +2798,6 @@ fn find_agent_for_category(
     Ok(agent)
 }
 
-fn claim_category_if_unowned(
-    conn: &Connection,
-    category: &str,
-    agent_id: &str,
-    ts: &str,
-) -> Result<(), error::DecapodError> {
-    if category.is_empty() || agent_id.is_empty() {
-        return Ok(());
-    }
-    if get_category_owner(conn, category)?.is_some() {
-        return Ok(());
-    }
-    claim_category_for_agent(conn, agent_id, category, ts)
-}
-
 fn get_category_owner(
     conn: &Connection,
     category: &str,
@@ -3468,7 +3314,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     let intent_ref = format!("intent:todo.add:{}", crate::core::ulid::new_ulid());
     let owner_list = parse_owners_input(owner);
     let primary_owner = owner_list.first().cloned().unwrap_or_default();
-    let mut effective_tags = tags.clone();
+    let effective_tags = tags.clone();
 
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -3488,65 +3334,9 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
         |conn| {
             ensure_schema(conn)?;
 
-            let similar_active_task = if scope == "workspace" || scope.starts_with("paths:") {
-                None
-            } else {
-                find_similar_active_task(conn, title, description, &effective_tags, &primary_owner)?
-            };
-            if let Some(similar) = similar_active_task.as_ref() {
-                append_fuzzy_assignment_labels(&mut effective_tags, similar);
-                let comment = format!(
-                    "Similar todo request consolidated here: title=\"{}\" priority={} tags=\"{}\" description=\"{}\"",
-                    title, priority, effective_tags, description
-                );
-                write_task_comment_event(
-                    root,
-                    conn,
-                    &similar.task_id,
-                    "decapod",
-                    &comment,
-                    serde_json::json!({
-                        "kind": "fuzzy-consolidation",
-                        "source_title": title,
-                        "source_description": description,
-                        "source_priority": priority,
-                        "source_tags": effective_tags,
-                        "similarity_score": similar.score,
-                        "matched_task_id": similar.task_id,
-                        "matched_task_hash": similar.task_hash,
-                        "matched_task_title": similar.title,
-                        "assigned_to": similar.assigned_to,
-                        "intent_ref": intent_ref,
-                        "fuzzy_labels": [
-                            "fuzzy-similar",
-                            format!("similar-task:{}", similar.task_id),
-                            format!("similar-hash:{}", similar.task_hash),
-                            format!("handoff-to:{}", similar.assigned_to),
-                        ],
-                    }),
-                    &ts,
-                )?;
-
-                return Ok((
-                    similar.task_id.clone(),
-                    similar.task_hash.clone(),
-                    effective_tags.clone(),
-                    Some(serde_json::json!({
-                        "matched_task_id": similar.task_id,
-                        "matched_task_hash": similar.task_hash,
-                        "matched_task_title": similar.title,
-                        "assigned_to": similar.assigned_to,
-                        "similarity_score": similar.score,
-                        "comment_added": true,
-                        "labels": [
-                            "fuzzy-similar",
-                            format!("similar-task:{}", similar.task_id),
-                            format!("similar-hash:{}", similar.task_hash),
-                            format!("handoff-to:{}", similar.assigned_to),
-                        ],
-                    })),
-                ));
-            }
+            // A matching title is not task identity. Distinct requests stay
+            // distinct even when their titles are identical.
+            let _ = (&primary_owner, description);
 
             // Infer category from tags or title for auto-assignment.
             let inferred_category = infer_category_from_task(conn, title, &effective_tags)?;
@@ -3555,25 +3345,15 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             let task_id = make_task_id(&task_type);
             let task_hash = task_hash_from_id(&task_id);
 
-            let category_agent = if let Some(cat) = &inferred_category {
+            // Category expertise is a routing hint. It is not task custody and
+            // it does not claim the category for the recommended agent.
+            let routing_agent = if let Some(cat) = &inferred_category {
                 find_agent_for_category(conn, cat, &ts)?
             } else {
                 None
             };
-
-            // Determine assigned_to and assigned_at
-            let (assigned_to, assigned_at, auto_assignment_reason) =
-                if let Some(agent) = category_agent {
-                    (agent, Some(ts.clone()), Some("category-owner"))
-                } else {
-                    (String::new(), None, None)
-                };
-
-            if let Some(cat) = inferred_category.as_deref()
-                && !assigned_to.is_empty()
-            {
-                claim_category_if_unowned(conn, cat, &assigned_to, &ts)?;
-            }
+            let assigned_to = String::new();
+            let assigned_at: Option<String> = None;
 
             conn.execute(
             "INSERT INTO tasks(id, hash, title, description, tags, owner, due, ref, status, created_at, updated_at, completed_at, closed_at, dir_path, scope, parent_task_id, priority, depends_on, blocks, category, assigned_to, assigned_at, one_shot)
@@ -3624,18 +3404,17 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 "task_type": task_type,
             });
 
-            // Add auto-assignment info if applicable
-            if !assigned_to.is_empty()
+            if let Some(agent) = routing_agent
                 && let Some(obj) = payload.as_object_mut()
             {
-                obj.insert("assigned_to".to_string(), serde_json::json!(assigned_to));
-                obj.insert("auto_assigned".to_string(), serde_json::json!(true));
-                if let Some(reason) = auto_assignment_reason {
-                    obj.insert(
-                        "auto_assignment_reason".to_string(),
-                        serde_json::json!(reason),
-                    );
-                }
+                obj.insert(
+                    "routing_recommendation".to_string(),
+                    serde_json::json!(agent),
+                );
+                obj.insert(
+                    "routing_basis".to_string(),
+                    serde_json::json!("category-expertise"),
+                );
             }
 
             let ev = TodoEvent {
@@ -3667,7 +3446,12 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 )?;
             }
             sync_legacy_owner_column(conn, &task_id)?;
-            Ok((task_id, task_hash, effective_tags.clone(), None))
+            Ok((
+                task_id,
+                task_hash,
+                effective_tags.clone(),
+                None::<serde_json::Value>,
+            ))
         },
     )?;
 
@@ -4320,6 +4104,7 @@ pub fn claim_task_with_lease(
         TaskJournalSelection::Ids(vec![id.to_owned()]),
         |conn| {
             ensure_schema(conn)?;
+            let mut advisory_overlaps = Vec::new();
             touch_agent_presence(conn, agent_id, &ts)?;
             let claim_zone = if mode == ClaimMode::Shared {
                 "todo.claim.shared"
@@ -4498,40 +4283,24 @@ pub fn claim_task_with_lease(
                         let overlaps = fleet_coord::detect_overlaps(
                             id, agent_id, &scope, &category, &dir_path, &active, &ts,
                         );
-                        if !overlaps.is_empty() {
+                        let blocking: Vec<_> =
+                            overlaps.iter().filter(|o| o.enforced).cloned().collect();
+                        if !blocking.is_empty() {
                             return Ok(serde_json::json!({
                                 "status": "conflict",
                                 "mode": "exclusive",
-                                "resolution": "serialize_or_handoff",
+                                "conflict_class": "shared_resource",
+                                "resolution": "wait_for_resource_custody",
                                 "message": format!(
-                                    "Task {} overlaps {} active exclusive claim(s); serialize or hand off before claiming",
+                                    "Task {} conflicts with {} enforced shared resource claim(s)",
                                     id,
-                                    overlaps.len()
+                                    blocking.len()
                                 ),
                                 "overlap": true,
-                                "overlaps": overlaps
+                                "overlaps": blocking
                             }));
                         }
-                    }
-
-                    if !category.is_empty() && mode == ClaimMode::Exclusive {
-                        if let Some(owner) = get_category_owner(conn, &category)? {
-                            if owner != agent_id {
-                                if is_agent_stale(conn, &owner, &ts, AGENT_EVICT_TIMEOUT_SECS)? {
-                                    claim_category_for_agent(conn, agent_id, &category, &ts)?;
-                                } else {
-                                    return Ok(serde_json::json!({
-                                        "status": "error",
-                                        "message": format!(
-                                            "Category '{}' is owned by {}; cannot claim task {}",
-                                            category, owner, id
-                                        )
-                                    }));
-                                }
-                            }
-                        } else {
-                            claim_category_if_unowned(conn, &category, agent_id, &ts)?;
-                        }
+                        advisory_overlaps = overlaps;
                     }
                 }
             }
@@ -4665,6 +4434,11 @@ pub fn claim_task_with_lease(
                 ok["reclaimed_from"] = serde_json::json!(prev);
                 ok["resolution"] = serde_json::json!("reclaimed");
             }
+            if !advisory_overlaps.is_empty() {
+                ok["advisory_overlaps"] = serde_json::json!(advisory_overlaps);
+            }
+            ok["authoring_state"] = serde_json::json!("custody_pending");
+            ok["authoring_isolation"] = serde_json::json!("custody_acquired_workspace_unproven");
             Ok(ok)
         },
     )?;
@@ -5355,7 +5129,24 @@ pub fn handoff_task_as(
             Ok(output)
         }
         Err(error::DecapodError::ValidationError(reason)) => {
-            let recovery = handoff_recovery_diagnostic(id, to, from, acting_agent, &reason);
+            let mut recovery = handoff_recovery_diagnostic(id, to, from, acting_agent, &reason);
+            if !DbBroker::new(&store.root).is_cloud()
+                && let Ok(Some((owner, generation))) = handoff_snapshot(&store.root, id)
+            {
+                let target = handoff_approval_target(id, &owner, to, generation);
+                recovery["expected_generation"] = serde_json::json!(generation);
+                recovery["approval_target"] = serde_json::json!(target);
+                recovery["evaluate_argv"] = serde_json::json!([
+                    "decapod",
+                    "govern",
+                    "policy",
+                    "eval",
+                    "--command",
+                    "todo.handoff",
+                    "--path",
+                    target
+                ]);
+            }
             Err(error::DecapodError::ValidationError(format!(
                 "{reason}\nHANDOFF_RECOVERY: {recovery}"
             )))
@@ -5471,6 +5262,36 @@ fn handoff_recovery_diagnostic(
     })
 }
 
+/// Versioned exact recovery intent, interpreted only by Decapod's local policy.
+/// It conveys no Supabase authority and is not an approval itself.
+pub fn handoff_approval_target(id: &str, owner: &str, receiver: &str, generation: u32) -> String {
+    use sha2::{Digest, Sha256};
+    let intent =
+        serde_json::json!(["decapod.handoff.v1", id, owner, receiver, generation]).to_string();
+    format!(
+        "{id}:handoff:v1:{generation}:{:x}",
+        Sha256::digest(intent.as_bytes())
+    )
+}
+
+fn handoff_snapshot(root: &Path, id: &str) -> Result<Option<(String, u32)>, error::DecapodError> {
+    let path = todo_db_path(root);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let conn =
+        crate::core::db::db_connect_for_validate(path.to_str().ok_or_else(|| {
+            error::DecapodError::ValidationError("invalid task store path".into())
+        })?)?;
+    Ok(conn
+        .query_row(
+            "SELECT assigned_to,COALESCE(lease_generation,0) FROM tasks WHERE id=?1",
+            [id],
+            |r| Ok((r.get(0)?, r.get::<_, i64>(1)? as u32)),
+        )
+        .optional()?)
+}
+
 fn handoff_task_impl(
     store: &Store,
     id: &str,
@@ -5486,7 +5307,16 @@ fn handoff_task_impl(
         ));
     }
     let root = &store.root;
-    let broker = DbBroker::new(root).with_target(id);
+    if DbBroker::new(root).is_cloud() {
+        return Err(error::DecapodError::NotImplemented("HANDOFF_PROFILE_UNSUPPORTED: cloud task/event v1 has no authorized lease handoff operation".into()));
+    }
+    let expected = handoff_snapshot(root, id)?;
+    let target = expected
+        .as_ref()
+        .filter(|(owner, _)| !owner.is_empty() && owner != acting_agent)
+        .map(|(owner, generation)| handoff_approval_target(id, owner, to, *generation))
+        .unwrap_or_else(|| id.to_owned());
+    let broker = DbBroker::new(root).with_target(&target);
     let db_path = todo_db_path(root);
     let ts = now_iso();
     let now_secs = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
@@ -5534,7 +5364,7 @@ fn handoff_task_impl(
         TaskJournalSelection::Ids(vec![id.to_owned()]),
         |conn| {
             ensure_schema(conn)?;
-            enforce_operation_policy(root, conn, "todo.handoff", acting_agent, id, None)?;
+            enforce_operation_policy(root, conn, "todo.handoff", acting_agent, &target, None)?;
             touch_agent_presence(conn, to, &ts)?;
 
             struct HandoffRow {
@@ -5581,6 +5411,9 @@ fn handoff_task_impl(
                     String::new(),
                 ));
             };
+            if expected.as_ref() != Some(&(row.assigned_to.clone(), row.lease_generation)) {
+                return Err(error::DecapodError::ValidationError("HANDOFF_CUSTODY_CHANGED: expected owner/generation changed; inspect before requesting new approval".into()));
+            }
             if row.status == "done" || row.status == "archived" {
                 return Ok((
                     serde_json::json!({
@@ -5627,10 +5460,10 @@ fn handoff_task_impl(
                         "HANDOFF_RECOVERY_OWNER_REQUIRED: pass --from with the recorded owner; retain your actual caller identity".into(),
                     ));
                 }
-                let ids = policy::exact_target_approval_ids_on_conn(conn, "todo.handoff", id)?;
+                let ids = policy::exact_target_approval_ids_on_conn(conn, "todo.handoff", &target)?;
                 if ids.is_empty() {
                     return Err(error::DecapodError::ValidationError(format!(
-                        "HANDOFF_RECOVERY_APPROVAL_REQUIRED: recovery requires a live exact task approval; run decapod govern policy eval --command todo.handoff --path {id}"
+                        "HANDOFF_RECOVERY_APPROVAL_REQUIRED: recovery requires a bounded exact owner/generation/receiver approval; run decapod govern policy eval --command todo.handoff --path {target}"
                     )));
                 }
                 ids
@@ -5671,25 +5504,28 @@ fn handoff_task_impl(
                 &active,
                 &ts,
             );
-            if !overlaps.is_empty() {
+            let blocking: Vec<_> = overlaps
+                .iter()
+                .filter(|overlap| overlap.enforced)
+                .cloned()
+                .collect::<Vec<_>>();
+            if !blocking.is_empty() {
                 return Ok((
                     serde_json::json!({
                         "status": "conflict",
-                        "resolution": "serialize_or_handoff",
+                        "conflict_class": "shared_resource",
+                        "resolution": "wait_for_resource_custody",
                         "message": format!(
-                            "Task {id} handoff to {to} overlaps {} active exclusive claim(s)",
-                            overlaps.len()
+                            "Task {id} handoff to {to} conflicts with {} enforced shared resource claim(s)",
+                            blocking.len()
                         ),
                         "overlap": true,
-                        "overlaps": overlaps
+                        "overlaps": blocking
                     }),
                     String::new(),
                 ));
             }
-
-            if !row.category.is_empty() {
-                claim_category_for_agent(conn, to, &row.category, &ts)?;
-            }
+            let handoff_advisory = overlaps;
 
             let previous = if row.assigned_to.is_empty() {
                 from.unwrap_or("unassigned").to_string()
@@ -5722,24 +5558,33 @@ fn handoff_task_impl(
                 .map_err(error::DecapodError::StorageError)?;
             }
 
-            conn.execute(
-                "UPDATE tasks
+            let changed = conn
+                .execute(
+                    "UPDATE tasks
              SET assigned_to = ?1, assigned_at = ?2, updated_at = ?2,
                  lease_expires_at = ?3, lease_generation = ?4,
                  lease_lifecycle = ?5, intent_anchor = ?6,
                  revision = revision + 1
-             WHERE id = ?7",
-                crate::core::db::params![
-                    to,
-                    ts,
-                    transfer.lease_expires_at,
-                    transfer.next_generation as i64,
-                    transfer.next_lifecycle.as_str(),
-                    transfer.intent_anchor,
-                    id
-                ],
-            )
-            .map_err(error::DecapodError::StorageError)?;
+             WHERE id = ?7 AND assigned_to = ?8 AND COALESCE(lease_generation,0) = ?9",
+                    crate::core::db::params![
+                        to,
+                        ts,
+                        transfer.lease_expires_at,
+                        transfer.next_generation as i64,
+                        transfer.next_lifecycle.as_str(),
+                        transfer.intent_anchor,
+                        id,
+                        row.assigned_to,
+                        row.lease_generation
+                    ],
+                )
+                .map_err(error::DecapodError::StorageError)?;
+
+            if changed != 1 {
+                return Err(error::DecapodError::ValidationError(
+                    "HANDOFF_CUSTODY_CHANGED: no ownership or success event committed".into(),
+                ));
+            }
 
             // Consume recovery authority only inside the successful custody
             // transaction; errors roll back both task state and consumption.
@@ -5782,6 +5627,7 @@ fn handoff_task_impl(
             append_event(conn, &ev)?;
             insert_event(conn, &ev).map_err(error::DecapodError::StorageError)?;
 
+            let authoring_isolation = "custody_acquired_workspace_unproven";
             Ok((
                 serde_json::json!({
                     "status": "ok",
@@ -5800,7 +5646,9 @@ fn handoff_task_impl(
                     "lease_expires_at": transfer.lease_expires_at,
                     "lease_seconds": transfer.lease_seconds,
                     "lease_state": "active",
-                    "dependency_readiness": dependency_readiness
+                    "dependency_readiness": dependency_readiness,
+                    "advisory_overlaps": handoff_advisory,
+                    "authoring_isolation": authoring_isolation
                 }),
                 event_id,
             ))

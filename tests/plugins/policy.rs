@@ -322,7 +322,8 @@ fn expiry_accepts_utc_and_offsets_and_rejects_invalid_or_elapsed_grants() {
 #[test]
 fn cli_grants_have_bounded_lifetime_and_can_be_listed_and_revoked() {
     use clap::Parser;
-    use decapod::plugins::policy::{PolicyCli, list_approvals, run_policy_cli};
+    use decapod::plugins::policy::{PolicyCli, list_approvals, run_policy_cli_as};
+    let run_policy_cli = |store: &Store, cli: PolicyCli| run_policy_cli_as(store, cli, "operator");
     let tmp = tempdir().unwrap();
     let store = Store {
         kind: StoreKind::User,
