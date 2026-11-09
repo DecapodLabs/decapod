@@ -5,8 +5,9 @@
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `intent.reconcile` is a sessionless local inspection RPC over the existing
 repository plan, canonical specs and source fingerprints. It bypasses mutation
-custody and startup datastore writes, accepts only an empty parameter object,
-and adds no network access, credential access or persistence. Filesystem read
+custody and startup datastore writes, accepts an empty object or an optional
+full immutable Git base commit ID, and adds no network access, credential
+access or persistence. Filesystem read
 permissions remain the access boundary. Reports expose repository paths,
 requirement IDs, hashes and unresolved plan questions; callers must treat those
 questions as repository content when sharing output. A digest is provenance for
@@ -14,6 +15,18 @@ observed bytes, not authenticated human approval. Markers, matching hashes and
 review records cannot establish semantic correctness, resolve a pending human
 decision or authorize validation/publication; `semantic_alignment` remains
 `not_proven`. The existing mutation and publication gates remain authoritative.
+
+## Immutable impact Git trust boundary
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+The optional base-to-HEAD impact reader invokes bounded, repo-local Git
+inspection on immutable commit objects with source replacement and inherited
+Git directory/worktree/index overrides removed. It does not fetch network
+data, execute repository hooks, infer code-to-requirement authority, disclose
+source contents, or write repository state. Exact ancestry and complete
+path accounting are required for complete observations; unsupported paths and
+truncated results remain explicitly unproven. An uncommitted working tree is
+outside the immutable comparison, and unresolved questions remain visible.
 
 ## Shared policy command regression
 

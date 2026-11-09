@@ -263,6 +263,16 @@ reconciliation report exposes missing or orphaned references, unresolved
 questions, and outdated source/spec snapshots without declaring semantic
 alignment or granting publication authority.
 
+## Immutable Change Impact
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+The agent must be able to inspect what implementation and authored living-spec
+material changed between an exact accepted Git base commit and the current HEAD
+commit, without permitting source observations to rewrite human intent. An
+unmapped code change remains explicitly unmapped, incomplete or unsupported
+inputs remain unproven, and the harness owns any proposed code/spec repair.
+The kernel retains independent review, validation and publication authority.
+
 <!-- decapod:declared-capabilities:start -->
 
 ## Declared Capability Surfaces

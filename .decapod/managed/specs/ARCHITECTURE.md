@@ -790,6 +790,18 @@ repository code fingerprints. It stores no secondary project authority and
 requires no persistent database migration or agent scheduler. The calling
 harness remains responsible for interpreting findings and proposing repairs.
 
+## Bounded Immutable Impact Read
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+`core/intent_reconcile.rs` optionally reads an immutable ancestor commit and
+the current HEAD through bounded local Git calls. It reuses
+`core/project_specs::material_specs_change_between_refs` for authored versus
+generated-only living-spec deltas, with the same canonical specification list
+and material-body stripping rules. NUL-delimited change paths preserve renames
+and whitespace. Oversized, unsupported or unavailable observations fail closed
+or explicitly mark the impact incomplete. No new persistence, scheduler, proof
+record or cross-document authority is introduced.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.

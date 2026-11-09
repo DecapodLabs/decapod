@@ -59,8 +59,13 @@ Use `decapod rpc --op intent.reconcile --params '{}'` to inspect the current
 human-intent binding, authored requirement references across canonical living
 specs, manifest freshness, and existing spec-review evidence. The response is
 advisory, always reports semantic alignment as `not_proven`, and never edits
-project meaning or waives configured validation gates. See
-[Intent](../book/src/concepts/intent.md) for the optional `REQ-*` marker contract.
+project meaning or waives configured validation gates.
+
+An optional `base_commit` containing a full immutable Git OID adds a bounded
+base-to-HEAD impact view. Changed implementation paths remain unmapped without
+explicit evidence, and authored spec deltas and review requirements remain
+advisory. See [Intent](../book/src/concepts/intent.md) for the `REQ-*` marker
+and change-impact contract.
 
 ### Before Any Agent Action
 
