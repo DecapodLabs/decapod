@@ -226,10 +226,28 @@ fn run_dirty_root_case(default_branch: &str) {
         &format!("agent/test/{default_branch}-1255"),
     );
     let wt_before = snapshot_specs(&wt);
+    // Workspace admission refreshes generated codebase attestations and the
+    // manifest in the isolated checkout. Only authored spec material must
+    // remain identical to the committed protected-root baseline.
     assert_eq!(
-        wt_before, before,
-        "new worktree should start with the same committed specs as root"
+        wt_before.keys().collect::<Vec<_>>(),
+        before.keys().collect::<Vec<_>>(),
+        "managed workspace must retain the complete spec set"
     );
+    for (path, root_bytes) in &before {
+        if !path.ends_with(".md") {
+            continue;
+        }
+        let root_body = std::str::from_utf8(root_bytes).expect("root spec UTF-8");
+        let worktree_bytes = wt_before.get(path).expect("worktree spec");
+        let worktree_body =
+            std::str::from_utf8(worktree_bytes).expect("worktree spec UTF-8");
+        assert_eq!(
+            decapod::core::project_specs::material_spec_body_hash(worktree_body),
+            decapod::core::project_specs::material_spec_body_hash(root_body),
+            "workspace admission must preserve authored spec material for {path}"
+        );
+    }
 
     let _ = run_decapod(
         &wt,
