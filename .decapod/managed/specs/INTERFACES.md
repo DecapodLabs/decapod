@@ -1173,8 +1173,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (225 files), `tests/` (215 files)
+- Repository signal fingerprint: `9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1499,3 +1499,21 @@ source nor changes its ownership/history. Identical calls are idempotent;
 conflicting context is rejected. `resolve-obligation` requires the recovery
 observation to be archived in Git before retiring its active obligation.
 Publication still independently verifies every commit in the new range.
+
+## Event storage compatibility
+
+Event physical layout revision 2 adds no CLI/RPC fields and changes no proof
+encoding. Historical DDL remains available to migration fixtures; current
+initialization no longer creates `idx_events_stream_seq`. The full unique
+`idx_events_stream_seq_unique` continues enforcing stream-local order identity.
+`EVENT_INDEX_COMPACTION_UNSAFE` identifies altered prerequisite definitions.
+Older stores missing the unique tree receive it additively; duplicate sequences
+fail with the original typed storage error and rollback, without normalization.
+Native PostgreSQL uses Propodus's own migrations; the SQLite index migration is
+never sent through cloud RPC.
+
+## Laya-only optional setup and initialization
+
+`setup laya` replaces the retired `setup vega` command, with explicit cache, runtime, CPU companion, offline and update-check options. `--laya-decisions[=true|false]` replaces the old init selector. Disabled is the default; explicit selection pins the reviewed Laya manifest. Init refresh preserves Laya backend, fallback and runtime bindings, and retains legacy Vega settings for explicit migration rather than silently activating another evaluator.
+
+Legacy configuration and receipt JSON retain their existing names and fields through passive compatibility DTOs; there is no legacy evaluator execution path. Laya runtime registration retains its historical schema identifier to preserve existing installations, while model-manifest verification still enforces Laya identity. Production projection golden vectors bind the unchanged `validation-results.v3` serialized input.

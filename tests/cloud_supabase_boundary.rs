@@ -229,6 +229,9 @@ mod enabled {
                         }
                     }
                 };
+                // macOS accepts inherit the listener's nonblocking flag;
+                // reads must block within their timeout while headers arrive.
+                stream.set_nonblocking(false).unwrap();
                 stream
                     .set_read_timeout(Some(Duration::from_secs(5)))
                     .unwrap();
@@ -587,6 +590,24 @@ mod enabled {
             assert_eq!(result["item"]["tags"], json!(["cloud", "supabase"]));
             assert_no_fallback(root.path());
         }
+    }
+
+    #[tokio::test]
+    async fn request_fixture_waits_for_delayed_headers() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let (endpoint, server) = server(200, json!({"rows": []}));
+        let response = tokio::time::timeout(Duration::from_secs(5), async {
+            let mut stream = tokio::net::TcpStream::connect(
+                endpoint.strip_prefix("http://").unwrap(),
+            ).await.unwrap();
+            tokio::time::sleep(Duration::from_millis(30)).await;
+            stream.write_all(b"POST /query HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer synthetic-bearer-secret\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}").await.unwrap();
+            let mut response = String::new();
+            stream.read_to_string(&mut response).await.unwrap();
+            response
+        }).await.expect("fixture response exceeded its budget");
+        assert!(response.starts_with("HTTP/1.1 200 Fixture"));
+        assert_eq!(server.join().unwrap(), json!({}));
     }
 
     #[test]

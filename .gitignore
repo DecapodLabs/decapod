@@ -77,3 +77,6 @@ err.log
 
 # --- Bazel ---
 /bazel-*
+
+# Machine-local session-update backups are never source artifacts.
+.decapod/backups/

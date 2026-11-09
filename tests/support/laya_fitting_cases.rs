@@ -1,7 +1,7 @@
 //! Source-grounded bounded microcontracts. Expected dispositions are authored
 //! independently of Laya and witness actual executed Rust, not model verdicts.
 //! All identities are replay-only; no record here authorizes publication.
-use super::{Decision, Mode, evidence, laya_assets, shared, vega_runtime, wire};
+use super::{Decision, Mode, evidence, laya_assets, laya_runtime, shared, wire};
 use crate::core::{atomic, bounded_process::Cancellation, fs_permissions};
 use serde_json::{Value, json};
 use std::{
@@ -117,7 +117,7 @@ fn execute(family: &str) -> Result<Witness> {
             )
         }
         "revision_pin" => {
-            assert!(crate::core::vega_setup::valid_revision(
+            assert!(crate::core::model_assets::valid_revision(
                 "7a77439b0923d6efe00052d50a7f787840bfce98"
             ));
             for invalid in [
@@ -126,7 +126,7 @@ fn execute(family: &str) -> Result<Witness> {
                 "7a77439",
                 "7A77439b0923d6efe00052d50a7f787840bfce98",
             ] {
-                assert!(!crate::core::vega_setup::valid_revision(invalid));
+                assert!(!crate::core::model_assets::valid_revision(invalid));
             }
             (
                 "Accept only full 40-character lowercase hexadecimal immutable revisions; reject floating names, tags, abbreviations and uppercase text.",
@@ -134,7 +134,7 @@ fn execute(family: &str) -> Result<Witness> {
                     "Executed revision-pin assertions: full immutable lowercase SHA accepted; main, tag, short and uppercase inputs rejected",
                 ],
                 json!({"valid_accepted":true,"invalid_rejections":4}),
-                "src/decapod/core/vega_setup.rs::valid_revision",
+                "src/decapod/core/model_assets.rs::valid_revision",
             )
         }
         "atomic_replacement" => {
@@ -339,7 +339,7 @@ fn project(
     let proof_path = directory.join(family).join(variant).join("case-proof.json");
     atomic::write_atomic(&proof_path, &proof)?;
     let executable = std::env::current_exe()?.canonicalize()?;
-    let runtime = vega_runtime::runtime_digest(
+    let runtime = laya_runtime::runtime_digest(
         &executable,
         Instant::now() + Duration::from_secs(30),
         &Cancellation::default(),

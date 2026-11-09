@@ -303,8 +303,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (225 files), `tests/` (215 files)
+- Repository signal fingerprint: `9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -457,3 +457,17 @@ lack their own checkpoints. The supported outcome is a new, properly admitted
 workstream with a present-time gap observation and fresh proof, while the
 original source history remains unproven. This change adds no trust elevation,
 human-approval assertion, database maintenance privilege or publication waiver.
+
+## Datastore efficiency mission
+
+Preserve the minimum durable operational authority and evidence required for
+local-first governed work. The first storage increment removes a structurally
+redundant event index while preserving exact historical records and uniqueness.
+Its benchmark reports disk allocation, fixture-only reclamation, WAL and latency
+separately. It does not establish full cloud parity, hosted capacity, new retention
+permissions or the overall 30% storage goal. Subsequent changes require independent
+measurements and compatibility proof, as sequenced in `docs/datastore-v2/architecture.md`.
+
+## Operator-directed Vega retirement
+
+This active datastore increment also removes the entire retired `assets/tools/vega-native` tree and its standalone entrypoint, as explicitly requested by the operator. Laya alone is the optional post-validation evaluator; default deterministic validation needs no model, Metal toolchain or scientific Vega worker. Historical observations are preserved as history and do not assert present requirements.

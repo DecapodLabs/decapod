@@ -74,29 +74,9 @@ mode = "disabled"
 validation_buildkite_preflights = true
 commands = []
 
-[proof.rust_workers]
-reviewed_recipes_digest = "sha256:d6d9c7ff0ea68ac067f2c25e5c3544407d9ed00a63d021330061e47244cfe1c1"
-
-[[proof.rust_workers.workers]]
-name = "vega-native"
-manifest = "assets/tools/vega-native/Cargo.toml"
-features = []
-metal_toolchain = true
-timeout_seconds = 1800
-runs = [
-    { arguments = ["--collect-scientific-numerics"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "0"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "1"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "2"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "3"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "4"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "5"], proof_output = true },
-    { arguments = ["--verify-scientific-collection"], proof_output = true },
-]
-
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:c236477edaef0889d95e82927feddf9c87a8c4671dc245a98cd06250d5053ab4"
+reviewed_sources_digest = "sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb"
 
 [custody]
 isolation = "container"

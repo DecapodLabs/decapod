@@ -558,7 +558,7 @@ pub fn query_serialized_lines(root: &Path, stream: &str) -> Result<String, error
 
 /// Ensure the unified events table exists and fold historical stream tables when present.
 pub fn ensure_tables(conn: &Connection) -> Result<(), error::DecapodError> {
-    conn.execute_batch(schemas::EVENTS_TABLE_SCHEMA)?;
+    conn.execute_batch(schemas::EVENTS_TABLE_SCHEMA_V2)?;
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS legacy_event_imports (
              filename TEXT PRIMARY KEY,

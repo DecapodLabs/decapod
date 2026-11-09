@@ -219,6 +219,19 @@ fn actual_cpu_and_metal_use_production_projection() -> Result<(), Box<dyn std::e
 fn development_snapshot(
     variant: &str,
 ) -> Result<shared::EvaluationSnapshot, Box<dyn std::error::Error>> {
+    let executable = std::env::current_exe()?.canonicalize()?;
+    let digest = laya_runtime::runtime_digest(
+        &executable,
+        Instant::now() + Duration::from_secs(30),
+        &Cancellation::default(),
+    )?;
+    development_snapshot_with_artifact_digest(variant, digest)
+}
+
+fn development_snapshot_with_artifact_digest(
+    variant: &str,
+    executable_digest: String,
+) -> Result<shared::EvaluationSnapshot, Box<dyn std::error::Error>> {
     // Execute the asserted implementation contract; expected labels
     // remain outside the model input. Replay identities are explicit.
     assert!(shared::permits_decision(
@@ -274,12 +287,6 @@ fn development_snapshot(
         _ => unreachable!(),
     }
     let mut snapshot: shared::EvaluationSnapshot = serde_json::from_value(snapshot)?;
-    let executable = std::env::current_exe()?.canonicalize()?;
-    let executable_digest = vega_runtime::runtime_digest(
-        &executable,
-        Instant::now() + Duration::from_secs(30),
-        &Cancellation::default(),
-    )?;
     let output_digest = laya_assets::hash(&serde_json::to_vec(&checks)?);
     for (i, row) in snapshot.evidence.results.iter_mut().enumerate() {
         row.observation = evidence::Observation::Executed {
@@ -315,5 +322,41 @@ fn export_development_projection_inputs() -> Result<(), Box<dyn std::error::Erro
             &json!({"schema":"decapod.laya-development-inputs.v1","scope":"Exposed functional development cases; not held-out labels or authenticated publication proof","states":states}),
         )?,
     )?;
+    Ok(())
+}
+
+#[test]
+fn shared_helper_retirement_preserves_production_projection_bytes()
+-> Result<(), Box<dyn std::error::Error>> {
+    // Captured from the original shared production projector before moving
+    // ownership. These replay vectors prove byte compatibility, not readiness.
+    for (case, expected) in [
+        (
+            "ready",
+            "sha256:76b9bf287421361558c92f90dba14544fff1a56d196f499212393d915a27a59e",
+        ),
+        (
+            "unmet",
+            "sha256:05909cfe44c0032a84917a50fe7f881050ccbcb7b42db20e700afbe6863e351c",
+        ),
+        (
+            "unresolved",
+            "sha256:f1814ed63394c29fefdba71307f275e70f2289e5a1faa5bef5a3a6018b38a587",
+        ),
+        (
+            "manipulation",
+            "sha256:85d1ed724ed8ed9e395484f20223b89a14725c15a1da2636a369e5a1ecfb7882",
+        ),
+    ] {
+        // This is a projector replay fixture, not executable-registration proof.
+        // Debug test binaries can exceed the production runtime size allowance;
+        // the projected protocol deliberately omits this artifact identity.
+        let state = development_snapshot_with_artifact_digest(
+            case,
+            laya_assets::hash(b"replay-only executable artifact fixture"),
+        )?
+        .project()?;
+        assert_eq!(laya_assets::hash(state.as_bytes()), expected, "{case}");
+    }
     Ok(())
 }

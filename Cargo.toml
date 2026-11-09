@@ -24,7 +24,6 @@ exclude = [
     "assets/*.mp4",
     "tests/fixtures/*",
     "tests/golden_vectors/*",
-    "assets/tools/vega-native",
 ]
 
 [lib]
@@ -95,7 +94,6 @@ anyhow = "1"
 async-trait = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
 walkdir = "2.5.0"
-libm = "0.2"
 
 [package.metadata.cargo-machete]
 ignored = ["flate2"]

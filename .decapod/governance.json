@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "b0af0c28cf54f4aae837d10ea76ed01085373ff0",
+    "accepted_commit": "1d865efdf9846b88a8911ff0ee34c16d75d6cdc9",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -540,67 +540,148 @@
     }
   },
   "change": {
-    "id": "change_01M6ZV2AX1TTAGDGR67DN30KEB",
-    "base_commit": "b0af0c28cf54f4aae837d10ea76ed01085373ff0",
+    "id": "change_01M70TT9S62S73SECJEVRCDVS1",
+    "base_commit": "1d865efdf9846b88a8911ff0ee34c16d75d6cdc9",
     "target_base": "origin/master"
   },
   "claims": {
-    "macos-pinned-epoch-reader": {
-      "statement": "macOS bounded epoch traversal preserves ordinary digests and input boundaries using a descriptor-owned directory stream with independent cursors",
-      "falsifier": "Ordinary and bounded digests differ, replacing the path redirects enumeration, dropping the original handle breaks the stream, traversals share a cursor, or existing symlink/FIFO/bounds rejections stop working",
+    "event-index-preservation": {
+      "statement": "The versioned SQLite compaction removes only the duplicate sequence index while preserving exact event identities, sequence values, payloads and unique ordering.",
+      "falsifier": "Any changed historical row or accepted duplicate stream sequence, unsafe index removal, or non-atomic failure refutes the claim.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/validation_epoch/input.rs",
-        "src/decapod/core/validation_epoch/input/mac_directory.rs"
+        "/private/tmp/index134-correctness.log",
+        "/private/tmp/index134-events.log",
+        "/private/tmp/index134-migration.log"
+      ]
+    },
+    "retired-native-vega": {
+      "statement": "The entire native Vega workspace and entrypoint are absent; no Vega Rust-worker recipe is required; Laya is the sole optional post-validation setup and init selection, disabled by default.",
+      "falsifier": "A surviving native worker tree, required Vega recipe, offered Vega setup command, enabled-by-default Laya policy or lost explicit Laya policy refutes this retirement contract.",
+      "status": "supported",
+      "proof_refs": [
+        "/private/tmp/index134-retirement-final-init.log",
+        "docs/agent/repository-readiness.md"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "macos-pinned-directory-stream",
-      "summary": "Fix accepted macOS ENOTDIR using descriptor-owned streaming; preserve no-follow checks, bounds, digests and honest broad-unit failures",
-      "input_digest": "sha256:7b29bc888c3b091be41bef01b1027e25425666d885d32b159495cd61cd613408",
+      "id": "index-v01340",
+      "summary": "Port independently measured event sequence index compaction and partial architecture inventory onto accepted v0.134.0; 6 integration, 6 migration and 16 event tests pass; current publication spec reviews recorded; old failed CI remains failed.",
+      "input_digest": "sha256:df9edac42387c7d8adce47e1c12c0f133a6ce17963ae28273f4256c40c7fd516",
       "proof_refs": [
-        "src/decapod/core/validation_epoch/input.rs",
-        "src/decapod/core/validation_epoch/input/mac_directory.rs"
+        "/private/tmp/index134-correctness.log",
+        "docs/datastore-v2/proof-ledger.json"
       ]
     },
     {
-      "id": "accepted-1340-reader-rebase",
-      "summary": "Present-time replay of unchanged macOS reader repair onto accepted 1d865efd with official v0.134.0 projections and fresh regression evidence; original proof history retained",
-      "input_digest": "sha256:0ccbdbea8edf9550f0cad8ae4370955ac6c6e57884166c11878dbd06d7964c36",
+      "id": "retire-native-vega",
+      "summary": "Operator-directed removal of complete native Vega workspace, entrypoint and orphan backbone from active datastore branch; remove its required recipe, expose optional Laya setup/init and preserve default disablement, policy/bindings and deterministic proof. 36 CLI/config tests pass; integrate accepted v0.134.1 next.",
+      "input_digest": "sha256:e4ae9dd803a6e4a60ff79b5e83d0e951ed92c947093991b5f4899a7552d9e67b",
       "proof_refs": [
-        "src/decapod/core/validation_epoch/input/mac_directory.rs",
-        "tests/intent_reconciliation_rpc.rs"
+        "/private/tmp/index134-retirement-final-init.log",
+        "docs/agent/repository-readiness.md"
       ]
     },
     {
-      "id": "required-path-dependency-lock",
-      "summary": "Reconcile only accepted Decapod path dependency version in required worker lock; preserve every recipe and third-party pin; locked offline graph resolution passed",
-      "input_digest": "sha256:66e2eac492cde508204d3dc25ec7adff5ed15b4177b9d95e34a19af22cc5026f",
+      "id": "merge-v01341-retirement",
+      "summary": "Integrate accepted v0.134.1 and macOS reader repair while retaining active datastore/Vega-retirement journal. Current 6 storage and 36 CLI/config tests pass. Refresh release-bound projections with official 0.134.1; retain full deterministic source-CI profile and explicit optional Laya.",
+      "input_digest": "sha256:72da894a644cf6d18b27163dc9343cf9e962a17a8c8d9b6df6b03b7eda94220b",
       "proof_refs": [
-        "assets/tools/vega-native/Cargo.lock"
+        "/private/tmp/index134-retirement-01341-datastore.log",
+        "/private/tmp/index134-retirement-01341-init.log"
+      ]
+    },
+    {
+      "id": "retire-vega-kernel-and-repair-bazel-lock",
+      "summary": "Remove retired Vega implementation, preserve Laya protocol and historical receipts, regenerate dependency locks to repair failed CI setup.",
+      "input_digest": "sha256:c48eaf3dd50a70b694e9f1aad94dbf019953a4ce265df9aec64c2393ccc28649",
+      "proof_refs": [
+        "/private/tmp/index134-bazel-lock-verify.log",
+        "/private/tmp/index134-final-integration.log",
+        "/private/tmp/index134-laya-helper-tests.log"
+      ]
+    },
+    {
+      "id": "macos-canonical-test-fixtures",
+      "summary": "Repair canonical custody fixture roots and typed unsupported-recovery assertions; full library suite passes on default macOS temp environment.",
+      "input_digest": "sha256:df356ab9f646b5d3f7ef07b25b786eb05e6799408f46eb6d43b2876b72903a94",
+      "proof_refs": [
+        "/private/tmp/index134-final-lib-repaired.log"
+      ]
+    },
+    {
+      "id": "accepted-v01342-release-alignment",
+      "summary": "Merge accepted master 3cda3f14 and PR1585; regenerate release-bound fingerprints with installed published Decapod0.134.2; preserve Laya-only interface and fix projection replay fixture for large Supabase debug binaries.",
+      "input_digest": "sha256:e2f8bafe8213e19b273ec0a2c10fc60b348984f18f42547b2dce77c82c5155ad",
+      "proof_refs": [
+        "/private/tmp/index134-v01342-bazel-strict.log",
+        "/private/tmp/index134-v01342-capabilities.json",
+        "/private/tmp/index134-v01342-clippy.log",
+        "/private/tmp/index134-v01342-final-tests.log",
+        "/private/tmp/index134-v01342-merge-tests.log"
+      ]
+    },
+    {
+      "id": "accepted-v01342-final-verification",
+      "summary": "Record final installed-release fingerprint alignment and exact verification outcomes, including isolated passing socket recheck without relabeling failed feature suite.",
+      "input_digest": "sha256:8a1161bcd889a87cec3286cf65908e697de5a47d2f0c74e2a4f928d481addb5d",
+      "proof_refs": [
+        "/private/tmp/index134-v01342-capabilities.json",
+        "/private/tmp/index134-v01342-clippy.log",
+        "/private/tmp/index134-v01342-final-tests.log",
+        "/private/tmp/index134-v01342-merge-tests.log",
+        "/private/tmp/index134-v01342-socket-recheck.log"
+      ]
+    },
+    {
+      "id": "ci-fixture-and-review-repair",
+      "summary": "Repair ETXTBSY test runtime readiness and bounded socket fixture teardown; record accurate unchanged SECURITY review against accepted base, preserving all production guards and historical checkpoint chain.",
+      "input_digest": "sha256:3f683e3da1bd1e8d8b4a47376ffbcf365c01aaee028d2585bdb55410574f9015",
+      "proof_refs": [
+        "/private/tmp/pr1589-history-before-repair.json",
+        "/private/tmp/pr1589-lifecycle-repair-tests.log",
+        "/private/tmp/pr1589-supabase-final-suite.log"
+      ]
+    },
+    {
+      "id": "ci-http-fixture-blocking-repair",
+      "summary": "Make accepted HTTP fixture sockets explicitly blocking under unchanged read timeout; delayed-header regression passes, with current content-bound security review correctly unchanged.",
+      "input_digest": "sha256:8fe0281d9af3dfae764c6a7e3235dba1059f5d879ebe9af61601b9d27dc1074c",
+      "proof_refs": [
+        "/private/tmp/pr1589-accepted-socket-probe.log",
+        "/private/tmp/pr1589-http-fixture-repair.log",
+        "/private/tmp/pr1589-publication-material-repair.log"
+      ]
+    },
+    {
+      "id": "approved-async-http-regression",
+      "summary": "Use approved bounded Tokio client for delayed-header fixture regression; final HTTP18 cases and all-target Clippy pass, complete Supabase suite passes with external profiles explicitly unexecuted.",
+      "input_digest": "sha256:b4d8ecb809633d006fe9f3b8566b9eeaf8e991f3e34096621e6a703b8ffe98b3",
+      "proof_refs": [
+        "/private/tmp/pr1589-clippy-async-final.log",
+        "/private/tmp/pr1589-http-async-final.log",
+        "/private/tmp/pr1589-supabase-final-suite.log"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB": {
+    "intent:change_01M70TT9S62S73SECJEVRCDVS1": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/validation_epoch",
-        "src/decapod/core/project_specs",
-        "tests"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+      "id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix macOS bounded epoch directory enumeration\n\nResolve #1571 in a separate PR from merged #1575. Preserve descriptor identity, symlink protection, bounded reads and proof integrity. No CI policy, datastore or SaaS changes.",
-      "refined_intent": "Fix macOS bounded epoch directory enumeration\n\nResolve #1571 in a separate PR from merged #1575. Preserve descriptor identity, symlink protection, bounded reads and proof integrity. No CI policy, datastore or SaaS changes.",
+      "raw_intent": "Datastore v2: measured inventory and first storage optimization\n\nAudit accepted Decapod, Dactyl and Propodus storage contracts; establish reproducible inventory and baseline; implement and verify the highest-value safe first optimization. Preserve local authority, evidence and migration compatibility; no production operations.",
+      "refined_intent": "Datastore v2: measured inventory and first storage optimization\n\nAudit accepted Decapod, Dactyl and Propodus storage contracts; establish reproducible inventory and baseline; implement and verify the highest-value safe first optimization. Preserve local authority, evidence and migration compatibility; no production operations.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -613,98 +694,175 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Ship the pinned macOS directory-reader repair and the minimal accepted-release path-dependency lock maintenance needed to execute existing publication gates; no policy or runtime redesign",
+      "intent": "Implement the measured datastore event-index increment and, per explicit operator instruction, remove the entire retired assets/tools/vega-native tree and its required execution from this active branch. Laya alone remains an optional configuration-controlled post-validation evaluator. Preserve deterministic governance checks, existing event/proof bytes and migration compatibility; publish this combined PR after exact-candidate validation.",
       "phases": [],
       "proof_hooks": [
-        "Existing full independent readiness contract, unchanged worker recipe, locked dependency resolution and fresh CI on final candidate"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current PR adds no new architectural authority beyond accepted v0.134.1; local journal batch, RBAC exceptions, and Laya remain under the existing broker and post-proof boundaries",
-          "reviewed_code_fingerprint": "18b631052a623b66b9ede2ea875b2fc0c911f40001829ebca0958d5d81a8a8d2",
-          "spec_material_hash": "042e62b5a21b33e93d2a0db5a0d1615acb620b3cc4e136caec1a5c3d9b6dc2ee"
+          "reason": "Current branch material event/Laya architecture reviewed. Final CI repair remains fixture-only, with approved Tokio regression client and bounded kernel readiness waits.",
+          "reviewed_code_fingerprint": "9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379",
+          "spec_material_hash": "aca2b9332b2f0f39f9377bb30175b7f857ec39562b2530d98648a033f15ef142"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed repeatable historical gap selection, atomic journal acceptance, RBAC-only local exception and explicit Laya gating",
-          "reviewed_code_fingerprint": "18b631052a623b66b9ede2ea875b2fc0c911f40001829ebca0958d5d81a8a8d2",
-          "spec_material_hash": "3b9387a0c7c5948ca3525bf84e59eba80f4c0d91315668ad57d933b59a41fd59"
+          "reason": "Material optional Laya and legacy-data interfaces remain reviewed; fixture-only Tokio client does not change production RPC or timeout contracts.",
+          "reviewed_code_fingerprint": "9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379",
+          "spec_material_hash": "f84bad49056ac0cd09d0c34e27a27c8b6c0b7706ce3f75591d47bb963aaa6974"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed default-deny cooperative actor-label roles, proof-preserving local exceptions and exact executable identity checks",
-          "reviewed_code_fingerprint": "18b631052a623b66b9ede2ea875b2fc0c911f40001829ebca0958d5d81a8a8d2",
+          "reason": "Security semantic content equals accepted3cda3f14. No lint-policy exceptions or production container, socket, auth or transport changes; updated fixture code is bound by this current review.",
+          "reviewed_code_fingerprint": "9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379",
           "spec_material_hash": "2a7ed5e559e71e6c8ff54801816f6f36ccfdebb745fc1c97607deea8d96c4779"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Pinned macOS epoch directory enumeration",
+      "title": "Datastore v2: measured inventory and first storage optimization",
       "todo_ids": [
-        "bugs_01m6zv1ej06spcmc"
+        "perf_01m6z2f0csrsekxz",
+        "refa_01m70zb0rmsgvas7"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794254000Z"
+      "updated_at": "1794266966Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3ab410b2c5e2c7e554abfd89a95daf4b998c94f6ea311e209a2ad92eeaa2f2c4",
+      "artifact_hash": "sha256:c599a40368afe6d289adfad52b2e14c5e45050bff5143d4f9d2ed24f851e9450",
       "checks": [
         {
-          "name": "1340-formatting",
+          "name": "canonical-snapshot-fixtures",
           "status": "passed"
         },
         {
-          "name": "1340-intent-cli",
+          "name": "canonical-worker-fixture",
           "status": "passed"
         },
         {
-          "name": "1340-intent-unit",
-          "status": "passed"
-        },
-        {
-          "name": "1340-reader-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "1340-strict-clippy",
-          "status": "passed"
-        },
-        {
-          "name": "accepted-1332-before-regression",
+          "name": "ci-governance-head6c6d",
           "status": "failed"
         },
         {
-          "name": "bounded-reader-focused",
+          "name": "ci-governance-repaired",
           "status": "passed"
         },
         {
-          "name": "broad-unit-suite",
+          "name": "ci-lock-inputs",
+          "status": "passed"
+        },
+        {
+          "name": "ci-publication-material",
+          "status": "passed"
+        },
+        {
+          "name": "ci-supabase-head6c6d",
           "status": "failed"
         },
         {
-          "name": "descriptor-stream-regressions",
+          "name": "clippy-all-targets",
           "status": "passed"
         },
         {
-          "name": "formatting",
+          "name": "datastore-correctness",
           "status": "passed"
         },
         {
-          "name": "required-lock-resolution",
+          "name": "event-suite",
           "status": "passed"
         },
         {
-          "name": "strict-clippy",
+          "name": "final-all-target-clippy",
           "status": "passed"
+        },
+        {
+          "name": "final-targeted-integration",
+          "status": "passed"
+        },
+        {
+          "name": "full-library",
+          "status": "passed"
+        },
+        {
+          "name": "laya-cli-configuration",
+          "status": "passed"
+        },
+        {
+          "name": "laya-projection-compatibility",
+          "status": "passed"
+        },
+        {
+          "name": "laya-proof-first",
+          "status": "passed"
+        },
+        {
+          "name": "legacy-decoding",
+          "status": "passed"
+        },
+        {
+          "name": "lifecycle-fixture-host",
+          "status": "passed"
+        },
+        {
+          "name": "migration-suite",
+          "status": "passed"
+        },
+        {
+          "name": "prior-publication",
+          "status": "failed"
+        },
+        {
+          "name": "prior-resume",
+          "status": "failed"
+        },
+        {
+          "name": "release-alignment",
+          "status": "passed"
+        },
+        {
+          "name": "supabase-consumer-local",
+          "status": "passed"
+        },
+        {
+          "name": "supabase-http-fixtures",
+          "status": "passed"
+        },
+        {
+          "name": "supabase-projection-fixture",
+          "status": "passed"
+        },
+        {
+          "name": "v01341-cli-config",
+          "status": "passed"
+        },
+        {
+          "name": "v01341-storage",
+          "status": "passed"
+        },
+        {
+          "name": "v01342-clippy",
+          "status": "passed"
+        },
+        {
+          "name": "v01342-merged-suite",
+          "status": "passed"
+        },
+        {
+          "name": "v01342-strict-lock",
+          "status": "passed"
+        },
+        {
+          "name": "v01342-supabase-library",
+          "status": "failed"
         }
       ],
       "current_phase": "validation",
@@ -712,161 +870,436 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M6ZV2AZPCK66JSA2TPWH562K",
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M6ZV2AZPCK66JSA2TPWH562K",
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M6ZV2AZPCK66JSA2TPWH562K",
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M6ZV2AZPCK66JSA2TPWH562K",
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M6ZV2AZPCK66JSA2TPWH562K",
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:19",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 19
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 19,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M6ZV2AZPCK66JSA2TPWH562K": {
+          "branch_01M70TT9YCVF9GDEN1NF0KHM96": {
             "evidence_only": true,
-            "id": "branch_01M6ZV2AZPCK66JSA2TPWH562K",
-            "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+            "id": "branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "steps": [
               {
                 "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/validation_epoch/input.rs",
-                  "src/decapod/core/project_specs.rs",
-                  "src/decapod/core/validation_epoch/input.rs",
-                  "src/decapod/core/validation_epoch/input/mac_directory.rs",
-                  "src/decapod/core/project_specs.rs",
-                  "Accepted b0af0c28 / v0.133.2 reproduced ENOTDIR in bounded_epoch_preserves_ordinary_epoch_digest before source edits; no platform bypass or path fallback used"
+                  "src/decapod/core/migration.rs",
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/schemas.rs",
+                  "tests/datastore_efficiency.rs",
+                  "Ported material patch from own preserved commits 3ea461bc and 37fdd674 onto accepted 1d865efd; no source patch conflicts or changed accepted storage files.",
+                  "Original synthetic benchmark: docs/datastore-v2/measurements.json; physical savings 1650688 bytes at 100K events, WAL savings 2241280 bytes per 512 appends. Timing and hosted limits retained.",
+                  "Previous v0.133.2 Buildkite 6113 failed missing content-bound spec review; current interfaces, architecture and security explicitly reviewed. Fresh validation required."
                 ],
                 "proof_refs": [
-                  "accepted-1332-before-regression"
+                  "prior-publication"
                 ],
                 "scope": [
-                  "src/decapod/core/project_specs",
-                  "src/decapod/core/validation_epoch",
-                  "tests"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "validation",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "All 8 targeted reader tests passed on macOS, including 3 new stream regressions and all 5 existing digest/symlink/FIFO/bounds tests",
-                  "All 120 independently discovered source hashes match accepted master b0af0c28; inventory declaration reconciles only accepted Cargo release changes and does not alter executor or checks"
+                  "/private/tmp/index134-correctness.log: v0.134.0 six integration tests passed, including 64 independent SQLite writers and replay.",
+                  "/private/tmp/index134-migration.log: six passed; /private/tmp/index134-events.log: sixteen passed."
                 ],
                 "proof_refs": [
-                  "bounded-reader-focused",
-                  "descriptor-stream-regressions"
+                  "datastore-correctness",
+                  "migration-suite",
+                  "event-suite"
                 ],
                 "scope": [
-                  "src/decapod/core/project_specs",
-                  "src/decapod/core/validation_epoch",
-                  "tests"
+                  "root"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "validation",
+                "action": "implementation",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Broad unit suite: 1649 passed, 4 failed, 8 ignored. Four failing permission/cache cases also failed in the preserved accepted 15b69ce4 baseline run; their implementation and test files are unchanged in current b0af0c28.",
-                  "Before-fix accepted v0.133.2 reader regression failed ENOTDIR; after-fix all 8 targeted reader/stream tests passed. No source-CI profile, gate, transport or datastore algorithm changed."
+                  "Operator explicitly directed removal of assets/tools/vega-native, exclusive optional Laya post-validation evaluation, inclusion in this active branch and immediate PR publication when verified. Supersedes prior Vega worker retention requirement.",
+                  "/private/tmp/index134-resume-validate.log and readiness-fLXSmg: Buildkite proof verified; retired worker failed locked dependency resolution (parent Decapod 0.130.0 versus current 0.134.0). Removing obsolete worker by operator direction, not rewriting failure as success."
                 ],
                 "proof_refs": [
-                  "formatting",
-                  "strict-clippy",
-                  "broad-unit-suite"
+                  "prior-resume"
                 ],
                 "scope": [
-                  "src/decapod/core/project_specs",
-                  "src/decapod/core/validation_epoch",
-                  "tests"
+                  "root"
                 ],
                 "sequence": 6,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "validation",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "Requested rebase onto accepted 1d865efd / v0.134.0; original 46053619 and its genuine results preserved in archive/macos-epoch-before-1340-46053619. Reader Rust bytes unchanged.",
-                  "Fresh v0.134.0 results: 8 reader regressions, 11 intent unit tests, 2 intent RPC integration tests, strict all-target/all-feature Clippy and formatting passed. Documentation generation produced no drift.",
-                  "All 120 source-execution inventory hashes match accepted master exactly; reviewed digest reconciles the accepted release without changing executor definitions or checks. Previous full-unit and CI observations remain tied to original 46053619, not this new candidate."
+                  "/private/tmp/index134-retirement-final-init.log: 36 passed, 1 preexisting ignored; Laya opt-in, default-disabled setup surface and refresh preservation pass.",
+                  "/private/tmp/index134-retirement-laya.log: 2 Laya deterministic tests passed; 4 external-model/development profiles explicitly ignored. No model accuracy or hosted proof claimed.",
+                  "Fetched b4939469 / v0.134.1 after operator update. Retirement checkpoint records verified v0.134.0 source before integrating the new accepted target; final candidate proof remains pending."
                 ],
                 "proof_refs": [
-                  "1340-reader-regressions",
-                  "1340-intent-unit",
-                  "1340-intent-cli",
-                  "1340-strict-clippy",
-                  "1340-formatting"
+                  "laya-cli-configuration",
+                  "laya-proof-first"
                 ],
                 "scope": [
-                  "src/decapod/core/project_specs",
-                  "src/decapod/core/validation_epoch",
-                  "tests"
+                  "root"
                 ],
                 "sequence": 7,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "validation",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "assets/tools/vega-native/Cargo.lock",
-                  "User continuation requires completing publication work. Minimal worker lock change updates only the Decapod path dependency 0.130.0 to accepted 0.134.0; complete cargo metadata --locked --offline succeeds. No third-party versions, checksums, recipes, features or required checks changed."
+                  "/private/tmp/index134-retirement-01341-datastore.log: 6 passed; /private/tmp/index134-retirement-01341-init.log: 36 passed, 1 ignored. Actual merged v0.134.1 source.",
+                  "Supported session flow updated verifier to 0.134.1; temporary auto-update opt-in was backed up and restored. Runtime backup files stay ignored outside source artifacts.",
+                  "Resolved accepted b4939469 merge by preserving this active journal and both branches authored specs; removed obsolete lock-maintenance requirement with the retired workspace. No history reset or forced push."
                 ],
                 "proof_refs": [
-                  "required-lock-resolution"
+                  "v01341-storage",
+                  "v01341-cli-config"
                 ],
                 "scope": [
-                  "src/decapod/core/project_specs",
-                  "src/decapod/core/validation_epoch",
-                  "tests"
+                  "root"
                 ],
                 "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "MODULE.bazel.lock",
+                  "Old Cargo manifest fingerprint stopped setup/core/contracts before compilation; regenerated using bazel mod deps --lockfile_mode=update; log /private/tmp/index134-bazel-lock-update.log",
+                  "Four pre-refactor production projection hashes replay exactly; /private/tmp/index134-laya-helper-tests.log",
+                  "Both configuration and complete historical receipt roundtrips pass; /private/tmp/index134-legacy-receipt-tests.log"
+                ],
+                "proof_refs": [
+                  "ci-lock-inputs",
+                  "laya-projection-compatibility",
+                  "legacy-decoding"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Full controller still rejects operator-directed removal of accepted required Vega worker; retain explicit disclosure, no fabricated readiness."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "/private/tmp/index134-bazel-lock-verify.log: bazel mod deps --lockfile_mode=error exits 0 after generated lock update; no enforcement changed.",
+                  "/private/tmp/index134-final-integration.log: datastore 6 passed 1 ignored; CLI/config 36 passed 1 ignored; four Laya runtime tests, two legacy roundtrips, three bounded-asset tests and projection golden vectors pass in ongoing library run.",
+                  "/private/tmp/index134-final-lib.log: ongoing; two preexisting filesystem-permission subprocess tests fail and require diagnosis; do not claim whole suite passed."
+                ],
+                "proof_refs": [
+                  "ci-lock-inputs",
+                  "final-targeted-integration",
+                  "full-library"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "/private/tmp/index134-canonical-snapshot.log: all 26 snapshot tests pass with canonical temp root; preserve default-host correctness by constructing canonical fixtures.",
+                  "/private/tmp/index134-canonical-worker.log: locked Rust worker executes and retains failures, passes with canonical temp root.",
+                  "/private/tmp/index134-final-clippy.log: cargo clippy --all-targets -- -D warnings passed.",
+                  "/private/tmp/index134-d7f8-validate.log: released controller continues RUST_WORKER_POLICY_DOWNGRADE on explicitly retired accepted Vega recipe; no full readiness claimed."
+                ],
+                "proof_refs": [
+                  "canonical-snapshot-fixtures",
+                  "canonical-worker-fixture",
+                  "clippy-all-targets"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "/private/tmp/index134-final-lib-repaired.log: 1595 passed, 0 failed, 8 explicitly ignored under default host TMPDIR; all prior 18 failures resolved by canonical fixture roots and typed capability assertions."
+                ],
+                "proof_refs": [
+                  "full-library"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "tests/unit/core/laya_readiness_tests.rs",
+                  "Fetched accepted 3cda3f14 including PR #1585 and release v0.134.2; installed published 0.134.2 only through session acquire; restored original configuration and update preference. Regenerated release-bound entrypoints and Dockerfile with installed 0.134.2. Reviewed proof-source changes limited to accepted Cargo versions; hosted workflow/helper/executor definitions unchanged; reconciled source digest sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb.",
+                  "Previous bb204834 Supabase consumer test failed because debug test executable exceeded real runtime size allowance. Replay-only projection test now supplies explicit fixture artifact identity, preserving four independent expected hashes and production 512 MiB guard; final suite pending."
+                ],
+                "proof_refs": [
+                  "supabase-projection-fixture"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 13,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "/private/tmp/index134-v01342-capabilities.json confirms installed and latest version 0.134.2; generated AGENTS/CLAUDE/CODEX/GEMINI release headers and managed Dockerfile now pin 0.134.2. /private/tmp/index134-v01342-final-preview.log: proof_pending with reconciled source inventory; no stale SHA declaration.",
+                  "/private/tmp/index134-v01342-merge-tests.log: 1604 library tests passed, 8 ignored; datastore 6 passed 1 ignored; CLI 36 passed 1 ignored.",
+                  "/private/tmp/index134-v01342-bazel-strict.log exits 0 with lockfile_mode=error; package version normalization preserves generated dependency lock validity.",
+                  "/private/tmp/index134-v01342-clippy.log: all-target clippy with warnings denied passed.",
+                  "/private/tmp/index134-v01342-final-tests.log: projection golden replay test passes with explicit supabase-cloud feature after replay-only artifact fixture repair. This does not claim model/runtime registration evidence.",
+                  "Final feature-enabled suite reported one socket test failure; identical isolated recheck passes (/private/tmp/index134-v01342-socket-recheck.log). Preserve failure rather than claim an entirely passing run; final verdict pending."
+                ],
+                "proof_refs": [
+                  "release-alignment",
+                  "v01342-merged-suite",
+                  "v01342-strict-lock",
+                  "v01342-clippy",
+                  "supabase-projection-fixture",
+                  "v01342-supabase-library"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 14,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "/private/tmp/index134-v01342-final-tests.log: 1603 passed, 1 failed, 8 ignored. Unchanged socket cleanup test saw transient BROKER_ENDPOINT_LIVE after listener drop; isolated identical-binary recheck passes. Preserve run failure; no test skipped or production socket protection changed.",
+                  "Final projection replay golden vectors pass in feature-enabled binary. Prior merged-source complete library/storage/CLI suites pass; final feature-run failure prevents claiming universal green status."
+                ],
+                "proof_refs": [
+                  "v01342-supabase-library"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 15,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "tests/unit/core/container_runtime_tests.rs",
+                  "tests/unit/core/container_runtime_tests.rs",
+                  "GitHub job129495429987: 1607 library tests passed, one lifecycle fixture spawn failed ETXTBSY before container mutation. No Supabase data/auth failure. Fixture now establishes side-effect-free successful exec with bounded ETXTBSY-only retry; Linux regression holds a real writer.",
+                  "GitHub job129498781351: SPEC_REVIEW_DISPOSITION_MISMATCH for SECURITY.md. Semantic body equals accepted3cda3f14; corrected explicit review to unchanged-with-reason, bound current code fingerprint. Guard and historical checkpoints unchanged."
+                ],
+                "proof_refs": [
+                  "ci-supabase-head6c6d",
+                  "ci-governance-head6c6d"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 16,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "/private/tmp/pr1589-lifecycle-repair-tests.log: seven lifecycle/runtime tests pass. Linux-only held-writer ETXTBSY regression is defined but requires Linux provider execution; host success is not Linux proof.",
+                  "Socket fixture now waits at most2s for AddrInUse after closing its own listeners, preserving live-peer refusal and replacement-owner assertions. Production remove_stale is unchanged. Final full Supabase command repeats after this test-only source change."
+                ],
+                "proof_refs": [
+                  "lifecycle-fixture-host"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 17,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "tests/cloud_supabase_boundary.rs",
+                  "/private/tmp/pr1589-publication-material-repair.log: exact immutable base3cda3f14/head5800aa7c/targetmaster publication-material gate status ok; no guard removed, historical chain remains proven.",
+                  "/private/tmp/pr1589-http-fixture-repair.log: 18 passed, including delayed headers. /private/tmp/pr1589-accepted-socket-probe.log reproduces inherited nonblocking behavior: immediate WouldBlock before explicit blocking, ~100ms configured timeout afterward.",
+                  "Final full library run currently passes repaired lifecycle and socket cases. Linux held-writer test remains provider-only; retain explicit scope."
+                ],
+                "proof_refs": [
+                  "ci-publication-material",
+                  "supabase-http-fixtures"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 18,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:19",
+                "observations": [
+                  "/private/tmp/pr1589-supabase-final-suite.log: complete CI consumer command passes, 1604 library and33 integration tests; 8 optional library and2 external service profiles ignored. Final fixture-only Tokio adjustment separately passes all18 HTTP boundary tests in /private/tmp/pr1589-http-async-final.log.",
+                  "/private/tmp/pr1589-clippy-async-final.log: all-target Clippy with warnings denied passes after replacing raw blocking regression client with approved Tokio API, no lint exemption.",
+                  "/private/tmp/pr1589-publication-material-final.log: immutable head157e9493/current accepted3cda3f14 gate passes; final Tokio-only follow-up will repeat exact committed-head gate before push."
+                ],
+                "proof_refs": [
+                  "supabase-consumer-local",
+                  "final-all-target-clippy",
+                  "ci-governance-repaired"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 19,
                 "validation_findings": []
               }
             ]
@@ -876,42 +1309,82 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Accepted b0af0c28 / v0.133.2 reproduced ENOTDIR in bounded_epoch_preserves_ordinary_epoch_digest before source edits; no platform bypass or path fallback used",
-        "All 120 independently discovered source hashes match accepted master b0af0c28; inventory declaration reconciles only accepted Cargo release changes and does not alter executor or checks",
-        "All 120 source-execution inventory hashes match accepted master exactly; reviewed digest reconciles the accepted release without changing executor definitions or checks. Previous full-unit and CI observations remain tied to original 46053619, not this new candidate.",
-        "All 8 targeted reader tests passed on macOS, including 3 new stream regressions and all 5 existing digest/symlink/FIFO/bounds tests",
-        "Before-fix accepted v0.133.2 reader regression failed ENOTDIR; after-fix all 8 targeted reader/stream tests passed. No source-CI profile, gate, transport or datastore algorithm changed.",
-        "Broad unit suite: 1649 passed, 4 failed, 8 ignored. Four failing permission/cache cases also failed in the preserved accepted 15b69ce4 baseline run; their implementation and test files are unchanged in current b0af0c28.",
-        "Fresh v0.134.0 results: 8 reader regressions, 11 intent unit tests, 2 intent RPC integration tests, strict all-target/all-feature Clippy and formatting passed. Documentation generation produced no drift.",
-        "Requested rebase onto accepted 1d865efd / v0.134.0; original 46053619 and its genuine results preserved in archive/macos-epoch-before-1340-46053619. Reader Rust bytes unchanged.",
-        "User continuation requires completing publication work. Minimal worker lock change updates only the Decapod path dependency 0.130.0 to accepted 0.134.0; complete cargo metadata --locked --offline succeeds. No third-party versions, checksums, recipes, features or required checks changed."
+        "/private/tmp/index134-bazel-lock-verify.log: bazel mod deps --lockfile_mode=error exits 0 after generated lock update; no enforcement changed.",
+        "/private/tmp/index134-canonical-snapshot.log: all 26 snapshot tests pass with canonical temp root; preserve default-host correctness by constructing canonical fixtures.",
+        "/private/tmp/index134-canonical-worker.log: locked Rust worker executes and retains failures, passes with canonical temp root.",
+        "/private/tmp/index134-correctness.log: v0.134.0 six integration tests passed, including 64 independent SQLite writers and replay.",
+        "/private/tmp/index134-d7f8-validate.log: released controller continues RUST_WORKER_POLICY_DOWNGRADE on explicitly retired accepted Vega recipe; no full readiness claimed.",
+        "/private/tmp/index134-final-clippy.log: cargo clippy --all-targets -- -D warnings passed.",
+        "/private/tmp/index134-final-integration.log: datastore 6 passed 1 ignored; CLI/config 36 passed 1 ignored; four Laya runtime tests, two legacy roundtrips, three bounded-asset tests and projection golden vectors pass in ongoing library run.",
+        "/private/tmp/index134-final-lib-repaired.log: 1595 passed, 0 failed, 8 explicitly ignored under default host TMPDIR; all prior 18 failures resolved by canonical fixture roots and typed capability assertions.",
+        "/private/tmp/index134-final-lib.log: ongoing; two preexisting filesystem-permission subprocess tests fail and require diagnosis; do not claim whole suite passed.",
+        "/private/tmp/index134-migration.log: six passed; /private/tmp/index134-events.log: sixteen passed.",
+        "/private/tmp/index134-resume-validate.log and readiness-fLXSmg: Buildkite proof verified; retired worker failed locked dependency resolution (parent Decapod 0.130.0 versus current 0.134.0). Removing obsolete worker by operator direction, not rewriting failure as success.",
+        "/private/tmp/index134-retirement-01341-datastore.log: 6 passed; /private/tmp/index134-retirement-01341-init.log: 36 passed, 1 ignored. Actual merged v0.134.1 source.",
+        "/private/tmp/index134-retirement-final-init.log: 36 passed, 1 preexisting ignored; Laya opt-in, default-disabled setup surface and refresh preservation pass.",
+        "/private/tmp/index134-retirement-laya.log: 2 Laya deterministic tests passed; 4 external-model/development profiles explicitly ignored. No model accuracy or hosted proof claimed.",
+        "/private/tmp/index134-v01342-bazel-strict.log exits 0 with lockfile_mode=error; package version normalization preserves generated dependency lock validity.",
+        "/private/tmp/index134-v01342-capabilities.json confirms installed and latest version 0.134.2; generated AGENTS/CLAUDE/CODEX/GEMINI release headers and managed Dockerfile now pin 0.134.2. /private/tmp/index134-v01342-final-preview.log: proof_pending with reconciled source inventory; no stale SHA declaration.",
+        "/private/tmp/index134-v01342-clippy.log: all-target clippy with warnings denied passed.",
+        "/private/tmp/index134-v01342-final-tests.log: 1603 passed, 1 failed, 8 ignored. Unchanged socket cleanup test saw transient BROKER_ENDPOINT_LIVE after listener drop; isolated identical-binary recheck passes. Preserve run failure; no test skipped or production socket protection changed.",
+        "/private/tmp/index134-v01342-final-tests.log: projection golden replay test passes with explicit supabase-cloud feature after replay-only artifact fixture repair. This does not claim model/runtime registration evidence.",
+        "/private/tmp/index134-v01342-merge-tests.log: 1604 library tests passed, 8 ignored; datastore 6 passed 1 ignored; CLI 36 passed 1 ignored.",
+        "/private/tmp/pr1589-clippy-async-final.log: all-target Clippy with warnings denied passes after replacing raw blocking regression client with approved Tokio API, no lint exemption.",
+        "/private/tmp/pr1589-http-fixture-repair.log: 18 passed, including delayed headers. /private/tmp/pr1589-accepted-socket-probe.log reproduces inherited nonblocking behavior: immediate WouldBlock before explicit blocking, ~100ms configured timeout afterward.",
+        "/private/tmp/pr1589-lifecycle-repair-tests.log: seven lifecycle/runtime tests pass. Linux-only held-writer ETXTBSY regression is defined but requires Linux provider execution; host success is not Linux proof.",
+        "/private/tmp/pr1589-publication-material-final.log: immutable head157e9493/current accepted3cda3f14 gate passes; final Tokio-only follow-up will repeat exact committed-head gate before push.",
+        "/private/tmp/pr1589-publication-material-repair.log: exact immutable base3cda3f14/head5800aa7c/targetmaster publication-material gate status ok; no guard removed, historical chain remains proven.",
+        "/private/tmp/pr1589-supabase-final-suite.log: complete CI consumer command passes, 1604 library and33 integration tests; 8 optional library and2 external service profiles ignored. Final fixture-only Tokio adjustment separately passes all18 HTTP boundary tests in /private/tmp/pr1589-http-async-final.log.",
+        "Both configuration and complete historical receipt roundtrips pass; /private/tmp/index134-legacy-receipt-tests.log",
+        "Fetched accepted 3cda3f14 including PR #1585 and release v0.134.2; installed published 0.134.2 only through session acquire; restored original configuration and update preference. Regenerated release-bound entrypoints and Dockerfile with installed 0.134.2. Reviewed proof-source changes limited to accepted Cargo versions; hosted workflow/helper/executor definitions unchanged; reconciled source digest sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb.",
+        "Fetched b4939469 / v0.134.1 after operator update. Retirement checkpoint records verified v0.134.0 source before integrating the new accepted target; final candidate proof remains pending.",
+        "Final feature-enabled suite reported one socket test failure; identical isolated recheck passes (/private/tmp/index134-v01342-socket-recheck.log). Preserve failure rather than claim an entirely passing run; final verdict pending.",
+        "Final full library run currently passes repaired lifecycle and socket cases. Linux held-writer test remains provider-only; retain explicit scope.",
+        "Final projection replay golden vectors pass in feature-enabled binary. Prior merged-source complete library/storage/CLI suites pass; final feature-run failure prevents claiming universal green status.",
+        "Four pre-refactor production projection hashes replay exactly; /private/tmp/index134-laya-helper-tests.log",
+        "GitHub job129495429987: 1607 library tests passed, one lifecycle fixture spawn failed ETXTBSY before container mutation. No Supabase data/auth failure. Fixture now establishes side-effect-free successful exec with bounded ETXTBSY-only retry; Linux regression holds a real writer.",
+        "GitHub job129498781351: SPEC_REVIEW_DISPOSITION_MISMATCH for SECURITY.md. Semantic body equals accepted3cda3f14; corrected explicit review to unchanged-with-reason, bound current code fingerprint. Guard and historical checkpoints unchanged.",
+        "Old Cargo manifest fingerprint stopped setup/core/contracts before compilation; regenerated using bazel mod deps --lockfile_mode=update; log /private/tmp/index134-bazel-lock-update.log",
+        "Operator explicitly directed removal of assets/tools/vega-native, exclusive optional Laya post-validation evaluation, inclusion in this active branch and immediate PR publication when verified. Supersedes prior Vega worker retention requirement.",
+        "Original synthetic benchmark: docs/datastore-v2/measurements.json; physical savings 1650688 bytes at 100K events, WAL savings 2241280 bytes per 512 appends. Timing and hosted limits retained.",
+        "Ported material patch from own preserved commits 3ea461bc and 37fdd674 onto accepted 1d865efd; no source patch conflicts or changed accepted storage files.",
+        "Previous bb204834 Supabase consumer test failed because debug test executable exceeded real runtime size allowance. Replay-only projection test now supplies explicit fixture artifact identity, preserving four independent expected hashes and production 512 MiB guard; final suite pending.",
+        "Previous v0.133.2 Buildkite 6113 failed missing content-bound spec review; current interfaces, architecture and security explicitly reviewed. Fresh validation required.",
+        "Resolved accepted b4939469 merge by preserving this active journal and both branches authored specs; removed obsolete lock-maintenance requirement with the retired workspace. No history reset or forced push.",
+        "Socket fixture now waits at most2s for AddrInUse after closing its own listeners, preserving live-peer refusal and replacement-owner assertions. Production remove_stale is unchanged. Final full Supabase command repeats after this test-only source change.",
+        "Supported session flow updated verifier to 0.134.1; temporary auto-update opt-in was backed up and restored. Runtime backup files stay ignored outside source artifacts."
       ],
       "inspected_files": [
-        "src/decapod/core/project_specs.rs",
-        "src/decapod/core/validation_epoch/input.rs"
+        "Cargo.lock",
+        "Cargo.toml",
+        "MODULE.bazel.lock",
+        "src/decapod/core/events.rs",
+        "src/decapod/core/migration.rs",
+        "src/decapod/core/schemas.rs",
+        "tests/unit/core/container_runtime_tests.rs"
       ],
-      "intent_id": "intent:change_01M6ZV2AX1TTAGDGR67DN30KEB",
+      "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
       "modified_files": [
-        "assets/tools/vega-native/Cargo.lock",
-        "src/decapod/core/project_specs.rs",
-        "src/decapod/core/validation_epoch/input.rs",
-        "src/decapod/core/validation_epoch/input/mac_directory.rs"
+        "tests/cloud_supabase_boundary.rs",
+        "tests/datastore_efficiency.rs",
+        "tests/unit/core/container_runtime_tests.rs",
+        "tests/unit/core/laya_readiness_tests.rs"
       ],
       "next_transitions": [
+        "Commit exact candidate and run full decapod validate before publication.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "assets/tools/vega-native/Cargo.lock",
-        "src/decapod/core/project_specs",
-        "src/decapod/core/validation_epoch",
-        "tests"
+        "root"
       ],
-      "run_id": "branch_01M6ZV2AZPCK66JSA2TPWH562K",
+      "run_id": "branch_01M70TT9YCVF9GDEN1NF0KHM96",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m6zv1ej06spcmc",
+      "task_id": "perf_01m6z2f0csrsekxz",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Full controller still rejects operator-directed removal of accepted required Vega worker; retain explicit disclosure, no fabricated readiness."
+      ]
     }
   },
   "legacy_digests": {

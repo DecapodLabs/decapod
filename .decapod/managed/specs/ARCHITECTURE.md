@@ -841,8 +841,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b55add389d5dba54c9e80a5f970b5f69cc37257a99587d7f60008c0b4fccf604`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (225 files), `tests/` (215 files)
+- Repository signal fingerprint: `9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1077,3 +1077,22 @@ fresh workstream's carried obligations, under the existing document lock.
 The source commit, tree and governance blob remain immutable; no database,
 scheduler or second history authority is introduced. Source reauthoring and
 current independent proof are distinct from reconstruction of past evidence.
+
+## Datastore physical revision 2
+
+Decapod retains one local SQLite authority and routes physical execution through
+Dactyl. `core/schemas.rs::EVENTS_TABLE_SCHEMA_V2` retains event columns and proof
+encodings while avoiding the duplicate nonunique `(stream,seq)` tree. The forward
+`events.compact_sequence_index.v002` migration verifies both index definitions
+under `BEGIN IMMEDIATE` and removes only the redundant tree. Missing uniqueness
+is established additively; duplicate historical sequences reject the upgrade
+without normalization. No historical payload, identity or hash is rewritten.
+Freed pages are reusable; file shrink requires separately controlled maintenance.
+The measured catalog and unresolved cross-backend contracts live in
+`docs/datastore-v2/`; native Propodus RPC supports only a partial task model.
+
+## Current evaluator boundary
+
+The retired native Vega workspace, vendored kernels, independent native entrypoint and orphan backbone source are removed. This repository no longer declares `proof.rust_workers` for Vega. Generic physical worker verification remains available for other explicitly configured applications. Laya retains its existing protocol, shared bounded projection and private runtime custody helpers; no model/proof encoding is renamed. Deterministic proof remains authoritative, followed only by explicitly enabled Laya assessment.
+
+The kernel also removes the retired Vega engine, calibration, prompt, setup and readiness implementations and their sole `libm` dependency. Shared protocol/projection types now live in `core/readiness_assessment.rs`; bounded downloads in `core/model_assets.rs`; private registered-runtime custody in `core/laya_runtime.rs`. Passive `core/legacy_vega.rs` DTOs preserve old configuration and receipt decoding only. The existing runtime registration schema label remains unchanged for installed Laya compatibility. Four independently captured projection hashes test byte-for-byte preservation. Cargo and Bazel dependency locks are regenerated together; CI continues enforcing frozen lock inputs.

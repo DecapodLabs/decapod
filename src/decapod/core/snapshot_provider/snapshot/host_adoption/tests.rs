@@ -43,7 +43,7 @@ struct Fixture {
 }
 impl Fixture {
     fn new(budget: &Budget<'_>) -> Self {
-        let directory = tempfile::tempdir().unwrap();
+        let directory = tempfile::tempdir_in(std::env::temp_dir().canonicalize().unwrap()).unwrap();
         let root = directory.path().join("source");
         let remote = directory.path().join("remote.git");
         std::fs::create_dir(&root).unwrap();

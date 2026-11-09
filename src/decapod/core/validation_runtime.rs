@@ -129,10 +129,10 @@ impl ValidationGuidance {
 
     fn for_readiness_outcome(
         proof_ready: bool,
-        mode: super::vega_readiness::Mode,
-        decision: super::vega_readiness::Decision,
+        mode: super::readiness_assessment::Mode,
+        decision: super::readiness_assessment::Decision,
     ) -> Self {
-        use super::vega_readiness::{Decision, Mode};
+        use super::readiness_assessment::{Decision, Mode};
         if !proof_ready {
             return Self::for_outcome(false);
         }
@@ -177,8 +177,8 @@ impl ValidationGuidance {
     )]
     fn for_vega_outcome(
         ready: bool,
-        mode: super::vega_readiness::Mode,
-        decision: super::vega_readiness::Decision,
+        mode: super::readiness_assessment::Mode,
+        decision: super::readiness_assessment::Decision,
     ) -> Self {
         Self::for_readiness_outcome(ready, mode, decision)
     }
@@ -188,7 +188,7 @@ impl ValidationGuidance {
 pub struct ValidationReport {
     pub ready: bool,
     pub proof_ready: bool,
-    pub vega_readiness: Option<super::vega_readiness::Receipt>,
+    pub vega_readiness: Option<super::legacy_vega::Receipt>,
     pub laya_readiness: Option<super::laya_readiness::Receipt>,
     pub scope: &'static str,
     pub agent_guidance: ValidationGuidance,
@@ -585,10 +585,6 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
     let accepted_entries = git(options, budget, &["ls-tree", "-z", &base, "--", CONFIG])?;
     if !accepted_entries.is_empty() {
         let accepted_bytes = git(options, budget, &["show", &format!("{base}:{CONFIG}")])?;
-        super::vega_readiness::verify_policy_acceptance(
-            &super::vega_readiness::configuration_from_bytes(&configuration_bytes)?,
-            &super::vega_readiness::configuration_from_bytes(&accepted_bytes)?,
-        )?;
         super::laya_readiness::verify_policy_acceptance(
             &super::laya_readiness::configuration_from_bytes(&configuration_bytes)?,
             &super::laya_readiness::configuration_from_bytes(&accepted_bytes)?,
