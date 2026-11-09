@@ -1152,6 +1152,17 @@ event_id stays unique. Historical 1.0 events deserialize with an empty caller
 field rather than inventing prior attribution. Policy continues to run in each
 isolated caller subprocess, with task-specific checks using the actual claimant.
 
+## Intent Reconciliation RPC
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+`decapod rpc --op intent.reconcile --params '{}'` returns an advisory,
+versioned reconciliation report. It exposes the governed-plan intent digest,
+unresolved questions, current code fingerprint and last spec refresh identity,
+canonical authored spec hashes, explicit `REQ-*` references, and observable
+gaps. It accepts an empty parameter object, requires no session or worktree
+for inspection, and does not mutate spec or governance records. Its
+`semantic_alignment: not_proven` field is deliberately never a success proof.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation

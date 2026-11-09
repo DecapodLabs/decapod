@@ -47,6 +47,7 @@ pub mod governed_transition;
 pub mod group_broker;
 pub mod http_transport;
 pub mod init_reconciliation;
+pub mod intent_reconcile;
 pub mod interop;
 pub mod interview;
 pub(crate) mod jev_history;

@@ -1021,6 +1021,16 @@ Generated capability obligations: `persistent-state` is declared for this projec
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
 
+## Intent Reconciliation Acceptance Boundary
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+The read-only reconciliation report must detect missing/orphaned/duplicate
+requirement references, missing proof-spec mappings, stale code fingerprints,
+and unresolved human questions. A matching manifest or reference is not
+semantic proof; `intent.reconcile` cannot satisfy validation obligations,
+approve spec changes, or authorize publication. Unit tests must exercise
+these negative cases and preserve existing proof and publication gates.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation

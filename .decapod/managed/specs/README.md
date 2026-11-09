@@ -51,6 +51,12 @@ behavior, state, trust boundary, proof obligation, or recovery path. Keep
 cross-document terms consistent. Record current behavior and explicit limits;
 use the changelog and Git history for release narratives and past measurements.
 
+The optional `<!-- decapod:requirement REQ-ID -->` marker defines a stable
+requirement in authored `INTENT.md`; matching markers in other authored specs
+are cross-references only. `decapod rpc --op intent.reconcile` reports their
+presence, missing mappings, code-fingerprint drift, and unresolved intent.
+These observations are advisory and never replace semantic review or proof.
+
 Before publication, the agent reviews the authored changes with the source,
 refreshes supported projections through `decapod rpc --op specs.refresh` or
 `decapod validate --refresh-specs`, and satisfies the applicable validation

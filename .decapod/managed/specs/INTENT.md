@@ -272,6 +272,16 @@ These declarations select authoring and proof obligations; they do not attest im
 
 <!-- decapod:declared-capabilities:end -->
 
+## Continuous Intent Traceability
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+The agent must preserve the human-originated change intent while proposing
+updates to living specifications and implementation. Explicit requirement
+identities may be attached to authored specs across changes. The read-only
+reconciliation report exposes missing or orphaned references, unresolved
+questions, and outdated source/spec snapshots without declaring semantic
+alignment or granting publication authority.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation

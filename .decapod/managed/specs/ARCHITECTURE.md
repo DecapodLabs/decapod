@@ -803,6 +803,15 @@ Generated capability obligations: `persistent-state` is declared for this projec
 - Migration and rollback treatment MUST match the selected storage technology
 <!-- decapod:capability-overlay:persistent-state:end -->
 
+## Intent Traceability Read Model
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+`core/intent_reconcile.rs` derives a read-only reconciliation view from
+`plan_governance`, `core/project_specs`, the spec manifest, and current
+repository code fingerprints. It stores no secondary project authority and
+requires no persistent database migration or agent scheduler. The calling
+harness remains responsible for interpreting findings and proposing repairs.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
