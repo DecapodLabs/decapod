@@ -598,6 +598,14 @@
       "id": "accepted-1331-retained-replay-770940fd",
       "summary": "Present-time replay of 770940fd onto accepted 7035a854 with complete journal and parent checkpoint preservation; original history retained in archive refs",
       "input_digest": "sha256:6f532bfa89892616358fa961b135dd8ecf2037a002cc634c09e6cc267e135dd7"
+    },
+    {
+      "id": "generated-intent-rpc-index",
+      "summary": "Regenerate operation index after accepted IntentReconcile merge; resolve observed documentation drift without source or gate changes",
+      "input_digest": "sha256:d7c6d84577367c635a0280eeac222b5e473c2d4ec89dab8940c778702f814c39",
+      "proof_refs": [
+        "docs/agent/command-contracts.md"
+      ]
     }
   ],
   "intents": {
@@ -675,7 +683,7 @@
         "No production changes beyond accepted 5557b015 design; no auth, custody, provider, required-check or datastore changes.",
         "Only standalone worker local path package version 0.130.0 to accepted 0.133.0; complete 119-input comparison reviewed, no dependency edges or required checks changed."
       ],
-      "artifact_hash": "sha256:fb9471354daa61be330ed336770641dd2247c606174109987f49dc6cbe12cc18",
+      "artifact_hash": "sha256:73fdd96c4066a7e8f8e64a7d0ec92ccf1d2ed31d34fad6eb492fb027c43a7164",
       "checks": [
         {
           "name": "actual_cli_recovery_and_spec_review",
@@ -700,6 +708,10 @@
         {
           "name": "contract_integrations_43",
           "status": "passed"
+        },
+        {
+          "name": "documentation-sync",
+          "status": "failed"
         },
         {
           "name": "final_candidate_rechecks",
@@ -829,10 +841,17 @@
             "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M6ZB196Q7989BE8ZKJEYWA8A",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M6ZB196Q7989BE8ZKJEYWA8A": {
@@ -976,6 +995,22 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "docs/agent/command-contracts.md",
+                  "New CI execution reached docs proof; generator added missing IntentReconcile operation inherited from accepted #1576. Generated command-contract index refreshed; kernel code unchanged."
+                ],
+                "proof_refs": [
+                  "documentation-sync"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -987,6 +1022,7 @@
         "10/10 workbranch tests passed, including real CLI recovery/spec review and normal custody admission; strict all-target/all-feature Clippy passed under accepted v0.133.1 source",
         "72 governance tests passed on v0.133.1 accepted target 7035a854; original recovery Rust/test bytes unchanged by rebase",
         "All 120 independently discovered inventory hashes match accepted master 7035a854 exactly; only Cargo.toml/Cargo.lock differ from accepted e344110f before the accepted v0.133.1 release. Reviewed inventory declaration reconciled to that accepted inventory, without changing check definitions or executor.",
+        "New CI execution reached docs proof; generator added missing IntentReconcile operation inherited from accepted #1576. Generated command-contract index refreshed; kernel code unchanged.",
         "Pre-rebase complete history preserved in archive/governance-liveness-before-rebase-8d1da88; current accepted mirror and broker-isolation changes inherited unchanged",
         "assets/tools/vega-native/Cargo.lock; docs/architecture/governance-liveness-audit.md; exact-candidate ccd4cd0b independent publisher diagnostic RUST_WORKER_FAILED",
         "docs/architecture/governance-liveness-audit.md; accepted-controller PUBLICATION_NOT_READY and rust_worker::preserve_accepted policy",
@@ -1003,6 +1039,7 @@
       "intent_id": "intent:change_01M6ZB193NCTA203GG9009RRFZ",
       "modified_files": [
         "assets/tools/vega-native/Cargo.lock",
+        "docs/agent/command-contracts.md",
         "docs/architecture/governance-liveness-audit.md",
         "src/decapod/core/governance_document/checkpoint_history.rs",
         "tests/workbranch_governance.rs"

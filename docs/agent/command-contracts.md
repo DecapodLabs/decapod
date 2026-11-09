@@ -174,6 +174,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `ConstitutionLinksQuery`
 ### Operation: `ConstitutionLinksNavigate`
 ### Operation: `SpecsRefresh`
+### Operation: `IntentReconcile`
 ### Operation: `ConstitutionMigrate`
 ### Operation: `AgentRegistryQuery`
 ### Operation: `SchemaGet`
