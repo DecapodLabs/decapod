@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.134.0](https://github.com/DecapodLabs/decapod/compare/v0.133.2...v0.134.0) - 2026-11-09
+
+### Added
+
+- *(intent)* rebase immutable change-impact projection onto v0.133.2
+
+### Fixed
+
+- *(intent)* a zero-byte Git delta is a complete empty observation
+- *(intent)* retain malformed empty fields in bounded NUL parser
+- *(intent)* bound Git diff capture before parsing and exclude dirty edits
+
+### Other
+
+- *(intent)* apply exact rustfmt output from source CI
+- *(specs)* commit exact Decapod v0.133.2 source projections
+
 ## [0.133.2](https://github.com/DecapodLabs/decapod/compare/v0.133.1...v0.133.2) - 2026-11-09
 
 ### Fixed
