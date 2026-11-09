@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "b0af0c28cf54f4aae837d10ea76ed01085373ff0",
+  "before": {
+    "allocated_after": {
+      "file_bytes": 720896,
+      "prompt_objects": [
+        {
+          "bytes": 90112,
+          "name": "agent_prompts"
+        },
+        {
+          "bytes": 16384,
+          "name": "idx_agent_prompts_context"
+        },
+        {
+          "bytes": 24576,
+          "name": "sqlite_autoindex_agent_prompts_1"
+        }
+      ]
+    },
+    "final_prompts": 516,
+    "initial": {
+      "file_bytes": 245760,
+      "prompt_objects": [
+        {
+          "bytes": 4096,
+          "name": "agent_prompts"
+        },
+        {
+          "bytes": 4096,
+          "name": "idx_agent_prompts_context"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_agent_prompts_1"
+        }
+      ]
+    },
+    "initial_prompts": 4,
+    "initialization_first_ns": 115593459,
+    "invocations": 128,
+    "journal_mode": "delete",
+    "limits": "Full in-process aptitude initializer including TODO schema and broker audit; shared OS cache; no hosted or process cold-start claim. No runtime pragma changes. VACUUM is fixture-only.",
+    "new_prompt_rows": 512,
+    "p50_ns": 78017917,
+    "p95_ns": 85463709,
+    "p99_ns": 94566625,
+    "packed_after": {
+      "file_bytes": 720896,
+      "prompt_objects": [
+        {
+          "bytes": 90112,
+          "name": "agent_prompts"
+        },
+        {
+          "bytes": 16384,
+          "name": "idx_agent_prompts_context"
+        },
+        {
+          "bytes": 24576,
+          "name": "sqlite_autoindex_agent_prompts_1"
+        }
+      ]
+    },
+    "schema_version": 1,
+    "sqlite_version": "3.54.0"
+  },
+  "after": {
+    "allocated_after": {
+      "file_bytes": 602112,
+      "prompt_objects": [
+        {
+          "bytes": 4096,
+          "name": "agent_prompts"
+        },
+        {
+          "bytes": 4096,
+          "name": "idx_agent_prompts_context"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_agent_prompts_1"
+        }
+      ]
+    },
+    "final_prompts": 4,
+    "initial": {
+      "file_bytes": 245760,
+      "prompt_objects": [
+        {
+          "bytes": 4096,
+          "name": "agent_prompts"
+        },
+        {
+          "bytes": 4096,
+          "name": "idx_agent_prompts_context"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_agent_prompts_1"
+        }
+      ]
+    },
+    "initial_prompts": 4,
+    "initialization_first_ns": 104742083,
+    "invocations": 128,
+    "journal_mode": "delete",
+    "limits": "Full in-process aptitude initializer including TODO schema and broker audit; shared OS cache; no hosted or process cold-start claim. No runtime pragma changes. VACUUM is fixture-only.",
+    "new_prompt_rows": 0,
+    "p50_ns": 75769500,
+    "p95_ns": 99440333,
+    "p99_ns": 128418208,
+    "packed_after": {
+      "file_bytes": 602112,
+      "prompt_objects": [
+        {
+          "bytes": 4096,
+          "name": "agent_prompts"
+        },
+        {
+          "bytes": 4096,
+          "name": "idx_agent_prompts_context"
+        },
+        {
+          "bytes": 4096,
+          "name": "sqlite_autoindex_agent_prompts_1"
+        }
+      ]
+    },
+    "schema_version": 1,
+    "sqlite_version": "3.54.0"
+  },
+  "saved_final_bytes": 118784,
+  "avoided_prompt_rows": 512,
+  "growth_reduction_percent": 25,
+  "qualification": {
+    "storage": "measured fixture growth prevention",
+    "state_preservation": "passed",
+    "concurrent_seeding": "64 independent SQLite connections passed",
+    "latency": "no improvement claim; shared-host p95/p99 regression observed",
+    "hosted": "unavailable"
+  }
+}

@@ -235,9 +235,18 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
 
         // Schema migrations: add columns if they don't exist
         // These will fail silently if columns already exist
-        let _ = conn.execute("ALTER TABLE preferences ADD COLUMN confidence INTEGER DEFAULT 100", []);
-        let _ = conn.execute("ALTER TABLE preferences ADD COLUMN last_accessed_at TEXT", []);
-        let _ = conn.execute("ALTER TABLE preferences ADD COLUMN access_count INTEGER DEFAULT 0", []);
+        let _ = conn.execute(
+            "ALTER TABLE preferences ADD COLUMN confidence INTEGER DEFAULT 100",
+            [],
+        );
+        let _ = conn.execute(
+            "ALTER TABLE preferences ADD COLUMN last_accessed_at TEXT",
+            [],
+        );
+        let _ = conn.execute(
+            "ALTER TABLE preferences ADD COLUMN access_count INTEGER DEFAULT 0",
+            [],
+        );
 
         // Create indexes
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY, [])?;
@@ -267,17 +276,30 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
             )?;
         }
 
-        // Insert default agent prompts
-        for (context, prompt, priority) in DEFAULT_AGENT_PROMPTS {
-            conn.execute(
-                "INSERT OR IGNORE INTO agent_prompts(id, context, prompt_text, priority, active, usage_count, created_at)
-                 VALUES(?1, ?2, ?3, ?4, 1, 0, ?5)",
-                params![crate::core::ulid::new_ulid(), context, prompt, priority, now],
-            )?;
-        }
+        seed_default_agent_prompts(conn, &now)?;
 
         Ok(())
     })
+}
+
+fn seed_default_agent_prompts(
+    conn: &crate::core::db::Connection,
+    now: &str,
+) -> Result<(), error::DecapodError> {
+    for (context, prompt, priority) in DEFAULT_AGENT_PROMPTS {
+        // Fresh random IDs do not identify previously seeded defaults.
+        // Admit a missing default in one atomic SQLite write statement, using
+        // the existing context index. Disabled/default duplicates and custom
+        // usage history remain untouched; no new global uniqueness rule is
+        // imposed on user-authored prompts.
+        conn.execute(
+            "INSERT INTO agent_prompts(id, context, prompt_text, priority, active, usage_count, created_at)
+             SELECT ?1, ?2, ?3, ?4, 1, 0, ?5
+             WHERE NOT EXISTS(SELECT 1 FROM agent_prompts WHERE context=?2 AND prompt_text=?3)",
+            params![crate::core::ulid::new_ulid(), context, prompt, priority, now],
+        )?;
+    }
+    Ok(())
 }
 
 // ============================================================================
@@ -1245,3 +1267,7 @@ pub fn run_aptitude_cli(store: &Store, cli: AptitudeCli) -> Result<(), error::De
 
     Ok(())
 }
+
+#[cfg(test)]
+#[path = "../../../tests/unit/plugins/aptitude_seed_tests.rs"]
+mod seed_tests;
