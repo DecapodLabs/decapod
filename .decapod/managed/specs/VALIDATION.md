@@ -1081,7 +1081,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f3d8413c07c17647d92114258aa846cb2cc0e7d62d1b204ae3c279293b3d385f`
+- Repository signal fingerprint: `89c084fc24d937bb66967deeba33f0ca88e2f9f41f458264f30d319a65a5c93e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1415,3 +1415,5 @@ requires the full exact-candidate profile. The v0.134.0 proof-source inventory d
 The operator explicitly revoked the Vega native worker requirement for this active branch. The entire native tree and entrypoint are deleted and the repository worker declaration removed; the previously failed worker remains failed historical evidence. All deterministic source-CI, datastore preservation, golden-vector and migration checks remain required. Laya configuration/CLI regression tests cover opt-in, default disablement and preservation. The generic accepted-worker policy guard remains unchanged; older installed controllers may still report the deliberately retired Vega obligation until this reviewed transition is accepted.
 
 The v0.134.1 merge preserves the accepted macOS descriptor-reader repair and removes the now-obsolete worker lock-maintenance obligation with the retired native workspace. The proof-source review changes only accepted Cargo package versions and the explicitly removed worker/source paths; hosted source-CI definitions stay intact. The earlier failed Vega execution is not recategorized as success.
+
+MacOS custody test fixtures resolve the temporary directory before constructing source and independently reviewed toolchain paths. This preserves production canonical-path rejection. Unsupported-platform SQLite recovery assertions inspect the typed Dactyl capability kind and code rather than requiring a machine code in human-readable error text.

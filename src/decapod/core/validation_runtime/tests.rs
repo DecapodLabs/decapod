@@ -26,7 +26,7 @@ struct Fixture {
 }
 impl Fixture {
     fn new(config: &str) -> Self {
-        let storage = tempfile::tempdir().unwrap();
+        let storage = tempfile::tempdir_in(std::env::temp_dir().canonicalize().unwrap()).unwrap();
         let root = storage.path().join("source");
         fs::create_dir(&root).unwrap();
         fs::create_dir(root.join(".decapod")).unwrap();

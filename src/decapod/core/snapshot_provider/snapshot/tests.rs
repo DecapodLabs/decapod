@@ -1,7 +1,7 @@
 use super::*;
 use std::process::Command;
 fn setup() -> (tempfile::TempDir, SnapshotRequest) {
-    let d = tempfile::tempdir().unwrap();
+    let d = tempfile::tempdir_in(std::env::temp_dir().canonicalize().unwrap()).unwrap();
     let root = d.path();
     let run = |args: &[&str]| {
         let r = Command::new("/usr/bin/git")

@@ -322,12 +322,16 @@ fn permissive_umask_flows_are_confined() {
         assert_eq!(mode(&database), 0o600);
         assert_eq!(mode(&archive), 0o600);
     } else {
-        assert!(
-            recovery
-                .unwrap_err()
-                .to_string()
-                .contains("secure_recovery_unsupported")
-        );
+        match recovery.unwrap_err() {
+            crate::core::error::DecapodError::DactylError(error) => {
+                assert_eq!(
+                    error.adapter_kind(),
+                    Some(dactyl_db::AdapterErrorKind::Capability)
+                );
+                assert_eq!(error.adapter_code(), Some("secure_recovery_unsupported"));
+            }
+            other => panic!("unexpected recovery refusal: {other}"),
+        }
         assert!(!archive.exists());
         assert_eq!(mode(&database), 0o600);
     }
@@ -441,12 +445,16 @@ fn shared_store_requires_explicit_opt_in_and_never_accepts_world_write() {
         assert_eq!(mode(&database), 0o660);
         assert_eq!(mode(&archive), 0o660);
     } else {
-        assert!(
-            recovery
-                .unwrap_err()
-                .to_string()
-                .contains("secure_recovery_unsupported")
-        );
+        match recovery.unwrap_err() {
+            crate::core::error::DecapodError::DactylError(error) => {
+                assert_eq!(
+                    error.adapter_kind(),
+                    Some(dactyl_db::AdapterErrorKind::Capability)
+                );
+                assert_eq!(error.adapter_code(), Some("secure_recovery_unsupported"));
+            }
+            other => panic!("unexpected recovery refusal: {other}"),
+        }
         assert!(!archive.exists());
         assert_eq!(fs::read(&database).unwrap(), before);
     }

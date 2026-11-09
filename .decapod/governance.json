@@ -602,6 +602,14 @@
         "/private/tmp/index134-final-integration.log",
         "/private/tmp/index134-laya-helper-tests.log"
       ]
+    },
+    {
+      "id": "macos-canonical-test-fixtures",
+      "summary": "Repair canonical custody fixture roots and typed unsupported-recovery assertions; full library suite passes on default macOS temp environment.",
+      "input_digest": "sha256:df356ab9f646b5d3f7ef07b25b786eb05e6799408f46eb6d43b2876b72903a94",
+      "proof_refs": [
+        "/private/tmp/index134-final-lib-repaired.log"
+      ]
     }
   ],
   "intents": {
@@ -642,22 +650,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final Laya helper separation and lock repair with unchanged protocol golden vectors.",
-          "reviewed_code_fingerprint": "f3d8413c07c17647d92114258aa846cb2cc0e7d62d1b204ae3c279293b3d385f",
+          "reason": "Reviewed retired Vega module removal and shared Laya helper ownership; canonical fixture repair changes no production custody checks.",
+          "reviewed_code_fingerprint": "89c084fc24d937bb66967deeba33f0ca88e2f9f41f458264f30d319a65a5c93e",
           "spec_material_hash": "aca2b9332b2f0f39f9377bb30175b7f857ec39562b2530d98648a033f15ef142"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final generated configuration docs reference passive legacy DTOs; Laya setup remains optional and historical wire labels unchanged.",
-          "reviewed_code_fingerprint": "f3d8413c07c17647d92114258aa846cb2cc0e7d62d1b204ae3c279293b3d385f",
+          "reason": "Reviewed passive legacy JSON and runtime-label preservation with unchanged Laya production projection golden vectors.",
+          "reviewed_code_fingerprint": "89c084fc24d937bb66967deeba33f0ca88e2f9f41f458264f30d319a65a5c93e",
           "spec_material_hash": "b9f92087fbbe6da27f6d4145903425983ae857bb1f6cfd56e88ef8b4ff5a4e63"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Bounded private runtime and model-asset custody protections unchanged by module move; execution of retired evaluator removed.",
-          "reviewed_code_fingerprint": "f3d8413c07c17647d92114258aa846cb2cc0e7d62d1b204ae3c279293b3d385f",
+          "reason": "Canonical test fixture paths and typed capability assertions preserve fail-closed production guards and private runtime protections.",
+          "reviewed_code_fingerprint": "89c084fc24d937bb66967deeba33f0ca88e2f9f41f458264f30d319a65a5c93e",
           "spec_material_hash": "058f444fd13fffe4dfaa7b5ff6fb4c3bf06062220fd53647403ab076517c802c"
         }
       ],
@@ -670,16 +678,28 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794259730Z"
+      "updated_at": "1794259905Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:60445807e17a646db1fc6ec24f13b55a1fde60661ce5e8dd17a67af534506b1f",
+      "artifact_hash": "sha256:47e9e99b4285db26426b731ed4c96cb37166ce45541277c696fe4a7e481e6eb3",
       "checks": [
         {
+          "name": "canonical-snapshot-fixtures",
+          "status": "passed"
+        },
+        {
+          "name": "canonical-worker-fixture",
+          "status": "passed"
+        },
+        {
           "name": "ci-lock-inputs",
+          "status": "passed"
+        },
+        {
+          "name": "clippy-all-targets",
           "status": "passed"
         },
         {
@@ -696,7 +716,7 @@
         },
         {
           "name": "full-library",
-          "status": "partial"
+          "status": "passed"
         },
         {
           "name": "laya-cli-configuration",
@@ -798,10 +818,24 @@
             "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M70TT9YCVF9GDEN1NF0KHM96": {
@@ -940,6 +974,41 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "/private/tmp/index134-canonical-snapshot.log: all 26 snapshot tests pass with canonical temp root; preserve default-host correctness by constructing canonical fixtures.",
+                  "/private/tmp/index134-canonical-worker.log: locked Rust worker executes and retains failures, passes with canonical temp root.",
+                  "/private/tmp/index134-final-clippy.log: cargo clippy --all-targets -- -D warnings passed.",
+                  "/private/tmp/index134-d7f8-validate.log: released controller continues RUST_WORKER_POLICY_DOWNGRADE on explicitly retired accepted Vega recipe; no full readiness claimed."
+                ],
+                "proof_refs": [
+                  "canonical-snapshot-fixtures",
+                  "canonical-worker-fixture",
+                  "clippy-all-targets"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "/private/tmp/index134-final-lib-repaired.log: 1595 passed, 0 failed, 8 explicitly ignored under default host TMPDIR; all prior 18 failures resolved by canonical fixture roots and typed capability assertions."
+                ],
+                "proof_refs": [
+                  "full-library"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -949,8 +1018,13 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/index134-bazel-lock-verify.log: bazel mod deps --lockfile_mode=error exits 0 after generated lock update; no enforcement changed.",
+        "/private/tmp/index134-canonical-snapshot.log: all 26 snapshot tests pass with canonical temp root; preserve default-host correctness by constructing canonical fixtures.",
+        "/private/tmp/index134-canonical-worker.log: locked Rust worker executes and retains failures, passes with canonical temp root.",
         "/private/tmp/index134-correctness.log: v0.134.0 six integration tests passed, including 64 independent SQLite writers and replay.",
+        "/private/tmp/index134-d7f8-validate.log: released controller continues RUST_WORKER_POLICY_DOWNGRADE on explicitly retired accepted Vega recipe; no full readiness claimed.",
+        "/private/tmp/index134-final-clippy.log: cargo clippy --all-targets -- -D warnings passed.",
         "/private/tmp/index134-final-integration.log: datastore 6 passed 1 ignored; CLI/config 36 passed 1 ignored; four Laya runtime tests, two legacy roundtrips, three bounded-asset tests and projection golden vectors pass in ongoing library run.",
+        "/private/tmp/index134-final-lib-repaired.log: 1595 passed, 0 failed, 8 explicitly ignored under default host TMPDIR; all prior 18 failures resolved by canonical fixture roots and typed capability assertions.",
         "/private/tmp/index134-final-lib.log: ongoing; two preexisting filesystem-permission subprocess tests fail and require diagnosis; do not claim whole suite passed.",
         "/private/tmp/index134-migration.log: six passed; /private/tmp/index134-events.log: sixteen passed.",
         "/private/tmp/index134-resume-validate.log and readiness-fLXSmg: Buildkite proof verified; retired worker failed locked dependency resolution (parent Decapod 0.130.0 versus current 0.134.0). Removing obsolete worker by operator direction, not rewriting failure as success.",
