@@ -1163,11 +1163,25 @@ gaps. It accepts an empty parameter object, requires no session or worktree
 for inspection, and does not mutate spec or governance records. Its
 `semantic_alignment: not_proven` field is deliberately never a success proof.
 
+## Immutable Intent Change-Impact RPC
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+`intent.reconcile` accepts an optional `base_commit` string containing an
+exact 40/64-hex Git commit ID. When present, report schema 1.1.0 adds
+`change_impact` with immutable base/head identities, sorted changed files
+and rename predecessors, authored-material versus generated-only spec deltas,
+REQ identifiers explicitly cited in changed authored specs, unmapped
+implementation paths, completeness, advisory review/evidence flags and
+structured findings. Uncommitted bytes are excluded from this Git comparison.
+Invalid symbolic, absent or non-ancestor bases return a validation error.
+The original empty-parameter report stays version 1.0.0 without an impact
+field. Nothing in this operation authorizes a mutation, approval or completion.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289`
+- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

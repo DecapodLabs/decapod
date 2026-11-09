@@ -55,6 +55,30 @@ code fences. Missing, duplicate, invalid, orphaned, and unvalidated references
 remain visible. A reference is an agent-authored traceability assertion, never
 evidence that code satisfies the requirement or that a test passed.
 
+## Immutable change impact
+
+For a bounded, exact Git comparison, provide the **full immutable base commit ID**.
+The current `HEAD` commit is the other end of the comparison. This view excludes
+uncommitted working-tree changes; it never silently resolves a moving branch name.
+
+```bash
+decapod rpc --op intent.reconcile --params '{"base_commit":"<full-commit-oid>"}'
+```
+
+The additive `change_impact` section (report version 1.1.0 when requested)
+lists changed paths and status, including renames, authored material-spec changes
+versus generated-only projection updates, and REQ identifiers explicitly present
+in changed authored specs. It separately exposes changed implementation paths
+that have **no verified code-to-requirement mapping**. A marker appearing in a
+spec cannot establish that any changed code implements it.
+
+The inspection requires a real commit object that is an ancestor of `HEAD`.
+Unsupported or oversized paths and incomplete observations are reported with
+`complete: false`, without inferring unaffected files. Invalid or symbolic
+base identifiers fail explicitly. `review_needed` and `evidence_needed` are
+advisory; neither field satisfies spec review, validation or publication proof.
+Empty RPC parameters retain the existing report shape and version.
+
 This first reconciliation contract is advisory: it does not write specs or code,
 approve changes, execute tests, or certify semantic alignment. Agents resolve
 the findings in their isolated workspace and use the configured validation

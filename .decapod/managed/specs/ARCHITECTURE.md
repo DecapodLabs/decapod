@@ -790,6 +790,18 @@ repository code fingerprints. It stores no secondary project authority and
 requires no persistent database migration or agent scheduler. The calling
 harness remains responsible for interpreting findings and proposing repairs.
 
+## Bounded Immutable Impact Read
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+`core/intent_reconcile.rs` optionally reads an immutable ancestor commit and
+the current HEAD through bounded local Git calls. It reuses
+`core/project_specs::material_specs_change_between_refs` for authored versus
+generated-only living-spec deltas, with the same canonical specification list
+and material-body stripping rules. NUL-delimited change paths preserve renames
+and whitespace. Oversized, unsupported or unavailable observations fail closed
+or explicitly mark the impact incomplete. No new persistence, scheduler, proof
+record or cross-document authority is introduced.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -816,7 +828,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289`
+- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

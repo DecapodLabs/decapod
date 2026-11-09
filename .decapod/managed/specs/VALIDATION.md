@@ -1010,6 +1010,18 @@ semantic proof; `intent.reconcile` cannot satisfy validation obligations,
 approve spec changes, or authorize publication. Unit tests must exercise
 these negative cases and preserve existing proof and publication gates.
 
+## Immutable Impact Negative Acceptance
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+Unit and RPC tests must preserve existing empty-params compatibility while
+proving exact-commit ancestry, deterministic NUL-safe add/modify/delete/rename
+classification, authored-spec versus generated-projection distinctions, and
+bounded uncertainty on malformed, non-UTF8 or excessive paths. A code change
+without reviewed authored specs remains observable and explicitly unmapped.
+Human-intent questions, requirement markers, stable hashes and changed-source
+inventory are advisory: none may satisfy a proof gate or change
+`semantic_alignment: not_proven`.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -1058,7 +1070,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289`
+- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -273,7 +273,11 @@ pub struct SpecsRefreshResult {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-pub struct IntentReconcileParams {}
+pub struct IntentReconcileParams {
+    /// Optional full immutable Git base commit for bounded source/spec impact.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base_commit: Option<String>,
+}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct IntentReconcileResult {
@@ -901,7 +905,7 @@ pub fn generate_capabilities() -> CapabilitiesReport {
             },
             Capability {
                 name: "intent.reconcile".to_string(),
-                description: "Inspect intent-to-spec links, code freshness, and unresolved obligations without changing governance state".to_string(),
+                description: "Inspect intent/spec links, freshness and optional immutable Git change impact without changing governance state".to_string(),
                 stability: "beta".to_string(),
                 cost: "low".to_string(),
             },

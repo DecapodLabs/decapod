@@ -263,6 +263,16 @@ reconciliation report exposes missing or orphaned references, unresolved
 questions, and outdated source/spec snapshots without declaring semantic
 alignment or granting publication authority.
 
+## Immutable Change Impact
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+The agent must be able to inspect what implementation and authored living-spec
+material changed between an exact accepted Git base commit and the current HEAD
+commit, without permitting source observations to rewrite human intent. An
+unmapped code change remains explicitly unmapped, incomplete or unsupported
+inputs remain unproven, and the harness owns any proposed code/spec repair.
+The kernel retains independent review, validation and publication authority.
+
 <!-- decapod:declared-capabilities:start -->
 
 ## Declared Capability Surfaces
@@ -286,7 +296,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a0abcfbee3d1988cd0eedd6e4a8127bbc6b11d25e5ab8cf317462c7048de8289`
+- Repository signal fingerprint: `c15eae0fd8d8a12064b324c0a5563a13e0084b704bf38ddf94d374a73b577228`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (224 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
