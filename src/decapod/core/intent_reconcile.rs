@@ -185,10 +185,10 @@ fn immutable_oid(value: &str) -> bool {
 }
 
 fn utf8_path(bytes: &[u8]) -> Option<String> {
-    (bytes.len() <= MAX_PATH_BYTES)
-        .then(|| std::str::from_utf8(bytes).ok())
-        .flatten()
-        .map(str::to_owned)
+    if bytes.len() > MAX_PATH_BYTES {
+        return None;
+    }
+    std::str::from_utf8(bytes).ok().map(str::to_owned)
 }
 
 /// Parse Git's NUL-delimited name/status output. Refuse to call partial output
@@ -294,7 +294,7 @@ fn inspect_change_impact(root: &Path, requested_base: &str) -> Result<ChangeImpa
     }
     let base_commit = requested_base.to_ascii_lowercase();
     let kind = git_output(root, &["cat-file", "-t", &base_commit])?;
-    if kind != b"commit\n" {
+    if kind.as_slice() != b"commit\n" {
         return Err(DecapodError::ValidationError(
             "IMPACT_BASE_NOT_COMMIT: base_commit must identify a commit object".into(),
         ));
