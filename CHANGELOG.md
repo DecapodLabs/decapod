@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.135.0](https://github.com/DecapodLabs/decapod/compare/v0.134.2...v0.135.0) - 2026-11-09
+
+### Other
+
+- use bounded Tokio client for delayed-header regression
+- make Supabase fixture request reads portable
+- stabilize runtime fixtures and correct security review
+- align PR1589 with accepted Decapod v0.134.2
+- repair macOS custody fixtures and typed recovery assertions
+- [**breaking**] remove retired Vega kernel and repair Bazel lock
+- integrate v0.134.1 for datastore and Laya changes
+- retire native Vega and use optional Laya evaluation
+- *(storage)* remove redundant event sequence index
+
 ## [0.134.2](https://github.com/DecapodLabs/decapod/compare/v0.134.1...v0.134.2) - 2026-11-09
 
 ### Added
