@@ -1373,3 +1373,5 @@ remains mandatory, and unsupported exception/maintenance capabilities stay absen
 ### Workbranch fixture admission
 
 `tests/workbranch_governance.rs` exercises custody through the actual actor-bound CLI. A manual Git worktree does not become authoring-admissible merely because `agent.init` observes it: `workspace ensure` must verify and bind the checkout first. A session release deliberately clears task assignments, so resumption requires a fresh task claim and authoring admission. Negative fixtures assert that observation preserves inherited governance and that foreign or nonexistent branch-task bindings cannot be admitted. These preconditions preserve the existing custody contract; passing fixtures do not replace independent exact-candidate publication proof.
+
+The standalone Vega worker retains mandatory locked execution. Its Cargo.lock local Decapod package version must match the accepted root package version; release-pin reconciliation preserves all other resolved dependencies and does not waive any worker test or scientific run.

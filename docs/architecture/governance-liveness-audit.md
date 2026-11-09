@@ -334,3 +334,31 @@ Rust test invocations above used the same canonical temporary directory. They
 are local regression evidence, not hosted publication authority. All historical
 proof distinctions, datastore boundaries and required CI identities remain
 unchanged.
+
+### Standalone worker release pin
+
+On `ccd4cd0b38c8cfbfff4725642633baa1e6681d32`, all 41 Buildkite checks across
+all five required workflows passed. The supported draft publisher subsequently
+refused `PUBLICATION_NOT_READY / RUST_WORKER_FAILED`: the first configured
+standalone Vega test exited before compilation because its tracked lockfile
+still pinned the local Decapod path dependency to 0.130.0, while the accepted
+root package is 0.133.0. This stale release pin is also present on clean accepted
+master.
+
+The narrow repair changes only that local package version to 0.133.0. No
+registry/git package versions, dependency edges, features, worker commands or
+required checks change. Full `cargo metadata --locked --offline --manifest-path
+assets/tools/vega-native/Cargo.toml --format-version 1` accepts the corrected
+lock. Existing mandatory locked worker execution remains required; metadata
+success does not establish its test or scientific-run results.
+
+The independently installed controller compared all 119 discovered inputs with
+clean accepted master: only `assets/tools/vega-native/Cargo.lock` differs. Its
+content hash changes from
+`sha256:a2d53d33e2ed6cc74ef4a9f266888c18108b0d660ee4cd1873a7a44fd53ff007`
+to `sha256:d583f185163fb34533b2c173823a316800f2e1e0003c94e9911dac86860f0224`.
+The reviewed inventory declaration is reconciled from `sha256:d8c65ab6901a57c4df55f3914dd0eeaecbf7338177233831854ade1304e53361`
+to `sha256:23746a85886fa2d9d501bfda4cb7665c27413cf70391864205f5d1315a4ee349`
+after that complete comparison. No accepted executor, recipe digest or check
+definition changes. Publication still requires full independent validation of
+the resulting exact candidate, including the worker.
