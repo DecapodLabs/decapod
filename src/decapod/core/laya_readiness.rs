@@ -7,7 +7,7 @@ use super::{
         self as wire, Backend, BackendPreference, Judgment, RUBRIC, Request, Response,
         WORKER_SCHEMA,
     },
-    laya_setup, readiness_evidence as evidence, vega_readiness as shared, vega_runtime,
+    laya_runtime, laya_setup, readiness_assessment as shared, readiness_evidence as evidence,
 };
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
@@ -124,7 +124,7 @@ pub(crate) fn capture_installation(config: &Configuration) -> io::Result<Option<
     let installation = match &config.installation {
         Some(installation) => installation.clone(),
         None => {
-            vega_runtime::resolve_at(&laya_setup::default_cache()?, &config.model_manifest_digest)?
+            laya_runtime::resolve_at(&laya_setup::default_cache()?, &config.model_manifest_digest)?
         }
     };
     if installation.manifest_digest != config.model_manifest_digest {

@@ -1613,7 +1613,7 @@ fn successful_validation_preserves_readiness_scope_and_existing_delivery_authori
 
 #[test]
 fn vega_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
-    use crate::core::vega_readiness::{Decision, Mode};
+    use crate::core::readiness_assessment::{Decision, Mode};
     for (mode, decision, expected) in [
         (Mode::Required, Decision::Accept, "create_authorized_pr"),
         (
@@ -1664,7 +1664,7 @@ fn vega_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
 
 #[test]
 fn late_verdict_write_failure_revokes_readiness_and_pr_instructions() {
-    use crate::core::vega_readiness::{Decision, Mode};
+    use crate::core::readiness_assessment::{Decision, Mode};
     let directory = tempfile::tempdir().unwrap();
     let verdict = directory.path().join("verdict.json");
     write_new(&verdict, b"preserve existing evidence").unwrap();
@@ -2170,8 +2170,8 @@ fn native_completion_write_failures_never_publish_success_artifacts() {
                 scope: READINESS_SCOPE,
                 agent_guidance: ValidationGuidance::for_vega_outcome(
                     true,
-                    crate::core::vega_readiness::Mode::Disabled,
-                    crate::core::vega_readiness::Decision::Accept,
+                    crate::core::readiness_assessment::Mode::Disabled,
+                    crate::core::readiness_assessment::Decision::Accept,
                 ),
                 stage_dispositions: Vec::new(),
                 blockers: Vec::new(),

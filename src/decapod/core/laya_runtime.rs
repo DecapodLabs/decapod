@@ -1,8 +1,8 @@
-//! Per-maintainer runtime binding, owned by explicit Vega setup, outside Git.
+//! Per-maintainer runtime binding, owned by explicit Laya setup, outside Git.
 //! A registration pins local executable bytes; it is not build provenance,
 //! numerical parity, or evidence that inference has run.
 use super::bounded_process::Cancellation;
-use super::{fs_permissions, vega_readiness::Installation, vega_setup};
+use super::{fs_permissions, model_assets, readiness_assessment::Installation};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::fs::{self, OpenOptions};
@@ -10,6 +10,8 @@ use std::io::{self, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
+// Preserve the historical private binding wire identifier so installed Laya
+// runtimes remain registered; the model manifest is verified independently.
 const SCHEMA: &str = "decapod.vega-local-runtime.v1";
 const MAX_RUNTIME: u64 = 512 * 1024 * 1024;
 const MAX_BINDING: usize = 8192;
@@ -47,7 +49,7 @@ fn native_header(file: &mut fs::File, length: u64) -> io::Result<()> {
     } else if cfg!(target_os = "windows") && header[..2] == *b"MZ" {
         let offset = u32::from_le_bytes(header[60..64].try_into().unwrap()) as u64;
         if offset > length.saturating_sub(6) {
-            return Err(invalid("vega_runtime_invalid_pe_header"));
+            return Err(invalid("laya_runtime_invalid_pe_header"));
         }
         file.seek(SeekFrom::Start(offset))?;
         let mut pe = [0; 6];
@@ -62,7 +64,7 @@ fn native_header(file: &mut fs::File, length: u64) -> io::Result<()> {
         false
     };
     if !matches {
-        return Err(invalid("vega_runtime_not_native_executable"));
+        return Err(invalid("laya_runtime_not_native_executable"));
     }
     file.rewind()
 }
@@ -73,10 +75,10 @@ pub(crate) fn runtime_digest(
     cancel: &Cancellation,
 ) -> io::Result<String> {
     if Instant::now() >= deadline || cancel.is_cancelled() {
-        return Err(invalid("vega_runtime_verification_cancelled_or_timeout"));
+        return Err(invalid("laya_runtime_verification_cancelled_or_timeout"));
     }
     if !path.is_absolute() || path.canonicalize()? != path {
-        return Err(invalid("vega_runtime_path_not_canonical"));
+        return Err(invalid("laya_runtime_path_not_canonical"));
     }
     let mut options = OpenOptions::new();
     options.read(true);
@@ -88,7 +90,7 @@ pub(crate) fn runtime_digest(
     let mut file = options.open(path)?;
     let metadata = file.metadata()?;
     if !metadata.is_file() || !(64..=MAX_RUNTIME).contains(&metadata.len()) {
-        return Err(invalid("vega_runtime_not_bounded_regular_file"));
+        return Err(invalid("laya_runtime_not_bounded_regular_file"));
     }
     #[cfg(unix)]
     {
@@ -100,7 +102,7 @@ pub(crate) fn runtime_digest(
             || mode & 0o022 != 0
             || mode & 0o111 == 0
         {
-            return Err(invalid("vega_runtime_unsafe_permissions_or_links"));
+            return Err(invalid("laya_runtime_unsafe_permissions_or_links"));
         }
     }
     native_header(&mut file, metadata.len())?;
@@ -109,7 +111,7 @@ pub(crate) fn runtime_digest(
     let mut count = 0u64;
     loop {
         if Instant::now() >= deadline || cancel.is_cancelled() {
-            return Err(invalid("vega_runtime_verification_cancelled_or_timeout"));
+            return Err(invalid("laya_runtime_verification_cancelled_or_timeout"));
         }
         let n = file.read(&mut buffer)?;
         if n == 0 {
@@ -117,27 +119,23 @@ pub(crate) fn runtime_digest(
         }
         count += n as u64;
         if count > MAX_RUNTIME {
-            return Err(invalid("vega_runtime_size_changed"));
+            return Err(invalid("laya_runtime_size_changed"));
         }
         hasher.update(&buffer[..n]);
     }
     if count != metadata.len() {
-        return Err(invalid("vega_runtime_size_changed"));
+        return Err(invalid("laya_runtime_size_changed"));
     }
     Ok(format!("sha256:{:x}", hasher.finalize()))
 }
 
 fn binding_path(root: &Path, manifest: &str) -> io::Result<PathBuf> {
-    if !super::vega_setup::valid_digest(manifest) {
-        return Err(invalid("vega_local_binding_manifest_required"));
+    if !super::model_assets::valid_digest(manifest) {
+        return Err(invalid("laya_local_binding_manifest_required"));
     }
     Ok(root
         .join("runtimes")
         .join(format!("{}.json", &manifest[7..])))
-}
-
-pub(crate) fn register(installation: Installation) -> io::Result<()> {
-    register_at(&vega_setup::default_cache()?, installation)
 }
 
 fn validate_binding(binding: &LocalBinding, manifest: &str) -> io::Result<()> {
@@ -147,14 +145,14 @@ fn validate_binding(binding: &LocalBinding, manifest: &str) -> io::Result<()> {
         || !installation.directory.is_dir()
         || installation.directory.canonicalize()? != installation.directory
         || installation.runtime.canonicalize()? != installation.runtime
-        || !vega_setup::valid_digest(&installation.runtime_sha256)
+        || !model_assets::valid_digest(&installation.runtime_sha256)
         || installation.cpu_runtime.as_ref().is_some_and(|cpu| {
             !cpu.runtime.is_absolute()
                 || cpu.runtime.canonicalize().ok().as_ref() != Some(&cpu.runtime)
-                || !vega_setup::valid_digest(&cpu.runtime_sha256)
+                || !model_assets::valid_digest(&cpu.runtime_sha256)
         })
     {
-        return Err(invalid("vega_local_binding_invalid"));
+        return Err(invalid("laya_local_binding_invalid"));
     }
     Ok(())
 }
@@ -168,16 +166,11 @@ pub(crate) fn register_at(root: &Path, installation: Installation) -> io::Result
     validate_binding(&binding, &binding.installation.manifest_digest)?;
     let bytes = serde_json::to_vec_pretty(&binding).map_err(io::Error::other)?;
     if bytes.len() > MAX_BINDING {
-        return Err(invalid("vega_local_binding_overflow"));
+        return Err(invalid("laya_local_binding_overflow"));
     }
     fs_permissions::ensure_private_dir(root)?;
     fs_permissions::ensure_private_dir(path.parent().unwrap())?;
     fs_permissions::write_private(path, bytes)
-}
-
-#[cfg(test)]
-pub(crate) fn resolve(manifest: &str) -> io::Result<Installation> {
-    resolve_at(&vega_setup::default_cache()?, manifest)
 }
 
 pub(crate) fn resolve_at(root: &Path, manifest: &str) -> io::Result<Installation> {
@@ -186,14 +179,14 @@ pub(crate) fn resolve_at(root: &Path, manifest: &str) -> io::Result<Installation
     options.read(true);
     let mut file = fs_permissions::open_private_file(&path, &mut options)?;
     if !file.metadata()?.is_file() {
-        return Err(invalid("vega_local_binding_not_regular"));
+        return Err(invalid("laya_local_binding_not_regular"));
     }
     let mut bytes = Vec::new();
     file.by_ref()
         .take((MAX_BINDING + 1) as u64)
         .read_to_end(&mut bytes)?;
     if bytes.len() > MAX_BINDING {
-        return Err(invalid("vega_local_binding_overflow"));
+        return Err(invalid("laya_local_binding_overflow"));
     }
     let binding: LocalBinding = serde_json::from_slice(&bytes).map_err(io::Error::other)?;
     validate_binding(&binding, manifest)?;
@@ -255,7 +248,7 @@ mod tests {
         .unwrap();
         Installation {
             directory: directory.canonicalize().unwrap(),
-            manifest_digest: super::super::vega_readiness::hash(b"shared model"),
+            manifest_digest: super::super::readiness_assessment::hash(b"shared model"),
             runtime,
             runtime_sha256,
             cpu_runtime: None,
@@ -296,7 +289,7 @@ mod tests {
         invalid.runtime_sha256 = "floating".into();
         assert!(register_at(root.path(), invalid).is_err());
         assert_eq!(fs::read(&path).unwrap(), before);
-        let other = super::super::vega_readiness::hash(b"other model");
+        let other = super::super::readiness_assessment::hash(b"other model");
         assert!(resolve_at(root.path(), &other).is_err());
         let mut record: serde_json::Value = serde_json::from_slice(&before).unwrap();
         record["schema"] = "unknown".into();
@@ -368,7 +361,7 @@ mod tests {
         let path = binding_path(primary.path(), &installation.manifest_digest).unwrap();
         let before = fs::read(&path).unwrap();
         let worker = fixture(cpu.path(), 10);
-        installation.cpu_runtime = Some(super::super::vega_readiness::RuntimePin {
+        installation.cpu_runtime = Some(super::super::readiness_assessment::RuntimePin {
             runtime: cpu.path().join("missing"),
             runtime_sha256: worker.runtime_sha256.clone(),
         });

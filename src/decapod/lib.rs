@@ -1861,7 +1861,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-        vega: core::vega_readiness::Configuration::default(),
+        vega: core::legacy_vega::Configuration::default(),
         laya: core::laya_readiness::Configuration::default(),
     }
 }

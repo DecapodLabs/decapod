@@ -841,8 +841,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e54d82e60d35b3c0559afcdd6a97e457d8a66481d8f67f0558166d745d7c61c1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (224 files), `tests/` (216 files)
+- Repository signal fingerprint: `f3d8413c07c17647d92114258aa846cb2cc0e7d62d1b204ae3c279293b3d385f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1094,3 +1094,5 @@ The measured catalog and unresolved cross-backend contracts live in
 ## Current evaluator boundary
 
 The retired native Vega workspace, vendored kernels, independent native entrypoint and orphan backbone source are removed. This repository no longer declares `proof.rust_workers` for Vega. Generic physical worker verification remains available for other explicitly configured applications. Laya retains its existing protocol, shared bounded projection and private runtime custody helpers; no model/proof encoding is renamed. Deterministic proof remains authoritative, followed only by explicitly enabled Laya assessment.
+
+The kernel also removes the retired Vega engine, calibration, prompt, setup and readiness implementations and their sole `libm` dependency. Shared protocol/projection types now live in `core/readiness_assessment.rs`; bounded downloads in `core/model_assets.rs`; private registered-runtime custody in `core/laya_runtime.rs`. Passive `core/legacy_vega.rs` DTOs preserve old configuration and receipt decoding only. The existing runtime registration schema label remains unchanged for installed Laya compatibility. Four independently captured projection hashes test byte-for-byte preservation. Cargo and Bazel dependency locks are regenerated together; CI continues enforcing frozen lock inputs.

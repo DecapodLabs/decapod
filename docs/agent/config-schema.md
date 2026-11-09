@@ -17,9 +17,9 @@ pub struct DecapodProjectConfig {
     pub context: DeclaredContextConfig,
     #[serde(
         default,
-        skip_serializing_if = "crate::core::vega_readiness::Configuration::is_default"
+        skip_serializing_if = "crate::core::legacy_vega::Configuration::is_default"
     )]
-    pub vega: crate::core::vega_readiness::Configuration,
+    pub vega: crate::core::legacy_vega::Configuration,
     #[serde(
         default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"

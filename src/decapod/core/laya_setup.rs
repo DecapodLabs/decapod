@@ -6,8 +6,8 @@ use super::{
     bounded_process::Cancellation,
     fs_permissions, laya_assets,
     laya_protocol::Manifest,
-    vega_readiness::{Installation, RuntimePin},
-    vega_runtime, vega_setup,
+    laya_runtime, model_assets,
+    readiness_assessment::{Installation, RuntimePin},
 };
 use fs2::FileExt;
 use serde::Serialize;
@@ -91,7 +91,7 @@ pub fn check_updates(cache_directory: Option<&Path>) -> io::Result<UpdateReport>
     .enumerate()
     {
         let path = scratch.path().join(format!("metadata-{index}.json"));
-        vega_setup::download_public_asset(
+        model_assets::download_public_asset(
             &url,
             &path,
             1024 * 1024,
@@ -104,7 +104,7 @@ pub fn check_updates(cache_directory: Option<&Path>) -> io::Result<UpdateReport>
             .get("sha")
             .or_else(|| value.get(0).and_then(|v| v.get("sha")))
             .and_then(|v| v.as_str())
-            .filter(|v| vega_setup::valid_revision(v))
+            .filter(|v| model_assets::valid_revision(v))
             .ok_or_else(|| invalid("laya_update_revision_invalid"))?;
         metadata_compatible &= revision == expected;
         latest_revisions.insert(repository.into(), revision.into());
@@ -132,7 +132,7 @@ fn checkpoint(deadline: Instant, cancel: &Cancellation) -> io::Result<()> {
     }
 }
 pub(crate) fn default_cache() -> io::Result<PathBuf> {
-    Ok(vega_setup::default_cache()?.with_file_name("laya"))
+    Ok(model_assets::default_cache()?.with_file_name("laya"))
 }
 
 fn read_metadata(path: &Path) -> io::Result<Vec<u8>> {
@@ -300,7 +300,7 @@ pub fn run(options: &SetupOptions) -> io::Result<SetupReport> {
                             "https://huggingface.co/{}/resolve/{}/{}",
                             asset.repository, asset.revision, asset.upstream_path
                         );
-                        vega_setup::download_public_asset(
+                        model_assets::download_public_asset(
                             &url,
                             &pending,
                             asset.bytes,
@@ -343,20 +343,20 @@ pub fn run(options: &SetupOptions) -> io::Result<SetupReport> {
     }
     if let Some(path) = &options.runtime {
         let runtime = path.canonicalize()?;
-        let runtime_sha256 = vega_runtime::runtime_digest(&runtime, deadline, &cancel)?;
+        let runtime_sha256 = laya_runtime::runtime_digest(&runtime, deadline, &cancel)?;
         let cpu_runtime = options
             .cpu_runtime
             .as_ref()
             .map(|path| {
                 let runtime = path.canonicalize()?;
-                let runtime_sha256 = vega_runtime::runtime_digest(&runtime, deadline, &cancel)?;
+                let runtime_sha256 = laya_runtime::runtime_digest(&runtime, deadline, &cancel)?;
                 Ok::<_, io::Error>(RuntimePin {
                     runtime,
                     runtime_sha256,
                 })
             })
             .transpose()?;
-        vega_runtime::register_at(
+        laya_runtime::register_at(
             &root,
             Installation {
                 directory: destination.clone(),

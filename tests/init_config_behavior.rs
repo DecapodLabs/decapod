@@ -301,7 +301,7 @@ fn init_refuses_ambiguous_retired_selectors_without_rewriting_user_configuration
 }
 
 #[test]
-fn optional_laya_replaces_the_retired_vega_setup_surface() {
+fn optional_laya_replaces_the_retired_model_assets_surface() {
     let project = tempdir().unwrap();
     let help = run_decapod(project.path(), &["setup", "--help"]);
     assert!(help.status.success());
