@@ -154,12 +154,8 @@ Perform a deterministic query over the embedded constitution.
 - `--topic <name>`: The subject of inquiry.
 - `--scope <scope>`: The context boundary (e.g., "interfaces").
 
-### `setup vega`
+### `setup laya`
 
-Explicitly manage the external pinned vega model cache. Options:
-`--cache-directory <path>`, `--check-updates`, `--refresh`, `--offline`, and
-`--rollback <manifest-digest>`. Conflicting modes are rejected. Output is a JSON
-installation/update report with disabled configuration; installing model data
-neither installs a worker executable nor proves native readiness. Runtime is
-one-shot and offline. The native worker separately supports `--probe` and
-`--request <private-json> [--proof-output <new-private-json>]`.
+Explicitly install/verify the pinned external cache and register private native
+runtime pins. Supports `--cache-directory`, `--runtime`, `--cpu-runtime`,
+`--offline` and `--check-updates`. See the [assessment contract](../../../laya-readiness.md).

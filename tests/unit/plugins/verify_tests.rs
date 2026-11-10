@@ -22,16 +22,6 @@ fn readiness_document(run: &str) -> serde_json::Value {
                 "request_id": format!("sha256:laya-request-{run}"),
                 "binding": {
                     "evidence_digest": format!("sha256:laya-evidence-{run}"),
-                    "material": {"head_revision": "head", "accepted_base_revision": "base"},
-                    "configuration_digest": "laya-config", "governance_digest": "governance",
-                    "proof_plan_digest": "plan"
-                }
-            },
-            "vega_readiness": {
-                "schema": "decapod.vega-readiness.v1", "mode": "disabled", "decision": "disabled",
-                "request_id": format!("sha256:request-{run}"),
-                "binding": {
-                    "evidence_digest": format!("sha256:evidence-{run}"),
                     "material": {"head_revision": "head", "accepted_base_revision": "base",
                         "toolchain_digest": "tools", "tree_digest": "tree"},
                     "configuration_digest": "config", "governance_digest": "governance",
@@ -58,8 +48,8 @@ fn validation_replay_ignores_only_run_evidence_identity() {
     );
     // Normalization operates on a copy; the complete execution receipt is kept.
     assert_eq!(
-        first["readiness"]["vega_readiness"]["request_id"],
-        "sha256:request-first"
+        first["readiness"]["laya_readiness"]["request_id"],
+        "sha256:laya-request-first"
     );
 }
 
@@ -79,15 +69,11 @@ fn validation_replay_retains_material_policy_and_failure_changes() {
         "/readiness/laya_readiness/decision",
         "/readiness/laya_readiness/binding/material/head_revision",
         "/readiness/laya_readiness/binding/configuration_digest",
-        "/readiness/vega_readiness/mode",
-        "/readiness/vega_readiness/decision",
-        "/readiness/vega_readiness/binding/material/head_revision",
-        "/readiness/vega_readiness/binding/material/accepted_base_revision",
-        "/readiness/vega_readiness/binding/material/toolchain_digest",
-        "/readiness/vega_readiness/binding/material/tree_digest",
-        "/readiness/vega_readiness/binding/configuration_digest",
-        "/readiness/vega_readiness/binding/governance_digest",
-        "/readiness/vega_readiness/binding/proof_plan_digest",
+        "/readiness/laya_readiness/binding/material/accepted_base_revision",
+        "/readiness/laya_readiness/binding/material/toolchain_digest",
+        "/readiness/laya_readiness/binding/material/tree_digest",
+        "/readiness/laya_readiness/binding/governance_digest",
+        "/readiness/laya_readiness/binding/proof_plan_digest",
         "/readiness/stage_dispositions/0/disposition",
     ] {
         let mut changed = baseline.clone();

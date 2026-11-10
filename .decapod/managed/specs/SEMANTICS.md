@@ -220,15 +220,6 @@ prose. Refresh must reject a transformation that would lose authored content
 before writing specs or the manifest. A fingerprint-only change cannot satisfy
 the material authored-spec requirement.
 
-Historical Jev observations retain their serialized meaning without current
-trajectory or publication authority. Vega consumes actual bounded validation
-outcomes and minimal intent context only after deterministic proof passes.
-Positive singleton yes, with no abstention/OOD and unchanged exact identities,
-can satisfy required-mode assessment. Negative singleton rejects; larger/missing
-sets, failed runtime or stale evidence abstain. `proof_ready` remains separate
-from `ready`; a model result cannot create proof. Indexed prompt compaction never
-removes adverse outcomes, exclusions, simulations, blockers or unknowns.
-
 ## Failure reporting
 
 Failures must preserve the violated condition, relevant state, and a supported
@@ -303,7 +294,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
+- Repository signal fingerprint: `d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

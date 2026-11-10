@@ -10,7 +10,7 @@ fn export_frozen_adaptation_inputs() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn required_configuration_is_pinned_and_never_silently_migrates_vega() {
+fn required_configuration_requires_a_reviewed_manifest() {
     let digest = laya_assets::manifest_digest(&laya_assets::baseline()).unwrap();
     let config = configuration_from_bytes(
         format!("[laya]\nmode='required'\nmodel_manifest_digest='{digest}'\n").as_bytes(),
@@ -20,7 +20,6 @@ fn required_configuration_is_pinned_and_never_silently_migrates_vega() {
     assert!(Configuration::default().cpu_fallback);
     assert_eq!(config.mode, Mode::Required);
     assert!(configuration_from_bytes(b"[laya]\nmode='required'\n").is_err());
-    assert!(configuration_from_bytes(b"[vega]\nmode='required'\n").is_err());
     assert!(verify_policy_acceptance(&Configuration::default(), &config).is_err());
 }
 

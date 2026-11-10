@@ -58,25 +58,14 @@ into authenticated principals or authorize a trust-grant API.
 
 ## Execution identity and replay safety
 
-Only three exact JSON pointers are normalized for repeated proof comparison:
-`/readiness/evidence_path`, `/readiness/vega_readiness/request_id`, and
-`/readiness/vega_readiness/binding/evidence_digest`. Fields with those names
-elsewhere and non-string malformed values remain bound. Receipt verification
-and actual validation success remain prerequisites; this projection neither
-imports evidence nor authorizes replay from a failed snapshot. Regression
-coverage requires policy, material, scope and failure changes to remain visible.
+Generic replay normalization masks only execution identity in named readiness
+receipts: request IDs and binding evidence digests, plus the report evidence
+path. Material revisions, model/governance/proof bindings, modes, decisions,
+blockers and unknown fields remain significant. The normalizer is unchanged by
+model retirement, preserving historical replay behavior without model-specific
+code. Complete receipts remain intact in persisted historical evidence.
 
 ## Rust source-spelling fixture isolation
-
-The new inventory regression uses a private disposable repository, isolated
-machine configuration paths and bounded Git/CLI subprocesses. It does not
-import credentials, forge receipts, replace provider execution, or weaken
-publication gates. Its APFS preconditions fail explicitly. Passing fixture
-unit tests or filename binding is not authority to close the outstanding full
-native readiness. The #1473 live historical-recovery retry has passed on native
-macOS ARM64 with Vega disabled, preserving original task/history fields and
-passing full unscoped validation. Other-platform recovery and this PR's configured
-Buildkite proof remain separate obligations.
 
 ## Cooperative shared-claim opt-in
 
@@ -137,22 +126,6 @@ evidence or Git. Buildkite documents the current host in its
 The fix grants no arbitrary storage, credential, publication or candidate
 self-authorization capability. The original strict-collection failure remains
 failed until an independently supported controller can execute that route.
-
-Vega's tracked team policy pins model identity separately from each maintainer's
-private runtime binding. Explicit setup registers native executable bytes without
-running them or proving their source. Unix runtime checks reject foreign ownership,
-writable-by-others files, scripts, incompatible architecture and multiple links;
-private registration records reject malformed or mismatched identities. Operator
-selection of a trusted reviewed runtime remains a trust boundary. Validation
-freezes the binding before proof and rechecks binding/model/runtime identity before
-consuming an acceptance. Local registration cannot bless source proof, fabricate
-Metal/CPU execution or establish numerical parity. CPU fallback is restricted to a
-typed hardware-unavailable response without a model answer, then a fresh process
-under the original deadline with reverified identical pins. Malformed output,
-arithmetic failure, timeout, crash, negative verdict and abstention do not trigger
-fallback. Runtime labels must match the explicit physical-backend request. New
-CPU and CUDA paths still require actual execution and numerical verification;
-neither a CPU answer nor a capability declaration proves Metal execution.
 
 The verification-only scalar F64 reference verifies immutable model/config hashes and calculates expected values without candidate tensor/model math, while sharing generic infrastructure, weights and authorship. Candidate `30015be0` executed three fixed 138/314/4,096-token Metal/CPU comparisons, the exact token boundary and all 16 memory slots; this does not establish all-input equivalence or independent human review. Raw tensors stay in bounded private exports. The final required scientific command rechecks referenced bytes and comparisons without importing earlier-run artifacts. The complete v2 collection nevertheless produced 23 false-ready proxy outcomes per backend. Proxy labels, incomplete supported coverage and 23 source lineages retain the unsatisfied readiness-calibration gate.
 
@@ -279,35 +252,12 @@ principal with unrestricted filesystem/Git access from rewriting history.
 
 ## Authentication
 
-Vega's required publication configuration is inherited from the accepted target.
-`vega_readiness::verify_policy_acceptance` rejects candidate-side disablement,
-runtime/model repinning, installation-path changes or calibration-setting changes
-when accepted policy is required. Such a policy transition needs independent
-acceptance; setup cache refresh cannot authorize it. A disabled accepted policy
-keeps normal behavior and may add a required assessment. The same check runs in
-initial and post-inference project discovery.
-
 Most mutations require an active local session. Session credentials establish
 repository-local custody and correlation. They do not authenticate an agent's
 model provider, harness, organization or human identity. Local handshake hashes
 make declarations tamper-evident; environment-supplied identity assertions remain
 self-declared and unverified without a configured trust root. The current binary
 exposes CLI and structured process RPC, not a native MCP server.
-
-Local session credentials prefer private machine-local storage, with a secure
-workspace-local fallback. Cloud authentication uses separate machine-local
-records. Active Jev credential persistence and lookup are removed; historical
-secret files are left untouched and are never read by vega. Session-health proof
-records active or inactive status only. Credentials must not enter source,
-trajectory records, validation artifacts or diagnostics.
-
-Vega setup accepts only bounded public official-source artifacts with explicit
-revision, size and SHA-256 pins. It does not accept credentials, agreements or
-gated-model access. Runtime performs no network operation and invokes only the
-canonical pinned native executable. Private create-new bounded request/proof
-files may contain repository context and numeric features; they are local
-diagnostics, never uploaded or treated as trusted policy. Repository text is
-untrusted evidence, and a model verdict cannot overrule deterministic proof.
 
 ## Data Classification
 
@@ -542,8 +492,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
+- Repository signal fingerprint: `d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -657,8 +607,6 @@ GPU one-shot ownership consumes the entire model before inference and discards i
 The historical completed76 validation exposed false-ready outcomes against proxy labels and unexecuted/token-overflow cases on both backends. Those failed results remain preserved under their original criterion, which was superseded by the explicitly approved functional delivery scope in #1445/#1460; they are not passing accuracy evidence or a revived statistical publication prerequisite. The reference's zero-memory omission is repaired from independently pinned specification/config and own scalar block outputs, with analytic anchors rather than candidate-derived expected values. Shared authorship/parser/weights and512-token scope still limit independence. Actual CUDA-unavailable-to-CPU component execution does not establish preferred-Metal failure or full production custody/fallback routing. All raw numeric inputs and receipts remain private outside Git.
 
 Public provider metadata and logs may diagnose a failed bootstrap without credentials. They remain untrusted diagnostic content: reading a sibling success or downloading a failure log cannot import a passed observation, alter the required graph or grant publication. A pre-parser helper launch failure establishes no source-test or native execution. Provider recovery must preserve failed history and bind the next real execution to the exact ordinary branch candidate. No authentication state, raw machine logs or model inputs belong in Git.
-
-Numerical and semantic references have separate trust limits. The scalar Rust reference shares parsing/hash infrastructure and pinned weights with the candidate, and its author is the same agent; measured agreement does not imply separate human review or unsupported-mode correctness. Public bug findings, test-oracle resolution and same-agent counterfactual labels do not establish comprehensive readiness. Related lineage IDs must not inflate independent risk counts, nor may an absent review finding be silently converted into a ready label. Domain-level readiness reliability remains unestablished. The published functional qualification and safe abstention remain authoritative: configured Vega must actually run, and rejection, abstention, malformed output or execution failure prevents readiness without overriding deterministic proof.
 
 ## Immutable configuration bootstrap trust boundary
 
@@ -829,3 +777,13 @@ running executable, never arbitrary similarly named executables. Readiness
 hash normalization strips only per-run IDs and evidence digests, preserving
 material, policy, decision and blocker semantics. Laya requires explicit
 post-proof configuration and cannot waive deterministic validation.
+
+## Current model policy and private registration
+
+`laya_readiness::verify_policy_acceptance` rejects candidate-side disablement or
+repinning of accepted required Laya policy. Private registration version 2 uses
+`decapod.laya-local-runtime.v2`; unsupported versions produce explicit setup
+instructions and leave the record untouched. Native format, canonical path,
+ownership, single-link, byte-size and digest checks remain enforced. Model setup
+uses bounded credential-free public asset transport. Opaque user configuration
+extensions survive refresh but cannot enable evaluation or grant authority.

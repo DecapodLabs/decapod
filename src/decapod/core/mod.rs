@@ -110,5 +110,4 @@ pub mod laya_setup;
 #[cfg(unix)]
 pub(crate) mod local_socket;
 
-pub mod legacy_vega;
 pub mod readiness_assessment;

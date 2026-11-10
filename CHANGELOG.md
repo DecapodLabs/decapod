@@ -16,9 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - stabilize runtime fixtures and correct security review
 - align PR1589 with accepted Decapod v0.134.2
 - repair macOS custody fixtures and typed recovery assertions
-- [**breaking**] remove retired Vega kernel and repair Bazel lock
 - integrate v0.134.1 for datastore and Laya changes
-- retire native Vega and use optional Laya evaluation
 - *(storage)* remove redundant event sequence index
 
 ## [0.134.2](https://github.com/DecapodLabs/decapod/compare/v0.134.1...v0.134.2) - 2026-11-09
@@ -255,19 +253,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- repair stale vega-native Cargo.lock decapod pin for v0.126.5 ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
 - identify supported Nix setup in SQLite runtime error ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
 - carry SQLite runtime library in the Nix package output ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
 
 ### Other
 
 - rebind #1536 artifacts onto v0.130.0 master - regenerate surfaces, reconcile digest, record spec reviews and refresh projections ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
-- regenerate v0.130.0 release-bound entrypoints and vega-native lock pin after rebase onto v0.130.0 master ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
 - rebind #1536 artifacts onto post-#1540 master (c6b7919d) - refresh projections and record spec reviews ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
 - rebind #1536 artifacts onto v0.129.0 master - regenerate surfaces, reconcile digest, record spec reviews and refresh projections ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
-- regenerate v0.129.0 release-bound entrypoints and vega-native lock pin after rebase ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
 - refresh specs manifest after #1536 digest reconcile
-- reconcile source digest after vega-native lock pin repair ([#1536](https://github.com/DecapodLabs/decapod/pull/1536))
 - regenerate v0.126.5 entrypoints and re-review specs after #1536 rebase
 - regenerate specs projections on v0.126.5 after #1536 rebase
 - rebase #1536 onto v0.126.5 and reconcile source digest
@@ -286,15 +280,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- repair stale vega-native Cargo.lock decapod pin for v0.126.5 ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
 - pass None skip to check_complete_suffix in task_transfer ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
 
 ### Other
 
 - rebind #1534 artifacts onto v0.129.0 master - regenerate surfaces, reconcile digest, record spec reviews and refresh projections ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
-- regenerate v0.129.0 release-bound entrypoints, manifest pin and vega-native lock after rebase ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
 - refresh specs manifest after #1534 digest reconcile
-- reconcile source digest after vega-native lock pin repair ([#1534](https://github.com/DecapodLabs/decapod/pull/1534))
 - regenerate v0.126.5 entrypoints and re-review specs after #1534 rebase
 - regenerate specs projections on v0.126.5 after #1534 rebase
 - rebase #1534 onto v0.126.5 and reconcile source digest
@@ -317,15 +308,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - complete ci_only closure for #1531 - all-CI-only repos keep local proof, agent docs aligned ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
 - allow ci_only source_coverage rows to omit commands in config.toml ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
-- repair stale vega-native Cargo.lock decapod pin for v0.128.0 ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
-- repair stale vega-native Cargo.lock decapod pin for v0.126.5 ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
 
 ### Other
 
 - re-record spec reviews and refresh projections at rebound v0.128.0 head ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
 - regenerate v0.128.0 release-bound entrypoints, manifest and Dockerfile pin after rebase ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
 - refresh specs manifest after #1531 digest reconcile
-- reconcile source digest after vega-native lock pin repair ([#1531](https://github.com/DecapodLabs/decapod/pull/1531))
 - regenerate v0.126.5 entrypoints and re-review specs after #1531 rebase
 - regenerate specs projections on v0.126.5 after #1531 rebase
 - rebase #1531 onto v0.126.5 and reconcile source digest
@@ -388,7 +376,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- bump vega-native lock path-dep to decapod 0.126.5 and reconcile source digest
 
 ### Other
 
@@ -410,7 +397,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- repair stale vega-native Cargo.lock decapod pin for v0.126.5 ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
 - correct crates.io version fetch and make auto-install opt-in ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
 - identify crates.io version check with User-Agent ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
 
@@ -428,7 +414,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enforce no-auto-install entrypoint contract in validate ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
 - Remove cargo-install auto-bootstrap from generated entrypoint templates ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
 - refresh specs manifest after #1533 digest reconcile
-- reconcile source digest after vega-native lock pin repair ([#1533](https://github.com/DecapodLabs/decapod/pull/1533))
 - regenerate v0.126.5 entrypoints and re-review specs after #1533 rebase
 - regenerate specs projections on v0.126.5 after #1533 rebase
 - rebase #1533 onto v0.126.5 and reconcile source digest
@@ -453,7 +438,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- repair stale vega-native Cargo.lock decapod pin (0.121.0 -> 0.126.3)
 - prevent validate deadlock when worker output exceeds pipe capacity ([#1526](https://github.com/DecapodLabs/decapod/pull/1526))
 
 ### Other
@@ -881,7 +865,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refresh interface fingerprint for security repairs
 - refresh architecture fingerprint for security repairs
 - refresh intent fingerprint for security repairs
-- specify advisory remediation and retained Vega limits
 - record the reviewed security repair source inventory
 - map Dependabot repair to native verification
 - isolate worker evidence fixtures from shell umask
@@ -914,66 +897,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- verify active Vega readiness under functional acceptance
-- *(vega)* collect bounded frozen readiness evaluation
-- prepare pinned Rust Vega verification inputs
-- collect native Vega diagnostics before parity acceptance
-- *(vega)* integrate accepted native verification support
-- add portable vega backend selection and safe cpu fallback
-- bind Vega runtimes locally for shared project policy
-- select Vega post-validation decisions during init
-- *(readiness)* prepare accepted-base Rust vega assessment
 
 ### Fixed
 
-- qualify useful Vega decisions with safe abstention
-- retain candidate build proof in Vega functional cases
-- propagate Vega diagnostic export errors
-- share the final Vega readiness decision rule
-- reconcile Vega projection docs and Clippy checks
-- evaluate Vega through the production readiness projection
 - compile public review source diagnostics
 - refresh Bazel input lock for research fixtures
 - preserve readiness obligations and audit public inputs
 - revoke readiness after late validation errors
-- preserve Vega guidance in local validation output
-- guide agents after Vega readiness assessment
 - stop failed scientific reduction before model setup
 - retain scientific diagnostics when strict aggregation fails
 - keep scientific nonce validation inside the native worker
-- synchronize Vega Metal recurrence shared memory
-- calculate independent Vega memory pooling reference
 - isolate one-shot Metal state and collect independent proof
 - pin compatible native Metal runtime dependencies
-- *(governance)* refresh Vega code-bound spec reviews
-- *(vega)* retain kernel ownership during evaluation
-- reject malformed Vega reference comparisons
-- *(vega)* pin a CPU companion for GPU loader failures
-- scope vega synchronization dependency to gpu builds
-- finish Vega item ordering and specify native proof obligations
-- refresh Vega release-bound validation projections
-- preserve Vega cache safety and retired init settings
-- reconcile vega reference docs and clippy types
-- resolve vega setup compilation and dependency lint
 
 ### Other
 
-- verify calibration metadata order and preserve Vega outcomes
-- diagnose Vega readiness task mismatch
-- synchronize generated Vega configuration reference
-- collect bounded Vega numerical and heldout evidence
-- reconcile Vega verification evidence and label scope
 - construct synthetic credential fixtures at runtime
-- reconcile Vega with accepted v0.119.1
-- *(vega)* add independent scalar backbone reference
-- *(vega)* freeze contradictory evidence and abstention cases
-- *(vega)* reconcile accepted controller v0.119.0
 - balance required CLI recovery coverage within finite budgets
-- integrate accepted master after Vega task transfer
-- cover signed vega half conversion boundaries
-- reconcile reviewed vega source inventory
-- keep vega checkpoint decoding in native worker
-- keep vega tokenizer adapter in native worker
 - *(readiness)* adopt released validation controller 0.117
 
 ## [0.119.1](https://github.com/DecapodLabs/decapod/compare/v0.119.0...v0.119.1) - 2026-10-18

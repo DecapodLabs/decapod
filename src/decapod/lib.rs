@@ -1866,7 +1866,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-        vega: core::legacy_vega::Configuration::default(),
+
         laya: init.existing_laya.clone(),
     }
 }
@@ -2629,7 +2629,6 @@ pub fn run() -> Result<(), error::DecapodError> {
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
             let mut config = config_from_init_with(&init_with, repo_ctx);
             if let Some(existing) = existing_config.as_ref() {
-                config.vega = existing.vega.clone();
                 config.laya = existing.laya.clone();
             }
             if let Some(enabled) = init_with.laya_decisions {
@@ -6864,7 +6863,7 @@ fn run_current_workbranch_readiness_with(
                 return Ok(runtime::ValidationReport {
                     ready: false,
                     proof_ready: false,
-                    vega_readiness: None,
+
                     laya_readiness: None,
                     scope: runtime::READINESS_SCOPE,
                     agent_guidance: runtime::ValidationGuidance::for_outcome(false),
@@ -6971,7 +6970,7 @@ fn run_current_workbranch_readiness_with(
     result.unwrap_or_else(|error| runtime::ValidationReport {
         ready: false,
         proof_ready: false,
-        vega_readiness: None,
+
         laya_readiness: None,
         scope: report_scope,
         agent_guidance: runtime::ValidationGuidance::for_outcome(false),
