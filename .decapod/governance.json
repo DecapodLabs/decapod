@@ -466,9 +466,282 @@
     }
   },
   "change": {
-    "id": "change_01M71C02B3MSRQY464Y79Z99F0",
+    "id": "change_01M7136X1WJ16STGBM3F1FKKN2",
     "base_commit": "854703b40e97946eb1c40ac8b0e4c602a6f0af66",
     "target_base": "origin/master"
+  },
+  "checkpoints": [
+    {
+      "id": "cicd_01m712xqxeaejw0n-v0136-governed",
+      "summary": "Rebase original #1595 reproducible-build fix onto accepted v0.136.0; preserve Laya-only obligation retirement; review current specification fingerprints and attest full staged material in one immutable commit",
+      "input_digest": "sha256:44c455d55243f5776c5eaa8fa3a60f9f4bc619dd6b3dadd9a850c51ea70ca54a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/issues/1176",
+        "https://github.com/DecapodLabs/decapod/pull/1595",
+        "https://github.com/DecapodLabs/decapod/pull/1596"
+      ]
+    }
+  ],
+  "intents": {
+    "intent:cicd_01m712xqxeaejw0n-v0134-2": {
+      "acceptance_criteria": [],
+      "assumptions": [],
+      "boundaries": [
+        "Change only the build script's map types, the flake package's build environment, the Nix doc and ARCHITECTURE; no runtime behavior change; no workflow change (the nix-flake.yml contract is compiled)"
+      ],
+      "constraints": [
+        "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
+      ],
+      "created_sequence": 1,
+      "id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+      "out_of_scope": [],
+      "proof_requirements": [],
+      "raw_intent": "Tao (worldofgeese): address DecapodLabs/decapod#1176 with a PR; the maintainer invited PRs on 2026-11-09.",
+      "refined_intent": "Make two Nix builds of packages.default from the same locked inputs byte-identical: BTreeMap in the constitution build script, and the flake maps the Darwin build directory to /build.",
+      "status": "refined",
+      "updated_sequence": 3
+    }
+  },
+  "sections": {
+    "plan": {
+      "constraints": {
+        "file_touch_budget": null,
+        "forbidden_paths": []
+      },
+      "deferred_questions": [],
+      "human_questions": [],
+      "intent": "Two Nix builds of packages.default from the same locked inputs must be byte-identical, so a consumer can check a cached binary with nix build --rebuild (DecapodLabs/decapod#1176; maintainer invited a PR 2026-11-09). Root causes found on aarch64-darwin: the constitution build script serializes HashMaps, whose order changes per build, into the embedded JSON; and on Darwin the random Nix build directory is embedded in panic locations. Fix: BTreeMap in assets/build/compress_constitution.rs; the flake maps NIX_BUILD_TOP to /build; the Nix flake workflow checks nix build --rebuild; docs and ARCHITECTURE record it. codegen-units = 1 was tested and is neither needed nor sufficient.",
+      "phases": [],
+      "proof_hooks": [
+        "nix build --rebuild of packages.default on aarch64-darwin is byte-identical",
+        "the Nix flake workflow (rebuild step) passes on x86_64-linux and aarch64-darwin runners",
+        "rustfmt --check of the build script",
+        "decapod validate"
+      ],
+      "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Current Facts records that packages.default is reproducible on x86_64-linux, the remaining aarch64-darwin LC_UUID difference under upstream Nix, the BTreeMap rule of the constitution build script and the flake's /build remap (#1176); reviewed against v0.136.0, retaining current spec material",
+          "reviewed_code_fingerprint": "37723541c1d54797ebcbda9fab0f6491dff6a6cd64f95687b71dd25d43c50301",
+          "spec_material_hash": "9aa1a5289aca0ff67892fe90e049191de84da222d68b2941b5e87974e91ccd2a"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Reviewed against current v0.136.0 inputs: the change touches only the map types of the constitution build script (assets/build/compress_constitution.rs) and the Nix package's build environment (flake.nix), plus the Nix doc; the interfaces and the security model that INTERFACES.md describes do not change",
+          "reviewed_code_fingerprint": "37723541c1d54797ebcbda9fab0f6491dff6a6cd64f95687b71dd25d43c50301",
+          "spec_material_hash": "4515647c945b367aec9b8ca84014d9b6a3e5e7f949c5a4a27ebe904962edc0ef"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reviewed against current v0.136.0 inputs: the change touches only the map types of the constitution build script (assets/build/compress_constitution.rs) and the Nix package's build environment (flake.nix), plus the Nix doc; the interfaces and the security model that SECURITY.md describes do not change",
+          "reviewed_code_fingerprint": "37723541c1d54797ebcbda9fab0f6491dff6a6cd64f95687b71dd25d43c50301",
+          "spec_material_hash": "99c7faf55d9a02d0607f62d311b5ace056ad457dbad41799b0f4255d3830102e"
+        }
+      ],
+      "state": "APPROVED",
+      "stop_conditions": [],
+      "title": "Make packages.default reproducible (#1176)",
+      "todo_ids": [
+        "cicd_01m712xqxeaejw0n"
+      ],
+      "unknowns": [],
+      "unresolved_contradictions": [],
+      "updated_at": "1794273506Z"
+    },
+    "trajectory": {
+      "active_boundaries": [
+        "Change only the build script's map types, the flake package's build environment, the Nix doc and ARCHITECTURE; no runtime behavior change; no workflow change (the nix-flake.yml contract is compiled)"
+      ],
+      "artifact_hash": "sha256:2b1eefcd99002963a44418ba0c6e3120577e3a03f3ddede9b3a564d7f8c64711",
+      "checks": [
+        {
+          "name": "ld64-flag-S-fixes-darwin-uuid",
+          "status": "failed"
+        },
+        {
+          "name": "ld64-flag-reproducible-fixes-darwin-uuid",
+          "status": "failed"
+        },
+        {
+          "name": "nix-rebuild-aarch64-darwin-github-runner",
+          "status": "failed"
+        },
+        {
+          "name": "nix-rebuild-aarch64-darwin-local-lix",
+          "status": "passed"
+        },
+        {
+          "name": "nix-rebuild-x86_64-linux-github-runner",
+          "status": "passed"
+        },
+        {
+          "name": "rustfmt-build-script",
+          "status": "passed"
+        }
+      ],
+      "current_phase": "validation",
+      "custody": {
+        "events": [
+          {
+            "event_id": "event:2",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+            "kind": "created",
+            "sequence": 2
+          },
+          {
+            "event_id": "event:3",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+            "kind": "refined",
+            "sequence": 3
+          },
+          {
+            "detail": "trajectory:cicd_01m712xqxeaejw0n-v0134-2",
+            "event_id": "event:4",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
+          },
+          {
+            "detail": "trajectory:cicd_01m712xqxeaejw0n-v0134-2",
+            "event_id": "event:5",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:cicd_01m712xqxeaejw0n-v0134-2",
+            "event_id": "event:6",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:cicd_01m712xqxeaejw0n-v0134-2",
+            "event_id": "event:7",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          }
+        ],
+        "knowledge_candidates": [],
+        "next_sequence": 7,
+        "schema_version": "1.0.0",
+        "trajectories": {
+          "cicd_01m712xqxeaejw0n-v0134-2": {
+            "evidence_only": true,
+            "id": "cicd_01m712xqxeaejw0n-v0134-2",
+            "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+            "steps": [
+              {
+                "action": "validation",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "assets/build/compress_constitution.rs",
+                  "flake.nix",
+                  "docs/book/src/reference/nix.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "Previous run branch_01M7136X45BSSTPPP82GJKFGZD (0.133.2 epoch) holds the full investigation. Fork runners: upstream master's rebuild fails on ubuntu-latest and macos-latest (run 42714037038); with the fix ubuntu-latest passes (runs 42714041770, 42716643725, 42718176457); macos-latest differed once in 48 bytes (LC_UUID plus one signature page hash, no other byte or string) and passed once."
+                ],
+                "proof_refs": [
+                  "nix-rebuild-aarch64-darwin-local-lix",
+                  "nix-rebuild-x86_64-linux-github-runner",
+                  "nix-rebuild-aarch64-darwin-github-runner",
+                  "rustfmt-build-script"
+                ],
+                "scope": [
+                  "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
+                ],
+                "sequence": 4,
+                "validation_findings": [
+                  "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace"
+                ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "docs/book/src/reference/nix.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  "GitHub macOS runners (upstream Nix): rebuilds of the fixed package differ only in LC_UUID (16 bytes at 1848) and one code-signature page hash (32 bytes), in 5 of 7 runs (runs 42714041770, 42719375943, 42720518141, 42722006292); -Wl,-S and -Wl,-reproducible do not fix it (run 42724278925). ld64-954.16 computeContentUUID hashes the pre-strip output (stab regions excluded, symbol and string tables included). Local Lix 2.95.4 rebuilds are byte-identical (5 of 5). x86_64-linux: master fails, fix passes (runs 42714037038, 42714041770, 42716643725, 42718176457, 42720518141)."
+                ],
+                "proof_refs": [
+                  "nix-rebuild-aarch64-darwin-github-runner",
+                  "ld64-flag-S-fixes-darwin-uuid",
+                  "ld64-flag-reproducible-fixes-darwin-uuid"
+                ],
+                "scope": [
+                  "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Correction of earlier counts, checked against the run records: local Lix rebuilds with the fix are byte-identical in 3 of 3 runs (not 5 of 5). GitHub macOS rebuilds with the fix differ in 8 of 10 runs (not 5 of 7); where located (runs 42716643725, 42719375943 runs 1 and 3, 42722006292) only LC_UUID and one signature page hash differ. With -Wl,-S or -Wl,-reproducible, all 4 runs differ (bytes not located). ubuntu-latest with the fix: 4 of 4 identical; master: differs."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Rebased on upstream master b64eb5d3 (Decapod 0.135.0) with the verified v0.135.0 release binary (sha256 6a984a73057a74dc...): 0.135.0 projections, renewed source inventory, and fresh spec reviews (ARCHITECTURE updated; INTERFACES and SECURITY unchanged with reason). project-check --refresh-specs: 206 pass, 0 fail."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
+      },
+      "declared_commands": [],
+      "evidence": [
+        "Correction of earlier counts, checked against the run records: local Lix rebuilds with the fix are byte-identical in 3 of 3 runs (not 5 of 5). GitHub macOS rebuilds with the fix differ in 8 of 10 runs (not 5 of 7); where located (runs 42716643725, 42719375943 runs 1 and 3, 42722006292) only LC_UUID and one signature page hash differ. With -Wl,-S or -Wl,-reproducible, all 4 runs differ (bytes not located). ubuntu-latest with the fix: 4 of 4 identical; master: differs.",
+        "GitHub macOS runners (upstream Nix): rebuilds of the fixed package differ only in LC_UUID (16 bytes at 1848) and one code-signature page hash (32 bytes), in 5 of 7 runs (runs 42714041770, 42719375943, 42720518141, 42722006292); -Wl,-S and -Wl,-reproducible do not fix it (run 42724278925). ld64-954.16 computeContentUUID hashes the pre-strip output (stab regions excluded, symbol and string tables included). Local Lix 2.95.4 rebuilds are byte-identical (5 of 5). x86_64-linux: master fails, fix passes (runs 42714037038, 42714041770, 42716643725, 42718176457, 42720518141).",
+        "Previous run branch_01M7136X45BSSTPPP82GJKFGZD (0.133.2 epoch) holds the full investigation. Fork runners: upstream master's rebuild fails on ubuntu-latest and macos-latest (run 42714037038); with the fix ubuntu-latest passes (runs 42714041770, 42716643725, 42718176457); macos-latest differed once in 48 bytes (LC_UUID plus one signature page hash, no other byte or string) and passed once.",
+        "Rebased on upstream master b64eb5d3 (Decapod 0.135.0) with the verified v0.135.0 release binary (sha256 6a984a73057a74dc...): 0.135.0 projections, renewed source inventory, and fresh spec reviews (ARCHITECTURE updated; INTERFACES and SECURITY unchanged with reason). project-check --refresh-specs: 206 pass, 0 fail."
+      ],
+      "inspected_files": [],
+      "intent_id": "intent:cicd_01m712xqxeaejw0n-v0134-2",
+      "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        "assets/build/compress_constitution.rs",
+        "docs/book/src/reference/nix.md",
+        "flake.nix"
+      ],
+      "repo_scope": [
+        "assets/build/compress_constitution.rs, flake.nix, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md"
+      ],
+      "run_id": "cicd_01m712xqxeaejw0n-v0134-2",
+      "schema_version": "1.1.0",
+      "shortcut_risk_signals": [],
+      "task_id": "cicd_01m712xqxeaejw0n",
+      "tool_calls": [],
+      "unresolved_assumptions": [
+        "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace"
+      ]
+    }
+  },
+  "legacy_digests": {
+    ".decapod/governance/claims.json": "sha256:8f810aa7c70f812f74f283553df4094c6c4b59fbbad7d7a506d20b81a3000712",
+    ".decapod/governance/plan.json": "sha256:ca4344858263b306ee2c7af5c8f22610b78e8256a71adca473b7e9ad4e636a07",
+    ".decapod/governance/trajectory.json": "sha256:663de8d495bce0a4eb624af211626850879cb4daace607b28676fb1739b8988e",
+    ".decapod/governance/validation.json": "sha256:1ab71c7dd43b89e6aa332a2fbfa3799d0607888026ddd027d7bce7cde4d42f1c"
   },
   "claims": {
     "laya-only-active-contract": {
@@ -586,228 +859,5 @@
         "intent:todo:refa_01m71bsrx503b1dv"
       ]
     }
-  },
-  "checkpoints": [
-    {
-      "id": "laya-only-contract",
-      "summary": "Remove retired assessment compatibility, corpora and obsolete documentation; retain Laya-only model output and explicit local binding version2; preserve raw history and current audit-resolution identifiers.",
-      "input_digest": "sha256:881f1ad9db17a1674eebe9cd3bb9e677cfe516f52805b41677a2e0bfed1a0c07",
-      "proof_refs": [
-        "/private/tmp/laya-only-bazel-strict.log",
-        "/private/tmp/laya-only-clippy.log",
-        "/private/tmp/laya-only-final-tests.log",
-        "/private/tmp/laya-only-source-scan.json"
-      ]
-    }
-  ],
-  "intents": {
-    "intent:change_01M71C02B3MSRQY464Y79Z99F0": {
-      "acceptance_criteria": [],
-      "assumptions": [],
-      "boundaries": [
-        "Current claimed task and isolated work branch"
-      ],
-      "constraints": [
-        "root"
-      ],
-      "created_sequence": 1,
-      "id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
-      "out_of_scope": [],
-      "proof_requirements": [],
-      "raw_intent": "Laya-only runtime and source cleanup\n\nRemove all remaining retired evaluator code, configuration and receipt compatibility, obsolete fixtures and documentation. Preserve Laya-only optional post-validation assessment, deterministic proof encodings and explicit typed compatibility boundaries. User requests a fresh governed worktree after published release availability.",
-      "refined_intent": "Laya-only runtime and source cleanup\n\nRemove all remaining retired evaluator code, configuration and receipt compatibility, obsolete fixtures and documentation. Preserve Laya-only optional post-validation assessment, deterministic proof encodings and explicit typed compatibility boundaries. User requests a fresh governed worktree after published release availability.",
-      "status": "refined",
-      "updated_sequence": 3
-    }
-  },
-  "sections": {
-    "plan": {
-      "constraints": {
-        "file_touch_budget": null,
-        "forbidden_paths": []
-      },
-      "deferred_questions": [],
-      "human_questions": [],
-      "intent": "Use only Laya for optional post-validation assessment. Remove retired evaluator compatibility DTOs, report fields, guidance aliases, unused fixtures, stale documentation and package exclusions. Adopt explicit Laya runtime-binding version2 with typed re-registration failure for older bindings. Preserve documented opaque user configuration extensions, generic historical replay normalization, proof bytes and Git history. Resolve retired ledger obligations through supported CLI; retained historical resolution IDs require accepted compaction, never manual deletion. Verify active source/path absence, Laya CLI/configuration behavior, private runtime custody, projection goldens and exact-candidate validation.",
-      "phases": [],
-      "proof_hooks": [
-        "decapod validate"
-      ],
-      "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Materially remove retired model machinery and research claims; sole optional Laya path, common projector, generic replay and private binding version2 match current source.",
-          "reviewed_code_fingerprint": "d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091",
-          "spec_material_hash": "0b86d1dc4eb7158c85628908dadfc194cc9ea51d68256c74e30b5d5e327ce47c"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current validation report has only Laya model field; old DTO/guidance API removed. Current setup/init preserve Laya and opaque user tables; v2 binding re-registration is explicit.",
-          "reviewed_code_fingerprint": "d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091",
-          "spec_material_hash": "4515647c945b367aec9b8ca84014d9b6a3e5e7f949c5a4a27ebe904962edc0ef"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Replace obsolete evaluator trust text with current Laya policy and private runtime custody; generic historical replay and canonical proof encodings unchanged. Historical audit IDs are preserved pending accepted compaction.",
-          "reviewed_code_fingerprint": "d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091",
-          "spec_material_hash": "99c7faf55d9a02d0607f62d311b5ace056ad457dbad41799b0f4255d3830102e"
-        }
-      ],
-      "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Laya-only runtime and source cleanup",
-      "todo_ids": [
-        "refa_01m71bsrx503b1dv"
-      ],
-      "unknowns": [],
-      "unresolved_contradictions": [],
-      "updated_at": "1794270799Z"
-    },
-    "trajectory": {
-      "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "No historical Git commit, event identity or canonical proof bytes rewritten; no operator production access used."
-      ],
-      "artifact_hash": "sha256:32cad21e322553421c71043662f86281926f3b0d8023d722c62239556d978a4f",
-      "checks": [
-        {
-          "name": "active-source-absence",
-          "status": "passed"
-        },
-        {
-          "name": "clippy-all-targets",
-          "status": "passed"
-        },
-        {
-          "name": "final-local-tests",
-          "status": "passed"
-        },
-        {
-          "name": "initial-library-and-config",
-          "status": "passed"
-        },
-        {
-          "name": "strict-bazel-lock",
-          "status": "passed"
-        }
-      ],
-      "current_phase": "intent",
-      "custody": {
-        "events": [
-          {
-            "event_id": "event:2",
-            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
-            "kind": "created",
-            "sequence": 2
-          },
-          {
-            "event_id": "event:3",
-            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
-            "kind": "refined",
-            "sequence": 3
-          },
-          {
-            "detail": "trajectory:branch_01M71C02DXB9T0EJKFXWCA5HRC",
-            "event_id": "event:4",
-            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M71C02DXB9T0EJKFXWCA5HRC",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          }
-        ],
-        "knowledge_candidates": [],
-        "next_sequence": 5,
-        "schema_version": "1.0.0",
-        "trajectories": {
-          "branch_01M71C02DXB9T0EJKFXWCA5HRC": {
-            "evidence_only": true,
-            "id": "branch_01M71C02DXB9T0EJKFXWCA5HRC",
-            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
-            "steps": [
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "/private/tmp/laya-only-initial-tests.log: 1602 library tests passed,8 ignored;36 init/config tests passed,1 ignored. Four production projection hashes preserved; generic replay normalizer unchanged.",
-                  "Retired carried obligations were resolved through CLI with accepted-source and task-intent references. Historical resolution IDs remain in current audit data until accepted compaction; source and documentation scan excludes only that explicit audit boundary."
-                ],
-                "proof_refs": [
-                  "initial-library-and-config"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "/private/tmp/laya-only-final-tests.log:1602 library tests passed,8 ignored;16 native-consumer tests passed;36 init/config tests passed,1 ignored. Runtime-version rejection preserves bytes and explicit re-registration succeeds; four production projection hashes remain unchanged.",
-                  "/private/tmp/laya-only-clippy.log: all-target clippy with warnings denied passed.",
-                  "/private/tmp/laya-only-bazel-strict.log: strict lockfile_mode=error succeeds after generated dependency lock update.",
-                  "/private/tmp/laya-only-source-scan.json: no active tracked text or path matches; ledger resolution identifiers are the documented remaining archive boundary.",
-                  "Custody expired after workspace provisioning narrowed lease to30minutes. Same owner reclaimed generation2, renewed86400seconds and explicitly rebound the checkout; workspace status can_work=true. No raw control-plane state edits."
-                ],
-                "proof_refs": [
-                  "final-local-tests",
-                  "clippy-all-targets",
-                  "strict-bazel-lock",
-                  "active-source-absence"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
-      },
-      "declared_commands": [],
-      "destination": "pull request",
-      "evidence": [
-        "/private/tmp/laya-only-bazel-strict.log: strict lockfile_mode=error succeeds after generated dependency lock update.",
-        "/private/tmp/laya-only-clippy.log: all-target clippy with warnings denied passed.",
-        "/private/tmp/laya-only-final-tests.log:1602 library tests passed,8 ignored;16 native-consumer tests passed;36 init/config tests passed,1 ignored. Runtime-version rejection preserves bytes and explicit re-registration succeeds; four production projection hashes remain unchanged.",
-        "/private/tmp/laya-only-initial-tests.log: 1602 library tests passed,8 ignored;36 init/config tests passed,1 ignored. Four production projection hashes preserved; generic replay normalizer unchanged.",
-        "/private/tmp/laya-only-source-scan.json: no active tracked text or path matches; ledger resolution identifiers are the documented remaining archive boundary.",
-        "Custody expired after workspace provisioning narrowed lease to30minutes. Same owner reclaimed generation2, renewed86400seconds and explicitly rebound the checkout; workspace status can_work=true. No raw control-plane state edits.",
-        "Retired carried obligations were resolved through CLI with accepted-source and task-intent references. Historical resolution IDs remain in current audit data until accepted compaction; source and documentation scan excludes only that explicit audit boundary."
-      ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
-      "modified_files": [],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
-      ],
-      "repo_scope": [
-        "root"
-      ],
-      "run_id": "branch_01M71C02DXB9T0EJKFXWCA5HRC",
-      "schema_version": "1.1.0",
-      "shortcut_risk_signals": [],
-      "task_id": "refa_01m71bsrx503b1dv",
-      "tool_calls": [],
-      "unresolved_assumptions": []
-    }
-  },
-  "legacy_digests": {
-    ".decapod/governance/claims.json": "sha256:8f810aa7c70f812f74f283553df4094c6c4b59fbbad7d7a506d20b81a3000712",
-    ".decapod/governance/plan.json": "sha256:ca4344858263b306ee2c7af5c8f22610b78e8256a71adca473b7e9ad4e636a07",
-    ".decapod/governance/trajectory.json": "sha256:663de8d495bce0a4eb624af211626850879cb4daace607b28676fb1739b8988e",
-    ".decapod/governance/validation.json": "sha256:1ab71c7dd43b89e6aa332a2fbfa3799d0607888026ddd027d7bce7cde4d42f1c"
   }
 }
