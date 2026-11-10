@@ -1,5 +1,12 @@
 # Interfaces
 
+## Nix smoke invocation
+
+The packaging and publication smoke steps invoke `result/bin/decapod system
+version` by absolute path from a private temporary working directory. This
+changes CI execution context only: CLI arguments, storage permission rejection,
+native publication ownership and Cachix credentials retain their contracts.
+
 ## Publication projection
 
 `interop.project` validation reports expose `proof_judgment` alongside
@@ -998,7 +1005,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58`
+- Repository signal fingerprint: `d250bd62e6a1f93d73b3c4d161f29aabaeb74408c2322f0b5d754e04a583c297`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

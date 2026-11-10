@@ -1,5 +1,20 @@
 # Validation
 
+## Nix package smoke isolation
+
+The Nix workflow (`.github/workflows/nix-flake.yml`) runs packaging and
+publication smoke checks from private `mktemp -d` directories using the
+absolute checkout path to `result/bin/decapod`. EXIT cleanup covers successful
+and failed binary invocations, and a failed binary still fails the step.
+Checkout-local `.decapod` permissions and state must neither influence this
+package execution proof nor be changed by it. Storage security remains enforced
+for normal repository operations. The regression
+`nix_smoke_checks_use_private_scratch_and_propagate_failure` executes both
+workflow scripts against a fixture binary with a world-writable checkout
+datastore, checks private scratch isolation and cleanup, and verifies nonzero
+exit propagation. Actual Nix compilation and reproducibility remain separate
+workflow gates; fixture execution does not prove either.
+
 ## Post-merge Gatling test-budget recovery (#1596)
 
 The `Tests (Full)` job in GitHub Actions run `42744631477` ended with a
@@ -933,7 +948,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58`
+- Repository signal fingerprint: `d250bd62e6a1f93d73b3c4d161f29aabaeb74408c2322f0b5d754e04a583c297`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
