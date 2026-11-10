@@ -502,6 +502,11 @@
       "id": "nix-smoke-validation-retry",
       "summary": "Record completed source reconciliation and request independent controller compatibility result",
       "input_digest": "sha256:c730c4bd370975415398ac73703441ef6934f2d4bb6edd21f7ab58da67c99552"
+    },
+    {
+      "id": "nix-controller-blocker",
+      "summary": "Preserve exact unsupported-controller blocker and bounded smoke verification; PR not authorized by validation",
+      "input_digest": "sha256:eb89785296cd894bc95520f4bbc617bf26804c870298d22f51a022a986acbe7e"
     }
   ],
   "intents": {
@@ -576,7 +581,10 @@
         "Current claimed task and isolated work branch",
         "Retain storage security, source build and publication authority"
       ],
-      "artifact_hash": "sha256:d927d1766705714a378a6ef92e4ed4ab58fb8092b74f5182b784c71baf4aa3b3",
+      "artifact_hash": "sha256:4301e6347a3e8d086c86a725b6587c7bb150f72fc5af876784282f9147e5ce2a",
+      "blockers": [
+        "CONTROLLER_CONTRACT_UNSUPPORTED: released 0.136.3 controller does not support reviewed .github/workflows/nix-flake.yml; independently supported controller required before full validation and PR creation"
+      ],
       "checks": [
         {
           "name": "actual-binary-smoke-reproduction",
@@ -595,7 +603,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "blocked",
       "custody": {
         "events": [
           {
@@ -630,10 +638,17 @@
             "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M73XRFA0ZXW5Q64PMWXJKEH2": {
@@ -693,6 +708,21 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "blocked",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Exact candidate 72917b05: decapod validate returns CONTROLLER_CONTRACT_UNSUPPORTED for .github/workflows/nix-flake.yml after source inventory reconciliation. No full source tests or Nix rebuild executed by validation; direct installed-binary smoke and script fixtures are supplemental only."
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -702,6 +732,7 @@
       "destination": "pull request",
       "evidence": [
         "Both workflow scripts tested with installed 0.136.3: old checkout invocation rejects 0777 .decapod; revised smoke passes. Fixture runs verify 0700 scratch and anchor, paths containing spaces, cleanup and exit 23 propagation.",
+        "Exact candidate 72917b05: decapod validate returns CONTROLLER_CONTRACT_UNSUPPORTED for .github/workflows/nix-flake.yml after source inventory reconciliation. No full source tests or Nix rebuild executed by validation; direct installed-binary smoke and script fixtures are supplemental only.",
         "GitHub check 130026729576 resolves to Buildkite 6692 job 01a1c6a7-145a-45c5-ad8e-c0007e3989da: compilation succeeded; smoke failed STORAGE_UNSAFE_PERMISSIONS on checkout .decapod",
         "Reviewed full workflow diff: only two smoke run blocks change; jobs, conditions, matrix, credentials, build and reproducibility gates retained. Reconciled source inventory and compiled workflow review digest.",
         "Source reconciliation completed; retry full validation to establish controller compatibility, which remains unproven until observed"
@@ -719,7 +750,8 @@
         "tests/source_ci_profile_policy.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Supply independently accepted controller supporting revised Nix workflow; rerun exact-candidate validation before opening PR"
       ],
       "repo_scope": [
         "root"
