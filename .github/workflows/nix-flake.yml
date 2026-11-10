@@ -155,6 +155,7 @@ jobs:
           binary="$PWD/result/bin/decapod"
           smoke_dir="$(mktemp -d)"
           trap 'rm -rf -- "$smoke_dir"' EXIT
+          mkdir -m 700 "$smoke_dir/.decapod"
           cd "$smoke_dir"
           "$binary" system version
 
@@ -207,6 +208,7 @@ jobs:
           binary="$PWD/result/bin/decapod"
           smoke_dir="$(mktemp -d)"
           trap 'rm -rf -- "$smoke_dir"' EXIT
+          mkdir -m 700 "$smoke_dir/.decapod"
           cd "$smoke_dir"
           "$binary" system version
 

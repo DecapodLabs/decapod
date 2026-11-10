@@ -2290,7 +2290,8 @@ fn nix_smoke_checks_use_private_scratch_and_propagate_failure() {
 set -euo pipefail
 test "$*" = 'system version'
 test "$PWD" != "$CHECKOUT"
-test ! -e .decapod
+test -d .decapod
+test "$(stat -c %a .decapod 2>/dev/null || stat -f %Lp .decapod)" = 700
 test "$(stat -c %a . 2>/dev/null || stat -f %Lp .)" = 700
 printf '%s' "$PWD" > "$OBSERVED_CWD"
 exit "$SMOKE_EXIT"

@@ -19,7 +19,8 @@ Both packaging and publication smoke checks execute the built binary by its
 absolute checkout path from a fresh private temporary directory, removed on
 success or failure. This keeps checkout-local `.decapod` state and shared CI
 checkout permissions outside the package smoke check; runtime storage permission
-checks remain enforced.
+checks remain enforced. A private empty `.decapod` directory anchors discovery
+inside the scratch directory, excluding any ancestor's governance state too.
 
 The build is reproducible on `x86_64-linux`: two builds from the same locked
 inputs give byte-identical output, and CI checks this on each release merge.
