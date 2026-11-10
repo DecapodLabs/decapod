@@ -108,3 +108,35 @@ jobs:
       - name: Smoke-check the built binary
         if: steps.release-gate.outputs.run == 'true'
         run: ./result/bin/decapod system version
+
+      # Reproducibility proof (#1176): on x86_64-linux a second build from the
+      # same locked inputs must be byte-identical, so a consumer can check a
+      # cached binary with `nix build --rebuild`. aarch64-darwin is not checked,
+      # because with upstream Nix the linker UUID can still differ there
+      # (docs/book/src/reference/nix.md).
+      - name: Check that a rebuild is byte-identical
+        if: steps.release-gate.outputs.run == 'true' && matrix.expected_system == 'x86_64-linux'
+        run: nix build --rebuild --print-build-logs
+
+      # Binary cache (#1177): a release merge publishes the proven package to
+      # the decapod Cachix cache. Only a push to master publishes, never a
+      # manual dispatch, and only when the repository holds the
+      # CACHIX_AUTH_TOKEN secret. Pull requests do not run this workflow.
+      - name: Check for the cache token
+        id: cache
+        if: steps.release-gate.outputs.run == 'true' && github.event_name == 'push'
+        env:
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+        run: |
+          if [ -n "${CACHIX_AUTH_TOKEN:-}" ]; then
+            echo "push=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "CACHIX_AUTH_TOKEN is not set, so the binary cache is not published."
+            echo "push=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish packages.default to the binary cache
+        if: steps.cache.outputs.push == 'true'
+        env:
+          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
+        run: nix run --inputs-from . nixpkgs#cachix -- push decapod ./result

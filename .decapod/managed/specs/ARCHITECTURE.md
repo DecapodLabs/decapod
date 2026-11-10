@@ -211,11 +211,17 @@ repository records provide continuity instead of a resident orchestration servic
 - `packages.default` is reproducible on `x86_64-linux`: two builds from the same
   locked inputs are byte-identical (`nix build --rebuild`). On `aarch64-darwin`,
   upstream Nix rebuilds can still differ in the Mach-O `LC_UUID` and its one
-  code-signature page hash; Lix rebuilds are byte-identical. No workflow checks
-  this yet. The constitution build script
+  code-signature page hash; Lix rebuilds are byte-identical. The Nix flake
+  workflow checks the `x86_64-linux` rebuild on each release merge. The
+  constitution build script
   (`assets/build/compress_constitution.rs`) serializes only `BTreeMap`s, so the
   embedded JSON keeps one key order, and the flake maps the build directory to
   `/build`, because on Darwin it is random and rustc embeds it (#1176)
+- When the repository holds the `CACHIX_AUTH_TOKEN` secret, each release merge
+  publishes `packages.default` for `x86_64-linux` and `aarch64-darwin` to the
+  `decapod` Cachix cache, after the Nix flake workflow's toolchain, build and
+  smoke proof, and on `x86_64-linux` after the byte-identical rebuild. Only a
+  push to `master` publishes; manual runs and pull requests do not (#1177)
 - Git worktrees and supported containers provide task execution isolation
 - CLI and Decapod-specific process RPC are the current integration surfaces
 
@@ -752,7 +758,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8df864bcfbea31b98f5d88506bb386e48884499d2659b0505decd1025503cd4c`
+- Repository signal fingerprint: `a5b56f3becb3600bb0b69c55457ea75914425139902bc0201ad1d9f14215623f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

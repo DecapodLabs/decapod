@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "13d1114eb4108e26f41b10e3a633d3097abe4e6e",
+    "accepted_commit": "0dbfb06bbc60a7bd074980ce20f2edee7e1ac290",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -170,6 +170,11 @@
       "claim:full-proof-preserved": {
         "falsifier": "Any missing, failed, stale, mismatched or skipped required proof can produce readiness, or an original check command is omitted",
         "statement": "All currently applicable source checks, per-check receipts, exact-source bindings and final freshness remain required under bounded transport and same-checkout grouping",
+        "status": "open"
+      },
+      "claim:gatling-full-suite-bounded-ci": {
+        "falsifier": "The Bazel target uses the old 300-second moderate timeout, excludes cases, disables assertions, drops or masks nonzero test exits, or allows an unbounded runtime.",
+        "statement": "Bazel assigns the complete //:gatling 50-case CLI test suite a finite 900-second budget without omitting any assertions, retrying failures, or changing test-thread parallelism.",
         "status": "open"
       },
       "claim:governance-recovery-liveness": {
@@ -467,45 +472,38 @@
     }
   },
   "change": {
-    "id": "change_01M71SZ1WJHRHG5P37SM6QZ7S6",
-    "base_commit": "13d1114eb4108e26f41b10e3a633d3097abe4e6e",
+    "id": "change_01M722BBWBJF68WZTWQWWGREEJ",
+    "base_commit": "0dbfb06bbc60a7bd074980ce20f2edee7e1ac290",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "gatling-full-suite-bounded-ci": {
-      "statement": "Bazel assigns the complete //:gatling 50-case CLI test suite a finite 900-second budget without omitting any assertions, retrying failures, or changing test-thread parallelism.",
-      "falsifier": "The Bazel target uses the old 300-second moderate timeout, excludes cases, disables assertions, drops or masks nonzero test exits, or allows an unbounded runtime.",
-      "status": "open"
-    }
   },
   "checkpoints": [
     {
-      "id": "cicd_01m71sxhgp8z0hfw-gatling-v01361",
-      "summary": "Extend complete Gatling Bazel suite to a finite 900-second budget after post-merge #1596 timeout; document Pages transient evidence; preserve full v0.136.1 release projections and semantic validation spec",
-      "input_digest": "sha256:1603be8d21a7a29153ad71b77be09d17c3bf0946ac0e95165b8395f8e3e00ebf",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/42744631477",
-        "https://github.com/DecapodLabs/decapod/actions/runs/42744631501"
-      ]
+      "id": "code_01m7221ergf65bsj",
+      "summary": "Binary cache publication on release merges (#1177): x86_64-linux rebuild check, token-gated Cachix push, docs and specs",
+      "input_digest": "sha256:e652bfa929d018e318eb6814eecdc39505f57e8c65410c7a3d5d7ab667fec93a"
+    },
+    {
+      "id": "code_01m7221ergf65bsj-r2",
+      "summary": "Spec manifest refresh",
+      "input_digest": "sha256:13c474437694cb0303f73d538400e336b32230b51773d2affce176b396cfe20d"
     }
   ],
   "intents": {
-    "intent:change_01M71SZ1WJHRHG5P37SM6QZ7S6": {
+    "intent:change_01M722BBWBJF68WZTWQWWGREEJ": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "paths:[\".config/build/decapod.BUILD.bzl\"",
-        "\".decapod/managed/specs/VALIDATION.md\"]"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M71SZ1WJHRHG5P37SM6QZ7S6",
+      "id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Repair post-merge Bazel Gatling CI timeout with bounded budget on v0.136.1",
-      "refined_intent": "Repair post-merge Bazel Gatling CI timeout with bounded budget on v0.136.1",
+      "raw_intent": "Publish packages.default to a binary cache on release merges (#1177)",
+      "refined_intent": "Publish packages.default to a binary cache on release merges (#1177)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -518,84 +516,79 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Repair post-merge Bazel Gatling CI timeout with bounded budget on v0.136.1",
+      "intent": "Nix consumers compile decapod on every release (DecapodLabs/decapod#1177). With #1176 merged (#1596), x86_64-linux rebuilds are byte-identical, so a cache can be verifiable there. The Nix flake workflow checks the x86_64-linux rebuild, then a release-merge push publishes packages.default to the decapod Cachix cache when the CACHIX_AUTH_TOKEN repository secret exists; manual runs and pull requests never publish. Docs, ARCHITECTURE, OPERATIONS and SECURITY record it. The maintainers create the cache and the secret.",
       "phases": [],
       "proof_hooks": [
+        "actionlint of the changed workflow reports no new finding",
+        "the fork's Nix flake workflow, dispatched on the branch, builds, smoke-checks and passes the x86_64-linux rebuild, and skips publication",
+        "decapod govern project-check --refresh-specs",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The bounded Bazel test budget changes validation scheduling only; no implementation architecture, state model or external dependency changed.",
-          "reviewed_code_fingerprint": "8df864bcfbea31b98f5d88506bb386e48884499d2659b0505decd1025503cd4c",
-          "spec_material_hash": "9aa1a5289aca0ff67892fe90e049191de84da222d68b2941b5e87974e91ccd2a"
+          "reason": "Current Facts records the binary cache publication (#1177) and that the Nix flake workflow checks the x86_64-linux rebuild on each release merge",
+          "reviewed_code_fingerprint": "a5b56f3becb3600bb0b69c55457ea75914425139902bc0201ad1d9f14215623f",
+          "spec_material_hash": "7b03965408fa2c15a76e58daf1c376de446222cbbc4432a398dc55b8edbb5034"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The fix retains all 50 Gatling cases, public interfaces, CLI contracts, and exit conditions; only Bazel aggregates more test time.",
-          "reviewed_code_fingerprint": "8df864bcfbea31b98f5d88506bb386e48884499d2659b0505decd1025503cd4c",
+          "reason": "The change adds release-gated workflow steps and documentation only; no CLI, RPC, schema or file interface that INTERFACES.md describes changes",
+          "reviewed_code_fingerprint": "a5b56f3becb3600bb0b69c55457ea75914425139902bc0201ad1d9f14215623f",
           "spec_material_hash": "4515647c945b367aec9b8ca84014d9b6a3e5e7f949c5a4a27ebe904962edc0ef"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No trust, authorization, secrets, confinement, validation bypass, or CI gate changed; test timeout remains finite and nonzero failures remain failures.",
-          "reviewed_code_fingerprint": "8df864bcfbea31b98f5d88506bb386e48884499d2659b0505decd1025503cd4c",
-          "spec_material_hash": "99c7faf55d9a02d0607f62d311b5ace056ad457dbad41799b0f4255d3830102e"
+          "reason": "Trust-Boundary Inventory records the binary cache as a release-publication boundary: who reads CACHIX_AUTH_TOKEN, who never receives it, and what trusting the decapod cache key means per platform",
+          "reviewed_code_fingerprint": "a5b56f3becb3600bb0b69c55457ea75914425139902bc0201ad1d9f14215623f",
+          "spec_material_hash": "15b802f1a1d9cd6bee6a7b47e053109b25896fb52fa125895153bca33f94110f"
         }
       ],
-      "state": "EXECUTING",
+      "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Repair post-merge Bazel Gatling CI timeout with bounded budget on v0.136.1",
+      "title": "Publish packages.default to a binary cache on release merges (#1177)",
       "todo_ids": [
-        "cicd_01m71sxhgp8z0hfw"
+        "code_01m7221ergf65bsj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794283584Z"
+      "updated_at": "1794292391Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "No CI check skipped; preserve full Gatling suite, all assertions and nonzero exits; only bounded aggregate timeout changes"
+        "Change only the release-gated Nix flake workflow job, the Nix doc and the specs; publication needs the maintainers' cache and secret; no runtime behavior change",
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8787b510eff175273998863ed9179ef13f8c5af74110229495f9aa69e7eb2eac",
+      "artifact_hash": "sha256:6d1bf116767ffe144402c6464b79138f6f521838b3d77e654917ddf942e791b9",
       "checks": [
         {
-          "name": "github-gatling-timeout-reproduced",
+          "name": "actionlint-no-new-finding",
           "status": "passed"
-        },
-        {
-          "name": "github-pages-source-change-unnecessary",
-          "status": "passed"
-        },
-        {
-          "name": "postmerge-full-suite",
-          "status": "unavailable"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M71SZ1WJHRHG5P37SM6QZ7S6",
+            "intent_id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M71SZ1WJHRHG5P37SM6QZ7S6",
+            "intent_id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M71SZ1Y2FFCSPCZB97H55HKD",
+            "detail": "trajectory:branch_01M722BBYGEKC1HX8AM1GPDNEW",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M71SZ1WJHRHG5P37SM6QZ7S6",
+            "intent_id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -604,70 +597,82 @@
         "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M71SZ1Y2FFCSPCZB97H55HKD": {
+          "branch_01M722BBYGEKC1HX8AM1GPDNEW": {
             "evidence_only": true,
-            "id": "branch_01M71SZ1Y2FFCSPCZB97H55HKD",
-            "intent_id": "intent:change_01M71SZ1WJHRHG5P37SM6QZ7S6",
+            "id": "branch_01M722BBYGEKC1HX8AM1GPDNEW",
+            "intent_id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
             "steps": [
               {
-                "action": "validation",
+                "action": "implementation",
+                "command": "nix run --inputs-from . nixpkgs#actionlint -- -oneline .github/workflows/nix-flake.yml",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".config/build/decapod.BUILD.bzl",
-                  ".github/workflows/ci.yml",
-                  ".github/workflows/docs.yml",
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/actions/runs/42744631477 (Bazel Gatling TIMEOUT at 300.1s)",
-                  "https://github.com/DecapodLabs/decapod/actions/runs/42744631501 (Pages queued failure)",
-                  "Bazel long timeout is finite 900s; branch acceptance still requires full CI"
+                  ".github/workflows/nix-flake.yml",
+                  "docs/book/src/reference/nix.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".github/workflows/nix-flake.yml",
+                  "docs/book/src/reference/nix.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "actionlint reports the same two pre-existing shellcheck warnings (lines 43, 83) on master's file and on this one; the three new steps (lines 117-142) have none. Design follows the #1177 scope note: release-gated push only, repository secret only, pull requests build-only (the workflow has no pull_request trigger), committed flake.lock and toolchain check first, x86_64-linux rebuild proof, Darwin documented as convenience trust."
                 ],
                 "proof_refs": [
-                  "github-gatling-timeout-reproduced",
-                  "postmerge-full-suite",
-                  "github-pages-source-change-unnecessary"
+                  "actionlint-no-new-finding"
                 ],
                 "scope": [
-                  "\".decapod/managed/specs/VALIDATION.md\"]",
-                  "paths:[\".config/build/decapod.BUILD.bzl\""
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
+                  "the maintainers create the decapod Cachix cache and the CACHIX_AUTH_TOKEN secret; until then the publish step is skipped"
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "nix run --inputs-from . nixpkgs#actionlint -- -oneline .github/workflows/nix-flake.yml"
+      ],
       "destination": "pull request",
       "evidence": [
-        "Bazel long timeout is finite 900s; branch acceptance still requires full CI",
-        "https://github.com/DecapodLabs/decapod/actions/runs/42744631477 (Bazel Gatling TIMEOUT at 300.1s)",
-        "https://github.com/DecapodLabs/decapod/actions/runs/42744631501 (Pages queued failure)"
+        "actionlint reports the same two pre-existing shellcheck warnings (lines 43, 83) on master's file and on this one; the three new steps (lines 117-142) have none. Design follows the #1177 scope note: release-gated push only, repository secret only, pull requests build-only (the workflow has no pull_request trigger), committed flake.lock and toolchain check first, x86_64-linux rebuild proof, Darwin documented as convenience trust."
       ],
       "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".github/workflows/ci.yml",
-        ".github/workflows/docs.yml"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/OPERATIONS.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".github/workflows/nix-flake.yml",
+        "docs/book/src/reference/nix.md"
       ],
-      "intent_id": "intent:change_01M71SZ1WJHRHG5P37SM6QZ7S6",
+      "intent_id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/managed/specs/VALIDATION.md"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/OPERATIONS.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".github/workflows/nix-flake.yml",
+        "docs/book/src/reference/nix.md"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "\".decapod/managed/specs/VALIDATION.md\"]",
-        "paths:[\".config/build/decapod.BUILD.bzl\""
+        ".github/workflows/nix-flake.yml, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md, OPERATIONS.md, SECURITY.md",
+        "root"
       ],
-      "run_id": "branch_01M71SZ1Y2FFCSPCZB97H55HKD",
+      "run_id": "branch_01M722BBYGEKC1HX8AM1GPDNEW",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m71sxhgp8z0hfw",
+      "task_id": "code_01m7221ergf65bsj",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
+        "the maintainers create the decapod Cachix cache and the CACHIX_AUTH_TOKEN secret; until then the publish step is skipped"
+      ]
     }
   },
   "legacy_digests": {
