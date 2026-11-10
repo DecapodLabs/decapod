@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.136.3](https://github.com/DecapodLabs/decapod/compare/v0.136.2...v0.136.3) - 2026-11-10
+
+### Added
+
+- *(nix)* publish packages.default to a binary cache on release merges
+
+### Fixed
+
+- *(nix)* isolate Cachix publication with governed release proof
+
+### Other
+
+- *(governance)* explain immutable push-event CI recovery
+
 ## [0.136.2](https://github.com/DecapodLabs/decapod/compare/v0.136.1...v0.136.2) - 2026-11-10
 
 ### Fixed
