@@ -296,8 +296,12 @@ and projection handling use exact proofs, never branch names or labels.
 
 Code PRs carry release-bound entrypoints, the managed Dockerfile pin, specifications
 and governance. Release automation compiles and publishes approved artifacts;
-on a release merge the Nix flake workflow also publishes `packages.default` to
-the `decapod` Cachix cache when the `CACHIX_AUTH_TOKEN` secret exists;
+on a release merge native GitHub Actions publishes `packages.default` to the
+`decapod` Cachix cache only after a credential-free release-owner gate and
+proof job succeed. A separate native publisher rebuilds, smoke-checks and
+proves Linux reproducibility before uploading. Missing or invalid
+`CACHIX_AUTH_TOKEN` fails publication closed; Buildkite imports and manual runs
+never resolve the publisher's secret;
 it does not directly mutate master or open a projection-healing PR. A later agent
 iteration refreshes projections for the installed release in its claimed workspace.
 Documentation drift workflows report changes without committing to PR branches.
@@ -370,7 +374,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a5b56f3becb3600bb0b69c55457ea75914425139902bc0201ad1d9f14215623f`
+- Repository signal fingerprint: `edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

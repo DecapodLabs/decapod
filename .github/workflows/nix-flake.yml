@@ -16,6 +16,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Credential-free owner gate. Buildkite imports workflows and resolves
+  # secrets before step conditions, so only a separate native job may publish.
+  publication-owner:
+    name: Select Cachix publisher
+    runs-on: ubuntu-latest
+    permissions: {}
+    outputs:
+      publish: ${{ steps.owner.outputs.publish }}
+    steps:
+      - name: Authorize native release publication
+        id: owner
+        shell: bash
+        run: |
+          set -euo pipefail
+          publish=false
+          if [ "${RUNNER_ENVIRONMENT:-}" = "github-hosted" ] &&
+             [ -z "${BUILDKITE_BUILD_ID:-}" ] &&
+             [ "${BUILDKITE:-}" != "true" ] &&
+             [ "${GITHUB_ACTIONS:-}" = "true" ] &&
+             [ "${GITHUB_EVENT_NAME:-}" = "push" ] &&
+             [ "${GITHUB_REF:-}" = "refs/heads/master" ]; then
+            # Fetch only the protected pushed commit and its immediate
+            # parents, anonymously: this owner has no GITHUB_TOKEN permissions.
+            git init -q .
+            git remote add origin https://github.com/DecapodLabs/decapod.git
+            git -c protocol.version=2 fetch --quiet --no-tags --depth=2 origin "$GITHUB_SHA"
+            read -r -a parents <<< "$(git rev-list --parents -n 1 FETCH_HEAD)"
+            if [ "${#parents[@]}" -eq 3 ]; then
+              subject="$(git log -1 --format=%s "${parents[2]}")"
+              if [[ "$subject" == chore:\ release\ v* ]]; then
+                publish=true
+                echo "Native release merge detected: $subject"
+              fi
+            fi
+          fi
+          printf 'publish=%s\n' "$publish" >> "$GITHUB_OUTPUT"
+          if [ "$publish" != "true" ]; then
+            echo "No native release publication permitted."
+          fi
+
   # Packaging proof: packages.default must build from the committed Cargo.lock
   # on each natively proven OS, and the locked rust-overlay must supply the
   # repository-pinned Rust channel. Fail closed; CI never mutates flake.lock.
@@ -36,6 +76,8 @@ jobs:
             expected_system: aarch64-darwin
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Gate to release merge
         id: release-gate
@@ -118,25 +160,54 @@ jobs:
         if: steps.release-gate.outputs.run == 'true' && matrix.expected_system == 'x86_64-linux'
         run: nix build --rebuild --print-build-logs
 
-      # Binary cache (#1177): a release merge publishes the proven package to
-      # the decapod Cachix cache. Only a push to master publishes, never a
-      # manual dispatch, and only when the repository holds the
-      # CACHIX_AUTH_TOKEN secret. Pull requests do not run this workflow.
-      - name: Check for the cache token
-        id: cache
-        if: steps.release-gate.outputs.run == 'true' && github.event_name == 'push'
-        env:
-          CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-        run: |
-          if [ -n "${CACHIX_AUTH_TOKEN:-}" ]; then
-            echo "push=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "CACHIX_AUTH_TOKEN is not set, so the binary cache is not published."
-            echo "push=false" >> "$GITHUB_OUTPUT"
-          fi
+  # The publisher rebuilds from the committed lock. It cannot inherit a
+  # different runner's Nix store; all publication candidates are smoke-checked.
+  publish:
+    name: cachix (${{ matrix.os }})
+    needs: [publication-owner, build]
+    if: needs.publication-owner.outputs.publish == 'true' && needs.build.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            expected_system: x86_64-linux
+          - os: macos-latest
+            expected_system: aarch64-darwin
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Publish packages.default to the binary cache
-        if: steps.cache.outputs.push == 'true'
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Verify native Nix system
+        run: |
+          set -euo pipefail
+          system="$(nix eval --impure --raw --expr builtins.currentSystem)"
+          test "$system" = "${{ matrix.expected_system }}"
+
+      - name: Verify locked Rust toolchain
+        run: nix build --print-build-logs .#checks.${{ matrix.expected_system }}.rust-toolchain
+
+      - name: Build packages.default
+        run: nix build --print-build-logs
+
+      - name: Smoke-check publication candidate
+        run: ./result/bin/decapod system version
+
+      - name: Check Linux publication candidate is reproducible
+        if: matrix.expected_system == 'x86_64-linux'
+        run: nix build --rebuild --print-build-logs
+
+      - name: Publish verified closure to Cachix
         env:
           CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}
-        run: nix run --inputs-from . nixpkgs#cachix -- push decapod ./result
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CACHIX_AUTH_TOKEN:-}" ]; then
+            echo "::error::CACHIX_AUTH_TOKEN must be a write-capable token for decapod.cachix.org"
+            exit 1
+          fi
+          nix run --inputs-from . nixpkgs#cachix -- push decapod ./result

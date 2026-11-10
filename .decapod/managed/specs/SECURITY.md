@@ -230,13 +230,20 @@ workspaces isolate changes. A missing workspace-local task projection is a
 coordination discrepancy, not permission to bypass ownership or a reason to
 invent a different request.
 
-The Nix binary cache (#1177) is a release-publication boundary. Only the
-release-merge push of the Nix flake workflow reads the `CACHIX_AUTH_TOKEN`
-repository secret, in its token check and publish steps. Manual runs, pull
-requests and forks do not receive it. Cachix signs what it serves with the
-`decapod` cache key, so a consumer who trusts that key trusts the CI builder.
-`x86_64-linux` entries can be checked independently with `nix build --rebuild`.
-`aarch64-darwin` entries cannot yet, because the linker UUID can differ.
+The Nix binary cache (#1177) is a release-publication boundary. A
+credential-free `publication-owner` job requires the native GitHub-hosted
+identity and an actual release-merge push to `master`. Buildkite imports,
+manual dispatches, ordinary merges, pull requests and forks cannot pass it.
+Only the downstream `publish` job statically references the repository's
+`CACHIX_AUTH_TOKEN` secret, after the owner and credential-free build job
+succeed. Missing or rejected write credentials fail the publication. Each
+publisher independently rebuilds from the committed lock, verifies its native
+system, toolchain and smoke check, and on Linux proves an identical rebuild.
+No unverified derivation is intentionally uploaded. Consumers trust the
+`decapod` cache signing key and its authorized CI builder; the public key is
+never a write token. `x86_64-linux` entries can be checked independently with
+`nix build --rebuild`. `aarch64-darwin` entries cannot yet, because the linker
+UUID can differ.
 
 ## Authorization
 
@@ -500,7 +507,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a5b56f3becb3600bb0b69c55457ea75914425139902bc0201ad1d9f14215623f`
+- Repository signal fingerprint: `edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

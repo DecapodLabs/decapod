@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "0dbfb06bbc60a7bd074980ce20f2edee7e1ac290",
+    "accepted_commit": "92f54bd12b30a54786395508cf40d0c9a96cd7cd",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -462,6 +462,7 @@
       "trajectory:e0f0a51392feb190": "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
       "trajectory:e59eda56341d71a3": "New tests/MetalCPUproductiondiagnostics authored and require prescribed validate; no new pass claims. User rejects inactive stage; fitting source only inspected, no Python executed. Current official upstream has old base+two generic adapters and incompatible universal port/stats engine, none demonstrated readiness-qualified. Reviewed24source candidates still zero admissible complete final units. Preserve old study/failures and every required original criterion. Final admission stays missing rather than repeating exposed final data. No branch/custody/controller changes.",
       "trajectory:e6b0bb96ddfbd405": "Preserve040d sourceCI lock failure and separate officialvalidator publicGithubCommitChecks403/reset1792449991. Actual anonymous publicBuildkite setup log confirms MODULE.bazel.lock stale because Cargo.toml packagingexclusion changed; prescribed repair is bazel mod deps --lockfile_mode=update. Installed officialHomebrewBazelisk1.29 afterreading officialformula/installerdocs, restored Homebrew developer modeoff. Run batch metadata regeneration only underrepositorypinnedBazel9.3, notmanualbuild/test orshadowpreflight; preserve dependencies, scientificgates and failedholdout. No native execution on040d is claimed. Newfullvalidation mustwaitreportedpublicAPIreset and bindcorrectedexactcandidate.",
+      "trajectory:e75f5b9f6163b9ce": "the maintainers create the decapod Cachix cache and the CACHIX_AUTH_TOKEN secret; until then the publish step is skipped",
       "trajectory:e765d893d1533fc1": "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
       "trajectory:e99e15278c8de6ad": "User explicitly authorizes functional acceptance replacingresearchqualification, not fabricatedsuccess/accuracy. Fixedcasebytes97b4667e frozen before firstmodelrun, nofitting/threshold/model/calibration/tolerancechange. Actualcontractchecksrun beforeobservationconstruction; three meaningful positives, negative/uncertain/manipulated/declared-proof and failed/stale controls. Sharedproduction code andstrictfinalreducer rederiveoutcomes; oldstudiesfailures preserved. Issue1445andbroader1052/1069/1070/1398/1024updated; closeonlyfullyresolved1445. Sourceconfigreview0e9afdd8 unchanged8runargs; no newprereq/task/branch. Preserve originaltask/branch andfullfinalvalidationgates.",
       "trajectory:ec49216a39e5bf93": "The config decision is cooperative; its author and agent labels are not authenticated.",
@@ -472,24 +473,19 @@
     }
   },
   "change": {
-    "id": "change_01M722BBWBJF68WZTWQWWGREEJ",
-    "base_commit": "0dbfb06bbc60a7bd074980ce20f2edee7e1ac290",
+    "id": "change_01M72CQRM8DEWA0941HRJ4YTQ2",
+    "base_commit": "92f54bd12b30a54786395508cf40d0c9a96cd7cd",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "code_01m7221ergf65bsj",
-      "summary": "Binary cache publication on release merges (#1177): x86_64-linux rebuild check, token-gated Cachix push, docs and specs",
-      "input_digest": "sha256:e652bfa929d018e318eb6814eecdc39505f57e8c65410c7a3d5d7ab667fec93a"
-    },
-    {
-      "id": "code_01m7221ergf65bsj-r2",
-      "summary": "Spec manifest refresh",
-      "input_digest": "sha256:13c474437694cb0303f73d538400e336b32230b51773d2affce176b396cfe20d"
+      "id": "cicd_01m72cqb2s4gdv0y-gov-1602",
+      "summary": "Native-only Cachix publisher from accepted master, refreshed spec reviews/projections, CI regression target inputs repaired and temp export excluded",
+      "input_digest": "sha256:b5b0e8d65fd4f71880e42ce5b3b35b24ef0e2aeacae0b6611e93f21ac3bc6a27"
     }
   ],
   "intents": {
-    "intent:change_01M722BBWBJF68WZTWQWWGREEJ": {
+    "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -499,11 +495,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
+      "id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Publish packages.default to a binary cache on release merges (#1177)",
-      "refined_intent": "Publish packages.default to a binary cache on release merges (#1177)",
+      "raw_intent": "Cachix PR 1602 governance and CI repair\n\nRegenerate source review, checkpoints, and worktree from master while preserving Cachix release publisher contract",
+      "refined_intent": "Cachix PR 1602 governance and CI repair\n\nRegenerate source review, checkpoints, and worktree from master while preserving Cachix release publisher contract",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -516,79 +512,81 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Nix consumers compile decapod on every release (DecapodLabs/decapod#1177). With #1176 merged (#1596), x86_64-linux rebuilds are byte-identical, so a cache can be verifiable there. The Nix flake workflow checks the x86_64-linux rebuild, then a release-merge push publishes packages.default to the decapod Cachix cache when the CACHIX_AUTH_TOKEN repository secret exists; manual runs and pull requests never publish. Docs, ARCHITECTURE, OPERATIONS and SECURITY record it. The maintainers create the cache and the secret.",
+      "intent": "Preserve merged Cachix packaging proof and publish Nix binaries only for verified release merges on native GitHub; keep Buildkite secret-free, reconcile controller source contract, fix CI and preserve governance evidence",
       "phases": [],
       "proof_hooks": [
-        "actionlint of the changed workflow reports no new finding",
-        "the fork's Nix flake workflow, dispatched on the branch, builds, smoke-checks and passes the x86_64-linux rebuild, and skips publication",
-        "decapod govern project-check --refresh-specs",
-        "decapod validate"
+        "Nix workflow policy and source inventory digests checked",
+        "All source CI and per-commit governance green",
+        "decapod validate full workbranch or explicit supported-controller blocker"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current Facts records the binary cache publication (#1177) and that the Nix flake workflow checks the x86_64-linux rebuild on each release merge",
-          "reviewed_code_fingerprint": "a5b56f3becb3600bb0b69c55457ea75914425139902bc0201ad1d9f14215623f",
-          "spec_material_hash": "7b03965408fa2c15a76e58daf1c376de446222cbbc4432a398dc55b8edbb5034"
+          "reason": "Reviewed release publication separation: existing credential-free Nix proof and new native-owner gated Cachix publisher independently build locked toolchain and verify binaries before upload; CI workflow and compiled source digest remain explicit",
+          "reviewed_code_fingerprint": "edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58",
+          "spec_material_hash": "bb8170b0431349b028f0faf667eb6a3fbb2410afd6ba2d9e5b554eaedea33ae0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The change adds release-gated workflow steps and documentation only; no CLI, RPC, schema or file interface that INTERFACES.md describes changes",
-          "reviewed_code_fingerprint": "a5b56f3becb3600bb0b69c55457ea75914425139902bc0201ad1d9f14215623f",
+          "reason": "Reviewed this change against current code and specification; it changes Nix CI job boundaries, repository proof metadata and documentation, not the decapod CLI/RPC/public data interfaces",
+          "reviewed_code_fingerprint": "edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58",
           "spec_material_hash": "4515647c945b367aec9b8ca84014d9b6a3e5e7f949c5a4a27ebe904962edc0ef"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Trust-Boundary Inventory records the binary cache as a release-publication boundary: who reads CACHIX_AUTH_TOKEN, who never receives it, and what trusting the decapod cache key means per platform",
-          "reviewed_code_fingerprint": "a5b56f3becb3600bb0b69c55457ea75914425139902bc0201ad1d9f14215623f",
-          "spec_material_hash": "15b802f1a1d9cd6bee6a7b47e053109b25896fb52fa125895153bca33f94110f"
+          "reason": "Reviewed Cachix trust boundary: only native GitHub release merges authorize publisher, Buildkite imports and forks do not resolve token, missing write credential fails closed, public cache key only verifies binary consumers",
+          "reviewed_code_fingerprint": "edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58",
+          "spec_material_hash": "9d41f7d722fd84a6f8fdda94e83c67918fe44969b04310bc0c57eecb547d9281"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Publish packages.default to a binary cache on release merges (#1177)",
+      "title": "Secure native Cachix release publisher after PR #1600",
       "todo_ids": [
-        "code_01m7221ergf65bsj"
+        "cicd_01m72cqb2s4gdv0y"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794292391Z"
+      "updated_at": "1794303151Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Change only the release-gated Nix flake workflow job, the Nix doc and the specs; publication needs the maintainers' cache and secret; no runtime behavior change",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:6d1bf116767ffe144402c6464b79138f6f521838b3d77e654917ddf942e791b9",
+      "artifact_hash": "sha256:20694e9a39d10e7aa6e6a39036ce77119e80ea4868186c295b6f4430c6ac0644",
       "checks": [
         {
-          "name": "actionlint-no-new-finding",
-          "status": "passed"
+          "name": "github-pr-1602-initial-ci",
+          "status": "failed"
+        },
+        {
+          "name": "project-check-local",
+          "status": "failed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
+            "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
+            "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M722BBYGEKC1HX8AM1GPDNEW",
+            "detail": "trajectory:branch_01M72CQRMW7XHAB4F0AXC4YGG0",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
+            "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -597,82 +595,63 @@
         "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M722BBYGEKC1HX8AM1GPDNEW": {
+          "branch_01M72CQRMW7XHAB4F0AXC4YGG0": {
             "evidence_only": true,
-            "id": "branch_01M722BBYGEKC1HX8AM1GPDNEW",
-            "intent_id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
+            "id": "branch_01M72CQRMW7XHAB4F0AXC4YGG0",
+            "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
             "steps": [
               {
-                "action": "implementation",
-                "command": "nix run --inputs-from . nixpkgs#actionlint -- -oneline .github/workflows/nix-flake.yml",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
                   ".github/workflows/nix-flake.yml",
-                  "docs/book/src/reference/nix.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  ".decapod/managed/specs/SECURITY.md",
+                  "src/decapod/core/readiness_profile.rs",
                   ".github/workflows/nix-flake.yml",
-                  "docs/book/src/reference/nix.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "actionlint reports the same two pre-existing shellcheck warnings (lines 43, 83) on master's file and on this one; the three new steps (lines 117-142) have none. Design follows the #1177 scope note: release-gated push only, repository secret only, pull requests build-only (the workflow has no pull_request trigger), committed flake.lock and toolchain check first, x86_64-linux rebuild proof, Darwin documented as convenience trust."
+                  "tests/source_ci_profile_policy.rs",
+                  "Previous PR tip 93d8c4ad includes temporary export unsupported by source inventory. New worktree starts from accepted 92f54bd with exact new spec reviews. Local project-check 201 pass 2 fail: container runtime missing and Gatekeeper patterns; no readiness claim.",
+                  "Source policy test moved to previously declared Bazel compile-data set and rustfmt newline reconciled."
                 ],
                 "proof_refs": [
-                  "actionlint-no-new-finding"
+                  "github-pr-1602-initial-ci",
+                  "project-check-local"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
-                  "the maintainers create the decapod Cachix cache and the CACHIX_AUTH_TOKEN secret; until then the publish step is skipped"
-                ]
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "nix run --inputs-from . nixpkgs#actionlint -- -oneline .github/workflows/nix-flake.yml"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "actionlint reports the same two pre-existing shellcheck warnings (lines 43, 83) on master's file and on this one; the three new steps (lines 117-142) have none. Design follows the #1177 scope note: release-gated push only, repository secret only, pull requests build-only (the workflow has no pull_request trigger), committed flake.lock and toolchain check first, x86_64-linux rebuild proof, Darwin documented as convenience trust."
+        "Previous PR tip 93d8c4ad includes temporary export unsupported by source inventory. New worktree starts from accepted 92f54bd with exact new spec reviews. Local project-check 201 pass 2 fail: container runtime missing and Gatekeeper patterns; no readiness claim.",
+        "Source policy test moved to previously declared Bazel compile-data set and rustfmt newline reconciled."
       ],
       "inspected_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        ".decapod/managed/specs/SECURITY.md",
         ".github/workflows/nix-flake.yml",
-        "docs/book/src/reference/nix.md"
+        "src/decapod/core/readiness_profile.rs"
       ],
-      "intent_id": "intent:change_01M722BBWBJF68WZTWQWWGREEJ",
+      "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        ".decapod/managed/specs/SECURITY.md",
         ".github/workflows/nix-flake.yml",
-        "docs/book/src/reference/nix.md"
+        "tests/source_ci_profile_policy.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".github/workflows/nix-flake.yml, docs/book/src/reference/nix.md, .decapod/managed/specs/ARCHITECTURE.md, OPERATIONS.md, SECURITY.md",
         "root"
       ],
-      "run_id": "branch_01M722BBYGEKC1HX8AM1GPDNEW",
+      "run_id": "branch_01M72CQRMW7XHAB4F0AXC4YGG0",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7221ergf65bsj",
+      "task_id": "cicd_01m72cqb2s4gdv0y",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
-        "the maintainers create the decapod Cachix cache and the CACHIX_AUTH_TOKEN secret; until then the publish step is skipped"
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
