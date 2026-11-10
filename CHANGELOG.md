@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.136.1](https://github.com/DecapodLabs/decapod/compare/v0.136.0...v0.136.1) - 2026-11-10
+
+### Fixed
+
+- *(build)* reproducible Nix outputs with v0.136.0 governed proof
+
 ## [0.136.0](https://github.com/DecapodLabs/decapod/compare/v0.135.0...v0.136.0) - 2026-11-10
 
 ### Other
