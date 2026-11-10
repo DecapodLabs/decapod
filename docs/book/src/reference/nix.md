@@ -16,7 +16,8 @@ builds (including a short `decapod system version` smoke). Other flake systems
 may evaluate without continuous proof.
 
 The build is reproducible on `x86_64-linux`: two builds from the same locked
-inputs give byte-identical output. To check a binary that you got from a cache
+inputs give byte-identical output, and CI checks this on each release merge.
+To check a binary that you got from a cache
 or a mirror, rebuild it locally and let Nix compare:
 
 ```bash
@@ -35,6 +36,27 @@ that covers it; every other byte is the same. ld64 computes the UUID before
 `strip -S`, over linker output whose symbol tables still depend on the build
 directory. Lix gives byte-identical rebuilds. `-Wl,-S` and `-Wl,-reproducible`
 do not remove the difference.
+
+## Binary cache
+
+When the repository holds the `CACHIX_AUTH_TOKEN` secret, each release merge
+publishes `packages.default` for `x86_64-linux` and `aarch64-darwin` to the
+`decapod` Cachix cache, so Nix downloads the binary instead of building it:
+
+```bash
+cachix use decapod
+```
+
+Without the `cachix` command, add `https://decapod.cachix.org` to
+`extra-substituters`, and the public key that
+<https://app.cachix.org/cache/decapod> shows to `extra-trusted-public-keys`.
+
+Only a release merge on `master` publishes, never a manual run, and only after
+the proof above: the toolchain check, the build from the committed
+`flake.lock`, and the smoke check. On `x86_64-linux` a rebuild must also be
+byte-identical, so you can check a cached binary yourself with
+`nix build --rebuild`. On `aarch64-darwin` that check can fail on the linker
+UUID, so for Darwin you trust the CI builder and the cache's signing key.
 
 When maintainers bump `rust-toolchain.toml`, they must refresh and commit
 `flake.lock`’s `rust-overlay` input (`nix flake update rust-overlay`). CI
