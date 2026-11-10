@@ -482,6 +482,11 @@
       "id": "cicd_01m72cqb2s4gdv0y-gov-1602",
       "summary": "Native-only Cachix publisher from accepted master, refreshed spec reviews/projections, CI regression target inputs repaired and temp export excluded",
       "input_digest": "sha256:b5b0e8d65fd4f71880e42ce5b3b35b24ef0e2aeacae0b6611e93f21ac3bc6a27"
+    },
+    {
+      "id": "cicd_01m737qc5q4k5qxa-push-recovery",
+      "summary": "Document immutable GitHub force-push event rejection and safe fast-forward CI recovery in the governed existing PR branch",
+      "input_digest": "sha256:9f95c1d2178b0670432c95761c84818402cfb8f62013ff2cc18218e39958feb9"
     }
   ],
   "intents": {
@@ -547,20 +552,24 @@
       "stop_conditions": [],
       "title": "Secure native Cachix release publisher after PR #1600",
       "todo_ids": [
-        "cicd_01m72cqb2s4gdv0y"
+        "cicd_01m737qc5q4k5qxa"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794303151Z"
+      "updated_at": "1794331575Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:20694e9a39d10e7aa6e6a39036ce77119e80ea4868186c295b6f4430c6ac0644",
+      "artifact_hash": "sha256:b9a29a991e82f59ff9910a07170b114e40350bdf051275fbfdf8f78aedf9dd48",
       "checks": [
         {
           "name": "github-pr-1602-initial-ci",
+          "status": "failed"
+        },
+        {
+          "name": "historical-force-push-context",
           "status": "failed"
         },
         {
@@ -589,10 +598,17 @@
             "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M72CQRMW7XHAB4F0AXC4YGG0",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M72CQRMW7XHAB4F0AXC4YGG0": {
@@ -620,6 +636,25 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".github/workflows/constitution-sync.yml",
+                  ".github/actions/ci-context/action.yml",
+                  "docs/book/src/reference/governance-artifacts.md",
+                  "docs/book/src/reference/governance-artifacts.md",
+                  "Historical push run 42792704104 referred to unreachable before 93d8c4ad; direct checkout cannot attest it. PR CI for 2478caf completed successfully; new fast-forward push will be checked independently."
+                ],
+                "proof_refs": [
+                  "historical-force-push-context"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -628,16 +663,21 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Historical push run 42792704104 referred to unreachable before 93d8c4ad; direct checkout cannot attest it. PR CI for 2478caf completed successfully; new fast-forward push will be checked independently.",
         "Previous PR tip 93d8c4ad includes temporary export unsupported by source inventory. New worktree starts from accepted 92f54bd with exact new spec reviews. Local project-check 201 pass 2 fail: container runtime missing and Gatekeeper patterns; no readiness claim.",
         "Source policy test moved to previously declared Bazel compile-data set and rustfmt newline reconciled."
       ],
       "inspected_files": [
+        ".github/actions/ci-context/action.yml",
+        ".github/workflows/constitution-sync.yml",
         ".github/workflows/nix-flake.yml",
+        "docs/book/src/reference/governance-artifacts.md",
         "src/decapod/core/readiness_profile.rs"
       ],
       "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
       "modified_files": [
         ".github/workflows/nix-flake.yml",
+        "docs/book/src/reference/governance-artifacts.md",
         "tests/source_ci_profile_policy.rs"
       ],
       "next_transitions": [
@@ -649,7 +689,7 @@
       "run_id": "branch_01M72CQRMW7XHAB4F0AXC4YGG0",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m72cqb2s4gdv0y",
+      "task_id": "cicd_01m737qc5q4k5qxa",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
