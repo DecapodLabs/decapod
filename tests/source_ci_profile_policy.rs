@@ -2222,3 +2222,38 @@ fn storage_and_broker_changes_select_unfiltered_runtime_regressions() {
         assert!(serialized.contains("//:validate_termination"));
     }
 }
+
+#[test]
+fn nix_cachix_publication_has_native_owner_and_isolated_secret() {
+    let workflow = include_str!("../.github/workflows/nix-flake.yml");
+    let owner = job(workflow, "publication-owner");
+    let proof = job(workflow, "build");
+    let publisher = job(workflow, "publish");
+
+    // A Buildkite-imported job must be discarded before statically resolving
+    // the credential-bearing job's secret. Step-level if guards are too late.
+    assert!(owner.contains("permissions: {}"));
+    assert!(!owner.contains("secrets."));
+    assert!(!owner.contains("uses:"));
+    assert!(owner.contains("RUNNER_ENVIRONMENT:-"));
+    assert!(owner.contains("BUILDKITE_BUILD_ID:-"));
+    assert!(owner.contains("GITHUB_ACTIONS:-"));
+    assert!(owner.contains("GITHUB_EVENT_NAME:-"));
+    assert!(owner.contains("refs/heads/master"));
+    assert!(owner.contains("chore:"));
+    assert!(!proof.contains("secrets."));
+    assert!(proof.contains("Check that a rebuild is byte-identical"));
+    assert!(publisher.contains("needs: [publication-owner, build]"));
+    assert!(publisher.contains("needs.publication-owner.outputs.publish == 'true'"));
+    assert!(publisher.contains("needs.build.result == 'success'"));
+    assert!(publisher.contains("github.event_name == 'push'"));
+    assert!(publisher.contains("github.ref == 'refs/heads/master'"));
+    assert!(publisher.contains("CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}"));
+    assert_eq!(workflow.matches("secrets.CACHIX_AUTH_TOKEN").count(), 1);
+    assert!(publisher.contains("nix build --print-build-logs"));
+    assert!(publisher.contains("nix build --rebuild --print-build-logs"));
+    assert!(publisher.contains("Smoke-check publication candidate"));
+    assert!(publisher.contains("nix run --inputs-from . nixpkgs#cachix -- push decapod ./result"));
+    assert!(publisher.contains("CACHIX_AUTH_TOKEN must be a write-capable token"));
+    assert!(!workflow.contains("pull_request:"));
+}

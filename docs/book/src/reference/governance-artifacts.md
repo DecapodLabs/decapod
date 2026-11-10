@@ -43,6 +43,22 @@ Pre-adoption legacy history is not retroactively represented as verified proof.
 Historical observation sections remain readable and are preserved when a new
 trajectory starts. They do not supply current readiness or require credentials.
 
+### Rewritten branch pushes and stale CI events
+
+A GitHub `push` event binds both the old and new commit IDs. If a later
+force-push replaces that history and the old commit is no longer present in
+a fresh checkout, the immutable event-context verifier must reject the run
+(`Git cat-file verification failed`). That historical run remains failed:
+rerunning it cannot establish the missing Git objects or replace its event
+identity with the branch's current tip.
+
+For an existing pull request, preserve the current accepted branch history,
+make a substantive follow-up change in its claimed Decapod worktree, record a
+new checkpoint, and push a **fast-forward** commit. Inspect the resulting
+`push` run and the pull-request checks against the same new immutable SHA.
+Do not erase the old failure, substitute a mutable branch ref for the event's
+old SHA, or treat a green PR workflow as proof that the earlier push passed.
+
 ## Population order and write boundaries
 
 Use the existing commands in dependency order:

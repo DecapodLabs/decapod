@@ -217,11 +217,15 @@ repository records provide continuity instead of a resident orchestration servic
   (`assets/build/compress_constitution.rs`) serializes only `BTreeMap`s, so the
   embedded JSON keeps one key order, and the flake maps the build directory to
   `/build`, because on Darwin it is random and rustc embeds it (#1176)
-- When the repository holds the `CACHIX_AUTH_TOKEN` secret, each release merge
-  publishes `packages.default` for `x86_64-linux` and `aarch64-darwin` to the
-  `decapod` Cachix cache, after the Nix flake workflow's toolchain, build and
-  smoke proof, and on `x86_64-linux` after the byte-identical rebuild. Only a
-  push to `master` publishes; manual runs and pull requests do not (#1177)
+- The Nix flake workflow has credential-free release identification and build
+  proof, followed by a separate native GitHub Actions-only Cachix publisher.
+  The publisher executes native locked builds, smoke checks and Linux rebuild
+  proof again before sending `packages.default` for `x86_64-linux` and
+  `aarch64-darwin` to `decapod`. It requires a valid `CACHIX_AUTH_TOKEN` and
+  fails closed if missing; Buildkite import, manual runs, ordinary merges and
+  pull requests cannot publish (#1177). The reviewed workflow hash in the
+  compiled readiness profile and the source-inventory digest must both match
+  this reviewed source definition.
 - Git worktrees and supported containers provide task execution isolation
 - CLI and Decapod-specific process RPC are the current integration surfaces
 
@@ -758,7 +762,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a5b56f3becb3600bb0b69c55457ea75914425139902bc0201ad1d9f14215623f`
+- Repository signal fingerprint: `edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

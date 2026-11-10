@@ -39,9 +39,11 @@ do not remove the difference.
 
 ## Binary cache
 
-When the repository holds the `CACHIX_AUTH_TOKEN` secret, each release merge
-publishes `packages.default` for `x86_64-linux` and `aarch64-darwin` to the
-`decapod` Cachix cache, so Nix downloads the binary instead of building it:
+On native GitHub Actions, release merges publish `packages.default` for
+`x86_64-linux` and `aarch64-darwin` to the public `decapod` Cachix cache.
+Publishing requires a write-capable `CACHIX_AUTH_TOKEN` repository secret;
+when it is missing or rejected, the publishing job fails rather than reporting
+a false success. Nix can then download the binary instead of rebuilding it:
 
 ```bash
 cachix use decapod
@@ -51,9 +53,13 @@ Without the `cachix` command, add `https://decapod.cachix.org` to
 `extra-substituters`, and the public key that
 <https://app.cachix.org/cache/decapod> shows to `extra-trusted-public-keys`.
 
-Only a release merge on `master` publishes, never a manual run, and only after
-the proof above: the toolchain check, the build from the committed
-`flake.lock`, and the smoke check. On `x86_64-linux` a rebuild must also be
+Only a release merge on `master` publishes. The credential-free owner job
+checks the native GitHub runner, push event and release merge identity before
+GitHub schedules the separate secret-bearing publisher. Buildkite-imported
+jobs, manual runs, ordinary merges and pull requests cannot publish. The
+publisher rebuilds natively from the committed `flake.lock` and verifies the
+Rust toolchain, smoke-check and Linux reproducibility before uploading; a
+separate credential-free proof job must also succeed. On `x86_64-linux` a rebuild must also be
 byte-identical, so you can check a cached binary yourself with
 `nix build --rebuild`. On `aarch64-darwin` that check can fail on the linker
 UUID, so for Darwin you trust the CI builder and the cache's signing key.
