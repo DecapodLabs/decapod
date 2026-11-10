@@ -476,11 +476,6 @@ pub struct DecapodProjectConfig {
     pub context: DeclaredContextConfig,
     #[serde(
         default,
-        skip_serializing_if = "crate::core::legacy_vega::Configuration::is_default"
-    )]
-    pub vega: crate::core::legacy_vega::Configuration,
-    #[serde(
-        default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
     )]
     pub laya: crate::core::laya_readiness::Configuration,
@@ -863,7 +858,6 @@ impl Default for DecapodProjectConfig {
             custody: CustodyConfig::default(),
             tracker: TrackerConfig::default(),
             context: DeclaredContextConfig::default(),
-            vega: crate::core::legacy_vega::Configuration::default(),
             laya: crate::core::laya_readiness::Configuration::default(),
         }
     }

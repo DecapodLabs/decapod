@@ -17,11 +17,6 @@ pub struct DecapodProjectConfig {
     pub context: DeclaredContextConfig,
     #[serde(
         default,
-        skip_serializing_if = "crate::core::legacy_vega::Configuration::is_default"
-    )]
-    pub vega: crate::core::legacy_vega::Configuration,
-    #[serde(
-        default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
     )]
     pub laya: crate::core::laya_readiness::Configuration,
@@ -258,18 +253,6 @@ the human retains merge authority. This principle adds no unimplemented guarante
 
 ## Optional Laya post-validation assessment
 
-Laya is the sole post-validation evaluator. It is disabled by default and is
-selected only through `[laya]` configuration or `init --laya-decisions[=true|false]`
-(and the equivalent `init with` option). Enabling assessment does not add a
-scientific development worker or native model-verification recipe to validation.
-The retired Vega native worker is no longer built or required.
-
-Laya runs only after deterministic proof passes. It cannot create proof, waive
-checks, change policy or publish. A required accepted Laya configuration cannot
-be weakened by the candidate it governs. Legacy required `[vega]` configuration
-is rejected with `LAYA_EXPLICIT_MIGRATION_REQUIRED`; it is never silently
-interpreted as an equivalent Laya model or discarded during init refresh.
-
 ```toml
 [laya]
 mode = "disabled" # default; no model/runtime needed
@@ -279,18 +262,3 @@ Explicit opt-in uses `mode = "required"` and the reviewed `model_manifest_digest
 printed by `decapod setup laya`. Init can select that reviewed digest without
 installing or executing a model. Omitted options preserve current Laya policy,
 backend preference, CPU fallback and local binding settings. Dry-run is read-only.
-
-`decapod setup laya` explicitly installs/verifies pinned external model data.
-`--offline` verifies cached data without networking; `--check-updates` only checks
-bounded upstream metadata and never activates unreviewed weights. Register an
-independently installed worker with `--runtime <worker>` and, when needed,
-`--cpu-runtime <cpu-only-worker>`. Maintainer-specific paths and executable hashes
-remain in private local cache metadata rather than team configuration. There is
-no in-repository Vega worker build/install command. Setup prints configuration;
-it does not silently enable assessment for a repository.
-
-The existing Laya protocol, manifest/model identity, bounded governed projection,
-runtime custody, explicit hardware-unavailable fallback and proof-first ordering
-remain unchanged. A response is a bound model observation, not a completion proof
-or a calibrated population-accuracy claim. Historical Vega evidence remains
-historical; it is not a current execution requirement or Laya qualification.

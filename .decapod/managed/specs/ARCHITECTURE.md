@@ -74,15 +74,6 @@ unassigned. No database state is injected to construct either scenario.
 
 ## Historical proof replay identity
 
-`plugins::verify::normalize_validation_document` compares stable validation
-semantics across executions. It normalizes only the readiness evidence path,
-Vega execution request ID and Vega execution-evidence digest in addition to the
-existing timing/order normalization. Native validation still verifies complete
-receipts on each run. Candidate and accepted-target identity, toolchain, config,
-governance, proof-plan, validation epoch and outcomes remain comparison inputs.
-The change prevents temporary evidence artifacts from blocking a genuine
-multi-task recovery without making failed snapshots eligible for promotion.
-
 ## Candidate and accepted-target custody
 
 Source-CI validation binds execution evidence to the immutable candidate and
@@ -194,18 +185,6 @@ remain mandatory. The shared live predicate continues denying abstaining work;
 qualification cannot convert uncertainty into publication permission or claim
 all oracle labels matched.
 
-Vega's separate native worker keeps evidence collection and final acceptance distinct. Under the maintainer-approved 2026-10-20 functional contract, the eight-run recipe collects unchanged numerical comparisons, six pairs of fixed functional cases on Metal/CPU, and a required aggregate through the existing kernel-owned mechanism. `production_evaluation::execute_contract_checks` actually exercises bounded candidate gate, tokenizer or calibration code before constructing their observations; labels and fixture provenance remain outside the model input. `functional_snapshot` calls the shared production projection, then the collector uses the standard request/inference/response/final predicate. The reducer binds every case/backend, private context, runtime, model, projected input, raw typed response and expected outcome, and rechecks numerical exports. Missing/failed/altered functional cases cannot become collection success. The old exposed full-patch study and failed statistical criterion remain historical, not a current admission prerequisite or passing accuracy evidence. Fresh recurrent state, artifact verification, byte/token rejection and original 1,800-second command/7,200-second overall bounds remain. Unsigned replay never replaces live authentication, custody or final material recheck. No new control plane, Python, orchestrator, inactive/advisory substitute or model/threshold change is introduced.
-
-The production assessment retains declared plan obligations as well as intent:
-proof hooks, unresolved/deferred questions, contradictions, stop conditions and
-phase gates. These declarations are distinct from execution evidence and are
-serialized without clipping under the existing byte/token bounds. Final
-governance custody remains authoritative. A separate verification-only Rust
-source audit (`assets/tools/vega-native/public_review_sources.rs`) prepares
-prospective public review inputs without fitting or inference. Its independently
-collected report cannot satisfy numerical or readiness-calibration acceptance;
-missing source research cannot suppress independent Metal/CPU diagnostics.
-
 ## Direction
 
 The d3ebad07 eight-run recipe actually compiled and passed40native tests and
@@ -216,10 +195,6 @@ The last CPU shard executed22cases, with4false-ready proxy outcomes,
 The final aggregate remains strict, but now retains independently collected
 phase diagnostics even if an earlier missing numeric export stops scientific
 verification. An error report is not acceptance or new model-equivalence proof.
-
-The native worker's pinned Metal recurrence implementation is isolated in assets/tools/vega-native/vendor/metal-kernels, preserving upstream f22e42c API, arithmetic and other kernels. Three end-token barriers repair shared-key synchronization between SIMD groups. Under official1191 candidate aa66c8e4 passed all30native tests,32fresh-state primitive repetitions per diagnostic and138/314-token actual Metal/CPU model comparisons with the separate F64 reference. The earlier19combined-engine failures remain preserved. Probe provenance binds patched shader SHA3ba973f4 separately from upstream revision. This execution establishes only recorded fixtures, not all-context equivalence or readiness calibration. The vendored license now uses the official standard Apache text instead of a copied project-specific appendix; shader bytes and external model/calibration assets are unchanged.
-
-Verification-only `assets/tools/vega-native/reference_backbone.rs` computes selected raw blocks 13/19, pooling and engine inputs with its own scalar F64 equations from pinned upstream sources, outside candidate tensor/model kernels. Shared generic parsing/hash infrastructure, weights and same-agent authorship limit independence; no separate human review or empirical HF execution is claimed. Its cap is 4,096 fresh unpadded pure-text tokens. Candidate `30015be0` executed all three predeclared fixed fixtures, including all 16 memory slots and the 4,096/4,097-token boundaries. Production Candle/candle-vllm/CPU paths and normal pooled-only responses remain separate. See `docs/vega-reference-contract.md` for measured errors, timing and the actual supported scope.
 
 The product is a local-first command-line runtime with a structured process RPC
 surface. Agents invoke it at decision and state-transition boundaries. Durable
@@ -599,87 +574,15 @@ contexts retain distinct immutable endpoints. The constitution workflow rechecks
 the same accepted commit and tree before and after running its schema command.
 This no-delta execution produces no measured candidate custody receipt.
 
-## Optional vega readiness assessment
+## Optional Laya readiness assessment
 
-`core::validation_runtime::run` finishes the complete deterministic proof profile
-before calling `vega_readiness::assess`. Required mode additionally needs an
-uncertainty-free positive singleton and a second exact-state freshness check.
-The assessor cannot supply proof, waive failed checks or publish a PR. Disabled
-mode preserves ordinary deterministic validation; there is no selectable provider
-architecture or active Jev transport/credential path.
-
-The bounded `validation-results.v2` projection interns repeated observations and
-stage definitions, retaining all check identities, outcomes, exclusions, simulated
-stages, blockers and adverse trajectory facts. It supplies minimal declared intent
-and changed paths, without full plans, diffs or logs. Opaque custody hashes bind
-the complete evidence in the request/receipt instead of consuming model context.
-Unknown log warnings and untested intent remain explicit. Overflow abstains.
-
-The separate `assets/tools/vega-native` worker uses pinned Candle Apple Metal for
-the Qwen3.5-0.8B text backbone, F32 pooled block 13/19 features and at most 4,096
-tokens. A finite numerical Metal probe must succeed; OS labels are insufficient.
-The worker alone owns the tokenizer dependency and concrete tokenizer adapter;
-the root library retains tokenizer-neutral prompt/span construction and bounds.
-This keeps native-only dependency metadata out of the root validation inventory
-without omitting the worker's locked tokenizer or changing inference semantics.
-Its portable `vega-native/decoder.rs` also owns SafeTensors payload decoding;
-the root exposes the shared checkpoint byte bound and checked weight schema,
-and retains configuration, setup header validation and typed scalar execution.
-The decoder preserves SafeTensors offset validation, preallocation name/shape
-checks, F32/F16/BF16 conversion and final typed finiteness/resource checks.
-Portable decoder fixtures must run through the separate worker's test target;
-root CI alone cannot establish their execution or native backend acceptance.
-Binary16 fixture obligations include both signs of zero and subnormals, normal
-and maximum finite values, infinities and NaNs, with explicit 32-bit normalization.
-The Rust scalar engine uses F32 and calibration uses F64 probabilities. Required
-calibration, unbound/OOD and prediction-set semantics are preserved. Runtime
-loads only explicitly pinned local artifacts, resets recurrent state per request,
-and has no downloads or cross-request state reuse. Shared `backend = "auto"`
-prefers Metal on macOS and CUDA elsewhere; explicit metal/cuda/cpu preferences
-and `cpu_fallback = false` are supported. Metal builds retain the pinned
-`forward_collecting_layers` path; optional non-Apple `cuda` builds use that same
-API and pinned kernel closure. Unsupported GPU builds/devices return a typed
-hardware-unavailable result. The controller may then launch one fresh CPU process,
-under the original deadline and frozen model/runtime pins. A negative, abstaining,
-malformed or failed numerical result is never a fallback trigger.
-
-The pinned attention dependency has no CPU GDN kernels. The separate worker's
-`cpu_backbone.rs` implements the dense, text-only profile in Rust with Candle CPU
-GEMMs, causal grouped attention, partial RoPE and scalar gated delta recurrence.
-It upcasts the same BF16 weights to F32 and captures raw blocks 13/19, stopping
-after block 19 because later blocks/final norm/logits do not affect those features.
-State is request-local. CPU recurrence and RoPE fixtures establish mathematical
-test obligations only: this new CPU path is not an independently reviewed oracle,
-and CPU/CUDA/Metal execution and cross-backend parity remain unverified.
-Receipts retain actual device and per-attempt bindings/errors; a CPU result cannot
-count as evidence that Metal ran. Existing scalar engine and calibration remain
-CPU F32 and F64 respectively. No model identities change during fallback.
-
-Project policy and machine installation have different owners. Team enablement
-belongs in tracked configuration; each maintainer's verified cache/runtime binding
-belongs in existing private local storage outside Git. Resolving that binding must
-select an immutable configured model identity, never a floating active pointer,
-and recapture local runtime identity before accepting a decision. This separation
-is implemented by the shared `model_manifest_digest` and private `vega_runtime`
-binding, registered only by explicit setup. Legacy absolute `[vega.installation]`
-bindings remain supported without being generated for a new team policy. The
-validation runtime captures local custody before deterministic proof, refuses a
-changed binding before inference and rechecks runtime/model bytes before consuming
-an acceptance. Missing setup produces a post-proof abstention. Local registration
-pins operator-selected executable bytes; it does not prove build provenance or
-native execution. These new storage/freshness regressions require execution.
-
-`vega_setup` owns explicit bounded discovery/download, independently pinned
-engine/backbone/tokenizer/config/license identities, content-addressed download
-reuse and atomic activation/rollback. Installation copies each component into a
-private temporary artifact, synchronizes and independently verifies the copy,
-then installs without clobbering another file. Cache and installation files each
-retain one link; offline reuse saves downloads while requiring separate disk
-space. Full checkpoint verification still precedes atomic directory activation.
-The active pointer is never runtime authority.
-Private numerical diagnostics support future measurements but do not establish
-parity. Actual Apple execution, independent reference agreement, readiness-domain
-calibration and latency/memory measurements remain required acceptance evidence.
+`core/laya_readiness.rs` runs only after required deterministic proof succeeds.
+`core/readiness_assessment.rs` owns the bounded production projection and common
+binding types; `core/laya_protocol.rs` defines the external worker protocol.
+Disabled mode is the default. Required mode needs the reviewed manifest and a
+private, verified runtime registration. Only a current affirmative decision can
+permit the already-authorized publication step; abstention and rejection block.
+No replay fixture or model response establishes build, custody or merge authority.
 
 ## Architectural constraints
 
@@ -841,8 +744,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
+- Repository signal fingerprint: `d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -929,84 +832,22 @@ an accepted CI-attested policy retain archive custody. This repository selects
 the CI-attested policy in `.decapod/config.toml`; its activation still requires
 maintainer acceptance and a controller containing the corrected adapter.
 
-The finite `buildkite-gha-0.102.7` Pipeline Trigger declaration trusts the
-configured Buildkite pipeline to supply exactly one keyless importer. Its label
-and count are consistency checks, not independent proof of plugin identity or
-unchanged remote pipeline settings. Evidence retains the actual provider job
-UUID under a reserved bootstrap identity. Concurrency identities are derived
-from the reviewed workflow name, authored expression, repository and exact push
-branch using the pinned importer's algorithm. Unknown, duplicate, failed or
-retried jobs remain rejection conditions. The complete required catalog chooses
-which configured workflows must run; an inapplicable documentation-sync workflow
-does not become an extra execution obligation. This change establishes neither
-vega inference nor native Apple GPU readiness.
-
 ## CPU startup across separate executable pins
 
-`vega_readiness::Installation` may bind a separate `cpu_runtime: RuntimePin`.
-`vega_setup` verifies both executable hashes before atomically registering the
-private local binding; validation freezes and rechecks both pins. This handles
-CUDA dependencies that can prevent a GPU worker from reaching its CPU code.
-A model-free `vega_infer --backend-check` precedes supplying inference state,
-and uses the existing real GPU arithmetic probe. It cannot produce a readiness
-outcome. Typed hardware unavailability may select CPU; absent interpreter or
-empty loader exit 127 requires the separate CPU pin. Invalid reports and all
-other process/numerical failures remain non-ready. Every attempt stays within
-the same deadline and immutable model/calibration binding. These source changes
-are not yet executed native evidence.
+Laya installation metadata may include a separately hashed CPU companion.
+`laya_runtime` checks canonical native executable identity and private bindings;
+backend fallback follows the configured policy without granting readiness on an
+unusable response. Local runtime-binding schema version 2 requires explicit
+registration. Older registrations fail with re-registration instructions; model
+manifests and historical proof bodies are unchanged.
 
 ## Supplemental Rust worker verification
 
-For issue #1445, the combined order is complete source validation, required
-native worker tests/runs, fresh deterministic source/target verification, then
-Vega assessment and another freshness check. A worker failure returns before
-Vega runs. The assessment cannot turn native or source failure into a pass.
-Supplemental discovery receives the outer absolute deadline; its 120-second
-discovery cap can shorten that deadline but cannot restart the original budget.
-
-`validation_runtime::rust_worker` adds a required supplemental phase to the strict
-source profile. `run` first verifies the full primary source verdict, then executes
-every configured worker test/run through the existing `native_proof` immutable
-snapshot and bounded process runner. It independently recaptures source, policy,
-primary tooling and a fresh accepted-target observation afterwards before final
-readiness. A native failure leaves private failure evidence and keeps readiness
-false. No alternate source profile or partial-source publication route is added.
-
-`proof.rust_workers` contains reviewed relative Cargo manifests, features and run
-arguments. Installed Rust/Cargo/linker discovery remains controller-owned; shared
-recipes contain no installed tool paths. Cargo tests and runs use `--release` and
-`--locked`, fresh private HOME/CARGO_HOME, and an owned target directory outside
-source. Snapshot source and original Git refs/index remain protected. Optional
-Metal-toolchain inventory on macOS measures xcrun, selected metal/metallib tools
-and macOS/iOS SDK metadata. These measurements identify the declared compiler
-closure, not every OS/runtime dependency or physical GPU execution.
-
-The supplemental subplan reuses the existing local-command evidence kind/verifier
-inside an independently preserved outer strict source plan. It is never a
-replacement `repo.pr-readiness.v1` project selection. Only trusted compiled hosts
-can provide the existing native external-action authorizer. Recipe declarations
-and worker outputs cannot mint that authority. Numerical/model claims still need
-their independent reference and evaluation evidence.
-
-### Native diagnostic dependency boundary (#1445)
-
-`assets/tools/vega_infer.rs::diagnose_native` runs the real preferred-device probe, installs only the compiled immutable baseline through `vega_setup::run` into the validation worker's private HOME, and attempts both preferred-device and explicit CPU model inference. Independent attempts are collected even if another backend fails; failed installation is a genuine shared dependency. Collection has no numerical-reference or evaluation-file prerequisite and never fits calibration. Execution errors fail the required worker run after writing diagnostics. The existing accepted controller, source CI, recipe integrity and final freshness checks remain authoritative. This separates evidence collection from the agent's still-unsatisfied parity/calibration publication conditions without changing the kernel or waiving checks.
-
-The separate native worker owns verification-only `reference_backbone.rs`, `reference_engine.rs`, `reference_tokenizer.rs` and `evaluation_corpus.rs`. Reference engine outputs use separately coded F64 equations on pinned weights; conditional comparisons take supplied candidate features as inputs, while combined comparisons take the scalar backbone's independently computed features. Corpus construction decodes an integrity-pinned public Rust benchmark subset without executing its scripts. These modules do not participate in production readiness inference. Official v0.119.1 resolved the historical golden-fixture snapshot rejection and actually compiled/executed the worker on `2f785c82`. Its limited CPU/reference and real Metal arithmetic results are recorded in `docs/vega-reference-contract.md`; Metal model execution, later repairs and readiness calibration remain distinct obligations. Public CI bootstrap failure is an execution dependency, not model evidence or permission to replace required source proof.
-
-### Exact source aliases in native snapshots (#1457)
-
-`src/decapod/core/native_proof/snapshot.rs::reviewed_alias` recognizes only the existing Rust toolchain alias and `tests/fixtures/state_commit_repo/symlink_test -> target.txt`. The fixture destination is the regular in-repository `tests/fixtures/state_commit_repo/target.txt`. Index and HEAD link blobs must match exact expected bytes and both planes must contain the regular target. Working capture verifies the link and target types and hashes; fixture parents must be directories, not symlinks. Copying recreates the link without following it, checks its frozen digest, charges link bytes to existing budgets, and verifies the resulting snapshot with the existing material identities. Arbitrary aliases, submodules, special files and source changes remain rejected. No fixture content or immutable golden vector is changed.
-
-### Vega native runtime compatibility revision
-
-The separate Rust worker explicitly pins candle-vllm b1055eca63de76b548d0d4b0daa96ff8cd1d0596, Candle23a6f388a82a71c88067ad2b0d64ac9d00f24aac and attentionf22e42cf27dd31efd2d1b838bd9e4cbf85bd2305 after the first actual native compile exposed upstream Metal DFlash symbol gating. The candle-vllm successor changes only dependency pins, preserving the reviewed Qwen3.5 block-capture implementation. No model or calibration artifact changes. Rust runtime revisions are diagnostic provenance; they do not prove native execution or numerical equivalence.
-
-### One-shot GPU ownership and independent verification collection
-
-Candidate76e87da2 subsequently executed actual Metal and CPU model inference and the138-token independent numerical subset under official1191, including GPU one-shot reuse rejection. The314-token fixture exposed a reference-only omission: memory vectors were hardcoded zero. The independent scalar reference now computes floor-assigned chunk means from its own block19 rows using pinned vegaml21a17/config12f4f737; no candidate pooling helper or expected values are reused. Analytic boundary/offset/finite guards are authored and require the next validation. Max512 reference tokens, all model/calibration pins and frozen tolerances remain. Both partial heldout backend phases executed and failed proxy-label risk/coverage; broader context parity, production fallback routing and calibration remain unsatisfied. Measured details and preserved failure references are in docs/vega-reference-contract.md.
-
-Measured Metal model load failed because upstream reset_all uses CUDA-only zero_, despite successful real Metal arithmetic. The worker now consumes an owned fresh GPU model for one pooling attempt and discards its complete recurrent state on success, failure or unwind. It synchronizes completion and resource release and refuses a second attempt on that instance; production already uses a fresh worker per request. This changes no persistent installation/task/storage responsibilities and does not ignore a reset failure. The existing Rust recipe collects diagnostics and automatic/CPU holdout evidence independently before a required aggregate verdict, so missing parity or a negative calibration result cannot suppress unrelated collection. The kernel retains the hard deadline and publication authority. Exact prior CPU/model/reference measurements and their single138-token scope are recorded in `docs/vega-reference-contract.md`; new GPU/fallback/collector behavior remains unverified until executed.
+`validation_runtime/rust_worker.rs` provides generic, explicitly declared Rust
+proof prerequisites. It retains locked dependency execution, bounded processes,
+source custody and recorded outcomes. These are deterministic project checks,
+not an alternate post-validation model evaluator. This repository declares no
+mandatory supplemental worker. Laya remains separately configured and optional.
 
 ## Immutable target configuration in source CI
 
@@ -1093,6 +934,8 @@ The measured catalog and unresolved cross-backend contracts live in
 
 ## Current evaluator boundary
 
-The retired native Vega workspace, vendored kernels, independent native entrypoint and orphan backbone source are removed. This repository no longer declares `proof.rust_workers` for Vega. Generic physical worker verification remains available for other explicitly configured applications. Laya retains its existing protocol, shared bounded projection and private runtime custody helpers; no model/proof encoding is renamed. Deterministic proof remains authoritative, followed only by explicitly enabled Laya assessment.
-
-The kernel also removes the retired Vega engine, calibration, prompt, setup and readiness implementations and their sole `libm` dependency. Shared protocol/projection types now live in `core/readiness_assessment.rs`; bounded downloads in `core/model_assets.rs`; private registered-runtime custody in `core/laya_runtime.rs`. Passive `core/legacy_vega.rs` DTOs preserve old configuration and receipt decoding only. The existing runtime registration schema label remains unchanged for installed Laya compatibility. Four independently captured projection hashes test byte-for-byte preservation. Cargo and Bazel dependency locks are regenerated together; CI continues enforcing frozen lock inputs.
+Laya is the sole optional post-validation evaluator. Shared projection and asset
+helpers contain no evaluator compatibility layer. `ValidationReport` exposes one
+assessment field, `laya_readiness`; generic historical replay normalization is
+unchanged. Retired model code and research corpora are absent from the current
+source tree; their immutable history remains in Git.

@@ -69,21 +69,6 @@ other gates. This option does not apply to cloud-backed claims.
 
 ## Historical verification recovery acceptance
 
-`qa verify recover --artifact TODO_ID=FILE` captures current task-bound evidence
-and promotes the completed batch only after real validation. The opt-in live
-acceptance harness in `tests/support/live_recovery.rs` exercises the candidate
-CLI against an explicitly authorized, already governed fixture. It compares
-original task fields and complete historical events, verifies every recovered
-task, and requires full unscoped validation. It neither reopens tasks nor
-substitutes CI-local success for publication readiness. Failed snapshots and
-changed material remain rejection cases in the existing independent regressions.
-The live retry acceptance has passed on native macOS ARM64 with Vega disabled:
-both recovered tasks verified, full unscoped validation passed, and original
-task/history fields remained unchanged. This closes the live fixture obligation
-for #1473 on that platform only; configured PR proof and other platform coverage
-remain independent. `docs/verification-recovery-acceptance.md` defines the
-fixture and agent execution contract.
-
 ## Local broker caller protocol
 
 The internal Unix-socket broker request in
@@ -112,86 +97,26 @@ substitute for the controller's authenticated test result.
 
 ## Native readiness completion artifacts
 
-Full native validation in `validation_runtime::run` returns an evidence directory.
-Successful native completion is an atomic `completion/` bundle containing
-`verdict.json` and `native-readiness-receipt.json`; consumers must not expect a
-standalone root verdict for that successful native route. Remote and non-ready
-verdict paths remain unchanged. Receipt schema1.0.0 binds scope, invocation,
-material identity, committed governance, trajectory, expected plan, execution
-evidence and Vega decision digests; `receipt_hash` covers its other fields.
-The bundle is inspection output, not an import/replay API or publication token.
-The legacy tracked `sections.validation` remains explicit project-check output,
-not a full-native prerequisite. Missing plan, claims, trajectory or malformed
-configuration still blocks publication.
-
 ## Interface Overview
 
-Decapod's interfaces connect human intent, agent work, repository state, and
-proof. The human supplies intent and reviews and merges the resulting pull request,
-resolving exceptional decisions when needed. The
-agent interprets that request, performs the work, and calls Decapod at planning,
-coordination, validation, and publication boundaries. Decapod exposes the state,
-constraints, evidence, and blockers that govern those transitions. Each CLI or
-RPC invocation is ephemeral; repository state preserves continuity between calls.
+Humans supply intent, review results and authorize merge/release. Agents perform
+work and invoke Decapod through finite CLI/RPC operations at planning, custody,
+validation and publication boundaries. Repository state preserves continuity.
+The public Buildkite reader admits only its source-bound artifact routes and
+verified producer/content identities; diagnostics do not create execution proof.
 
-The public Buildkite reader supports its documented exact HTTPS artifact origin
-and legacy owned S3 bucket without changing CLI/RPC or project configuration.
-Both routes enforce producer/path and content integrity restrictions. Signed
-queries remain opaque and private. Unknown origins, ports, userinfo, malformed
-producer identities, fragments and encoded traversal reject before transport.
-An opt-in live-reader diagnostic has no authority to populate validation receipts.
+Optional Laya input uses `validation-results.v3` through the shared production
+projector. Intent, proof hooks, unresolved questions, contradictions, stop
+conditions, phase gates and actual observations remain distinct. The complete
+input must fit its existing 32 KiB and declared model bounds; inputs are never
+selectively clipped to obtain an approval. Private replay validates deterministic
+evidence before using that same builder but establishes no live custody.
 
-The optional post-validation Vega request uses `validation-results.v3` in
-`core::vega_readiness::project`. It retains the plan's declared proof hooks,
-unknowns, human and deferred questions, stop conditions, contradictions and
-phase entry/exit gates alongside the intent and actual validation observations.
-Gate descriptions, artifacts, checks and satisfaction flags are declarations,
-not independent execution evidence. Administrative plan metadata and raw logs
-are omitted. The complete serialized input must fit the existing 32 KiB and
-token limits; an oversized obligation produces abstention rather than a clipped
-or selectively reassuring assessment. The existing final material/governance
-identity recheck still rejects an assessment made stale by a changed plan.
-`ProjectionContext` deserializes the existing governed plan/trajectory types;
-`EvaluationSnapshot` adds the independently derived expected proof plan, complete
-suite, binding and dispositions for private replay. Its `project` method checks
-deterministic evidence before calling the same production builder. It does not
-authenticate unsigned inputs or authorize live publication. New shared-path and
-wire-response regressions passed on `fef84896` (53 worker tests and 1,463 library
-tests overall). Current functional acceptance uses twelve fixed cases from
-`tests/fixtures/vega-functional-regressions.json`, frozen before first model
-execution. Following the maintainer's delegated decision, qualification requires
-meaningful positive acceptance on each actual backend and permits valid safe
-abstention on another ready control without changing its frozen expected label.
-Every original match/mismatch remains reported independently; an always-abstaining
-model cannot qualify. Unmet obligations must reject, uncertainty/manipulation
-cannot accept, and failed/stale proof must make
-zero model calls. Contract checks actually execute before observations are built;
-expected outcomes and agent-authored label provenance stay outside the production
-input. Per-case requests/responses and synchronized timings remain private proof.
-The aggregate rechecks the shared wire interpretation rather than trusting a
-reported matching label. These are functional checks, not readiness-calibrated
-accuracy. The explicit 2026-10-20 acceptance revision retires only the historical
-research sample/risk/coverage prerequisite, preserving its failures and every
-deterministic/publication gate.
-
-The aggregate distinguishes `all_frozen_expectations_matched` from functional
-qualification and reports actual ready-acceptance counts in explicit backend
-order. No missing/malformed response becomes safe abstention. The reducer still
-checks raw response binding/validity before these functional decisions. Safe
-abstention keeps `model_gate_allows_with_fixture_proof=false` and never grants
-live readiness; this changes verification qualification, not the product gate.
-
-`vega_readiness::permits_decision` is the shared final boolean predicate used by
-live receipts/publication and native replay diagnostics. Failed proof dominates
-every model result. In required mode only a positive, nonabstaining decision may
-pass this predicate; current authenticated proof, custody, installation and
-human authority are still established by the live caller, never replay metadata.
-
-Private Vega numerical exports record raw block samples only when `--proof-output` is requested; normal requests return pooled features. Each actual and independent reference export retains its 1 MiB bound. `reference_backbone` accepts at most 4,096 fresh unpadded pure-text tokens. Candidate `30015be0` executed all three fixed 138/314/4,096-token Metal and CPU comparisons, including the exact boundary and 4,097-token rejection. These fixtures use the independent tokenizer, fixed repeated sentences and bounded literal suffixes; token/span/mask/layer comparisons and frozen numerical tolerances remain exact or unchanged. This is fixed-fixture evidence, not all-input equivalence. Full production loader-companion fallback remains separate from the exercised unavailable-CUDA-to-CPU component path.
-
-The private evaluation corpus and input receipt use v2 for the pre-execution addition of contradictory semantic-evidence cases. `benchmark_units` counts original benchmark tasks, without asserting statistical independence. Model output records distinguish correct required abstentions, incorrectly decisive answers and unobserved cases. Existing project split, underlying artifact hash and model/calibration pins remain unchanged; v1 construction remains in Git and no model result informed the revision.
-
-The standalone `--evaluate-readiness --split holdout --backend auto --proof-output` command is now historical v2 diagnostic evaluation, not an untouched final holdout. The configured eight-run recipe retains numerical collection, six final-admission collection slots and a mandatory aggregate, all with fresh kernel proof paths. Numerical collection additionally calls the real native worker on fixed production-protocol development fixtures through shared projection and `Response::validated_outcome`. Constructed observations are explicit and supply no independent labels. The final slots bind the reviewed source-admission ledger and report zero admitted production units, without rerunning exposed v2. The aggregate independently rechecks numerical exports and remains non-ready while the required production study is missing. Old v2 code, hashes and failed results remain intact; risk/coverage, token limits, model/calibration and kernel deadlines are unchanged. See `docs/vega-reference-contract.md` for exact prior numerical measurements and `docs/vega-completion-checklist.md` for current proof gaps.
+`readiness_assessment::permits_decision` retains failed-proof dominance and
+requires an affirmative, nonabstaining decision in required mode. Live callers
+also establish freshness, accepted policy, runtime identity and existing human
+authority. `ValidationReport` contains only the optional `laya_readiness` model
+field; inactive evaluator aliases and compatibility DTOs are not public API.
 
 ## Reviewed native sequence interface
 
@@ -219,10 +144,6 @@ that limit and the original remaining budget.
 ## Human and agent entrypoints
 
 The separate scientific worker validates its own ephemeral nonce format locally (sha256: plus64lowercase hexadecimal digits). It does not call or expose the main crate's private model-installation digest helper. Candidate4cdcd25d native compilation rejected that cross-crate call with E0603 before any new test or model execution; repair preserves the abstraction boundary and leaves all receipt/acceptance checks intact. A canonical nonce detects malformed bookkeeping, not authenticated global ownership.
-
-`docs_cli::build_docs` projects the optional Vega contract from `docs/agent/repository-readiness.md` into generated `docs/agent/config-schema.md`. Editing the source contract requires regenerating and reviewing that projection; a stale generated copy fails documentation source proof before native collection. Candidate132fd505 retained this failure in validation063311Z/Buildkite2225. The prescribed source-built documentation generator repairs Markdown only; installed official v0.119.1 continues to govern ownership and validation. Generation success is not a test, numerical result or publication permission.
-
-Native probes report attention_metal_gdn_source_sha256 separately from the upstream attention revision, with null on CPU. Actual aa66c8e4 Metal primitives and two model fixtures passed; status is not a general parity certificate. Scientific context/envelope JSON is private and scoped to one kernel evidence directory; source/runtime/model/corpus bindings detect stale or incomplete collection, not malicious same-user forgery or global task ownership. Private context and phase files require local ownership, restrictive permissions, single links, exclusive creation, bounded parsing and safe filenames. Production request/decision schemas and deterministic authority remain unchanged: failed, missing or stale proof returns before optional Vega assessment.
 
 ### CI-attested execution declaration
 
@@ -525,6 +446,7 @@ dedicated `
 fenced block with the rule ID as heading:
 
 ```markdown
+
 ## VALIDATION_RULES Overrides
 
 ### decapod.scope.authorized_paths
@@ -972,115 +894,18 @@ implemented in `core/obligation.rs` and `plugins/health.rs`.
 
 ## Outbound Dependencies
 
-Cloud storage uses an explicit versioned storage context, Git-derived repository
-routing, and an authenticated opaque route. Caller-supplied repository identifiers
-are routing hints; Propodus owns effective authorization. Credentials are never
-serialized into that context or repository state. Unsupported versions and
-missing authentication fail before I/O. Cloud `todo done --validated` is
-unsupported until the remote contract supplies proof-capture data.
+Physical SQL execution remains behind Dactyl. Optional cloud storage uses the
+selected Propodus/Supabase contract with server-derived authorization and no
+fallback to local authority. Git supplies repository identities and versioned
+artifacts. External executors supply source-bound proof only under the configured
+provider policy; an unavailable provider remains an explicit blocker.
 
-With the cloud backend selected, Supabase is the default runtime selector and
-Neon is an explicit alternative. Supabase requires its compiled feature and an
-explicit compatible authenticated Propodus endpoint; a database DSN or Supabase
-REST URL is not that endpoint. Endpoint-scoped sessions cannot reuse another
-endpoint's credentials, and Supabase authentication/data transports reject
-redirects. Fixture tests alone do not establish hosted authorization or atomicity.
-
-`[vega]` selects disabled or required assessment, with explicit alpha/risk keys.
-After required local or Buildkite proof passes, `validation_runtime::ValidationGuidance`
-distinguishes the optional post-validation assessment from validation repair.
-Required Vega acceptance instructs the already-authorized agent to create the PR
-on the exact validated branch, subject to freshness and existing delivery authority.
-Rejection instructs the agent to inspect unmet intent and requirements, complete
-work and revalidate; abstention instructs it to inspect the receipt and resolve
-evidence or installation/runtime gaps. A boolean verdict supplies no invented
-defect explanation. Failed or stale proof always returns validation repair guidance,
-including when a model previously accepted. These instructions grant no merge or
-release authority and leave disabled-mode delivery guidance unchanged. Both the
-local-route top-level JSON/text renderer in `src/decapod/lib.rs` and the Buildkite
-route expose the final report's guidance; local rendering must not replace a
-post-validation Vega instruction with generic build/test repair advice.
-`ValidationReport::finish` gives every execution error precedence over an earlier
-in-memory readiness result. In particular, failure to create or synchronize the
-final verdict clears `ready`, restores repair guidance and yields a failing exit
-code, even after proof and Vega acceptance. Completed proof and earlier evidence
-remain diagnostic records; they cannot authorize publication after that failure.
-Both `init --vega-decisions[=true|false]` and `init with --vega-decisions[=true|false]`
-select that policy. Interactive init offers the same choice; refresh preserves it
-unless explicitly changed. Init does not install models or execute inference.
-New selection contains no machine-specific installation path; previously authored
-pins and unrelated settings remain intact when the mode changes. These new init
-regressions are authored but require execution before a passing claim.
-`[vega].model_manifest_digest` pins the shared compound model identity. Explicit
-`setup vega --runtime <path>` verifies the installed worker's native file format
-and byte identity, then atomically records this maintainer's local binding in
-private cache metadata. It executes no worker and does not certify build source.
-Legacy `[vega.installation]` still binds canonical directory, manifest digest,
-native worker path and SHA-256; both model pins must agree if present. These
-installation identities are frozen before proof and rechecked before acceptance.
-The old provider flag and credential lookup
-are removed. Historical Jev evidence remains read-only compatibility, without
-current trajectory or readiness authority.
-
-Shared `[vega]` policy resolves each maintainer's private local installation.
-`backend` accepts auto (default), metal, cuda and cpu; `cpu_fallback` defaults true.
-Auto prefers Metal on macOS and CUDA elsewhere; CPU-only builds on other systems
-can return a typed unavailable-GPU response and then execute CPU inference.
-CUDA currently targets NVIDIA via the worker's explicit `cuda` build feature;
-AMD/Intel acceleration is not implemented. These defaults do not prove runtime
-availability. Backend choice/fallback are part of the frozen policy and cannot
-weaken an accepted required policy through candidate changes.
-
-Init refresh removes only the obsolete provider selector when its value is
-`none` or `jev`, deleting the section only when empty. Authored extension keys
-remain intact. Unknown or malformed selectors require review and leave the
-configuration unchanged; dry-run performs the same checks without writing it.
-
-`decapod setup vega` supports `--cache-directory`, `--check-updates`, `--refresh`,
-`--offline`, `--rollback <manifest-digest>` and explicit `--runtime <path>` local
-registration. A read-only update check cannot register a runtime. Its JSON report
-prints verified model pins and disabled portable TOML; `runtime_registered` is
-distinct from `runtime_installed`, and it does not build or install an executable.
-Report serialization failures propagate through the CLI's typed validation error path
-instead of panicking or claiming a successful setup response.
-The generated configuration reference includes the exact vega configuration
-declaration and the complete authored readiness/setup guidance; source-derived
-documentation corrections still require the CI renderer's equality check.
-The worker's bounded `decapod.vega-worker.v2` request/response additionally binds
-the explicitly requested physical backend. The parent validates actual backend
-and precision labels before consuming an answer or considering fallback. A typed
-`hardware_unavailable` error with no outcome/tokens permits one fresh CPU process
-when policy allows; inference errors, invalid IPC, timeout, crash and all model
-decisions terminate the attempt without retry. Pins are rechecked between attempts,
-each request has its own digest and the original deadline bounds both. Receipt
-`backend_attempts` preserves each requested backend, request ID and error.
-This protocol needs execution tests; declarations alone are not portability proof.
-Outcomes preserve [no, yes] probabilities, prediction set,
-abstention, unbound/OOD, physical diagnostics and explicit devices/precision.
-Only positive singleton yes accepts; negative rejects and uncertainty abstains.
-The validation report separates `proof_ready`, final `ready`, and the exact-bound
-`decapod.vega-readiness.v1` receipt. No result supplies independent proof authority.
-
-Worker `--probe` performs a real finite Metal numerical check without models.
-Optional `--proof-output` writes private bounded numerical diagnostics, including
-tokens/spans, pooled vectors, readouts, outcomes and measured durations; parity
-remains unverified until independently authenticated reference comparison.
-
-Local handshake hashes make declarations tamper-evident. Self-declared model,
-provider, and agent identity remain unverified without a configured trust root.
-Policy approvals retain exact action/target scope and expiry; category approval
-and risk-zone approval are independent gates. No provider or approval record
-expands Decapod's control to commands the agent executes outside its interfaces.
-
-Configured validation uses existing authority for its exact non-forced workspace
-branch push, including a supported retry whose outcome can be safely rechecked.
-Agent guidance explicitly avoids asking for that same permission again. It still
-requires renewed authority after explicit cancellation or a material scope change,
-and it preserves access and authorization denials. Source and accepted-target
-checks precede reuse; guidance is not an authorization receipt. A same-head
-retry can reuse the exact published branch after fresh binding checks; it does
-not approve arbitrary shell commands, a different ref, or changed source under
-an earlier receipt.
+Laya model assets are immutable, pinned external artifacts. Explicit setup
+verifies the private cache and optionally registers a native runtime and CPU
+companion. Merely enabling `--laya-decisions` does not download assets or prove
+that inference works. Required Laya policy and installation bindings are checked
+again before final readiness. Runtime-registration version 2 requires explicit
+re-registration of older local bindings, preserving files on refusal.
 
 ## Compatibility Matrix
 
@@ -1173,8 +998,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
+- Repository signal fingerprint: `d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1232,94 +1057,16 @@ immutable `CHANGE_EVENT`, `CHANGE_BASE` and `CHANGE_HEAD` to CI-local validation
 
 ## Local CPU companion and model-free startup protocol
 
-`setup vega --runtime <native-worker> --cpu-runtime <cpu-only-worker>` registers
-optional separate CPU bytes privately. The CPU option requires the primary
-runtime and conflicts with read-only update checks. Legacy bindings omit this
-optional field without changing their serialized identity. A loader failure
-cannot be retried through the same unavailable GPU executable.
-
-`decapod.vega-backend-check.v1` binds a requested GPU backend to an availability
-boolean and optional typed bounded error; it has no outcome, model path or state.
-Unknown fields, contradictory status, wrong schema/backend and compute errors
-are rejected. A successful capability check is not a readiness verdict.
-`BackendAttempt` records capability/inference phase and executable SHA-256; the
-receipt's runtime pin identifies the final selected inference executable.
+`setup laya --runtime <path> --cpu-runtime <path>` registers explicit local native
+executable pins. Startup probes and fallback use the existing Laya protocol and
+bounded process adapter. A successful probe is not model inference evidence.
 
 ## Supplemental Rust worker verification
 
-The Vega work branch selects a reviewed `vega-native` recipe using the separate
-`assets/tools/vega-native/Cargo.toml` and its lock. Tests precede
-`--probe-auto --proof-output <private-controller-path>`. Automatic capability
-diagnostics select Metal on Apple or CUDA elsewhere, with real CPU tensor
-arithmetic only after typed hardware unavailability. The JSON names the selected
-backend and fallback reason and explicitly says model inference was not executed.
-The explicit `--probe` remains a Metal-only check with no CPU retry.
-
-Optional `[proof.rust_workers]` has `reviewed_recipes_digest` and `workers`.
-Each worker has a unique `name` and a repository-relative `manifest` ending in
-`Cargo.toml`, explicit `timeout_seconds` (1–1800 per test/run), `features` (default
-empty), `metal_toolchain` (default false) and nonempty `runs`. Each run has literal
-`arguments` and optional `proof_output` (default false). The controller always runs
-the worker's tests first. Run arguments follow Cargo's `--` separator. The worker
-must be a separately locked Cargo workspace with explicit `package.rust-version`.
-A manifest may have distinct feature-set variants; exact or reordered duplicate
-variants are rejected. Each variant has independent build scratch. At most four workers, sixteen unique simple feature names and eight runs per
-worker are accepted, with bounded argument counts/bytes and the original overall
-validation deadline. Paths, duplicate declarations, unsupported fields and stale
-review pins fail closed. An accepted recipe cannot be removed or changed by a
-candidate; additional recipes only add required proof.
-
-`rpc agent.init` reports `rust_worker_recipes_digest` as a read-only review aid.
-It neither writes nor approves the recipe pin. Init refresh retains authored
-recipes. A configured recipe requires the strict Decapod source profile and the
-complete existing source proof before native execution. Absent host authorization
-is an explicit unsupported-adapter error. This prerequisite's installed controller
-continues to be v0.118.0; candidate support cannot authorize its own adoption.
-
-`proof_output=true` appends `--proof-output <fresh-private-path>` to that run. The
-controller retains a bounded private JSON object (at most 1 MiB), hashes it, and
-retains command stdout/stderr, timing, termination and failures under the existing
-validation evidence directory. A run cannot supply its own output destination.
-This is diagnostic custody, not independent validation of model semantics. The
-outer validation report is the only publication-readiness result; supplemental
-command records explicitly carry `publication_ready=false`.
-
-### Private native collection interface (#1445)
-
-`verify_scientific_collection` always writes its bounded private final failure
-report after loading a valid local collection context, including available phase
-diagnostics when strict verification encounters a missing numeric export. Each
-phase independently retains its context binding or an explicit read error;
-binding verification does not mean its scientific contents passed. Missing,
-unsafe or malformed evidence still fails the required command and cannot be
-replaced by later diagnostic success. The d3ebad07 run exposed this reporting
-gap after public download failures: all40 native tests passed, but only the
-last CPU shard produced model outcomes, and no complete numerical result was
-available. Installation errors now identify the immutable public component pin
-and HTTP status where available, preserving the original I/O error kind and
-access-denial behavior. These diagnostic fields add no retry or transport route.
-
-The final reducer checks the required numerical collection disposition before
-model setup. A known failed numerical collection immediately yields a non-ready
-failure report with all available current-context diagnostics; it cannot cause
-another download or full asset rehash. This does not skip independent work:
-the numerical collection and all six evaluation shards precede the reducer.
-Production failed-proof handling remains the separate earlier kernel gate,
-which never invokes Vega to assess a failed required validation result.
-
-`decapod-vega-infer --diagnose-native --proof-output <fresh-private-path>` is a diagnostic-only worker command for the reviewed native recipe. It records pinned installation identities, actual per-backend inference outputs/errors, synchronized stage timings and lifetime-process RSS high water (macOS bytes; other Unix ru_maxrss converted from KiB). It reports `publication_ready=false`, parity and readiness calibration unverified. Explicit CPU execution does not itself establish production fallback routing. No model paths, weights, credentials or private input are committed. The 1 MiB private-export cap remains unchanged. Preferred and CPU attempts share a process, so RSS includes earlier attempts and is not isolated GPU/model allocation. Production request/response, deterministic gates and abstention behavior are unchanged.
-
-Verification-only `--prepare-evaluation --proof-output <fresh-private-path>` writes a bounded private input receipt and an 8 MiB capped sibling corpus without clobbering. The pinned dataset, grouped split, agent-authored label scope, benchmark-reported evidence and constructed conditions are explicit. `--diagnose-native` collects it independently of model setup and adds separate tokenization/engine reference comparisons with frozen tolerances; neither command claims full-backbone parity or readiness calibration. See `docs/vega-reference-contract.md` for exact hashes, provenance, commands and unsatisfied criteria.
-
-### Native snapshot alias boundary (#1457)
-
-Candidate76 receipts now establish26worker tests and the short Metal/CPU model/reference subset; both heldout evaluations returned nonaccepting results. reference_backbone::compute additionally receives exact pinned engine-config bytes and verifies SHA12f4f737 before independently calculating active memory chunks, with source revision/hash recorded in private reference exports. It retains its512-token pure-text bound and exact masks, existing mixed numerical tolerances and fail-closed unsupported inputs. The correction remains unexecuted until fresh validation; neither old receipts nor conditional engine agreement establish nonempty chunk or long-context parity. No production IPC authority, receipt size, timeout, calibration or model pin changes.
-
-The existing supplemental Rust-worker recipe and private evidence contracts are unchanged. Native snapshot preparation accepts the exact already reviewed golden-vector fixture symlink in addition to the reviewed toolchain alias. There is no generic symlink permission or caller-controlled target map. `SnapshotReview.denied_paths` remains an additional deny list and takes precedence even for a recognized alias. Missing or retargeted HEAD/index/working links or nonregular targets fail closed; no out-of-repository referent is copied. Official published controller v0.119.1 contains this repair and successfully compiled/executed candidate `2f785c82` through the required recipe. Its real Metal arithmetic and limited CPU/reference receipts do not establish successful Metal model execution or the later repair. The accepted released controller retains validation authority; public provider logs are diagnostic inputs, never substitute proof or publication permission.
-
-Native device-probe receipts now include the exact attention source revision alongside Candle provenance. Source compatibility is explicitly advanced to candle-vllm b1055eca/Candle23a6f38/attentionf22e42c; external model/tokenizer/engine/calibration identities and selected raw blocks13/19 remain fixed. Unsupported model modes and malformed/abstaining/stale proof still cannot authorize readiness.
-
-The worker's `--collect-native-verification --proof-output <new-private-path>` runs native diagnostics and heldout automatic/explicit-CPU evaluation independently. It records bounded private child receipts with digest references, then fails if any required phase failed or a receipt is missing/malformed. Each phase retains its scientific acceptance checks; collection is not readiness. The existing controller timeout still bounds the whole command, and evaluation retains its600-second soft dispatch window. `Response::permits_cpu_retry` is a public pure classifier shared by production and native diagnostics, never proof/publication authority. Diagnostic fallback uses a real unsupported alternate GPU API; it does not claim available Metal failed or that kernel custody/loader companion routing executed. Private GPU model proofs also require consumed-model reuse rejection.
+Generic Rust proof recipes remain physical prerequisites, not model policy.
+Configured manifests, features, arguments, dependency locks and timeouts are
+bounded and source-bound. Worker outcomes cannot authorize publication, and
+this repository declares no required worker recipe.
 
 ## Material-spec gate execution records
 
@@ -1514,6 +1261,8 @@ never sent through cloud RPC.
 
 ## Laya-only optional setup and initialization
 
-`setup laya` replaces the retired `setup vega` command, with explicit cache, runtime, CPU companion, offline and update-check options. `--laya-decisions[=true|false]` replaces the old init selector. Disabled is the default; explicit selection pins the reviewed Laya manifest. Init refresh preserves Laya backend, fallback and runtime bindings, and retains legacy Vega settings for explicit migration rather than silently activating another evaluator.
-
-Legacy configuration and receipt JSON retain their existing names and fields through passive compatibility DTOs; there is no legacy evaluator execution path. Laya runtime registration retains its historical schema identifier to preserve existing installations, while model-manifest verification still enforces Laya identity. Production projection golden vectors bind the unchanged `validation-results.v3` serialized input.
+`setup laya` supports cache-directory, runtime, CPU companion, offline and
+update-check options. `init --laya-decisions[=true|false]` explicitly selects the
+optional assessment policy; omission preserves it. Init preserves current Laya
+settings and opaque user extension tables. Only `[laya]` has model-policy
+semantics. No retired model configuration or receipt type is an API alias.

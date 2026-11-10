@@ -94,16 +94,6 @@ pub(crate) fn configuration_from_bytes(bytes: &[u8]) -> io::Result<Configuration
             "laya_reviewed_manifest_required: run decapod setup laya and commit its shared manifest digest; each maintainer registers a private runtime",
         ));
     }
-    if value
-        .get("vega")
-        .and_then(|v| v.get("mode"))
-        .and_then(|v| v.as_str())
-        == Some("required")
-    {
-        return Err(invalid(
-            "LAYA_EXPLICIT_MIGRATION_REQUIRED: legacy required Vega policy is not silently disabled or interpreted as Laya; review and accept the explicit team policy migration",
-        ));
-    }
     Ok(config)
 }
 pub(crate) fn verify_policy_acceptance(

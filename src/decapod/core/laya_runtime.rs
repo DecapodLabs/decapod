@@ -10,9 +10,9 @@ use std::io::{self, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-// Preserve the historical private binding wire identifier so installed Laya
-// runtimes remain registered; the model manifest is verified independently.
-const SCHEMA: &str = "decapod.vega-local-runtime.v1";
+// Explicit version boundary: older private registrations must be reissued
+// through setup; model manifests and historical proof bodies are unchanged.
+const SCHEMA: &str = "decapod.laya-local-runtime.v2";
 const MAX_RUNTIME: u64 = 512 * 1024 * 1024;
 const MAX_BINDING: usize = 8192;
 
@@ -140,8 +140,12 @@ fn binding_path(root: &Path, manifest: &str) -> io::Result<PathBuf> {
 
 fn validate_binding(binding: &LocalBinding, manifest: &str) -> io::Result<()> {
     let installation = &binding.installation;
-    if binding.schema != SCHEMA
-        || installation.manifest_digest != manifest
+    if binding.schema != SCHEMA {
+        return Err(invalid(
+            "laya_local_binding_version_unsupported: re-register with decapod setup laya --runtime <path>",
+        ));
+    }
+    if installation.manifest_digest != manifest
         || !installation.directory.is_dir()
         || installation.directory.canonicalize()? != installation.directory
         || installation.runtime.canonicalize()? != installation.runtime
@@ -293,8 +297,23 @@ mod tests {
         assert!(resolve_at(root.path(), &other).is_err());
         let mut record: serde_json::Value = serde_json::from_slice(&before).unwrap();
         record["schema"] = "unknown".into();
-        fs_permissions::write_private(&path, serde_json::to_vec(&record).unwrap()).unwrap();
-        assert!(resolve_at(root.path(), &installation.manifest_digest).is_err());
+        let unsupported = serde_json::to_vec(&record).unwrap();
+        fs_permissions::write_private(&path, &unsupported).unwrap();
+        let error = resolve_at(root.path(), &installation.manifest_digest).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("laya_local_binding_version_unsupported")
+        );
+        assert_eq!(fs::read(&path).unwrap(), unsupported);
+        register_at(root.path(), installation.clone()).unwrap();
+        assert_eq!(
+            resolve_at(root.path(), &installation.manifest_digest).unwrap(),
+            installation
+        );
+        let registered: serde_json::Value =
+            serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+        assert_eq!(registered["schema"], "decapod.laya-local-runtime.v2");
         fs_permissions::write_private(&path, vec![b'x'; 8193]).unwrap();
         assert!(resolve_at(root.path(), &installation.manifest_digest).is_err());
     }

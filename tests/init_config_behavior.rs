@@ -307,12 +307,6 @@ fn optional_laya_replaces_the_retired_model_assets_surface() {
     assert!(help.status.success());
     let text = String::from_utf8(help.stdout).unwrap();
     assert!(text.contains("laya"));
-    assert!(!text.contains("vega"));
-    assert!(
-        !run_decapod(project.path(), &["setup", "vega", "--help"])
-            .status
-            .success()
-    );
 
     assert!(
         run_decapod(project.path(), &["init", "with", "--force"])
@@ -394,30 +388,27 @@ fn init_can_select_laya_and_refresh_preserves_policy_and_local_pins() {
 }
 
 #[test]
-fn init_refresh_preserves_explicit_vega_installation_without_executing_it() {
+fn init_refresh_preserves_opaque_project_extensions_without_enabling_evaluation() {
     let project = tempdir().expect("project tempdir");
-    let first = run_decapod(project.path(), &["init", "with", "--force"]);
-    assert!(first.status.success());
-    let config_path = project.path().join(".decapod/config.toml");
-    let mut config = fs::read_to_string(&config_path).unwrap();
-    config.push_str(&format!(
-        "\n[vega]\nmode = \"required\"\nalpha = \"0.05\"\nrisk = \"0.1\"\n\
-         [vega.installation]\ndirectory = \"/unavailable-model\"\n\
-         manifest_digest = \"sha256:{}\"\nruntime = \"/unavailable-worker\"\n\
-         runtime_sha256 = \"sha256:{}\"\n",
-        "a".repeat(64),
-        "b".repeat(64)
-    ));
+    assert!(
+        run_decapod(project.path(), &["init", "with", "--force"])
+            .status
+            .success()
+    );
+    let path = project.path().join(".decapod/config.toml");
+    let mut config = fs::read_to_string(&path).unwrap();
+    config.push_str("\n[project_extension]\nmode='required'\nlabel='user-owned'\n");
+    fs::write(&path, &config).unwrap();
     let before: toml::Value = toml::from_str(&config).unwrap();
-    fs::write(&config_path, config).unwrap();
     let refresh = run_decapod(project.path(), &["init", "--refresh"]);
     assert!(
         refresh.status.success(),
         "{}",
         String::from_utf8_lossy(&refresh.stderr)
     );
-    let after: toml::Value = toml::from_str(&fs::read_to_string(config_path).unwrap()).unwrap();
-    assert_eq!(before["vega"], after["vega"]);
+    let after: toml::Value = toml::from_str(&fs::read_to_string(path).unwrap()).unwrap();
+    assert_eq!(before["project_extension"], after["project_extension"]);
+    assert_eq!(after.get("laya"), before.get("laya"));
 }
 
 #[test]

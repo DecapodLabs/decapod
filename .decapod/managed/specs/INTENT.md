@@ -9,16 +9,6 @@ no authorization exception, publication waiver, new datastore or cloud behavior.
 
 ## Rust consumer source-spelling coverage
 
-Consumer initialization must bind discovered build inputs to their actual
-tracked spelling. Issue #1470 coverage includes a dependency-free Rust consumer,
-real CLI inventory/index checks, and a required macOS case-insensitive APFS test.
-These tests establish filename binding; full live native readiness and historical
-recovery remain separate acceptance obligations, not inferred from fixture tests.
-The #1473 historical-recovery retry has since passed against the authorized live
-fixture on native macOS ARM64 with Vega disabled. This evidence verifies the
-recovered tasks and full unscoped readiness; it does not establish readiness on
-other platforms or replace the independently configured PR proof.
-
 ## Product Outcome
 
 Decapod keeps AI coding work tied to the human request, the repository's rules,
@@ -59,17 +49,6 @@ derived-release branch and its failed collection remain preserved until an
 independently supported release can resume them; this fix does not close the
 broader #1070/#1398/#779 or four-platform packaging requirements.
 
-Merged #1464 preserves the accepted #1462 delivery and v0.120.1 release.
-Its native execution changes extend the existing runner with reviewed finite
-command sequences, complete step evidence and original deadline/cancellation
-propagation. A successful first command cannot stand in for a later required
-command. Final native selection binds the declared policy timeout rather than
-remaining wall-clock time, so rechecking unchanged work does not invalidate its
-own invocation identity. Missing platform, workflow or release adapters still
-block full readiness. This contributes to #1398/#1070 and #1069; it does not
-declare those entire umbrella scopes complete or change Vega's authority,
-calibration, numerical tolerances or accuracy qualification.
-
 The maintainer delegated the functional safe-abstention decision after seeing two
 meaningful ready controls approved and the third validly abstaining. Functional
 delivery requires genuine approval on each tested backend and every adverse or
@@ -77,10 +56,6 @@ protocol control; a ready control may safely abstain, with its frozen expected-
 accept mismatch preserved explicitly. This is no claim of perfect oracle agreement
 or domain accuracy. Abstention still blocks readiness for that work. No production
 threshold, model, prompt, numerical tolerance or deterministic gate changes.
-
-Vega is an optional team choice during init and in shared project configuration. Each maintainer resolves a verified private local runtime/model installation; selecting the option does not add this repository's research corpus or Mac-specific verification recipe to other projects. Failed, incomplete or stale deterministic proof exits before Vega; only successful proof can reach bounded readiness assessment. Explicit plan obligations accompany intent and check outcomes, so successful tests cannot hide a declared unmet requirement. Vega cannot waive proof or create a PR, and the human retains merge authority. Candidate `30015be0` executed real M1 Max Metal and CPU inference, 43 native tests and three fixed numerical comparisons through 4,096 tokens successfully, but the complete heldout evaluation failed its risk and coverage criteria. Prospective public review inputs require source and semantic audits before any new evaluation or fitting; an external review proxy is not automatically ground truth. Labels remain outside model input, and errors, unsupported cases or missing independent adjudication cannot be converted into acceptance.
-
-The maintainer's explicit 2026-10-20 decision replaces the implementation-added 59-acceptance/5%-risk/95%-confidence/50%-coverage publication prerequisite with **functional active integration** acceptance. The old criterion is not passed; prior studies/failures are preserved and domain-level reliability remains unestablished. `vega_readiness::project`, `Response::validated_outcome` and `permits_decision` remain shared by live decisions and functional replay. Failed/missing/stale mandatory proof blocks before inference; relevant state/model changes invalidate a result. A valid current affirmative verdict can satisfy the configured required model condition; rejection, abstention, malformed or unavailable inference cannot. The human retains merge authority. Twelve fixed agent-authored functional scenarios require actual candidate Rust contract executions, real Metal/CPU model decisions for ready work and unmet/uncertain obligations, and policy/manipulation controls. Expected labels stay outside model input. These are bounded regression evidence, not independent population labels or an accuracy guarantee. No forced verdict, threshold/model/calibration change or inactive/advisory substitute is authorized. The issue-to-code-to-test mapping lives in `docs/vega-completion-checklist.md`; historical checkpoint interpretations below are superseded where they require the research criterion for delivery.
 
 The record must preserve what was asked, how the agent understood it, what
 scope was accepted, what changed, and what remains unproven. That record stays
@@ -194,11 +169,6 @@ unattempted backlog to be complete (`core::obligation`, `core::validate`).
 
 ### Local operation with explicit integrations
 
-Decapod runs on demand without a daemon and uses local repository state by
-default. Cloud storage, container execution, remote validation, and optional
-vega readiness inference have separate access and proof requirements. They extend
-particular boundaries of the product without owning its intent or governance.
-
 Release automation may create an ordinary branch at the accepted target before
 authoring a change. That event must retain its verified identity without becoming
 a candidate, a release exemption, or publication proof. Source changes on that
@@ -303,55 +273,30 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
+- Repository signal fingerprint: `d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
-## Rust vega readiness scope
+## Laya readiness scope
 
-Issue #1445 adds a small, optional post-validation intent-fit assessment to the
-existing agent publication gate. The user chose vega alone and removal of active
-Jev integration, with Rust production/setup/new tests for the text-only 0.8B
-backbone. Teams must be able to select Vega in project configuration and during
-init without requiring every maintainer to own an Apple GPU. Automatic execution
-must prefer Apple Metal on macOS and supported GPU acceleration elsewhere, with
-safe CPU fallback and the actual backend recorded. Shared policy must not depend
-on one maintainer's absolute installation paths. Shared pins/private bindings and
-portable selection/fallback now have source implementations. Metal, optional CUDA
-and the separate Rust CPU backbone still require executed verification before
-claiming portability. The bounded 4,096-token input contains structured
-validation outcomes and minimal intent/change context; all adverse facts and
-unknowns survive compaction. No full plan, diff or log is copied into the prompt.
-The agent publishes through existing gates and the human merges. Failed/stale
-proof cannot be blessed, and only an uncertainty-free positive singleton yes can
-satisfy required assessment. External pinned model setup and explicit refresh
-remain separate from offline inference. Source preparation is not native parity,
-readiness calibration, latency evidence or publication readiness.
+The sole model evaluator is optional Laya assessment after deterministic proof.
+The kernel remains daemonless and local-first; model installation and inference
+are not required for ordinary disabled-mode operation. No retired scientific
+corpus, calibration threshold or old runtime implementation is current policy.
 
 ## Optional team publication gate
 
-When a team explicitly enables `[vega] mode = "required"`, the agent may create
-a PR only after both deterministic validation and a current positive Vega
-assessment pass. Vega rejection, abstention or missing/stale/malformed evidence
-keeps publication blocked. Disabled policy retains ordinary validation gates.
-The shared configuration and init selection apply to maintainers; local runtime
-paths stay private, and the human retains merge authority. This is the intended
-integration contract; native execution and calibration proof remain outstanding.
+Teams opt into `[laya] mode = "required"` with the reviewed model manifest and
+private runtime registration. Current deterministic proof remains mandatory;
+only an affirmative Laya decision may permit an already-authorized PR step.
+Rejection, abstention and missing/stale evidence retain repair/revalidation
+instructions. Assessment never grants merge or release authority.
 
 ## Supplemental Rust worker verification
 
-The native-worker prerequisite for issue #1445 extends verification inside normal
-`decapod validate`. A project may require a separately locked Rust worker's tests
-and bounded runs after the complete strict source profile passes. This preserves
-the existing agent/publication and human/merge boundaries. It does not claim
-that successful compilation or a JSON diagnostic proves Metal execution,
-numerical equivalence or readiness-domain calibration. This prerequisite leaves
-the recipe inactive in Decapod's own configuration and needs independent acceptance
-and release before the Vega feature can use its controller support.
-
 ### Diagnostic collection and unresolved acceptance (#1445)
- 
+
 Native diagnostics must be executable before independent parity and readiness evaluation are available. Missing reference/holdout inputs are publication acceptance gaps, not dependencies of a device tensor probe or model forward pass. The agent must produce public, reproducible Rust verification inputs and auditable agent-curated repository cases; these labels are not human-reviewed ground truth. Source/native diagnostic success alone must not trigger feature publication or a completion claim.
 
 ## Validation Rules System
@@ -468,6 +413,10 @@ separately. It does not establish full cloud parity, hosted capacity, new retent
 permissions or the overall 30% storage goal. Subsequent changes require independent
 measurements and compatibility proof, as sequenced in `docs/datastore-v2/architecture.md`.
 
-## Operator-directed Vega retirement
+## Laya-only source cleanup
 
-This active datastore increment also removes the entire retired `assets/tools/vega-native` tree and its standalone entrypoint, as explicitly requested by the operator. Laya alone is the optional post-validation evaluator; default deterministic validation needs no model, Metal toolchain or scientific Vega worker. Historical observations are preserved as history and do not assert present requirements.
+Remove retired model implementation, compatibility fields, fixtures and stale
+documentation from the current tree. Preserve canonical proof/event bytes and
+historical Git commits. Resolve obsolete carried obligations through the
+supported governance CLI; historical resolution identifiers remain auditable
+until their accepted merge allows normal workstream compaction.

@@ -262,7 +262,6 @@ The previous 41 unit failures divide into these observed causes:
 | Bounded epoch directory enumeration | 21 | Twelve execution-checkpoint, three bounded-input and six workunit tests share the macOS descriptor-enumeration failure, including assertions masked by the earlier input error; retained in #1571. |
 | Noncanonical temporary paths | 15 | Snapshot/host-adoption fixtures supply an alias where the production boundary requires a canonical root. Rerun with `TMPDIR=/private/tmp`; do not relax canonical identity. |
 | Permission/recovery diagnostics | 2 | Host-specific fs-permission recovery expectations; unrelated production paths are unchanged. |
-| Vega cache identity/permissions | 2 | Temporary-path/cache fixture constraints; unchanged by history recovery. |
 | Independently reviewed toolchain inventory | 1 | Supplemental-worker fixture fails before execution; no successful worker proof is inferred. |
 
 The macOS epoch reader is deliberately deferred. Its shared `RepoSignalIo`
@@ -314,12 +313,6 @@ avoid artifact reuse between source snapshots. Accepted master reports
 accepted master. The sole baseline-only failure is the shared-directory mode
 fixture already corrected in `5557b015` to verify the mode actually established
 by the host. No new unit failure was introduced.
-
-Compared with the earlier noncanonical run, all fifteen canonical-root failures
-and the supplemental toolchain-inventory failure now pass. The remaining
-twenty-five failures are twenty-one bounded epoch reader cases, two permission/
-recovery cases, and two Vega cache cases. These remain failed; no platform
-validation or proof boundary was relaxed.
 
 Final focused commands and outcomes for the fixture reconciliation:
 

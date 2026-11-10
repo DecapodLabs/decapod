@@ -2,14 +2,6 @@
 
 ## Inspecting native validation completion
 
-After full native validation, inspect the returned evidence directory's
-`completion/verdict.json` and `completion/native-readiness-receipt.json` together.
-Pending completion staging is not success. A failed write, missing proof, stale
-candidate/target or rejected required Vega decision must be repaired and validated
-again; never manufacture a tracked receipt to unlock the native boundary.
-`decapod govern project-check` may produce the legacy preparation receipt but
-does not establish publication permission. Full validation remains the entrypoint.
-
 ## Operations Overview
 
 Decapod runs on demand as a versioned CLI or structured RPC process. The agent
@@ -269,15 +261,6 @@ semantics remain outside the coordination guarantee. Details are in
 
 ## Optional services
 
-Vega is disabled by default. Explicit setup caches verified external model data;
-normal builds and inference never download models. Check updates using
-`decapod setup vega --check-updates`, refresh an explicitly selected compatible
-revision using `--refresh`, or restore a verified cached manifest with
-`--rollback`. Unchanged backbone files are reused by content hash. The native
-Rust worker must be built from a reviewed source release on Apple-arm64, checked
-with `--probe`, and explicitly pinned before required mode can run. This is not
-permission to bypass repository validation for development builds.
-
 Required inference is bounded and one-shot, with fresh recurrent state and no
 background process. Unsupported hardware, missing/changed artifacts, timeout,
 overflow or ambiguous output abstains. Current calibration is general upstream
@@ -385,8 +368,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (222 files), `tests/` (216 files)
+- Repository signal fingerprint: `d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

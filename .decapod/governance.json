@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "1d865efdf9846b88a8911ff0ee34c16d75d6cdc9",
+    "accepted_commit": "854703b40e97946eb1c40ac8b0e4c602a6f0af66",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -378,78 +378,6 @@
         "statement": "Configured validation can create, fast-forward or reuse its exact governed workspace branch without asking the human for a separate local policy receipt; unrelated writes, altered requests and provider/executable denials remain blocked.",
         "status": "open"
       },
-      "claim:vega-agent-readiness-guidance": {
-        "falsifier": "Failed or stale proof produces PR instructions, rejection or abstention produces PR instructions, disabled mode changes delivery authority, or boolean model output is presented as a textual defect explanation.",
-        "statement": "The optional Vega post-validation result instructs the agent: accepted current required proof and accepted Vega allow an already authorized PR; rejection requires requirement/evidence review and further work; abstention requires resolving the reported gap; failed or stale required proof always requires repair and revalidation. No result grants merge or release authority.",
-        "status": "open"
-      },
-      "claim:vega-current-run-scientific-collection": {
-        "falsifier": "Missing/replayed/mixed/unsafe/malformed phases, altered frozen inputs/labels, inconsistent decisions, numerical disagreement, failed adverse controls, absent positive coverage, hidden oracle mismatches or an abstaining verdict permit publication readiness.",
-        "proof_refs": [
-          "/private/tmp/vega-1191-validation-20261020T081406Z.json"
-        ],
-        "statement": "Eight reviewed Rust runs preserve three fixed numerical fixtures and six pairs of fixed production-path functional cases. The mandatory current-run aggregate rechecks identity, exports, raw response interpretation, every adverse/control result and genuine positive approval on each backend. Original oracle agreement is reported separately from delegated safe-abstention qualification; collection alone never authorizes publication.",
-        "status": "open"
-      },
-      "claim:vega-late-report-failure": {
-        "falsifier": "A late final-report filesystem error leaves ready=true, exit_code0 or create_authorized_pr instructions, overwrites existing evidence, or loses unsupported-controller recovery guidance.",
-        "statement": "Every validation execution error revokes publication readiness and PR guidance, including final verdict write or sync failure after completed proof and accepted Vega; completed proof and earlier evidence remain diagnostic only.",
-        "status": "open"
-      },
-      "claim:vega-native-acceptance": {
-        "falsifier": "Publication occurs without complete current source/native/numerical/functional proof, without positive approval on both backends, with unsafe adverse outcomes, or by presenting agent-authored functional labels as independently calibrated domain accuracy.",
-        "proof_refs": [
-          "https://github.com/DecapodLabs/decapod/issues/1445"
-        ],
-        "statement": "Current functional delivery requires actual native Metal/CPU inference, unchanged separate Rust numerical comparisons, installation/fallback checks, meaningful model approvals and safe negative/uncertain controls. Maintainer-authorized qualification supersedes the prior research prerequisite without passing it; all old failures and domain-accuracy limits remain preserved.",
-        "status": "open"
-      },
-      "claim:vega-package-input-lock": {
-        "falsifier": "Bazel still rejects the normalized Cargo manifest input, dependencies/required checks are changed to hide the mismatch, the lock exceeds existing discovery bounds, or metadata regeneration is represented as executed tests.",
-        "proof_refs": [
-          "/private/tmp/vega-040d-buildkite-setup.log"
-        ],
-        "statement": "The reviewed crate packaging exclusion is reflected by normal Bazel module metadata regeneration; only the normalized Cargo.toml input hash changed, without dependency additions, expanded discovery limits or weakened checks.",
-        "status": "open"
-      },
-      "claim:vega-plan-obligations": {
-        "falsifier": "An explicit deferred obligation, phase acceptance gate or adverse plan fact disappears from the assessment; overflow produces a partial assessment instead of abstention; stale governance authorizes publication.",
-        "statement": "The bounded post-validation assessment preserves declared proof hooks, unresolved questions, contradictions, stop conditions and phase gates as well as intent; none is silently omitted or truncated to fit model input.",
-        "status": "open"
-      },
-      "claim:vega-positive-singleton": {
-        "falsifier": "A disabled or repinned accepted required policy, failed/stale check, adverse projection omission, changed binding, negative/ambiguous/OOD/abstaining result can establish readiness.",
-        "proof_refs": [
-          "src/decapod/core/validation_runtime.rs",
-          "src/decapod/core/vega_readiness.rs"
-        ],
-        "statement": "Required vega may permit readiness only after deterministic proof and exact freshness, accepted policy integrity and a positive singleton yes without abstention/OOD; failed, stale, uncertain or changed identities remain blocked.",
-        "status": "open"
-      },
-      "claim:vega-production-projection-evaluation": {
-        "falsifier": "Replay uses another prompt builder, drops adverse obligations, dispatches on failed/stale/missing proof, accepts malformed responses, invents executed checks, hides oracle disagreements or authorizes publication from unsigned fixture evidence.",
-        "proof_refs": [
-          "https://github.com/DecapodLabs/decapod/issues/1445"
-        ],
-        "statement": "Live assessment and replay share validation-results.v3 projection, request/response checks and the final readiness predicate. Complete deterministic proof precedes inference. Fixed functional observations come from executed bounded candidate checks but unsigned replay never grants custody or publication. Exposed v2 and zero-unit research admission stay historical, not passing accuracy or current research prerequisites.",
-        "status": "open"
-      },
-      "claim:vega-public-review-source-audit": {
-        "falsifier": "Audit leaks selected verdict/rationale or future checks into input, labels wrong-commit/edited requirements as eligible, equates variants with independent ground truth, suppresses native checks, or claims historical statistical qualification passed.",
-        "proof_refs": [
-          "tests/fixtures/vega-public-review-sources/final-admission-review.json"
-        ],
-        "statement": "Historical public review records remain pinned/audited Rust diagnostic inputs, not a qualified readiness study. Review verdicts/rationale, future CI, conflicting identities and incomplete source histories cannot become independent readiness truth. Maintainer-authorized functional qualification does not claim that the old study or risk criterion passed.",
-        "status": "open"
-      },
-      "claim:vega1445-readiness-role-qualification": {
-        "falsifier": "Qualification passes an always-abstaining/rejecting model, lacks approval on either backend, accepts unmet obligations/manipulation, accepts malformed inference, hides an oracle mismatch, changes model/input/threshold/tolerances, or grants readiness to failed/stale/abstaining work.",
-        "proof_refs": [
-          "https://github.com/DecapodLabs/decapod/issues/1445"
-        ],
-        "statement": "The maintainer replaced the statistical qualification with functional integration and delegated safe-abstention interpretation. Both actual backends must approve meaningful ready work; every adverse/control case and numerical comparison must pass. A ready control may validly abstain, preserving its frozen expected-accept mismatch and blocking that assessed work. Domain accuracy and old research success remain unestablished.",
-        "status": "open"
-      },
       "claim:workunit-journal-recovery": {
         "falsifier": "Concurrent mutations lose updates, stale prepared state overwrites the journal, a retry overwrites a divergent projection, or replay refreshes a retained passing proof artifact.",
         "proof_refs": [
@@ -512,10 +440,8 @@
       "trajectory:92d20e7a29fe6436": "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
       "trajectory:9cae7985f5372144": "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
       "trajectory:9ccc878a4150c313": "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
-      "trajectory:9dc5e300bb3bd67b": "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked.",
       "trajectory:9ec958ffca8a0a63": "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
       "trajectory:ac23859f7db4e13e": "Preserve explicit cancellation and all remote sourcepass evidence. Late final report failure must dominate earlier readiness; this repair changes no scientific threshold or model result. Sourcepass is not nativeverification. Continue official validate exactnewcandidate on originalbranch; no new ownership, manual tests, forcepush, PR while acceptance fails, merge or release.",
-      "trajectory:acca78c440a4be4f": "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership.",
       "trajectory:ad78b8b133b57577": "Only released119 snapshot blocker retired: merged fix is officially published1191. Native/parity/calibration acceptance remains unverified and required recipe remains nonaccepting until actual evidence; authored inputs and frozen criteria unchanged.",
       "trajectory:afd7f835abf45cbd": "Native full graph still requires actual platform capabilities; current Mac does not by itself establish Linux or four-archive release execution",
       "trajectory:b2b784d1dd82ea8a": "Mac-only offline metadata does not prove cached dependency resolution on every platform; normalized lock references are not version-only proof reuse",
@@ -540,134 +466,142 @@
     }
   },
   "change": {
-    "id": "change_01M70TT9S62S73SECJEVRCDVS1",
-    "base_commit": "1d865efdf9846b88a8911ff0ee34c16d75d6cdc9",
+    "id": "change_01M71C02B3MSRQY464Y79Z99F0",
+    "base_commit": "854703b40e97946eb1c40ac8b0e4c602a6f0af66",
     "target_base": "origin/master"
   },
   "claims": {
-    "event-index-preservation": {
-      "statement": "The versioned SQLite compaction removes only the duplicate sequence index while preserving exact event identities, sequence values, payloads and unique ordering.",
-      "falsifier": "Any changed historical row or accepted duplicate stream sequence, unsafe index removal, or non-atomic failure refutes the claim.",
+    "laya-only-active-contract": {
+      "statement": "Laya is the sole active optional post-validation evaluator; retired model references are absent from tracked active source, documentation, fixtures and paths. Historical governance resolution IDs are retained as an explicit accepted-compaction boundary.",
+      "falsifier": "Any active tracked interface or path still refers to a retired evaluator, or a non-Laya model field remains in validation output.",
       "status": "supported",
       "proof_refs": [
-        "/private/tmp/index134-correctness.log",
-        "/private/tmp/index134-events.log",
-        "/private/tmp/index134-migration.log"
+        "/private/tmp/laya-only-final-tests.log",
+        "/private/tmp/laya-only-source-scan.json"
+      ]
+    }
+  },
+  "resolutions": {
+    "claim:vega-agent-readiness-guidance": {
+      "obligation_digest": "sha256:bf8cc625d934a02a2e04fb857e61a491f791f62625f6485bb269acd4661d5df4",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
       ]
     },
-    "retired-native-vega": {
-      "statement": "The entire native Vega workspace and entrypoint are absent; no Vega Rust-worker recipe is required; Laya is the sole optional post-validation setup and init selection, disabled by default.",
-      "falsifier": "A surviving native worker tree, required Vega recipe, offered Vega setup command, enabled-by-default Laya policy or lost explicit Laya policy refutes this retirement contract.",
-      "status": "supported",
+    "claim:vega-current-run-scientific-collection": {
+      "obligation_digest": "sha256:c8062a46f1a26c35d64635c74d3fa5180ff42f07e583aa526884cde38552402f",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
       "proof_refs": [
-        "/private/tmp/index134-retirement-final-init.log",
-        "docs/agent/repository-readiness.md"
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "claim:vega-late-report-failure": {
+      "obligation_digest": "sha256:0d26c9033c29748511f32eee0f9ec252327d58c769ff9b9bb3857fce750f8692",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "claim:vega-native-acceptance": {
+      "obligation_digest": "sha256:b255347853431cfb7e974ea4a9f3849207e8543bc5f3c79d78521508d153857f",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "claim:vega-package-input-lock": {
+      "obligation_digest": "sha256:d05322b533f3da146a467092475b34add9fc57f2fbbcc38fb2f4a0f7b161e4a6",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "claim:vega-plan-obligations": {
+      "obligation_digest": "sha256:802639c639e8e89228532485de71369cfd297b42fc3e95f8687d9d6ce87c7b1f",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "claim:vega-positive-singleton": {
+      "obligation_digest": "sha256:f7268f73f41a738b6f3632aa7047866f89868f58b7cdf46e113165dd62ecc49f",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "claim:vega-production-projection-evaluation": {
+      "obligation_digest": "sha256:137d6a7c23f96f30a3b4c4942c005758bdfa77452a9b2d1800cac43066a9575f",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "claim:vega-public-review-source-audit": {
+      "obligation_digest": "sha256:db30319b2271d3f3cfd772dc6415d416f54f733184151a17377b1a2bfe921a2c",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "claim:vega1445-readiness-role-qualification": {
+      "obligation_digest": "sha256:27764fb5f2da0746445f8fc23493e7e4eb6c5faf5cd2075b3e07498ef1573aa4",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "trajectory:43470fe9583c1d8f": {
+      "obligation_digest": "sha256:43470fe9583c1d8fabbbc8d83b6feedaddffad66b8d0e80b8defc8919df1fb65",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "trajectory:9dc5e300bb3bd67b": {
+      "obligation_digest": "sha256:9dc5e300bb3bd67b79d4c925d5e469225c1d122fa8457d7c74fac17bedd34122",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
+      ]
+    },
+    "trajectory:acca78c440a4be4f": {
+      "obligation_digest": "sha256:acca78c440a4be4fd6ee8dbae3ab7ce7c73e0f7ec0db816de6300d21f2ab086d",
+      "resolution": "The operator explicitly retired this assessment obligation. Current Laya-only scope does not claim prior model qualification, scientific acceptance or failed execution as passed. Preserve the original in accepted Git history; this resolution retires the requirement, not the evidence.",
+      "proof_refs": [
+        "git:854703b40e97946eb1c40ac8b0e4c602a6f0af66:.decapod/governance.json",
+        "intent:todo:refa_01m71bsrx503b1dv"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "index-v01340",
-      "summary": "Port independently measured event sequence index compaction and partial architecture inventory onto accepted v0.134.0; 6 integration, 6 migration and 16 event tests pass; current publication spec reviews recorded; old failed CI remains failed.",
-      "input_digest": "sha256:df9edac42387c7d8adce47e1c12c0f133a6ce17963ae28273f4256c40c7fd516",
+      "id": "laya-only-contract",
+      "summary": "Remove retired assessment compatibility, corpora and obsolete documentation; retain Laya-only model output and explicit local binding version2; preserve raw history and current audit-resolution identifiers.",
+      "input_digest": "sha256:881f1ad9db17a1674eebe9cd3bb9e677cfe516f52805b41677a2e0bfed1a0c07",
       "proof_refs": [
-        "/private/tmp/index134-correctness.log",
-        "docs/datastore-v2/proof-ledger.json"
-      ]
-    },
-    {
-      "id": "retire-native-vega",
-      "summary": "Operator-directed removal of complete native Vega workspace, entrypoint and orphan backbone from active datastore branch; remove its required recipe, expose optional Laya setup/init and preserve default disablement, policy/bindings and deterministic proof. 36 CLI/config tests pass; integrate accepted v0.134.1 next.",
-      "input_digest": "sha256:e4ae9dd803a6e4a60ff79b5e83d0e951ed92c947093991b5f4899a7552d9e67b",
-      "proof_refs": [
-        "/private/tmp/index134-retirement-final-init.log",
-        "docs/agent/repository-readiness.md"
-      ]
-    },
-    {
-      "id": "merge-v01341-retirement",
-      "summary": "Integrate accepted v0.134.1 and macOS reader repair while retaining active datastore/Vega-retirement journal. Current 6 storage and 36 CLI/config tests pass. Refresh release-bound projections with official 0.134.1; retain full deterministic source-CI profile and explicit optional Laya.",
-      "input_digest": "sha256:72da894a644cf6d18b27163dc9343cf9e962a17a8c8d9b6df6b03b7eda94220b",
-      "proof_refs": [
-        "/private/tmp/index134-retirement-01341-datastore.log",
-        "/private/tmp/index134-retirement-01341-init.log"
-      ]
-    },
-    {
-      "id": "retire-vega-kernel-and-repair-bazel-lock",
-      "summary": "Remove retired Vega implementation, preserve Laya protocol and historical receipts, regenerate dependency locks to repair failed CI setup.",
-      "input_digest": "sha256:c48eaf3dd50a70b694e9f1aad94dbf019953a4ce265df9aec64c2393ccc28649",
-      "proof_refs": [
-        "/private/tmp/index134-bazel-lock-verify.log",
-        "/private/tmp/index134-final-integration.log",
-        "/private/tmp/index134-laya-helper-tests.log"
-      ]
-    },
-    {
-      "id": "macos-canonical-test-fixtures",
-      "summary": "Repair canonical custody fixture roots and typed unsupported-recovery assertions; full library suite passes on default macOS temp environment.",
-      "input_digest": "sha256:df356ab9f646b5d3f7ef07b25b786eb05e6799408f46eb6d43b2876b72903a94",
-      "proof_refs": [
-        "/private/tmp/index134-final-lib-repaired.log"
-      ]
-    },
-    {
-      "id": "accepted-v01342-release-alignment",
-      "summary": "Merge accepted master 3cda3f14 and PR1585; regenerate release-bound fingerprints with installed published Decapod0.134.2; preserve Laya-only interface and fix projection replay fixture for large Supabase debug binaries.",
-      "input_digest": "sha256:e2f8bafe8213e19b273ec0a2c10fc60b348984f18f42547b2dce77c82c5155ad",
-      "proof_refs": [
-        "/private/tmp/index134-v01342-bazel-strict.log",
-        "/private/tmp/index134-v01342-capabilities.json",
-        "/private/tmp/index134-v01342-clippy.log",
-        "/private/tmp/index134-v01342-final-tests.log",
-        "/private/tmp/index134-v01342-merge-tests.log"
-      ]
-    },
-    {
-      "id": "accepted-v01342-final-verification",
-      "summary": "Record final installed-release fingerprint alignment and exact verification outcomes, including isolated passing socket recheck without relabeling failed feature suite.",
-      "input_digest": "sha256:8a1161bcd889a87cec3286cf65908e697de5a47d2f0c74e2a4f928d481addb5d",
-      "proof_refs": [
-        "/private/tmp/index134-v01342-capabilities.json",
-        "/private/tmp/index134-v01342-clippy.log",
-        "/private/tmp/index134-v01342-final-tests.log",
-        "/private/tmp/index134-v01342-merge-tests.log",
-        "/private/tmp/index134-v01342-socket-recheck.log"
-      ]
-    },
-    {
-      "id": "ci-fixture-and-review-repair",
-      "summary": "Repair ETXTBSY test runtime readiness and bounded socket fixture teardown; record accurate unchanged SECURITY review against accepted base, preserving all production guards and historical checkpoint chain.",
-      "input_digest": "sha256:3f683e3da1bd1e8d8b4a47376ffbcf365c01aaee028d2585bdb55410574f9015",
-      "proof_refs": [
-        "/private/tmp/pr1589-history-before-repair.json",
-        "/private/tmp/pr1589-lifecycle-repair-tests.log",
-        "/private/tmp/pr1589-supabase-final-suite.log"
-      ]
-    },
-    {
-      "id": "ci-http-fixture-blocking-repair",
-      "summary": "Make accepted HTTP fixture sockets explicitly blocking under unchanged read timeout; delayed-header regression passes, with current content-bound security review correctly unchanged.",
-      "input_digest": "sha256:8fe0281d9af3dfae764c6a7e3235dba1059f5d879ebe9af61601b9d27dc1074c",
-      "proof_refs": [
-        "/private/tmp/pr1589-accepted-socket-probe.log",
-        "/private/tmp/pr1589-http-fixture-repair.log",
-        "/private/tmp/pr1589-publication-material-repair.log"
-      ]
-    },
-    {
-      "id": "approved-async-http-regression",
-      "summary": "Use approved bounded Tokio client for delayed-header fixture regression; final HTTP18 cases and all-target Clippy pass, complete Supabase suite passes with external profiles explicitly unexecuted.",
-      "input_digest": "sha256:b4d8ecb809633d006fe9f3b8566b9eeaf8e991f3e34096621e6a703b8ffe98b3",
-      "proof_refs": [
-        "/private/tmp/pr1589-clippy-async-final.log",
-        "/private/tmp/pr1589-http-async-final.log",
-        "/private/tmp/pr1589-supabase-final-suite.log"
+        "/private/tmp/laya-only-bazel-strict.log",
+        "/private/tmp/laya-only-clippy.log",
+        "/private/tmp/laya-only-final-tests.log",
+        "/private/tmp/laya-only-source-scan.json"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M70TT9S62S73SECJEVRCDVS1": {
+    "intent:change_01M71C02B3MSRQY464Y79Z99F0": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -677,11 +611,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+      "id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Datastore v2: measured inventory and first storage optimization\n\nAudit accepted Decapod, Dactyl and Propodus storage contracts; establish reproducible inventory and baseline; implement and verify the highest-value safe first optimization. Preserve local authority, evidence and migration compatibility; no production operations.",
-      "refined_intent": "Datastore v2: measured inventory and first storage optimization\n\nAudit accepted Decapod, Dactyl and Propodus storage contracts; establish reproducible inventory and baseline; implement and verify the highest-value safe first optimization. Preserve local authority, evidence and migration compatibility; no production operations.",
+      "raw_intent": "Laya-only runtime and source cleanup\n\nRemove all remaining retired evaluator code, configuration and receipt compatibility, obsolete fixtures and documentation. Preserve Laya-only optional post-validation assessment, deterministic proof encodings and explicit typed compatibility boundaries. User requests a fresh governed worktree after published release availability.",
+      "refined_intent": "Laya-only runtime and source cleanup\n\nRemove all remaining retired evaluator code, configuration and receipt compatibility, obsolete fixtures and documentation. Preserve Laya-only optional post-validation assessment, deterministic proof encodings and explicit typed compatibility boundaries. User requests a fresh governed worktree after published release availability.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -694,7 +628,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement the measured datastore event-index increment and, per explicit operator instruction, remove the entire retired assets/tools/vega-native tree and its required execution from this active branch. Laya alone remains an optional configuration-controlled post-validation evaluator. Preserve deterministic governance checks, existing event/proof bytes and migration compatibility; publish this combined PR after exact-candidate validation.",
+      "intent": "Use only Laya for optional post-validation assessment. Remove retired evaluator compatibility DTOs, report fields, guidance aliases, unused fixtures, stale documentation and package exclusions. Adopt explicit Laya runtime-binding version2 with typed re-registration failure for older bindings. Preserve documented opaque user configuration extensions, generic historical replay normalization, proof bytes and Git history. Resolve retired ledger obligations through supported CLI; retained historical resolution IDs require accepted compaction, never manual deletion. Verify active source/path absence, Laya CLI/configuration behavior, private runtime custody, projection goldens and exact-candidate validation.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -704,318 +638,111 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current branch material event/Laya architecture reviewed. Final CI repair remains fixture-only, with approved Tokio regression client and bounded kernel readiness waits.",
-          "reviewed_code_fingerprint": "9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379",
-          "spec_material_hash": "aca2b9332b2f0f39f9377bb30175b7f857ec39562b2530d98648a033f15ef142"
+          "reason": "Materially remove retired model machinery and research claims; sole optional Laya path, common projector, generic replay and private binding version2 match current source.",
+          "reviewed_code_fingerprint": "d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091",
+          "spec_material_hash": "0b86d1dc4eb7158c85628908dadfc194cc9ea51d68256c74e30b5d5e327ce47c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Material optional Laya and legacy-data interfaces remain reviewed; fixture-only Tokio client does not change production RPC or timeout contracts.",
-          "reviewed_code_fingerprint": "9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379",
-          "spec_material_hash": "f84bad49056ac0cd09d0c34e27a27c8b6c0b7706ce3f75591d47bb963aaa6974"
+          "reason": "Current validation report has only Laya model field; old DTO/guidance API removed. Current setup/init preserve Laya and opaque user tables; v2 binding re-registration is explicit.",
+          "reviewed_code_fingerprint": "d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091",
+          "spec_material_hash": "4515647c945b367aec9b8ca84014d9b6a3e5e7f949c5a4a27ebe904962edc0ef"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Security semantic content equals accepted3cda3f14. No lint-policy exceptions or production container, socket, auth or transport changes; updated fixture code is bound by this current review.",
-          "reviewed_code_fingerprint": "9a4f17e8485cc13e895f8d02aab32a426aa2c5d70dc35a332e1decb83be46379",
-          "spec_material_hash": "2a7ed5e559e71e6c8ff54801816f6f36ccfdebb745fc1c97607deea8d96c4779"
+          "reason": "Replace obsolete evaluator trust text with current Laya policy and private runtime custody; generic historical replay and canonical proof encodings unchanged. Historical audit IDs are preserved pending accepted compaction.",
+          "reviewed_code_fingerprint": "d93491b324f77bc133776349474707d9479031956f5e443443f7cb8853072091",
+          "spec_material_hash": "99c7faf55d9a02d0607f62d311b5ace056ad457dbad41799b0f4255d3830102e"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Datastore v2: measured inventory and first storage optimization",
+      "title": "Laya-only runtime and source cleanup",
       "todo_ids": [
-        "perf_01m6z2f0csrsekxz",
-        "refa_01m70zb0rmsgvas7"
+        "refa_01m71bsrx503b1dv"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794266966Z"
+      "updated_at": "1794270799Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "No historical Git commit, event identity or canonical proof bytes rewritten; no operator production access used."
       ],
-      "artifact_hash": "sha256:c599a40368afe6d289adfad52b2e14c5e45050bff5143d4f9d2ed24f851e9450",
+      "artifact_hash": "sha256:32cad21e322553421c71043662f86281926f3b0d8023d722c62239556d978a4f",
       "checks": [
         {
-          "name": "canonical-snapshot-fixtures",
+          "name": "active-source-absence",
           "status": "passed"
-        },
-        {
-          "name": "canonical-worker-fixture",
-          "status": "passed"
-        },
-        {
-          "name": "ci-governance-head6c6d",
-          "status": "failed"
-        },
-        {
-          "name": "ci-governance-repaired",
-          "status": "passed"
-        },
-        {
-          "name": "ci-lock-inputs",
-          "status": "passed"
-        },
-        {
-          "name": "ci-publication-material",
-          "status": "passed"
-        },
-        {
-          "name": "ci-supabase-head6c6d",
-          "status": "failed"
         },
         {
           "name": "clippy-all-targets",
           "status": "passed"
         },
         {
-          "name": "datastore-correctness",
+          "name": "final-local-tests",
           "status": "passed"
         },
         {
-          "name": "event-suite",
+          "name": "initial-library-and-config",
           "status": "passed"
         },
         {
-          "name": "final-all-target-clippy",
+          "name": "strict-bazel-lock",
           "status": "passed"
-        },
-        {
-          "name": "final-targeted-integration",
-          "status": "passed"
-        },
-        {
-          "name": "full-library",
-          "status": "passed"
-        },
-        {
-          "name": "laya-cli-configuration",
-          "status": "passed"
-        },
-        {
-          "name": "laya-projection-compatibility",
-          "status": "passed"
-        },
-        {
-          "name": "laya-proof-first",
-          "status": "passed"
-        },
-        {
-          "name": "legacy-decoding",
-          "status": "passed"
-        },
-        {
-          "name": "lifecycle-fixture-host",
-          "status": "passed"
-        },
-        {
-          "name": "migration-suite",
-          "status": "passed"
-        },
-        {
-          "name": "prior-publication",
-          "status": "failed"
-        },
-        {
-          "name": "prior-resume",
-          "status": "failed"
-        },
-        {
-          "name": "release-alignment",
-          "status": "passed"
-        },
-        {
-          "name": "supabase-consumer-local",
-          "status": "passed"
-        },
-        {
-          "name": "supabase-http-fixtures",
-          "status": "passed"
-        },
-        {
-          "name": "supabase-projection-fixture",
-          "status": "passed"
-        },
-        {
-          "name": "v01341-cli-config",
-          "status": "passed"
-        },
-        {
-          "name": "v01341-storage",
-          "status": "passed"
-        },
-        {
-          "name": "v01342-clippy",
-          "status": "passed"
-        },
-        {
-          "name": "v01342-merged-suite",
-          "status": "passed"
-        },
-        {
-          "name": "v01342-strict-lock",
-          "status": "passed"
-        },
-        {
-          "name": "v01342-supabase-library",
-          "status": "failed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "detail": "trajectory:branch_01M71C02DXB9T0EJKFXWCA5HRC",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
+            "detail": "trajectory:branch_01M71C02DXB9T0EJKFXWCA5HRC",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:13",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 13
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:14",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 14
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:15",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 15
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:16",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 16
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:17",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 17
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:18",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 18
-          },
-          {
-            "detail": "trajectory:branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "event_id": "event:19",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 19
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M70TT9YCVF9GDEN1NF0KHM96": {
+          "branch_01M71C02DXB9T0EJKFXWCA5HRC": {
             "evidence_only": true,
-            "id": "branch_01M70TT9YCVF9GDEN1NF0KHM96",
-            "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
+            "id": "branch_01M71C02DXB9T0EJKFXWCA5HRC",
+            "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
             "steps": [
               {
-                "action": "implementation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/migration.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/schemas.rs",
-                  "tests/datastore_efficiency.rs",
-                  "Ported material patch from own preserved commits 3ea461bc and 37fdd674 onto accepted 1d865efd; no source patch conflicts or changed accepted storage files.",
-                  "Original synthetic benchmark: docs/datastore-v2/measurements.json; physical savings 1650688 bytes at 100K events, WAL savings 2241280 bytes per 512 appends. Timing and hosted limits retained.",
-                  "Previous v0.133.2 Buildkite 6113 failed missing content-bound spec review; current interfaces, architecture and security explicitly reviewed. Fresh validation required."
+                  "/private/tmp/laya-only-initial-tests.log: 1602 library tests passed,8 ignored;36 init/config tests passed,1 ignored. Four production projection hashes preserved; generic replay normalizer unchanged.",
+                  "Retired carried obligations were resolved through CLI with accepted-source and task-intent references. Historical resolution IDs remain in current audit data until accepted compaction; source and documentation scan excludes only that explicit audit boundary."
                 ],
                 "proof_refs": [
-                  "prior-publication"
+                  "initial-library-and-config"
                 ],
                 "scope": [
                   "root"
@@ -1024,282 +751,25 @@
                 "validation_findings": []
               },
               {
-                "action": "validation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "/private/tmp/index134-correctness.log: v0.134.0 six integration tests passed, including 64 independent SQLite writers and replay.",
-                  "/private/tmp/index134-migration.log: six passed; /private/tmp/index134-events.log: sixteen passed."
+                  "/private/tmp/laya-only-final-tests.log:1602 library tests passed,8 ignored;16 native-consumer tests passed;36 init/config tests passed,1 ignored. Runtime-version rejection preserves bytes and explicit re-registration succeeds; four production projection hashes remain unchanged.",
+                  "/private/tmp/laya-only-clippy.log: all-target clippy with warnings denied passed.",
+                  "/private/tmp/laya-only-bazel-strict.log: strict lockfile_mode=error succeeds after generated dependency lock update.",
+                  "/private/tmp/laya-only-source-scan.json: no active tracked text or path matches; ledger resolution identifiers are the documented remaining archive boundary.",
+                  "Custody expired after workspace provisioning narrowed lease to30minutes. Same owner reclaimed generation2, renewed86400seconds and explicitly rebound the checkout; workspace status can_work=true. No raw control-plane state edits."
                 ],
                 "proof_refs": [
-                  "datastore-correctness",
-                  "migration-suite",
-                  "event-suite"
+                  "final-local-tests",
+                  "clippy-all-targets",
+                  "strict-bazel-lock",
+                  "active-source-absence"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Operator explicitly directed removal of assets/tools/vega-native, exclusive optional Laya post-validation evaluation, inclusion in this active branch and immediate PR publication when verified. Supersedes prior Vega worker retention requirement.",
-                  "/private/tmp/index134-resume-validate.log and readiness-fLXSmg: Buildkite proof verified; retired worker failed locked dependency resolution (parent Decapod 0.130.0 versus current 0.134.0). Removing obsolete worker by operator direction, not rewriting failure as success."
-                ],
-                "proof_refs": [
-                  "prior-resume"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "/private/tmp/index134-retirement-final-init.log: 36 passed, 1 preexisting ignored; Laya opt-in, default-disabled setup surface and refresh preservation pass.",
-                  "/private/tmp/index134-retirement-laya.log: 2 Laya deterministic tests passed; 4 external-model/development profiles explicitly ignored. No model accuracy or hosted proof claimed.",
-                  "Fetched b4939469 / v0.134.1 after operator update. Retirement checkpoint records verified v0.134.0 source before integrating the new accepted target; final candidate proof remains pending."
-                ],
-                "proof_refs": [
-                  "laya-cli-configuration",
-                  "laya-proof-first"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "/private/tmp/index134-retirement-01341-datastore.log: 6 passed; /private/tmp/index134-retirement-01341-init.log: 36 passed, 1 ignored. Actual merged v0.134.1 source.",
-                  "Supported session flow updated verifier to 0.134.1; temporary auto-update opt-in was backed up and restored. Runtime backup files stay ignored outside source artifacts.",
-                  "Resolved accepted b4939469 merge by preserving this active journal and both branches authored specs; removed obsolete lock-maintenance requirement with the retired workspace. No history reset or forced push."
-                ],
-                "proof_refs": [
-                  "v01341-storage",
-                  "v01341-cli-config"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "MODULE.bazel.lock",
-                  "Old Cargo manifest fingerprint stopped setup/core/contracts before compilation; regenerated using bazel mod deps --lockfile_mode=update; log /private/tmp/index134-bazel-lock-update.log",
-                  "Four pre-refactor production projection hashes replay exactly; /private/tmp/index134-laya-helper-tests.log",
-                  "Both configuration and complete historical receipt roundtrips pass; /private/tmp/index134-legacy-receipt-tests.log"
-                ],
-                "proof_refs": [
-                  "ci-lock-inputs",
-                  "laya-projection-compatibility",
-                  "legacy-decoding"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 9,
-                "validation_findings": [
-                  "Full controller still rejects operator-directed removal of accepted required Vega worker; retain explicit disclosure, no fabricated readiness."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "/private/tmp/index134-bazel-lock-verify.log: bazel mod deps --lockfile_mode=error exits 0 after generated lock update; no enforcement changed.",
-                  "/private/tmp/index134-final-integration.log: datastore 6 passed 1 ignored; CLI/config 36 passed 1 ignored; four Laya runtime tests, two legacy roundtrips, three bounded-asset tests and projection golden vectors pass in ongoing library run.",
-                  "/private/tmp/index134-final-lib.log: ongoing; two preexisting filesystem-permission subprocess tests fail and require diagnosis; do not claim whole suite passed."
-                ],
-                "proof_refs": [
-                  "ci-lock-inputs",
-                  "final-targeted-integration",
-                  "full-library"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "/private/tmp/index134-canonical-snapshot.log: all 26 snapshot tests pass with canonical temp root; preserve default-host correctness by constructing canonical fixtures.",
-                  "/private/tmp/index134-canonical-worker.log: locked Rust worker executes and retains failures, passes with canonical temp root.",
-                  "/private/tmp/index134-final-clippy.log: cargo clippy --all-targets -- -D warnings passed.",
-                  "/private/tmp/index134-d7f8-validate.log: released controller continues RUST_WORKER_POLICY_DOWNGRADE on explicitly retired accepted Vega recipe; no full readiness claimed."
-                ],
-                "proof_refs": [
-                  "canonical-snapshot-fixtures",
-                  "canonical-worker-fixture",
-                  "clippy-all-targets"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 11,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:12",
-                "observations": [
-                  "/private/tmp/index134-final-lib-repaired.log: 1595 passed, 0 failed, 8 explicitly ignored under default host TMPDIR; all prior 18 failures resolved by canonical fixture roots and typed capability assertions."
-                ],
-                "proof_refs": [
-                  "full-library"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 12,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:13",
-                "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "tests/unit/core/laya_readiness_tests.rs",
-                  "Fetched accepted 3cda3f14 including PR #1585 and release v0.134.2; installed published 0.134.2 only through session acquire; restored original configuration and update preference. Regenerated release-bound entrypoints and Dockerfile with installed 0.134.2. Reviewed proof-source changes limited to accepted Cargo versions; hosted workflow/helper/executor definitions unchanged; reconciled source digest sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb.",
-                  "Previous bb204834 Supabase consumer test failed because debug test executable exceeded real runtime size allowance. Replay-only projection test now supplies explicit fixture artifact identity, preserving four independent expected hashes and production 512 MiB guard; final suite pending."
-                ],
-                "proof_refs": [
-                  "supabase-projection-fixture"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 13,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:14",
-                "observations": [
-                  "/private/tmp/index134-v01342-capabilities.json confirms installed and latest version 0.134.2; generated AGENTS/CLAUDE/CODEX/GEMINI release headers and managed Dockerfile now pin 0.134.2. /private/tmp/index134-v01342-final-preview.log: proof_pending with reconciled source inventory; no stale SHA declaration.",
-                  "/private/tmp/index134-v01342-merge-tests.log: 1604 library tests passed, 8 ignored; datastore 6 passed 1 ignored; CLI 36 passed 1 ignored.",
-                  "/private/tmp/index134-v01342-bazel-strict.log exits 0 with lockfile_mode=error; package version normalization preserves generated dependency lock validity.",
-                  "/private/tmp/index134-v01342-clippy.log: all-target clippy with warnings denied passed.",
-                  "/private/tmp/index134-v01342-final-tests.log: projection golden replay test passes with explicit supabase-cloud feature after replay-only artifact fixture repair. This does not claim model/runtime registration evidence.",
-                  "Final feature-enabled suite reported one socket test failure; identical isolated recheck passes (/private/tmp/index134-v01342-socket-recheck.log). Preserve failure rather than claim an entirely passing run; final verdict pending."
-                ],
-                "proof_refs": [
-                  "release-alignment",
-                  "v01342-merged-suite",
-                  "v01342-strict-lock",
-                  "v01342-clippy",
-                  "supabase-projection-fixture",
-                  "v01342-supabase-library"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 14,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:15",
-                "observations": [
-                  "/private/tmp/index134-v01342-final-tests.log: 1603 passed, 1 failed, 8 ignored. Unchanged socket cleanup test saw transient BROKER_ENDPOINT_LIVE after listener drop; isolated identical-binary recheck passes. Preserve run failure; no test skipped or production socket protection changed.",
-                  "Final projection replay golden vectors pass in feature-enabled binary. Prior merged-source complete library/storage/CLI suites pass; final feature-run failure prevents claiming universal green status."
-                ],
-                "proof_refs": [
-                  "v01342-supabase-library"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 15,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:16",
-                "observations": [
-                  "tests/unit/core/container_runtime_tests.rs",
-                  "tests/unit/core/container_runtime_tests.rs",
-                  "GitHub job129495429987: 1607 library tests passed, one lifecycle fixture spawn failed ETXTBSY before container mutation. No Supabase data/auth failure. Fixture now establishes side-effect-free successful exec with bounded ETXTBSY-only retry; Linux regression holds a real writer.",
-                  "GitHub job129498781351: SPEC_REVIEW_DISPOSITION_MISMATCH for SECURITY.md. Semantic body equals accepted3cda3f14; corrected explicit review to unchanged-with-reason, bound current code fingerprint. Guard and historical checkpoints unchanged."
-                ],
-                "proof_refs": [
-                  "ci-supabase-head6c6d",
-                  "ci-governance-head6c6d"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 16,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:17",
-                "observations": [
-                  "/private/tmp/pr1589-lifecycle-repair-tests.log: seven lifecycle/runtime tests pass. Linux-only held-writer ETXTBSY regression is defined but requires Linux provider execution; host success is not Linux proof.",
-                  "Socket fixture now waits at most2s for AddrInUse after closing its own listeners, preserving live-peer refusal and replacement-owner assertions. Production remove_stale is unchanged. Final full Supabase command repeats after this test-only source change."
-                ],
-                "proof_refs": [
-                  "lifecycle-fixture-host"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 17,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:18",
-                "observations": [
-                  "tests/cloud_supabase_boundary.rs",
-                  "/private/tmp/pr1589-publication-material-repair.log: exact immutable base3cda3f14/head5800aa7c/targetmaster publication-material gate status ok; no guard removed, historical chain remains proven.",
-                  "/private/tmp/pr1589-http-fixture-repair.log: 18 passed, including delayed headers. /private/tmp/pr1589-accepted-socket-probe.log reproduces inherited nonblocking behavior: immediate WouldBlock before explicit blocking, ~100ms configured timeout afterward.",
-                  "Final full library run currently passes repaired lifecycle and socket cases. Linux held-writer test remains provider-only; retain explicit scope."
-                ],
-                "proof_refs": [
-                  "ci-publication-material",
-                  "supabase-http-fixtures"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 18,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:19",
-                "observations": [
-                  "/private/tmp/pr1589-supabase-final-suite.log: complete CI consumer command passes, 1604 library and33 integration tests; 8 optional library and2 external service profiles ignored. Final fixture-only Tokio adjustment separately passes all18 HTTP boundary tests in /private/tmp/pr1589-http-async-final.log.",
-                  "/private/tmp/pr1589-clippy-async-final.log: all-target Clippy with warnings denied passes after replacing raw blocking regression client with approved Tokio API, no lint exemption.",
-                  "/private/tmp/pr1589-publication-material-final.log: immutable head157e9493/current accepted3cda3f14 gate passes; final Tokio-only follow-up will repeat exact committed-head gate before push."
-                ],
-                "proof_refs": [
-                  "supabase-consumer-local",
-                  "final-all-target-clippy",
-                  "ci-governance-repaired"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 19,
                 "validation_findings": []
               }
             ]
@@ -1309,82 +779,29 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/index134-bazel-lock-verify.log: bazel mod deps --lockfile_mode=error exits 0 after generated lock update; no enforcement changed.",
-        "/private/tmp/index134-canonical-snapshot.log: all 26 snapshot tests pass with canonical temp root; preserve default-host correctness by constructing canonical fixtures.",
-        "/private/tmp/index134-canonical-worker.log: locked Rust worker executes and retains failures, passes with canonical temp root.",
-        "/private/tmp/index134-correctness.log: v0.134.0 six integration tests passed, including 64 independent SQLite writers and replay.",
-        "/private/tmp/index134-d7f8-validate.log: released controller continues RUST_WORKER_POLICY_DOWNGRADE on explicitly retired accepted Vega recipe; no full readiness claimed.",
-        "/private/tmp/index134-final-clippy.log: cargo clippy --all-targets -- -D warnings passed.",
-        "/private/tmp/index134-final-integration.log: datastore 6 passed 1 ignored; CLI/config 36 passed 1 ignored; four Laya runtime tests, two legacy roundtrips, three bounded-asset tests and projection golden vectors pass in ongoing library run.",
-        "/private/tmp/index134-final-lib-repaired.log: 1595 passed, 0 failed, 8 explicitly ignored under default host TMPDIR; all prior 18 failures resolved by canonical fixture roots and typed capability assertions.",
-        "/private/tmp/index134-final-lib.log: ongoing; two preexisting filesystem-permission subprocess tests fail and require diagnosis; do not claim whole suite passed.",
-        "/private/tmp/index134-migration.log: six passed; /private/tmp/index134-events.log: sixteen passed.",
-        "/private/tmp/index134-resume-validate.log and readiness-fLXSmg: Buildkite proof verified; retired worker failed locked dependency resolution (parent Decapod 0.130.0 versus current 0.134.0). Removing obsolete worker by operator direction, not rewriting failure as success.",
-        "/private/tmp/index134-retirement-01341-datastore.log: 6 passed; /private/tmp/index134-retirement-01341-init.log: 36 passed, 1 ignored. Actual merged v0.134.1 source.",
-        "/private/tmp/index134-retirement-final-init.log: 36 passed, 1 preexisting ignored; Laya opt-in, default-disabled setup surface and refresh preservation pass.",
-        "/private/tmp/index134-retirement-laya.log: 2 Laya deterministic tests passed; 4 external-model/development profiles explicitly ignored. No model accuracy or hosted proof claimed.",
-        "/private/tmp/index134-v01342-bazel-strict.log exits 0 with lockfile_mode=error; package version normalization preserves generated dependency lock validity.",
-        "/private/tmp/index134-v01342-capabilities.json confirms installed and latest version 0.134.2; generated AGENTS/CLAUDE/CODEX/GEMINI release headers and managed Dockerfile now pin 0.134.2. /private/tmp/index134-v01342-final-preview.log: proof_pending with reconciled source inventory; no stale SHA declaration.",
-        "/private/tmp/index134-v01342-clippy.log: all-target clippy with warnings denied passed.",
-        "/private/tmp/index134-v01342-final-tests.log: 1603 passed, 1 failed, 8 ignored. Unchanged socket cleanup test saw transient BROKER_ENDPOINT_LIVE after listener drop; isolated identical-binary recheck passes. Preserve run failure; no test skipped or production socket protection changed.",
-        "/private/tmp/index134-v01342-final-tests.log: projection golden replay test passes with explicit supabase-cloud feature after replay-only artifact fixture repair. This does not claim model/runtime registration evidence.",
-        "/private/tmp/index134-v01342-merge-tests.log: 1604 library tests passed, 8 ignored; datastore 6 passed 1 ignored; CLI 36 passed 1 ignored.",
-        "/private/tmp/pr1589-clippy-async-final.log: all-target Clippy with warnings denied passes after replacing raw blocking regression client with approved Tokio API, no lint exemption.",
-        "/private/tmp/pr1589-http-fixture-repair.log: 18 passed, including delayed headers. /private/tmp/pr1589-accepted-socket-probe.log reproduces inherited nonblocking behavior: immediate WouldBlock before explicit blocking, ~100ms configured timeout afterward.",
-        "/private/tmp/pr1589-lifecycle-repair-tests.log: seven lifecycle/runtime tests pass. Linux-only held-writer ETXTBSY regression is defined but requires Linux provider execution; host success is not Linux proof.",
-        "/private/tmp/pr1589-publication-material-final.log: immutable head157e9493/current accepted3cda3f14 gate passes; final Tokio-only follow-up will repeat exact committed-head gate before push.",
-        "/private/tmp/pr1589-publication-material-repair.log: exact immutable base3cda3f14/head5800aa7c/targetmaster publication-material gate status ok; no guard removed, historical chain remains proven.",
-        "/private/tmp/pr1589-supabase-final-suite.log: complete CI consumer command passes, 1604 library and33 integration tests; 8 optional library and2 external service profiles ignored. Final fixture-only Tokio adjustment separately passes all18 HTTP boundary tests in /private/tmp/pr1589-http-async-final.log.",
-        "Both configuration and complete historical receipt roundtrips pass; /private/tmp/index134-legacy-receipt-tests.log",
-        "Fetched accepted 3cda3f14 including PR #1585 and release v0.134.2; installed published 0.134.2 only through session acquire; restored original configuration and update preference. Regenerated release-bound entrypoints and Dockerfile with installed 0.134.2. Reviewed proof-source changes limited to accepted Cargo versions; hosted workflow/helper/executor definitions unchanged; reconciled source digest sha256:41cdea5dd676413c8a7f7cf2616f9f8d1b5f379c0bac5ce1ef9e7e2a485947eb.",
-        "Fetched b4939469 / v0.134.1 after operator update. Retirement checkpoint records verified v0.134.0 source before integrating the new accepted target; final candidate proof remains pending.",
-        "Final feature-enabled suite reported one socket test failure; identical isolated recheck passes (/private/tmp/index134-v01342-socket-recheck.log). Preserve failure rather than claim an entirely passing run; final verdict pending.",
-        "Final full library run currently passes repaired lifecycle and socket cases. Linux held-writer test remains provider-only; retain explicit scope.",
-        "Final projection replay golden vectors pass in feature-enabled binary. Prior merged-source complete library/storage/CLI suites pass; final feature-run failure prevents claiming universal green status.",
-        "Four pre-refactor production projection hashes replay exactly; /private/tmp/index134-laya-helper-tests.log",
-        "GitHub job129495429987: 1607 library tests passed, one lifecycle fixture spawn failed ETXTBSY before container mutation. No Supabase data/auth failure. Fixture now establishes side-effect-free successful exec with bounded ETXTBSY-only retry; Linux regression holds a real writer.",
-        "GitHub job129498781351: SPEC_REVIEW_DISPOSITION_MISMATCH for SECURITY.md. Semantic body equals accepted3cda3f14; corrected explicit review to unchanged-with-reason, bound current code fingerprint. Guard and historical checkpoints unchanged.",
-        "Old Cargo manifest fingerprint stopped setup/core/contracts before compilation; regenerated using bazel mod deps --lockfile_mode=update; log /private/tmp/index134-bazel-lock-update.log",
-        "Operator explicitly directed removal of assets/tools/vega-native, exclusive optional Laya post-validation evaluation, inclusion in this active branch and immediate PR publication when verified. Supersedes prior Vega worker retention requirement.",
-        "Original synthetic benchmark: docs/datastore-v2/measurements.json; physical savings 1650688 bytes at 100K events, WAL savings 2241280 bytes per 512 appends. Timing and hosted limits retained.",
-        "Ported material patch from own preserved commits 3ea461bc and 37fdd674 onto accepted 1d865efd; no source patch conflicts or changed accepted storage files.",
-        "Previous bb204834 Supabase consumer test failed because debug test executable exceeded real runtime size allowance. Replay-only projection test now supplies explicit fixture artifact identity, preserving four independent expected hashes and production 512 MiB guard; final suite pending.",
-        "Previous v0.133.2 Buildkite 6113 failed missing content-bound spec review; current interfaces, architecture and security explicitly reviewed. Fresh validation required.",
-        "Resolved accepted b4939469 merge by preserving this active journal and both branches authored specs; removed obsolete lock-maintenance requirement with the retired workspace. No history reset or forced push.",
-        "Socket fixture now waits at most2s for AddrInUse after closing its own listeners, preserving live-peer refusal and replacement-owner assertions. Production remove_stale is unchanged. Final full Supabase command repeats after this test-only source change.",
-        "Supported session flow updated verifier to 0.134.1; temporary auto-update opt-in was backed up and restored. Runtime backup files stay ignored outside source artifacts."
+        "/private/tmp/laya-only-bazel-strict.log: strict lockfile_mode=error succeeds after generated dependency lock update.",
+        "/private/tmp/laya-only-clippy.log: all-target clippy with warnings denied passed.",
+        "/private/tmp/laya-only-final-tests.log:1602 library tests passed,8 ignored;16 native-consumer tests passed;36 init/config tests passed,1 ignored. Runtime-version rejection preserves bytes and explicit re-registration succeeds; four production projection hashes remain unchanged.",
+        "/private/tmp/laya-only-initial-tests.log: 1602 library tests passed,8 ignored;36 init/config tests passed,1 ignored. Four production projection hashes preserved; generic replay normalizer unchanged.",
+        "/private/tmp/laya-only-source-scan.json: no active tracked text or path matches; ledger resolution identifiers are the documented remaining archive boundary.",
+        "Custody expired after workspace provisioning narrowed lease to30minutes. Same owner reclaimed generation2, renewed86400seconds and explicitly rebound the checkout; workspace status can_work=true. No raw control-plane state edits.",
+        "Retired carried obligations were resolved through CLI with accepted-source and task-intent references. Historical resolution IDs remain in current audit data until accepted compaction; source and documentation scan excludes only that explicit audit boundary."
       ],
-      "inspected_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "MODULE.bazel.lock",
-        "src/decapod/core/events.rs",
-        "src/decapod/core/migration.rs",
-        "src/decapod/core/schemas.rs",
-        "tests/unit/core/container_runtime_tests.rs"
-      ],
-      "intent_id": "intent:change_01M70TT9S62S73SECJEVRCDVS1",
-      "modified_files": [
-        "tests/cloud_supabase_boundary.rs",
-        "tests/datastore_efficiency.rs",
-        "tests/unit/core/container_runtime_tests.rs",
-        "tests/unit/core/laya_readiness_tests.rs"
-      ],
+      "inspected_files": [],
+      "intent_id": "intent:change_01M71C02B3MSRQY464Y79Z99F0",
+      "modified_files": [],
       "next_transitions": [
-        "Commit exact candidate and run full decapod validate before publication.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M70TT9YCVF9GDEN1NF0KHM96",
+      "run_id": "branch_01M71C02DXB9T0EJKFXWCA5HRC",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "perf_01m6z2f0csrsekxz",
+      "task_id": "refa_01m71bsrx503b1dv",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Full controller still rejects operator-directed removal of accepted required Vega worker; retain explicit disclosure, no fabricated readiness."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

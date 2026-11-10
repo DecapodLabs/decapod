@@ -623,14 +623,18 @@ fn failed_partial_prerequisites_never_reach_execution() {
     );
 }
 #[test]
-fn failed_validation_precedes_required_vega_and_retains_repair_guidance() {
-    let f = Fixture::new("[proof]\n[vega]\nmode='required'\nalpha='0.1'\nrisk='0.1'\n");
+fn failed_validation_precedes_required_laya_and_retains_repair_guidance() {
+    let config = format!(
+        "[proof]\n[laya]\nmode='required'\nmodel_manifest_digest='{}'\n",
+        crate::core::laya_assets::manifest_digest(&crate::core::laya_assets::baseline()).unwrap()
+    );
+    let f = Fixture::new(&config);
     let mut h = host();
     h.prerequisites = ProjectPrerequisites::Failed;
     let report = validate(&f.options, &mut h, &Cancellation::default());
     assert_eq!(report.exit_code(), 1);
     assert!(!report.proof_ready);
-    assert!(report.vega_readiness.is_none());
+    assert!(report.laya_readiness.is_none());
     assert!(report.evidence_path.is_none());
     assert_eq!(report.agent_guidance.next_action, "repair_and_revalidate");
     assert!(
@@ -1612,7 +1616,7 @@ fn successful_validation_preserves_readiness_scope_and_existing_delivery_authori
 }
 
 #[test]
-fn vega_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
+fn laya_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
     use crate::core::readiness_assessment::{Decision, Mode};
     for (mode, decision, expected) in [
         (Mode::Required, Decision::Accept, "create_authorized_pr"),
@@ -1637,7 +1641,7 @@ fn vega_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
             "review_delivery_readiness",
         ),
     ] {
-        let guidance = ValidationGuidance::for_vega_outcome(true, mode, decision);
+        let guidance = ValidationGuidance::for_readiness_outcome(true, mode, decision);
         assert_eq!(guidance.next_action, expected);
         assert_eq!(guidance.owner, "agent");
         assert_eq!(guidance.entry_command, "decapod validate");
@@ -1656,7 +1660,7 @@ fn vega_guidance_distinguishes_completed_proof_from_remaining_readiness_work() {
             }
         }
         // Even an accepting model cannot turn failed or stale proof into PR guidance.
-        let failed = ValidationGuidance::for_vega_outcome(false, mode, decision);
+        let failed = ValidationGuidance::for_readiness_outcome(false, mode, decision);
         assert_eq!(failed.phase, "validation");
         assert_eq!(failed.next_action, "repair_and_revalidate");
     }
@@ -1671,10 +1675,10 @@ fn late_verdict_write_failure_revokes_readiness_and_pr_instructions() {
     let report = ValidationReport {
         ready: true,
         proof_ready: true,
-        vega_readiness: None,
+
         laya_readiness: None,
         scope: READINESS_SCOPE,
-        agent_guidance: ValidationGuidance::for_vega_outcome(
+        agent_guidance: ValidationGuidance::for_readiness_outcome(
             true,
             Mode::Required,
             Decision::Accept,
@@ -2165,10 +2169,10 @@ fn native_completion_write_failures_never_publish_success_artifacts() {
             let report = ValidationReport {
                 ready: true,
                 proof_ready: true,
-                vega_readiness: None,
+
                 laya_readiness: None,
                 scope: READINESS_SCOPE,
-                agent_guidance: ValidationGuidance::for_vega_outcome(
+                agent_guidance: ValidationGuidance::for_readiness_outcome(
                     true,
                     crate::core::readiness_assessment::Mode::Disabled,
                     crate::core::readiness_assessment::Decision::Accept,

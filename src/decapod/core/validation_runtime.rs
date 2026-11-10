@@ -142,15 +142,15 @@ impl ValidationGuidance {
         let (next_action, instruction) = match (mode, decision) {
             (Mode::Required, Decision::Accept) => (
                 "create_authorized_pr",
-                "Required validation passed and Laya accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Vega evidence. This result does not authorize merge or release; preserve human review and existing delivery authority.",
+                "Required validation passed and Laya accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Laya evidence. This result does not authorize merge or release; preserve human review and existing delivery authority.",
             ),
             (Mode::Required, Decision::Reject) => (
                 "address_readiness_gaps_and_revalidate",
-                "Required validation passed, but Vega did not find the validated change ready. Agent: review the declared intent, remaining requirements and bound evidence, complete any unmet work, checkpoint the correction and rerun decapod validate. The boolean verdict does not identify a specific defect by itself; do not invent a model explanation or retry unchanged inputs to seek acceptance. Do not create the PR.",
+                "Required validation passed, but Laya did not find the validated change ready. Agent: review the declared intent, remaining requirements and bound evidence, complete any unmet work, checkpoint the correction and rerun decapod validate. The boolean verdict does not identify a specific defect by itself; do not invent a model explanation or retry unchanged inputs to seek acceptance. Do not create the PR.",
             ),
             _ => (
                 "resolve_readiness_abstention_and_revalidate",
-                "Required validation passed, but Vega supplied no usable readiness approval. Agent: inspect the Vega receipt reason and backend attempts, resolve missing, stale, contradictory or unsupported evidence and any reported installation/runtime error, then rerun decapod validate. Abstention is not approval or a diagnosed code defect. Do not create the PR, weaken required proof or retry unchanged inputs to seek acceptance.",
+                "Required validation passed, but Laya supplied no usable readiness approval. Agent: inspect the Laya receipt reason and backend attempts, resolve missing, stale, contradictory or unsupported evidence and any reported installation/runtime error, then rerun decapod validate. Abstention is not approval or a diagnosed code defect. Do not create the PR, weaken required proof or retry unchanged inputs to seek acceptance.",
             ),
         };
         Self {
@@ -169,26 +169,12 @@ impl ValidationGuidance {
             ..Self::for_outcome(false)
         }
     }
-
-    /// Backward compatibility alias for tests that expect Vega-specific guidance
-    #[allow(
-        dead_code,
-        reason = "Used by validation_runtime tests for Vega readiness outcomes"
-    )]
-    fn for_vega_outcome(
-        ready: bool,
-        mode: super::readiness_assessment::Mode,
-        decision: super::readiness_assessment::Decision,
-    ) -> Self {
-        Self::for_readiness_outcome(ready, mode, decision)
-    }
 }
 
 #[derive(Debug, Serialize)]
 pub struct ValidationReport {
     pub ready: bool,
     pub proof_ready: bool,
-    pub vega_readiness: Option<super::legacy_vega::Receipt>,
     pub laya_readiness: Option<super::laya_readiness::Receipt>,
     pub scope: &'static str,
     pub agent_guidance: ValidationGuidance,
@@ -204,7 +190,7 @@ impl ValidationReport {
     fn finish(mut self, result: io::Result<()>) -> Self {
         if let Err(error) = result {
             // A late evidence write/sync failure must revoke an earlier verdict
-            // and its delivery instructions, even after proof and Vega passed.
+            // and its delivery instructions, even after proof and Laya passed.
             self.ready = false;
             self.agent_guidance = ValidationGuidance::for_outcome(false);
             let unsupported_controller = matches!(
@@ -940,7 +926,7 @@ pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -
     let mut report = ValidationReport {
         ready: false,
         proof_ready: false,
-        vega_readiness: None,
+
         laya_readiness: None,
         scope: READINESS_SCOPE,
         agent_guidance: ValidationGuidance::for_outcome(false),

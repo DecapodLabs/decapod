@@ -50,19 +50,6 @@ container_workspaces = true
 done_criteria = "Validate passes and all unit tests are green."
 ```
 
-## Vega post-validation readiness
-
-`[vega] mode` is `disabled` by default or explicitly `required`. Required mode
-accepts only a positive singleton without abstention/OOD after current proof.
-Optional `alpha`/`risk` select supported pinned calibration keys. Installation
-requires `[vega.installation] directory`, `manifest_digest`, `runtime` and
-`runtime_sha256`; paths are canonical and absolute, digests are SHA-256 pins.
-Use explicit `decapod setup vega` for data installation/update checks. No model
-is bundled with the crate or downloaded during builds/inference. Native
-execution, parity, domain calibration and latency remain separate proof duties.
-Retired `[decision]` input is ignored on load and omitted on init refresh;
-retired credentials are not read or overwritten.
-
 ## Exceptional RBAC operations
 
 The main repository's `.decapod/config.toml` owns exceptional permissions;
@@ -103,6 +90,6 @@ publication. The publisher and proof verifier still require real evidence.
 deterministic validation when the repo sets `mode = "required"` with the
 reviewed `model_manifest_digest` and local installation. A candidate cannot
 disable an accepted required policy. No Laya installation or inference is
-required for disabled mode. Per-run Laya and Vega receipt identifiers are
+required for disabled mode. Per-run assessment receipt identifiers are
 excluded from verification replay hashes; receipt decisions, material,
 configuration and governance bindings remain significant.
