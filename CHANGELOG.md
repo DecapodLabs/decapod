@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- *(nix)* isolate Cachix publication with governed release proof
+- *(nix)* gate Cachix publication on native GitHub-hosted release merges, keeping the write token out of Buildkite imports and failing publication if credentials are unavailable
 
 ### Other
 
