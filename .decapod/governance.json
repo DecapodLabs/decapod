@@ -497,6 +497,11 @@
       "id": "nix-smoke-discovery-anchor",
       "summary": "Anchor private smoke discovery, verify against actual binary and reconcile reviewed workflow definition and source inventory",
       "input_digest": "sha256:63576d64dc8e4cee08b527f23cf3e88ea589a5bbae58d215dfc810f1b9f72c84"
+    },
+    {
+      "id": "nix-smoke-validation-retry",
+      "summary": "Record completed source reconciliation and request independent controller compatibility result",
+      "input_digest": "sha256:c730c4bd370975415398ac73703441ef6934f2d4bb6edd21f7ab58da67c99552"
     }
   ],
   "intents": {
@@ -571,10 +576,7 @@
         "Current claimed task and isolated work branch",
         "Retain storage security, source build and publication authority"
       ],
-      "artifact_hash": "sha256:ef3585ac985d5474e34e36ab7e995455b64ecdd942dc6e8e1dfd5250f550f6b4",
-      "blockers": [
-        "Released controller workflow contract requires independent support for changed Nix workflow; full validation pending"
-      ],
+      "artifact_hash": "sha256:d927d1766705714a378a6ef92e4ed4ab58fb8092b74f5182b784c71baf4aa3b3",
       "checks": [
         {
           "name": "actual-binary-smoke-reproduction",
@@ -621,10 +623,17 @@
             "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M73XRFA0ZXW5Q64PMWXJKEH2": {
@@ -671,6 +680,19 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Source reconciliation completed; retry full validation to establish controller compatibility, which remains unproven until observed"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -681,7 +703,8 @@
       "evidence": [
         "Both workflow scripts tested with installed 0.136.3: old checkout invocation rejects 0777 .decapod; revised smoke passes. Fixture runs verify 0700 scratch and anchor, paths containing spaces, cleanup and exit 23 propagation.",
         "GitHub check 130026729576 resolves to Buildkite 6692 job 01a1c6a7-145a-45c5-ad8e-c0007e3989da: compilation succeeded; smoke failed STORAGE_UNSAFE_PERMISSIONS on checkout .decapod",
-        "Reviewed full workflow diff: only two smoke run blocks change; jobs, conditions, matrix, credentials, build and reproducibility gates retained. Reconciled source inventory and compiled workflow review digest."
+        "Reviewed full workflow diff: only two smoke run blocks change; jobs, conditions, matrix, credentials, build and reproducibility gates retained. Reconciled source inventory and compiled workflow review digest.",
+        "Source reconciliation completed; retry full validation to establish controller compatibility, which remains unproven until observed"
       ],
       "inspected_files": [
         ".github/workflows/nix-flake.yml"
