@@ -1,5 +1,31 @@
 # Validation
 
+## Post-merge Gatling test-budget recovery (#1596)
+
+The `Tests (Full)` job in GitHub Actions run `42744631477` ended with a
+Bazel `//:gatling` TIMEOUT after 300.1 seconds, while executing the complete
+50-test CLI integration suite with `--test-threads=4`. This is evidence of an
+insufficient aggregate CI deadline, not of a specific assertion failure or a
+successful run. The previous five-minute `moderate` budget did not establish
+whether the remaining tests pass.
+
+`.config/build/decapod.BUILD.bzl` now gives only `tests/gatling.rs` the
+existing Bazel `long` class (a bounded 900-second ceiling), already used for
+two other integration-heavy targets. The test inventory, assertions,
+per-process deadlines, four-thread setting, nonzero exit behavior and required
+CI checks are unchanged. A hang or failed assertion must still fail CI.
+
+The concurrent `Deploy Docs` failure in run `42744631501` was GitHub Pages
+remaining `deployment_queued` before an API deployment error. A later
+unchanged-source deployment succeeded, so no speculative Pages workflow or
+permission changes belong in this repair. Treat a new failure as independent
+evidence requiring its own diagnosis.
+
+Acceptance requires an exact-head, v0.136.1-governed candidate with material
+checkpoint proof and the configured required CI graph; a declaration of a
+larger timeout does not by itself prove the full test suite passes. The
+post-merge `Tests (Full)` run is the decisive 900-second regression signal.
+
 ## macOS bounded-reader recovery (#1571)
 
 The accepted v0.133.2 before-fix regression
@@ -907,7 +933,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37723541c1d54797ebcbda9fab0f6491dff6a6cd64f95687b71dd25d43c50301`
+- Repository signal fingerprint: `8df864bcfbea31b98f5d88506bb386e48884499d2659b0505decd1025503cd4c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

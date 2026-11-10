@@ -235,7 +235,10 @@ def decapod_targets():
             # The broker suite includes 20 separately authenticated clients,
             # crash recovery and launch probes. Individual client waits remain
             # bounded; retain a finite aggregate budget for their stage evidence.
-            timeout = "long" if path in ["tests/group_broker.rs", "tests/interop_conformance.rs"] else "moderate",
+            # Gatling runs the complete 50-case CLI suite. The 300s moderate
+            # ceiling cut off post-merge CI before completion; keep its full
+            # suite and four threads while allowing Bazel's finite 900s budget.
+            timeout = "long" if path in ["tests/gatling.rs", "tests/group_broker.rs", "tests/interop_conformance.rs"] else "moderate",
             # These suites depend on finite process/request deadlines. Rust's
             # test-threads flag alone does not isolate concurrent Bazel targets.
             # Keep all broker clients concurrent within its exclusive target.
