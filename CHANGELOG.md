@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.136.2](https://github.com/DecapodLabs/decapod/compare/v0.136.1...v0.136.2) - 2026-11-10
+
+### Fixed
+
+- *(ci)* bound full Gatling suite at 900s on v0.136.1
+
 ## [0.136.1](https://github.com/DecapodLabs/decapod/compare/v0.136.0...v0.136.1) - 2026-11-10
 
 ### Fixed
