@@ -531,6 +531,11 @@
       "id": "refreshed-config-manifest",
       "summary": "Refresh supported spec manifest after reviewed inventory update to resolve standalone CI projection drift",
       "input_digest": "sha256:71a59c05a174dc05c2d9b72c7859a07ecc8a16e687a2d81abdf69a5ee4036879"
+    },
+    {
+      "id": "isolated-stateful-permission-fixture",
+      "summary": "Separate damaged configuration and unsafe storage fixture assertions to exercise each startup contract",
+      "input_digest": "sha256:eed7bf45d87671bcd3ed2249246aab93ed9500ae6a18272dc3bc5d7f3d75be57"
     }
   ],
   "intents": {
@@ -571,22 +576,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Early version dispatch avoids project store discovery, session and migration; Nix workflow remains accepted",
-          "reviewed_code_fingerprint": "f78d172647dac280c953ef3a78cf9343dd43993291adb5b1e5db4bc0ca228907",
+          "reason": "Early dispatch returns binary metadata; stateful configuration parsing and storage validation retain their order",
+          "reviewed_code_fingerprint": "1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af",
           "spec_material_hash": "0eee077b350ba5f65fa70b6c2043aaa6c216ea14fa13752ea9a1580d84e3d827"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Version metadata is now storage-independent; normal commands retain security and migration notices",
-          "reviewed_code_fingerprint": "f78d172647dac280c953ef3a78cf9343dd43993291adb5b1e5db4bc0ca228907",
+          "reason": "Version reporting remains independent of config and storage; fixture separately checks stateful permissions after config parsing",
+          "reviewed_code_fingerprint": "1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af",
           "spec_material_hash": "875c56849a6c844dd7ab621065044478e1baf487a2bae63b940e1c6d05786191"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Version reporting has no storage access; stateful operations still reject unsafe permissions, covered by regression",
-          "reviewed_code_fingerprint": "f78d172647dac280c953ef3a78cf9343dd43993291adb5b1e5db4bc0ca228907",
+          "reason": "Unsafe storage remains rejected by stateful commands; regression controls damaged config and shared-group opt-in separately",
+          "reviewed_code_fingerprint": "1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af",
           "spec_material_hash": "9d41f7d722fd84a6f8fdda94e83c67918fe44969b04310bc0c57eecb547d9281"
         }
       ],
@@ -598,14 +603,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794355270Z"
+      "updated_at": "1794356246Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Retain storage security, source build and publication authority"
       ],
-      "artifact_hash": "sha256:668c69b894288040d5886085ca0972c5714b30b3280e368ab4a9a8e64c2be278",
+      "artifact_hash": "sha256:ada524be5b3adf98b48861863fd603db9b8456187ea46c2ad11476798e152a4b",
       "checks": [
         {
           "name": "actual-binary-smoke-reproduction",
@@ -621,7 +626,7 @@
         },
         {
           "name": "source-version-regressions",
-          "status": "unavailable"
+          "status": "failed"
         },
         {
           "name": "workflow-script-isolation-and-exit-propagation",
@@ -698,10 +703,17 @@
             "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M73XRFA0ZXW5Q64PMWXJKEH2": {
@@ -837,6 +849,21 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Buildkite 6705 contracts: version succeeds with malformed config and unsafe storage; stateful rejection assertion saw INVALID_CONFIG_SCHEMA before storage validation. Repair fixture by removing damaged config before independently checking unsafe-permission rejection; explicitly clear shared-group opt-in for that subprocess."
+                ],
+                "proof_refs": [
+                  "source-version-regressions"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -848,6 +875,7 @@
         "Accepted source workflows/helpers/build inputs are unchanged from bf50c589. Read-only discovery reports inventory sha256:78d39990ac9aaab62f4574ea8f7823a7cbf64a72e8facdb3d1b1ebbd60c1c059; retained strict full profile and reconciled its stale reviewed source inventory declaration only.",
         "Both workflow scripts tested with installed 0.136.3: old checkout invocation rejects 0777 .decapod; revised smoke passes. Fixture runs verify 0700 scratch and anchor, paths containing spaces, cleanup and exit 23 propagation.",
         "Buildkite 6702 standalone-validation passed 190 prerequisite gates but rejected manifest config_input_hash drift after reviewed inventory update. Regenerated supported manifest through specs.refresh; no checks weakened.",
+        "Buildkite 6705 contracts: version succeeds with malformed config and unsafe storage; stateful rejection assertion saw INVALID_CONFIG_SCHEMA before storage validation. Repair fixture by removing damaged config before independently checking unsafe-permission rejection; explicitly clear shared-group opt-in for that subprocess.",
         "Exact candidate 72917b05: decapod validate returns CONTROLLER_CONTRACT_UNSUPPORTED for .github/workflows/nix-flake.yml after source inventory reconciliation. No full source tests or Nix rebuild executed by validation; direct installed-binary smoke and script fixtures are supplemental only.",
         "GitHub check 130026729576 resolves to Buildkite 6692 job 01a1c6a7-145a-45c5-ad8e-c0007e3989da: compilation succeeded; smoke failed STORAGE_UNSAFE_PERMISSIONS on checkout .decapod",
         "Restored accepted Nix workflow, source-profile digests, workflow policy tests and Nix documentation. Final fix makes system version storage-independent and preserves one-time migration reporting on workspace status.",

@@ -339,7 +339,16 @@ fn system_version_does_not_open_or_repair_project_storage() {
         );
 
         if mode != 0o700 {
-            let stateful = run_decapod(temp.path(), &["workspace", "status"]);
+            // Configuration validation precedes permission checks for stateful
+            // commands. Remove the damaged-config fixture to isolate the
+            // independent storage-permission contract.
+            std::fs::remove_file(&config).unwrap();
+            let stateful = Command::new(resolve_decapod_bin())
+                .current_dir(temp.path())
+                .env_remove("DECAPOD_STORAGE_SHARED_GROUP")
+                .args(["workspace", "status"])
+                .output()
+                .unwrap();
             assert!(!stateful.status.success());
             assert!(
                 String::from_utf8_lossy(&stateful.stderr).contains("STORAGE_UNSAFE_PERMISSIONS"),
