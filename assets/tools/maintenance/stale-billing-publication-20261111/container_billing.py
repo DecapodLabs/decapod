@@ -16,6 +16,25 @@ BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
 REPO = "DecapodLabs/decapod"
 OPS = "ops/stale-billing-publication-20261111"
 CONTROLLER = "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
+OCI_BINARY = "dd30b7516c331ac0a6c3128f7a9c433833935bc9f380d311b188502037f857e0"
+OCI_INDEX = "sha256:38ff07bbbaf33643f7dcb1b98ba7e4352a67e9f6e40e0a21f1988dfec804ade2"
+OCI_MANIFEST = "sha256:aaca38cd94450d512f85415e529e0176c0dab2168cc135602ff601d6514aefe4"
+OCI_CONFIG = "sha256:89b8305bb9de658d420c10b75b281b30f5f02f598116be58fe506f9a6daeb416"
+OCI_REPOSITORY = "ghcr.io/decapodlabs/decapod"
+OCI_IMAGE = OCI_REPOSITORY + "@" + OCI_INDEX
+OCI_TAG = OCI_REPOSITORY + ":v0.138.2-debian"
+OCI_LAYERS = ["sha256:1d7b9dd8778ebc4d9bf2f64436dd358640718cb349f5640b33bebaea4ffd62c2",
+              "sha256:70a8643c19a81cf1fb923662b68df5b476057f3612dec0b32eb5c48347fec3d1",
+              "sha256:eb2a4a74344cf17b72044dffabfff586c77132371f3b2f02eda721ab1e9c5a98",
+              "sha256:a5a62c72b3529e15955cfc56c1d755a03a82daf8eb4ef07d6822aec850f61398",
+              "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"]
+HOST_CONTROLLER_IDENTITY = dict(release="v0.138.2", distribution="github_release", binary_sha256=CONTROLLER,
+    archive_sha256="718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06",
+    release_id=442229037, asset_id=737052855, release_tag_commit=BASE)
+OCI_CONTROLLER_IDENTITY = dict(release="v0.138.2", distribution="oci", binary_sha256=OCI_BINARY, binary_bytes=29185240,
+    image_repository=OCI_REPOSITORY, image_index_digest=OCI_INDEX, platform_manifest_digest=OCI_MANIFEST,
+    image_config_digest=OCI_CONFIG, platform=dict(os="linux", architecture="amd64"), release_tag_commit=BASE,
+    source_workflow_run_id=43106957801, source_workflow_job_id=130812709187)
 CERT = "c54fbd6b328ebc89c57a0b158cbdddc434e37f48b8283b0e9af532506600f6dc"
 COORDINATOR = "chatgpt-billing-container-preparation"
 ASSETS = ("container_billing.py", "container_entry.sh", "continue_billing.py", "billing-continuation.json", "gate-repair.patch", "release-generated.patch", "custody-recipient.pem")
@@ -97,7 +116,10 @@ def inside(context):
     for name, expected in state["asset_digests"].items():
         require(name in ASSETS and sha((assets / name).read_bytes()) == expected, "Read-only reviewed runtime asset changed")
     controller = safe_path(state["controller"])
-    require(controller.is_file() and os.access(controller, os.X_OK) and hashlib.sha256(controller.read_bytes()).hexdigest() == CONTROLLER, "Native staged official controller identity differs")
+    require(controller == Path("/usr/local/bin/decapod") and controller.is_file() and os.access(controller, os.X_OK)
+            and controller.stat().st_size == OCI_CONTROLLER_IDENTITY["binary_bytes"]
+            and hashlib.sha256(controller.read_bytes()).hexdigest() == OCI_BINARY, "Official immutable OCI child controller identity differs")
+    require(state["child_controller"] == OCI_CONTROLLER_IDENTITY and state["host_controller"] == HOST_CONTROLLER_IDENTITY, "Host and child official distributions are not honestly bound")
     env = os.environ.copy()
     env.update(state["ci_environment"])
     if state["engine"] == "podman":
@@ -178,6 +200,7 @@ def host(args):
         require(located is not None, "Verified official controller missing")
         controller = Path(located).resolve()
         require(hashlib.sha256(controller.read_bytes()).hexdigest() == CONTROLLER, "Controller differs from accepted official release")
+        report["host_controller"] = HOST_CONTROLLER_IDENTITY
         certificate = assets / "custody-recipient.pem"
         observed = text("verify bootstrap encryption recipient", "openssl", "x509", "-in", str(certificate), "-noout", "-fingerprint", "-sha256").split("=", 1)[-1].strip().replace(":", "").lower()
         require(observed == CERT, "Operator custody certificate differs")
@@ -192,6 +215,30 @@ def host(args):
         initialized = json.loads(native("initialize native coordination", "rpc", "--op", "agent.init"))
         require(not initialized.get("error"), "Native coordination initialization failed")
         native("discover native coordination capabilities", "capabilities", "--format", "json")
+        expected_engine = "podman" if shutil.which("podman", path=env.get("PATH")) else "docker"
+        require(shutil.which(expected_engine, path=env.get("PATH")) is not None, "Native container engine is absent")
+        index = json.loads(text("inspect immutable official OCI index", expected_engine, "manifest", "inspect", OCI_IMAGE))
+        platform = [entry for entry in index.get("manifests", []) if entry.get("platform") == {"architecture":"amd64", "os":"linux"}]
+        require(len(platform) == 1 and platform[0].get("digest") == OCI_MANIFEST, "Official index does not bind the accepted linux-amd64 platform")
+        text("pull immutable official OCI release", expected_engine, "pull", OCI_IMAGE, timeout=600)
+        pinned = json.loads(text("inspect immutable official OCI platform", expected_engine, "image", "inspect", OCI_IMAGE))
+        require(isinstance(pinned, list) and len(pinned) == 1, "Immutable official image inspection is ambiguous")
+        pinned = pinned[0]
+        image_id = pinned.get("Id", "")
+        if re.fullmatch(r"[0-9a-f]{64}", image_id):
+            image_id = "sha256:" + image_id
+        labels = pinned.get("Config", {}).get("Labels", {})
+        require(image_id == OCI_CONFIG and pinned.get("Architecture") == "amd64" and pinned.get("Os") == "linux"
+                and pinned.get("RootFS", {}).get("Layers") == OCI_LAYERS
+                and labels.get("org.opencontainers.image.revision") == BASE
+                and labels.get("org.opencontainers.image.version") == "v0.138.2-debian"
+                and labels.get("org.opencontainers.image.source") == "https://github.com/" + REPO,
+                "Pinned official image platform, source, release or rootfs identity differs")
+        checksum = text("verify official OCI controller bytes without source execution", expected_engine, "run", "--rm", "--read-only", "--network", "none", "--entrypoint", "/usr/bin/sha256sum", OCI_IMAGE, "/usr/local/bin/decapod").split()
+        require(checksum == [OCI_BINARY, "/usr/local/bin/decapod"], "Immutable official image controller differs from independently extracted bytes")
+        # Freeze the native version-tag input locally to this accepted release.
+        # The subsequent derived-image ancestry guard rejects a different pull.
+        text("bind native release image tag to accepted immutable image", expected_engine, "tag", OCI_IMAGE, OCI_TAG)
         prepared = json.loads(native("prepare native container workspace", "workspace", "ensure", "--container", timeout=900))
         work = safe_path(prepared["worktree_path"])
         require(work.parent == root / ".decapod/workspaces" and prepared.get("branch", "").startswith("agent/" + COORDINATOR + "/"), "Native coordination destination differs")
@@ -204,6 +251,7 @@ def host(args):
         image = re.search(r" -w " + re.escape(quote(work)) + r" '([a-z0-9][a-z0-9./:_-]*)' sh -lc ", hint)
         require(engine_match is not None and invocation is not None and image is not None, "Native engine/invocation/image binding is unavailable")
         engine = engine_match[1]
+        require(engine == expected_engine, "Native engine changed after immutable image binding")
         store = root / ".decapod/data"
         cleanup = 'result_code=$?; trap - EXIT; rm -f -- "$snapshot_dir/decapod.db"; rmdir -- "$snapshot_dir"; exit "$result_code"'
         seed = "cp -- /tmp/decapod-store.db " + quote(store) + "/decapod.db && exec bash"
@@ -212,6 +260,16 @@ def host(args):
                     + quote("org.decapod.workspace.path=" + str(work)) + " --label " + quote("org.decapod.invocation=" + invocation[1]) + " -e DECAPOD_CONTAINER=1 -v " + quote(str(root) + ":" + str(root))
                     + ' --mount "type=bind,src=$snapshot_dir/decapod.db,dst=/tmp/decapod-store.db,readonly" --tmpfs ' + quote(str(store) + ":rw,nosuid,nodev,mode=0700") + " -w " + quote(work) + " " + quote(image[1]) + " sh -lc " + quote(seed) + " )")
         require(hint == expected, "Native launch contract changed; preserve it for review")
+        derived = json.loads(text("verify native workspace image ancestry", engine, "image", "inspect", image[1]))
+        require(isinstance(derived, list) and len(derived) == 1, "Native workspace image inspection is ambiguous")
+        derived = derived[0]
+        derived_layers = derived.get("RootFS", {}).get("Layers", [])
+        require(derived.get("Architecture") == "amd64" and derived.get("Os") == "linux"
+                and derived_layers[:len(OCI_LAYERS)] == OCI_LAYERS and len(derived_layers) > len(OCI_LAYERS),
+                "Native workspace image does not extend the exact accepted official image layers")
+        report["official_oci_controller"] = OCI_CONTROLLER_IDENTITY
+        report["native_image_ancestry"] = dict(official_image=OCI_IMAGE, official_config_digest=OCI_CONFIG,
+            official_rootfs_layers=OCI_LAYERS, workspace_image_id=derived.get("Id"), workspace_rootfs_layers=derived_layers, exact_base_prefix_verified=True)
         rootless, id_mappings = False, None
         if engine == "podman":
             host_info = json.loads(text("observe actual native rootless runtime", "podman", "info", "--format", "json"))["host"]
@@ -222,7 +280,8 @@ def host(args):
         event = safe_path(env["GITHUB_EVENT_PATH"])
         require(event.is_file() and event.stat().st_size <= 10 * 1024 * 1024, "Actual workflow event file missing")
         cidfile = private / "native-container.cid"
-        handoff = dict(root=str(root), assets=str(assets), incoming=str(incoming), runtime=str(runtime), controller=str(staged),
+        handoff = dict(root=str(root), assets=str(assets), incoming=str(incoming), runtime=str(runtime), controller="/usr/local/bin/decapod",
+                       child_controller=OCI_CONTROLLER_IDENTITY, host_controller=HOST_CONTROLLER_IDENTITY,
                        engine=engine, rootless_host=rootless, host_id_mappings=id_mappings, cidfile=str(cidfile),
                        uid=os.geteuid(), gid=os.getegid(), publish_timeout=args.publish_timeout,
                        asset_digests={name: sha((assets / name).read_bytes()) for name in ASSETS}, event_sha256=sha(event.read_bytes()),

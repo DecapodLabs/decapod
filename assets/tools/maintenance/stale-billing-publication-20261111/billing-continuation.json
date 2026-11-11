@@ -29,13 +29,20 @@
   "allowed_source_changes": [],
   "controller": {
     "release": "v0.138.2",
-    "release_id": 442229037,
-    "asset_id": 737052855,
-    "archive_bytes": 8241216,
-    "archive_sha256": "sha256:718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06",
-    "binary_sha256": "sha256:31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723",
-    "release_tag_object": "2c9fabc27d681c2ae7636a648008a056fff2903b",
-    "release_tag_commit": "c5de35a89b27e788169612ae71681e45c13bf71a"
+    "distribution": "oci",
+    "binary_sha256": "dd30b7516c331ac0a6c3128f7a9c433833935bc9f380d311b188502037f857e0",
+    "binary_bytes": 29185240,
+    "image_repository": "ghcr.io/decapodlabs/decapod",
+    "image_index_digest": "sha256:38ff07bbbaf33643f7dcb1b98ba7e4352a67e9f6e40e0a21f1988dfec804ade2",
+    "platform_manifest_digest": "sha256:aaca38cd94450d512f85415e529e0176c0dab2168cc135602ff601d6514aefe4",
+    "image_config_digest": "sha256:89b8305bb9de658d420c10b75b281b30f5f02f598116be58fe506f9a6daeb416",
+    "platform": {
+      "os": "linux",
+      "architecture": "amd64"
+    },
+    "release_tag_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
+    "source_workflow_run_id": 43106957801,
+    "source_workflow_job_id": 130812709187
   },
   "release_generated_paths": [
     ".decapod/managed/Dockerfile.decapod",
@@ -520,6 +527,16 @@
     "launch_contract": "Exact native backup, labels, whole-repository bind, readonly snapshot, and private tmpfs; TTY removed, scoped runtime inputs added, ephemeral tools installed, only private tmpfs ownership changed before setpriv",
     "project_check_order": "Restore authentic18 paths; native projection receipt/material guard; source checkpoint; JSON project prerequisites; native governance-only receipt checkpoint if needed; exact final full native publisher",
     "project_check_is_publication_proof": false,
-    "host_custody_fallback": false
+    "host_custody_fallback": false,
+    "official_distribution": "Host uses the verified GNU v0.138.2 release; child uses the independently verified immutable official v0.138.2-debian OCI controller compatible with the native image. Both identify accepted source c5de35a8; no candidate-built authoring controller."
+  },
+  "host_controller": {
+    "release": "v0.138.2",
+    "distribution": "github_release",
+    "binary_sha256": "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723",
+    "archive_sha256": "718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06",
+    "release_id": 442229037,
+    "asset_id": 737052855,
+    "release_tag_commit": "c5de35a89b27e788169612ae71681e45c13bf71a"
   }
 }

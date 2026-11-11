@@ -12,7 +12,7 @@ import signal
 import subprocess
 import sys
 import tempfile
-from container_billing import verify_runtime
+from container_billing import verify_runtime, OCI_CONTROLLER_IDENTITY, HOST_CONTROLLER_IDENTITY
 
 REPO = "DecapodLabs/decapod"
 BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
@@ -20,8 +20,7 @@ SOURCE = "26a499d9f0789a5ed00605d23cfc57f5392ae8fc"
 OPS = "ops/stale-billing-publication-20261111"
 ACTOR = "chatgpt-stale-billing"
 RECEIVER = "chatgpt-stale-billing-next"
-CONTROLLER = "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
-CONTROLLER_ARCHIVE = "718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06"
+CONTROLLER = "dd30b7516c331ac0a6c3128f7a9c433833935bc9f380d311b188502037f857e0"
 CURRENT = "c7609e42bbbcff9c72af6be7a86333d4b0408922"
 CURRENT_TREE = "f08a124d242dbb85d9eb058a16f3c5bb68a039a3"
 OLD_BRANCH = "agent/codex-init-billing/code_01m7513af6jtzhp4-admin-checkout"
@@ -324,14 +323,17 @@ def main():
             raise Blocked(str(error)) from None
         if runtime_state["engine"] == "podman" and env.get("CONTAINER_ID") != result["container_execution"]["container_id"]:
             raise Blocked("native runtime identity is not the exact observed rootless container ID")
+        if (runtime_state.get("child_controller") != OCI_CONTROLLER_IDENTITY or runtime_state.get("host_controller") != HOST_CONTROLLER_IDENTITY
+                or manifest.get("controller") != OCI_CONTROLLER_IDENTITY or manifest.get("host_controller") != HOST_CONTROLLER_IDENTITY):
+            raise Blocked("official OCI child and GNU host controller provenance differs from the reviewed manifest")
         located = shutil.which("decapod", path=env.get("PATH"))
         if not located:
             raise Blocked("official controller unavailable")
         controller = Path(located).resolve()
         if hashlib.sha256(controller.read_bytes()).hexdigest() != CONTROLLER:
             raise Blocked("controller differs from verified official v0.138.2")
-        result["controller"] = dict(release="v0.138.2", binary_sha256=CONTROLLER, archive_sha256=CONTROLLER_ARCHIVE,
-                                    release_id=442229037, asset_id=737052855, release_tag_commit=BASE)
+        result["controller"] = OCI_CONTROLLER_IDENTITY
+        result["host_controller"] = HOST_CONTROLLER_IDENTITY
         run("ingest native instructions", "decapod", "docs", "ingest")
         evaluation = doc("evaluate original user request and bounded continuation", "eval", "--stdin", "--format", "json",
                          data=REQUEST + "\n\nReviewed residual intent:\n" + manifest["intent"] + "\n" + repair["intent"])
