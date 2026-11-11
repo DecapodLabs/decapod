@@ -102,6 +102,36 @@ unassigned. No database state is injected to construct either scenario.
 
 ## Historical proof replay identity
 
+`core::validation_history` preserves successful full-readiness evidence in the
+existing local canonical verification event stream, indexed by the validated commit.
+It adds no parallel datastore or background service. `lib.rs` captures the
+task binding before proof starts and rechecks it at the durable append boundary.
+Native, repository-local and provider execution share that boundary; partial
+CI checks, snapshot preparation and failed proof cannot create successful
+history. An append failure revokes the returned publication readiness.
+Cloud-backed validation keeps its existing authority path; this local history
+implementation does not claim cloud task completion support.
+
+The archived record retains the complete bounded check plan, execution results,
+material identity and optional decision assessment. It survives deletion of the
+temporary execution directory without promising permanent raw build logs.
+Full proof remains outside `.decapod/governance.json` and the frozen candidate,
+so recording it does not change the commit it proves. The tracked validation
+section retains its existing prerequisite-only meaning.
+
+`plugins::verify` uses a distinct historical completion proof. It checks the
+original task contract, owner and lease lineage against the canonical task
+journal, then verifies integration into the accepted branch. The validated
+candidate, its original accepted base and the observed integration are separate
+identities. Task completion and proof repair use the existing atomic revision,
+dependency, verification and journal transaction. A completed but unverified
+task retains its original completion timestamp and revision when repaired.
+
+Historical replay does not run current-workspace validation or bind unrelated
+later work to the old task. It cannot satisfy the full current-candidate gate
+used by `workspace publish`. Missing, corrupt, ambiguous or mismatched evidence
+fails closed rather than selecting a convenient successful run.
+
 ## Candidate and accepted-target custody
 
 Source-CI validation binds execution evidence to the immutable candidate and
@@ -790,8 +820,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
+- Repository signal fingerprint: `3e553342256aca9b1ee9cae7404ca1a0fee05283c17b47a0e3512da38e321e78`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

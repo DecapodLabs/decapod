@@ -1,5 +1,25 @@
 # Security
 
+## Historical validation trust boundary
+
+`core::validation_history` accepts full execution evidence only from the
+controller's completed runtime path. There is no command that imports a caller's
+success JSON as validation authority. Records bind repository, immutable
+candidate and original base, exact check plan and results, original task
+contract, owner and lease lineage. SHA lookup is a bounded read-only operation;
+malformed, oversized, ambiguous or digest-inconsistent records fail closed.
+
+Historical completion independently checks integration and the complete supported
+task lineage. Reassignment, renewed custody, intent edits later reverted,
+missing history and concurrent task mutations cannot inherit an older pass.
+It does not trust commit messages, branch names, a provider badge, or the legacy
+tracked prerequisite receipt as proof of integration and successful execution.
+Historical authority is limited to completing its original task; new publication
+still requires current full validation. These local records retain Decapod's
+cooperative same-user trust model: hashes detect inconsistent evidence but do
+not protect against an unrestricted owner rewriting all state or impersonating
+another local actor.
+
 ## macOS directory stream ownership
 
 The bounded epoch reader opens an independent directory description relative to
@@ -533,8 +553,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
+- Repository signal fingerprint: `3e553342256aca9b1ee9cae7404ca1a0fee05283c17b47a0e3512da38e321e78`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

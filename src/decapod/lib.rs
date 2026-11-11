@@ -2715,6 +2715,18 @@ pub fn run() -> Result<(), error::DecapodError> {
                 &format,
             )?;
         }
+        Command::Qa(QaCli {
+            command: QaCommand::Verify(verify_cli),
+        }) if verify::is_commit_lookup(&verify_cli) => {
+            // Historical evidence inspection must not initialize a datastore,
+            // acquire a session, refresh presence, or repair the current worktree.
+            let workspace_root = decapod_root_option?;
+            let project_store = Store {
+                kind: StoreKind::Repo,
+                root: find_governance_root(&workspace_root).join(".decapod/data"),
+            };
+            verify::run_verify_cli(&project_store, &workspace_root, verify_cli)?;
+        }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
         }
@@ -6777,6 +6789,14 @@ fn run_current_workbranch_readiness_with(
         let mut signal_guard = core::bounded_process::SignalCancellationGuard::new()?;
         let cancellation = signal_guard.cancellation().clone();
         let store_root = find_governance_root(workspace_root).join(".decapod/data");
+        let history_store = Store {
+            kind: StoreKind::Repo,
+            root: store_root.clone(),
+        };
+        // Capture task custody before the potentially long proof run. A later
+        // task edit or ownership transition must not inherit its successful result.
+        let history_binding =
+            core::validation_history::capture_task_binding(&history_store, workspace_root)?;
         let authorize = |action: runtime::NativeAction<'_>| -> std::io::Result<()> {
             use core::external_action::{self, ExternalCapability};
             let result = match action {
@@ -6849,6 +6869,7 @@ fn run_current_workbranch_readiness_with(
                 )?;
                 signal_guard.restore()?;
                 return Ok(runtime::ValidationReport {
+                    completed_evidence: None,
                     ready: false,
                     proof_ready: false,
 
@@ -6903,8 +6924,14 @@ fn run_current_workbranch_readiness_with(
             if let Some(path) = &invocation.provider_artifacts {
                 host = host.with_artifact_directory(path.clone())?;
             }
-            let report = runtime::validate(&options, &mut host, &cancellation);
+            let mut report = runtime::validate(&options, &mut host, &cancellation);
             signal_guard.restore()?;
+            archive_workbranch_readiness(
+                &history_store,
+                workspace_root,
+                history_binding.as_ref(),
+                &mut report,
+            );
             return Ok(report);
         }
         if config
@@ -6919,8 +6946,14 @@ fn run_current_workbranch_readiness_with(
                 prerequisite,
                 authorize,
             )?;
-            let report = runtime::validate(&options, &mut host, &cancellation);
+            let mut report = runtime::validate(&options, &mut host, &cancellation);
             signal_guard.restore()?;
+            archive_workbranch_readiness(
+                &history_store,
+                workspace_root,
+                history_binding.as_ref(),
+                &mut report,
+            );
             return Ok(report);
         }
         let manifest: toml::Value = toml::from_str(&fs::read_to_string(
@@ -6951,11 +6984,18 @@ fn run_current_workbranch_readiness_with(
         remaining_options.timeout = remaining_options.timeout.checked_sub(native_started.elapsed())
             .filter(|remaining| !remaining.is_zero())
             .ok_or_else(|| error::DecapodError::ValidationError("READINESS_DEADLINE_EXCEEDED: native tool discovery exhausted the original budget".into()))?;
-        let report = runtime::validate(&remaining_options, &mut host, &cancellation);
+        let mut report = runtime::validate(&remaining_options, &mut host, &cancellation);
         signal_guard.restore()?;
+        archive_workbranch_readiness(
+            &history_store,
+            workspace_root,
+            history_binding.as_ref(),
+            &mut report,
+        );
         Ok(report)
     })();
     result.unwrap_or_else(|error| runtime::ValidationReport {
+        completed_evidence: None,
         ready: false,
         proof_ready: false,
 
@@ -6969,6 +7009,31 @@ fn run_current_workbranch_readiness_with(
         )],
         evidence_path: None,
     })
+}
+
+fn archive_workbranch_readiness(
+    store: &Store,
+    workspace_root: &Path,
+    binding: Option<&core::validation_history::ValidationBinding>,
+    report: &mut core::validation_runtime::ValidationReport,
+) {
+    // Cloud-backed task history has its own authority boundary. Preserve its
+    // existing validation path without claiming local historical completion.
+    let Some(binding) = binding else {
+        return;
+    };
+    if let Err(error) =
+        core::validation_history::finish_archive(store, workspace_root, binding, report)
+    {
+        // Preserve the execution evidence and its original failure details, but
+        // never return publication authority if durable recording failed.
+        report.ready = false;
+        report.agent_guidance = core::validation_runtime::ValidationGuidance::for_outcome(false);
+        report.blockers.push(core::validation_runtime::Blocker::new(
+            "VALIDATION_HISTORY_PERSIST_FAILED",
+            error.to_string(),
+        ));
+    }
 }
 
 pub(crate) fn enforce_workbranch_readiness_before_push(

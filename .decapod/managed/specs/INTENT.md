@@ -164,6 +164,16 @@ and repair recoverable failures. Decapod binds supported evidence to the task,
 repository state, policy, and validation epoch. Governed publication remains
 blocked while required checks, evidence, or approvals are unsatisfied.
 
+Completion after integration is a separate decision from publishing new work.
+An agent may finish its original task using durable full validation evidence
+for the exact candidate commit, provided the task's intent and custody remain
+continuous and that candidate's integration is independently established.
+Advancing the accepted branch does not erase that historical execution.
+Historical completion must not require a new pending PR or another agent's
+workspace, and it must never authorize publication of a different candidate.
+Missing historical proof remains missing; a green hosting-provider badge or
+the legacy tracked prerequisite receipt cannot reconstruct it.
+
 Obligation completion must remain true when inspected from a fresh session:
 current transitive dependencies, proof outcomes, proof freshness, and a nonempty
 state-commit root determine readiness. Cached status is advisory. Verification
@@ -277,8 +287,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
+- Repository signal fingerprint: `3e553342256aca9b1ee9cae7404ca1a0fee05283c17b47a0e3512da38e321e78`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

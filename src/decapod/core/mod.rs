@@ -95,6 +95,7 @@ pub mod trajectory;
 pub mod ulid;
 pub mod validate;
 pub mod validation_epoch;
+pub(crate) mod validation_history;
 pub mod validation_rules;
 pub mod validation_runtime;
 pub mod work_claim;

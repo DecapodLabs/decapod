@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "53a55742dfbd100d2f0fd94a91d9b5bdd6c484ee",
+    "accepted_commit": "91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -86,6 +86,14 @@
           "tests/unit/plugins/container_tests.rs"
         ],
         "statement": "Automatic container workspace deletion requires successful command completion, branch foldback, verified ownership and a clean Git worktree; failed, unsynced, dirty or unverifiable work remains available with recovery diagnostics.",
+        "status": "open"
+      },
+      "claim:claim:recovery-aptitude": {
+        "falsifier": "Unreviewed runtime or workflow changes, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+        "proof_refs": [
+          ".decapod/managed/specs/VALIDATION.md"
+        ],
+        "statement": "The candidate recovers only reviewed residual tests/documentation with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct.",
         "status": "open"
       },
       "claim:committed-scope-enforcement": {
@@ -500,32 +508,29 @@
     }
   },
   "change": {
-    "id": "change_01M74XZBVH3QA54Q089MTT4FA9",
-    "base_commit": "53a55742dfbd100d2f0fd94a91d9b5bdd6c484ee",
+    "id": "change_01M750AEM96WQ9YW6JMNSZRDZ4",
+    "base_commit": "91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:recovery-aptitude": {
-      "statement": "The candidate recovers only reviewed residual tests/documentation with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct.",
-      "falsifier": "Unreviewed runtime or workflow changes, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+    "claim:issue-1610": {
+      "statement": "Merged tasks can complete from their own immutable full validation proof while missing, mismatched, or stale task evidence cannot authorize completion or publication.",
+      "falsifier": "A post-merge completion starts current-workspace validation, accepts mismatched proof, changes task state after a failed CAS, or permits a new PR from historical proof.",
       "status": "open",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
+        "https://github.com/DecapodLabs/decapod/issues/1610"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "recovery-aptitude",
-      "summary": "Recover reviewed residual source in current admitted custody; preserve original history, regenerate projections and retain full validation as unavailable.",
-      "input_digest": "sha256:c5920b1e66528a91e58848f4637200559a51dd9bc18c063a1fcdb8051c2de3aa",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
+      "id": "issue1610-2",
+      "summary": "Implement issue #1610 durable full validation history and commit-bound post-merge task completion; preserve fresh publication proof. Reviewed task/custody, proof-plan, atomicity and integration regressions are authored but unexecuted. Reconcile only the independently verified v0.137.3 Cargo version source inventory; required checks unchanged. The prior hosted apply passed formatting and source reconciliation, then stopped on unsupported spec-review paths. Retry records only the three supported reviews and adds an actual capture/append/temporary-evidence-deletion regression.",
+      "input_digest": "sha256:c9753d2fde076f44ea4784f55b4927c9d3cc308645eb6ae5594df6c8f4a8e84e"
     }
   ],
   "intents": {
-    "intent:change_01M74XZBVH3QA54Q089MTT4FA9": {
+    "intent:change_01M750AEM96WQ9YW6JMNSZRDZ4": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -535,11 +540,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M74XZBVH3QA54Q089MTT4FA9",
+      "id": "intent:change_01M750AEM96WQ9YW6JMNSZRDZ4",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Recover aptitude prompt-history regressions\n\nRecover reviewed residual source only; preserve original history and obtain fresh task custody and checkpoints. Full readiness remains unavailable in CI.",
-      "refined_intent": "Recover aptitude prompt-history regressions\n\nRecover reviewed residual source only; preserve original history and obtain fresh task custody and checkpoints. Full readiness remains unavailable in CI.",
+      "raw_intent": "Complete merged tasks from SHA-bound validation proof\n\nImplement issue #1610: durable full validation history, commit lookup, and atomic post-merge verified task completion without weakening publication readiness.",
+      "refined_intent": "Complete merged tasks from SHA-bound validation proof\n\nImplement issue #1610: durable full validation history, commit lookup, and atomic post-merge verified task completion without weakening publication readiness.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -547,61 +552,64 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 22,
+        "file_touch_budget": 55,
         "forbidden_paths": [
-          "src/",
           ".github/"
         ]
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Recover the reviewed narrow patch, regenerate projections through Decapod, verify actual new checkpoints and push this admitted branch for explicitly authorized draft review. Preserve all proof obligations. Source history: already_proven",
+      "intent": "Implement durable SHA-bound full validation evidence and atomic post-merge task completion with verifiable task continuity and accepted integration. Preserve fresh full validation for every new PR.",
       "phases": [],
       "proof_hooks": [
-        "decapod govern artifacts verify-checkpoints --base-branch 53a55742dfbd100d2f0fd94a91d9b5bdd6c484ee --head-ref HEAD --target-base master --format json",
-        "decapod validate --format json"
+        "decapod validate --format json",
+        "decapod workspace publish"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed unchanged authored semantics against accepted base 53a55742dfbd100d2f0fd94a91d9b5bdd6c484ee: this recovery adds preservation/index-discovery tests and authored documentation only. Production APIs, architecture, authorization and required proof gates remain unchanged. Controller-generated projections do not supply semantic changes or executed proof.",
-          "reviewed_code_fingerprint": "3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785",
-          "spec_material_hash": "ec1f8dc91a706a5715b879fb78f0d06134a8353867ece1b079ca4bc45b3fe9b5"
+          "reason": "Describe durable full-proof records, original task binding, atomic historical completion and separate current publication authority.",
+          "reviewed_code_fingerprint": "3e553342256aca9b1ee9cae7404ca1a0fee05283c17b47a0e3512da38e321e78",
+          "spec_material_hash": "016135af30289e8b09270254bad9e78a180be5f43cbf3be8450c29009dea45e4"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed unchanged authored semantics against accepted base 53a55742dfbd100d2f0fd94a91d9b5bdd6c484ee: this recovery adds preservation/index-discovery tests and authored documentation only. Production APIs, architecture, authorization and required proof gates remain unchanged. Controller-generated projections do not supply semantic changes or executed proof.",
-          "reviewed_code_fingerprint": "3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785",
-          "spec_material_hash": "3e4cc0b5f8f932afff3e6bff27e846e9e1bc4ffc76b170d2061585118cab3006"
+          "reason": "Specify commit lookup and historical todo completion, exact-record replay, conservative integration support and explicit unsupported transports.",
+          "reviewed_code_fingerprint": "3e553342256aca9b1ee9cae7404ca1a0fee05283c17b47a0e3512da38e321e78",
+          "spec_material_hash": "c8d99624cba5965b01bd152ae3ce05edd407362ed99eec11a334e39398933247"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed unchanged authored semantics against accepted base 53a55742dfbd100d2f0fd94a91d9b5bdd6c484ee: this recovery adds preservation/index-discovery tests and authored documentation only. Production APIs, architecture, authorization and required proof gates remain unchanged. Controller-generated projections do not supply semantic changes or executed proof.",
-          "reviewed_code_fingerprint": "3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785",
-          "spec_material_hash": "f51e675e74a6d2796094893aec00b89a4b2ccffc9d742590b1775e8519a5ccd1"
+          "reason": "Specify producer custody, task and lease continuity, bounded integration verification, and cooperative local trust limitations.",
+          "reviewed_code_fingerprint": "3e553342256aca9b1ee9cae7404ca1a0fee05283c17b47a0e3512da38e321e78",
+          "spec_material_hash": "f3b3a9a0dcdfdfc0ce9c9f5fb251339e496d828291c10194d0aa549827f8dd73"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Recover aptitude prompt-history regressions",
+      "title": "fix(verify): complete merged tasks from recorded candidate proof",
       "todo_ids": [
-        "cicd_01m74xyzy5a2cr4a"
+        "code_01m750a4daxmnxmj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794388277Z"
+      "updated_at": "1794392106Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Reviewed residual patch and CLI-generated governance only; draft review, no full-readiness claim"
+        "Historical validation and task completion; publication gates retained"
       ],
-      "artifact_hash": "sha256:7593b4f1937c4d24b86ab24de34c52ff86ba498e9416df5bab654075b5cb4035",
+      "artifact_hash": "sha256:95c26e5d9d83ddabf6132231cad98cdad667fcd9bff79bcff8715cd9c9ebce05",
       "checks": [
+        {
+          "name": "formatting",
+          "status": "passed"
+        },
         {
           "name": "full-workbranch-validation",
           "status": "unavailable"
@@ -611,25 +619,25 @@
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M74XZBVH3QA54Q089MTT4FA9",
+            "intent_id": "intent:change_01M750AEM96WQ9YW6JMNSZRDZ4",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M74XZBVH3QA54Q089MTT4FA9",
+            "intent_id": "intent:change_01M750AEM96WQ9YW6JMNSZRDZ4",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M74XZBWE0NNPEQCPXST4DCYG",
+            "detail": "trajectory:branch_01M750AEN5M2W8ARZCMK9Y7RSK",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M74XZBVH3QA54Q089MTT4FA9",
+            "intent_id": "intent:change_01M750AEM96WQ9YW6JMNSZRDZ4",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -638,20 +646,42 @@
         "next_sequence": 4,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M74XZBWE0NNPEQCPXST4DCYG": {
+          "branch_01M750AEN5M2W8ARZCMK9Y7RSK": {
             "evidence_only": true,
-            "id": "branch_01M74XZBWE0NNPEQCPXST4DCYG",
-            "intent_id": "intent:change_01M74XZBVH3QA54Q089MTT4FA9",
+            "id": "branch_01M750AEN5M2W8ARZCMK9Y7RSK",
+            "intent_id": "intent:change_01M750AEM96WQ9YW6JMNSZRDZ4",
             "steps": [
               {
-                "action": "validation",
-                "command": "git apply reviewed patch",
+                "action": "implementation",
+                "command": "cargo fmt --all",
                 "custody_event_id": "event:4",
                 "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
                   ".decapod/managed/specs/VALIDATION.md",
-                  "Actual hosted session, claim and admitted workspace; source history: already_proven. No retrospective proof. Source checks remain unrun at this checkpoint; a later CI-local validation cannot establish complete workbranch readiness."
+                  "docs/agent/command-contracts.md",
+                  "docs/agent/error-recovery.md",
+                  "docs/agent/state-model.md",
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/mod.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "src/decapod/core/validation_runtime/tests.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "tests/unit/core/task_journal_historical_tests.rs",
+                  "tests/unit/core/validation_history_integration_tests.rs",
+                  "tests/unit/plugins/verify_historical_tests.rs",
+                  "tests/unit/core/validation_history_archive_tests.rs",
+                  "Reviewed payload 96ffb2e94d4857797c60a5a0fe9254ad8cdd0774 applied in this admitted workspace. Formatting and whitespace checks executed; full validation remains pending."
                 ],
                 "proof_refs": [
+                  "formatting",
                   "git-diff-whitespace",
                   "full-workbranch-validation"
                 ],
@@ -666,29 +696,49 @@
         }
       },
       "declared_commands": [
-        "decapod rpc --op specs.refresh",
-        "git apply reviewed patch"
+        "cargo fmt --all"
       ],
       "destination": "pull request",
       "evidence": [
-        "Actual hosted session, claim and admitted workspace; source history: already_proven. No retrospective proof. Source checks remain unrun at this checkpoint; a later CI-local validation cannot establish complete workbranch readiness."
+        "Reviewed payload 96ffb2e94d4857797c60a5a0fe9254ad8cdd0774 applied in this admitted workspace. Formatting and whitespace checks executed; full validation remains pending."
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M74XZBVH3QA54Q089MTT4FA9",
+      "intent_id": "intent:change_01M750AEM96WQ9YW6JMNSZRDZ4",
       "modified_files": [
-        ".decapod/managed/specs/VALIDATION.md"
+        ".decapod/config.toml",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/agent/command-contracts.md",
+        "docs/agent/error-recovery.md",
+        "docs/agent/state-model.md",
+        "src/decapod/core/events.rs",
+        "src/decapod/core/mod.rs",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/tests.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/plugins/verify.rs",
+        "tests/unit/core/task_journal_historical_tests.rs",
+        "tests/unit/core/validation_history_archive_tests.rs",
+        "tests/unit/core/validation_history_integration_tests.rs",
+        "tests/unit/plugins/verify_historical_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "aptitude",
+        "issue-1610",
         "root"
       ],
-      "run_id": "branch_01M74XZBWE0NNPEQCPXST4DCYG",
+      "run_id": "branch_01M750AEN5M2W8ARZCMK9Y7RSK",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m74xyzy5a2cr4a",
+      "task_id": "code_01m750a4daxmnxmj",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
