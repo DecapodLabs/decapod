@@ -29,6 +29,10 @@ TASK_INTENTS = {
     "decapod": "Implement issue #1628: logical local/cloud project selection through Dactyl; machine-private origin/repository-bound sessions and durable pending flows; serialized refresh and interruption recovery; server-confirmed account readiness; no cloud failure fallback to SQLite; offline client regression coverage and accurate proof boundaries. Published Dactyl package handoff remains an explicit dependency, not a waived release gate.",
     "dactyl": "Implement Dactyl issue #100 as the dependency for decapod #1628: an additive instance-scoped logical local/cloud connector, public discovery, supported managed authentication/onboarding/account transport and current-bearer native data connections. Preserve caller-owned private custody, strict origin isolation, bounded redacted transport, server-owned entitlement/policy, and separation of fixture evidence from hosted acceptance.",
 }
+EARLIER_BOOTSTRAPS = {
+    "decapod": {"run_id": 43112618001, "task": "code_01m76bwvngbby68c"},
+    "dactyl": {"run_id": 43112637243, "task": "feat_01m76bwjb7637nj6"},
+}
 
 
 class Blocked(RuntimeError):
@@ -55,7 +59,9 @@ def main():
         parser.error("results must be outside source")
     os.umask(0o077)
     out.mkdir(mode=0o700, parents=True, exist_ok=False)
-    private = Path(tempfile.mkdtemp(prefix="issue1628-private-", dir=out.parent))
+    # GitHub's mounted RUNNER_TEMP has host ownership. Native custody must
+    # remain under this actual container user's private ancestry instead.
+    private = Path(tempfile.mkdtemp(prefix="issue1628-private-", dir="/root"))
     diagnostics = private / "diagnostics"
     diagnostics.mkdir(mode=0o700)
     env = os.environ.copy()
@@ -67,6 +73,8 @@ def main():
                   target=target, base=base, operations_sha=env.get("GITHUB_SHA"),
                   status="blocked", task=None, branch=None, admitted=False,
                   container_observed=False, custody_exported=False, publication_ready=False)
+    result["earlier_bootstrap"] = dict(**EARLIER_BOOTSTRAPS[args.slug],
+        disposition="historical admission only; no product changes or remote branch; ephemeral runner ended after yield and failed custody export; this is a new task, not restored custody or inherited proof")
     controller = None
     controller_digest = None
     work = None
@@ -200,7 +208,8 @@ def main():
         run("read native capabilities", "decapod", "capabilities", "--format", "json")
         run("inspect native workspaces", "decapod", "workspace", "status")
         title = "Route cloud initialization and account readiness through Dactyl" if args.slug == "decapod" else "Add logical connector and cloud auth/account transport for decapod"
-        task_doc = doc("create native task", "todo", "add", title, "--description", REQUEST + "\n\n" + TASK_INTENTS[args.slug],
+        history = "Earlier ephemeral bootstrap " + json.dumps(result["earlier_bootstrap"], sort_keys=True)
+        task_doc = doc("create native task", "todo", "add", title, "--description", REQUEST + "\n\n" + TASK_INTENTS[args.slug] + "\n\n" + history,
                        "--tags", "code", "--priority", "high", "--ref", f"https://github.com/{repo}/issues/{issue}", "--format", "json")
         task = task_doc["id"]
         result["task"] = task
@@ -220,6 +229,11 @@ def main():
         run("orient native task", "decapod", "infer", "orientation", "--task-id", task, cwd=work)
         run("read core doctrine", "decapod", "constitution", "get", "core/DECAPOD", cwd=work)
         doc("resolve task context", "rpc", "--op", "context.resolve", cwd=work)
+        current = doc("inspect governed workstream", "govern", "artifacts", "status", cwd=work)
+        run_id = current["sections"]["trajectory"]["run_id"]
+        doc("record bootstrap custody gap", "govern", "trajectory", "record", "--run-id", run_id,
+            "--task-id", task, "--evidence", history,
+            "--check", "full-workbranch-validation=unavailable", cwd=work)
         result.update(status="admitted_no_implementation", admitted=True)
     except (Blocked, OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
         result.setdefault("blocker", dict(stage=stage, type=type(exc).__name__, reason=str(exc)))
