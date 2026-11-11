@@ -240,7 +240,6 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
         let _ = conn.execute("ALTER TABLE preferences ADD COLUMN access_count INTEGER DEFAULT 0", []);
 
         // Create indexes
-        conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_KEY, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS, [])?;
         conn.execute(schemas::APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT, [])?;

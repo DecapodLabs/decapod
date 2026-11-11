@@ -1274,3 +1274,12 @@ update-check options. `init --laya-decisions[=true|false]` explicitly selects th
 optional assessment policy; omission preserves it. Init preserves current Laya
 settings and opaque user extension tables. Only `[laya]` has model-policy
 semantics. No retired model configuration or receipt type is an API alias.
+
+## Relational compaction compatibility
+
+The `sqlite.compact_redundant_relational_indexes.v001` forward migration
+changes only redundant local SQLite btree structures. No CLI/RPC, Dactyl
+operation, task revision, event sequence, transaction semantics, or cloud
+schema change. An unexpected historical index or missing unique enforcement
+raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
+Freed SQLite pages are reusable but are not auto-vacuumed.

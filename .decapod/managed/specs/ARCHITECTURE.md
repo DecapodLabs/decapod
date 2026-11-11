@@ -965,3 +965,14 @@ helpers contain no evaluator compatibility layer. `ValidationReport` exposes one
 assessment field, `laya_readiness`; generic historical replay normalization is
 unchanged. Retired model code and research corpora are absent from the current
 source tree; their immutable history remains in Git.
+
+## Guarded relational index compaction
+
+`core::migration::migrate_compact_redundant_relational_indexes` runs one
+`BEGIN IMMEDIATE` transaction over local `decapod.db`. For each of five
+nonunique indexes it verifies exact index shape and the full ascending/BINARY
+UNIQUE replacement before DROP. Category/risk-zone names already have UNIQUE
+constraints; task-owner/dependency keys have matching composite UNIQUE
+indexes; preferences use `UNIQUE(category,key)`. Runtime initializers stop
+recreating redundant trees. Reverse-key indexes remain. No data or proof
+encodings change; cloud PostgreSQL migration ownership stays with Propodus.

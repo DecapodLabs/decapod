@@ -424,3 +424,12 @@ documentation from the current tree. Preserve canonical proof/event bytes and
 historical Git commits. Resolve obsolete carried obligations through the
 supported governance CLI; historical resolution identifiers remain auditable
 until their accepted merge allows normal workstream compaction.
+
+## Relational index compaction intent (v0.136.4)
+
+Preserve all Decapod domain rows, stable IDs, proof bindings, journal history,
+and local isolation while eliminating nonunique indexes duplicated by existing
+UNIQUE btrees' leftmost-key coverage. Do not delete rows, rewrite events, alter
+WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
+This is a bounded local SQLite optimization. Full semantic parity with
+Propodus Supabase remains a separately gated migration (Propodus #71).

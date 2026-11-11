@@ -1216,3 +1216,13 @@ The socket lifecycle fixture likewise permits a bounded `AddrInUse` interval aft
 Supabase HTTP fixtures explicitly restore blocking mode on accepted connections before applying the existing five-second read timeout. This is necessary when the platform inherits the nonblocking listener flag. A delayed-header regression verifies that the fixture waits for a valid request instead of failing immediately with `WouldBlock`; production HTTP transport is unchanged.
 
 The delayed-header regression uses the approved Tokio networking API with a five-second overall deadline, while the fixture server deliberately uses blocking reads under its existing read timeout. No lint-policy exception or production networking change is required.
+
+## Local relational compaction proof
+
+`tests/datastore_relational_compaction.rs` proves historical index removal
+preserves nonempty multi-table row digests and uniqueness, is idempotent,
+rejects redefined historical indexes, atomically rolls back when a required
+UNIQUE replacement is missing, and stays compact after subsystem
+reinitialization. Any row/hash change, index recreation, partial mutation,
+or incorrect upgrade-success claim falsifies completion. Full independent
+candidate validation and CI remain required before publishing or merging.

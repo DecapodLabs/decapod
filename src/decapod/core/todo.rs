@@ -1036,7 +1036,6 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute_batch(schemas::TODO_DB_SCHEMA_TASK_TAGS)
         .map_err(error::DecapodError::StorageError)?;
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_OWNERS, [])?;
-    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK, [])?;
     // Preserve the first historical claim for each pair before installing the
     // invariant required by concurrent owner upserts.
     conn.execute(
@@ -1048,10 +1047,8 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     )?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_UNIQUE, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
-    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
-    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_APPROVALS, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_INDEX, [])?;
     conn.execute_batch(
@@ -1091,12 +1088,10 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_VERIFICATION, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
-    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
 
     if current_version < 2 {
         conn.execute(schemas::TODO_DB_SCHEMA_CATEGORIES, [])?;
-        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_CATEGORY_NAME, [])?;
         seed_default_categories(conn)?;
     }
 
@@ -1142,7 +1137,6 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     if current_version < 10 {
         // Multiple owners support (also always-enforced above).
         conn.execute(schemas::TODO_DB_SCHEMA_TASK_OWNERS, [])?;
-        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK, [])?;
         // Agent expertise folded into agents.expertise_json (#1129).
     }
 
@@ -1153,12 +1147,10 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     if current_version < 12 {
         // Operational risk zones
         conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
-        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
     }
 
     if current_version < 13 {
         conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
-        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
         backfill_task_dependencies(conn)?;
     }

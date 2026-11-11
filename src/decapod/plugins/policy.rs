@@ -222,7 +222,6 @@ pub fn initialize_policy_db(root: &Path) -> Result<(), error::DecapodError> {
         // so bootstrap those tables when policy is initialized first.
         conn.execute_batch(schemas::AGENTS_TABLE_SCHEMA)?;
         conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
-        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
         Ok(())
     })
 }
