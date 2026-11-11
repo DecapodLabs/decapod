@@ -262,6 +262,29 @@ All requirements above remain open in this documentation PR. The acceptance
 matrix is a repair specification; it does not create test results or substitute
 for implementation.
 
+## Reviewed source-inventory reconciliation
+
+The accepted `proof.required_profile.reviewed_sources_digest` was last authored
+at commit `1512b61f`. Its independently recomputed 79-entry inventory matches
+the accepted declaration `sha256:78d39990...`. The v0.137.1 master inventory
+contains 80 entries and hashes to
+`sha256:8ef8d57a8a5ea3526ea113016515f18a8ae2d13711365d88ee3563419b03cbe6`.
+The five changes were inspected rather than automatically blessed:
+
+- `Cargo.toml` and `Cargo.lock`: the local Decapod package version advanced
+  from 0.136.3 to 0.137.1 without modifying dependency selections.
+- `.config/build/decapod.BUILD.bzl`: three actual datastore tests and their
+  versioned inventory fixture were added to the core target; no test removed.
+- `assets/tools/storage_size_probe.rs`: a new Rust-only disposable synthetic
+  measurement runner; no production migration authority.
+- `src/decapod/core/release_metadata.rs`: workbranch push-ancestry handling
+  retains accepted-fork validation and PR checks.
+
+All nine inventoried workflow files still match their separately compiled
+`readiness_profile::reviewed_workflow_digests()` constants. The finite required
+check catalog and Buildkite selection remain unchanged. The updated declaration
+records this inspection; it is not an executed source-PR proof receipt.
+
 ## Execution and publication record
 
 The released Decapod binary allowed the incoming request, and a local session

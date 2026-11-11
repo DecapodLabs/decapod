@@ -513,6 +513,15 @@
         ".decapod/managed/specs/VALIDATION.md",
         "docs/datastore-v2/production-readiness-v0.137.0.md"
       ]
+    },
+    {
+      "id": "pr1609-source-inventory-v2",
+      "summary": "Review changed source inventory and accepted workflow bytes; restore complete reviewed source profile without weakening any required CI check",
+      "input_digest": "sha256:1bf3c1e5878f60ec9b333992eb56c3f1e5c58eaad3f9307623b5954a149ad480",
+      "proof_refs": [
+        "docs/datastore-v2/production-readiness-v0.137.0.md",
+        "src/decapod/core/readiness_profile.rs"
+      ]
     }
   ],
   "intents": {
@@ -553,21 +562,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Authored ARCHITECTURE semantics remain correct for a documentation-only datastore qualification review. Only version-bound generator output changes; runtime authority and interfaces do not.",
+          "reason": "Reconciled 80-item source inventory, verified all nine compiled workflow definitions, preserved unchanged ARCHITECTURE authored semantics and mandatory CI profile.",
           "reviewed_code_fingerprint": "efd39e6ead63862cdedbea60343f5b43e23a5f8f6515c6e502b7e91d09ac6490",
           "spec_material_hash": "ec1f8dc91a706a5715b879fb78f0d06134a8353867ece1b079ca4bc45b3fe9b5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Authored INTERFACES semantics remain correct for a documentation-only datastore qualification review. Only version-bound generator output changes; runtime authority and interfaces do not.",
+          "reason": "Reconciled 80-item source inventory, verified all nine compiled workflow definitions, preserved unchanged INTERFACES authored semantics and mandatory CI profile.",
           "reviewed_code_fingerprint": "efd39e6ead63862cdedbea60343f5b43e23a5f8f6515c6e502b7e91d09ac6490",
           "spec_material_hash": "3e4cc0b5f8f932afff3e6bff27e846e9e1bc4ffc76b170d2061585118cab3006"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Authored SECURITY semantics remain correct for a documentation-only datastore qualification review. Only version-bound generator output changes; runtime authority and interfaces do not.",
+          "reason": "Reconciled 80-item source inventory, verified all nine compiled workflow definitions, preserved unchanged SECURITY authored semantics and mandatory CI profile.",
           "reviewed_code_fingerprint": "efd39e6ead63862cdedbea60343f5b43e23a5f8f6515c6e502b7e91d09ac6490",
           "spec_material_hash": "f51e675e74a6d2796094893aec00b89a4b2ccffc9d742590b1775e8519a5ccd1"
         }
@@ -580,14 +589,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794381885Z"
+      "updated_at": "1794382267Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Accepted master and original failed draft remain immutable evidence",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cb1d14251a40244c842349cad13ae2b363e8b31215ff1d8e9f89f852bb369b27",
+      "artifact_hash": "sha256:7ceab860fd04cf97b0ee02e16642bb9618b9a331093ca0c0d578ab20d067a41b",
       "checks": [
         {
           "name": "documentation_structure",
@@ -598,15 +607,23 @@
           "status": "passed"
         },
         {
+          "name": "nine_compiled_workflow_digests",
+          "status": "passed"
+        },
+        {
           "name": "previous_PR_governance_check",
           "status": "failed"
         },
         {
           "name": "previous_PR_health_check",
           "status": "failed"
+        },
+        {
+          "name": "source_inventory_reconciliation",
+          "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -634,10 +651,17 @@
             "intent_id": "intent:change_01M74QH1HTFBNP3H5V0BMM6XCE",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M74QH1M4YHVHRKPXQE9ATES4",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M74QH1HTFBNP3H5V0BMM6XCE",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M74QH1M4YHVHRKPXQE9ATES4": {
@@ -688,6 +712,30 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  "src/decapod/core/release_metadata.rs",
+                  "assets/tools/storage_size_probe.rs",
+                  ".decapod/config.toml",
+                  "docs/datastore-v2/production-readiness-v0.137.0.md",
+                  "Reviewed exact source inventory from 1512b61f to accepted master: 5 changed entries, 9 compiled workflow hashes matched"
+                ],
+                "proof_refs": [
+                  "source_inventory_reconciliation",
+                  "nine_compiled_workflow_digests"
+                ],
+                "scope": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "docs/datastore-v2/architecture.md",
+                  "docs/datastore-v2/production-readiness-v0.137.0.md",
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -699,24 +747,31 @@
       "destination": "PR #1609 governed reauthoring",
       "evidence": [
         "GitHub Actions run 42975459164: missing governance diff and refreshed project projections",
+        "Reviewed exact source inventory from 1512b61f to accepted master: 5 changed entries, 9 compiled workflow hashes matched",
         "Seven source-grounded findings and eleven open acceptance gates in docs/datastore-v2/production-readiness-v0.137.0.md"
       ],
       "inspected_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
         "AGENTS.md",
-        "docs/datastore-v2/architecture.md"
+        "assets/tools/storage_size_probe.rs",
+        "docs/datastore-v2/architecture.md",
+        "src/decapod/core/release_metadata.rs"
       ],
       "intent_id": "intent:change_01M74QH1HTFBNP3H5V0BMM6XCE",
       "modified_files": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/VALIDATION.md",
         "docs/datastore-v2/architecture.md",
         "docs/datastore-v2/production-readiness-v0.137.0.md"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks",
+        "Refresh owned projections, stage/checkpoint, commit and revalidate",
         "Stage reviewed candidate, checkpoint, commit, and run exact-candidate validate"
       ],
       "repo_scope": [
+        ".decapod/config.toml",
         ".decapod/managed/specs/VALIDATION.md",
         "docs/datastore-v2/architecture.md",
         "docs/datastore-v2/production-readiness-v0.137.0.md",
