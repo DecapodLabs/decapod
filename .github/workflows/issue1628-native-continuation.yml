@@ -58,7 +58,7 @@ jobs:
           echo /usr/local/cargo/bin >> "$GITHUB_PATH"
           python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/install_controller.py" /root/issue1628-controller-probe
           cd /root
-          /root/issue1628-controller-probe/decapod docs ingest > /root/issue1628-controller-orientation.txt
+          /root/issue1628-controller-probe/decapod system version > /root/issue1628-controller-version.txt
       - name: Prepare exact private custody receiver
         shell: bash
         run: |
