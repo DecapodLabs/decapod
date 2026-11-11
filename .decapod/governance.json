@@ -574,24 +574,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed agent-invoked repo-local orchestration and backend-owned identity resolution; this PR extends existing protected cloud tests and documents delegated authority without changing the data-plane transport.",
-          "reviewed_code_fingerprint": "067c3b44cef3e629c13d231509b865a856985ea337ffdd417be23000e9a243ac",
-          "spec_material_hash": "24e49dced60535747bf46469221a771e46a1e382e5f7dab99414333518234d18"
+          "reason": "Reviewed repository-native agent execution and the two trust domains against the merged Propodus backend: solo local mode remains cooperative and account-free; hosted operations bind to managed Auth, repository grants, and principal-owned custody. The implementation and protected tests do not introduce a human-facing IAM or contractor execution path.",
+          "reviewed_code_fingerprint": "88d69ceac036e9827792cf5ea9bc0d206af71490859175f7ef10347551df84a3",
+          "spec_material_hash": "ec1f8dc91a706a5715b879fb78f0d06134a8353867ece1b079ca4bc45b3fe9b5"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed agent-only cloud boundary: the protected Supabase fixture rejects release and completion from a second authenticated principal even with the claimant's exact agent label; public cloud RPC shape is unchanged.",
-          "reviewed_code_fingerprint": "067c3b44cef3e629c13d231509b865a856985ea337ffdd417be23000e9a243ac",
-          "spec_material_hash": "d9be5a36258aa0231ce26253d99ad8f1cff3bcce2f611cbda5a20abdd6595770"
+          "reason": "Reviewed the current agent-only cloud interface: local actor labels do not authorize remote operations; two independently authenticated principals cannot transfer claim custody by copying the same agent label. The Dactyl request contract stays unchanged, cloud denial never falls back to local SQLite, and the protected service proof remains distinct from local fixtures.",
+          "reviewed_code_fingerprint": "88d69ceac036e9827792cf5ea9bc0d206af71490859175f7ef10347551df84a3",
+          "spec_material_hash": "3e4cc0b5f8f932afff3e6bff27e846e9e1bc4ffc76b170d2061585118cab3006"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the new material security contract, local no-auth boundary, authenticated Propodus grants, expiring contractor access and negative principal-impersonation tests; this review does not claim hosted enforcement without service proof.",
-          "reviewed_code_fingerprint": "067c3b44cef3e629c13d231509b865a856985ea337ffdd417be23000e9a243ac",
+          "reason": "Reviewed owner, maintainer, contributor and expiring contractor delegation with Propodus #93 merged; a self-selected agent identity cannot elevate cloud authority or release another principal's task. Local cooperative authority, cloud revocation, denial propagation, hosted proof scope and independent merge checks remain explicit and bounded.",
+          "reviewed_code_fingerprint": "88d69ceac036e9827792cf5ea9bc0d206af71490859175f7ef10347551df84a3",
           "spec_material_hash": "f51e675e74a6d2796094893aec00b89a4b2ccffc9d742590b1775e8519a5ccd1"
         }
       ],
@@ -603,7 +603,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794375080Z"
+      "updated_at": "1794378537Z"
     },
     "trajectory": {
       "active_boundaries": [
