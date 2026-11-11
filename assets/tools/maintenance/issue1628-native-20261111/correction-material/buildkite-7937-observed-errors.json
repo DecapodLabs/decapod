@@ -1,0 +1,143 @@
+{
+  "schema": "decapod.issue1628-observed-buildkite-errors.v1",
+  "retrieval": "public cloud browser UI; no login, credential/settings changes, or remote mutation",
+  "build_url": "https://buildkite.com/decapodlabs/decapod/builds/7937/list",
+  "job_log_url": "https://buildkite.com/decapodlabs/decapod/builds/7937/list?sid=01a1cce7-284d-4519-86e6-1c0191006f8b&tab=output",
+  "build": 7937,
+  "build_uuid": "01a1cce6-fe03-40d1-975e-a200e9170ad0",
+  "job_uuid": "01a1cce7-28a2-4cb3-8fe5-e6357432ae62",
+  "workflow": ".github/workflows/docs_sync.yml",
+  "job": "sync-docs",
+  "check": "docs-drift",
+  "candidate": "1289a80a782d651af337125ee447db4b5723cbd7",
+  "accepted_base": "c5de35a89b27e788169612ae71681e45c13bf71a",
+  "observed_dependency_compilation": {
+    "package": "dactyl-db",
+    "version": "0.11.1",
+    "log_line": 1073
+  },
+  "observed_errors": [
+    {
+      "code": "E0433",
+      "symbol": "CloudConnector",
+      "path": "src/decapod/core/cloud_client.rs",
+      "line": 52,
+      "column": 20,
+      "log_line": 1077
+    },
+    {
+      "code": "E0433",
+      "symbol": "CloudConnector",
+      "path": "src/decapod/core/cloud_client.rs",
+      "line": 60,
+      "column": 19,
+      "log_line": 1083
+    },
+    {
+      "code": "E0433",
+      "symbol": "AuthenticationSecrets",
+      "path": "src/decapod/core/cloud_client.rs",
+      "line": 146,
+      "column": 16,
+      "log_line": 1089
+    },
+    {
+      "code": "E0433",
+      "symbol": "CloudConnector",
+      "path": "src/decapod/core/cloud_client.rs",
+      "line": 300,
+      "column": 32,
+      "log_line": 1095
+    },
+    {
+      "code": "E0433",
+      "symbol": "AuthenticationState",
+      "path": "src/decapod/core/cloud_client.rs",
+      "line": 391,
+      "column": 24,
+      "log_line": 1101
+    },
+    {
+      "code": "E0433",
+      "symbol": "AuthenticationState",
+      "path": "src/decapod/core/cloud_client.rs",
+      "line": 392,
+      "column": 24,
+      "log_line": 1107
+    },
+    {
+      "code": "E0433",
+      "symbol": "AuthenticationState",
+      "path": "src/decapod/core/cloud_client.rs",
+      "line": 393,
+      "column": 24,
+      "log_line": 1113
+    },
+    {
+      "code": "E0433",
+      "symbol": "AuthenticationState",
+      "path": "src/decapod/core/cloud_client.rs",
+      "line": 393,
+      "column": 67,
+      "log_line": 1119
+    },
+    {
+      "code": "E0433",
+      "symbol": "CloudConnector",
+      "path": "src/decapod/core/dactyl.rs",
+      "line": 334,
+      "column": 40,
+      "log_line": 1125
+    },
+    {
+      "code": "E0425",
+      "symbol": "AuthenticationSecrets",
+      "path": "src/decapod/core/cloud_client.rs",
+      "line": 145,
+      "column": 56,
+      "log_line": 1131
+    },
+    {
+      "code": "E0425",
+      "symbol": "UserSession",
+      "path": "src/decapod/core/cloud_client.rs",
+      "line": 159,
+      "column": 40,
+      "log_line": 1137
+    }
+  ],
+  "observed_warning": {
+    "kind": "unused_imports",
+    "symbols": [
+      "auth",
+      "cloud_backend"
+    ],
+    "path": "src/decapod/lib.rs",
+    "line": 22,
+    "column": 5,
+    "log_line": 1143
+  },
+  "compiler_result": {
+    "errors": 11,
+    "warnings": 1,
+    "log_line": 1154
+  },
+  "visible_source_ci_receipt": {
+    "schema": "decapod.source-ci.execution.v3",
+    "status": "failed",
+    "complete_pr_profile": false,
+    "authenticated": false,
+    "execution_complete": false,
+    "logs_complete": true,
+    "command": [
+      "bash",
+      "assets/tools/source_ci/docs-drift.sh"
+    ],
+    "command_exit_code": 101,
+    "stderr_bytes": 20507,
+    "stderr_sha256": "sha256:726247e978cf852dd7e5f0a6140231640143af5e20e9de94303012ae0d33ef05",
+    "terminal_record_sha256": "sha256:24594da64f6b11c874b8f00bc9648a050dc563a12c8384e47e66e80435d4d9b9"
+  },
+  "job_exit_code": 1,
+  "interpretation": "Observed compilation failure against the accepted registry dependency, before successful documentation drift proof. This confirms missing Dactyl API symbols rather than demonstrating a documentation-content mismatch. No test or publication success is claimed."
+}

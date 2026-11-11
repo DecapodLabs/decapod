@@ -1,4 +1,4 @@
-name: Continue issue 1628 governed client
+name: Checkpoint issue 1628 client evidence corrections
 
 on:
   push:
@@ -19,11 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:24.04
-    timeout-minutes: 160
+    timeout-minutes: 80
     permissions:
       contents: write
       actions: read
-      pull-requests: write
     env:
       OPERATIONS_PATH: assets/tools/maintenance/issue1628-native-20261111
       TMPDIR: /root/issue1628-tmp
@@ -63,9 +62,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay.py" prepare \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_client_corrections.py" prepare \
             --slug decapod \
-            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/decapod-bootstrap-result.json" \
+            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/decapod-admitted-result.json" \
             --directory /root/issue1628-relay
       - name: Publish only the ephemeral receiver certificate
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -80,21 +79,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay.py" receive \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay_client_corrections.py" receive \
             --slug decapod \
-            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/decapod-bootstrap-result.json" \
+            --report "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/decapod-admitted-result.json" \
             --directory /root/issue1628-relay
-      - name: Materialize reviewed source and continue original native task
+      - name: Correct warnings and evidence on original governed task
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
           umask 077
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/unpack_client.py" \
-            "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/client-material.b64" \
-            "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/decapod-continuation.json" \
-            "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/material"
           git clone --no-hardlinks --no-checkout "$GITHUB_WORKSPACE/subject" /root/issue1628-subject
           cd /root/issue1628-subject
           git remote set-url origin https://github.com/DecapodLabs/decapod.git
@@ -102,17 +97,17 @@ jobs:
           git config user.name 'ChatGPT'
           git config user.email 'chatgpt@users.noreply.github.com'
           gh auth setup-git
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/continue_decapod.py" \
-            --material "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/material" \
-            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/decapod-continuation.json" \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/resume_client_corrections.py" \
+            --material "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/correction-material" \
+            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/client-corrections.json" \
             --native-transfer /root/issue1628-relay/native-transfer.json \
             --certificate "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody-recipient.pem" \
-            --output "$RUNNER_TEMP/issue1628-decapod-continuation"
+            --output "$RUNNER_TEMP/issue1628-client-corrections"
       - name: Preserve actual readiness blocker and encrypted task custody
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: issue1628-decapod-continuation
-          path: ${{ runner.temp }}/issue1628-decapod-continuation/
+          name: issue1628-client-corrections
+          path: ${{ runner.temp }}/issue1628-client-corrections/
           if-no-files-found: warn
           retention-days: 90

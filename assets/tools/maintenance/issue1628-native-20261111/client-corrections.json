@@ -1,0 +1,75 @@
+{
+  "schema": "decapod.issue1628-client-corrections-proposal.v1",
+  "repository": "DecapodLabs/decapod",
+  "base": "c5de35a89b27e788169612ae71681e45c13bf71a",
+  "source": "1289a80a782d651af337125ee447db4b5723cbd7",
+  "task": "code_01m76c1kqhjgr3yr",
+  "branch": "agent/chatgpt-issue1628-decapod/code_01m76c1kqhjgr3yr-cloud-connector",
+  "intent": "Continue the original issue1628 task and preserved candidate through exact native successor custody. Apply only the reviewed unused-import and evidence-boundary patches plus material VALIDATION prose. Preserve the original journal, required Buildkite source contract, registry dependency policy and release handoff. Format, refresh native projections, append trajectory and checkpoint, verify full checkpoint history and clean source, then make a normal fast-forward push of this same existing workbranch. No build, tests, full publisher, PR creation or readiness success is authorized or claimed by this continuation.",
+  "previous_report_sha256": "sha256:3bbf71ad8dca25ef85a11e5f1a3a3d56df18011e3a723fb55ae328468562b644",
+  "buildkite_evidence_sha256": "sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8",
+  "prior_diagnostics_archive_sha256": "sha256:211346d50c7b6c9e9516dd192e0e758ae5f9b858343ba768f062664ae174ff61",
+  "incoming_transfer_id": "01M76EGYPHAVQZC0MXD73AF3X8",
+  "incoming_native_sha256": "sha256:6514cb6f433f347116df2963850d6077c88506abc2e0ab546fb76386bf81a471",
+  "incoming_source_branch": "issue1628-decapod-continuation-9a61daffa511",
+  "original_change": {
+    "id": "change_01M76ECD1993X600J9GEM0D7FY",
+    "base_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
+    "target_base": "origin/master"
+  },
+  "original_run_id": "branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+  "source_inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
+  "patches": [
+    {
+      "name": "unused-imports.patch",
+      "sha256": "sha256:fc10ed1698a1353779994f746e9d9a20c4ab7053841976eb8087478c8378f2cb",
+      "bytes": 581
+    },
+    {
+      "name": "evidence-boundary.patch",
+      "sha256": "sha256:4b502b9c92e794795dc9eae4f2780ecb7985db46a03e80df08c8828979e1231d",
+      "bytes": 1956
+    }
+  ],
+  "changed_files": {
+    "src/decapod/lib.rs": {
+      "before_sha256": "sha256:5301d7c8d3cddc61548c8854ae38228212d7fb243c5301bf1308be585cde9201",
+      "after_sha256": "sha256:f8c9632776d171cd148494a8e81ff49dabd79ae8b5c84663a37e8bca6caa249f"
+    },
+    "docs/book/src/reference/supabase-validation.md": {
+      "before_sha256": "sha256:f8853284ce1625a36c2c70fe115be781ab155648d2b769d47d1e7dd9e3bd839d",
+      "after_sha256": "sha256:4634ea59841f3210ddf40afdfe859a3a3b0c2d614a029e9d2292c7438e3bb941"
+    },
+    "docs/book/src/reference/propodus.md": {
+      "before_sha256": "sha256:706c0721533f6033dd9b318846b0078a90b00f5bfd100e12ff508753ef6a6233",
+      "after_sha256": "sha256:917d38815cb31ba97402ad3f8e500256da2dd1de497eeacfcc7f900d306b8a2a"
+    }
+  },
+  "preserved_files": {
+    ".decapod/config.toml": "sha256:153ad66ad36f19d6fd71eb8163ae8c344624ccebb15801dd2d37f8038fb9199e",
+    "Cargo.toml": "sha256:fb697173e3505a25660cacbcf274855b769d0d0e20a1b783414f3cc0adf59ded",
+    "Cargo.lock": "sha256:ee80472cdbae893ecdaf86e98d8d287eabe338d2e2eb876a9012d49c78eb1ff7",
+    "tests/release_dependency_policy.rs": "sha256:96d3936d2e2ac255ec7f7b73173652109bd3213a45800a9e39ff6fb4fe1f49b9"
+  },
+  "validation_addition": "## Managed connector execution prerequisites (#1628)\n\nThe managed connector requires a published Dactyl dependency containing its\npublic API and successful execution of the complete required source checks.\nNo governed source-overlay recipe is configured for integration diagnostics\nbefore those checks pass. Source review, formatting, native checkpoints and\nworkbranch pushes do not establish compilation, test execution or readiness.\n\nThe registry manifest and lockfile, `tests/release_dependency_policy.rs` and\ncomplete required source profile remain authoritative. Dependency alignment\nand package publication remain the separate\n[#1380](https://github.com/DecapodLabs/decapod/issues/1380) handoff; no path/Git\nfallback, dependency override or relaxed proof gate supplies that evidence.\n",
+  "validation_before_sha256": "sha256:ee0768e0f8d14c179c666b0c3940aee5f14318eaa5071bc53c0d7ccfb9100b36",
+  "validation_after_authored_sha256": "sha256:97c9b9c29ac70febbe58ee318269e73ffe0cf3494227e8e59d587afeb68dcf6e",
+  "spec_reviews": {
+    "ARCHITECTURE": {
+      "disposition": "unchanged-with-reason",
+      "reason": "Only unused imports and evidence wording change. Existing logical Dactyl transport, private session custody, fail-closed startup and local independence architecture remain unchanged."
+    },
+    "INTERFACES": {
+      "disposition": "unchanged-with-reason",
+      "reason": "No CLI or transport interface changes. The correction documents the observed registry API blocker and unavailable pre-readiness overlay path without changing the existing interface contract."
+    },
+    "SECURITY": {
+      "disposition": "unchanged-with-reason",
+      "reason": "No authentication, token handling, origin binding or storage permissions change. Existing private custody, no replay, no fallback and service authorization boundaries remain intact."
+    }
+  },
+  "trajectory_evidence": "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs.",
+  "checkpoint_summary": "Remove observed unused legacy imports and correct documentation to preserve the actual Dactyl registry API blocker and absence of a governed pre-readiness overlay recipe. Retain original journal and checkpoint history; source push only, without build/test, full readiness, PR or release claims.",
+  "commit_message": "fix(cloud): preserve observed dependency proof boundary",
+  "execution_scope": "Same-task correction preparation and normal fast-forward source push only; publication_ready remains false."
+}

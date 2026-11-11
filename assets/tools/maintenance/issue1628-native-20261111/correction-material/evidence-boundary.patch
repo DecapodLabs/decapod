@@ -1,0 +1,34 @@
+--- a/docs/book/src/reference/supabase-validation.md
++++ b/docs/book/src/reference/supabase-validation.md
+@@ -12,10 +12,11 @@
+ The managed connector requires the public API delivered by
+ [Dactyl #100](https://github.com/DecapodLabs/dactyl/issues/100). The existing
+ `dactyl-db` 0.11.1 registry release provides the earlier explicit Supabase
+-adapter, not this connector API. A coordinated source-overlay build can test
+-the client integration before publication, but it cannot satisfy the registry
+-dependency policy or establish a publishable Decapod package. The release
+-handoff remains [#1380](https://github.com/DecapodLabs/decapod/issues/1380).
++adapter, not this connector API. The current required repository checks need
++a published dependency containing the connector API. No governed source-overlay
++recipe is configured for integration diagnostics before those checks pass; no
++such diagnostic result is claimed. The release handoff remains
++[#1380](https://github.com/DecapodLabs/decapod/issues/1380).
+ Do not replace a missing registry artifact with a committed Git/path override
+ or remove the release dependency checks.
+ 
+--- a/docs/book/src/reference/propodus.md
++++ b/docs/book/src/reference/propodus.md
+@@ -166,9 +166,10 @@
+ Connector-enabled builds require the public API delivered by
+ [Dactyl #100](https://github.com/DecapodLabs/dactyl/issues/100). Registry
+ dependency alignment and package publication remain
+-[#1380](https://github.com/DecapodLabs/decapod/issues/1380). A temporary source
+-overlay used to test both repositories together is not a published dependency
+-and cannot satisfy Decapod's release dependency policy.
++[#1380](https://github.com/DecapodLabs/decapod/issues/1380). The current required
++repository checks need that API in the published dependency. No governed
++source-overlay recipe is configured before full readiness, and no
++cross-repository integration result is claimed.
+ 
+ ## Local SQLite maintenance
+ 
