@@ -287,17 +287,23 @@ fn large_lcm_summary_is_losslessly_compressed_and_corruption_is_detected() {
     let decoded = show_summary(&store, Some(hash)).unwrap().unwrap();
     assert!(decoded.summary_text.contains(&content));
     let conn = Connection::open(store.root.join("decapod.db")).unwrap();
-    let storage_type: String = conn.query_row(
-        "SELECT typeof(summary_text) FROM summaries WHERE summary_hash=?1",
-        [hash], |r| r.get(0),
-    ).unwrap();
+    let storage_type: String = conn
+        .query_row(
+            "SELECT typeof(summary_text) FROM summaries WHERE summary_hash=?1",
+            [hash],
+            |r| r.get(0),
+        )
+        .unwrap();
     assert_eq!(storage_type, "blob");
     conn.execute(
         "UPDATE summaries SET summary_text=?1 WHERE summary_hash=?2",
         decapod::params![b"damaged-envelope".to_vec(), hash],
-    ).unwrap();
-    assert!(show_summary(&store, Some(hash))
-        .unwrap_err()
-        .to_string()
-        .contains("LCM_STORAGE_CODEC_CORRUPT"));
+    )
+    .unwrap();
+    assert!(
+        show_summary(&store, Some(hash))
+            .unwrap_err()
+            .to_string()
+            .contains("LCM_STORAGE_CODEC_CORRUPT")
+    );
 }

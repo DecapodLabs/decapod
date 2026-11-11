@@ -219,36 +219,55 @@ fn composite_keys_compact_without_losing_operator_bytes_or_foreign_keys() {
          INSERT INTO meta VALUES ('aptitude','pattern:alpha','{ \"key\": \"value\" }');
          INSERT INTO task_tags VALUES ('t1','size-first');
          INSERT INTO task_tags VALUES ('t1','proof:required');",
-    ).unwrap();
+    )
+    .unwrap();
     let meta_before: Vec<(String, String, String)> = conn
-        .prepare("SELECT namespace,key,value FROM meta ORDER BY namespace,key").unwrap()
-        .query_map([], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?))).unwrap()
-        .collect::<Result<_, _>>().unwrap();
+        .prepare("SELECT namespace,key,value FROM meta ORDER BY namespace,key")
+        .unwrap()
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
+        .unwrap()
+        .collect::<Result<_, _>>()
+        .unwrap();
     let tags_before: Vec<(String, String)> = conn
-        .prepare("SELECT task_id,tag FROM task_tags ORDER BY task_id,tag").unwrap()
-        .query_map([], |r| Ok((r.get(0)?,r.get(1)?))).unwrap()
-        .collect::<Result<_, _>>().unwrap();
+        .prepare("SELECT task_id,tag FROM task_tags ORDER BY task_id,tag")
+        .unwrap()
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
+        .unwrap()
+        .collect::<Result<_, _>>()
+        .unwrap();
     compact(temp.path()).unwrap();
     compact(temp.path()).unwrap();
     for table in ["meta", "task_tags"] {
         let sql = "SELECT wr FROM pragma_table_list WHERE name=?1 AND \"schema\"='main'";
-        let without_rowid: i64 = conn.query_row(sql,[table],|r|r.get(0)).unwrap();
-        assert_eq!(without_rowid, 1, "{table} still stores duplicate rowid B-tree");
+        let without_rowid: i64 = conn.query_row(sql, [table], |r| r.get(0)).unwrap();
+        assert_eq!(
+            without_rowid, 1,
+            "{table} still stores duplicate rowid B-tree"
+        );
     }
     let meta_after: Vec<(String, String, String)> = conn
-        .prepare("SELECT namespace,key,value FROM meta ORDER BY namespace,key").unwrap()
-        .query_map([], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?))).unwrap()
-        .collect::<Result<_, _>>().unwrap();
+        .prepare("SELECT namespace,key,value FROM meta ORDER BY namespace,key")
+        .unwrap()
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
+        .unwrap()
+        .collect::<Result<_, _>>()
+        .unwrap();
     let tags_after: Vec<(String, String)> = conn
-        .prepare("SELECT task_id,tag FROM task_tags ORDER BY task_id,tag").unwrap()
-        .query_map([], |r| Ok((r.get(0)?,r.get(1)?))).unwrap()
-        .collect::<Result<_, _>>().unwrap();
+        .prepare("SELECT task_id,tag FROM task_tags ORDER BY task_id,tag")
+        .unwrap()
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
+        .unwrap()
+        .collect::<Result<_, _>>()
+        .unwrap();
     assert_eq!(meta_after, meta_before);
     assert_eq!(tags_after, tags_before);
-    assert!(has_index(&conn,"idx_task_tags_tag"));
-    let violations: i64 = conn.query_row(
-        "SELECT COUNT(*) FROM pragma_foreign_key_check",[],|r|r.get(0)).unwrap();
-    assert_eq!(violations,0);
+    assert!(has_index(&conn, "idx_task_tags_tag"));
+    let violations: i64 = conn
+        .query_row("SELECT COUNT(*) FROM pragma_foreign_key_check", [], |r| {
+            r.get(0)
+        })
+        .unwrap();
+    assert_eq!(violations, 0);
 }
 
 #[test]
@@ -260,16 +279,22 @@ fn unexpected_meta_index_rolls_back_every_index_and_row_rewrite() {
          PRIMARY KEY(namespace,key));
          CREATE INDEX idx_external_meta_value ON meta(value);
          INSERT INTO meta VALUES ('operator','authored','must survive');",
-    ).unwrap();
-    let before=contents_digest(&conn);
-    let error=compact(temp.path()).unwrap_err().to_string();
-    assert!(error.contains("RELATIONAL_COMPACTION_UNSAFE"),"{error}");
-    assert_eq!(contents_digest(&conn),before);
-    assert!(has_index(&conn,"idx_categories_name"));
-    assert!(has_index(&conn,"idx_external_meta_value"));
-    let wr:i64=conn.query_row(
-        "SELECT wr FROM pragma_table_list WHERE name='meta'",[],|r|r.get(0)).unwrap();
-    assert_eq!(wr,0);
+    )
+    .unwrap();
+    let before = contents_digest(&conn);
+    let error = compact(temp.path()).unwrap_err().to_string();
+    assert!(error.contains("RELATIONAL_COMPACTION_UNSAFE"), "{error}");
+    assert_eq!(contents_digest(&conn), before);
+    assert!(has_index(&conn, "idx_categories_name"));
+    assert!(has_index(&conn, "idx_external_meta_value"));
+    let wr: i64 = conn
+        .query_row(
+            "SELECT wr FROM pragma_table_list WHERE name='meta'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(wr, 0);
     assert!(conn.is_autocommit());
 }
 
@@ -277,56 +302,80 @@ fn unexpected_meta_index_rolls_back_every_index_and_row_rewrite() {
 fn cold_summary_migration_compresses_losslessly_and_is_idempotent() {
     let temp = tempfile::tempdir().unwrap();
     let conn = fixture(temp.path(), true);
-    conn.execute_batch(schemas::LCM_DB_SCHEMA_SUMMARIES).unwrap();
+    conn.execute_batch(schemas::LCM_DB_SCHEMA_SUMMARIES)
+        .unwrap();
     let original = "proof  and exact historical context\n".repeat(1200);
     let hashes = serde_json::to_string(&vec!["sha256:abc"; 350]).unwrap();
     conn.execute(
         "INSERT INTO summaries(summary_hash,ts,scope,original_hashes,summary_text,token_estimate)
          VALUES('historic','2026-11-10','all',?1,?2,10000)",
-        decapod::params![hashes,original],
-    ).unwrap();
+        decapod::params![hashes, original],
+    )
+    .unwrap();
     compact(temp.path()).unwrap();
     compact(temp.path()).unwrap();
-    let stored = conn.query_row(
-        "SELECT original_hashes,summary_text FROM summaries WHERE summary_hash='historic'",
-        [],|r|Ok(r.parameters())).unwrap();
-    assert_eq!(decapod::core::storage_codec::decode(&stored[0]).unwrap(),hashes);
-    assert_eq!(decapod::core::storage_codec::decode(&stored[1]).unwrap(),original);
-    let physical:String=conn.query_row(
-        "SELECT typeof(summary_text) FROM summaries WHERE summary_hash='historic'",
-        [],|r|r.get(0)).unwrap();
-    assert_eq!(physical,"blob");
-    let integrity:String=conn.query_row("PRAGMA integrity_check",[],|r|r.get(0)).unwrap();
-    assert_eq!(integrity,"ok");
+    let stored = conn
+        .query_row(
+            "SELECT original_hashes,summary_text FROM summaries WHERE summary_hash='historic'",
+            [],
+            |r| Ok(r.parameters()),
+        )
+        .unwrap();
+    assert_eq!(
+        decapod::core::storage_codec::decode(&stored[0]).unwrap(),
+        hashes
+    );
+    assert_eq!(
+        decapod::core::storage_codec::decode(&stored[1]).unwrap(),
+        original
+    );
+    let physical: String = conn
+        .query_row(
+            "SELECT typeof(summary_text) FROM summaries WHERE summary_hash='historic'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(physical, "blob");
+    let integrity: String = conn
+        .query_row("PRAGMA integrity_check", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(integrity, "ok");
 }
 
 #[test]
 fn broken_summary_blob_fails_closed_and_restores_index_history() {
-    let temp=tempfile::tempdir().unwrap();
-    let conn=fixture(temp.path(),true);
-    conn.execute_batch(schemas::LCM_DB_SCHEMA_SUMMARIES).unwrap();
+    let temp = tempfile::tempdir().unwrap();
+    let conn = fixture(temp.path(), true);
+    conn.execute_batch(schemas::LCM_DB_SCHEMA_SUMMARIES)
+        .unwrap();
     conn.execute(
         "INSERT INTO summaries(summary_hash,ts,scope,original_hashes,summary_text,token_estimate)
          VALUES('bad','now','all','[]',?1,3)",
         decapod::params![b"bogus-envelope".to_vec()],
-    ).unwrap();
-    let error=compact(temp.path()).unwrap_err().to_string();
-    assert!(error.contains("LCM_STORAGE_CODEC_CORRUPT"),"{error}");
-    assert!(has_index(&conn,"idx_categories_name"));
+    )
+    .unwrap();
+    let error = compact(temp.path()).unwrap_err().to_string();
+    assert!(error.contains("LCM_STORAGE_CODEC_CORRUPT"), "{error}");
+    assert!(has_index(&conn, "idx_categories_name"));
     assert!(conn.is_autocommit());
 }
 
 #[test]
 fn default_agent_prompts_do_not_accumulate_on_each_initialization() {
-    let temp=tempfile::tempdir().unwrap();
-    let data=temp.path().join("data");
+    let temp = tempfile::tempdir().unwrap();
+    let data = temp.path().join("data");
     decapod::plugins::aptitude::initialize_aptitude_db(&data).unwrap();
-    let conn=Connection::open(data.join("decapod.db")).unwrap();
-    let before:i64=conn.query_row("SELECT count(*) FROM agent_prompts",[],|r|r.get(0)).unwrap();
-    assert!(before>0);
+    let conn = Connection::open(data.join("decapod.db")).unwrap();
+    let before: i64 = conn
+        .query_row("SELECT count(*) FROM agent_prompts", [], |r| r.get(0))
+        .unwrap();
+    assert!(before > 0);
     for _ in 0..4 {
         decapod::plugins::aptitude::initialize_aptitude_db(&data).unwrap();
     }
-    let after:i64=conn.query_row("SELECT count(*) FROM agent_prompts",[],|r|r.get(0)).unwrap();
-    assert_eq!(after,before);
+    let after: i64 = conn
+        .query_row("SELECT count(*) FROM agent_prompts", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(after, before);
 }

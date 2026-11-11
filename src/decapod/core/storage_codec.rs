@@ -37,9 +37,7 @@ pub fn encode(text: &str) -> Result<StoredText, DecapodError> {
     encoder.write_all(input).map_err(DecapodError::IoError)?;
     let compressed = encoder.finish().map_err(DecapodError::IoError)?;
     let n = HEADER + compressed.len();
-    if n.saturating_add(128) >= input.len()
-        || n > input.len().saturating_sub(input.len() / 8)
-    {
+    if n.saturating_add(128) >= input.len() || n > input.len().saturating_sub(input.len() / 8) {
         return Ok(StoredText::Plain(text.to_owned()));
     }
     let mut blob = Vec::with_capacity(n);
@@ -67,9 +65,7 @@ pub fn decode(p: &Parameter) -> Result<String, DecapodError> {
                 .take(expected as u64 + 1)
                 .read_to_end(&mut raw)
                 .map_err(|_| invalid("invalid zlib stream"))?;
-            if raw.len() != expected
-                || Sha256::digest(&raw).as_slice() != &bytes[12..HEADER]
-            {
+            if raw.len() != expected || Sha256::digest(&raw).as_slice() != &bytes[12..HEADER] {
                 return Err(invalid("decoded size or SHA-256 mismatch"));
             }
             String::from_utf8(raw).map_err(|_| invalid("invalid UTF-8"))

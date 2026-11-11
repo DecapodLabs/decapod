@@ -14,11 +14,10 @@ pub fn apply(conn: &Connection) -> Result<(), DecapodError> {
     compact_pair(conn, "meta")?;
     compact_pair(conn, "task_tags")?;
     compact_summaries(conn)?;
-    let violations: i64 = conn.query_row(
-        "SELECT COUNT(*) FROM pragma_foreign_key_check",
-        [],
-        |row| row.get(0),
-    )?;
+    let violations: i64 =
+        conn.query_row("SELECT COUNT(*) FROM pragma_foreign_key_check", [], |row| {
+            row.get(0)
+        })?;
     if violations > 0 {
         return Err(unsafe_schema("foreign-key integrity changed"));
     }
@@ -61,7 +60,9 @@ fn compact_pair(conn: &Connection, table: &str) -> Result<(), DecapodError> {
         |r| r.get(0),
     )?;
     if actual != shape {
-        return Err(unsafe_schema(&format!("{table} has altered columns or primary key")));
+        return Err(unsafe_schema(&format!(
+            "{table} has altered columns or primary key"
+        )));
     }
     let without_rowid: i64 = conn.query_row(
         "SELECT wr FROM pragma_table_list WHERE \"schema\"='main' AND name=?1 AND type='table'",
@@ -84,7 +85,9 @@ fn compact_pair(conn: &Connection, table: &str) -> Result<(), DecapodError> {
         |r| r.get(0),
     )?;
     if unsafe_index || triggers {
-        return Err(unsafe_schema(&format!("{table} has unreviewed indexes/triggers")));
+        return Err(unsafe_schema(&format!(
+            "{table} has unreviewed indexes/triggers"
+        )));
     }
     if table == "task_tags" {
         let valid_fk: bool = conn.query_row(
@@ -118,7 +121,9 @@ fn compact_pair(conn: &Connection, table: &str) -> Result<(), DecapodError> {
     conn.execute_batch(insert)?;
     let exact: bool = conn.query_row(compare, [], |r| r.get(0))?;
     if !exact {
-        return Err(unsafe_schema(&format!("{table} failed lossless copy comparison")));
+        return Err(unsafe_schema(&format!(
+            "{table} failed lossless copy comparison"
+        )));
     }
     // This function is called only with the two constants above.
     conn.execute_batch(&format!("DROP TABLE \"{table}\""))?;

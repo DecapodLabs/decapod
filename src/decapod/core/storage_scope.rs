@@ -66,23 +66,55 @@ fn operating_user() -> Option<String> {
     }
 }
 
+type ScopeRecord = (
+    i64,
+    String,
+    i64,
+    Option<String>,
+    i64,
+    Option<String>,
+    Option<String>,
+    Option<String>,
+);
+
 pub fn read(conn: &Connection) -> Result<RepositoryScope, DecapodError> {
-    let raw: Option<(i64, String, i64, Option<String>, i64, Option<String>, Option<String>, Option<String>)> =
-        conn.query_row(
+    let raw: Option<ScopeRecord> = conn
+        .query_row(
             "SELECT version, stable_id, provider, owner_name, owner_kind,
                     organization_id, repository_name, local_user
              FROM repository_scope WHERE repository_key=1",
             [],
-            |row| Ok((
-                row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?,
-                row.get(4)?, row.get(5)?, row.get(6)?, row.get(7)?,
-            )),
-        ).optional()?;
-    let (version,stable_id,provider,owner_name,owner_kind,organization_id,repository_name,local_user) =
-        raw.ok_or_else(|| DecapodError::ValidationError(
+            |row| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                    row.get(5)?,
+                    row.get(6)?,
+                    row.get(7)?,
+                ))
+            },
+        )
+        .optional()?;
+    let (
+        version,
+        stable_id,
+        provider,
+        owner_name,
+        owner_kind,
+        organization_id,
+        repository_name,
+        local_user,
+    ) = raw.ok_or_else(|| {
+        DecapodError::ValidationError(
             "STORAGE_SCOPE_MISSING: repository directory has not been initialized".into(),
-        ))?;
-    if version != 1 || stable_id.len() != 26 || !matches!(provider, 0 | 1)
+        )
+    })?;
+    if version != 1
+        || stable_id.len() != 26
+        || !matches!(provider, 0 | 1)
         || !matches!(owner_kind, 0..=2)
         || (provider == 0 && (owner_name.is_some() || repository_name.is_some()))
         || (provider == 1 && (owner_name.is_none() || repository_name.is_none()))
@@ -92,9 +124,13 @@ pub fn read(conn: &Connection) -> Result<RepositoryScope, DecapodError> {
         ));
     }
     Ok(RepositoryScope {
-        stable_id, owner_name, owner_kind:owner_kind as u8,
-        organization_id, repository_name, local_user,
-        origin_observed:provider == 1,
+        stable_id,
+        owner_name,
+        owner_kind: owner_kind as u8,
+        organization_id,
+        repository_name,
+        local_user,
+        origin_observed: provider == 1,
     })
 }
 
@@ -109,24 +145,25 @@ pub fn ensure(conn: &Connection, data_root: &Path) -> Result<RepositoryScope, De
     conn.execute_batch(SQLITE_SCOPE_DDL)?;
     let exists: bool = conn.query_row(
         "SELECT EXISTS(SELECT 1 FROM repository_scope WHERE repository_key=1)",
-        [], |row| row.get(0),
+        [],
+        |row| row.get(0),
     )?;
     if !exists {
-        let observed=project_root(data_root)
+        let observed = project_root(data_root)
             .and_then(|path| repo_identity::resolve_repository_identity(path).ok());
-        let (provider,owner,repo) = if let Some(value)=observed {
-            (1_i64,Some(value.owner),Some(value.repository))
+        let (provider, owner, repo) = if let Some(value) = observed {
+            (1_i64, Some(value.owner), Some(value.repository))
         } else {
-            (0_i64,None,None)
+            (0_i64, None, None)
         };
-        let id=ulid::new_ulid().to_string();
-        let user=operating_user();
+        let id = ulid::new_ulid().to_string();
+        let user = operating_user();
         conn.execute(
             "INSERT OR IGNORE INTO repository_scope(
                 repository_key,version,stable_id,provider,owner_name,owner_kind,
                 organization_id,repository_name,local_user
              ) VALUES (1,1,?1,?2,?3,0,NULL,?4,?5)",
-            params![id,provider,owner,repo,user],
+            params![id, provider, owner, repo, user],
         )?;
     }
     read(conn)

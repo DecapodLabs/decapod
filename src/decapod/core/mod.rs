@@ -83,10 +83,10 @@ pub mod state_commit;
 pub mod storage;
 pub mod storage_codec;
 pub mod storage_compaction;
-pub mod storage_scope;
 pub mod storage_lock;
 #[cfg(unix)]
 pub(crate) mod storage_owner;
+pub mod storage_scope;
 pub mod store;
 pub mod time;
 pub mod todo;
