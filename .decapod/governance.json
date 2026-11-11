@@ -530,6 +530,14 @@
       "proof_refs": [
         "decapod validate;tests/init_config_behavior.rs;docs/cloud-repository-billing.md"
       ]
+    },
+    {
+      "id": "cloud-init-billing-inventory",
+      "summary": "Reconcile version-only accepted CI inventory drift while preserving all required checks and executor bindings.",
+      "input_digest": "sha256:1e61656b59407925329123b27bf10a2ecac83ee5ee1ee6e29ad3852eac063674",
+      "proof_refs": [
+        "/private/tmp/decapod-billing-source-contract-diff.txt;decapod validate"
+      ]
     }
   ],
   "intents": {
@@ -610,9 +618,14 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:26ff897fabb2b815a4e567bda1a6d5bfa0a57f918bbe5791886a298425ef38e8",
-      "checks": [],
-      "current_phase": "implementation",
+      "artifact_hash": "sha256:ccb3f5e86aafdc4b7c529fa9b2f15b860e4e76d75b02b2e698282b51c900afe3",
+      "checks": [
+        {
+          "name": "full-validation",
+          "status": "failed"
+        }
+      ],
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -633,10 +646,17 @@
             "intent_id": "intent:change_01M751429W1PXXG11DA7HDVFEV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M75142CS6EQ6M57VBWHH367E",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M751429W1PXXG11DA7HDVFEV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M75142CS6EQ6M57VBWHH367E": {
@@ -664,6 +684,26 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Reviewed the 80-source CI/build inventory against v0.137.2 and origin/master: only Cargo package versions moved from 0.137.2 to 0.137.3; workflows, toolchains and source-CI adapter unchanged. Reconcile reviewed inventory digest without altering required CI graph or accepted executor."
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "docs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/cloud_backend.rs",
+                  "src/decapod/lib.rs",
+                  "tests"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -672,7 +712,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Admin-payer policy confirmed by user; init records requested intent and supplies hosted approval; native storage release and hosted payment proof remain explicit dependencies."
+        "Admin-payer policy confirmed by user; init records requested intent and supplies hosted approval; native storage release and hosted payment proof remain explicit dependencies.",
+        "Reviewed the 80-source CI/build inventory against v0.137.2 and origin/master: only Cargo package versions moved from 0.137.2 to 0.137.3; workflows, toolchains and source-CI adapter unchanged. Reconcile reviewed inventory digest without altering required CI graph or accepted executor."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M751429W1PXXG11DA7HDVFEV",
