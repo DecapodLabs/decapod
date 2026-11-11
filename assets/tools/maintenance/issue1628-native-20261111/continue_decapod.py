@@ -422,8 +422,16 @@ def main():
                         run("preserve exact candidate history", "git", "bundle", "create", str(bundle), "HEAD", "^" + BASE, cwd=work)
                         run("verify candidate preservation", "git", "bundle", "verify", str(bundle), cwd=work)
                         result["candidate_bundle"] = encrypt(bundle, "candidate.der")
-                    execute("preserve pending tracked material", ["git", "diff", "--binary", "HEAD"], cwd=work)
-                    execute("preserve pending index", ["git", "diff", "--cached", "--binary", "HEAD"], cwd=work)
+                    for label, argv, name in [
+                        ("preserve pending tracked material", ["git", "diff", "--binary", "HEAD"], "pending-tracked.patch"),
+                        ("preserve pending index", ["git", "diff", "--cached", "--binary", "HEAD"], "pending-index.patch"),
+                    ]:
+                        code, stdout, stderr, timeout = execute(label, argv, cwd=work)
+                        if code or timeout:
+                            raise Blocked("exact pending source preservation failed")
+                        # Raw source stays inside this private encrypted archive;
+                        # display diagnostics remain scrubbed independently.
+                        (diagnostics / name).write_text(stdout)
                     pending = set(run("inspect pending source paths", "git", "ls-files", "--others", "--exclude-standard", "-z", cwd=work).split("\0")) - {""}
                     for p in sorted(pending):
                         if p in set(files) | GENERATED or p.startswith(SPEC):

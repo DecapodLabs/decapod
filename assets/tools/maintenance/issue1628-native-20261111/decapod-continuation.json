@@ -26,8 +26,8 @@
     },
     {
       "path": "docs/book/src/reference/supabase-validation.md",
-      "bytes": 8839,
-      "sha256": "sha256:a0ed6ccec6d69bb7dd7f6bfb6d926c28b7fea54225d3c567090949a8a14db2ff"
+      "bytes": 9348,
+      "sha256": "sha256:f8853284ce1625a36c2c70fe115be781ab155648d2b769d47d1e7dd9e3bd839d"
     },
     {
       "path": "src/decapod/cli.rs",
@@ -46,8 +46,8 @@
     },
     {
       "path": "src/decapod/core/cloud_client.rs",
-      "bytes": 19621,
-      "sha256": "sha256:051596a90a9877fc888dd003e4007c4094532cf9901ad8e326509356a3cde779"
+      "bytes": 20316,
+      "sha256": "sha256:69f7ca9e4ccbff9bbeebded5fe6960300446657f3c6bb7549986e4d8326fe1c8"
     },
     {
       "path": "src/decapod/core/cloud_session.rs",
@@ -106,8 +106,8 @@
     },
     {
       "path": "tests/cloud_managed_session.rs",
-      "bytes": 26394,
-      "sha256": "sha256:7b75ca1be4c6ba93a9f7b4b6c2c5ed333a495725fc2916780976bb88459e2c77"
+      "bytes": 28235,
+      "sha256": "sha256:ad98e4108fefcf5fe8602e91765613541f1552cac239d6d2b75a4e21bb84c02c"
     },
     {
       "path": "tests/cloud_supabase_boundary.rs",
@@ -130,6 +130,16 @@
       "sha256": "sha256:5ceca4c455858b33e6dcf51c379b688b26b375e8dc938c930a9411548c7186b2"
     },
     {
+      "path": "tests/propodus_live.rs",
+      "bytes": 8281,
+      "sha256": "sha256:6dd6be686b62a49901597364bc32c5f0d6a9085dadddf16d6dbbcc23f3cb4cdb"
+    },
+    {
+      "path": "tests/supabase_service.rs",
+      "bytes": 17728,
+      "sha256": "sha256:8858f6e19301eb524499c2ffeb6bbbb7cb8e1b19934e93696b2320a0ed5ea497"
+    },
+    {
       "path": "tests/unit/core/cloud_session_tests.rs",
       "bytes": 17802,
       "sha256": "sha256:1b10bed0eed00640e3010895a8b228c05b2cf6e63f0edd435d543f792c849a1a"
@@ -140,7 +150,7 @@
     ".decapod/managed/specs/ARCHITECTURE.md": "## Managed cloud connector and crash-safe custody (#1628)\n\n`core::cloud_client::connect` composes the public Dactyl `CloudConnector` with\nthe private `core::cloud_session::SessionStore`. Dactyl resolves discovery and\nthe physical route; the active init/session/TODO path does not use the legacy\nPropodus HTTP client or ambient provider/token selectors. Decapod supplies the\nGit-origin repository target and an opaque bearer to the managed bridge.\n\nThe session binding contains the validated origin, repository, and canonical\nmain-checkout identity. Linked worktrees share a binding; distinct clones and\norigins do not. Private Unix files, no-follow opened descriptors, ownership and\nlink checks, bounded records, a stable exclusive lock, and synchronized atomic\nreplacement protect durable custody. Credentials and pending bootstrap state\nare never stored in the project. Every persisted phase validates its required\nsession/bootstrap/code shape before orchestration uses it.\n\nPreparing, code exchange, session exchange, and refresh persist an in-flight\nmarker before dispatch. Reopening an interrupted one-time phase yields\n`RestartRequired`; no uncertain mutation is replayed. Status polling and\nsame-session account completion resume safely. Received codes and rotations\nare durable before later requests. Explicit bearer rejection invalidates that\nsame bearer under the refresh lock without discarding a newer concurrent\nrotation. Denied or unresolved entitlement retains a safely retryable account\ncompletion. `DactylTodoStore::check_read_access` uses an existing read-only,\nservice-authorized task query; health checks never stand in for authorization.\n\nUnsupported cloud repository-datastore commands fail before local migration,\npresence, group-broker, or SQLite startup. Explicit file-only controls retain\ntheir own path; this is a capability boundary, not remote kernel parity.\n`tests/cloud_managed_session.rs` exercises the binary through local fixtures;\nit cannot establish server RLS, PostgreSQL atomicity, or protected hosted policy.\n",
     ".decapod/managed/specs/SECURITY.md": "## Managed credential custody and server authority (#1628)\n\n`core::cloud_session::SessionStore` is the only durable custody owner in the\nmanaged CLI path. Its binding includes the validated service origin, exact\nrepository spelling used by the current service contract, and canonical main\ncheckout identity. The store rejects unsafe machine roots (including parent\ntraversal), paths within any Git checkout, symlinks/hard links, non-private\nowners/modes, oversized records, invalid phase shapes, and binding mismatches.\nFiles use no-follow opened descriptors and synchronized atomic replacement;\nrefresh and rejection updates share a stable exclusive lock with a bounded\nwait. Credential material and pending one-time secrets never enter Git.\n\n`core::cloud_client` saves uncertainty before every one-time exchange or refresh\nand never infers successful rotation after response loss. Explicit restart is\nrequired for ambiguous one-time state. A rejection may invalidate only the\nexact bearer used by that request, preserving a newer concurrent rotation.\nRaw transport/service text and credentials are excluded from diagnostics.\nThe deliberately displayed browser handoff is validated by Dactyl and remains\na short-lived human sign-in capability, not repository authorization.\n\nDactyl alone performs discovery/auth/account/data transport in the ordinary\ncloud path, with no redirect or ambient legacy token/provider adoption.\nDecapod validates returned repository and lifetime but does not evaluate price,\nmembership, seat/payment authority, or privileged grants. Service-confirmed\ncompletion plus current authorized read is required before reporting setup\nready; every subsequent request still requires server authorization. Offline\nfixtures cannot establish hosted PostgreSQL or managed-account enforcement.\n",
     ".decapod/managed/specs/INTERFACES.md": "## Cloud initialization, continuation, and readiness (#1628)\n\n`decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud\nTODO operations share `core::cloud_client::connect`. Missing custody starts a\nbounded sign-in and returns non-success `onboarding_pending` with a validated\nbrowser URL and headless resume instruction. A subsequent invocation polls once,\nexchanges only when ready, persists the issued session, and asks the service to\nconfirm account completion. Init reports ready only after an authenticated\nread-only task lookup confirms current repository access.\n\n`action_required` describes a service-reported unresolved entitlement without\ninferring price, payment, membership, or seat authority. `repository_denied`\npropagates explicit access denial. `restart_required` preserves uncertainty\nafter an interrupted one-time exchange or rotation. The explicit\n`--restart-cloud-signin` flag starts a fresh flow for this binding without\nreplaying its old exchange. Normal data failures do not trigger unauthenticated\nretry, mutation replay, or local fallback.\n\n`decapod cloud status` reports only private local phase, credential presence,\nand expiry; its `server_readiness` remains `not_checked`. `--proof` on cloud\ninitialization prepares configuration only and does not synthesize sign-in or\nclaim readiness. The legacy `cloud login` alias uses the same managed flow.\nNo new project provider, deployment, credential, price, or roster field exists.\nThe fixture-only origin requires explicit test mode and literal loopback HTTP.\n\nThe connector-enabled source requires the Dactyl #100 API and a corresponding\npublished registry dependency before Decapod can pass its release-policy gate.\nSource-overlay integration results cannot be reported as package publication,\nreal PostgreSQL, hosted account enforcement, or full remote governance proof.\n",
-    ".decapod/managed/specs/VALIDATION.md": "## Managed cloud client proof and package prerequisite (#1628)\n\nThe configured complete source-CI profile remains required. New\n`tests/cloud_managed_session.rs` fixtures exercise the actual binary through\nheadless sign-in, durable continuation, credential refresh, interrupted mutation,\nexplicit restart and authenticated read readiness. The cloud backend, CLI,\nSupabase boundary, TODO resume and init regression suites preserve local\nindependence and fail-closed cloud behavior. Unit coverage in\n`tests/unit/core/cloud_session_tests.rs` exercises private record permissions,\npath rejection, exact binding, phase invariants and serialized custody.\n\nThese tests must run on the exact checkpointed candidate. Static review and\nsource formatting do not establish compilation or execution. The managed API\nrequires Dactyl #100 plus its corresponding published registry dependency.\n`tests/release_dependency_policy.rs`, Cargo manifests and source-CI configuration\nremain intact; an unpublished source overlay cannot establish release-policy or\npublication readiness. No local fixture claims hosted managed Auth, production\nentitlement policy, real PostgreSQL, deployment or full remote governance parity.\n"
+    ".decapod/managed/specs/VALIDATION.md": "## Managed cloud client proof and package prerequisite (#1628)\n\nThe configured complete source-CI profile remains required. New\n`tests/cloud_managed_session.rs` fixtures exercise the actual binary through\nheadless sign-in, durable continuation, credential refresh, interrupted mutation,\nexplicit restart and authenticated read readiness. The cloud backend, CLI,\nSupabase boundary, TODO resume and init regression suites preserve local\nindependence and fail-closed cloud behavior. Unit coverage in\n`tests/unit/core/cloud_session_tests.rs` exercises private record permissions,\npath rejection, exact binding, phase invariants and serialized custody.\n\nThese tests must run on the exact checkpointed candidate. Static review and\nsource formatting do not establish compilation or execution. The managed API\nrequires Dactyl #100 plus its corresponding published registry dependency.\n`tests/release_dependency_policy.rs`, Cargo manifests and source-CI configuration\nremain intact; an unpublished source overlay cannot establish release-policy or\npublication readiness. No local fixture claims hosted managed Auth, production\nentitlement policy, real PostgreSQL, deployment or full remote governance parity.\n\nThe legacy protected CLI profiles in `tests/supabase_service.rs` and\n`tests/propodus_live.rs` fail explicitly with `MANAGED_CLI_FIXTURE_UNAVAILABLE`\nbefore inspecting fixture credentials or dispatching any CLI/network request.\nTheir real-service assertions remain intact for a future managed fixture; no\nignored profile is represented as passing. The explicit legacy PropodusClient\nAPI test retains its own service boundary. Account completion response loss\nresumes the idempotent confirmation using the same body and bearer; the binary\nfixture asserts that one-time token exchange is never replayed.\n"
   },
   "spec_reviews": {
     "ARCHITECTURE": {
@@ -172,8 +182,6 @@
     "hosted": "not_run",
     "publication_ready": false
   },
-  "frozen_source_manifest_sha256": "sha256:e7972ae250cb85ae2e88dea67d4a9a6a5089367f028ce9e7ea778648167d4bd1",
-  "material_archive_sha256": "sha256:9744f73b95f16f267187adc9c292b207f08bcfe1929fe8360aeace9316c17245",
   "source": "c5de35a89b27e788169612ae71681e45c13bf71a",
   "incoming_source_branch": "issue1628-control-decapod-6e06f788d29c",
   "accepted_sources": {
@@ -391,5 +399,7 @@
     "src/decapod/core/release_metadata.rs": "sha256:cb07b64800f6d69a64b65a80c80536194325a833cb6a541a8a0743d4b669c54b"
   },
   "reviewed_source_inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
-  "body": "## Why\n\nCloud initialization and task access need a single Dactyl transport lifecycle with private, durable session custody and honest account readiness.\n\n## Changes\n\n- Route managed discovery, authentication, account completion and native data access through Dactyl.\n- Keep origin/repository/project-bound credentials and pending one-time state in machine-private locked storage; preserve interrupted outcomes without replay.\n- Require server-confirmed completion and an authenticated read before reporting readiness, with explicit pending, denied, action-required and restart-required states.\n- Preserve local independence, feature boundaries, existing source-CI proof and registry release policy; update operator documentation and actual-binary fixture regressions.\n\n## Proof boundary\n\nNative publication is permitted only after full exact-candidate validation against accepted master. Candidate: {{HEAD_SHA}}. Accepted target: {{BASE_SHA}}. Client source initially depends on the Dactyl #100 API, which requires its corresponding published registry artifact before this source can pass the unchanged dependency contract. No source-overlay, hosted PostgreSQL, managed Auth, production entitlement or release result is implied by local fixtures.\n\nCloses #1628.\n"
+  "body": "## Why\n\nCloud initialization and task access need a single Dactyl transport lifecycle with private, durable session custody and honest account readiness.\n\n## Changes\n\n- Route managed discovery, authentication, account completion and native data access through Dactyl.\n- Keep origin/repository/project-bound credentials and pending one-time state in machine-private locked storage; preserve interrupted outcomes without replay.\n- Require server-confirmed completion and an authenticated read before reporting readiness, with explicit pending, denied, action-required and restart-required states.\n- Preserve local independence, feature boundaries, existing source-CI proof and registry release policy; update operator documentation and actual-binary fixture regressions.\n\n## Proof boundary\n\nNative publication is permitted only after full exact-candidate validation against accepted master. Candidate: {{HEAD_SHA}}. Accepted target: {{BASE_SHA}}. Client source initially depends on the Dactyl #100 API, which requires its corresponding published registry artifact before this source can pass the unchanged dependency contract. No source-overlay, hosted PostgreSQL, managed Auth, production entitlement or release result is implied by local fixtures.\n\nCloses #1628.\n",
+  "frozen_source_manifest_sha256": "sha256:690159c3d913e527c5242fe879cdfe9c4a4576a862968659b36cd21ccada813d",
+  "material_archive_sha256": "sha256:33fd19e3fbe352e7403c99d8ffde86d6ae53bb8beac1d8bd30d0366d61ef3b5b"
 }

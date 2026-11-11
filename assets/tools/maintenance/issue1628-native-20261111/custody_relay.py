@@ -125,6 +125,8 @@ def main():
         time.sleep(15)
     assert reply is not None, "No custody reply arrived within bounded deadline"
     assert reply["identity"] == identity, "Custody reply belongs to another runner or source"
+    if reply.get("decision") == "declined":
+        raise SystemExit("Custody withheld by independent review before native import; the original task remains unconsumed.")
     if "runtime_inventory_sha256" in identity:
         assert reply.get("runtime_review") == {
             "runtime_inventory_sha256": identity["runtime_inventory_sha256"],
