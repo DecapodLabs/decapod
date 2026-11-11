@@ -276,3 +276,28 @@ fn test_lcm_ingest_rejects_invalid_kind() {
     let result = ingest(&store, "test", "invalid_kind", "agent", None, None);
     assert!(result.is_err());
 }
+
+#[test]
+fn large_lcm_summary_is_losslessly_compressed_and_corruption_is_detected() {
+    let (_temp, store) = test_store();
+    let content = "immutable original with exact spacing  \n".repeat(350);
+    ingest(&store, &content, "message", "agent", None, None).unwrap();
+    let result = summarize(&store, "all").unwrap();
+    let hash = result["summary_hash"].as_str().unwrap();
+    let decoded = show_summary(&store, Some(hash)).unwrap().unwrap();
+    assert!(decoded.summary_text.contains(&content));
+    let conn = Connection::open(store.root.join("decapod.db")).unwrap();
+    let storage_type: String = conn.query_row(
+        "SELECT typeof(summary_text) FROM summaries WHERE summary_hash=?1",
+        [hash], |r| r.get(0),
+    ).unwrap();
+    assert_eq!(storage_type, "blob");
+    conn.execute(
+        "UPDATE summaries SET summary_text=?1 WHERE summary_hash=?2",
+        decapod::params![b"damaged-envelope".to_vec(), hash],
+    ).unwrap();
+    assert!(show_summary(&store, Some(hash))
+        .unwrap_err()
+        .to_string()
+        .contains("LCM_STORAGE_CODEC_CORRUPT"));
+}
