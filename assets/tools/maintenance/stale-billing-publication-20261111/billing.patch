@@ -1,0 +1,947 @@
+diff --git a/.decapod/managed/specs/ARCHITECTURE.md b/.decapod/managed/specs/ARCHITECTURE.md
+index 63ae66b17cf9865dd9cc71538f9537f1999917de..255d223b6b4fa1f2f9dfadad0b15e4e676e99fea 100644
+--- a/.decapod/managed/specs/ARCHITECTURE.md
++++ b/.decapod/managed/specs/ARCHITECTURE.md
+@@ -1026,3 +1026,24 @@
+ indexes; preferences use `UNIQUE(category,key)`. Runtime initializers stop
+ recreating redundant trees. Reverse-key indexes remain. No data or proof
+ encodings change; cloud PostgreSQL migration ownership stays with Propodus.
++
++## Cloud repository purchase handoff
++
++Before `run_init_apply`, `prepare_cloud_roster` in `src/decapod/lib.rs`
++collects the GitHub repository and requested usernames through explicit flags
++or the human interactive init flow. `RepoContext` persists
++`cloud_repository` and `cloud_github_users` without credentials. An existing
++GitHub origin must match purchase intent; a new project may name its intended
++repository before configuring origin. `cloud_generation_summary` adds that
++repository to the generation seed while preserving the authored summary.
++
++`src/decapod/core/cloud_backend.rs` normalizes the bounded roster and builds
++a fixed HTTPS approval URL. Human interactive init may open it; headless,
++proof, dry-run and noninteractive execution only print it. This init handoff
++does not invoke the legacy login bootstrap or create a cloud session. Explicit
++session acquisition retains its existing independent credential flow.
++
++The coordinated Propodus deployment must verify GitHub identity, repository
++admin permission and paid repository-specific seats. This CLI recovery does
++not deploy that service or prove its Stripe and native-RPC integrations; those
++dependencies remain recorded in `docs/cloud-repository-billing.md`.
+diff --git a/.decapod/managed/specs/INTENT.md b/.decapod/managed/specs/INTENT.md
+index dcbe6f505366206f72b355b91e7dfc6bade23cd9..5fb50d6e33b90b7460e74a9fee4b233b459ef991 100644
+--- a/.decapod/managed/specs/INTENT.md
++++ b/.decapod/managed/specs/INTENT.md
+@@ -443,3 +443,19 @@
+ WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
+ This is a bounded local SQLite optimization. Full semantic parity with
+ Propodus Supabase remains a separately gated migration (Propodus #71).
++
++## Cloud repository purchase approval
++
++Cloud init carries repository identity into generated context, collects the
++requested GitHub roster and presents the hosted purchase-approval handoff.
++The preserved commercial contract is USD15 per named user per repository
++monthly, with payment approval owned by a verified repository owner/admin.
++The non-secret config records requested intent; it cannot establish a paid
++seat, a cloud credential or datastore authorization. Local use remains
++available without login or purchase.
++
++This recovery preserves the previously authored CLI contribution from
++`26a499d9f0789a5ed00605d23cfc57f5392ae8fc` on the current accepted source.
++Hosted billing deployment, sandbox purchase acceptance and released native
++client credential integration remain separate rollout requirements. A printed
++approval link alone cannot establish their completion.
+diff --git a/.decapod/managed/specs/INTERFACES.md b/.decapod/managed/specs/INTERFACES.md
+index 3b489a106b68e5c0221ebe9d244db40a0a4b3570..dfccf9bb270ed5707b9cdda7bfc88a7b1bf4c2c3 100644
+--- a/.decapod/managed/specs/INTERFACES.md
++++ b/.decapod/managed/specs/INTERFACES.md
+@@ -1341,3 +1341,22 @@
+ schema change. An unexpected historical index or missing unique enforcement
+ raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
+ Freed SQLite pages are reusable but are not auto-vacuumed.
++
++## Cloud purchase intent
++
++Both init surfaces accept `--cloud-repository owner/repo` and
++`--github-users alice,bob`. Cloud init requires 1–100 distinct valid GitHub
++usernames, lowercases/sorts them, and rejects a repository inconsistent with an
++existing GitHub origin before project-config writes. Refresh preserves the
++requested roster unless explicitly replaced. Non-secret TOML fields are
++`[repo].cloud_repository` and `[repo].cloud_github_users`; they grant neither
++access nor a datastore route override. Generation context and the test-only
++init registration carry the repository name.
++
++The purchase URL uses the fixed Propodus HTTPS `billing` destination and
++encoded repository/users intent. Interactive init may open the browser;
++headless, proof, dry-run and noninteractive modes print the URL. Init reports
++purchase approval and does not claim that a session or paid seat exists.
++The hosted service must independently derive price/quantity, verify admin
++authority and reconcile payment before granting repository-specific access.
++Its deployment and native client integration remain separately required.
+diff --git a/.decapod/managed/specs/SECURITY.md b/.decapod/managed/specs/SECURITY.md
+index 6a11afb0e6b7f6eca5fe2955eef4105ac8afa0c7..fb75d0f8af53775de837792193d4dba592c714a2 100644
+--- a/.decapod/managed/specs/SECURITY.md
++++ b/.decapod/managed/specs/SECURITY.md
+@@ -848,3 +848,21 @@
+ ownership, single-link, byte-size and digest checks remain enforced. Model setup
+ uses bounded credential-free public asset transport. Opaque user configuration
+ extensions survive refresh but cannot enable evaluation or grant authority.
++
++## Requested roster and hosted purchase authority
++
++The CLI accepts a bounded repository and distinct GitHub usernames. Its public
++approval URL uses a fixed HTTPS destination and encoded allowlisted values;
++config cannot choose a payment host or embed credentials. An existing GitHub
++origin and requested purchase identity must match. Only non-secret request data
++is persisted. Editing the roster, changing a local role or visiting a return
++URL cannot establish cloud authorization.
++
++Propodus must verify managed numeric GitHub identity, live repository-admin
++permission for purchase, paid named repository seats and applicable directory
++grants. A non-admin can request approval without gaining purchase authority.
++Browser launch remains limited to human interactive init and respects
++`DECAPOD_HEADLESS`; proof and dry-run execution never initiate a purchase.
++`cloud_init_prints_purchase_approval_without_creating_machine_session` in
++`tests/cloud_backend_storage.rs` also requires that even explicit mock auth
++does not make the init handoff write a credential or claim cloud readiness.
+diff --git a/.decapod/managed/specs/VALIDATION.md b/.decapod/managed/specs/VALIDATION.md
+index c05245c9ba73bccaa12492b04e56d5162f6e2715..26c32de445c1d03953b315bdaa221dabd5b92a09 100644
+--- a/.decapod/managed/specs/VALIDATION.md
++++ b/.decapod/managed/specs/VALIDATION.md
+@@ -1419,3 +1419,33 @@
+ v0.137.4 execution remains historical evidence; the rebased commit requires
+ fresh complete publication proof and execution of the documentation-index and
+ real-executable regressions against the captured accepted target.
++
++## Recovered cloud purchase-intent boundary
++
++The source recovery preserves the CLI approval-link proposal from
++`26a499d9f0789a5ed00605d23cfc57f5392ae8fc` against accepted target
++`c5de35a89b27e788169612ae71681e45c13bf71a`, including accepted historical
++verification, Laya and documentation-index changes. Historical commits and
++prior checks remain evidence of their original candidates only.
++
++`tests/init_config_behavior.rs` checks both init surfaces, requested roster
++persistence, normalization, refresh preservation, duplicate rejection and
++repository/origin mismatch before config writes. Existing cloud storage,
++boundary and live-proof setup callers supply the newly required requested
++repository and usernames; the missing-roster regression intentionally omits
++them. Both `InitWithCli` construction sites carry the new fields and the
++existing `RepoContext` test literal retains default initialization.
++
++`cloud_init_prints_purchase_approval_without_creating_machine_session` in
++`tests/cloud_backend_storage.rs` replaces the obsolete automatic-login
++expectation. It requires the approval URL, no machine session file, no
++`Cloud setup ready` claim and no exposed mock credential. Independent explicit
++session-acquisition tests retain their original credential expectations.
++
++These are test obligations, not execution claims. Full native validation must
++execute the current candidate's configured source-CI contract before PR
++publication. This source change cannot prove hosted billing deployment,
++GitHub admin verification, Stripe sandbox purchase or native-client integration.
++The local preparation environment rejects AF_UNIX sockets before broker
++admission, so native task/workspace creation and proof execution require the
++supported hosted environment; no local governance or publication pass is claimed.
+diff --git a/docs/agent/config-schema.md b/docs/agent/config-schema.md
+index 6b98d86297ef2b5e0a2aeedbcc039de3982e35a4..6c3e812b0c3b42e8010666edd2510018f669a032 100644
+--- a/docs/agent/config-schema.md
++++ b/docs/agent/config-schema.md
+@@ -41,6 +41,15 @@
+ Propodus rechecks expiration and revocation on each operation. An expired direct
+ grant remains an explicit denial over inherited group, team, or organization
+ access; changing an agent ID or local role mapping cannot restore that access.
++
++Cloud init additionally records non-secret purchase intent in
++`[repo].cloud_repository` and `[repo].cloud_github_users`. Both init surfaces
++accept `--cloud-repository` and `--github-users`; usernames are normalized
++and bounded to 100 distinct people. These fields are requested seats, never
++authorization. Only the hosted service can verify the GitHub repo admin and
++the USD15 monthly named seat for that specific repository. A non-admin receives
++an approval link to share with an admin. See `docs/cloud-repository-billing.md`.
++
+ 
+ `[laya] mode = "disabled"` is the default. Set `mode = "required"`
+ and install the reviewed profile to opt in to post-proof Laya judgment.
+diff --git a/docs/cloud-repository-billing.md b/docs/cloud-repository-billing.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..25fb30e88cb14b70b0e751368a111c4517671442
+--- /dev/null
++++ b/docs/cloud-repository-billing.md
+@@ -0,0 +1,50 @@
++# Cloud init and paid repository approval
++
++Cloud init collects the GitHub repository and requested named users before
++generating context. Use either init surface, with headless flags when needed:
++
++```sh
++decapod init --backend cloud --cloud-repository example/repo --github-users alice,bob
++```
++
++The non-secret config is:
++
++```toml
++[repo]
++backend = "cloud"
++cloud_repository = "example/repo"
++cloud_github_users = ["alice", "bob"]
++```
++
++Two users on one repository cost USD30 monthly. The owner/admin manages one
++repository subscription. The payer need not occupy a seat unless they also use
++cloud storage. An existing GitHub origin must match this purchase repository.
++A new project can name its intended GitHub repository before configuring origin,
++but the repository must exist when the admin approves it.
++
++Init provides a hosted approval link and opens it for human interactive runs.
++Headless, proof and dry-run runs print the link. The page signs in with GitHub
++through Supabase Auth, verifies the numeric account identity and actual GitHub
++repository admin permission, resolves the requested users, and displays the
++roster and total before an explicit purchase. A non-admin gets the link to send
++to their admin. Added names remain requests until that admin buys the extra seats.
++Changing TOML does not confer a seat, admin status or cloud authorization.
++
++The CLI stores no Stripe keys, purchase sessions, GitHub tokens or Supabase
++credentials in project config. It does not treat a browser return as proof of
++payment. Propodus owns Stripe Checkout, paid increases, webhook reconciliation,
++repository-specific named seat records and authorization on each native RPC.
++The generated specs include the repository name while preserving the authored
++product summary. Refresh preserves the normalized roster.
++
++The coordinated Propodus implementation is migration 009 and
++`supabase/functions/propodus-onboarding/billing.js`. It requires a separate
++restricted billing executor, Stripe monthly USD15 price/server key/webhook
++secrets, Auth redirect configuration, deployment and sandbox acceptance before
++this CLI change is rolled out. Init's purchase handoff replaces its legacy login
++bootstrap; released Dactyl/Decapod native RPC credential and route support must
++also be accepted before presenting paid cloud as usable. An approval link alone
++does not establish a working cloud session.
++
++Seat removal, subscription restart and refund/dispute policies are outside this
++initial-purchase/add-seat contract and need an explicit lifecycle design.
+diff --git a/src/decapod/cli.rs b/src/decapod/cli.rs
+index b33e34a9e8f9f795bf303f61cf2af0d0774fb6b1..0c1ed961928115c8edd8205790de33f995da1899 100644
+--- a/src/decapod/cli.rs
++++ b/src/decapod/cli.rs
+@@ -279,9 +279,15 @@
+     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
+     ///
+     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
+-    /// It does not perform login, provisioning, or sync during init.
++    /// Init provides a hosted GitHub-admin approval link for USD15 monthly named seats.
+     #[clap(long, value_enum, default_value_t = BackendType::Local)]
+     pub backend: BackendType,
++    /// Canonical GitHub owner/repository for cloud purchase approval.
++    #[clap(long)]
++    pub cloud_repository: Option<String>,
++    /// Requested named GitHub seats (repeatable or comma separated). No credentials.
++    #[clap(long = "github-users", value_delimiter = ',')]
++    pub github_users: Vec<String>,
+     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
+     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
+     pub git: bool,
+@@ -441,9 +447,15 @@
+     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
+     ///
+     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
+-    /// It does not perform login, provisioning, or sync during init.
++    /// Init provides a hosted GitHub-admin approval link for USD15 monthly named seats.
+     #[clap(long, value_enum, default_value_t = BackendType::Local)]
+     pub backend: BackendType,
++    /// Canonical GitHub owner/repository for cloud purchase approval.
++    #[clap(long)]
++    pub cloud_repository: Option<String>,
++    /// Requested named GitHub seats (repeatable or comma separated). No credentials.
++    #[clap(long = "github-users", value_delimiter = ',')]
++    pub github_users: Vec<String>,
+     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
+     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
+     pub git: bool,
+@@ -769,6 +781,12 @@
+     /// Canonical repository backend selection.
+     #[serde(default, skip_serializing_if = "Option::is_none")]
+     pub backend: Option<BackendType>,
++    /// Requested purchase repository, independently verified by the cloud service.
++    #[serde(default, skip_serializing_if = "Option::is_none")]
++    pub cloud_repository: Option<String>,
++    /// Requested roster only. Paid seats and authorization remain server owned.
++    #[serde(default, skip_serializing_if = "Vec::is_empty")]
++    pub cloud_github_users: Vec<String>,
+     #[serde(
+         rename = "declared_capabilities",
+         alias = "capabilities",
+diff --git a/src/decapod/core/cloud_backend.rs b/src/decapod/core/cloud_backend.rs
+index 6b770b20df3428d5308ad28c40f4e5d1c17989ba..4fbc4ad81ad7a1ff85c887367d7913e38aaf5c38 100644
+--- a/src/decapod/core/cloud_backend.rs
++++ b/src/decapod/core/cloud_backend.rs
+@@ -18,6 +18,82 @@
+ pub const CLOUD_SESSION_TTL_DEFAULT_SECS: u64 = 4 * 60 * 60;
+ pub const CLOUD_SESSION_TTL_MAX_SECS: u64 = 6 * 60 * 60;
+ pub const CLOUD_SESSION_TTL_ENV: &str = "DECAPOD_CLOUD_SESSION_TTL_SECS";
++
++/// Public purchase UI only; this is never a datastore route or credential store.
++pub const CLOUD_BILLING_APPROVAL: &str =
++    "https://goyxpcmxetztjlrrcwew.supabase.co/functions/v1/propodus-onboarding/billing";
++
++pub fn validate_cloud_roster(repository: &str, users: &str) -> Result<Vec<String>, DecapodError> {
++    let invalid = || {
++        DecapodError::ValidationError(
++            concat!(
++                "Cloud requires a GitHub owner/repository and 1–100 distinct GitHub usernames; ",
++                "use --cloud-repository and --github-users."
++            )
++            .to_string(),
++        )
++    };
++    let parts: Vec<_> = repository.split('/').collect();
++    if repository.len() > 200
++        || parts.len() != 2
++        || parts.iter().any(|p| {
++            p.is_empty()
++                || !p
++                    .bytes()
++                    .all(|b| b.is_ascii_alphanumeric() || b"_.-".contains(&b))
++        })
++    {
++        return Err(invalid());
++    }
++    let mut names: Vec<_> = users
++        .split(',')
++        .map(|s| s.trim().to_ascii_lowercase())
++        .collect();
++    if names.is_empty()
++        || names.len() > 100
++        || names.iter().any(|s| {
++            s.is_empty()
++                || s.len() > 39
++                || s.starts_with('-')
++                || s.ends_with('-')
++                || s.contains("--")
++                || !s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
++        })
++    {
++        return Err(invalid());
++    }
++    names.sort();
++    if names.windows(2).any(|p| p[0] == p[1]) {
++        return Err(invalid());
++    }
++    Ok(names)
++}
++
++pub fn cloud_billing_approval_url(
++    repository: &str,
++    users: &[String],
++) -> Result<String, DecapodError> {
++    let names = validate_cloud_roster(repository, &users.join(","))?;
++    // Both values have a strict ASCII allowlist. Only the query delimiters need
++    // encoding; arbitrary URLs, tokens, fragments and callbacks cannot enter.
++    Ok(format!(
++        "{CLOUD_BILLING_APPROVAL}?repository={}&users={}",
++        repository.replace('/', "%2F"),
++        names.join("%2C")
++    ))
++}
++
++pub fn cloud_generation_summary(repo: &crate::cli::RepoContext) -> Option<String> {
++    match (&repo.product_summary, &repo.cloud_repository) {
++        (Some(summary), Some(repository)) if repo.effective_backend().is_cloud() => {
++            Some(format!("{summary}\nGitHub cloud repository: {repository}."))
++        }
++        (None, Some(repository)) if repo.effective_backend().is_cloud() => {
++            Some(format!("GitHub cloud repository: {repository}."))
++        }
++        (summary, _) => summary.clone(),
++    }
++}
+ 
+ pub fn requested_cloud_session_ttl_secs() -> u64 {
+     std::env::var(CLOUD_SESSION_TTL_ENV)
+diff --git a/src/decapod/core/propodus.rs b/src/decapod/core/propodus.rs
+index 4fe1df8b6e9e5c269404d567accf4dc78844aaba..ca8d28d33d1ebeb47c9bce12c190539962442e3b 100644
+--- a/src/decapod/core/propodus.rs
++++ b/src/decapod/core/propodus.rs
+@@ -905,7 +905,7 @@
+     }
+ }
+ 
+-fn try_open_browser(url: &str) {
++pub(crate) fn try_open_browser(url: &str) {
+     if std::env::var_os("DECAPOD_HEADLESS").is_some() {
+         return;
+     }
+diff --git a/src/decapod/core/scaffold.rs b/src/decapod/core/scaffold.rs
+index 94e64efbc5357522b5f66a84041c24d0c0ba5682..1b9956baa73d8cebef93dde2ace0a6216a703af3 100644
+--- a/src/decapod/core/scaffold.rs
++++ b/src/decapod/core/scaffold.rs
+@@ -1339,9 +1339,10 @@
+         crate::cli::InitDiagramStyle::Ascii => DiagramStyle::Ascii,
+         crate::cli::InitDiagramStyle::Mermaid => DiagramStyle::Mermaid,
+     };
++    let cloud_summary = crate::core::cloud_backend::cloud_generation_summary(&config.repo);
+     let seed = SpecsSeed {
+         product_name: config.repo.product_name,
+-        product_summary: config.repo.product_summary,
++        product_summary: cloud_summary,
+         architecture_direction: config.repo.architecture_direction,
+         product_type: config.repo.product_type,
+         primary_languages: config.repo.primary_languages,
+diff --git a/src/decapod/lib.rs b/src/decapod/lib.rs
+index 26eed114f50e61cde16423a0825cc3cbe6105aaa..70876cdbf4829d656a59e1367a02b65621530169 100644
+--- a/src/decapod/lib.rs
++++ b/src/decapod/lib.rs
+@@ -218,7 +218,7 @@
+     let registration = cloud_backend::CloudInitRegistration::for_init(
+         &cloud.provider,
+         &cloud.api_url,
+-        "",
++        config.repo.cloud_repository.as_deref().unwrap_or_default(),
+         target_dir,
+     );
+     if let Some(path) =
+@@ -229,6 +229,59 @@
+             path.display()
+         );
+     }
++    Ok(())
++}
++
++fn prepare_cloud_roster(
++    target: &Path,
++    repo: &mut RepoContext,
++    init: &InitWithCli,
++    interactive: bool,
++) -> Result<(), error::DecapodError> {
++    if !init.backend.is_cloud() {
++        return Ok(());
++    }
++    repo.set_backend(init.backend);
++    let remote = core::repo_identity::resolve_repository_identity(target).ok();
++    let default_repo = init
++        .cloud_repository
++        .clone()
++        .or_else(|| remote.as_ref().map(|r| r.canonical_name.clone()))
++        .or_else(|| repo.cloud_repository.clone())
++        .unwrap_or_default();
++    let repository = if interactive {
++        prompt_text_field(
++            "Cloud repository",
++            "GitHub owner/repository; your admin approves paid access.",
++            &default_repo,
++        )?
++    } else {
++        default_repo
++    };
++    if let Some(remote) = remote
++        && !repository.eq_ignore_ascii_case(&remote.canonical_name)
++    {
++        return Err(error::DecapodError::ValidationError(
++            "Cloud purchase repository must match the GitHub origin remote.".to_string(),
++        ));
++    }
++    let default_users = if init.github_users.is_empty() {
++        repo.cloud_github_users.join(",")
++    } else {
++        init.github_users.join(",")
++    };
++    let users = if interactive {
++        prompt_text_field(
++            "GitHub users",
++            "Comma-separated named seats, USD15 per person monthly. Config does not grant access.",
++            &default_users,
++        )?
++    } else {
++        default_users
++    };
++    let users = cloud_backend::validate_cloud_roster(&repository, &users)?;
++    repo.cloud_repository = Some(repository);
++    repo.cloud_github_users = users;
+     Ok(())
+ }
+ 
+@@ -371,6 +424,8 @@
+         ctx.detected_surfaces = existing_cfg.repo.detected_surfaces.clone();
+         ctx.capabilities = existing_cfg.repo.capabilities.clone();
+         ctx.migration_validation = existing_cfg.repo.migration_validation.clone();
++        ctx.cloud_repository = existing_cfg.repo.cloud_repository.clone();
++        ctx.cloud_github_users = existing_cfg.repo.cloud_github_users.clone();
+     }
+ 
+     let authored_product_name = ctx.product_name.is_some();
+@@ -1642,6 +1697,8 @@
+         existing_laya: config.laya.clone(),
+         laya_decisions: Some(config.laya.mode == core::laya_readiness::Mode::Required),
+         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
++        cloud_repository: config.repo.cloud_repository.clone(),
++        github_users: config.repo.cloud_github_users.clone(),
+         backend: if config.repo.effective_backend().is_cloud() {
+             crate::cli::BackendType::Cloud
+         } else {
+@@ -2061,7 +2118,8 @@
+         println!();
+         println!("Decapod Cloud is experimental.");
+         println!("It syncs governed operational state for this repo.");
+-        println!("Local state remains canonical unless cloud sync is enabled.");
++        println!("Each named GitHub user costs USD15 per month for this repository.");
++        println!("A repository owner/admin approves purchases through Stripe.");
+         println!();
+         if prompt_yes_no("Continue?", false)? {
+             crate::cli::BackendType::Cloud
+@@ -2231,7 +2289,7 @@
+         },
+         specs_seed: Some(scaffold::SpecsSeed {
+             product_name: repo_ctx.product_name.clone(),
+-            product_summary: repo_ctx.product_summary.clone(),
++            product_summary: cloud_backend::cloud_generation_summary(&repo_ctx),
+             architecture_direction: repo_ctx.architecture_direction.clone(),
+             product_type: repo_ctx.product_type.clone(),
+             primary_languages: repo_ctx.primary_languages.clone(),
+@@ -2519,6 +2577,8 @@
+                             validation_buildkite_preflights: init_group
+                                 .validation_buildkite_preflights,
+                             backend: init_group.backend,
++                            cloud_repository: init_group.cloud_repository.clone(),
++                            github_users: init_group.github_users.clone(),
+                             git: init_group.git,
+                             no_git: init_group.no_git,
+                         }
+@@ -2614,6 +2674,12 @@
+             {
+                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
+             }
++            prepare_cloud_roster(
++                &init_target,
++                &mut repo_ctx,
++                &init_with,
++                base_init_invocation && io::stdin().is_terminal() && !init_with.proof,
++            )?;
+             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
+             let mut config = config_from_init_with(&init_with, repo_ctx);
+             if let Some(existing) = existing_config.as_ref() {
+@@ -2653,11 +2719,21 @@
+                 config.repo.product_name.as_deref(),
+             );
+             print_init_reconciliation(&reconciliation);
+-            if !init_with.dry_run
+-                && config.repo.effective_backend().is_cloud()
+-                && let Err(error) = bootstrap_cloud_session(&target_dir)
+-            {
+-                println!("Cloud setup is pending: {error}");
++            if config.repo.effective_backend().is_cloud() {
++                let link = cloud_backend::cloud_billing_approval_url(
++                    config.repo.cloud_repository.as_deref().unwrap_or_default(),
++                    &config.repo.cloud_github_users,
++                )?;
++                println!("Cloud purchase approval: {link}");
++                println!(
++                    "USD15 per GitHub user per month for this repository. Sign in to detect GitHub admin access; otherwise send this link to an admin."
++                );
++                println!(
++                    "The config roster is a request. Cloud access requires a verified paid seat."
++                );
++                if !init_with.dry_run && !init_with.proof && io::stdin().is_terminal() {
++                    core::propodus::try_open_browser(&link);
++                }
+             }
+         }
+         Command::Govern(GovernCli {
+@@ -5820,7 +5896,7 @@
+         diagram_style,
+         specs_seed: Some(scaffold::SpecsSeed {
+             product_name: repo_ctx.product_name.clone(),
+-            product_summary: repo_ctx.product_summary.clone(),
++            product_summary: cloud_backend::cloud_generation_summary(&repo_ctx),
+             architecture_direction: repo_ctx.architecture_direction.clone(),
+             product_type: repo_ctx.product_type.clone(),
+             primary_languages: repo_ctx.primary_languages.clone(),
+diff --git a/tests/cloud_backend_storage.rs b/tests/cloud_backend_storage.rs
+index 8baa9118569880b0fd979c321c612c83d907900a..3e3b9db079711a4ca5f554fbade1b6761f598ef1 100644
+--- a/tests/cloud_backend_storage.rs
++++ b/tests/cloud_backend_storage.rs
+@@ -35,7 +35,17 @@
+ 
+     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+-        .args(["init", "--backend", "cloud", "--force", "--proof"])
++        .args([
++            "init",
++            "--backend",
++            "cloud",
++            "--force",
++            "--proof",
++            "--cloud-repository",
++            "DecapodLabs/decapod",
++            "--github-users",
++            "alice",
++        ])
+         .current_dir(&dir)
+         .output()
+         .expect("decapod init");
+@@ -71,7 +81,17 @@
+ 
+     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+-        .args(["init", "--backend", "cloud", "--force", "--proof"])
++        .args([
++            "init",
++            "--backend",
++            "cloud",
++            "--force",
++            "--proof",
++            "--cloud-repository",
++            "DecapodLabs/decapod",
++            "--github-users",
++            "alice",
++        ])
+         .env_remove("SUPABASE_URL")
+         .env_remove("SUPABASE_KEY")
+         .current_dir(&dir)
+@@ -120,7 +140,7 @@
+ }
+ 
+ #[test]
+-fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available() {
++fn cloud_init_prints_purchase_approval_without_creating_machine_session() {
+     let tmp = TempDir::new().expect("tempdir");
+     let data_home = TempDir::new().expect("credential data home");
+     git(tmp.path(), &["init", "-q"]);
+@@ -136,7 +156,17 @@
+ 
+     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+-        .args(["init", "--backend", "cloud", "--force", "--proof"])
++        .args([
++            "init",
++            "--backend",
++            "cloud",
++            "--force",
++            "--proof",
++            "--cloud-repository",
++            "DecapodLabs/decapod",
++            "--github-users",
++            "alice",
++        ])
+         .current_dir(tmp.path())
+         .env("DECAPOD_CLOUD_AUTH_MODE", "mock")
+         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+@@ -145,12 +175,12 @@
+         .expect("cloud init");
+     assert!(
+         init_out.status.success(),
+-        "cloud init should complete setup: {}",
++        "cloud init should record purchase intent: {}",
+         String::from_utf8_lossy(&init_out.stderr)
+     );
+     assert!(
+-        data_home.path().join("decapod/session_token.json").exists(),
+-        "canonical init should establish machine-local cloud custody"
++        !data_home.path().join("decapod/session_token.json").exists(),
++        "purchase intent must not establish a machine-local cloud session"
+     );
+     let output = format!(
+         "{}{}",
+@@ -158,8 +188,15 @@
+         String::from_utf8_lossy(&init_out.stderr)
+     );
+     assert!(
+-        output.contains("Cloud setup ready"),
++        output.contains("Cloud purchase approval:")
++            && output.contains(
++                "/propodus-onboarding/billing?repository=DecapodLabs%2Fdecapod&users=alice"
++            ),
+         "unexpected init output: {output}"
++    );
++    assert!(
++        !output.contains("Cloud setup ready"),
++        "purchase approval must not claim an authenticated session: {output}"
+     );
+     assert!(!output.contains("decapod-test-mock-access"));
+     assert!(!output.contains("decapod-test-mock-refresh"));
+@@ -171,7 +208,17 @@
+     let dir = tmp.path().to_path_buf();
+     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+-        .args(["init", "--backend", "cloud", "--force", "--proof"])
++        .args([
++            "init",
++            "--backend",
++            "cloud",
++            "--force",
++            "--proof",
++            "--cloud-repository",
++            "DecapodLabs/decapod",
++            "--github-users",
++            "alice",
++        ])
+         .current_dir(&dir)
+         .output()
+         .expect("decapod init");
+@@ -222,7 +269,17 @@
+     let dir = tmp.path().to_path_buf();
+     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+-        .args(["init", "--backend", "cloud", "--force", "--proof"])
++        .args([
++            "init",
++            "--backend",
++            "cloud",
++            "--force",
++            "--proof",
++            "--cloud-repository",
++            "DecapodLabs/decapod",
++            "--github-users",
++            "alice",
++        ])
+         .current_dir(&dir)
+         .output()
+         .expect("decapod init");
+@@ -298,7 +355,17 @@
+     let config_home = TempDir::new().expect("config home");
+     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+-        .args(["init", "--backend", "cloud", "--force", "--proof"])
++        .args([
++            "init",
++            "--backend",
++            "cloud",
++            "--force",
++            "--proof",
++            "--cloud-repository",
++            "DecapodLabs/decapod",
++            "--github-users",
++            "alice",
++        ])
+         .current_dir(tmp.path())
+         .output()
+         .expect("cloud init");
+@@ -350,7 +417,17 @@
+     let config_home = TempDir::new().expect("config home");
+     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+-        .args(["init", "--backend", "cloud", "--force", "--proof"])
++        .args([
++            "init",
++            "--backend",
++            "cloud",
++            "--force",
++            "--proof",
++            "--cloud-repository",
++            "DecapodLabs/decapod",
++            "--github-users",
++            "alice",
++        ])
+         .current_dir(tmp.path())
+         .output()
+         .expect("cloud init");
+diff --git a/tests/cloud_cli_boundary.rs b/tests/cloud_cli_boundary.rs
+index 1e1b8d3646b9196a418f0956afcdc2bef2b22e80..0089b19f2c92cbbdd12329685f2d3a30d4304b0b 100644
+--- a/tests/cloud_cli_boundary.rs
++++ b/tests/cloud_cli_boundary.rs
+@@ -136,7 +136,17 @@
+ fn cloud_project() -> TempDir {
+     let project = tempfile::tempdir().expect("project tempdir");
+     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
+-        .args(["init", "--backend", "cloud", "--force", "--proof"])
++        .args([
++            "init",
++            "--backend",
++            "cloud",
++            "--force",
++            "--proof",
++            "--cloud-repository",
++            "DecapodLabs/decapod",
++            "--github-users",
++            "alice",
++        ])
+         .current_dir(project.path())
+         .output()
+         .expect("init cloud project");
+diff --git a/tests/init_config_behavior.rs b/tests/init_config_behavior.rs
+index 95b9c1dcafea50dc733be264bce5a07a4db04003..24cdc0ad320cfef14f3b687a2a21d2494954facd 100644
+--- a/tests/init_config_behavior.rs
++++ b/tests/init_config_behavior.rs
+@@ -98,7 +98,17 @@
+ fn init_with_backend_cloud_saves_to_config() {
+     let tmp = tempdir().expect("tempdir");
+     let out = Command::new(resolve_decapod_bin())
+-        .args(["init", "with", "--backend", "cloud", "--force"])
++        .args([
++            "init",
++            "with",
++            "--backend",
++            "cloud",
++            "--force",
++            "--cloud-repository",
++            "DecapodLabs/decapod",
++            "--github-users",
++            "alice",
++        ])
+         .current_dir(tmp.path())
+         .output()
+         .expect("run decapod");
+@@ -115,6 +125,19 @@
+         config.contains("backend = \"cloud\""),
+         "explicit cloud backend must be recorded: {config}"
+     );
++    assert!(config.contains("cloud_repository = \"DecapodLabs/decapod\""));
++    assert!(config.contains("cloud_github_users = [\"alice\"]"));
++    let stdout = String::from_utf8_lossy(&out.stdout);
++    assert!(
++        stdout
++            .contains("/propodus-onboarding/billing?repository=DecapodLabs%2Fdecapod&users=alice")
++    );
++    assert!(
++        !stdout.contains("Cloud setup ready"),
++        "purchase link is not proof of access"
++    );
++    let intent = fs::read_to_string(tmp.path().join(".decapod/managed/specs/INTENT.md")).unwrap();
++    assert!(intent.contains("GitHub cloud repository: DecapodLabs/decapod"));
+     assert!(!config.contains("[cloud]"));
+     assert!(!config.contains("api_url"));
+     assert!(!config.contains("project_id"));
+@@ -146,6 +169,102 @@
+                 write["table"] == "tasks" && write["operation"] == "Dactyl query list/add"
+             }),
+         "registration should model repo-scoped todo access"
++    );
++}
++
++#[test]
++fn cloud_init_requires_roster_and_rejects_remote_mismatch_before_config_writes() {
++    let project = tempdir().unwrap();
++    let missing = run_decapod(
++        project.path(),
++        &["init", "with", "--backend", "cloud", "--proof"],
++    );
++    assert!(!missing.status.success());
++    assert!(!project.path().join(".decapod/config.toml").exists());
++    run_git(
++        project.path(),
++        &["remote", "add", "origin", "git@github.com:example/real.git"],
++    );
++    let mismatch = run_decapod(
++        project.path(),
++        &[
++            "init",
++            "--backend",
++            "cloud",
++            "--proof",
++            "--cloud-repository",
++            "example/other",
++            "--github-users",
++            "alice",
++        ],
++    );
++    assert!(!mismatch.status.success());
++    assert!(String::from_utf8_lossy(&mismatch.stderr).contains("must match"));
++    assert!(!project.path().join(".decapod/config.toml").exists());
++}
++
++#[test]
++fn cloud_init_records_normalized_roster_and_preserves_it_on_refresh() {
++    let project = tempdir().unwrap();
++    let first = run_decapod(
++        project.path(),
++        &[
++            "init",
++            "with",
++            "--backend",
++            "cloud",
++            "--proof",
++            "--cloud-repository",
++            "example/repo",
++            "--github-users",
++            "Bob,alice",
++        ],
++    );
++    assert!(
++        first.status.success(),
++        "{}",
++        String::from_utf8_lossy(&first.stderr)
++    );
++    let path = project.path().join(".decapod/config.toml");
++    let config: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
++    assert_eq!(
++        config["repo"]["cloud_github_users"].as_array().unwrap(),
++        &vec![
++            toml::Value::String("alice".into()),
++            toml::Value::String("bob".into())
++        ]
++    );
++    let refreshed = run_decapod(project.path(), &["init", "with", "--force", "--proof"]);
++    assert!(
++        refreshed.status.success(),
++        "{}",
++        String::from_utf8_lossy(&refreshed.stderr)
++    );
++    let after: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
++    assert_eq!(
++        after["repo"]["cloud_github_users"],
++        config["repo"]["cloud_github_users"]
++    );
++    assert_eq!(
++        after["repo"]["cloud_repository"],
++        config["repo"]["cloud_repository"]
++    );
++    let duplicate = run_decapod(
++        project.path(),
++        &[
++            "init",
++            "--backend",
++            "cloud",
++            "--proof",
++            "--github-users",
++            "Alice,alice",
++        ],
++    );
++    assert!(!duplicate.status.success());
++    let unchanged: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
++    assert_eq!(
++        unchanged["repo"]["cloud_github_users"],
++        after["repo"]["cloud_github_users"]
+     );
+ }
+ 
+@@ -427,7 +546,17 @@
+ fn init_cloud_opt_in_does_not_store_secret_environment_values() {
+     let tmp = tempdir().expect("tempdir");
+     let out = Command::new(resolve_decapod_bin())
+-        .args(["init", "with", "--backend", "cloud", "--force"])
++        .args([
++            "init",
++            "with",
++            "--backend",
++            "cloud",
++            "--force",
++            "--cloud-repository",
++            "DecapodLabs/decapod",
++            "--github-users",
++            "alice",
++        ])
+         .current_dir(tmp.path())
+         .env("SUPABASE_URL", "https://private.supabase.local")
+         .env("SUPABASE_KEY", "super-secret-service-role")
+diff --git a/tests/propodus_live.rs b/tests/propodus_live.rs
+index fcb7528f20a49d3aa7df792369ef1bc0e0dc0d00..75fc2848b55896242a1d460adfc24011c1622028 100644
+--- a/tests/propodus_live.rs
++++ b/tests/propodus_live.rs
+@@ -29,7 +29,19 @@
+ fn prepare_cloud_repo(dir: &Path, remote: &str) {
+     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
+         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+-        .args(["init", "--backend", "cloud", "--force", "--proof"])
++        .args([
++            "init",
++            "--backend",
++            "cloud",
++            "--force",
++            "--proof",
++            "--cloud-repository",
++            remote
++                .trim_start_matches("git@github.com:")
++                .trim_end_matches(".git"),
++            "--github-users",
++            "alexhraber",
++        ])
+         .current_dir(dir)
+         .output()
+         .expect("initialize cloud proof repository");

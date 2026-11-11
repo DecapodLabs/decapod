@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "repository": "DecapodLabs/decapod",
+  "base_sha": "c5de35a89b27e788169612ae71681e45c13bf71a",
+  "source_sha": "26a499d9f0789a5ed00605d23cfc57f5392ae8fc",
+  "source_base_sha": "91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d",
+  "title": "feat(init): recover cloud repository purchase approval handoff",
+  "intent": "Recover the reviewed cloud-init requested-seat and purchase-approval handoff onto accepted master; repair obsolete session assertions; preserve native governance and proof boundaries without deploying billing or claiming paid cloud is operational.",
+  "commit_message": "feat(init): recover cloud repository purchase approval handoff",
+  "authored_paths": [
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/INTENT.md",
+    ".decapod/managed/specs/INTERFACES.md",
+    ".decapod/managed/specs/SECURITY.md",
+    ".decapod/managed/specs/VALIDATION.md",
+    "docs/agent/config-schema.md",
+    "docs/cloud-repository-billing.md",
+    "src/decapod/cli.rs",
+    "src/decapod/core/cloud_backend.rs",
+    "src/decapod/core/propodus.rs",
+    "src/decapod/core/scaffold.rs",
+    "src/decapod/lib.rs",
+    "tests/cloud_backend_storage.rs",
+    "tests/cloud_cli_boundary.rs",
+    "tests/init_config_behavior.rs",
+    "tests/propodus_live.rs"
+  ],
+  "allowed_source_changes": [],
+  "spec_reviews": {
+    "ARCHITECTURE": {
+      "disposition": "updated",
+      "reason": "Preserves whole-product architecture and documents CLI roster preparation, fixed approval link, independent session acquisition and hosted rollout dependencies."
+    },
+    "INTERFACES": {
+      "disposition": "updated",
+      "reason": "Adds both init flags, requested config fields, roster/origin constraints and the explicit separation of purchase intent from authenticated access."
+    },
+    "SECURITY": {
+      "disposition": "updated",
+      "reason": "Documents fixed destination, bounded encoded request values, no local seat authority, human browser constraints and the no-session init regression."
+    }
+  },
+  "patch_file": "billing.patch",
+  "patch_sha256": "sha256:f333d9c6ed61f4ff58602fa4d9c0fa43a8dd3154d8bf145f6816dc586cab98ab",
+  "proposed_material_tree": "80de08071f5db88aca4aa3ffc496ec0aa2ac10c7",
+  "proposed_material_tree_scope": "Exact accepted base overlaid with this proposed patch only, before native governance or generated projection refresh. Hosted native refresh may change generated blocks in appended spec files.",
+  "files": [
+    {
+      "path": ".decapod/managed/specs/ARCHITECTURE.md",
+      "mode": "100644",
+      "before_blob": "63ae66b17cf9865dd9cc71538f9537f1999917de",
+      "after_blob": "255d223b6b4fa1f2f9dfadad0b15e4e676e99fea",
+      "before_sha256": "69291cd49df18c2aba0e615d61a4ad14afbd1ca670372dca3471593baa1eea74",
+      "after_sha256": "ceb7c1264dc3bad9fa86824a81f8db35f4bedebe31688c6a873643b024dbf37d",
+      "bytes": 63702,
+      "authored_spec_append_only": true
+    },
+    {
+      "path": ".decapod/managed/specs/INTENT.md",
+      "mode": "100644",
+      "before_blob": "dcbe6f505366206f72b355b91e7dfc6bade23cd9",
+      "after_blob": "5fb50d6e33b90b7460e74a9fee4b233b459ef991",
+      "before_sha256": "a0732960b367bc8810d22ea8cdacda0318e4a34bf213ac3cf2608d407ac5de2c",
+      "after_sha256": "e6def341b2202ab324992bca5d2d3de40837184a00bd4026f248e1a95dcfa68e",
+      "bytes": 25621,
+      "authored_spec_append_only": true
+    },
+    {
+      "path": ".decapod/managed/specs/INTERFACES.md",
+      "mode": "100644",
+      "before_blob": "3b489a106b68e5c0221ebe9d244db40a0a4b3570",
+      "after_blob": "dfccf9bb270ed5707b9cdda7bfc88a7b1bf4c2c3",
+      "before_sha256": "87462e42ec036fa8d3441836ddb7f7e89a1f09de2d3c85af377307dd9dcc39a2",
+      "after_sha256": "f8ae4dfd178c7987dba71ce314e9767ff89f01c7b55b2e58270b828b32ee8f02",
+      "bytes": 77247,
+      "authored_spec_append_only": true
+    },
+    {
+      "path": ".decapod/managed/specs/SECURITY.md",
+      "mode": "100644",
+      "before_blob": "6a11afb0e6b7f6eca5fe2955eef4105ac8afa0c7",
+      "after_blob": "fb75d0f8af53775de837792193d4dba592c714a2",
+      "before_sha256": "6f58f040c4b1be67c9dcda86d0d01e17a6179aa8505b0124b416bcc18e1ee67c",
+      "after_sha256": "d346f06ad9053066733d44e5cb9b53ea8bba65af4cfb13c9ba73de615c0c43aa",
+      "bytes": 58179,
+      "authored_spec_append_only": true
+    },
+    {
+      "path": ".decapod/managed/specs/VALIDATION.md",
+      "mode": "100644",
+      "before_blob": "c05245c9ba73bccaa12492b04e56d5162f6e2715",
+      "after_blob": "26c32de445c1d03953b315bdaa221dabd5b92a09",
+      "before_sha256": "85dab7ea05ad68fba3bc310e664ec1286fe84a1928f5fa4b347828e2e700087d",
+      "after_sha256": "1fc3243a7878faaf04d2f9551818a6621f3829525f4b5a4bc74d06802fe1cdf5",
+      "bytes": 91262,
+      "authored_spec_append_only": true
+    },
+    {
+      "path": "docs/agent/config-schema.md",
+      "mode": "100644",
+      "before_blob": "6b98d86297ef2b5e0a2aeedbcc039de3982e35a4",
+      "after_blob": "6c3e812b0c3b42e8010666edd2510018f669a032",
+      "before_sha256": "610e73ba6bdb8c27ea7d47a9317b8e67ba60ef856ab3ba864f2d36ae54c5b737",
+      "after_sha256": "76206c63964b7a934445930d4876b8b228852fe07e99f553c3e36bc117cf0feb",
+      "bytes": 17282,
+      "authored_spec_append_only": false
+    },
+    {
+      "path": "docs/cloud-repository-billing.md",
+      "mode": "100644",
+      "before_blob": null,
+      "after_blob": "25fb30e88cb14b70b0e751368a111c4517671442",
+      "before_sha256": null,
+      "after_sha256": "38221dad7c33fd6caa5e6cb24ef9785131a19b73e90217d5101ad1299fe219a2",
+      "bytes": 2534,
+      "authored_spec_append_only": false
+    },
+    {
+      "path": "src/decapod/cli.rs",
+      "mode": "100644",
+      "before_blob": "b33e34a9e8f9f795bf303f61cf2af0d0774fb6b1",
+      "after_blob": "0c1ed961928115c8edd8205790de33f995da1899",
+      "before_sha256": "19a9139dfd24f6f69b9e81ad9e268a5ca094cb35f5cf37dac1778f915657ac3e",
+      "after_sha256": "64e09b1e56d3816f46e55ba8a1352b878cdca426ad42ee1d29861e442e7354e2",
+      "bytes": 73154,
+      "authored_spec_append_only": false
+    },
+    {
+      "path": "src/decapod/core/cloud_backend.rs",
+      "mode": "100644",
+      "before_blob": "6b770b20df3428d5308ad28c40f4e5d1c17989ba",
+      "after_blob": "4fbc4ad81ad7a1ff85c887367d7913e38aaf5c38",
+      "before_sha256": "7160782322549f67ed74bd79a66e26774f99f8ad3d704a09d949f76b3bd79350",
+      "after_sha256": "469ecdee7a6940cfadc38edc36e3060753de3052b83aa1d6e357027be7c8a3e2",
+      "bytes": 20101,
+      "authored_spec_append_only": false
+    },
+    {
+      "path": "src/decapod/core/propodus.rs",
+      "mode": "100644",
+      "before_blob": "4fe1df8b6e9e5c269404d567accf4dc78844aaba",
+      "after_blob": "ca8d28d33d1ebeb47c9bce12c190539962442e3b",
+      "before_sha256": "4dbf4eae40951e9d50d80b4cb309a16320d3d80f40143806495e4be32bd97432",
+      "after_sha256": "5284f7f6094af3f5c28df03cc630e28ffa273da20b368a3785d7e2f99f5d2874",
+      "bytes": 45601,
+      "authored_spec_append_only": false
+    },
+    {
+      "path": "src/decapod/core/scaffold.rs",
+      "mode": "100644",
+      "before_blob": "94e64efbc5357522b5f66a84041c24d0c0ba5682",
+      "after_blob": "1b9956baa73d8cebef93dde2ace0a6216a703af3",
+      "before_sha256": "1c3f5b3d28b3722203daf0340ec801ac578e14bfafbf2c5650f415b6aa58dd76",
+      "after_sha256": "91c89d5294388faa28c2d4b35eccd837e5890808de64042cee3e48ab5394de39",
+      "bytes": 86100,
+      "authored_spec_append_only": false
+    },
+    {
+      "path": "src/decapod/lib.rs",
+      "mode": "100644",
+      "before_blob": "26eed114f50e61cde16423a0825cc3cbe6105aaa",
+      "after_blob": "70876cdbf4829d656a59e1367a02b65621530169",
+      "before_sha256": "9c4f068dd0cb96d43f9c6f15348d2f6423c86e74a9f0c0c1b9f444308272566b",
+      "after_sha256": "d19af2c3f8c1ac5977c46cf1b4132e21e6ac03a45d8b5756a9366c8362ac55d5",
+      "bytes": 497400,
+      "authored_spec_append_only": false
+    },
+    {
+      "path": "tests/cloud_backend_storage.rs",
+      "mode": "100644",
+      "before_blob": "8baa9118569880b0fd979c321c612c83d907900a",
+      "after_blob": "3e3b9db079711a4ca5f554fbade1b6761f598ef1",
+      "before_sha256": "1b1fea41065f0028e44e281c5d458bff826c893834c9b5a7ec42b60b7445cc6d",
+      "after_sha256": "fff4f1d21428fce3bf27c942f852cd870d1766977b35290f3b6de8da0a25a811",
+      "bytes": 16515,
+      "authored_spec_append_only": false
+    },
+    {
+      "path": "tests/cloud_cli_boundary.rs",
+      "mode": "100644",
+      "before_blob": "1e1b8d3646b9196a418f0956afcdc2bef2b22e80",
+      "after_blob": "0089b19f2c92cbbdd12329685f2d3a30d4304b0b",
+      "before_sha256": "7d22d3dfbc5d464bb881eec782cea1ea8d76d3a9bb508d0929e02b49af9622d3",
+      "after_sha256": "855be7355324b8859c351e7615cca783fb28875504f855cb4edefbe57dcba4b6",
+      "bytes": 8829,
+      "authored_spec_append_only": false
+    },
+    {
+      "path": "tests/init_config_behavior.rs",
+      "mode": "100644",
+      "before_blob": "95b9c1dcafea50dc733be264bce5a07a4db04003",
+      "after_blob": "24cdc0ad320cfef14f3b687a2a21d2494954facd",
+      "before_sha256": "05118b697cb066eca7820e51be559b9f97cb25564a3a807152ddcc6cd8feee8e",
+      "after_sha256": "4918a92b0c7bdca552aba903792da368895962869663215bcb25e0aca63377b6",
+      "bytes": 61179,
+      "authored_spec_append_only": false
+    },
+    {
+      "path": "tests/propodus_live.rs",
+      "mode": "100644",
+      "before_blob": "fcb7528f20a49d3aa7df792369ef1bc0e0dc0d00",
+      "after_blob": "75fc2848b55896242a1d460adfc24011c1622028",
+      "before_sha256": "42b6c7a7bed10b898e3f1380c4eefd236a284311ed75465f06b3e38a354186ae",
+      "after_sha256": "635c7a1613693f83bf3bc9f895651dc8df49a4e5fc01d119f8b0c8651ff4b0e2",
+      "bytes": 7641,
+      "authored_spec_append_only": false
+    }
+  ],
+  "local_native_admission": "blocked: sandbox denies AF_UNIX socket creation with EPERM; no task/workspace/source edits or local readiness receipt were created",
+  "publication_ready": false,
+  "pr_body_file": "pr-body.md",
+  "static_review_file": "static-review.json",
+  "paths": [
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/INTENT.md",
+    ".decapod/managed/specs/INTERFACES.md",
+    ".decapod/managed/specs/SECURITY.md",
+    ".decapod/managed/specs/VALIDATION.md",
+    "docs/agent/config-schema.md",
+    "docs/cloud-repository-billing.md",
+    "src/decapod/cli.rs",
+    "src/decapod/core/cloud_backend.rs",
+    "src/decapod/core/propodus.rs",
+    "src/decapod/core/scaffold.rs",
+    "src/decapod/lib.rs",
+    "tests/cloud_backend_storage.rs",
+    "tests/cloud_cli_boundary.rs",
+    "tests/init_config_behavior.rs",
+    "tests/propodus_live.rs"
+  ],
+  "slug": "billing",
+  "expected_material_tree": "80de08071f5db88aca4aa3ffc496ec0aa2ac10c7",
+  "source_review_manifest_sha256": "sha256:092bb69a8ecc5cb04e534bbabc420806e5387f9922392cacf8c993a65f90de08",
+  "body": "Cloud init now records a requested GitHub repository and named-user roster, validates that request against the local origin, and provides the hosted purchase-approval link. This recovers the unpublished billing contribution and corrects its obsolete assumption that init creates a cloud session automatically.\n\n## Changes\n\n- Add `--cloud-repository` and `--github-users` to both init entrypoints and preserve the normalized request in non-secret configuration.\n- Reject missing or duplicate usernames and repository/origin mismatches before writing configuration.\n- Expose the fixed approval URL; human interactive init may open it, while headless, proof, and dry-run execution only prints it.\n- Keep explicit session acquisition and backend entitlement checks authoritative. Regression coverage requires the approval link, no automatic session file, no leaked mock credential, and no readiness claim from init.\n- Update the living specifications and preserve the accepted verification, Laya, and documentation work.\n\n## Provenance and validation\n\nRecovered source: [`26a499d9`](https://github.com/DecapodLabs/decapod/commit/26a499d9f0789a5ed00605d23cfc57f5392ae8fc).\n\nExact candidate: `{{HEAD_SHA}}`.\nAccepted target: `{{BASE_SHA}}`.\n\nThe native publisher gates PR creation on complete validation of this exact candidate and target. The change does not modify CI, build definitions, or the controller contract; static patch checks are not publication proof.\n\n## Rollout boundary\n\nThis preserves the existing USD15 per named user per repository monthly purchase-intent contract. It does not deploy billing or establish that paid cloud is operational. Propodus billing deployment, GitHub admin verification, Stripe configuration and sandbox acceptance, and released client credential/route support remain prerequisites in `docs/cloud-repository-billing.md`. A roster entry or approval link cannot grant access.\n"
+}
