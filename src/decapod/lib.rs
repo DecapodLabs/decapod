@@ -2414,21 +2414,9 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
             return Ok(());
         }
-        command @ Command::System(SystemCli {
+        Command::System(SystemCli {
             command: SystemCommand::Version,
-        }) => {
-            // Keep `system version` usable before project initialization, but
-            // let an initialized project observe the normal migration notice
-            // exactly once when its release counter changes.
-            let in_project = std::env::current_dir()
-                .ok()
-                .is_some_and(|dir| find_decapod_project_root(&dir).is_ok());
-            if in_project {
-                command
-            } else {
-                return show_version_info();
-            }
-        }
+        }) => return show_version_info(),
         Command::System(SystemCli {
             command: SystemCommand::Capabilities(cap_cli),
         }) => return run_capabilities_command(cap_cli),

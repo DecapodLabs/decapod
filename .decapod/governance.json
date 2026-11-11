@@ -481,9 +481,18 @@
     "nix-smoke-isolation": {
       "statement": "Both Nix smoke scripts isolate execution from checkout storage, clean up scratch and propagate binary failure",
       "falsifier": "Executed workflow regression observes checkout cwd, non-private scratch, leaked scratch or swallowed exit 23",
+      "status": "refuted",
+      "proof_refs": [
+        "Replaced by source-level storage-independent version fix; Nix workflow restored to accepted definition"
+      ]
+    },
+    "version-storage-independence": {
+      "statement": "System version reports binary metadata without opening project state, while stateful commands retain unsafe-permission rejection and migration notices",
+      "falsifier": "Version fails on damaged or unsafe storage, writes project state, or consumes migration notice; stateful commands accept unsafe permissions",
       "status": "open",
       "proof_refs": [
-        "tests/source_ci_profile_policy.rs"
+        "tests/cli_contract_enforcement.rs",
+        "tests/trajectory_cli.rs"
       ]
     }
   },
@@ -507,6 +516,11 @@
       "id": "nix-controller-blocker",
       "summary": "Preserve exact unsupported-controller blocker and bounded smoke verification; PR not authorized by validation",
       "input_digest": "sha256:eb89785296cd894bc95520f4bbc617bf26804c870298d22f51a022a986acbe7e"
+    },
+    {
+      "id": "version-storage-independence",
+      "summary": "Fix root cause by reporting system version before project storage startup; preserve stateful security and one-time migration notices; restore accepted Nix workflow",
+      "input_digest": "sha256:dda1375e6c9d97ee7f28e32fee1caddb6b3c6cf5b471add97b47736de6de878e"
     }
   ],
   "intents": {
@@ -537,7 +551,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix Nix packaging smoke failure from unsafe Buildkite checkout storage by executing built binaries in private disposable directories; preserve packaging, reproducibility and publication gates.",
+      "intent": "Fix Nix smoke failure at its source: system version reports binary metadata without opening or mutating project storage; normal project commands retain storage security and migration reporting. Preserve accepted Nix workflow and validate before PR publication.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -547,22 +561,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Nix smoke execution uses private scratch and private local discovery anchor; owner cleanup and exit propagation preserved",
-          "reviewed_code_fingerprint": "924a7a293aaf76d4bcb86d82e1dfe87241fbe93396f0e2c019ac9e09bd71aa74",
-          "spec_material_hash": "06a890acc3ecfee72b8a0a8870601ca137c0c83a04cddeecfcb7583a635afdcf"
+          "reason": "Early version dispatch avoids project store discovery, session and migration; Nix workflow remains accepted",
+          "reviewed_code_fingerprint": "f78d172647dac280c953ef3a78cf9343dd43993291adb5b1e5db4bc0ca228907",
+          "spec_material_hash": "0eee077b350ba5f65fa70b6c2043aaa6c216ea14fa13752ea9a1580d84e3d827"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Nix invocation context changes only; version arguments, storage security and publisher authority retained",
-          "reviewed_code_fingerprint": "924a7a293aaf76d4bcb86d82e1dfe87241fbe93396f0e2c019ac9e09bd71aa74",
-          "spec_material_hash": "8d0edc2ae26f640353a1d1d4723494c283598e36c2707727aa08f627c1466717"
+          "reason": "Version metadata is now storage-independent; normal commands retain security and migration notices",
+          "reviewed_code_fingerprint": "f78d172647dac280c953ef3a78cf9343dd43993291adb5b1e5db4bc0ca228907",
+          "spec_material_hash": "875c56849a6c844dd7ab621065044478e1baf487a2bae63b940e1c6d05786191"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Runtime storage checks and publication credentials unchanged; private smoke directories exclude checkout and ancestor state",
-          "reviewed_code_fingerprint": "924a7a293aaf76d4bcb86d82e1dfe87241fbe93396f0e2c019ac9e09bd71aa74",
+          "reason": "Version reporting has no storage access; stateful operations still reject unsafe permissions, covered by regression",
+          "reviewed_code_fingerprint": "f78d172647dac280c953ef3a78cf9343dd43993291adb5b1e5db4bc0ca228907",
           "spec_material_hash": "9d41f7d722fd84a6f8fdda94e83c67918fe44969b04310bc0c57eecb547d9281"
         }
       ],
@@ -574,17 +588,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794354903Z"
+      "updated_at": "1794355270Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Retain storage security, source build and publication authority"
       ],
-      "artifact_hash": "sha256:4301e6347a3e8d086c86a725b6587c7bb150f72fc5af876784282f9147e5ce2a",
-      "blockers": [
-        "CONTROLLER_CONTRACT_UNSUPPORTED: released 0.136.3 controller does not support reviewed .github/workflows/nix-flake.yml; independently supported controller required before full validation and PR creation"
-      ],
+      "artifact_hash": "sha256:5c783c3661e4fc31ad5fdb3f3114fb0a13d3c4ae156adc581e76bb95d65c3b72",
       "checks": [
         {
           "name": "actual-binary-smoke-reproduction",
@@ -596,14 +607,18 @@
         },
         {
           "name": "full-validation",
-          "status": "failed"
+          "status": "unavailable"
+        },
+        {
+          "name": "source-version-regressions",
+          "status": "unavailable"
         },
         {
           "name": "workflow-script-isolation-and-exit-propagation",
           "status": "passed"
         }
       ],
-      "current_phase": "blocked",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -645,10 +660,24 @@
             "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M73XRFA0ZXW5Q64PMWXJKEH2": {
@@ -723,6 +752,38 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Root-cause inspection: lib.rs routes system version through datastore startup for initialized projects. Replace workflow-context workaround with storage-independent version dispatch; retain normal-command migration notice coverage. Worktree custody rebound after lease renewal."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "tests/cli_contract_enforcement.rs",
+                  "tests/trajectory_cli.rs",
+                  "Restored accepted Nix workflow, source-profile digests, workflow policy tests and Nix documentation. Final fix makes system version storage-independent and preserves one-time migration reporting on workspace status."
+                ],
+                "proof_refs": [
+                  "source-version-regressions",
+                  "full-validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -734,7 +795,9 @@
         "Both workflow scripts tested with installed 0.136.3: old checkout invocation rejects 0777 .decapod; revised smoke passes. Fixture runs verify 0700 scratch and anchor, paths containing spaces, cleanup and exit 23 propagation.",
         "Exact candidate 72917b05: decapod validate returns CONTROLLER_CONTRACT_UNSUPPORTED for .github/workflows/nix-flake.yml after source inventory reconciliation. No full source tests or Nix rebuild executed by validation; direct installed-binary smoke and script fixtures are supplemental only.",
         "GitHub check 130026729576 resolves to Buildkite 6692 job 01a1c6a7-145a-45c5-ad8e-c0007e3989da: compilation succeeded; smoke failed STORAGE_UNSAFE_PERMISSIONS on checkout .decapod",
+        "Restored accepted Nix workflow, source-profile digests, workflow policy tests and Nix documentation. Final fix makes system version storage-independent and preserves one-time migration reporting on workspace status.",
         "Reviewed full workflow diff: only two smoke run blocks change; jobs, conditions, matrix, credentials, build and reproducibility gates retained. Reconciled source inventory and compiled workflow review digest.",
+        "Root-cause inspection: lib.rs routes system version through datastore startup for initialized projects. Replace workflow-context workaround with storage-independent version dispatch; retain normal-command migration notice coverage. Worktree custody rebound after lease renewal.",
         "Source reconciliation completed; retry full validation to establish controller compatibility, which remains unproven until observed"
       ],
       "inspected_files": [
@@ -747,7 +810,10 @@
         ".github/workflows/nix-flake.yml",
         "docs/book/src/reference/nix.md",
         "src/decapod/core/readiness_profile.rs",
-        "tests/source_ci_profile_policy.rs"
+        "src/decapod/lib.rs",
+        "tests/cli_contract_enforcement.rs",
+        "tests/source_ci_profile_policy.rs",
+        "tests/trajectory_cli.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks",

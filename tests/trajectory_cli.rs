@@ -312,14 +312,21 @@ fn local_command_announces_a_detected_version_transition_once() {
     )
     .expect("seed prior release");
 
-    let first = run_decapod(&root, &["system", "version"], None);
+    // Binary metadata must not migrate project state or consume its notice.
+    let version = run_decapod(&root, &["system", "version"], None);
+    assert!(version.status.success());
+    assert!(!String::from_utf8_lossy(&version.stderr).contains("Decapod migration notice"));
+    let after_version: Value = serde_json::from_slice(&fs::read(&counter_path).unwrap()).unwrap();
+    assert_eq!(after_version["last_seen_version"], "0.96.13");
+
+    let first = run_decapod(&root, &["workspace", "status"], None);
     assert!(first.status.success());
     let first_stderr = String::from_utf8_lossy(&first.stderr);
     assert!(first_stderr.contains("Decapod migration notice"));
     assert!(first_stderr.contains("0.96.13"));
     assert!(first_stderr.contains("applied.json"));
 
-    let second = run_decapod(&root, &["system", "version"], None);
+    let second = run_decapod(&root, &["workspace", "status"], None);
     assert!(second.status.success());
     assert!(!String::from_utf8_lossy(&second.stderr).contains("Decapod migration notice"));
 }

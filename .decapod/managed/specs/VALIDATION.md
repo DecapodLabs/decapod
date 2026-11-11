@@ -1,20 +1,18 @@
 # Validation
 
-## Nix package smoke isolation
+## Version smoke regression
 
-The Nix workflow (`.github/workflows/nix-flake.yml`) runs packaging and
-publication smoke checks from private `mktemp -d` directories using the
-absolute checkout path to `result/bin/decapod`. EXIT cleanup covers successful
-and failed binary invocations, and a failed binary still fails the step.
-Private scratch-local `.decapod` anchors prevent upward state discovery.
-Checkout-local `.decapod` permissions and state must neither influence this
-package execution proof nor be changed by it. Storage security remains enforced
-for normal repository operations. The regression
-`nix_smoke_checks_use_private_scratch_and_propagate_failure` executes both
-workflow scripts against a fixture binary with a world-writable checkout
-datastore, checks private scratch isolation and cleanup, and verifies nonzero
-exit propagation. Actual Nix compilation and reproducibility remain separate
-workflow gates; fixture execution does not prove either.
+The unchanged Nix workflow (`.github/workflows/nix-flake.yml`) smoke-checks the
+built binary with `system version`. The CLI regression
+`system_version_does_not_open_or_repair_project_storage` runs that command with
+invalid project configuration and datastore modes 0700, 0775 and 0777; metadata
+reporting must succeed without creating state or changing permissions. Stateful
+commands must continue rejecting unsafe storage. In `tests/trajectory_cli.rs`,
+`local_command_announces_a_detected_version_transition_once` checks that version
+reporting leaves the old release counter untouched, then a normal project
+command emits the pending migration notice exactly once. Full validation must
+execute the source tests; these contracts alone do not prove Nix packaging or
+post-merge reproducibility.
 
 ## Post-merge Gatling test-budget recovery (#1596)
 
@@ -949,7 +947,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `924a7a293aaf76d4bcb86d82e1dfe87241fbe93396f0e2c019ac9e09bd71aa74`
+- Repository signal fingerprint: `f78d172647dac280c953ef3a78cf9343dd43993291adb5b1e5db4bc0ca228907`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

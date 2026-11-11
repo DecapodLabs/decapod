@@ -79,7 +79,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/nix-flake.yml",
-            "sha256:b7045ac1a459240e80097ecae17ea9781f46b18918eaf07345752b44a822003d",
+            "sha256:55be222bdaaa39d6ade4d42bb86d0b6951ceebd525435b2f24ad20a5a94534c5",
         ),
         (
             ".github/workflows/release.yml",

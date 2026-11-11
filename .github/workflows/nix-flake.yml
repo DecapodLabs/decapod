@@ -149,15 +149,7 @@ jobs:
 
       - name: Smoke-check the built binary
         if: steps.release-gate.outputs.run == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          binary="$PWD/result/bin/decapod"
-          smoke_dir="$(mktemp -d)"
-          trap 'rm -rf -- "$smoke_dir"' EXIT
-          mkdir -m 700 "$smoke_dir/.decapod"
-          cd "$smoke_dir"
-          "$binary" system version
+        run: ./result/bin/decapod system version
 
       # Reproducibility proof (#1176): on x86_64-linux a second build from the
       # same locked inputs must be byte-identical, so a consumer can check a
@@ -202,15 +194,7 @@ jobs:
         run: nix build --print-build-logs
 
       - name: Smoke-check publication candidate
-        shell: bash
-        run: |
-          set -euo pipefail
-          binary="$PWD/result/bin/decapod"
-          smoke_dir="$(mktemp -d)"
-          trap 'rm -rf -- "$smoke_dir"' EXIT
-          mkdir -m 700 "$smoke_dir/.decapod"
-          cd "$smoke_dir"
-          "$binary" system version
+        run: ./result/bin/decapod system version
 
       - name: Check Linux publication candidate is reproducible
         if: matrix.expected_system == 'x86_64-linux'

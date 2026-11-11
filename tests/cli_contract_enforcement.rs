@@ -310,6 +310,47 @@ fn bootstrap_commands_remain_available_when_project_state_needs_repair() {
 }
 
 #[test]
+#[cfg(unix)]
+fn system_version_does_not_open_or_repair_project_storage() {
+    use std::os::unix::fs::PermissionsExt;
+
+    for mode in [0o700, 0o775, 0o777] {
+        let temp = TempDir::new().unwrap();
+        let storage = temp.path().join(".decapod");
+        std::fs::create_dir(&storage).unwrap();
+        std::fs::set_permissions(&storage, std::fs::Permissions::from_mode(mode)).unwrap();
+        let config = storage.join("config.toml");
+        let invalid_config = b"invalid project configuration [";
+        std::fs::write(&config, invalid_config).unwrap();
+
+        let version = run_decapod(temp.path(), &["system", "version"]);
+        assert!(
+            version.status.success(),
+            "version with storage mode {mode:o}: {}",
+            String::from_utf8_lossy(&version.stderr)
+        );
+        assert!(String::from_utf8_lossy(&version.stdout).contains(env!("CARGO_PKG_VERSION")));
+        assert!(version.stderr.is_empty());
+        assert_eq!(std::fs::read(&config).unwrap(), invalid_config);
+        assert_eq!(std::fs::read_dir(&storage).unwrap().count(), 1);
+        assert_eq!(
+            std::fs::metadata(&storage).unwrap().permissions().mode() & 0o777,
+            mode
+        );
+
+        if mode != 0o700 {
+            let stateful = run_decapod(temp.path(), &["workspace", "status"]);
+            assert!(!stateful.status.success());
+            assert!(
+                String::from_utf8_lossy(&stateful.stderr).contains("STORAGE_UNSAFE_PERMISSIONS"),
+                "{}",
+                String::from_utf8_lossy(&stateful.stderr)
+            );
+        }
+    }
+}
+
+#[test]
 fn test_schema_determinism_command() {
     let (_tmp, dir) = setup_repo();
 

@@ -1,14 +1,12 @@
 # Architecture
 
-## Nix packaging execution boundary
+## Storage-independent version dispatch
 
-`.github/workflows/nix-flake.yml` builds in the checkout but runs both package
-smoke invocations in fresh private scratch directories. The absolute binary
-path keeps the Nix wrapper and runtime closure under test while excluding
-checkout-local `.decapod` state. Each smoke shell owns and removes its scratch
-directory on exit; the binary's nonzero result fails the step.
-A mode-0700 `.decapod` directory inside scratch anchors project discovery,
-preventing accidental selection of ancestor state outside the temporary directory.
+`src/decapod/lib.rs::run` dispatches `system version` alongside the bootstrap
+commands before project discovery, session acquisition and migration. Binary
+version metadata has no project-store dependency. Normal project commands still
+initialize storage and report a detected migration once; version reporting
+neither consumes that notice nor repairs unsafe datastore permissions.
 
 ## Bounded macOS epoch enumeration
 
@@ -772,7 +770,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `924a7a293aaf76d4bcb86d82e1dfe87241fbe93396f0e2c019ac9e09bd71aa74`
+- Repository signal fingerprint: `f78d172647dac280c953ef3a78cf9343dd43993291adb5b1e5db4bc0ca228907`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
