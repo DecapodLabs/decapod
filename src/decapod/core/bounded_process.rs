@@ -12,6 +12,8 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
+// This module is also included by the separate native Laya workspace.
+#[path = "bounded_process/signal.rs"]
 mod signal;
 pub use signal::SignalCancellationGuard;
 
