@@ -515,7 +515,19 @@ fn real_libtest_executable_inventory_is_read_through_the_supervisor() {
     let artifact = fixture.artifact();
     fake_supervisor(&artifact);
     fs::create_dir_all(artifact.join("gatling.runfiles/_main")).unwrap();
-    fs::copy(std::env::current_exe().unwrap(), artifact.join("gatling")).unwrap();
+    // Copy in a child so concurrent fixture subprocesses cannot inherit a
+    // writable descriptor for the executable. Wait for the copier to close
+    // its descriptors before the supervisor executes the real libtest binary.
+    let copied = std::process::Command::new("cp")
+        .arg(std::env::current_exe().unwrap())
+        .arg(artifact.join("gatling"))
+        .output()
+        .expect("copy real libtest executable in an isolated process");
+    assert!(
+        copied.status.success(),
+        "copy real libtest executable: {}",
+        String::from_utf8_lossy(&copied.stderr)
+    );
     let names = integration_shards::inventory(&artifact).unwrap();
     assert!(
         names.contains(

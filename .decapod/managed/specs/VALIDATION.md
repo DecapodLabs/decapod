@@ -1051,7 +1051,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9152c7b59ce534c74c20d3d2bda6022c9c00db56f78626c83d6aa48930cd0d8d`
+- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1381,3 +1381,41 @@ deployment, hosted capacity, backup restoration, or this candidate's publication
 readiness. Unavailable checks remain unavailable. The review records both the earlier unadmitted publication and the current
 governed reconstruction. No missing validation receipt is claimed as passed,
 and this documentation cannot weaken the configured runtime proof profile.
+
+## Agent documentation index consistency
+
+The Documentation Index in `docs/agent/api-index.md` is the canonical agent
+document list, including the API index itself. The Markdown document links in
+`docs/agent/README.md` and the agent section of `docs/agent/llms.txt` must name the
+same files exactly once. The human book retains its separate section; a matching
+basename under another directory does not satisfy an agent document link.
+
+`tests/contract_conformance.rs` compares both indexes with the canonical table and
+requires every indexed document to resolve through `assets::get_embedded_doc`.
+The required `contracts` source-CI profile executes `//:contract_conformance`,
+including this invariant. Its compile-time inputs are the three indexes; the
+test calls the public embedded-document lookup for corpus membership. The
+existing specification-refresh tests retain their independent coverage.
+The Bazel test inputs include the inspected indexes, and the constitution
+compression inputs include `repository-readiness.md`, so sandboxed builds can
+embed that contract. This regression verifies documentation discovery and
+packaging. It does not replace exact-candidate governance, runtime or publication
+proof, and adding the regression does not establish that it has executed.
+
+The real-libtest inventory fixture in `tests/integration_sharding_policy.rs`
+copies its executable in a child process and waits for that process to finish
+before invoking the supervisor. Parallel fixture processes must not inherit an
+open writable descriptor for the relocated binary. The inventory still executes
+the real copied libtest binary and checks its discovered test names; its separate
+exit-126 regression continues to require immediate failure with captured
+diagnostics and no retry.
+
+The v0.138.1 rebase preserves the accepted historical-completion and Laya
+research contracts while replaying this documentation and fixture repair onto
+the current accepted target. The original task journal, earlier checkpoints and
+archived pre-rebase tip retain their original provenance. Native APIs must
+refresh release-bound projections, review the changed Bazel source inventory,
+and record a distinct checkpoint for the replayed material. Earlier successful
+v0.137.4 execution remains historical evidence; the rebased commit requires
+fresh complete publication proof and execution of the documentation-index and
+real-executable regressions against the captured accepted target.
