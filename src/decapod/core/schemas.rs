@@ -70,7 +70,7 @@ pub const TODO_DB_SCHEMA_TASK_TAGS: &str = "CREATE TABLE IF NOT EXISTS task_tags
     tag TEXT NOT NULL,
     PRIMARY KEY(task_id, tag),
     FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE
-); CREATE INDEX IF NOT EXISTS idx_task_tags_tag ON task_tags(tag);";
+) WITHOUT ROWID; CREATE INDEX IF NOT EXISTS idx_task_tags_tag ON task_tags(tag);";
 
 /// Knowledge edges with optional metadata (#1128). Prefer node_edges over edges.
 pub const MEMORY_DB_SCHEMA_NODE_EDGES: &str = "CREATE TABLE IF NOT EXISTS node_edges (
@@ -194,7 +194,7 @@ pub const MEMORY_DB_SCHEMA_META: &str = "
         key TEXT NOT NULL,
         value TEXT NOT NULL,
         PRIMARY KEY(namespace, key)
-    )
+    ) WITHOUT ROWID
 ";
 
 pub const MEMORY_DB_SCHEMA_NODES: &str = "
@@ -431,7 +431,7 @@ pub const TODO_DB_SCHEMA_META: &str = "
         key TEXT NOT NULL,
         value TEXT NOT NULL,
         PRIMARY KEY(namespace, key)
-    )
+    ) WITHOUT ROWID
 ";
 
 pub const TODO_DB_SCHEMA_TASKS: &str = "
@@ -737,7 +737,7 @@ pub const LCM_DB_SCHEMA_META: &str = "
         key TEXT NOT NULL,
         value TEXT NOT NULL,
         PRIMARY KEY(namespace, key)
-    )
+    ) WITHOUT ROWID
 ";
 
 pub const LCM_DB_INDEX_ORIGINALS_KIND: &str =

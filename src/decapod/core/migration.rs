@@ -180,7 +180,7 @@ pub fn all_migrations() -> Vec<Migration> {
             script_path: None,
             min_version: "0.136.3",
             target_version: "0.136.3",
-            description: "Remove five redundant prefix indexes only after verifying their unique replacements",
+            description: "Compact redundant indexes, composite-key btrees, and cold LCM text",
             up: migrate_compact_redundant_relational_indexes,
         },
     ]
@@ -333,6 +333,7 @@ fn migrate_compact_redundant_relational_indexes(root: &Path) -> Result<(), error
             }
             conn.execute_batch(&format!("DROP INDEX \"{obsolete}\""))?;
         }
+        crate::core::storage_compaction::apply(conn)?;
         Ok(())
     })();
     match result {
