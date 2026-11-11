@@ -1,0 +1,113 @@
+diff --git a/.decapod/managed/Dockerfile.decapod b/.decapod/managed/Dockerfile.decapod
+index 899cec4c..81387ccd 100644
+--- a/.decapod/managed/Dockerfile.decapod
++++ b/.decapod/managed/Dockerfile.decapod
+@@ -73,9 +73,9 @@
+ 
+ 
+ 
+-ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.138.1-debian
++ARG DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.138.2-debian
+ FROM $DECAPOD_IMAGE
+-ARG DECAPOD_VERSION=0.138.1
++ARG DECAPOD_VERSION=0.138.2
+ ARG DECAPOD_WORKSPACE_PATH=unknown
+ ARG DECAPOD_USE_LOCAL_BINARY=0
+ LABEL org.opencontainers.image.base.name="$DECAPOD_IMAGE"
+diff --git a/.decapod/managed/specs/.manifest.json b/.decapod/managed/specs/.manifest.json
+index e0169790..a25b597f 100644
+--- a/.decapod/managed/specs/.manifest.json
++++ b/.decapod/managed/specs/.manifest.json
+@@ -18,31 +18,31 @@
+   "capability_definition_version": "1.0.0",
+   "config_input_hash": "9ded849d0e29e9d7ba878703f6f3a99498c872963c8d151cfe42a6b26a4d99ef",
+   "spec_input_hash": "5082f07dfd5c7022d293a20c574742c6077e87c191a21c5340450ad77ab6ce5f",
+-  "decapod_release": "0.138.1",
++  "decapod_release": "0.138.2",
+   "entrypoints": [
+     {
+       "path": "AGENTS.md",
+-      "template_hash": "4017cfb2bbbeb2a4a254d5e282fdf8f8d37469b55b94b8729d8070ed7a6fafa0",
+-      "content_hash": "4017cfb2bbbeb2a4a254d5e282fdf8f8d37469b55b94b8729d8070ed7a6fafa0",
+-      "fingerprint": "2ac728c43e2cb916c56f438169d358a91f0202f5178fe1d757c3df8de8948759"
++      "template_hash": "465f81b79748e422dc604a5d3c98d1a3d6e0d64a20207187d7cc62e2e9278a72",
++      "content_hash": "465f81b79748e422dc604a5d3c98d1a3d6e0d64a20207187d7cc62e2e9278a72",
++      "fingerprint": "c41616883db36bdf4726d3ce19d0daa22c0990c2ea95aa5ecc40cec208a319cf"
+     },
+     {
+       "path": "CLAUDE.md",
+-      "template_hash": "533aeda762445ba584f42128f4f18a8ecede7062e1bfaefac7e83de058d669d2",
+-      "content_hash": "533aeda762445ba584f42128f4f18a8ecede7062e1bfaefac7e83de058d669d2",
+-      "fingerprint": "e201a5c8b8febf810bc883e239e624e950789e930663d82f3721509ed96ae0b3"
++      "template_hash": "23e6c0ad0bfb5088cd6c086aa59d099e63abd1da588ae33f64bff88c20b87641",
++      "content_hash": "23e6c0ad0bfb5088cd6c086aa59d099e63abd1da588ae33f64bff88c20b87641",
++      "fingerprint": "e8db6b9612812aef453f17f116fa4980af966fdabf5f3344189b3e7a846e80cc"
+     },
+     {
+       "path": "GEMINI.md",
+-      "template_hash": "81c5665b6733752b89c4e51a94dedf08510f485664c583f019a29a7e985742c2",
+-      "content_hash": "81c5665b6733752b89c4e51a94dedf08510f485664c583f019a29a7e985742c2",
+-      "fingerprint": "e7200867e1d33fb6d113ed8224b6da9aeb5c12b5596a42ee4d7f8ad2045363a7"
++      "template_hash": "b459b7b7a8fcb35c4006bf6e72bcc24762a168814811a58937865a55f93f127b",
++      "content_hash": "b459b7b7a8fcb35c4006bf6e72bcc24762a168814811a58937865a55f93f127b",
++      "fingerprint": "9214c2acddc2fca754fedb52bb1551adbdca3c06a38f792f82ed61577abc97e9"
+     },
+     {
+       "path": "CODEX.md",
+-      "template_hash": "ed300409cd3e2f3ab231ea35e50e6c8d2a1b45b5f01236a4ef87a699fefc2e80",
+-      "content_hash": "ed300409cd3e2f3ab231ea35e50e6c8d2a1b45b5f01236a4ef87a699fefc2e80",
+-      "fingerprint": "1aad619e4fb1ea8fcc5b4bb8fa765bdd42e652eed2a6423f0551159a4e9c442f"
++      "template_hash": "df9b66f1e5a9c6eb0973c8139b7a793b954a4970b8ff441a84d595952af27c36",
++      "content_hash": "df9b66f1e5a9c6eb0973c8139b7a793b954a4970b8ff441a84d595952af27c36",
++      "fingerprint": "3dc8cad06949a28e0b7764bf5b3faeebcd9f5a435da206bf906c3295a5d699b7"
+     }
+   ],
+   "files": [
+diff --git a/AGENTS.md b/AGENTS.md
+index d55fbd09..2ff00681 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -1,5 +1,5 @@
+-<!-- decapod-release: 0.138.1 -->
+-<!-- decapod-fingerprint: 2ac728c43e2cb916c56f438169d358a91f0202f5178fe1d757c3df8de8948759 -->
++<!-- decapod-release: 0.138.2 -->
++<!-- decapod-fingerprint: c41616883db36bdf4726d3ce19d0daa22c0990c2ea95aa5ecc40cec208a319cf -->
+ # AGENTS.md — Universal Agent Contract
+ 
+ This is a Decapod-managed repository. **Strict Dependency: You are strictly bound to the Decapod governance kernel.**
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 4053e1ed..171927ee 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -1,5 +1,5 @@
+-<!-- decapod-release: 0.138.1 -->
+-<!-- decapod-fingerprint: e201a5c8b8febf810bc883e239e624e950789e930663d82f3721509ed96ae0b3 -->
++<!-- decapod-release: 0.138.2 -->
++<!-- decapod-fingerprint: e8db6b9612812aef453f17f116fa4980af966fdabf5f3344189b3e7a846e80cc -->
+ # CLAUDE.md - Agent Entrypoint
+ 
+ You are working in a Decapod-managed repository.
+diff --git a/CODEX.md b/CODEX.md
+index 36eed420..36c9f4b9 100644
+--- a/CODEX.md
++++ b/CODEX.md
+@@ -1,5 +1,5 @@
+-<!-- decapod-release: 0.138.1 -->
+-<!-- decapod-fingerprint: 1aad619e4fb1ea8fcc5b4bb8fa765bdd42e652eed2a6423f0551159a4e9c442f -->
++<!-- decapod-release: 0.138.2 -->
++<!-- decapod-fingerprint: 3dc8cad06949a28e0b7764bf5b3faeebcd9f5a435da206bf906c3295a5d699b7 -->
+ # CODEX.md - Agent Entrypoint
+ 
+ You are working in a Decapod-managed repository.
+diff --git a/GEMINI.md b/GEMINI.md
+index cdf9eef5..b303e6eb 100644
+--- a/GEMINI.md
++++ b/GEMINI.md
+@@ -1,5 +1,5 @@
+-<!-- decapod-release: 0.138.1 -->
+-<!-- decapod-fingerprint: e7200867e1d33fb6d113ed8224b6da9aeb5c12b5596a42ee4d7f8ad2045363a7 -->
++<!-- decapod-release: 0.138.2 -->
++<!-- decapod-fingerprint: 9214c2acddc2fca754fedb52bb1551adbdca3c06a38f792f82ed61577abc97e9 -->
+ # GEMINI.md - Agent Entrypoint
+ 
+ You are working in a Decapod-managed repository.

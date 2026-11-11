@@ -1,0 +1,94 @@
+{
+  "schema": "decapod.billing-gate-repair.review.v1",
+  "candidate": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
+  "accepted_base": "c5de35a89b27e788169612ae71681e45c13bf71a",
+  "patch_sha256": "5a866a1c160e824e231f25eef1e1ce42c6ff943981a563fe23d083450dfd2a84",
+  "changed_paths": [
+    "docs/agent/config-schema.md",
+    "src/decapod/lib.rs",
+    "docs/cloud-repository-billing.md"
+  ],
+  "expected_files": {
+    "docs/agent/command-contracts.md": {
+      "before_blob": "7645f1e91f453b0afdbf18d54ea43e12b9107f17",
+      "proposed_blob": "7645f1e91f453b0afdbf18d54ea43e12b9107f17",
+      "sha256": "3bd9bd10fb8a6478485c38e0fbe6c39bd6f00cbad61f04be6f4206c78f8ad113",
+      "bytes": 30566,
+      "changed": false,
+      "producer": "native-docs-build-expected-by-static-renderer-review"
+    },
+    "docs/agent/config-schema.md": {
+      "before_blob": "6c3e812b0c3b42e8010666edd2510018f669a032",
+      "proposed_blob": "e08cece2a1aff238354296081d7681b760f71a14",
+      "sha256": "65442547e687dfbe933766ee8821cfb4cb172949b83b1ce00b76d014e16653fb",
+      "bytes": 16045,
+      "changed": true,
+      "producer": "native-docs-build-expected-by-static-renderer-review"
+    },
+    "src/decapod/lib.rs": {
+      "before_blob": "70876cdbf4829d656a59e1367a02b65621530169",
+      "proposed_blob": "40d8066e17fd251fb5ff8412fbde02ec6ecf7f0f",
+      "sha256": "767d92a16f84d74652852e83851aec59435a181278fe00a2a2629bb1c220a159",
+      "bytes": 497399,
+      "changed": true,
+      "producer": "reviewed-authored-repair"
+    },
+    "docs/cloud-repository-billing.md": {
+      "before_blob": "25fb30e88cb14b70b0e751368a111c4517671442",
+      "proposed_blob": "8e5bff0f1094bb8e4a4e82ba87da909dd93b98e7",
+      "sha256": "c51f5b1b4329f0a78ea2ff33ce0291793aa6ecc10b3e1e2490c8eed0c5173083",
+      "bytes": 3350,
+      "changed": true,
+      "producer": "reviewed-authored-repair"
+    }
+  },
+  "documentation_regeneration_paths": [
+    "docs/agent/command-contracts.md",
+    "docs/agent/config-schema.md"
+  ],
+  "renderer_input_bindings": {
+    "src/decapod/core/docs_cli.rs": {
+      "blob": "3b9750d20cb3781054548d72e1908bcd276da2b3",
+      "sha256": "c7d2bd0cb8e65f3c51262486fa3678bd5d0542700acae4112b813221d9b7434a",
+      "unchanged_from_base": true
+    },
+    "src/decapod/core/rpc.rs": {
+      "blob": "7ceecb4e72baae3ad85cf1ba733e0ce908a54a36",
+      "sha256": "038a43e14b14d56958d3ce5bfcfcb046d96c548528a81e1c8702920c8a83e8b9",
+      "unchanged_from_base": true
+    },
+    "assets/schemas/trajectory.schema.json": {
+      "blob": "5270cd34712c015566d5145f50ee1f0afdbae72b",
+      "sha256": "63a8a99a58ffaabcaf546f3553399c9516a053663750988f8989b332e5fc52de",
+      "unchanged_from_base": true
+    },
+    "docs/agent/repository-readiness.md": {
+      "blob": "ccafce140520929b03bc8eba5269b7fce82644fc",
+      "sha256": "0647f316337642780fb45f00f3b9954d98c1bea31e5b1810c72c45b61d9fa964",
+      "unchanged_from_base": true
+    }
+  },
+  "top_level_command_enum_sha256": "9cb175e971527691475c0607dd345af4f1135cddb9764475309358e299e1dc51",
+  "decapod_project_config_body_sha256": "86069de3fb19ee9dc8955ee8a4a692d5f14e3d41d96cc11b0c7d35c63364cebb",
+  "static_rendering_only": true,
+  "native_hosted_generation_and_full_validation_required": true,
+  "accepted_cloud_authority_prose": {
+    "origin_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
+    "origin_path": "docs/agent/config-schema.md",
+    "origin_lines": [
+      34,
+      43
+    ],
+    "destination_path": "docs/cloud-repository-billing.md",
+    "destination_heading": "Cloud access and task authority",
+    "exact_text_sha256": "3bac396c187ebc3064233218f0e48bf88ec7e49ed4e78bb4e5160ac42aa0b03e",
+    "moved_verbatim": true
+  },
+  "scope": [
+    "Remove exactly one needless Rust borrow reported by configured clippy",
+    "Regenerate both doc surfaces with unchanged accepted renderer",
+    "Preserve accepted per-operation cloud authority contract verbatim in existing authored billing documentation",
+    "Leave both semantic draft-PR blockers unchanged",
+    "No CI definition, proof profile, source inventory, or controller source changes"
+  ]
+}

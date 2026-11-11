@@ -1,0 +1,65 @@
+diff --git a/docs/agent/config-schema.md b/docs/agent/config-schema.md
+index 6c3e812b0c3b42e8010666edd2510018f669a032..e08cece2a1aff238354296081d7681b760f71a14 100644
+--- a/docs/agent/config-schema.md
++++ b/docs/agent/config-schema.md
+@@ -31,25 +31,7 @@
+ repair requires an explicitly granted role and records the policy fingerprint
+ with the reviewed repairs. `validate --bypass-validation --bypass-reason`
+ requires its own role and leaves proof and publication readiness false.
+-These actor labels are cooperative local identities, not authenticated users.
+-For cloud repositories, a Decapod agent carries an authenticated user's bearer;
+-server-side Propodus grants determine its permitted operations. Cloud repository
+-access has `read`, `write`, `maintainer`, and `owner` tiers, with expiring
+-direct user grants for contractors. A client-selected agent ID or local
+-`actor_roles` entry cannot elevate cloud authority. A contractor is a bounded
+-delegation for the same agent interface, with no separate human CLI workflow.
+-Propodus rechecks expiration and revocation on each operation. An expired direct
+-grant remains an explicit denial over inherited group, team, or organization
+-access; changing an agent ID or local role mapping cannot restore that access.
+-
+-Cloud init additionally records non-secret purchase intent in
+-`[repo].cloud_repository` and `[repo].cloud_github_users`. Both init surfaces
+-accept `--cloud-repository` and `--github-users`; usernames are normalized
+-and bounded to 100 distinct people. These fields are requested seats, never
+-authorization. Only the hosted service can verify the GitHub repo admin and
+-the USD15 monthly named seat for that specific repository. A non-admin receives
+-an approval link to share with an admin. See `docs/cloud-repository-billing.md`.
+-
++These actor labels are cooperative identities, not authenticated users.
+ 
+ `[laya] mode = "disabled"` is the default. Set `mode = "required"`
+ and install the reviewed profile to opt in to post-proof Laya judgment.
+diff --git a/src/decapod/lib.rs b/src/decapod/lib.rs
+index 70876cdbf4829d656a59e1367a02b65621530169..40d8066e17fd251fb5ff8412fbde02ec6ecf7f0f 100644
+--- a/src/decapod/lib.rs
++++ b/src/decapod/lib.rs
+@@ -2289,7 +2289,7 @@
+         },
+         specs_seed: Some(scaffold::SpecsSeed {
+             product_name: repo_ctx.product_name.clone(),
+-            product_summary: cloud_backend::cloud_generation_summary(&repo_ctx),
++            product_summary: cloud_backend::cloud_generation_summary(repo_ctx),
+             architecture_direction: repo_ctx.architecture_direction.clone(),
+             product_type: repo_ctx.product_type.clone(),
+             primary_languages: repo_ctx.primary_languages.clone(),
+diff --git a/docs/cloud-repository-billing.md b/docs/cloud-repository-billing.md
+index 25fb30e88cb14b70b0e751368a111c4517671442..8e5bff0f1094bb8e4a4e82ba87da909dd93b98e7 100644
+--- a/docs/cloud-repository-billing.md
++++ b/docs/cloud-repository-billing.md
+@@ -48,3 +48,16 @@
+ 
+ Seat removal, subscription restart and refund/dispute policies are outside this
+ initial-purchase/add-seat contract and need an explicit lifecycle design.
++
++## Cloud access and task authority
++
++These actor labels are cooperative local identities, not authenticated users.
++For cloud repositories, a Decapod agent carries an authenticated user's bearer;
++server-side Propodus grants determine its permitted operations. Cloud repository
++access has `read`, `write`, `maintainer`, and `owner` tiers, with expiring
++direct user grants for contractors. A client-selected agent ID or local
++`actor_roles` entry cannot elevate cloud authority. A contractor is a bounded
++delegation for the same agent interface, with no separate human CLI workflow.
++Propodus rechecks expiration and revocation on each operation. An expired direct
++grant remains an explicit denial over inherited group, team, or organization
++access; changing an agent ID or local role mapping cannot restore that access.
