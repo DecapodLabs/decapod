@@ -1,0 +1,648 @@
+{
+  "base_sha": "c5de35a89b27e788169612ae71681e45c13bf71a",
+  "native_baseline_status": "needs_reconciliation",
+  "native_candidate_status": "needs_reconciliation",
+  "inventory_count": 105,
+  "maps_equal": true,
+  "all_inventory_blobs_match_immutable_master": true,
+  "inventory_hash_recomputed": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
+  "current_config_declaration": "sha256:2aea2eef7fb20d5343821996f637449a9afe7aea0020b56355702218838e5e80",
+  "proposed_config_declaration": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
+  "authored_source_inventory_overlap": [],
+  "reviewed_profile_unchanged": "decapod.pr-readiness.v1",
+  "validation_buildkite_preflights_unchanged": true,
+  "allowlist_changes_required": [],
+  "review": "Exact digest-only correction is supported by independently rehashed accepted source; it grants no new controller/carrier acceptance and proves no test execution.",
+  "verified_sources": [
+    {
+      "path": ".bazelrc",
+      "git_blob": "6222cd1bb1b0ca5777df9840a149151fb54750ff",
+      "sha256": "sha256:0b64ac89d47e099bcd5b013fcb0b3c3e1fc2b1212abe16239caa1fd5a9ebed3e",
+      "bytes": 45
+    },
+    {
+      "path": ".bazelversion",
+      "git_blob": "b13d146a7b02b96e4c30340e69388d539c9721be",
+      "sha256": "sha256:14ebdd5f5d8dfccb0fc574ea9aabecc07d7cdd99d53e4fc01e58f9c3d23d18ef",
+      "bytes": 6
+    },
+    {
+      "path": ".cargo/config.toml",
+      "git_blob": "1e56c539de41642dc0273b0d7e999989ae26a6e3",
+      "sha256": "sha256:9915d2b1b187f8fa0fcfffe41c9af335ecb5d94284a96255109244d6ab788d53",
+      "bytes": 2348
+    },
+    {
+      "path": ".config/build/BUILD.bazel",
+      "git_blob": "f7b46bddb1ef2c421a7e252692cda65f112cfd1e",
+      "sha256": "sha256:082586c958d6f9e796f1a0f8bf8ca23f735a514169501101c15d3ce46b18ef9b",
+      "bytes": 245
+    },
+    {
+      "path": ".config/build/bazelrc",
+      "git_blob": "9ec6317790358c75047bcb15c114804270f675d4",
+      "sha256": "sha256:f0f4ce3e3784d12163d665f1aff951fb748096344441859b8fc6013c90cf7ae6",
+      "bytes": 698
+    },
+    {
+      "path": ".config/build/cargo_inputs.bzl",
+      "git_blob": "d126b2ebaea667fae6ec035d857cbb8a094823d4",
+      "sha256": "sha256:70e952b99349febe7c7d4a8e03195c1189a22678dd43a6a3ce343a27db30b465",
+      "bytes": 3082
+    },
+    {
+      "path": ".config/build/cargo_inputs_policy.py",
+      "git_blob": "69e7d4f4265fb19b68a9f084f49e4834033f6a51",
+      "sha256": "sha256:bc77a4d3f841764474033ec09bf54d504fe5733fff2c0e55315ecc5af8f13556",
+      "bytes": 901
+    },
+    {
+      "path": ".config/build/cargo_inputs_tests.bzl",
+      "git_blob": "7d7349a9f74039417b37121989ad30735665da2f",
+      "sha256": "sha256:756891a2c6cf4496b5a7f043234f9716b00867f441d79bebce4f12d7c69709b6",
+      "bytes": 4354
+    },
+    {
+      "path": ".config/build/decapod.BUILD.bzl",
+      "git_blob": "b65e5013f3b8e621bd0210561fa8a4cc238f80d6",
+      "sha256": "sha256:b4ed60f61b6325622125052a40b742088a6aa2a91c329cb66d2082be14bca0f4",
+      "bytes": 20346
+    },
+    {
+      "path": ".config/build/decapod.MODULE.bazel",
+      "git_blob": "3061176e0c5f07f25a9ce855eb3b9d455af41b1a",
+      "sha256": "sha256:c8c7dd1dcb01c13a5f901844f0ccf6bc2988fb749e5a1f64523b65d370d3c109",
+      "bytes": 1097
+    },
+    {
+      "path": ".config/build/downloader.cfg",
+      "git_blob": "36139a56e9f60b479f884626f4d6ef963022824b",
+      "sha256": "sha256:49eae26f64eff9f648b0d04bcac0812b83ef44d1c71e5cf8556029459a6f5f05",
+      "bytes": 410
+    },
+    {
+      "path": ".config/build/rust-toolchain.toml",
+      "git_blob": "ea14c7edaf73d48f57ee5d007671daf3b50751e3",
+      "sha256": "sha256:4d0674575b116a100c7d0ad754308dc6dea178b4808c760afc43136db967c7a6",
+      "bytes": 66
+    },
+    {
+      "path": ".config/clippy.toml",
+      "git_blob": "d54899c362c31b4ea8ba5ad58aa5aeb36adb4c0f",
+      "sha256": "sha256:785efb952c66af574478f8dca773a7f182399a2fb6380a3fffc677c572dd6a7c",
+      "bytes": 720
+    },
+    {
+      "path": ".config/deny.toml",
+      "git_blob": "e21f2241fbed1da57baf33f8bad58cf78ac4dcc4",
+      "sha256": "sha256:f827da46b2996d79a5765d90456027f097d92634f4f77978511b9f9df97f2afd",
+      "bytes": 616
+    },
+    {
+      "path": ".config/nextest.toml",
+      "git_blob": "5b71dd169c4b7a3eef05eb202b9978bf8eb5fe51",
+      "sha256": "sha256:cdbd7e2601da009f9204415c6fce7cc34c4e1090275de04ef6279dc325988b81",
+      "bytes": 511
+    },
+    {
+      "path": ".github/actions/ci-context/action.yml",
+      "git_blob": "a01d4c577a0889f51a017f4624d552adcc9093d9",
+      "sha256": "sha256:590afb059f133a654f3a345fc1fad779878e05c8b0bd30b0df29d568fcd15ecd",
+      "bytes": 12104
+    },
+    {
+      "path": ".github/actions/docs-drift/action.yml",
+      "git_blob": "7e6bc06114e4816b6c87a2bedf1f78cb895c3b53",
+      "sha256": "sha256:930537360881fa8d2a5e736767ad51100e581e9582f756ddcbb949c681d7ce3e",
+      "bytes": 810
+    },
+    {
+      "path": ".github/actions/install-lld/action.yml",
+      "git_blob": "8bbd4b18858e7ecb87c43d451263780dbab1da2b",
+      "sha256": "sha256:51298d96e90b1a4ddeab9cb1105bf6c10574a3d560ef0e199671615c9c35de2c",
+      "bytes": 276
+    },
+    {
+      "path": ".github/actions/setup-release-proof/action.yml",
+      "git_blob": "6350748b679fc71f99a0f66d8cca903eea0fab97",
+      "sha256": "sha256:8b26958d5344a58bf3cecdfd42acd5fb40ea524facdea7610c403dc4860d4cdd",
+      "bytes": 1396
+    },
+    {
+      "path": ".github/actions/source-ci-profile/action.yml",
+      "git_blob": "65a5b4064fe32b0d525634498eff3f75a0f94f9f",
+      "sha256": "sha256:30abef75c7347b17df10bc60358b3c16d34fc2769a6f836a385cb291e7a35a1e",
+      "bytes": 9547
+    },
+    {
+      "path": ".github/actions/validation-checkout/action.yml",
+      "git_blob": "607e3aaa27e2958bb2ebb60244fce4c764ac2231",
+      "sha256": "sha256:f6148b13fde7e4daf979c86044ccce1e286a4c94a92f0986ed60231bf806d8f2",
+      "bytes": 1863
+    },
+    {
+      "path": ".github/release.toml",
+      "git_blob": "3382c0d14e45309b9350cdd1d45042b3f3ca51a4",
+      "sha256": "sha256:894bca7f7e5069e58388a5e129a1b64cd82f1bf9abc1bb766f27c3bebb67922c",
+      "bytes": 586
+    },
+    {
+      "path": ".github/scripts/install-release-dist.sh",
+      "git_blob": "de95faf1e3d6c991b3a9af455ee5d7db4aa9cb49",
+      "sha256": "sha256:3d48fc36017d5225b72b0c9c8222fa641aa30d25b0bd17d060a17d366f128716",
+      "bytes": 291
+    },
+    {
+      "path": ".github/scripts/preflight-release.py",
+      "git_blob": "6ece42ca34c8018bb47bfb3d3b571269cd9a13c0",
+      "sha256": "sha256:eba11211d59db93512c463f501d878ee18aa4578eeaaacae7a7df3b3a19a8743",
+      "bytes": 13616
+    },
+    {
+      "path": ".github/scripts/release-build.sh",
+      "git_blob": "03c4e77573836fe105605b77179d73ca8f546716",
+      "sha256": "sha256:318ff3bb21e083ca6046948aee995b0ec77d4f2bd8101e995879007d8ae8b9d5",
+      "bytes": 965
+    },
+    {
+      "path": ".github/scripts/release-plan.sh",
+      "git_blob": "db0a2045542c3f3eeaee17b471ea6aefb802a04f",
+      "sha256": "sha256:c98fcb2973c85e2496ab42b63553b566adf2baa800ce004f2bf1df41f0ca0746",
+      "bytes": 2803
+    },
+    {
+      "path": ".github/scripts/release-tool-versions.py",
+      "git_blob": "6b92ed8e286a3a8f59a3a843f68df114023ec258",
+      "sha256": "sha256:3fe3c56cc65d319b5d30f1a576f0057995f14b8e28fbddde54d765fb316caa7e",
+      "bytes": 1663
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "git_blob": "ac00ae6bdfcfe295ea07162ff6ef235e202767ac",
+      "sha256": "sha256:95625705ed672de81ee3ea337f928dd945d96508549e40995ac4b3a0c3d538a8",
+      "bytes": 57563
+    },
+    {
+      "path": ".github/workflows/constitution-sync.yml",
+      "git_blob": "836a23c1fd2176266082e0959cfd23493308dd67",
+      "sha256": "sha256:e28cc76a8034d9945bbb14556ad668fdf3b2b047bdfb5c925cdefe2ee12b5d50",
+      "bytes": 3409
+    },
+    {
+      "path": ".github/workflows/decapod-validate.yml",
+      "git_blob": "add88a5a082634567616a8f578bb36524748dacb",
+      "sha256": "sha256:bef2a7526eb250a9baf6831bf17896000c53395ed533d3d8e3c43ca9fff21a00",
+      "bytes": 1132
+    },
+    {
+      "path": ".github/workflows/docs.yml",
+      "git_blob": "5000c45cdfa2988175040c779a07043c7d7f9ef9",
+      "sha256": "sha256:8f3b4dac84e0181499335ae5960b7e98c7a26be2afd9e7260a3591e08a1dc6a3",
+      "bytes": 3068
+    },
+    {
+      "path": ".github/workflows/docs_autosync.yml",
+      "git_blob": "2109575c31027fc1c6f9126ff46c265e5b77050a",
+      "sha256": "sha256:a638976699a517b079fe38a855f78ccc00570b22f1664ec7112a7b734c031ee3",
+      "bytes": 1222
+    },
+    {
+      "path": ".github/workflows/docs_sync.yml",
+      "git_blob": "eed928ca2f1a994f9fd6792a88cdc8633c750b57",
+      "sha256": "sha256:c3953bd209b16656640984051555c61941a210fb7d9549419e79c6cd1a7f05fe",
+      "bytes": 1816
+    },
+    {
+      "path": ".github/workflows/nix-flake.yml",
+      "git_blob": "de43f8eb79536aa053f0e8f4655f50e964b3a165",
+      "sha256": "sha256:55be222bdaaa39d6ade4d42bb86d0b6951ceebd525435b2f24ad20a5a94534c5",
+      "bytes": 8467
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "git_blob": "502d1532a04259a92a4924f8bdd332303091875b",
+      "sha256": "sha256:5db0e38c1c013138048e4c0dea5f968511265033eb3a1561485c3ea1eeb350a4",
+      "bytes": 21263
+    },
+    {
+      "path": ".github/workflows/security-audit.yml",
+      "git_blob": "0b474b301a98df5cac29cbe1efbc3c7860a0eb3e",
+      "sha256": "sha256:125928d5fe733bc080ac9a395a0c36275265a518bbeb8b9cb65d19b44a35fee0",
+      "bytes": 584
+    },
+    {
+      "path": "BUILD.bazel",
+      "git_blob": "986f4603f2d481ed015bb7632b49976c179857c0",
+      "sha256": "sha256:a075beca71bdc27177fab1bbaaeec40289186b763f21933a236cb51abfc5ab57",
+      "bytes": 135
+    },
+    {
+      "path": "Cargo.lock",
+      "git_blob": "1159b2ed6465c2e1046a6d0e277e6a91dc9034b7",
+      "sha256": "sha256:ee80472cdbae893ecdaf86e98d8d287eabe338d2e2eb876a9012d49c78eb1ff7",
+      "bytes": 58400
+    },
+    {
+      "path": "Cargo.toml",
+      "git_blob": "1c8bfb9aa514e9bcdd0c0c833ae504bc7668f8ff",
+      "sha256": "sha256:fb697173e3505a25660cacbcf274855b769d0d0e20a1b783414f3cc0adf59ded",
+      "bytes": 4199
+    },
+    {
+      "path": "MODULE.bazel",
+      "git_blob": "febcbd83cf2c9c09c4b3c428218c917363c232a9",
+      "sha256": "sha256:96af859ed7738abf75c555c852f09d6271d791a0162ba402275af0dbe78cd607",
+      "bytes": 81
+    },
+    {
+      "path": "MODULE.bazel.lock",
+      "git_blob": "405b38e333bbc97292dd2a9965ef8bc4db6ae0d2",
+      "sha256": "sha256:f6b61c4da05f0cae2ece28701cfee6a418572612db2e7acc95c5fb6d6455941a",
+      "bytes": 1031256
+    },
+    {
+      "path": "assets/build/compress_constitution.rs",
+      "git_blob": "ebf4519a29c17720d1766c3efe88bc94e7ecd2e6",
+      "sha256": "sha256:960678a0e5cbae15854b526cb0465dff9c85752d6b9bde2110e23d8be58e78e6",
+      "bytes": 7643
+    },
+    {
+      "path": "assets/build/constitution_index.rs",
+      "git_blob": "b9fc872d6e4c8812c5fddc8ac1f52dd650cf43f0",
+      "sha256": "sha256:11ed7fa623b19d408b23a9ec68fad74420c339bcbc0ebc5b06c198277cde8f17",
+      "bytes": 1297
+    },
+    {
+      "path": "assets/tools/.gitkeep",
+      "git_blob": "4ed3743a947609eb2af6df865484375aa0d13024",
+      "sha256": "sha256:4b87b035ae3b24e271871222e4448414c43550bba973a70555d80abe49b3b31e",
+      "bytes": 260
+    },
+    {
+      "path": "assets/tools/build_lifecycle.rs",
+      "git_blob": "f59ed008c355ee3b2e51d4c51bb73c6123e17ec4",
+      "sha256": "sha256:c872a9c1714490c001fd91597e959db82b312ede72e06ded6d4185061ed040d1",
+      "bytes": 14559
+    },
+    {
+      "path": "assets/tools/build_lifecycle_tests.rs",
+      "git_blob": "2053286704a4a8527e79ae56ff7be82a7078f894",
+      "sha256": "sha256:1564722c54dcad7402c7e7b956112e79da27f1129146ff531dcd9c69349f22e7",
+      "bytes": 21397
+    },
+    {
+      "path": "assets/tools/ci_event_context.rs",
+      "git_blob": "c57f180fbc0e9a0141ef121ac510948809aea3e8",
+      "sha256": "sha256:a63811fce603d6f0d56c9a659cbc5293f30eafd2f04ec25fdd8e68449f780199",
+      "bytes": 30095
+    },
+    {
+      "path": "assets/tools/derived_release_aggregate.rs",
+      "git_blob": "b516406d388cca8860d5d8f8925abcb8bba0e4b8",
+      "sha256": "sha256:267e05f0eda673a2825e1586f8933990045cdc3e03faeac1d2dc1dbfc9f349cc",
+      "bytes": 8347
+    },
+    {
+      "path": "assets/tools/derived_release_proof.rs",
+      "git_blob": "929ea4e83c81854506b67de9bbbe757a9e1bf60e",
+      "sha256": "sha256:da2045081284e504828c7ff5fb39d073f164cae057022f5138b07dfb6591711b",
+      "bytes": 5166
+    },
+    {
+      "path": "assets/tools/docs_sync.rs",
+      "git_blob": "370158d7469a591055fcff8595ec124c751b8dce",
+      "sha256": "sha256:f7d0f27cbd3b84c4fda2c70fc59f41ddb7cb9b5ba51ab0ecd363da92fe23f18b",
+      "bytes": 9347
+    },
+    {
+      "path": "assets/tools/integration_custody.rs",
+      "git_blob": "374e21818b0e1595d5e01bb6a81a81d6f159b954",
+      "sha256": "sha256:c8592dbbccd0b0582f3d632924c6499595579f9b043efedf7c0d179806cf1c01",
+      "bytes": 26537
+    },
+    {
+      "path": "assets/tools/integration_shards.rs",
+      "git_blob": "51bffcc5e512788ae12eb8a95e0e578b6b88bc0c",
+      "sha256": "sha256:2e35774a4be6f743da9f6efb12a5a331014525660f6fce0a2b6b56f5a8c29f8d",
+      "bytes": 20768
+    },
+    {
+      "path": "assets/tools/laya-native/.gitignore",
+      "git_blob": "b83d22266ac8aa2f8df2edef68082c789727841d",
+      "sha256": "sha256:306fd52e74fca6746e12acc750f232de15e71da917756a1270d74c91f5eb7368",
+      "bytes": 9
+    },
+    {
+      "path": "assets/tools/laya-native/Cargo.lock",
+      "git_blob": "86f8b6c058bac2763cb0fdbe5c646f548926ae45",
+      "sha256": "sha256:05f875f9f472f6715890cbd53e1f32e94dcb4e54ef2507a2662d53ee145af099",
+      "bytes": 62685
+    },
+    {
+      "path": "assets/tools/laya-native/Cargo.toml",
+      "git_blob": "bfe3629b035f4a0c440cefb5eab8b7674a7a3ab9",
+      "sha256": "sha256:8782bd2030c77df873fc5949be7d82a9a1eff086e8c49ba3558f52f9e670a9e9",
+      "bytes": 1167
+    },
+    {
+      "path": "assets/tools/laya-native/LICENSE-APACHE",
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "sha256:c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "bytes": 11357
+    },
+    {
+      "path": "assets/tools/laya-native/LICENSE-MIT",
+      "git_blob": "31aa79387f27e730e33d871925e152e35e428031",
+      "sha256": "sha256:23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
+      "bytes": 1023
+    },
+    {
+      "path": "assets/tools/laya-native/README.md",
+      "git_blob": "4b866c09bb126cefbb293d67c34965cdfe091c62",
+      "sha256": "sha256:b50745fa86076908b60c435ec4c8ac1c88f1483df8b1da5e792b92ef2e9116f5",
+      "bytes": 4437
+    },
+    {
+      "path": "assets/tools/laya-native/src/affine.rs",
+      "git_blob": "fc3c0ef59c714f20805d31f83d6f4c8f2f727188",
+      "sha256": "sha256:3da0dc777caed7de816f387f22bc8e1604c1ca4bfbf41f9d52cc78650f6595ac",
+      "bytes": 17119
+    },
+    {
+      "path": "assets/tools/laya-native/src/engine.rs",
+      "git_blob": "937ec1fe7d02c5eb6518ac3656c28e575cdbbc2f",
+      "sha256": "sha256:38e9dd8508852f934960c406440da861bd588abb9f21cc2e4168f8e3fe433745",
+      "bytes": 12571
+    },
+    {
+      "path": "assets/tools/laya-native/src/lib.rs",
+      "git_blob": "713ce1dbfb6fa3a8981296e5a1e176dc9f6bd101",
+      "sha256": "sha256:3efae9eaeb20e5675d1735577339db2a6c7ac9b487183f613330754455860adb",
+      "bytes": 11109
+    },
+    {
+      "path": "assets/tools/laya-native/src/main.rs",
+      "git_blob": "e9ea1b1ad57888874e8f5b8542a98dd459c83dc2",
+      "sha256": "sha256:580709a7f28721a4253c770297ed709beaf479d896fc4c96b77a68fb53848bc4",
+      "bytes": 9002
+    },
+    {
+      "path": "assets/tools/laya-native/src/modernbert.rs",
+      "git_blob": "0ef53414956222ad151ccc9e3118b71e81364654",
+      "sha256": "sha256:52e07ca58639da257521e46b7d78cc8a39be72f93139eb0889136f5049b9c83e",
+      "bytes": 15424
+    },
+    {
+      "path": "assets/tools/laya-native/tests/affine_adaptation.rs",
+      "git_blob": "c9ef631477d5be61222fa06c450f730e22ee837b",
+      "sha256": "sha256:7d339e177187dea04495e490b9bd33123452ae09592d786313070f2d2769c393",
+      "bytes": 15465
+    },
+    {
+      "path": "assets/tools/laya-native/tests/fallback.rs",
+      "git_blob": "5b19d8b3d442dfdbc7df4c9e195846fc441804e9",
+      "sha256": "sha256:49ba41604f6083fc9796e05c532029cca8989a780b00a7e4475c5ed9ba3f1134",
+      "bytes": 3406
+    },
+    {
+      "path": "assets/tools/laya-native/tests/fixtures/english-meta.json",
+      "git_blob": "250e282fc118719e3f1e76a1fca1984ec5249584",
+      "sha256": "sha256:516cab8910789f3a3ba6e508985f72976268e0a013e22adde1e6ad03240d0431",
+      "bytes": 1976
+    },
+    {
+      "path": "assets/tools/laya-native/tests/fixtures/english-quickstart.json",
+      "git_blob": "ecae5998c4465b22a7113837b5c570754b12096c",
+      "sha256": "sha256:5b4203307afc27cc91debc3e2e987dacb0c8a01abcab3893e16e009e0e6d4693",
+      "bytes": 21674
+    },
+    {
+      "path": "assets/tools/laya-native/tests/fixtures/multilingual-long-exact.json",
+      "git_blob": "b632c88211380068cdb0237b257bf1112266245c",
+      "sha256": "sha256:8c4eb0fb6d6e87f5e7efc27cded4e475e72def9184cd8b5b516d356af704ec9a",
+      "bytes": 3521
+    },
+    {
+      "path": "assets/tools/laya-native/tests/fixtures/multilingual-meta.json",
+      "git_blob": "279b5e0bfc05857c001c69215346e840769d6a34",
+      "sha256": "sha256:2a6c6d3170c2c714e9ff3a48e945f8c1f30dfd625aaf781ba233af107d10cbd9",
+      "bytes": 1428
+    },
+    {
+      "path": "assets/tools/laya-native/tests/fixtures/multilingual-quickstart.json",
+      "git_blob": "f7155b077b5116de7bd4f5bbb9e7e6d74bed5d6e",
+      "sha256": "sha256:b3191cdbb6d7ee2f7269a62bcd5d1aa3af6e4342cecd0a2ae0e4598b9e391695",
+      "bytes": 21614
+    },
+    {
+      "path": "assets/tools/laya-native/tests/fixtures/typed-decisions-meta.json",
+      "git_blob": "7e4bec911e6751c32e9894adc1bd1182d5dd7399",
+      "sha256": "sha256:2c72f8490dafab0c3253270db1248acfd55d7221cc4e125b066047ab62332eff",
+      "bytes": 2029
+    },
+    {
+      "path": "assets/tools/laya-native/tests/fixtures/typed-decisions-quickstart.json",
+      "git_blob": "b8b3403bb68800a93da95946136b470ffa301953",
+      "sha256": "sha256:dc6214db45da6ed2662e4505b5f6c8e9f7467ee1b0e9984a832e44f64c4a7009",
+      "bytes": 21680
+    },
+    {
+      "path": "assets/tools/laya-native/tests/frontend_contract.rs",
+      "git_blob": "051a7b6ee95ef2c5b6184bd88570ce5bb8f6bd8d",
+      "sha256": "sha256:aa54930a9be9dbb898a1cb104012aace75e3e360ed29fc6659b7a7ae58ca369f",
+      "bytes": 1341
+    },
+    {
+      "path": "assets/tools/laya-native/tests/pinned_parity.rs",
+      "git_blob": "98ee7644cde60cf45917774bdb21a227f965896a",
+      "sha256": "sha256:7fe653bc437988dff051067be31d3b606e0670fd9e65cd1e7b5a35ae39d713e3",
+      "bytes": 9865
+    },
+    {
+      "path": "assets/tools/laya-native/tests/profile_readiness.rs",
+      "git_blob": "81cc57304a79014243d445f9fba11e3a71418a74",
+      "sha256": "sha256:54c20014461cdd01ad5b59d83ede4413d1923c69e1f1361588ed4acc77a7a472",
+      "bytes": 3577
+    },
+    {
+      "path": "assets/tools/laya-native/tests/support/mod.rs",
+      "git_blob": "b698dacb377f780563d6916b524a7d33faec733a",
+      "sha256": "sha256:293c2b111a1b5b375042c6e3f94d02ce67412a2f918c32d3b6c7ee513a989cc9",
+      "bytes": 5544
+    },
+    {
+      "path": "assets/tools/laya-native/tests/upstream_sdk.rs",
+      "git_blob": "30f4ab200809d5d33d53063baf9263be5631ca8c",
+      "sha256": "sha256:fbdda8648302bdd485d8181be14326bcf017f34f8d5556aa869d118cc340c990",
+      "bytes": 4773
+    },
+    {
+      "path": "assets/tools/release_artifacts.rs",
+      "git_blob": "9503f261e24c904051c9d960a7e9663cc1e7deb8",
+      "sha256": "sha256:9ac72f14fc18e5c740f76b4c05ca0c642835dbf18f1917bd119d907e7680763c",
+      "bytes": 3991
+    },
+    {
+      "path": "assets/tools/release_cpu.rs",
+      "git_blob": "4b33c2bb47db32cfb9e97ee19a70988b0b2266f1",
+      "sha256": "sha256:8f37d7324ad9382bd9e29e48aa85b89a1f6123e7019addb72e1b9b79f01a7683",
+      "bytes": 2110
+    },
+    {
+      "path": "assets/tools/release_metadata.rs",
+      "git_blob": "bbfedac07ff098374742e7a9e6aa914b36922087",
+      "sha256": "sha256:55be4df3f670dfe3217b29c980070f27058bf59daf3cebe577d9773f2d8fd60d",
+      "bytes": 1017
+    },
+    {
+      "path": "assets/tools/release_projection_drift.rs",
+      "git_blob": "b0ff703401f9a04cf29bd3c864d3064a62ab76e8",
+      "sha256": "sha256:ca14931a975415a31662cdf84ee4ba7e66a1502be33de67dc55d997c6c7b1d46",
+      "bytes": 1031
+    },
+    {
+      "path": "assets/tools/release_projection_drift_tests.rs",
+      "git_blob": "73e8089ba56d77f4546c50ae66052e19c10d0782",
+      "sha256": "sha256:affa5f2732bf3c00f23e90b660aae6cbbf54dee56183a7ac1fc2f6e5eebc6f89",
+      "bytes": 16494
+    },
+    {
+      "path": "assets/tools/source_ci/commit-lint.sh",
+      "git_blob": "17d013d566594de287827461980b39008bbfd95a",
+      "sha256": "sha256:f42e96d474cb537e97fe673f2777c96bbd8652d244b5029a939afbdb521ba8c2",
+      "bytes": 557
+    },
+    {
+      "path": "assets/tools/source_ci/docs-drift.sh",
+      "git_blob": "1080c02db80a6f55570f8120213111392583c6f1",
+      "sha256": "sha256:0f61810b1c8f62572641bbe59ffde222e2a0b8f7385c5642b2893bb6c62334a0",
+      "bytes": 782
+    },
+    {
+      "path": "assets/tools/source_ci/governance-artifacts.sh",
+      "git_blob": "9f7037133125bcbbcc83691c5d97c8dda803157a",
+      "sha256": "sha256:7b43faa6fc88ff4e819310abd1b82c8ef7fd934d28a7c76676c373d1670b0565",
+      "bytes": 2361
+    },
+    {
+      "path": "assets/tools/source_ci/health.sh",
+      "git_blob": "aceb8a27615f44014ba37b2c66547a9e48947deb",
+      "sha256": "sha256:ed27edbb7798c5c2f98251844f9051be636a520782f8a69595d8ebb5600d0ac0",
+      "bytes": 3701
+    },
+    {
+      "path": "assets/tools/source_ci/integration-prepare.sh",
+      "git_blob": "b764a4db9bada3de6308b2e34044eb344242ce68",
+      "sha256": "sha256:7fef0e8d1e46e79be5463849632658ad3edfc2c6de44b2253bf6cfde0e93545e",
+      "bytes": 4140
+    },
+    {
+      "path": "assets/tools/source_ci/integration-status.sh",
+      "git_blob": "d6b0cc2b674d3fd1918734eceb1ee822540b0533",
+      "sha256": "sha256:648f4f2ca5567e5c8bd20079c41f73fd98ded47f08e4cc400297ffa0730aa8fb",
+      "bytes": 537
+    },
+    {
+      "path": "assets/tools/source_ci/integration-worker.sh",
+      "git_blob": "081c3eaba7bfdf8f32b47dcbd4e6440ef8073e38",
+      "sha256": "sha256:e2b1ea047f17789410f37b53faceb2a04acd231b54851be8b248f3df4b5de493",
+      "bytes": 2284
+    },
+    {
+      "path": "assets/tools/source_ci/material-specs.sh",
+      "git_blob": "6db621cc53ff0c4201a73cfbe37515a400a35520",
+      "sha256": "sha256:c9b4f3e3f85d46cdb190634e1029a892a1d8dfb551b5ee1b234cecd945366d8b",
+      "bytes": 2561
+    },
+    {
+      "path": "assets/tools/source_ci/migration-detection.sh",
+      "git_blob": "abce7ca4b8a703146f6f2e870d7a60085757beab",
+      "sha256": "sha256:45044b77202b4a883d7fe045489361d7aac7e31a31fb8768a198320d3e49d39b",
+      "bytes": 416
+    },
+    {
+      "path": "assets/tools/source_ci/private-checkout.sh",
+      "git_blob": "ee79cf54fa771044012e0f226d570a3f1ae45572",
+      "sha256": "sha256:cdf02c7413c05166f075865065cec965307f4785c005b064e6a379c9122741d0",
+      "bytes": 1954
+    },
+    {
+      "path": "assets/tools/source_ci/release-metadata.sh",
+      "git_blob": "3d878cafed91a99db0b6f58dcf9e60b42d2d89ee",
+      "sha256": "sha256:085b34aada3ac8cefe8b6e202069eaee637104cfb9138b05b09c68e50799f991",
+      "bytes": 548
+    },
+    {
+      "path": "assets/tools/source_ci/standalone-validation.sh",
+      "git_blob": "12eaf94fe6c0d520238b0ee584d0f310aa5935be",
+      "sha256": "sha256:aceb9cdd3d675d66ef804e608d4be8d53b11faddf065c0adef81787c45b24e71",
+      "bytes": 3211
+    },
+    {
+      "path": "assets/tools/source_ci_custody.rs",
+      "git_blob": "3196030e3004058cfa20b81e8504e504b19afaac",
+      "sha256": "sha256:5aa20ae0c729c6c3a429b74742bcba43e3168e7dca598752c18b012290b00c88",
+      "bytes": 75543
+    },
+    {
+      "path": "assets/tools/source_ci_profile.rs",
+      "git_blob": "120d4d236bb729db9988ada7d764413453c1dead",
+      "sha256": "sha256:38ae7ed3d5d80a1d08d8e578af6b8ddf7a4dbce4f44b532414087a7c0e0938a8",
+      "bytes": 48369
+    },
+    {
+      "path": "assets/tools/source_ci_toolchain.rs",
+      "git_blob": "c7a58036f358bf47c7da7f055be9e7a3a73eb319",
+      "sha256": "sha256:b6f372f8428ad155079d78b341112d795f2769a31a33e7c4b412b9a05832693e",
+      "bytes": 36688
+    },
+    {
+      "path": "assets/tools/source_ci_workflow_owned.rs",
+      "git_blob": "bcf547a73a078d7c16e6637559986a148ffcbf34",
+      "sha256": "sha256:d0e55621350a04c09b5661556943b9fce8502a8702f900c1dd1589e7f55989be",
+      "bytes": 5717
+    },
+    {
+      "path": "assets/tools/storage_size_probe.rs",
+      "git_blob": "0b25445e07b896d17118a275d60d28af3e5ff40a",
+      "sha256": "sha256:41926a0769c0462cfea54db469df240b308f5c03eeaf62397bbfa70474225b89",
+      "bytes": 15094
+    },
+    {
+      "path": "dist-workspace.toml",
+      "git_blob": "ce6064082dc37097e5bf7e8e23912926428aaaf8",
+      "sha256": "sha256:9446d178936f2c85400d9419e8f15c0659dc934ac0f1c4191be69b7e3be12a56",
+      "bytes": 662
+    },
+    {
+      "path": "dist.toml",
+      "git_blob": "a936e07d3cd674b5e4c33b92ee7100e587f39914",
+      "sha256": "sha256:aa3ccf5e3804763fe4dfc68ed274c696efea624506685b2fe4dbadb4ab0905b6",
+      "bytes": 182
+    },
+    {
+      "path": "flake.lock",
+      "git_blob": "45c41ee59b05cbc1ae3d497a2fd4010cd23a6868",
+      "sha256": "sha256:9c584f3999e7b56f2b10f973dc57698314ac8afb0221f3f0984dde5e76035f75",
+      "bytes": 2035
+    },
+    {
+      "path": "flake.nix",
+      "git_blob": "0f8686372c53a83dfb54ad9f1ed3dfcf10062ebb",
+      "sha256": "sha256:7b175201372a75e2174eb7204ffea19c4e7f3c3b9706f8e9f139eb17fe23df66",
+      "bytes": 6679
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "git_blob": "7f77ea3839511a3c538d1c8000b480157a8cd73b",
+      "sha256": "sha256:804562fa4ed41181347df143166b1ac5a54d34d842de1c6c0ff8ae97ffae6c22",
+      "bytes": 33
+    },
+    {
+      "path": "src/decapod/core/release_metadata.rs",
+      "git_blob": "f18f0d94bb736e1ad766514b135f28e3cb3e3dd0",
+      "sha256": "sha256:cb07b64800f6d69a64b65a80c80536194325a833cb6a541a8a0743d4b669c54b",
+      "bytes": 10306
+    }
+  ]
+}

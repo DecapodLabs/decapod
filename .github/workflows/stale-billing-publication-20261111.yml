@@ -1,8 +1,10 @@
-name: Publish reviewed billing branch through native Decapod
+name: Resume original billing task through native Decapod
 
 on:
   push:
     branches: [ops/stale-billing-publication-20261111]
+    paths-ignore:
+      - assets/tools/maintenance/stale-billing-publication-20261111/replies/**
 
 permissions:
   contents: read
@@ -63,7 +65,30 @@ jobs:
           assert hashlib.sha256((p / 'decapod').read_bytes()).hexdigest() == expected
           (p / 'decapod').chmod(0o700)
           PY
-      - name: Create native task, author reviewed material, and publish after full readiness
+      - name: Prepare an ephemeral recipient for original private task custody
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay.py" prepare \
+            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/billing-resume.json" \
+            --directory "$RUNNER_TEMP/billing-custody-relay"
+      - name: Publish only the current runner public custody recipient
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: billing-resume-recipient
+          path: ${{ runner.temp }}/billing-custody-relay/public/
+          retention-days: 7
+      - name: Receive the authenticated original task and pending material
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody_relay.py" receive \
+            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/billing-resume.json" \
+            --directory "$RUNNER_TEMP/billing-custody-relay"
+      - name: Resume original task, restore recorded source, and publish after full readiness
         working-directory: subject
         env:
           GH_TOKEN: ${{ github.token }}
@@ -74,9 +99,10 @@ jobs:
           export PATH="$GITHUB_WORKSPACE/controller:$PATH"
           git config user.name 'ChatGPT'
           git config user.email 'chatgpt@users.noreply.github.com'
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/publish_billing.py" \
-            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/billing.json" \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/resume_billing.py" \
+            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/billing-resume.json" \
             --patch "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/billing.patch" \
+            --resume-private-dir "$RUNNER_TEMP/billing-custody-relay/recovery" \
             --custody-recipient "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody-recipient.pem" \
             --output "$RUNNER_TEMP/billing-publication-result" \
             --publish-timeout 3600
@@ -98,7 +124,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: billing-native-publication
+          name: billing-native-resume
           path: ${{ runner.temp }}/billing-publication-result/
           if-no-files-found: warn
           retention-days: 90
