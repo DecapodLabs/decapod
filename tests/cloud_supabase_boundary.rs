@@ -1028,3 +1028,21 @@ fn supabase_auth_transport_does_not_forward_refresh_body_or_bearer_on_redirect()
         );
     }
 }
+
+#[test]
+fn asserted_local_owner_role_never_authorizes_cloud_without_a_session() {
+    let root = project();
+    let config_path = root.path().join(".decapod/config.toml");
+    let mut config = std::fs::read_to_string(&config_path).unwrap();
+    config.push_str(
+        "\n[governance.rbac]\njournal_repair_roles = [\"owner\"]\nvalidation_bypass_roles = [\"owner\"]\n\n[governance.rbac.actor_roles]\nsupabase-proof = [\"owner\"]\n",
+    );
+    std::fs::write(config_path, config).unwrap();
+
+    let output = command(root.path(), "supabase", "http://127.0.0.1:1", None);
+    assert!(
+        !output.status.success(),
+        "asserted owner label must not substitute for Supabase Auth"
+    );
+    assert_no_fallback(root.path());
+}

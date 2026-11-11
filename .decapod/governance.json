@@ -576,23 +576,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Early dispatch returns binary metadata; stateful configuration parsing and storage validation retain their order",
-          "reviewed_code_fingerprint": "1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af",
-          "spec_material_hash": "0eee077b350ba5f65fa70b6c2043aaa6c216ea14fa13752ea9a1580d84e3d827"
+          "reason": "Reviewed repository-native agent execution and the two trust domains against the merged Propodus backend: solo local mode remains cooperative and account-free; hosted operations bind to managed Auth, repository grants, and principal-owned custody. The implementation and protected tests do not introduce a human-facing IAM or contractor execution path.",
+          "reviewed_code_fingerprint": "88d69ceac036e9827792cf5ea9bc0d206af71490859175f7ef10347551df84a3",
+          "spec_material_hash": "ec1f8dc91a706a5715b879fb78f0d06134a8353867ece1b079ca4bc45b3fe9b5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Version reporting remains independent of config and storage; fixture separately checks stateful permissions after config parsing",
-          "reviewed_code_fingerprint": "1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af",
-          "spec_material_hash": "875c56849a6c844dd7ab621065044478e1baf487a2bae63b940e1c6d05786191"
+          "reason": "Reviewed the current agent-only cloud interface: local actor labels do not authorize remote operations; two independently authenticated principals cannot transfer claim custody by copying the same agent label. The Dactyl request contract stays unchanged, cloud denial never falls back to local SQLite, and the protected service proof remains distinct from local fixtures.",
+          "reviewed_code_fingerprint": "88d69ceac036e9827792cf5ea9bc0d206af71490859175f7ef10347551df84a3",
+          "spec_material_hash": "3e4cc0b5f8f932afff3e6bff27e846e9e1bc4ffc76b170d2061585118cab3006"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Unsafe storage remains rejected by stateful commands; regression controls damaged config and shared-group opt-in separately",
-          "reviewed_code_fingerprint": "1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af",
-          "spec_material_hash": "9d41f7d722fd84a6f8fdda94e83c67918fe44969b04310bc0c57eecb547d9281"
+          "reason": "Reviewed owner, maintainer, contributor and expiring contractor delegation with Propodus #93 merged; a self-selected agent identity cannot elevate cloud authority or release another principal's task. Local cooperative authority, cloud revocation, denial propagation, hosted proof scope and independent merge checks remain explicit and bounded.",
+          "reviewed_code_fingerprint": "88d69ceac036e9827792cf5ea9bc0d206af71490859175f7ef10347551df84a3",
+          "spec_material_hash": "f51e675e74a6d2796094893aec00b89a4b2ccffc9d742590b1775e8519a5ccd1"
         }
       ],
       "state": "APPROVED",
@@ -603,7 +603,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794356246Z"
+      "updated_at": "1794378537Z"
     },
     "trajectory": {
       "active_boundaries": [

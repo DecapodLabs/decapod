@@ -1,5 +1,18 @@
 # Validation
 
+## Immutable push-range ancestry
+
+A feature-branch push supplies the previous branch tip as its `base`,
+which can already be ahead of accepted `master`. Validation requires
+both that previous tip and the independently captured accepted branch
+tip to be ancestors of the exact new push head. A protected-master push
+remains valid when the accepted target is the new head. PR validation
+retains its separate base-ancestry and exact merge-base requirements.
+No force-push, divergent accepted target or missing immutable Git
+history may be treated as a valid change. See
+`src/decapod/core/release_metadata.rs::validation_change_base` and
+`tests/release_metadata_policy.rs` for executable regressions.
+
 ## Version smoke regression
 
 The unchanged Nix workflow (`.github/workflows/nix-flake.yml`) smoke-checks the
@@ -947,8 +960,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9179711a2f811eb5b1c71e78cb88ca37341fe630aab7070463d020ee6d4c36c2`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (216 files)
+- Repository signal fingerprint: `c6fe8e65d1cf3a526b1e511e60235852a116099867ac682f98325762a0abdd02`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

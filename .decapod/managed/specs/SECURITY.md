@@ -159,6 +159,32 @@ cleared. The artifact excludes session tables and unrelated tasks, but task text
 can itself be sensitive and must remain outside Git. Older binaries and privileged
 writers are outside this cooperative local fence.
 
+## Agent-delegated authority, local and cloud
+
+The agent is the only operational caller. Human owners, maintainers,
+contributors, employees, and contractors express intent to their agent; the
+agent calls Decapod within the same repository-native work lifecycle.
+Local developer mode retains cooperative actor labels and requires no cloud
+authentication. These labels provide audit attribution and task custody
+within the local user trust boundary, not OS principal isolation.
+
+Cloud authority instead belongs to a verified Propodus principal and is
+evaluated on the server against a live managed session, organization
+membership, repository grant, and entitlement. The agent ID, local RBAC
+mapping, task owner field, and asserted role can never authorize a cloud
+operation. Access tiers distinguish read, contributor/write, maintainer,
+and owner. A contractor uses an expiring direct user grant within one
+repository, including an explicit expired-deny fence over group/team/org
+inheritance. Only the schema owner can issue or revoke that delegation.
+
+Cloud task custody binds the executing authenticated principal separately
+from the agent's freely chosen collaboration label. Release/complete of
+another principal's claim must fail even if the caller copies the exact
+label. Reviewed maintainer/owner repair is an explicit, bounded exception.
+An agent's self-asserted success or authority cannot become proof or
+publication permission. Live service assertions are required; synthetic
+client fixtures establish routing only.
+
 ## Threat Model
 
 Decapod governs accepted agent work inside a repository. Its security boundary
@@ -507,8 +533,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9179711a2f811eb5b1c71e78cb88ca37341fe630aab7070463d020ee6d4c36c2`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (216 files)
+- Repository signal fingerprint: `c6fe8e65d1cf3a526b1e511e60235852a116099867ac682f98325762a0abdd02`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

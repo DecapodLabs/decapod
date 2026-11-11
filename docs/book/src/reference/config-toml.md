@@ -67,9 +67,15 @@ operator = ["maintainer"]
 
 Callers must assert an exact configured actor label using
 `DECAPOD_AGENT_ID=operator`. These are **cooperative local role labels**, not
-cryptographic authentication; a process that can edit the main configuration
+cryptographic authentication; the local developer trusts their own workspace, and a process that can edit the main configuration
 or assert another actor label remains inside the local trust boundary. Protect
 the config with human review and file-system access controls.
+
+In cloud mode, these local role labels never authorize Propodus. The cloud
+backend authenticates the session bearer and resolves repository roles using
+server-owned grants. Contributor, maintainer, owner, and expiring contractor
+delegation are backend policy, not self-selected agent names. Local-first
+operation does not require a cloud account.
 
 `decapod todo journal checkpoint --accept-historical-gap TASK_A --accept-historical-gap TASK_B --reason "reviewed historical range"`
 requires `todo.journal.repair` permission. The entire batch, each bounded
