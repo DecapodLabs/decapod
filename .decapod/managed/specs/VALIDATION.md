@@ -4,10 +4,17 @@
 
 The historical candidate failed dependency denial on Tokio 1.52.3
 (`RUSTSEC-2026-0386`) and lacked a current-source Interfaces review. The
-reconciled source retains accepted v0.137.2's Tokio 1.53.3 root lockfile and
+reconciled source retains accepted v0.137.4's Tokio 1.53.3 root lockfile and
 sole-Laya kernel ownership. Native task/workspace admission, genuine current
 spec reviews, material checkpoints and exact-candidate validation must establish
 the new candidate's custody; neither an old result nor copied metadata does so.
+
+An upstream advance invalidates the old publication base even when a previous
+candidate has successful source-CI receipts. Current integration preserves the
+accepted test-only plugin selection and its material validation contract. Old
+receipts retain their original base/head bindings; reconciliation onto the new
+accepted base requires native custody, checkpoints and fresh exact-candidate
+publication checks. `PUBLICATION_MATERIAL_BASE_CHANGED` is not a test waiver.
 
 The original frozen fitting/evaluation corpus definitions replace unsupported
 placeholder families. Their partitions remain disjoint; the evaluation allows
@@ -998,7 +1005,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `70b01fca09e78c3fd6e57d97e6209daa065aa62eda2c2d50b94b804603491d35`
+- Repository signal fingerprint: `e1ad266ef041624eb21934f0d994b4a5173e3457126e5e8a8aea543b17914d4e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1297,6 +1304,13 @@ included in the existing required `selective-plugins` source-CI target;
 their presence is a test obligation, not an executed passing result. They add
 no runtime seeding behavior, concurrency or hosted-storage qualification,
 performance measurement, or publication-readiness claim.
+
+Changes under `tests/plugins/` select that same complete plugin recipe, including
+`//:plugins_aptitude_tests`, even when production source is unchanged.
+`tests/source_ci_profile_policy.rs` checks the test-only selection, required job
+inventory, identical production/test recipes, and preservation of unrelated-path
+and release-only exclusions. A green `not_applicable` result cannot establish
+that the prompt-history regressions executed.
 
 ## Datastore production qualification (v0.137.0 review)
 
