@@ -6,8 +6,7 @@ use std::path::{Path, PathBuf};
 
 pub const PUBLIC_CLOUD_BACKEND_UNAVAILABLE: &str = "This cloud storage operation is not implemented yet; cloud mode never falls back to local SQLite, and todo persistence is routed through Dactyl.";
 
-pub const PROPODUS_TODO_ROUTE_SUMMARY: &str =
-    "POST /query for task reads/writes; POST /batch for atomic task operations";
+pub const PROPODUS_TODO_ROUTE_SUMMARY: &str = "Supabase RPC v1: POST /rest/v1/rpc/dactyl_query_v1 for reads and POST /rest/v1/rpc/dactyl_batch_v1 for atomic ordered operations";
 pub const CLOUD_ONBOARDING_CONTRACT_VERSION: &str = "v1";
 pub const CLOUD_ONBOARDING_START_ROUTE: &str = "/api/onboarding/start";
 pub const CLOUD_ONBOARDING_STATUS_ROUTE: &str = "/api/onboarding/status";

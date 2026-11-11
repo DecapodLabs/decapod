@@ -181,29 +181,37 @@ writers are outside this cooperative local fence.
 
 ## Agent-delegated authority, local and cloud
 
-The agent is the only operational caller. Human owners, maintainers,
-contributors, employees, and contractors express intent to their agent; the
-agent calls Decapod within the same repository-native work lifecycle.
-Local developer mode retains cooperative actor labels and requires no cloud
-authentication. These labels provide audit attribution and task custody
-within the local user trust boundary, not OS principal isolation.
+Human owners, contributors and contractors express intent to their agent; the
+agent invokes Decapod within the repository-native work lifecycle. Local actor
+labels and `[governance.rbac]` remain cooperative custody/audit and exceptional
+local governance policy, not authenticated cloud grants.
 
-Cloud authority instead belongs to a verified Propodus principal and is
-evaluated on the server against a live managed session, organization
-membership, repository grant, and entitlement. The agent ID, local RBAC
-mapping, task owner field, and asserted role can never authorize a cloud
-operation. Access tiers distinguish read, contributor/write, maintainer,
-and owner. A contractor uses an expiring direct user grant within one
-repository, including an explicit expired-deny fence over group/team/org
-inheritance. Only the schema owner can issue or revoke that delegation.
+Cloud requests carry a Supabase user session through Dactyl. Ordinary access is
+bound to the canonical Supabase user UUID, active assigned paid seat, and
+server-enforced tenant/customer/project scope. Code-host identities, when linked,
+require independent server verification of provider/host/subject. Usernames,
+email, local roles, agent IDs and copied task labels cannot grant runtime access.
+SCM repository/PR/merge permissions are not the ordinary app access hierarchy;
+privileged governance controls retain their separate authorization contract.
 
-Cloud task custody binds the executing authenticated principal separately
-from the agent's freely chosen collaboration label. Release/complete of
-another principal's claim must fail even if the caller copies the exact
-label. Reviewed maintainer/owner repair is an explicit, bounded exception.
-An agent's self-asserted success or authority cannot become proof or
-publication permission. Live service assertions are required; synthetic
-client fixtures establish routing only.
+`core::cloud_session` and `core::auth::CloudSessionStore` keep PKCE/poll secrets,
+one-time codes and user/provider credentials outside Git, repository config and
+serialized storage context. Private records are read through no-follow handles
+with a 64 KiB byte bound; oversized reads/writes fail without replacing previous
+state. File creation is private and writes sync before atomic replacement, with
+Unix directory sync. A per-service bounded lock serializes rotating refreshes.
+An inflight marker precedes one-time dispatch; an unknown exchange result is
+preserved privately and requires fresh sign-in instead of automatic replay.
+A supplied credential does not consume or overwrite pending browser-flow state.
+
+Dactyl owns bounded profile/Auth/RPC transport and refuses redirects. Sign-in
+provider credentials can come from Google or another provider. They are stored
+separately and are never inferred to be GitHub/GitLab tokens or automatically
+forwarded as SCM credentials. Data credentials and Debug output omit them.
+Cloud task custody must bind the executing authenticated principal separately
+from its freely chosen collaboration label. Backend seat/tenant authorization,
+OAuth and billing require their own actual service proofs; local client fixtures
+only establish composition and failure behavior.
 
 ## Threat Model
 
@@ -553,8 +561,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -2,23 +2,42 @@
 
 ## Agent-invoked authority across local and cloud repositories
 
-The repository's agent remains Decapod's operational caller. Solo/local work
-uses its existing cooperative session and workspace custody; no external
-account is required. In cloud mode, Decapod carries a managed session bearer
-to Propodus through Dactyl's opaque storage context. Propodus independently
-resolves the authenticated GitHub-linked principal, live membership,
-repository grant and entitlement. A client-provided agent ID or local RBAC
-role label can identify the executing agent but cannot elevate cloud authority.
+Decapod remains the AI/system interface and governance kernel. Project config
+selects `repo.backend = "local" | "cloud"`; Dactyl resolves and executes the
+physical connector. The normal path is AI ↔ Decapod ↔ Dactyl ↔ Supabase.
+Propodus names the infrastructure-as-code for managed Auth, PostgreSQL RPC,
+Edge authentication/account endpoints and tenant policy; it is not a required
+standalone task server. Local mode keeps the existing Dactyl SQLite path.
 
-The coordinating backend maintains `read`, `write`, `maintainer`, and
-`owner` tiers; a contractor is a user with a bounded repository-scoped
-grant, rather than a special class of agent. Cloud task custody couples an
-agent label with its authenticated principal, so the same label supplied
-under a different principal cannot release or complete the claim. Reviewed
-cross-principal repair remains a separate privileged operation. These
-backend guarantees are developed and proved in the companion Propodus
-migration; this repository's client fixtures prove only request routing and
-denial propagation, not remote PostgreSQL authorization or Git merge rights.
+`core::dactyl::DactylBridge::from_storage_context` asks Dactyl's logical cloud
+connector for the native RPC route. Dactyl owns default deployment origin,
+bounded public profile discovery, publishable-key validation and native
+`dactyl_query_v1` / `dactyl_batch_v1` transport. Decapod carries the human's
+managed session bearer separately from its serializable repository context.
+Explicit Neon compatibility is retained without making physical provider
+selection part of ordinary project configuration. Cloud failures do not select
+SQLite or manufacture a local task store.
+
+`core::cloud_session` owns human session orchestration and private machine
+custody while every auth/profile request goes through Dactyl. The flow persists
+PKCE/poll secrets before a headless browser handoff, serializes service-scoped
+refresh rotation, and checkpoints one-time requests before submission. A lost
+one-time response is preserved privately and never automatically replayed.
+Consumed flows without a local result can restart on a later invocation. Session
+and pending records are bounded to 64 KiB, created privately, written atomically
+with Unix file/directory syncing, and never included in Git or storage context.
+A supplied session takes precedence over saved onboarding state.
+
+Ordinary cloud authority is the authenticated Supabase user UUID plus an active
+assigned paid seat and tenant/customer/project isolation. A linked code-host
+identity is verified server-side when needed; sign-in may also use Google.
+Neither GitHub usernames, agent IDs nor local `[governance.rbac]` mappings grant
+runtime access or mirror code-host repository/merge permission tiers. Optional
+privileged governance controls stay separately scoped. An optional sign-in
+provider token remains private and is never inferred to be an SCM credential.
+The companion Propodus policy and portal changes own seat materialization and
+administration; these client fixtures establish request composition, not hosted
+OAuth, billing, tenant policy or Git permissions.
 
 ## Storage-independent version dispatch
 
@@ -504,8 +523,8 @@ migration inputs rather than live alternate stores.
 
 Optional cloud routing is repository-scoped. Decapod derives repository identity
 from the supported Git origin and accepts an authenticated opaque datastore
-route. The hosted service owns its authentication and tenancy boundary; Dactyl
-owns transport and physical execution. A local transaction test does not prove
+route. Supabase managed Auth and server policy own authentication and tenancy;
+Dactyl owns native RPC transport and physical execution. A local transaction test does not prove
 that a deployed service implements the same contract.
 
 Task proof keeps its subject in the existing verification-artifact JSON: the
@@ -820,8 +839,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -976,8 +995,8 @@ atomically. The same physical checkout cannot acquire incompatible active task
 bindings, including under the same actor. Admission is rechecked at governed
 CLI/RPC authoring entrypoints; it is not an OS write sandbox.
 
-Repository-scoped cloud task state stays behind Dactyl and Propodus's trusted
-identity/authorization boundary. Host-local checkout identities are never sent
+Repository-scoped cloud task state stays behind Dactyl and the Propodus-managed
+Supabase identity/authorization boundary. Host-local checkout identities are never sent
 as cloud authorization. The released compatibility task/event profile remains;
 resource reservation, filesystem bindings, lease handoff and validated remote
 completion are unsupported there. Local labels cannot grant cloud roles or

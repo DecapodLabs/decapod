@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d",
+    "accepted_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -94,6 +94,14 @@
           ".decapod/managed/specs/VALIDATION.md"
         ],
         "statement": "The candidate recovers only reviewed residual tests/documentation with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct.",
+        "status": "open"
+      },
+      "claim:claim:recovery-docs": {
+        "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+        "proof_refs": [
+          ".decapod/managed/specs/VALIDATION.md"
+        ],
+        "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Reconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
         "status": "open"
       },
       "claim:committed-scope-enforcement": {
@@ -508,62 +516,71 @@
     }
   },
   "change": {
-    "id": "change_01M74ZXHYXJP978B091Q3MWRTP",
-    "base_commit": "91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d",
+    "id": "change_01M76ESS6K2ZNFGQ509DWGR8X4",
+    "base_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:recovery-docs": {
-      "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Reconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
-      "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+    "dactyl-cloud-transport": {
+      "statement": "Source maps logical cloud selection to Dactyl profile/Auth/native RPC transport with the user bearer separate from repository context and preserves local/explicit Neon compatibility without fallback",
+      "falsifier": "Boundary or feature-matrix checks observe Decapod direct Supabase I/O, a bearer in serialized context, a cloud-to-local fallback, or a broken supported connector route",
       "status": "open",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
+        "tests/cloud_backend_storage.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/unit/core/dactyl_tests.rs"
+      ]
+    },
+    "managed-session-custody": {
+      "statement": "Managed session source bounds no-follow private records, preserves unknown one-time outcomes, serializes refresh rotation and gives a supplied session precedence without replaying saved onboarding",
+      "falsifier": "Session regressions expose credentials, follow a dangling link, replace prior state on oversize, replay a one-time request or rotate one service session concurrently twice",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/cloud_session.rs",
+        "tests/unit/core/auth_tests.rs"
+      ]
+    },
+    "registry-release-prerequisite": {
+      "statement": "Normal Decapod registry adoption remains unavailable until reviewed Dactyl connector APIs are published and Cargo/Nix/Bazel release inputs are reconciled; this candidate is temporary Git source integration only",
+      "falsifier": "The existing registry-only release test and actual package checks establish this temporary Git-pinned source is ready for the current registry release path",
+      "status": "blocked",
+      "proof_refs": [
+        "docs/book/src/reference/supabase-validation.md",
+        "tests/release_dependency_policy.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "recovery-docs",
-      "summary": "Recover reviewed residual source in current admitted custody; preserve original history, regenerate projections and retain full validation as unavailable.",
-      "input_digest": "sha256:fe8778f8e6cfa1fa85dff6dedea6f639949186c04b0649aa29c54f6e1a0eb5c3",
+      "id": "dactyl-managed-cloud-candidate",
+      "summary": "Reconcile complete Dactyl connector/native RPC and private managed-session source onto accepted v0.138.2; preserve registry release and all strict proof policy; immutable coordinated development pin a85607e8",
+      "input_digest": "sha256:eb1a959d072cc4fb5e4797d7d245a8ced8d60e7d2b0d97b9cf2886427779f529",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "target-reconcile-docs-2f6daf8c4a15",
-      "summary": "Merge the actual accepted target into the same task branch; preserve original identity/checkpoints and reviewed residual material. Earlier readiness remains historical; fresh full proof is required.",
-      "input_digest": "sha256:7f8bb5a3d2835837c807e4b106f23451af1e6da2cdc21a085c29f4b75db2aa0f",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "rebase-docs-v01381-4ccc4ed2196e",
-      "summary": "Rebase the sole authored documentation and fixture commit onto released v0.138.1 under the same task and original journal. Preserve the original checkpoint entries; bind the reviewed residual and native projections to a new material checkpoint. Prior readiness is historical; fresh full exact-candidate proof is required.",
-      "input_digest": "sha256:f710613f102f56f8c16d3e38991aa3f463c898c279075020876ef33413163019",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
+        "/private/tmp/decapod-cloud-agent-init.json",
+        "/private/tmp/decapod-session-finalization-manifest.json"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M74ZXHYXJP978B091Q3MWRTP": {
+    "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "src/decapod/core/auth.rs",
+        "src/decapod/core/cloud_session.rs",
+        "src/decapod/core/dactyl.rs",
+        "docs/book/src/reference/supabase-validation.md",
+        ".decapod/managed/specs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
+      "id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Repair documentation CI and executable staging fixture\n\nReconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
-      "refined_intent": "Repair documentation CI and executable staging fixture\n\nReconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
+      "raw_intent": "Finalize managed cloud session custody and connector specifications\n\nDelegated source review for cloud connector integration; root owns final dependency pin, commits, proof and publication",
+      "refined_intent": "Finalize managed cloud session custody and connector specifications\n\nDelegated source review for cloud connector integration; root owns final dependency pin, commits, proof and publication",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -571,286 +588,294 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 27,
+        "file_touch_budget": null,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "fix(ci): run agent index contracts and avoid executable fixture races Continue the same task and original journal. Rebase the sole authored commit onto accepted target 4ccc4ed2196e7b1c8f8f614b3d38213c267ae16a; preserve historical checkpoints bound to prior material. A fresh checkpoint and full exact-candidate readiness are required.",
+      "intent": "Complete the AI to Decapod to Dactyl to Supabase flow with project local/cloud only. Integrate preserved parent source changes onto accepted v0.138.2 using hunks; preserve accepted journal, Laya and docs behavior. Dactyl owns connector discovery and Auth/native RPC transport. Decapod owns human browser/session custody and carries the user token. Ordinary runtime access uses Supabase UUID, assigned paid seat and tenant/project isolation; local RBAC is separate privileged policy. Reconcile Cargo and source against the final immutable reviewed Dactyl API; update authored specs, checkpoint every candidate, and run full independent decapod validate before creating the PR.",
       "phases": [],
       "proof_hooks": [
-        "decapod govern artifacts verify-checkpoints --base-branch 4ccc4ed2196e7b1c8f8f614b3d38213c267ae16a --head-ref HEAD --target-base master --format json",
-        "decapod workspace publish"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The accepted architecture already separates candidate source, accepted executor, canonical historical proof and current publication authority. This repair changes documentation discovery, required test inputs and test-only descriptor ownership; it adds no runtime component or control-plane path. Preserve the complete accepted historical-completion and Laya architecture.",
-          "reviewed_code_fingerprint": "f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff",
-          "spec_material_hash": "016135af30289e8b09270254bad9e78a180be5f43cbf3be8450c29009dea45e4"
+          "reason": "Reconciled onto accepted v0.138.2 preserving new task-journal, Laya and docs sections. Describes AI/system Decapod boundary, Dactyl connector/Auth/native RPC, private session custody and separate ordinary seat/tenant authorization. Development Git pin is not registry release or hosted proof.",
+          "reviewed_code_fingerprint": "f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770",
+          "spec_material_hash": "59b7c9dc22177204224c61b820a0624f7c89ed2e90718cc6739af2ff75677d26"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The nine agent document names agree with the existing canonical documentation table. No public CLI, RPC, historical SHA lookup, custody or runtime protocol changes. The real libtest inventory still requires immediate exit-126 failure with captured diagnostics and no retry. Preserve all v0.138.1 accepted interfaces.",
-          "reviewed_code_fingerprint": "f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff",
-          "spec_material_hash": "c8d99624cba5965b01bd152ae3ce05edd407362ed99eec11a334e39398933247"
+          "reason": "Reviewed actual default-origin, profile discovery, bearer/context placement, private managed-session/provider-token custody and preserved explicit Neon compatibility. Project selection is local/cloud; companion account/paid-seat readiness remains separate. Full exact-candidate proof is pending.",
+          "reviewed_code_fingerprint": "f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770",
+          "spec_material_hash": "a678bedb8be34ef39cb205784d965be1c7676197780f46f112038f56aa999411"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The fixture copies its executable in a waited child process, preventing inherited writable descriptors without changing production execution or retry policy. Existing authorization, frozen candidate, accepted-executor and historical-proof trust boundaries remain intact. The source-inventory review is not carrier approval or execution evidence; independent diagnostic findings remain explicit.",
-          "reviewed_code_fingerprint": "f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff",
-          "spec_material_hash": "f3b3a9a0dcdfdfc0ce9c9f5fb251339e496d828291c10194d0aa549827f8dd73"
+          "reason": "Reviewed bounded no-follow private reads, private atomic durable writes, supplied-token precedence, one-time request no-replay, shared-service refresh lock and sign-in token versus typed SCM separation. Existing privileged RBAC, registry dependency checks and complete validation contract remain unchanged.",
+          "reviewed_code_fingerprint": "f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770",
+          "spec_material_hash": "9026c99daa134605b88b0224d971896e36920d6cef3304f3ada14042eb77cfb2"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "fix(ci): run agent index contracts and avoid executable fixture races",
+      "stop_conditions": [
+        "Stop on unsupported controller contract or explicit access/authority denial; preserve exact blocker. No toolchain update until root confirms authorization."
+      ],
+      "title": "Deliver Dactyl-managed cloud connectors and private Supabase session custody",
       "todo_ids": [
-        "bugs_01m74zx5yv2f50dq"
+        "cicd_01m76ertkgpwa781"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794432593Z"
+      "updated_at": "1794441315Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Read-only diagnostics do not waive native authoring or publication gates",
-        "Read-only gatekeeper findings do not establish readiness; actual custody and decision gates remain enforced",
-        "Reviewed residual patch and CLI-generated governance only; draft review, no full-readiness claim",
-        "Same task and journal; accepted target merged without remote history rewrite; full readiness pending",
-        "Same task and whole original journal; actual user-requested rebase onto captured accepted target; old proof remains historical; full readiness pending"
+        "Existing delegated task and actor preserved; no task-type workaround for issue1629",
+        "No builds/tests, commits, publication, controller updates, dependency pin changes or parent governance edits",
+        "No manual builds/tests, controller install/update, fabricated proof, merge/release/deploy",
+        "Source hunks preserve accepted c5de35a task-journal, Laya and documentation; unchanged registry-only/deny/Nix/Bazel checks remain authoritative"
       ],
-      "artifact_hash": "sha256:dace817a8a25128b97bdee07490aa962f6eb5caa78216a5ba17de3b029c12b20",
+      "artifact_hash": "sha256:33aad912749b65766653dcadf1dc5de3379a83232bbc02701f7d62d523d2b142",
       "checks": [
         {
-          "name": "full-workbranch-validation",
+          "name": "builds_tests",
           "status": "unavailable"
         },
         {
-          "name": "git-diff-whitespace",
+          "name": "formatting",
           "status": "passed"
         },
         {
-          "name": "native-gatekeeper",
-          "status": "failed"
+          "name": "patch_applicability",
+          "status": "passed"
         },
         {
-          "name": "reviewed-residual-material",
+          "name": "patch_reconciliation",
+          "status": "passed"
+        },
+        {
+          "name": "source_formatting",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "completion_claim": "Source review patch is ready; runtime and full readiness remain unproven pending parent validation",
+      "current_phase": "exact-candidate-checkpoint",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
+            "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
+            "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M74ZXHZTQ2RYWRZ6QFWV44EV",
+            "detail": "trajectory:branch_01M76ESS9PZYKYZNS31XW9WGRX",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
+            "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M74ZXHZTQ2RYWRZ6QFWV44EV",
+            "detail": "trajectory:branch_01M76ESS9PZYKYZNS31XW9WGRX",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
+            "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M74ZXHZTQ2RYWRZ6QFWV44EV",
+            "detail": "trajectory:branch_01M76ESS9PZYKYZNS31XW9WGRX",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
+            "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M74ZXHZTQ2RYWRZ6QFWV44EV",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M74ZXHZTQ2RYWRZ6QFWV44EV",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M74ZXHZTQ2RYWRZ6QFWV44EV",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M74ZXHZTQ2RYWRZ6QFWV44EV": {
+          "branch_01M76ESS9PZYKYZNS31XW9WGRX": {
             "evidence_only": true,
-            "id": "branch_01M74ZXHZTQ2RYWRZ6QFWV44EV",
-            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
+            "id": "branch_01M76ESS9PZYKYZNS31XW9WGRX",
+            "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
             "steps": [
               {
-                "action": "validation",
-                "command": "git apply reviewed patch",
+                "action": "parent-integration",
+                "command": "rustfmt --edition 2024 delegated source paths",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Actual hosted session, claim and admitted workspace; source history: already_proven. No retrospective proof. Source checks remain unrun at this checkpoint; a later CI-local validation cannot establish complete workbranch readiness."
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "tests/unit/core/auth_tests.rs",
+                  "docs/book/src/reference/supabase-validation.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "/private/tmp/decapod-session-finalization-manifest.json"
                 ],
                 "proof_refs": [
-                  "git-diff-whitespace",
-                  "full-workbranch-validation"
+                  "formatting",
+                  "patch_applicability",
+                  "builds_tests"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "docs/book/src/reference/supabase-validation.md",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Parent retains exact dependency and controller publication authority; coordinated account/backend policy proofs remain separate"
+                ]
               },
               {
-                "action": "validation",
+                "action": "accepted-target-integration",
                 "custody_event_id": "event:5",
-                "observations": [
-                  "Native staged-candidate gatekeeper exit 1; sanitized actual findings retained in preparation result. User authorized draft workbranch iteration, not merge or full-readiness claims."
-                ],
-                "proof_refs": [
-                  "native-gatekeeper"
-                ],
+                "observations": [],
+                "proof_refs": [],
                 "scope": [
-                  "docs",
-                  "root"
+                  ".decapod/managed/specs",
+                  "docs/book/src/reference/supabase-validation.md",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs"
                 ],
                 "sequence": 5,
-                "validation_findings": []
+                "validation_findings": [
+                  "Final Dactyl Git pin is pending root validation/publication handoff"
+                ]
               },
               {
-                "action": "validation",
-                "command": "git merge --no-commit --no-ff -X ours 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd",
+                "action": "exact-candidate-checkpoint",
+                "command": "cargo update -p dactyl-db; exact a85607e8a8cbfce10cee1daca249efd58f8d58f3",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Original checkpoint history remains bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d; real merge parents will be 230f331115dfc9fd60ddd4a24e965b7fb8d97f14 and 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd. Authored residual tree 4616c82373a7e1ce4e042ffba79f27022b76c09f; source-review declaration does not approve controller execution."
+                  "tests/release_dependency_policy.rs",
+                  "flake.nix",
+                  ".config/build/decapod.MODULE.bazel",
+                  ".config/deny.toml",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "src/decapod/core/propodus.rs",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml",
+                  "/private/tmp/decapod-cloud-agent-init.json",
+                  "/private/tmp/decapod-session-finalization-manifest.json"
                 ],
                 "proof_refs": [
-                  "reviewed-residual-material",
-                  "full-workbranch-validation"
+                  "source_formatting",
+                  "patch_reconciliation"
                 ],
                 "scope": [
+                  ".config/deny.toml",
+                  ".decapod/managed/specs",
+                  "Cargo.lock",
+                  "Cargo.toml",
                   "docs",
-                  "root"
+                  "docs/book/src/reference/supabase-validation.md",
+                  "src/decapod",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "tests"
                 ],
                 "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Actual gatekeeper output retained encrypted; findings remain findings. Fresh full readiness has not yet run."
-                ],
-                "proof_refs": [
-                  "native-gatekeeper"
-                ],
-                "scope": [
-                  "docs",
-                  "root"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "command": "git rebase --onto 4ccc4ed2196e7b1c8f8f614b3d38213c267ae16a 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd agent/chatgpt-ci-source-docs/bugs_01m74zx5yv2f50dq-docs",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "The original tip a2699c73fb566fcceb788694358800cb9c16ef00 and its complete checkpoints are retained. Actual sole replay 230f331115dfc9fd60ddd4a24e965b7fb8d97f14 now has accepted parent 4ccc4ed2196e7b1c8f8f614b3d38213c267ae16a. Reviewed residual tree fee49cb4904f7d58adaf28f0ea7e6b485949abd8. A new native material checkpoint must precede the final amend and exact-old-tip lease; source review does not approve controller execution."
-                ],
-                "proof_refs": [
-                  "reviewed-residual-material",
-                  "full-workbranch-validation"
-                ],
-                "scope": [
-                  "docs",
-                  "root"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "Actual gatekeeper output retained encrypted; findings remain findings. Fresh full readiness has not yet run."
-                ],
-                "proof_refs": [
-                  "native-gatekeeper"
-                ],
-                "scope": [
-                  "docs",
-                  "root"
-                ],
-                "sequence": 9,
-                "validation_findings": []
+                "validation_findings": [
+                  "Final root handoff resolves development source pin to pushed Dactyl a85607e8; upstream full proof is still running and registry connector release is not published"
+                ]
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "decapod rpc --op specs.refresh",
-        "git apply reviewed patch",
-        "git merge --no-commit --no-ff -X ours 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd",
-        "git rebase --onto 4ccc4ed2196e7b1c8f8f614b3d38213c267ae16a 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd agent/chatgpt-ci-source-docs/bugs_01m74zx5yv2f50dq-docs"
+        "cargo fmt --all -- --check",
+        "cargo update -p dactyl-db; exact a85607e8a8cbfce10cee1daca249efd58f8d58f3",
+        "git apply --check /private/tmp/decapod-session-finalization.patch in parent worktree",
+        "git diff --check",
+        "rustfmt --edition 2024 delegated source paths"
       ],
       "destination": "pull request",
       "evidence": [
-        "Actual gatekeeper output retained encrypted; findings remain findings. Fresh full readiness has not yet run.",
-        "Actual hosted session, claim and admitted workspace; source history: already_proven. No retrospective proof. Source checks remain unrun at this checkpoint; a later CI-local validation cannot establish complete workbranch readiness.",
-        "Native staged-candidate gatekeeper exit 1; sanitized actual findings retained in preparation result. User authorized draft workbranch iteration, not merge or full-readiness claims.",
-        "Original checkpoint history remains bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d; real merge parents will be 230f331115dfc9fd60ddd4a24e965b7fb8d97f14 and 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd. Authored residual tree 4616c82373a7e1ce4e042ffba79f27022b76c09f; source-review declaration does not approve controller execution.",
-        "The original tip a2699c73fb566fcceb788694358800cb9c16ef00 and its complete checkpoints are retained. Actual sole replay 230f331115dfc9fd60ddd4a24e965b7fb8d97f14 now has accepted parent 4ccc4ed2196e7b1c8f8f614b3d38213c267ae16a. Reviewed residual tree fee49cb4904f7d58adaf28f0ea7e6b485949abd8. A new native material checkpoint must precede the final amend and exact-old-tip lease; source review does not approve controller execution."
+        "/private/tmp/decapod-cloud-agent-init.json",
+        "/private/tmp/decapod-session-finalization-manifest.json"
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
+      "inspected_files": [
+        ".config/build/decapod.MODULE.bazel",
+        ".config/deny.toml",
+        "flake.nix",
+        "src/decapod/core/auth.rs",
+        "src/decapod/core/cloud_session.rs",
+        "tests/release_dependency_policy.rs"
+      ],
+      "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
       "modified_files": [
-        ".decapod/managed/specs/VALIDATION.md"
+        ".decapod/config.toml",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        "Cargo.lock",
+        "Cargo.toml",
+        "docs/book/src/reference/supabase-validation.md",
+        "src/decapod/cli.rs",
+        "src/decapod/core/auth.rs",
+        "src/decapod/core/cloud_session.rs",
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/core/propodus.rs",
+        "tests/unit/core/auth_tests.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Apply source hunks to accepted c5de35a, reconcile specs, then checkpoint final dependency candidate and measure full validation",
+        "Parent integrates applicable patch, checkpoints complete candidate and runs decapod validate",
+        "Refine plan and declare falsifiable checks",
+        "Stage material, checkpoint, commit candidate, ensure binding, then plain full decapod validate with independent installed0.137.2"
       ],
       "repo_scope": [
+        ".config/deny.toml",
+        ".decapod/managed/specs",
+        "Cargo.lock",
+        "Cargo.toml",
         "docs",
-        "root"
+        "docs/book/src/reference/supabase-validation.md",
+        "src/decapod",
+        "src/decapod/core/auth.rs",
+        "src/decapod/core/cloud_session.rs",
+        "src/decapod/core/dactyl.rs",
+        "tests"
       ],
-      "run_id": "branch_01M74ZXHZTQ2RYWRZ6QFWV44EV",
+      "run_id": "branch_01M76ESS9PZYKYZNS31XW9WGRX",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m74zx5yv2f50dq",
+      "task_id": "cicd_01m76ertkgpwa781",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Final Dactyl Git pin is pending root validation/publication handoff",
+        "Final root handoff resolves development source pin to pushed Dactyl a85607e8; upstream full proof is still running and registry connector release is not published",
+        "Parent retains exact dependency and controller publication authority; coordinated account/backend policy proofs remain separate"
+      ]
     }
   },
   "legacy_digests": {

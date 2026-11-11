@@ -21,7 +21,35 @@ pub use dactyl_db::{OperationResult, WriteResult};
 
 const DEFAULT_LOCK_TIMEOUT: Duration = Duration::from_millis(250);
 pub const SQLITE_LIBRARY_ENV: &str = "DACTYL_SQLITE_LIBRARY";
+pub const SUPABASE_PUBLISHABLE_KEY_ENV: &str = "DACTYL_CLOUD_PUBLISHABLE_KEY";
+pub const SUPABASE_API_SCHEMA_ENV: &str = "DECAPOD_SUPABASE_API_SCHEMA";
 const HOST_RUNTIME_CONFIG_FILE: &str = "runtime.toml";
+
+/// Ask Dactyl to resolve the native RPC profile for the selected cloud origin.
+/// Dactyl owns public profile discovery and machine runtime overrides. The
+/// current user bearer remains separate and never enters this configuration.
+#[cfg(feature = "supabase-cloud")]
+pub fn supabase_rpc_config(
+    project_origin: &str,
+) -> Result<dactyl_db::SupabaseRpcConfig, DecapodError> {
+    Ok(dactyl_db::CloudConnector::from_runtime(project_origin)?
+        .rpc_config()
+        .clone())
+}
+
+/// Pure validation seam used by local contract tests. Runtime callers use the
+/// Dactyl connector's profile discovery or an explicit machine-local override.
+#[cfg(feature = "supabase-cloud")]
+pub fn supabase_rpc_config_with_settings(
+    project_origin: &str,
+    publishable_key: &str,
+    schema: &str,
+) -> Result<dactyl_db::SupabaseRpcConfig, DecapodError> {
+    let config =
+        dactyl_db::SupabaseRpcConfig::v1(project_origin, publishable_key).with_schema(schema);
+    dactyl_db::DatastoreRoute::supabase_rpc(config.clone(), None).validate()?;
+    Ok(config)
+}
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 struct HostRuntimeConfig {
@@ -314,7 +342,41 @@ impl DactylBridge {
         context: &StorageContext,
         access_mode: AccessMode,
     ) -> Result<Self, DecapodError> {
+        // Reject unsupported context versions before loading provider
+        // configuration so malformed serialized context remains the primary
+        // and stable diagnostic.
         context.validate()?;
+        #[cfg(feature = "supabase-cloud")]
+        if let (CloudDatastore::Supabase, BackendRoute::Cloud { uri, .. }) =
+            (context.cloud_datastore(), context.route())
+        {
+            let route = dactyl_db::DatastoreRoute::for_backend(
+                dactyl_db::Backend::Cloud,
+                uri,
+                context.bearer().map(str::to_owned),
+            )?;
+            let wire_context = dactyl_db::StorageContext::new(
+                context.version(),
+                serde_json::to_value(context).map_err(|error| {
+                    DecapodError::Config(format!("failed to encode storage context: {error}"))
+                })?,
+            )?;
+            return Self::open_route(route, access_mode, Some(wire_context), None);
+        }
+        Self::from_storage_context_with_rpc_config(context, access_mode, None)
+    }
+
+    /// Open a route with an explicit native RPC configuration. This additive
+    /// seam lets callers coordinate a reviewed Dactyl config without altering
+    /// the versioned storage context or its application-owned fields.
+    pub fn from_storage_context_with_rpc_config(
+        context: &StorageContext,
+        access_mode: AccessMode,
+        rpc_config: Option<dactyl_db::SupabaseRpcConfig>,
+    ) -> Result<Self, DecapodError> {
+        context.validate()?;
+        #[cfg(not(feature = "supabase-cloud"))]
+        let _ = rpc_config;
         match context.route() {
             BackendRoute::Local { path } => Self::open_local(path, access_mode),
             BackendRoute::Cloud { uri, .. } => {
@@ -332,7 +394,18 @@ impl DactylBridge {
                     CloudDatastore::Supabase => {
                         #[cfg(feature = "supabase-cloud")]
                         {
-                            dactyl_db::DatastoreRoute::supabase(uri, Some(bearer.to_string()))
+                            let rpc_config = rpc_config.ok_or_else(|| {
+                                DecapodError::Config(
+                                    "Supabase RPC configuration is required for this project origin".to_string(),
+                                )
+                            })?;
+                            if rpc_config.project_origin() != uri {
+                                return Err(DecapodError::Config(
+                                    "Supabase RPC project origin must match the selected cloud route".to_string(),
+                                ));
+                            }
+                            dactyl_db::CloudConnector::with_config(rpc_config)?
+                                .route(Some(bearer.to_string()))
                         }
                         #[cfg(not(feature = "supabase-cloud"))]
                         {

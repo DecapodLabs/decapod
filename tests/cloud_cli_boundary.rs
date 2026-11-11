@@ -70,7 +70,7 @@ impl CloudTodoStoreFactory for MockFactory {
         config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, DecapodError> {
-        assert_eq!(config.provider, "vercel");
+        assert_eq!(config.provider, "supabase");
         *self.builds.lock().expect("builds lock") += 1;
         self.identities
             .lock()

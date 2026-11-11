@@ -16,6 +16,29 @@ and evidence of what was actually checked. Its product outcome is work that
 people can inspect, agents can continue, and the project can accept through
 explicit governance gates.
 
+## Logical cloud connector intent
+
+The AI/system interface selects local or cloud and delegates backend access to
+Dactyl. Cloud means managed Supabase PostgreSQL/Auth/RPC supplied by Propodus
+infrastructure-as-code. No per-repository hosted URL, database credential or
+code-host-role map is required for the default cloud connector. The current
+human session is passed through Dactyl; missing sessions authenticate along the
+same path with private, resumable browser/PKCE custody. A selected cloud failure
+must remain visible and must not initialize local replacement task state.
+
+Ordinary access belongs to a canonical Supabase user with an active assigned
+paid seat in the correct tenant/project. Linked SCM identity is verified by the
+backend when needed and does not mirror repository/PR/merge permissions. Local
+RBAC continues to govern separately scoped exceptional actions. Login alone is
+not paid-seat readiness: the companion account registration/status, admin portal
+and billing work must establish that policy independently. This connector slice
+adds no hosted OAuth/payment/deployment claim and preserves the explicit legacy
+Neon compatibility route. The source candidate temporarily pins the reviewed
+Dactyl Git commit for coordinated development. Normal adoption remains blocked
+until those APIs are published and the registry dependency, Cargo lock and
+packaging inputs are reconciled. The existing registry-only release policy is
+preserved; a development source pin cannot establish registry readiness.
+
 Nix packaging proof must exercise the built Decapod binary independently of
 checkout-local governance state. Shared CI checkout permissions must not require
 loosening runtime storage security to smoke-check a package.
@@ -287,8 +310,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

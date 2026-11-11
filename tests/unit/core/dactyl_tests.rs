@@ -202,7 +202,7 @@ fn cloud_route_requires_explicit_bearer_and_keeps_repository_scope() {
     };
     let route = BackendRoute::Cloud {
         repository: identity,
-        uri: "https://example.invalid/api/v1/store".to_string(),
+        uri: "https://example.invalid".to_string(),
     };
 
     let missing = match DactylBridge::from_backend_route(&route, AccessMode::ReadWrite, None) {
@@ -211,20 +211,34 @@ fn cloud_route_requires_explicit_bearer_and_keeps_repository_scope() {
     };
     assert!(matches!(missing, DecapodError::CloudAuth(_)));
 
-    let result = DactylBridge::from_backend_route(
-        &route,
-        AccessMode::ReadOnly,
-        Some("opaque-session-token"),
-    );
     #[cfg(feature = "supabase-cloud")]
-    assert_eq!(
-        result
-            .expect("cloud route construction does not perform I/O")
+    {
+        let context = StorageContext::from_route(route.clone(), Some("opaque-session-token"))
+            .unwrap()
+            .with_cloud_datastore(crate::core::backend::CloudDatastore::Supabase)
+            .unwrap();
+        let rpc =
+            dactyl_db::SupabaseRpcConfig::v1("https://example.invalid", "sb_publishable_fixture");
+        assert_eq!(
+            DactylBridge::from_storage_context_with_rpc_config(
+                &context,
+                AccessMode::ReadOnly,
+                Some(rpc),
+            )
+            .expect("explicit cloud route construction does not perform I/O")
             .access_mode(),
-        AccessMode::ReadOnly
-    );
+            AccessMode::ReadOnly
+        );
+    }
     #[cfg(not(feature = "supabase-cloud"))]
-    assert!(matches!(result, Err(DecapodError::Config(_))));
+    assert!(matches!(
+        DactylBridge::from_backend_route(
+            &route,
+            AccessMode::ReadOnly,
+            Some("opaque-session-token"),
+        ),
+        Err(DecapodError::Config(_))
+    ));
 }
 
 #[test]
@@ -241,21 +255,14 @@ fn storage_context_binds_the_opaque_bearer_without_serializing_it() {
     };
     let context =
         StorageContext::from_route(route, Some("opaque-session-token")).expect("remote context");
-    #[cfg(not(feature = "supabase-cloud"))]
     let context = context
         .with_cloud_datastore(crate::core::backend::CloudDatastore::Neon)
-        .expect("explicit Neon remains available without the Supabase feature");
+        .expect("explicit Neon route is available");
     let bridge = DactylBridge::from_storage_context(&context, AccessMode::ReadOnly)
         .expect("constructing cloud route does not perform I/O");
     assert_eq!(context.version(), StorageContext::CURRENT_VERSION);
     assert_eq!(context.bearer(), Some("opaque-session-token"));
     assert!(bridge.access_mode() == AccessMode::ReadOnly);
-    #[cfg(feature = "supabase-cloud")]
-    assert_eq!(
-        bridge.connection.datastore(),
-        dactyl_db::Datastore::Supabase
-    );
-    #[cfg(not(feature = "supabase-cloud"))]
     assert_eq!(bridge.connection.datastore(), dactyl_db::Datastore::Neon);
     assert_eq!(
         bridge.connection.route().route(),

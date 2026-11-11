@@ -2,24 +2,40 @@
 
 ## Agent delegation and cloud authorization interface
 
-Decapod is invoked by each contributor's coding agent in the repository.
-Local `DECAPOD_AGENT_ID` labels and `[governance.rbac]` describe cooperative
-identity and exceptional local grants only. Cloud `todo` calls use a
-managed-Auth bearer, canonical repository binding, and backend-owned checks.
-Client role labels, task-assignee strings and `actor_roles` cannot substitute
-for that bearer or select a cloud privilege. The same agent command interface
-serves owners, maintainers, contributors and contractors; no contractor-specific
-human command is added.
+Agents use the same Decapod CLI/RPC interface for local and cloud work. Ordinary
+project configuration selects only `repo.backend = "local" | "cloud"`.
+`CloudRuntimeConfig` uses Dactyl's default origin and side-effect-free origin
+validation; inspecting configuration does not contact managed Auth or discover a
+profile. Dactyl owns default connector/profile selection and native Supabase RPC.
+Machine-only `DACTYL_CLOUD_ORIGIN` and `DACTYL_CLOUD_PUBLISHABLE_KEY` overrides
+support explicit private/test deployments; credentials are never project config.
 
-Propodus alone resolves the effective `read`, `write`, `maintainer`, or
-`owner` tier and enforces expiring direct user grants (including explicit
-revocation over inherited group/team/org grants). Cloud claim/release/complete
-must bind the acting authenticated principal independently from the
-caller-supplied agent label. The protected two-principal service proof checks
-both ordinary lifecycle concurrency and label impersonation. HTTP fixtures
-show client composition only; local mode never falls back from a failed cloud
-authorization. Merge readiness remains governed by the independently
-configured publication and proof gates.
+`core::cloud_session::ensure` passes authentication calls through Dactyl and
+returns the supplied or privately stored current Supabase user session. Missing
+sessions start or resume the managed browser flow; headless calls print its URL
+and return onboarding pending so the agent can resume. Endpoint-scoped session
+files isolate deployments and the legacy Neon session. Caller-provided session
+credentials take precedence without rewriting private pending state. Rotating
+refresh and one-time exchange requests are not replayed after an unknown result.
+Private records are size-bounded, reject symlinks, and use atomic durable writes.
+
+The native Dactyl route carries the user bearer independently from public
+publishable-key/profile metadata and canonical repository context. Server-side
+Supabase UUID, tenant/project isolation and active assigned paid seat establish
+ordinary runtime access. Local actor labels, GitHub usernames, task-assignee
+strings and `[governance.rbac.actor_roles]` cannot substitute for that bearer,
+select a cloud privilege or reproduce SCM repository/PR/merge roles. Separate
+privileged governance controls remain explicit. Cloud claim/release/complete
+also bind the acting authenticated principal independently from an agent label.
+
+`CloudSessionStore::store_managed_session` persists any optional sign-in
+provider token atomically with the user session and retains it only across an
+explicit refresh; a fresh sign-in without one clears the previous credential.
+`load_provider_token` is separate from ordinary data credentials. A Google
+provider token is not an SCM linking credential and is never automatically sent
+through Dactyl's optional typed SCM account channel. Account setup, paid-seat
+readiness and the org-admin portal are coordinated companion work; successful
+managed login alone does not prove those requirements or hosted readiness.
 
 ## Version reporting
 
@@ -1064,8 +1080,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
