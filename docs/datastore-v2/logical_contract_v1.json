@@ -1,0 +1,2713 @@
+{
+  "schema": "decapod.logical-storage-inventory.v1",
+  "status": "provisional_source_inventory_requires_effective_runtime_and_postgres_catalog_proof",
+  "release": "0.136.4",
+  "pinned_source_sha": "6de3d7a196752a2f869c04fdbeff18be28437926",
+  "inventory_blob_sha": "f409aa80ea5cfa17aa82365b2dab7c69ace15160",
+  "field_policy": "no narrowing or deletion authorized by this inventory",
+  "runtime_scope": {
+    "sqlite": "one_repository_per_file_no_tenant_strings",
+    "postgresql": "server_derived_compact_repository_key",
+    "service_extension": "identity_auth_entitlement_billing_not_local_kernel"
+  },
+  "invariants": [
+    "same stable IDs and logical event bytes across backends",
+    "task revision CAS and lease generation fenced transactionally",
+    "state and event append atomic with idempotent unknown-commit receipts",
+    "event stream sequence unique within repository and stream",
+    "generic event subjects are not forced to refer to tasks",
+    "secondary owners do not grant primary custody",
+    "historical proof and independent human-authored inputs are not disposable caches",
+    "cloud tenant scope derives from authenticated trusted server authority only"
+  ],
+  "ambiguity_notes": [
+    "SQLite TEXT PRIMARY KEY does not universally imply NOT NULL; verify live historical data before tightening",
+    "sessions is decision history locally; Propodus sessions is authentication and must be physically disjoint",
+    "inventory covers 31 exercised fixture tables; request_dedupe is lazily initialized and defined from source",
+    "production cardinalities and per-column value distributions remain unmeasured",
+    "some retired compatibility schemas are migration inputs, not runtime authorities"
+  ],
+  "tables": [
+    {
+      "logical_name": "agent_prompts",
+      "authority": "advisory_configuration",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "context",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "prompt_text",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "priority",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "100"
+        },
+        {
+          "name": "active",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "1"
+        },
+        {
+          "name": "usage_count",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "0"
+        },
+        {
+          "name": "last_shown_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_agent_prompts_context",
+          "columns": [
+            "context"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "agents",
+      "authority": "mixed_operational_and_advisory",
+      "columns": [
+        {
+          "name": "agent_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "trust_level",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'basic'"
+        },
+        {
+          "name": "trust_granted_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "trust_granted_by",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'system'"
+        },
+        {
+          "name": "last_seen",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "status",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'active'"
+        },
+        {
+          "name": "expertise_json",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'[]'"
+        },
+        {
+          "name": "category_claims_json",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'[]'"
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "agent_id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_agents_last_seen",
+          "columns": [
+            "last_seen"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_agents_status",
+          "columns": [
+            "status"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "approvals",
+      "authority": "authoritative_operational",
+      "columns": [
+        {
+          "name": "approval_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "action_fingerprint",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "actor",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "ts",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "scope",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "expires_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "approval_id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_approvals_fingerprint",
+          "columns": [
+            "action_fingerprint"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "archives",
+      "authority": "immutable_artifact_reference",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "path",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "content_hash",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "summary_hash",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "authoring_bindings",
+      "authority": "authoritative_operational",
+      "columns": [
+        {
+          "name": "worktree_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "task_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "agent_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "lease_generation",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "branch",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "repository_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "worktree_id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "categories",
+      "authority": "operational_policy",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "name",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "description",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "keywords",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [
+        [
+          "name"
+        ]
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_categories_name",
+          "columns": [
+            "name"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "claims",
+      "authority": "authoritative_claim_definition",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "subject",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "kind",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "provenance",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "cron_jobs",
+      "authority": "operational_automation_configuration",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "name",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "description",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "schedule",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "command",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "status",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'active'"
+        },
+        {
+          "name": "last_run",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "next_run",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "tags",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "dir_path",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "scope",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "decisions",
+      "authority": "decision_history",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "session_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "question_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "tree_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "question_text",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "chosen_value",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "chosen_label",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "rationale",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "user_note",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "federation_node_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "actor",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'decapod'"
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "from": [
+            "session_id"
+          ],
+          "ref_table": "sessions",
+          "ref_columns": [
+            "id"
+          ],
+          "on_delete": "no_action"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_decisions_session",
+          "columns": [
+            "session_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_decisions_tree",
+          "columns": [
+            "tree_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "events",
+      "authority": "immutable_history",
+      "columns": [
+        {
+          "name": "event_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "ts",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "seq",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "stream",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "subject_kind",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "subject_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "event_type",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "payload",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "actor",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'decapod'"
+        }
+      ],
+      "primary_key": [
+        "event_id"
+      ],
+      "unique": [
+        [
+          "stream",
+          "seq"
+        ]
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_events_stream_seq_unique",
+          "columns": [
+            "stream",
+            "seq"
+          ],
+          "unique": true
+        },
+        {
+          "name": "idx_events_subject",
+          "columns": [
+            "subject_kind",
+            "subject_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "feedback",
+      "authority": "advisory_user_input",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "source",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "text",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "links",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "health_cache",
+      "authority": "derived",
+      "columns": [
+        {
+          "name": "claim_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "computed_state",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "reason",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "claim_id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "from": [
+            "claim_id"
+          ],
+          "ref_table": "claims",
+          "ref_columns": [
+            "id"
+          ],
+          "on_delete": "no_action"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "logical_name": "knowledge",
+      "authority": "advisory_knowledge",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "title",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "content",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "provenance",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "claim_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "tags",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "dir_path",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "scope",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "status",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'active'"
+        },
+        {
+          "name": "merge_key",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "supersedes_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "ttl_policy",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'persistent'"
+        },
+        {
+          "name": "expires_ts",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_knowledge_active_merge_scope",
+          "columns": [
+            "status",
+            "merge_key",
+            "scope"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_knowledge_created",
+          "columns": [
+            "created_at"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_knowledge_merge_key",
+          "columns": [
+            "merge_key"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_knowledge_status",
+          "columns": [
+            "status"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "legacy_event_imports",
+      "authority": "authoritative_compatibility_receipt",
+      "columns": [
+        {
+          "name": "filename",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "content_hash",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "record_count",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "imported_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "filename"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "meta",
+      "authority": "mixed_by_namespace",
+      "columns": [
+        {
+          "name": "namespace",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "key",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 2,
+          "default_sql": null
+        },
+        {
+          "name": "value",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "namespace",
+        "key"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "node_edges",
+      "authority": "advisory_knowledge_relationship",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "source_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "target_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "edge_type",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "metadata",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'{}'"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "actor",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'decapod'"
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_node_edges_source",
+          "columns": [
+            "source_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_node_edges_target",
+          "columns": [
+            "target_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_node_edges_type",
+          "columns": [
+            "edge_type"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "nodes",
+      "authority": "advisory_knowledge",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "node_type",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "status",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'active'"
+        },
+        {
+          "name": "priority",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'notable'"
+        },
+        {
+          "name": "confidence",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'agent_inferred'"
+        },
+        {
+          "name": "title",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "body",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "scope",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'repo'"
+        },
+        {
+          "name": "tags",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "effective_from",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "effective_to",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "dir_path",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "actor",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'decapod'"
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_fed_nodes_priority",
+          "columns": [
+            "priority"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_fed_nodes_scope",
+          "columns": [
+            "scope"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_fed_nodes_status",
+          "columns": [
+            "status"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_fed_nodes_type",
+          "columns": [
+            "node_type"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_fed_nodes_updated",
+          "columns": [
+            "updated_at"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "obligation_edges",
+      "authority": "authoritative_operational",
+      "columns": [
+        {
+          "name": "edge_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "from_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "to_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "kind",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'depends_on'"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "edge_id"
+      ],
+      "unique": [
+        [
+          "from_id",
+          "to_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "from": [
+            "to_id"
+          ],
+          "ref_table": "obligations",
+          "ref_columns": [
+            "id"
+          ],
+          "on_delete": "cascade"
+        },
+        {
+          "from": [
+            "from_id"
+          ],
+          "ref_table": "obligations",
+          "ref_columns": [
+            "id"
+          ],
+          "on_delete": "cascade"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "logical_name": "obligations",
+      "authority": "authoritative_operational",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "intent_ref",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "risk_tier",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "required_proofs",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "state_commit_root",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "status",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'open'"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "metadata",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "originals_index",
+      "authority": "derived_reference_index",
+      "columns": [
+        {
+          "name": "content_hash",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "event_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "ts",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "actor",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "kind",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "byte_size",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "session_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "content_hash"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_lcm_originals_kind",
+          "columns": [
+            "kind"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_lcm_originals_ts",
+          "columns": [
+            "ts"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "preferences",
+      "authority": "advisory_user_input",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "category",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "key",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "value",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "context",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "source",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "confidence",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "100"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "last_accessed_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "access_count",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "0"
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [
+        [
+          "category",
+          "key"
+        ]
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_preferences_access",
+          "columns": [
+            "last_accessed_at"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_preferences_category",
+          "columns": [
+            "category"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_preferences_key",
+          "columns": [
+            "key"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "proof_events",
+      "authority": "immutable_history",
+      "columns": [
+        {
+          "name": "event_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "claim_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "ts",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "surface",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "result",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "sla_seconds",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "event_id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "from": [
+            "claim_id"
+          ],
+          "ref_table": "claims",
+          "ref_columns": [
+            "id"
+          ],
+          "on_delete": "no_action"
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "logical_name": "reflexes",
+      "authority": "operational_automation_configuration",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "name",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "description",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "trigger_type",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "trigger_config",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "'{}'"
+        },
+        {
+          "name": "action_type",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "action_config",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "status",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'active'"
+        },
+        {
+          "name": "tags",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "dir_path",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "scope",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "request_dedupe",
+      "authority": "authoritative_operation_outcome",
+      "bootstrap": "lazy",
+      "columns": [
+        {
+          "name": "request_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "payload_hash",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "status",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "commit_marker",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "result_envelope",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "retry_after_ms_hint",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "request_id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_request_dedupe_created_at",
+          "columns": [
+            "created_at"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "risk_zones",
+      "authority": "authoritative_policy",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "zone_name",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "description",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "required_trust_level",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'basic'"
+        },
+        {
+          "name": "requires_approval",
+          "sqlite_type": "BOOLEAN",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "0"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [
+        [
+          "zone_name"
+        ]
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_risk_zones_name",
+          "columns": [
+            "zone_name"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "sessions",
+      "authority": "decision_history",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "tree_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "title",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "description",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "status",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'active'"
+        },
+        {
+          "name": "federation_node_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "completed_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "dir_path",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "scope",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'repo'"
+        },
+        {
+          "name": "actor",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'decapod'"
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_sessions_status",
+          "columns": [
+            "status"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_sessions_tree",
+          "columns": [
+            "tree_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "summaries",
+      "authority": "derived_advisory",
+      "columns": [
+        {
+          "name": "summary_hash",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "ts",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "scope",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "original_hashes",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "summary_text",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "token_estimate",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "summary_hash"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_lcm_summaries_scope",
+          "columns": [
+            "scope"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "task_dependencies",
+      "authority": "authoritative_operational",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "task_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "depends_on_task_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [
+        [
+          "task_id",
+          "depends_on_task_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "from": [
+            "depends_on_task_id"
+          ],
+          "ref_table": "tasks",
+          "ref_columns": [
+            "id"
+          ],
+          "on_delete": "cascade"
+        },
+        {
+          "from": [
+            "task_id"
+          ],
+          "ref_table": "tasks",
+          "ref_columns": [
+            "id"
+          ],
+          "on_delete": "cascade"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_task_dependencies_depends_on",
+          "columns": [
+            "depends_on_task_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_task_dependencies_task",
+          "columns": [
+            "task_id"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "task_owners",
+      "authority": "authoritative_operational",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "task_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "agent_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "claimed_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "claim_type",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'primary'"
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [
+        [
+          "task_id",
+          "agent_id"
+        ]
+      ],
+      "foreign_keys": [
+        {
+          "from": [
+            "task_id"
+          ],
+          "ref_table": "tasks",
+          "ref_columns": [
+            "id"
+          ],
+          "on_delete": "cascade"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_task_owners_task",
+          "columns": [
+            "task_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_task_owners_task_agent",
+          "columns": [
+            "task_id",
+            "agent_id"
+          ],
+          "unique": true
+        }
+      ]
+    },
+    {
+      "logical_name": "task_tags",
+      "authority": "derived_compatibility",
+      "columns": [
+        {
+          "name": "task_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "tag",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 2,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "task_id",
+        "tag"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "from": [
+            "task_id"
+          ],
+          "ref_table": "tasks",
+          "ref_columns": [
+            "id"
+          ],
+          "on_delete": "cascade"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_task_tags_tag",
+          "columns": [
+            "tag"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "task_verification",
+      "authority": "historical_binding_and_operational_projection",
+      "columns": [
+        {
+          "name": "todo_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "proof_plan",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'[]'"
+        },
+        {
+          "name": "verification_artifacts",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "last_verified_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "last_verified_status",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "last_verified_notes",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "verification_policy_days",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "90"
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "todo_id"
+      ],
+      "unique": [],
+      "foreign_keys": [
+        {
+          "from": [
+            "todo_id"
+          ],
+          "ref_table": "tasks",
+          "ref_columns": [
+            "id"
+          ],
+          "on_delete": "cascade"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_task_verification_status",
+          "columns": [
+            "last_verified_status"
+          ],
+          "unique": false
+        }
+      ]
+    },
+    {
+      "logical_name": "tasks",
+      "authority": "authoritative_operational",
+      "columns": [
+        {
+          "name": "id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "hash",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "title",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "description",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "tags",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "owner",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "due",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "ref",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "status",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "'open'"
+        },
+        {
+          "name": "created_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "updated_at",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "completed_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "closed_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "dir_path",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "scope",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "parent_task_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "priority",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "'medium'"
+        },
+        {
+          "name": "depends_on",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "blocks",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "category",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "component",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "assigned_to",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "assigned_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "one_shot",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "0"
+        },
+        {
+          "name": "lease_expires_at",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "lease_generation",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "0"
+        },
+        {
+          "name": "lease_lifecycle",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "intent_anchor",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": "''"
+        },
+        {
+          "name": "revision",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "0"
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "name": "idx_tasks_dir",
+          "columns": [
+            "dir_path"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_tasks_hash",
+          "columns": [
+            "hash"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_tasks_scope",
+          "columns": [
+            "scope"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_tasks_status",
+          "columns": [
+            "status"
+          ],
+          "unique": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 #[path = "../datastore_relational_compaction.rs"]
 mod datastore_relational_compaction;
+#[path = "../datastore_contract.rs"]
+mod datastore_contract;
 
 use decapod::core::assets;
 use decapod::core::broker::{self, BrokerEvent, DbBroker};
