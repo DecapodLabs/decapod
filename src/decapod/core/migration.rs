@@ -334,6 +334,7 @@ fn migrate_compact_redundant_relational_indexes(root: &Path) -> Result<(), error
             conn.execute_batch(&format!("DROP INDEX \"{obsolete}\""))?;
         }
         crate::core::storage_compaction::apply(conn)?;
+        crate::core::storage_scope::ensure(&conn, &root.join("data"))?;
         Ok(())
     })();
     match result {

@@ -74,3 +74,20 @@ runtime entities, no proof or custody regression, and measured p50/p95 latency,
 storage bytes per task/event, write amplification, and tenant isolation
 across many repositories. One indexed table is never an adequate proxy for
 governance correctness.
+
+## Local identity context (one row, no hot-row tenant strings)
+
+A repository-local SQLite file now has a single `repository_scope` row with
+a stable repository identity, optional GitHub owner/repository observation,
+an observed OS user and explicit unresolved organization identity. The
+integer singleton key is the rowid; there is no second index. New and
+migrated stores seed the record once. Reinitialization, Git remote changes,
+and repeated migrations do not rewrite this binding.
+
+The observed Git remote cannot prove whether the owner is a person or an
+organization. Local OS identity is likewise observational and cannot
+authorize cloud data access. Hosted Propodus must resolve real principals,
+organization relationships and repository keys from authenticated sessions
+and grants. This design deliberately avoids storing human-readable tenant
+names on every local event/task/proof row while retaining explicit identity
+context for offline production work.

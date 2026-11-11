@@ -2574,6 +2574,7 @@ pub fn initialize_todo_db(root: &Path) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "todo.init", |conn| {
+        crate::core::storage_scope::ensure(conn, root)?;
         ensure_schema(conn)?;
         Ok(())
     })?;
