@@ -530,6 +530,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "target-reconcile-docs-2f6daf8c4a15",
+      "summary": "Merge the actual accepted target into the same task branch; preserve original identity/checkpoints and reviewed residual material. Earlier readiness remains historical; fresh full proof is required.",
+      "input_digest": "sha256:7f8bb5a3d2835837c807e4b106f23451af1e6da2cdc21a085c29f4b75db2aa0f",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -560,53 +568,55 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Recover the reviewed narrow patch, regenerate projections through Decapod, verify actual new checkpoints and push this admitted branch for explicitly authorized draft review. Preserve all proof obligations. Source history: already_proven",
+      "intent": "The recovered documentation-index invariant was outside the required PR recipes, and the real libtest executable fixture could fail with ETXTBSY when parallel test processes inherited a writable descriptor. This PR fixes both failures and preserves the recovered documentation work from #1616. Continue the same task and original checkpoint lineage. Merge accepted target 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd; preserve historical proof bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d. Fresh readiness is required for the actual merge commit.",
       "phases": [],
       "proof_hooks": [
-        "decapod govern artifacts verify-checkpoints --base-branch 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d --head-ref HEAD --target-base master --format json",
-        "decapod validate --format json"
+        "decapod govern artifacts verify-checkpoints --base-branch 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd --head-ref HEAD --target-base master --format json",
+        "decapod workspace publish"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed against accepted v0.137.3 architecture: Reconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics. Runtime ownership and repository-local proof authority remain with the accepted kernel. Detailed current proof obligations are authored in VALIDATION.md.",
-          "reviewed_code_fingerprint": "948d18dbe555060d2bf26342d880bc0083bd44dea2389e781739b24ca0a7a200",
+          "reason": "The seven-path residual changes documentation discovery and test/build inputs only. The accepted v0.137.4 kernel architecture and merged plugin selector remain intact; the child-copy fixture changes test descriptor ownership, not production execution architecture.",
+          "reviewed_code_fingerprint": "eb0dd8d3ad21ec0b19d7438b429207542e1b08225d7ef2d3bf08c4638bf27cd2",
           "spec_material_hash": "ec1f8dc91a706a5715b879fb78f0d06134a8353867ece1b079ca4bc45b3fe9b5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current public CLI, RPC and storage interfaces against this exact manifest. This repair preserves public command and artifact contracts; fixtures and input-selection/test wiring do not change those interfaces.",
-          "reviewed_code_fingerprint": "948d18dbe555060d2bf26342d880bc0083bd44dea2389e781739b24ca0a7a200",
+          "reason": "Agent indexes now agree with the existing canonical documentation table. No public CLI, RPC, custody or runtime interface changes; real executable inventory continues to preserve exit126 diagnostics and no-retry behavior.",
+          "reviewed_code_fingerprint": "eb0dd8d3ad21ec0b19d7438b429207542e1b08225d7ef2d3bf08c4638bf27cd2",
           "spec_material_hash": "3e4cc0b5f8f932afff3e6bff27e846e9e1bc4ffc76b170d2061585118cab3006"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed authority and safety boundaries for this exact scope: no policy, required check, actor role or failed qualification threshold is relaxed. Unexecuted or failed checks remain explicit; model or candidate output cannot authorize itself.",
-          "reviewed_code_fingerprint": "948d18dbe555060d2bf26342d880bc0083bd44dea2389e781739b24ca0a7a200",
+          "reason": "No authorization, proof adapter or production process policy is weakened. The child copy closes the fixture writable descriptor before execution. Existing independent scanner findings remain explicit, and source review is not carrier approval.",
+          "reviewed_code_fingerprint": "eb0dd8d3ad21ec0b19d7438b429207542e1b08225d7ef2d3bf08c4638bf27cd2",
           "spec_material_hash": "f51e675e74a6d2796094893aec00b89a4b2ccffc9d742590b1775e8519a5ccd1"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Repair documentation CI and executable staging fixture",
+      "title": "fix(ci): run agent index contracts and avoid executable fixture races",
       "todo_ids": [
         "bugs_01m74zx5yv2f50dq"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794390315Z"
+      "updated_at": "1794394439Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
+        "Read-only diagnostics do not waive native authoring or publication gates",
         "Read-only gatekeeper findings do not establish readiness; actual custody and decision gates remain enforced",
-        "Reviewed residual patch and CLI-generated governance only; draft review, no full-readiness claim"
+        "Reviewed residual patch and CLI-generated governance only; draft review, no full-readiness claim",
+        "Same task and journal; accepted target merged without remote history rewrite; full readiness pending"
       ],
-      "artifact_hash": "sha256:d0514e5d7a0eedabe2d3faafde44b22254c93f5622bbcd9bc6e664cbe8e57cd4",
+      "artifact_hash": "sha256:ab1f3a8844e70251a7768eb97d3e3a4e307fce6f6b3f22bb36b240e9b05d2ce1",
       "checks": [
         {
           "name": "full-workbranch-validation",
@@ -619,6 +629,10 @@
         {
           "name": "native-gatekeeper",
           "status": "failed"
+        },
+        {
+          "name": "reviewed-residual-material",
+          "status": "passed"
         }
       ],
       "current_phase": "validation",
@@ -649,10 +663,24 @@
             "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M74ZXHZTQ2RYWRZ6QFWV44EV",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M74ZXHZTQ2RYWRZ6QFWV44EV",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M74ZXHZTQ2RYWRZ6QFWV44EV": {
@@ -693,6 +721,41 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "command": "git merge --no-commit --no-ff -X ours 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Original checkpoint history remains bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d; real merge parents will be 230f331115dfc9fd60ddd4a24e965b7fb8d97f14 and 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd. Authored residual tree 4616c82373a7e1ce4e042ffba79f27022b76c09f; source-review declaration does not approve controller execution."
+                ],
+                "proof_refs": [
+                  "reviewed-residual-material",
+                  "full-workbranch-validation"
+                ],
+                "scope": [
+                  "docs",
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Actual gatekeeper output retained encrypted; findings remain findings. Fresh full readiness has not yet run."
+                ],
+                "proof_refs": [
+                  "native-gatekeeper"
+                ],
+                "scope": [
+                  "docs",
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -700,12 +763,15 @@
       },
       "declared_commands": [
         "decapod rpc --op specs.refresh",
-        "git apply reviewed patch"
+        "git apply reviewed patch",
+        "git merge --no-commit --no-ff -X ours 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd"
       ],
       "destination": "pull request",
       "evidence": [
+        "Actual gatekeeper output retained encrypted; findings remain findings. Fresh full readiness has not yet run.",
         "Actual hosted session, claim and admitted workspace; source history: already_proven. No retrospective proof. Source checks remain unrun at this checkpoint; a later CI-local validation cannot establish complete workbranch readiness.",
-        "Native staged-candidate gatekeeper exit 1; sanitized actual findings retained in preparation result. User authorized draft workbranch iteration, not merge or full-readiness claims."
+        "Native staged-candidate gatekeeper exit 1; sanitized actual findings retained in preparation result. User authorized draft workbranch iteration, not merge or full-readiness claims.",
+        "Original checkpoint history remains bound to 91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d; real merge parents will be 230f331115dfc9fd60ddd4a24e965b7fb8d97f14 and 2f6daf8c4a15223e1c7944e9471b0d2ceb4661cd. Authored residual tree 4616c82373a7e1ce4e042ffba79f27022b76c09f; source-review declaration does not approve controller execution."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M74ZXHYXJP978B091Q3MWRTP",

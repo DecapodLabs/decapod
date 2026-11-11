@@ -960,7 +960,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `948d18dbe555060d2bf26342d880bc0083bd44dea2389e781739b24ca0a7a200`
+- Repository signal fingerprint: `eb0dd8d3ad21ec0b19d7438b429207542e1b08225d7ef2d3bf08c4638bf27cd2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1259,6 +1259,13 @@ included in the existing required `selective-plugins` source-CI target;
 their presence is a test obligation, not an executed passing result. They add
 no runtime seeding behavior, concurrency or hosted-storage qualification,
 performance measurement, or publication-readiness claim.
+
+Changes under `tests/plugins/` select that same complete plugin recipe, including
+`//:plugins_aptitude_tests`, even when production source is unchanged.
+`tests/source_ci_profile_policy.rs` checks the test-only selection, required job
+inventory, identical production/test recipes, and preservation of unrelated-path
+and release-only exclusions. A green `not_applicable` result cannot establish
+that the prompt-history regressions executed.
 
 ## Datastore production qualification (v0.137.0 review)
 
