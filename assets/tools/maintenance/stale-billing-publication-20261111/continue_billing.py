@@ -12,6 +12,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+from container_billing import verify_runtime
 
 REPO = "DecapodLabs/decapod"
 BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
@@ -56,6 +57,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--publish-timeout", type=int, default=3600)
     parser.add_argument("--resume-private-dir", type=Path, required=True)
+    parser.add_argument("--container-context", type=Path, required=True)
     args = parser.parse_args()
     manifest = json.loads(args.manifest.read_text())
     resume, repair = manifest["resume"], manifest["repair"]
@@ -313,9 +315,15 @@ def main():
         if (env.get("GITHUB_ACTIONS") != "true" or env.get("BUILDKITE") == "true"
                 or env.get("GITHUB_REPOSITORY") != REPO or env.get("GITHUB_REF") != "refs/heads/" + OPS):
             raise Blocked("requires the exact authorized hosted operations context")
-        if not Path("/.dockerenv").is_file() or os.geteuid() == 0 or os.geteuid() != root.stat().st_uid:
-            raise Blocked("original billing custody requires the real native container and repository owner's UID")
-        result["container_execution"] = dict(actual_dockerenv=True, effective_uid=os.geteuid(), repository_owner_uid=root.stat().st_uid)
+        runtime_state = json.loads(args.container_context.read_text())
+        if Path(runtime_state["root"]).resolve() != root:
+            raise Blocked("original billing custody requires the exact native container source context")
+        try:
+            result["container_execution"] = verify_runtime(runtime_state)
+        except RuntimeError as error:
+            raise Blocked(str(error)) from None
+        if runtime_state["engine"] == "podman" and env.get("CONTAINER_ID") != result["container_execution"]["container_id"]:
+            raise Blocked("native runtime identity is not the exact observed rootless container ID")
         located = shutil.which("decapod", path=env.get("PATH"))
         if not located:
             raise Blocked("official controller unavailable")
@@ -372,7 +380,8 @@ def main():
         baseline = reconciliation(doc("initialize native control plane", "rpc", "--op", "agent.init"), "baseline_reconciliation", True)
         run("discover native capabilities", "decapod", "capabilities", "--format", "json")
         native_container = doc("inspect native container before original task import", "workspace", "status")
-        if native_container.get("workspace", {}).get("container", {}).get("in_container") is not True:
+        if (native_container.get("workspace", {}).get("container", {}).get("in_container") is not True
+                or native_container["workspace"]["container"].get("container_id") != result["container_execution"]["hostname"]):
             raise Blocked("native workspace inspection did not observe a real container before custody import")
         result["container_execution"]["native_before_import"] = native_container["workspace"]["container"]
         imported = doc("import original native billing custody", "todo", "transfer", "import",
