@@ -960,7 +960,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `efd39e6ead63862cdedbea60343f5b43e23a5f8f6515c6e502b7e91d09ac6490`
+- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1239,6 +1239,26 @@ UNIQUE replacement is missing, and stays compact after subsystem
 reinitialization. Any row/hash change, index recreation, partial mutation,
 or incorrect upgrade-success claim falsifies completion. Full independent
 candidate validation and CI remain required before publishing or merging.
+
+## Aptitude initialization preserves existing prompt history
+
+The existing `plugins_aptitude_tests` target in `tests/plugins/aptitude.rs`
+exercises the public `initialize_aptitude_db` entrypoint against disposable
+SQLite stores. Repeated initialization must preserve every persisted prompt
+field, including stable IDs, disabled defaults, user-adjusted priorities,
+usage counters, timestamps, custom prompts and historical duplicate defaults.
+Equality of the complete ordered row snapshots is required; unchanged row count
+alone cannot establish preservation.
+
+When a default is absent, initialization must restore exactly its logical
+`(context, prompt_text)` identity and authored priority, even if a custom prompt
+already occupies that context. The restored row receives a fresh physical ID,
+starts active with zero usage, and remains unchanged on the next initialization.
+Every previously present row must remain identical. The two regressions are
+included in the existing required `selective-plugins` source-CI target;
+their presence is a test obligation, not an executed passing result. They add
+no runtime seeding behavior, concurrency or hosted-storage qualification,
+performance measurement, or publication-readiness claim.
 
 ## Datastore production qualification (v0.137.0 review)
 
