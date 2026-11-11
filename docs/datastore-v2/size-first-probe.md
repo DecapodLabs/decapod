@@ -9,7 +9,7 @@ PR #1605 is insufficient to meet the size-first objective.
 
 ## Reproduction
 
-Run `python3 assets/tools/storage_size_probe.py --rows 24000 --reads 500`.
+Run `cargo run --locked --features build-tools --bin decapod-storage-size-probe -- --rows 24000 --reads 500`.
 All SQLite databases are disposable private temporary files; this command
 opens no live project database. It constructs equivalent logical events in five
 physical forms and compares decoded payloads to the original **byte-for-byte**.
@@ -25,7 +25,7 @@ The modeled dictionary replaces a few known strings with integral IDs.
 
 ## Baseline observation (24,000 synthetic events)
 
-Captured with SQLite 3.46.1 on a Linux Python environment:
+Historical exploratory observation captured with SQLite 3.46.1; the current Rust probe must be rerun for exact-source measurements:
 
 | Physical layout | Packed bytes | Bytes / event | Reduction | Read/decode 64 rows (illustrative) |
 | --- | ---: | ---: | ---: | ---: |
@@ -36,8 +36,8 @@ Captured with SQLite 3.46.1 on a Linux Python environment:
 | Dictionary + zlib | 8,929,280 | 372.1 | 31.4% | 0.335 ms |
 
 These read timings come from a predecessor exploratory fixture rather than
-a formal controlled performance experiment. The committed probe now reports
-p50 and p95 for each layout on the executing host, but cannot eliminate OS
+a formal controlled performance experiment. The Rust probe now reports
+p50, p95, and p99 for each layout on the executing host, but cannot eliminate OS
 cache, process variance or workload-selection bias. This benchmark deliberately
 exaggerates repeating string values, and may overstate real-world compression.
 It does establish that rowid removal alone is unlikely to justify a high-risk

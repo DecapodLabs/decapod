@@ -33,6 +33,11 @@ name = "decapod"
 path = "src/main.rs"
 
 [[bin]]
+name = "decapod-storage-size-probe"
+path = "assets/tools/storage_size_probe.rs"
+required-features = ["build-tools"]
+
+[[bin]]
 name = "decapod-build"
 path = "assets/tools/build_lifecycle.rs"
 required-features = ["build-tools"]
