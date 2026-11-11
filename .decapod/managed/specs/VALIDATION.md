@@ -960,7 +960,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c6fe8e65d1cf3a526b1e511e60235852a116099867ac682f98325762a0abdd02`
+- Repository signal fingerprint: `efd39e6ead63862cdedbea60343f5b43e23a5f8f6515c6e502b7e91d09ac6490`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1239,3 +1239,27 @@ UNIQUE replacement is missing, and stays compact after subsystem
 reinitialization. Any row/hash change, index recreation, partial mutation,
 or incorrect upgrade-success claim falsifies completion. Full independent
 candidate validation and CI remain required before publishing or merging.
+
+## Datastore production qualification (v0.137.0 review)
+
+`docs/datastore-v2/production-readiness-v0.137.0.md` records source findings
+and open acceptance requirements, not newly executed proof. Qualification must
+bind complete effective SQLite and native PostgreSQL catalogs to their reviewed
+logical contract. Historical inventory provenance remains distinct from the
+current package version, and legacy migration receipts cannot acquire invented
+implementation attestations during an upgrade.
+
+Acceptance requires actual released-client format compatibility, interrupted
+migration recovery, revision and claim-generation fencing, mandatory atomic
+mutation/event pairing on every retained route, and uncertain-commit retry
+reconciliation. Bounded pagination and journal replay must preserve complete
+history, canonical bytes and a coherent snapshot beyond the current aggregate
+limits. The shared scenario corpus must exercise governance transitions and
+proof bindings through both SQLite and the published native RPC client.
+
+Existing compaction fixtures, compatibility-service mocks and earlier proof
+ledger entries retain their stated scope. They cannot establish native cloud
+deployment, hosted capacity, backup restoration, or this candidate's publication
+readiness. Unavailable checks remain unavailable. The review records both the earlier unadmitted publication and the current
+governed reconstruction. No missing validation receipt is claimed as passed,
+and this documentation cannot weaken the configured runtime proof profile.

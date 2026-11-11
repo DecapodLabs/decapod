@@ -7,6 +7,12 @@ behavior, proposed contracts and unmeasured work. `entities.json` is the source
 classification companion to the effective SQLite catalog in the measured report.
 It explicitly leaves column-level deletion authority unresolved.
 
+The [v0.137.0 production-readiness review](production-readiness-v0.137.0.md)
+records the later release's remaining schema, migration, cloud-contract and
+capacity gaps, with pinned source evidence and falsifiable repair requirements.
+The measurements below retain their original increment's scope; they do not
+establish the later release's production readiness.
+
 ## Authority and entity boundaries
 
 Keep one logical contract with independently chosen SQLite/PostgreSQL layouts.
@@ -109,7 +115,7 @@ equivalent quotas. These capabilities require explicit versioned expansion.
 
 The v1 SQL profile is an exact allowlist with parameter binding, forced tenant
 RLS, separate API/executor roles, Auth/session verification and entitlements.
-Writes are atomic state/event pairs and use a repository-scoped advisory lock;
+Native RPC requires atomic state/event pairs and uses a repository-scoped advisory lock;
 unrelated repositories have no intentional shared sequencing lock. Results are
 limited to 1,000 rows / 4 MiB and requests to 1 MiB / 32 operations. These bounds
 reject oversized lists; they do not provide keyset pagination. Never add local
