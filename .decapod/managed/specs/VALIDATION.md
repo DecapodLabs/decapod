@@ -1,5 +1,33 @@
 # Validation
 
+## Historical full-proof completion (#1610)
+
+Required regressions exercise both native and provider history production,
+complete proof-plan and material bindings, archive durability, and failure to
+persist. A partial, failed, stale or decision-blocked result must not be archived
+as successful full proof. Recording history must leave the candidate SHA intact.
+
+`validation_history_archive_tests` exercises the actual pre-validation binding
+and canonical append transaction, then removes temporary execution evidence and
+looks up the full record by SHA. Native and provider-shaped complete-suite
+fixtures must preserve the original task, epoch, plan and results without
+changing Git HEAD or tracked governance. These fixtures test archival mechanics;
+their observations are not evidence of an external provider run.
+
+Completion tests must show that an original owner can complete a merged task,
+or repair its done-but-unverified state, from recorded candidate proof without
+launching current validation or borrowing another task's workspace. Adversarial
+cases cover wrong task, commit or repository, corrupt evidence, intent edit and
+revert, changed lease generation, incomplete task history, unproven integration,
+dependency failures and revision races. Failed attempts must preserve task,
+proof and journal state. Subsequent QA inspection must preserve this historical
+meaning after unrelated work and epoch changes. Publication continues requiring
+fresh complete proof and cannot consume this historical completion permission.
+
+The inline Rust regressions are part of the library unit suite selected by the
+complete source profile. Their presence and source review are not execution
+evidence; the exact candidate still requires configured full validation.
+
 ## Immutable push-range ancestry
 
 A feature-branch push supplies the previous branch tip as its `base`,
@@ -121,9 +149,12 @@ preparation writer; inventory continues to report its actual integrity and
 freshness rather than laundering absent or stale receipts into success.
 Malformed configuration and missing required governance still fail.
 
-Native success is published as one atomic completion directory only after both
-receipt and verdict have been written and synced in private staging. No fallible
-operation follows that publication point. Failed execution, stale candidate/target
+Native execution success is published as one atomic completion directory only
+after its receipt and verdict have been written and synced in private staging.
+The runtime writes its compact historical proof before that publication point.
+The outer full-readiness boundary then appends that
+proof to the canonical history; failure of that append revokes returned
+publication readiness while preserving the execution evidence. Failed execution, stale candidate/target
 or blocked decision produces no success receipt; receipt or verdict creation,
 partial-write or sync failure leaves no published success bundle and revokes
 returned readiness. Pending staging files are never completion evidence. No checkout or
@@ -960,8 +991,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4da98c03192df1b64a14d46d6f8be2f85bdd49b1700bc71ce8c637c41ec1597b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
+- Repository signal fingerprint: `3c3afee03e154304ad5c9cadedece22b21815f15843fccc826b53ff6f15cdb92`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

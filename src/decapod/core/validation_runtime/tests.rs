@@ -1673,6 +1673,7 @@ fn late_verdict_write_failure_revokes_readiness_and_pr_instructions() {
     let verdict = directory.path().join("verdict.json");
     write_new(&verdict, b"preserve existing evidence").unwrap();
     let report = ValidationReport {
+        completed_evidence: None,
         ready: true,
         proof_ready: true,
 
@@ -2167,6 +2168,7 @@ fn native_completion_write_failures_never_publish_success_artifacts() {
             );
             assert!(result.is_err(), "{failed_file}: {stage}");
             let report = ValidationReport {
+                completed_evidence: None,
                 ready: true,
                 proof_ready: true,
 

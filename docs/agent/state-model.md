@@ -59,6 +59,16 @@ is a no-op; releasing a task does not change its completion status. Actor identi
 uses the existing local caller boundary. These checks do not protect against an
 unrestricted process directly rewriting the database or impersonating that actor.
 
+Successful full validation with a local task store also appends a bounded record keyed by the validated
+candidate SHA to the canonical verification event stream. It retains the original
+task binding and complete compact proof, independently of temporary raw logs and
+without changing the candidate commit. `qa verify commit` only inspects this
+history. Explicit `todo done --validated --commit` may consume it for the original
+task after proving supported task continuity and accepted integration. It can
+repair done-but-unverified state atomically without a second completion event.
+Historical proof replay is distinct from current-workspace validation and never
+confers readiness to publish new work. Missing legacy records remain unavailable.
+
 ## 2. Workspaces
 Isolated execution environments.
 - **Context boundary:** Isolation does not discard the agent's prompt. With clear

@@ -72,6 +72,43 @@ must not affect the canonical datastore policy.
 
 ## Recovery replay comparison
 
+### Commit-bound completion after merge
+
+`decapod qa verify commit <full-candidate-sha>` inspects durable full validation
+history in a local canonical store without creating a datastore, acquiring a session, changing task state
+or refreshing the current workspace. Its historical result always declares
+`publication_ready=false`; inspection is not a new validation run.
+Cloud-backed historical task lookup and completion are explicitly unsupported;
+ordinary cloud validation retains its existing behavior.
+
+`decapod todo done <task-id> --validated --commit <full-candidate-sha>` requests
+completion from that task's recorded full proof. The caller must retain the
+original ownership lineage, the task contract must be unchanged, and the
+candidate must have verifiable integration into the configured accepted branch.
+This explicit mode uses the original plan and task binding instead of requiring
+a new current-workspace plan. It never starts a current-workspace validation
+child. Ordinary `todo done --validated`, batch recapture and publication retain
+their separate fresh-proof contracts.
+
+If the task is already done but lacks accepted verification, the same historical
+command repairs its proof atomically while preserving completion time and task
+revision. Missing proof, intent edits including edits later reverted, a new
+owner or lease generation, incomplete journal history, unsatisfied dependencies,
+and concurrent task changes leave task and proof state unchanged. The recorded
+candidate and the observed integration are not interchangeable SHAs; validation
+of the candidate is never reported as execution on the merge result.
+
+The first integration observer reads the original accepted branch through public
+GitHub HTTPS and requires its immutable objects to be available locally. Private
+repository integration is explicitly unsupported by this transport; status
+lookup remains local. Ordinary merges and fast-forwards use candidate ancestry.
+Squash/rebase recovery requires an exact complete candidate tree in at most 256
+accepted first-parent commits after the original base; patch similarity and
+unrelated tree matches are insufficient. Renewing or reacquiring the task with a
+new lease generation requires new proof. Repeated successful executions of the
+same SHA may be selected only within one task contract and custody binding;
+stored completion references retain the exact original record identity.
+
 `qa verify recover` and per-task verification use the same normalized validation
 report. Fresh execution paths and receipt IDs do not constitute material drift;
 changed scope, policy, artifact content, epoch, target or verdict still does.
@@ -1027,8 +1064,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4da98c03192df1b64a14d46d6f8be2f85bdd49b1700bc71ce8c637c41ec1597b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
+- Repository signal fingerprint: `3c3afee03e154304ad5c9cadedece22b21815f15843fccc826b53ff6f15cdb92`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
