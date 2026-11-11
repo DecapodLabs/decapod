@@ -526,6 +526,11 @@
       "id": "accepted-source-inventory",
       "summary": "Reconcile unchanged accepted build and CI source inventory for installed controller; retain complete strict validation profile",
       "input_digest": "sha256:f640d0824f1948a3c719dee9e6111a49e0b14f1bee7e583d8e23436c38744f44"
+    },
+    {
+      "id": "refreshed-config-manifest",
+      "summary": "Refresh supported spec manifest after reviewed inventory update to resolve standalone CI projection drift",
+      "input_digest": "sha256:71a59c05a174dc05c2d9b72c7859a07ecc8a16e687a2d81abdf69a5ee4036879"
     }
   ],
   "intents": {
@@ -600,7 +605,7 @@
         "Current claimed task and isolated work branch",
         "Retain storage security, source build and publication authority"
       ],
-      "artifact_hash": "sha256:684e9869ecf7e0a88c41d4939b13a0fe96b59dacf94a667f02292d47d2eae723",
+      "artifact_hash": "sha256:668c69b894288040d5886085ca0972c5714b30b3280e368ab4a9a8e64c2be278",
       "checks": [
         {
           "name": "actual-binary-smoke-reproduction",
@@ -612,7 +617,7 @@
         },
         {
           "name": "full-validation",
-          "status": "unavailable"
+          "status": "failed"
         },
         {
           "name": "source-version-regressions",
@@ -686,10 +691,17 @@
             "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M73XRFA0ZXW5Q64PMWXJKEH2": {
@@ -810,6 +822,21 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Buildkite 6702 standalone-validation passed 190 prerequisite gates but rejected manifest config_input_hash drift after reviewed inventory update. Regenerated supported manifest through specs.refresh; no checks weakened."
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -820,6 +847,7 @@
       "evidence": [
         "Accepted source workflows/helpers/build inputs are unchanged from bf50c589. Read-only discovery reports inventory sha256:78d39990ac9aaab62f4574ea8f7823a7cbf64a72e8facdb3d1b1ebbd60c1c059; retained strict full profile and reconciled its stale reviewed source inventory declaration only.",
         "Both workflow scripts tested with installed 0.136.3: old checkout invocation rejects 0777 .decapod; revised smoke passes. Fixture runs verify 0700 scratch and anchor, paths containing spaces, cleanup and exit 23 propagation.",
+        "Buildkite 6702 standalone-validation passed 190 prerequisite gates but rejected manifest config_input_hash drift after reviewed inventory update. Regenerated supported manifest through specs.refresh; no checks weakened.",
         "Exact candidate 72917b05: decapod validate returns CONTROLLER_CONTRACT_UNSUPPORTED for .github/workflows/nix-flake.yml after source inventory reconciliation. No full source tests or Nix rebuild executed by validation; direct installed-binary smoke and script fixtures are supplemental only.",
         "GitHub check 130026729576 resolves to Buildkite 6692 job 01a1c6a7-145a-45c5-ad8e-c0007e3989da: compilation succeeded; smoke failed STORAGE_UNSAFE_PERMISSIONS on checkout .decapod",
         "Restored accepted Nix workflow, source-profile digests, workflow policy tests and Nix documentation. Final fix makes system version storage-independent and preserves one-time migration reporting on workspace status.",
