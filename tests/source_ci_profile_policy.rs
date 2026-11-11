@@ -1301,6 +1301,36 @@ fn golden_recipes_check_immutable_vectors_and_run_their_regressions() {
 }
 
 #[test]
+fn plugin_test_changes_select_the_existing_complete_plugin_recipe() {
+    let check = find_check("selective-plugins").unwrap();
+    let production = paths(&["src/decapod/plugins/aptitude.rs"]);
+    let expected = commands(check, &production).unwrap();
+    assert!(!expected.is_empty());
+    assert!(expected.iter().any(|command| {
+        command.program == "bazelisk" && command.args.contains(&"//:plugins_aptitude_tests")
+    }));
+
+    for path in ["tests/plugins/aptitude.rs", "tests/plugins/todo.rs"] {
+        let changed = paths(&[path]);
+        assert!(selected(check, &changed, false), "{path}");
+        let recipe = commands(check, &changed).unwrap();
+        assert_eq!(recipe, expected, "{path} must retain every plugin target");
+        let scheduled = inventory(&changed, false);
+        let job = scheduled
+            .iter()
+            .find(|job| job.job == "test" && job.matrix == Some("plugins"))
+            .expect("plugin job remains in the required inventory");
+        assert!(job.applicable, "{path} must not emit not_applicable");
+        assert!(job.checks.contains(&"selective-plugins"));
+        assert!(!selected(check, &changed, true));
+    }
+
+    let unrelated = paths(&["docs/agent/README.md", "tests/contract_conformance.rs"]);
+    assert!(!selected(check, &unrelated, false));
+    assert!(commands(check, &unrelated).unwrap().is_empty());
+}
+
+#[test]
 fn rust_justfile_regressions_are_selected_on_linux_and_required_on_macos() {
     let cli = find_check("selective-cli").unwrap();
     for path in [
