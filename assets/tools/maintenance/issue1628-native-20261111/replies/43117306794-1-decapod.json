@@ -1,0 +1,19 @@
+{
+  "identity": {
+    "schema": "decapod.issue1628-custody-relay.v1",
+    "repository": "DecapodLabs/decapod",
+    "run_id": "43117306794",
+    "run_attempt": "1",
+    "operations_sha": "bfadb52175ecb3c00ee4695319a568a7a83d8f53",
+    "slug": "decapod",
+    "task_id": "code_01m76c1kqhjgr3yr",
+    "source_base": "c5de35a89b27e788169612ae71681e45c13bf71a",
+    "transfer_id": "01M76C2BDC2SWT2V852BA93XWY",
+    "receiver": "chatgpt-issue1628-decapod-next",
+    "plaintext_sha256": "sha256:c1734174448bdd416beffba9f08ec5827aec991197493b2f49d20f2fd5804f95",
+    "recipient_certificate_sha256": "sha256:7540d5b8411f42649b2dd3852550c2a17e26ad7c78dac728527432789f50d062",
+    "challenge": "53a230a5b8e4601247e4dde583e1707e02aaa06c7594adf869bd7b5d51ebb1bb"
+  },
+  "decision": "declined",
+  "reason": "Custody withheld before native import while reviewed client source is corrected to fail before unsupported legacy live-fixture transport can contact managed discovery."
+}
