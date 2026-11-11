@@ -61,6 +61,10 @@ fn fixture() -> (tempfile::TempDir, PathBuf, Store, String) {
     );
     git(&repo, &["commit", "--quiet", "-m", "accepted baseline"]);
     let accepted_base = git(&repo, &["rev-parse", "HEAD"]);
+    git(
+        &repo,
+        &["switch", "--quiet", "-c", "agent/archive-boundary"],
+    );
 
     let store = Store {
         kind: StoreKind::Repo,
@@ -217,7 +221,7 @@ fn native_and_provider_capture_archive_and_lookup_survive_evidence_directory_del
         completed.material.repository = "example/archive".into();
         completed.material.head_revision = head.clone();
         completed.material.accepted_base_revision = accepted_base;
-        completed.material.work_branch = "master".into();
+        completed.material.work_branch = git(&repo, &["branch", "--show-current"]);
         completed.governance_digest = format!("sha256:{:x}", Sha256::digest(&governance_bytes));
         completed.trajectory_digest = raw_trajectory_digest;
         completed.suite.before = completed.material.clone();
