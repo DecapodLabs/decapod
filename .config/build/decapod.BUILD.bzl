@@ -112,6 +112,7 @@ def decapod_targets():
             "docs/agent/llms.txt",
             "docs/agent/mcp.md",
             "docs/agent/payload-examples.md",
+            "docs/agent/repository-readiness.md",
             "docs/agent/state-model.md",
         ],
         deps = all_crate_deps(build = True),
@@ -330,6 +331,10 @@ def decapod_targets():
                 "docs/agent/command-contracts.md",
                 "docs/agent/payload-examples.md",
             ] if path == "tests/trajectory_docs.rs" else [
+                "docs/agent/README.md",
+                "docs/agent/api-index.md",
+                "docs/agent/llms.txt",
+            ] if path == "tests/contract_conformance.rs" else [
                 "src/decapod/core/assets.rs",
                 "src/decapod/core/docs_cli.rs",
                 "src/decapod/core/validate.rs",
