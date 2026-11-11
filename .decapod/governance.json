@@ -539,6 +539,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "billing-v1382-measured-gate-repair",
+      "summary": "Continue original billing task at its published checkpoint; fix measured lint, regenerate exact source docs preserving accepted prose, and refresh six official release surfaces. Full readiness must rerun.",
+      "input_digest": "sha256:35d682caaecee788ae44809fa05e9eb491d39079dd35537be336995394ad0375",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -578,24 +586,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserves whole-product architecture and documents CLI roster preparation, fixed approval link, independent session acquisition and hosted rollout dependencies.",
-          "reviewed_code_fingerprint": "820ec8082a1c8f742ab294ca9cef2a1781608ff92ed1c972eaa7347c17b07f7f",
+          "reason": "Continuation changes only measured lint, exact generated documentation with preserved existing authorization prose, and official release projections; accepted feature contracts and rollout boundaries remain unchanged.",
+          "reviewed_code_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
           "spec_material_hash": "2abef7c024c78f47e368f59e41963a48f3f474f1fa01db724e83a8f410c709bc"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Adds both init flags, requested config fields, roster/origin constraints and the explicit separation of purchase intent from authenticated access.",
-          "reviewed_code_fingerprint": "820ec8082a1c8f742ab294ca9cef2a1781608ff92ed1c972eaa7347c17b07f7f",
+          "reason": "Continuation changes only measured lint, exact generated documentation with preserved existing authorization prose, and official release projections; accepted feature contracts and rollout boundaries remain unchanged.",
+          "reviewed_code_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
           "spec_material_hash": "4ee67aebac958a1aac7f08e6cc0655b591911c02c023ed4ae45bebcc61756a47"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documents fixed destination, bounded encoded request values, no local seat authority, human browser constraints and the no-session init regression.",
-          "reviewed_code_fingerprint": "820ec8082a1c8f742ab294ca9cef2a1781608ff92ed1c972eaa7347c17b07f7f",
+          "reason": "Continuation changes only measured lint, exact generated documentation with preserved existing authorization prose, and official release projections; accepted feature contracts and rollout boundaries remain unchanged.",
+          "reviewed_code_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -607,15 +615,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794436095Z"
+      "updated_at": "1794441326Z"
     },
     "trajectory": {
       "active_boundaries": [
+        "Continue original transferred task and published source; no failed readiness is reused as proof",
         "Current claimed task and isolated work branch",
         "Original billing task resumed through native custody; no historical proof or completed readiness claimed"
       ],
-      "artifact_hash": "sha256:f0ca17d9c3f1c814082df009e0833d0b7fba4323aae53e04ebbe36a0f7e6eb68",
+      "artifact_hash": "sha256:9f8a66940cef03e85cfab9d96f7f3d8f12b76d5712e85afc94bb5bf8977dbe89",
       "checks": [
+        {
+          "name": "current-full-workbranch-validation",
+          "status": "unavailable"
+        },
         {
           "name": "full-workbranch-validation",
           "status": "unavailable"
@@ -623,6 +636,10 @@
         {
           "name": "git-diff-whitespace",
           "status": "passed"
+        },
+        {
+          "name": "prior-full-publication",
+          "status": "failed"
         }
       ],
       "current_phase": "validation",
@@ -646,10 +663,17 @@
             "intent_id": "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M76AQCXFVXPYJPPTC76PV506",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76AQCXFVXPYJPPTC76PV506": {
@@ -673,17 +697,40 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "command": "git merge --ff-only c7609e42bbbcff9c72af6be7a86333d4b0408922",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Native run 43111757803 stopped on actual source validation. Run 43116091778 preserved the original task and all 18 pending paths after native release healing, but project prerequisites correctly required an actual container. This continuation imports that exact native custody and journal only inside the native-prepared real container, preserves reviewed lint/docs/release material, and records a checkpoint before rerunning JSON project prerequisites and full native publication. No failed or partial check is reused as proof; source and CI policy remain unchanged."
+                ],
+                "proof_refs": [
+                  "git-diff-whitespace",
+                  "prior-full-publication",
+                  "current-full-workbranch-validation"
+                ],
+                "scope": [
+                  "billing",
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "decapod docs build",
         "decapod rpc --op specs.refresh",
-        "git apply authenticated pending material sha256:025caf8469c1540c0951c15f5484a49fa061222f08d0bdca6b5247f5974e21dc"
+        "git apply authenticated pending material sha256:025caf8469c1540c0951c15f5484a49fa061222f08d0bdca6b5247f5974e21dc",
+        "git apply authenticated pending snapshot sha256:e7c2e4dfa8a4d20b5a7172e7d472917337ff998cfef370d510202fe2a0f87420",
+        "git merge --ff-only c7609e42bbbcff9c72af6be7a86333d4b0408922"
       ],
       "destination": "pull request",
       "evidence": [
+        "Native run 43111757803 stopped on actual source validation. Run 43116091778 preserved the original task and all 18 pending paths after native release healing, but project prerequisites correctly required an actual container. This continuation imports that exact native custody and journal only inside the native-prepared real container, preserves reviewed lint/docs/release material, and records a checkpoint before rerunning JSON project prerequisites and full native publication. No failed or partial check is reused as proof; source and CI policy remain unchanged.",
         "Original task imported and re-admitted with authenticated pending journal/source intact. Exact accepted-baseline inventory declaration corrected after independent review of 105 sources. Historical source 26a499d9f0789a5ed00605d23cfc57f5392ae8fc recorded as already_proven. Complete native publication remains required on the checkpointed candidate."
       ],
       "inspected_files": [],

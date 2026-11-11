@@ -2289,7 +2289,7 @@ fn run_init_apply(
         },
         specs_seed: Some(scaffold::SpecsSeed {
             product_name: repo_ctx.product_name.clone(),
-            product_summary: cloud_backend::cloud_generation_summary(&repo_ctx),
+            product_summary: cloud_backend::cloud_generation_summary(repo_ctx),
             architecture_direction: repo_ctx.architecture_direction.clone(),
             product_type: repo_ctx.product_type.clone(),
             primary_languages: repo_ctx.primary_languages.clone(),

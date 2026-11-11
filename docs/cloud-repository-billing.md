@@ -48,3 +48,16 @@ does not establish a working cloud session.
 
 Seat removal, subscription restart and refund/dispute policies are outside this
 initial-purchase/add-seat contract and need an explicit lifecycle design.
+
+## Cloud access and task authority
+
+These actor labels are cooperative local identities, not authenticated users.
+For cloud repositories, a Decapod agent carries an authenticated user's bearer;
+server-side Propodus grants determine its permitted operations. Cloud repository
+access has `read`, `write`, `maintainer`, and `owner` tiers, with expiring
+direct user grants for contractors. A client-selected agent ID or local
+`actor_roles` entry cannot elevate cloud authority. A contractor is a bounded
+delegation for the same agent interface, with no separate human CLI workflow.
+Propodus rechecks expiration and revocation on each operation. An expired direct
+grant remains an explicit denial over inherited group, team, or organization
+access; changing an agent ID or local role mapping cannot restore that access.
