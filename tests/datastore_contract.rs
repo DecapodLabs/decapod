@@ -42,6 +42,7 @@ fn logical_schema_inventory_is_structurally_valid_and_matches_runtime_core() {
     todo::initialize_todo_db(&data).unwrap();
     decapod::plugins::health::initialize_health_db(&data).unwrap();
     decapod::plugins::federation::initialize_federation_db(&data).unwrap();
+    decapod::plugins::decide::initialize_decide_db(&data).unwrap();
     decapod::plugins::cron::initialize_cron_db(&data).unwrap();
     decapod::plugins::reflex::initialize_reflex_db(&data).unwrap();
     decapod::plugins::lcm::initialize_lcm_db(&data).unwrap();
