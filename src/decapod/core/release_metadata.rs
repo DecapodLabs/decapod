@@ -158,7 +158,16 @@ pub fn validation_change_base(
     for revision in [base, head, accepted_base] {
         git(repo, &["cat-file", "-e", &format!("{revision}^{{commit}}")])?;
     }
-    git(repo, &["merge-base", "--is-ancestor", base, accepted_base])?;
+    // A PR base precedes its accepted target. An ordinary push's before SHA,
+    // however, is the *previous feature-branch tip*, often newer than the
+    // accepted target. Both the previous tip and accepted target must be
+    // ancestors of the pushed head, so force pushes and stale bases fail.
+    if event == "pull_request" {
+        git(repo, &["merge-base", "--is-ancestor", base, accepted_base])?;
+    } else {
+        git(repo, &["merge-base", "--is-ancestor", base, head])?;
+        git(repo, &["merge-base", "--is-ancestor", accepted_base, head])?;
+    }
     let checkout = git(repo, &["rev-list", "--parents", "-n", "1", "HEAD"])?;
     let revisions: Vec<_> = checkout.split_whitespace().collect();
     if revisions.first().copied() != Some(head)
@@ -174,7 +183,8 @@ pub fn validation_change_base(
     if event == "pull_request" {
         Ok(git(repo, &["merge-base", base, head])?.trim().to_string())
     } else {
-        git(repo, &["merge-base", "--is-ancestor", base, head])?;
+        // Already verified above: the event's previous tip and the accepted
+        // target both precede this exact immutable push head.
         Ok(base.to_string())
     }
 }

@@ -433,3 +433,57 @@ fn musl_workflow_preserves_native_x86_and_executed_arm_regressions() {
         assert!(!musl.contains(forbidden), "{forbidden}");
     }
 }
+
+#[test]
+fn validation_push_admits_existing_workbranch_with_accepted_base_behind_previous_tip() {
+    let repo = Repo::new();
+    let accepted = repo.git(&["rev-parse", "master"]);
+    repo.git(&["checkout", "-q", "-b", "agent/rbac-proof"]);
+    fs::write(repo.0.join("src/lib.rs"), "pub fn first() {}\n").unwrap();
+    let before = repo.commit("first agent change");
+    fs::write(repo.0.join("src/lib.rs"), "pub fn second() {}\n").unwrap();
+    let head = repo.commit("second agent change");
+    assert_eq!(
+        release_metadata::validation_change_base(&repo.0, "push", &before, &head, &accepted)
+            .unwrap(),
+        before,
+        "a workbranch push's previous tip is after master, not before it"
+    );
+}
+
+#[test]
+fn validation_push_accepts_protected_base_update_but_rejects_rewrite_or_stale_master() {
+    let repo = Repo::new();
+    let before = repo.git(&["rev-parse", "master"]);
+    fs::write(repo.0.join("src/lib.rs"), "pub fn next() {}\n").unwrap();
+    let head = repo.commit("advance accepted master");
+    assert_eq!(
+        release_metadata::validation_change_base(&repo.0, "push", &before, &head, "master")
+            .unwrap(),
+        before
+    );
+
+    repo.git(&["checkout", "-q", "-b", "agent/a", &before]);
+    fs::write(repo.0.join("src/lib.rs"), "pub fn alternative() {}\n").unwrap();
+    let feature_before = repo.commit("feature base");
+    fs::write(repo.0.join("src/lib.rs"), "pub fn alternative_next() {}\n").unwrap();
+    let feature_head = repo.commit("feature head");
+    assert!(
+        release_metadata::validation_change_base(
+            &repo.0, "push", &feature_before, &feature_head, "master"
+        )
+        .is_err(),
+        "a feature branch that does not contain current accepted master must fail"
+    );
+
+    repo.git(&["checkout", "-q", "-b", "agent/rewritten", &before]);
+    fs::write(repo.0.join("src/lib.rs"), "pub fn rewrite() {}\n").unwrap();
+    let rewritten_head = repo.commit("rewritten feature head");
+    assert!(
+        release_metadata::validation_change_base(
+            &repo.0, "push", &feature_before, &rewritten_head, &before
+        )
+        .is_err(),
+        "a non-fast-forward branch rewrite must never qualify"
+    );
+}
