@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.136.4](https://github.com/DecapodLabs/decapod/compare/v0.136.3...v0.136.4) - 2026-11-11
+
+### Fixed
+
+- *(cli)* report version without opening project storage
+- *(ci)* anchor Nix smoke discovery in private scratch
+- *(ci)* isolate Nix smoke checks from checkout storage
+
+### Other
+
+- *(cli)* isolate stateful storage permission rejection
+- *(governance)* refresh config-bound spec manifest
+- *(governance)* reconcile accepted source inventory
+- *(governance)* preserve Nix controller support blocker
+- *(governance)* record reconciled Nix validation retry
+
 ## [0.136.3](https://github.com/DecapodLabs/decapod/compare/v0.136.2...v0.136.3) - 2026-11-10
 
 ### Added
