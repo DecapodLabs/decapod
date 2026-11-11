@@ -342,8 +342,18 @@ fn run(profile: &str) {
             (first.path(), "proof-one", one),
         )
     };
-    // Repository access does not grant ownership of another principal's claim.
+    // A different authenticated principal cannot release or complete a task
+    // merely by copying its current agent label. Role assignment is service-
+    // resolved; DECAPOD_AGENT_ID is never an authorization credential.
     for operation in ["release", "done"] {
+        rejected_transition(
+            &fixture,
+            other_root,
+            actor,
+            other_token,
+            &[operation, "--id", id],
+        );
+        // The original cross-agent claim remains forbidden too.
         rejected_transition(
             &fixture,
             other_root,

@@ -172,6 +172,35 @@ and rejects non-GitHub or ambiguous remotes. Forks remain distinct identities
 and are passed to the provider for authorization; Decapod does not maintain a
 repo allowlist or accept a project-configured repository identifier.
 
+## Authenticated delegated agent authority
+
+The agent is the operational caller. In local mode, a solo developer does not
+need cloud authentication: the local agent/session label is cooperative custody,
+not a verified human identity. In cloud mode, the same agent interface uses the
+user's managed Auth bearer. Propodus determines authorization independently
+from the bearer, active GitHub-linked identity, membership, repository grant,
+and entitlement. `DECAPOD_AGENT_ID`, project config, and task fields are
+never sources of cloud privileges.
+
+Propodus repository tiers are `read`, `write` (contributors), `maintainer`,
+and `owner`. Contractor access is a direct, repository-scoped user grant with
+a finite expiration; it is not a new agent type. Direct user grants take
+precedence over team, group, and organization inheritance, even after expiry,
+so revocation cannot silently restore inherited access. Operator-only
+provisioning/revocation functions do not enter the agent RPC surface.
+
+Cloud tasks store the agent label for coordination but enforce claim release
+and completion against the authenticated principal. Copying another agent's
+label cannot transfer custody. Maintainer/owner repair is a separately
+authorized, audited exception, and remote publication still requires its
+independent proof and merge checks.
+
+The canonical enforcement and regression tests live in Propodus schema
+migration 007. An ordinary client contract test cannot establish actual
+PostgreSQL or hosted permission enforcement; the protected
+`supabase_service` profile must exercise two independently authenticated users
+with a deliberately spoofed agent label.
+
 ## Current governance limits
 
 The cloud Dactyl todo slice supports repo-scoped list/add/get/claim/release/
