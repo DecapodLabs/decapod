@@ -1,3 +1,4 @@
+use decapod::core::db::Connection;
 use decapod::core::store::Store;
 use decapod::core::store::StoreKind;
 use decapod::plugins::aptitude::{
@@ -174,6 +175,142 @@ fn test_agent_prompts() {
     let prompts = get_prompts_for_context(&store, "git_operations", None).unwrap();
     assert!(!prompts.is_empty());
     assert_eq!(prompts[0].context, "git_operations");
+}
+
+fn prompt_rows(conn: &Connection) -> Vec<serde_json::Value> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, context, prompt_text, priority, active, usage_count,
+                    last_shown_at, created_at, updated_at
+             FROM agent_prompts ORDER BY id",
+        )
+        .unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    let mut result = Vec::new();
+    while let Some(row) = rows.next().unwrap() {
+        result.push(serde_json::to_value(row.parameters()).unwrap());
+    }
+    result
+}
+
+#[test]
+fn repeated_initialization_preserves_prompt_rows_and_disabled_defaults() {
+    let tmp = tempdir().unwrap();
+    initialize_aptitude_db(tmp.path()).unwrap();
+    let conn = Connection::open(aptitude_db_path(tmp.path())).unwrap();
+    let default_id: String = conn
+        .query_row(
+            "SELECT id FROM agent_prompts ORDER BY context, prompt_text LIMIT 1",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap();
+
+    assert_eq!(
+        conn.execute(
+            "UPDATE agent_prompts
+             SET active=0, usage_count=17, priority=3,
+                 last_shown_at='historical', updated_at='retained'
+             WHERE id=?1",
+            decapod::params![&default_id],
+        )
+        .unwrap(),
+        1
+    );
+    assert_eq!(
+        conn.execute(
+            "INSERT INTO agent_prompts(
+                 id, context, prompt_text, priority, active, usage_count, created_at)
+             SELECT 'custom-prompt', context, 'Retain custom configuration', 7, 0, 9, 'original'
+             FROM agent_prompts WHERE id=?1",
+            decapod::params![&default_id],
+        )
+        .unwrap(),
+        1
+    );
+    assert_eq!(
+        conn.execute(
+            "INSERT INTO agent_prompts(
+                 id, context, prompt_text, priority, active, usage_count, created_at)
+             SELECT 'historical-duplicate', context, prompt_text, 4, 0, 22, 'original'
+             FROM agent_prompts WHERE id=?1",
+            decapod::params![&default_id],
+        )
+        .unwrap(),
+        1
+    );
+
+    let before = prompt_rows(&conn);
+    for _ in 0..8 {
+        initialize_aptitude_db(tmp.path()).unwrap();
+        assert_eq!(prompt_rows(&conn), before);
+    }
+}
+
+#[test]
+fn initialization_restores_only_the_missing_default_beside_a_custom_prompt() {
+    let tmp = tempdir().unwrap();
+    initialize_aptitude_db(tmp.path()).unwrap();
+    let conn = Connection::open(aptitude_db_path(tmp.path())).unwrap();
+    let (removed_id, context, prompt_text, priority): (String, String, String, i32) = conn
+        .query_row(
+            "SELECT id, context, prompt_text, priority
+             FROM agent_prompts ORDER BY context, prompt_text LIMIT 1",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )
+        .unwrap();
+    assert_eq!(
+        conn.execute(
+            "DELETE FROM agent_prompts WHERE id=?1",
+            decapod::params![&removed_id],
+        )
+        .unwrap(),
+        1
+    );
+    conn.execute(
+        "INSERT INTO agent_prompts(
+             id, context, prompt_text, priority, active, usage_count,
+             last_shown_at, created_at, updated_at)
+         VALUES('same-context-custom', ?1, ?2, 7, 0, 9, 'historical', 'original', 'retained')",
+        decapod::params![&context, format!("Custom alternative to: {prompt_text}")],
+    )
+    .unwrap();
+    let retained = prompt_rows(&conn);
+
+    initialize_aptitude_db(tmp.path()).unwrap();
+    let current = prompt_rows(&conn);
+    assert_eq!(current.len(), retained.len() + 1);
+    for row in &retained {
+        assert!(
+            current.contains(row),
+            "initializer changed a retained prompt"
+        );
+    }
+    let restored_count: i64 = conn
+        .query_row(
+            "SELECT count(*) FROM agent_prompts WHERE context=?1 AND prompt_text=?2",
+            decapod::params![&context, &prompt_text],
+            |row| row.get(0),
+        )
+        .unwrap();
+    assert_eq!(restored_count, 1);
+    let (restored_id, restored_priority, active, usage_count): (String, i32, i32, i64) = conn
+        .query_row(
+            "SELECT id, priority, active, usage_count
+             FROM agent_prompts WHERE context=?1 AND prompt_text=?2",
+            decapod::params![&context, &prompt_text],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )
+        .unwrap();
+    assert!(!restored_id.is_empty());
+    assert_ne!(restored_id, removed_id);
+    assert_eq!(restored_priority, priority);
+    assert_eq!(active, 1);
+    assert_eq!(usage_count, 0);
+
+    initialize_aptitude_db(tmp.path()).unwrap();
+    assert_eq!(prompt_rows(&conn), current);
 }
 
 #[test]
