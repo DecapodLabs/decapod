@@ -1169,8 +1169,15 @@ fn initialization_snapshot(conn: &Connection) -> serde_json::Value {
             .map(|column| format!("quote(\"{}\")", column.replace('"', "\"\"")))
             .collect::<Vec<_>>()
             .join(",");
+        let order = if table == "meta" {
+            "namespace,key"
+        } else if table == "task_tags" {
+            "task_id,tag"
+        } else {
+            "rowid"
+        };
         let mut stmt = conn
-            .prepare(&format!("SELECT {select} FROM {table} ORDER BY rowid"))
+            .prepare(&format!("SELECT {select} FROM {table} ORDER BY {order}"))
             .unwrap();
         let rows = stmt
             .query_map([], |row| {

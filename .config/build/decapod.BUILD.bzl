@@ -212,8 +212,9 @@ def decapod_targets():
 
     rust_test(
         name = "core_tests",
-        srcs = ["tests/core/core.rs"],
+        srcs = ["tests/core/core.rs", "tests/datastore_relational_compaction.rs", "tests/datastore_contract.rs", "tests/datastore_scope.rs"],
         edition = "2024",
+        compile_data = ["docs/datastore-v2/logical_contract_v1.json"],
         crate_features = ["supabase-cloud"],
         rustc_env_files = [":cargo_pkg_env"],
         rustc_env = {
