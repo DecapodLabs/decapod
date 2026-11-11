@@ -510,13 +510,13 @@ fn validation_push_admits_existing_workbranch_with_accepted_base_behind_previous
     assert_eq!(
         release_metadata::validation_change_base(&repo.0, "push", &before, &head, &accepted)
             .unwrap(),
-        before,
-        "a workbranch push's previous tip is after master, not before it"
+        accepted,
+        "workbranch validation considers all changes since the accepted fork, not only the last push"
     );
 }
 
 #[test]
-fn validation_push_accepts_protected_base_update_but_rejects_rewrite_or_stale_master() {
+fn validation_push_accepts_protected_base_update_and_branch_fork_but_rejects_rewrite() {
     let repo = Repo::new();
     let before = repo.git(&["rev-parse", "master"]);
     fs::write(repo.0.join("src/lib.rs"), "pub fn next() {}\n").unwrap();
@@ -532,7 +532,7 @@ fn validation_push_accepts_protected_base_update_but_rejects_rewrite_or_stale_ma
     let feature_before = repo.commit("feature base");
     fs::write(repo.0.join("src/lib.rs"), "pub fn alternative_next() {}\n").unwrap();
     let feature_head = repo.commit("feature head");
-    assert!(
+    assert_eq!(
         release_metadata::validation_change_base(
             &repo.0,
             "push",
@@ -540,8 +540,9 @@ fn validation_push_accepts_protected_base_update_but_rejects_rewrite_or_stale_ma
             &feature_head,
             "master"
         )
-        .is_err(),
-        "a feature branch that does not contain current accepted master must fail"
+        .unwrap(),
+        before,
+        "the validated feature range must include the complete work since its original fork even when master advances"
     );
 
     repo.git(&["checkout", "-q", "-b", "agent/rewritten", &before]);
