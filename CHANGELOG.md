@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.137.1](https://github.com/DecapodLabs/decapod/compare/v0.137.0...v0.137.1) - 2026-11-11
+
+### Fixed
+
+- *(ci)* bind release policy tests to shared implementation module
+- *(ci)* validate push ancestors relative to accepted head
+
+### Other
+
+- *(authz)* review current agent authority contracts against verified source fingerprint
+- *(ci)* align immutable push-range assertions with accepted fork semantics
+- *(governance)* sync v0.137.0 generated projections with accepted master
+- incorporate latest master without dropping delegated RBAC tests
+- *(authz)* clarify cloud grant revocation and inherited-role denial
+- *(governance)* review push ancestry and delegated cloud RBAC on exact source
+- *(ci)* apply Rust formatter to push ancestry regressions
+- *(authz)* specify protected cross-principal custody proof
+- *(governance)* bind delegated RBAC spec reviews to current source
+- *(governance)* refresh current architecture and interface manifest digests
+- *(authz)* reconcile architecture and interface reviews with cloud delegation
+- *(governance)* refresh release-bound artifacts for decapod v0.136.4
+- *(authz)* satisfy Rust formatting for cloud owner assertion
+- *(authz)* assert principal-bound cloud custody and document delegated roles
+
 ## [0.137.0](https://github.com/DecapodLabs/decapod/compare/v0.136.4...v0.137.0) - 2026-11-11
 
 ### Added
