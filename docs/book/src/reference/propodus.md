@@ -201,6 +201,12 @@ PostgreSQL or hosted permission enforcement; the protected
 `supabase_service` profile must exercise two independently authenticated users
 with a deliberately spoofed agent label.
 
+For that protected profile, first claim a task with one authenticated session.
+Then reuse the same agent label with a different principal's session and
+attempt both release and completion. Neither operation may mutate the task or
+append a successful event, and a rejected cloud call must never fall back to
+local SQLite. This tests authority independently of the agent's chosen name.
+
 ## Current governance limits
 
 The cloud Dactyl todo slice supports repo-scoped list/add/get/claim/release/
