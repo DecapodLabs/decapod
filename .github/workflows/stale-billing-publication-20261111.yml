@@ -21,7 +21,7 @@ jobs:
   publish:
     if: github.repository == 'DecapodLabs/decapod' && github.ref == 'refs/heads/ops/stale-billing-publication-20261111'
     runs-on: ubuntu-latest
-    timeout-minutes: 95
+    timeout-minutes: 125
     permissions:
       contents: write
       actions: read
@@ -115,7 +115,7 @@ jobs:
           python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/continuation_relay.py" receive \
             --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/billing-continuation.json" \
             --directory "$RUNNER_TEMP/billing-custody-relay"
-      - name: Continue exact original source, repair observed gates, and publish natively
+      - name: Prepare native container and continue original billing task inside it
         working-directory: subject
         env:
           GH_TOKEN: ${{ github.token }}
@@ -126,19 +126,16 @@ jobs:
           export PATH="$GITHUB_WORKSPACE/controller:$PATH"
           git config user.name 'ChatGPT'
           git config user.email 'chatgpt@users.noreply.github.com'
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/continue_billing.py" \
-            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/billing-continuation.json" \
-            --repair-patch "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/gate-repair.patch" \
-            --release-drift "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/release-generated.patch" \
-            --resume-private-dir "$RUNNER_TEMP/billing-custody-relay/recovery" \
-            --custody-recipient "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody-recipient.pem" \
-            --output "$RUNNER_TEMP/billing-publication-result" \
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/container_billing.py" host \
+            --assets "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH" \
+            --incoming "$RUNNER_TEMP/billing-custody-relay/recovery" \
+            --runtime "$RUNNER_TEMP/billing-container-runtime" \
             --publish-timeout 3600
       - name: Report observed native publication outcome
         if: always()
         shell: bash
         run: |
-          python3 - "$RUNNER_TEMP/billing-publication-result/billing.json" <<'PY'
+          python3 - "$RUNNER_TEMP/billing-container-runtime/result/billing.json" "$RUNNER_TEMP/billing-container-runtime/bootstrap-public/billing-container.json" <<'PY'
           import json, pathlib, sys
           p = pathlib.Path(sys.argv[1])
           if p.is_file():
@@ -147,12 +144,18 @@ jobs:
               print(json.dumps({k: value[k] for k in keys if k in value}, indent=2))
           else:
               print('No terminal native result. No publication or custody success is inferred.')
+          bootstrap = pathlib.Path(sys.argv[2])
+          if bootstrap.is_file():
+              value = json.loads(bootstrap.read_text())
+              print(json.dumps({k:value[k] for k in ('status', 'original_task_imported_on_host', 'original_task_exported_on_host', 'blocker') if k in value}, indent=2))
           PY
       - name: Retain source recovery, native proof, and encrypted custody
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: billing-native-continuation
-          path: ${{ runner.temp }}/billing-publication-result/
+          path: |
+            ${{ runner.temp }}/billing-container-runtime/result/
+            ${{ runner.temp }}/billing-container-runtime/bootstrap-public/
           if-no-files-found: warn
           retention-days: 90

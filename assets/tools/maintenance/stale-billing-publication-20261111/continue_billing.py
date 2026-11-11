@@ -17,8 +17,8 @@ REPO = "DecapodLabs/decapod"
 BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
 SOURCE = "26a499d9f0789a5ed00605d23cfc57f5392ae8fc"
 OPS = "ops/stale-billing-publication-20261111"
-ACTOR = "chatgpt-stale-billing-next"
-RECEIVER = "chatgpt-stale-billing"
+ACTOR = "chatgpt-stale-billing"
+RECEIVER = "chatgpt-stale-billing-next"
 CONTROLLER = "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
 CONTROLLER_ARCHIVE = "718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06"
 CURRENT = "c7609e42bbbcff9c72af6be7a86333d4b0408922"
@@ -62,15 +62,15 @@ def main():
     prior = resume["prior_result"]
     task_id = "code_01m76aq15fea61e8"
     preserved_branch = "agent/chatgpt-stale-billing/" + task_id + "-cloud-approval"
-    native_digest = "sha256:0d1d1c1699212cc870d66c8495fc05dc0486dabd0a8b0e24374d65e8adbab343"
+    native_digest = "sha256:d8ca6ffaef87b2ff63283eb1906e5f54f32b1e8ec5b53fdd5408cdfd1f614090"
     approved_inventory = "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577"
     if (manifest.get("repository") != REPO or manifest.get("base_sha") != BASE
             or manifest.get("source_sha") != SOURCE or manifest.get("slug") != "billing"
             or resume.get("task_id") != task_id or resume.get("branch") != preserved_branch
-            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43115014473"
+            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43116091778"
             or resume.get("candidate_sha") != CURRENT or resume.get("candidate_tree") != CURRENT_TREE
             or resume.get("native_transfer", {}).get("plaintext_sha256") != native_digest
-            or resume.get("native_transfer", {}).get("transfer_id") != "01M76CY9MZA01A2EC1FBYR76JE"
+            or resume.get("native_transfer", {}).get("transfer_id") != "01M76DE2RNCERKRCA9J5C23RXG"
             or prior.get("task") != task_id or prior.get("branch") != preserved_branch
             or prior.get("status") != "blocked" or prior.get("head_sha") is not None
             or prior.get("pushed") is not False or prior.get("checkpoints") is not False
@@ -80,7 +80,7 @@ def main():
             or prior.get("custody_exported") is not True or prior.get("full_boundary_passed") is not False
             or prior.get("final_head_sha") != CURRENT or prior.get("source_dirty_after_attempt") is not True
             or set(resume.get("private_files", {})) != {"native-transfer.json", "pending-tracked.patch"}
-            or len(resume.get("pending_paths", [])) != 13
+            or len(resume.get("pending_paths", [])) != 18
             or resume.get("approved_baseline_inventory_digest") != approved_inventory
             or manifest.get("allowed_source_changes") != []
             or set(manifest.get("release_generated_paths", [])) != RELEASE_GENERATED
@@ -313,6 +313,9 @@ def main():
         if (env.get("GITHUB_ACTIONS") != "true" or env.get("BUILDKITE") == "true"
                 or env.get("GITHUB_REPOSITORY") != REPO or env.get("GITHUB_REF") != "refs/heads/" + OPS):
             raise Blocked("requires the exact authorized hosted operations context")
+        if not Path("/.dockerenv").is_file() or os.geteuid() == 0 or os.geteuid() != root.stat().st_uid:
+            raise Blocked("original billing custody requires the real native container and repository owner's UID")
+        result["container_execution"] = dict(actual_dockerenv=True, effective_uid=os.geteuid(), repository_owner_uid=root.stat().st_uid)
         located = shutil.which("decapod", path=env.get("PATH"))
         if not located:
             raise Blocked("official controller unavailable")
@@ -357,7 +360,7 @@ def main():
         native = json.loads(native_file.read_bytes())
         if (native["receiver"] != ACTOR or native["transfer_id"] != resume["native_transfer"]["transfer_id"]
                 or native["projection"]["task"]["id"] != task_id or native["source_commit"] != BASE
-                or native["source_branch"] != "billing-publication-control-eefdb3cc2f1a"):
+                or native["source_branch"] != "billing-publication-control-acfe121a6fb2"):
             raise Blocked("private native transfer does not match authenticated original task")
         observed_paths = {entry.split("\t", 2)[2] for entry in run("inspect approved repair patch paths", "git", "apply", "--numstat", "-z", data=patch).split("\0") if entry}
         release_paths = {entry.split("\t", 2)[2] for entry in run("inspect observed release drift paths", "git", "apply", "--numstat", "-z", data=release_patch).split("\0") if entry}
@@ -368,7 +371,10 @@ def main():
         run("acquire native session", "decapod", "session", "acquire")
         baseline = reconciliation(doc("initialize native control plane", "rpc", "--op", "agent.init"), "baseline_reconciliation", True)
         run("discover native capabilities", "decapod", "capabilities", "--format", "json")
-        run("inspect native workspaces", "decapod", "workspace", "status")
+        native_container = doc("inspect native container before original task import", "workspace", "status")
+        if native_container.get("workspace", {}).get("container", {}).get("in_container") is not True:
+            raise Blocked("native workspace inspection did not observe a real container before custody import")
+        result["container_execution"]["native_before_import"] = native_container["workspace"]["container"]
         imported = doc("import original native billing custody", "todo", "transfer", "import",
                        "--input", str(native_file), "--expected-digest", native_digest,
                        "--accept-source-transfer", "--format", "json")
@@ -384,7 +390,7 @@ def main():
         branch = preserved_branch
         result["branch"] = branch
         admitted = doc("admit original task workspace", "workspace", "ensure", "--branch", branch)
-        if admitted.get("can_work") is not True or admitted.get("branch") != branch:
+        if admitted.get("can_work") is not True or admitted.get("branch") != branch or admitted.get("in_container") is not True:
             raise Blocked("native workspace admission did not authorize the original branch")
         work = Path(admitted["worktree_path"]).resolve()
         if run("verify native workspace initial base", "git", "rev-parse", "HEAD", cwd=work).strip() != BASE:
@@ -479,8 +485,6 @@ def main():
         for path in NATIVE_DOCS:
             if run("verify native generated doc " + Path(path).stem, "git", "hash-object", path, cwd=work).strip() != reviewed_files[path]["after_blob"]:
                 raise Blocked("official native docs output differs from independently reviewed deterministic source rendering")
-        run("refresh full official release surfaces through native project prerequisites", "decapod", "govern", "project-check", "--refresh-specs", cwd=work)
-        result["project_prerequisites"] = dict(completed=True, publication_ready=False, command="decapod govern project-check --refresh-specs")
         native_refresh = doc("refresh official release projections", "rpc", "--op", "specs.refresh", cwd=work)
         result["native_projection_refresh"] = native_refresh
         for name in ("ARCHITECTURE", "INTERFACES", "SECURITY"):
@@ -491,9 +495,9 @@ def main():
         doc("record actual native gate repair evidence", "govern", "trajectory", "record", "--run-id", run_id, "--task-id", task,
             "--phase", "validation", "--scope", "billing", "--boundary", "Continue original transferred task and published source; no failed readiness is reused as proof",
             "--command", "git merge --ff-only " + CURRENT, "--command", "git apply authenticated pending snapshot " + pending_meta["sha256"],
-            "--command", "decapod docs build", "--command", "decapod govern project-check --refresh-specs", "--command", "decapod rpc --op specs.refresh",
+            "--command", "decapod docs build", "--command", "decapod rpc --op specs.refresh",
             "--check", "git-diff-whitespace=passed", "--check", "prior-full-publication=failed", "--check", "current-full-workbranch-validation=unavailable",
-            "--evidence", "Native run 43111757803 stopped on actual source validation; run 43115014473 restored the task and prepared repairs but rejected an unsupported trajectory status before checkpoint. Restore its authentic pending source and journal, use the supported failed status and native full-surface refresh; correct independently reviewed clippy needless borrow, exact generated docs, and six official v0.138.2 release projections. All source/CI policy remains unchanged. Full native readiness must rerun for this new checkpoint.", cwd=work)
+            "--evidence", "Native run 43111757803 stopped on actual source validation. Run 43116091778 preserved the original task and all 18 pending paths after native release healing, but project prerequisites correctly required an actual container. This continuation imports that exact native custody and journal only inside the native-prepared real container, preserves reviewed lint/docs/release material, and records a checkpoint before rerunning JSON project prerequisites and full native publication. No failed or partial check is reused as proof; source and CI policy remain unchanged.", cwd=work)
         changed = set(run("inspect exact gate repair paths", "git", "diff", "HEAD", "--name-only", "-z", cwd=work).split("\0")) - {""}
         changed |= set(run("inspect untracked gate repair paths", "git", "ls-files", "--others", "--exclude-standard", "-z", cwd=work).split("\0")) - {""}
         if not changed <= REPAIR_SCOPE | RELEASE_GENERATED | ATTESTATION_SPECS | {".decapod/governance.json"}:
@@ -516,9 +520,52 @@ def main():
         result.update(checkpoints=True, checkpoint_verification=proof)
         clean("verify continued candidate cleanliness")
         verify_material("exact continued committed candidate")
+        code, stdout, stderr, timed_out = execute("validate exact committed project prerequisites in native container", ["decapod", "govern", "project-check", "--refresh-specs", "--format", "json"], cwd=work)
+        try:
+            project_check = json.loads(stdout)
+        except ValueError:
+            project_check = None
+        result["project_prerequisites"] = dict(command="decapod govern project-check --refresh-specs --format json", exit_code=code, timeout=timed_out, publication_ready=False, head_sha=head, native_json=project_check)
+        report = project_check.get("report", {}) if isinstance(project_check, dict) else {}
+        if (code or timed_out or not isinstance(project_check, dict) or project_check.get("status") != "ok"
+                or project_check.get("scope") != "project_prerequisites" or project_check.get("publication_ready") is not False
+                or project_check.get("readiness") is not None or report.get("status") != "ok"
+                or report.get("fail_count") != 0 or report.get("failures") != []):
+            result["blocker"] = dict(stage=stage, exit_code=code, timeout=timed_out, failures=scrub(report.get("failures", [])), codes=sorted(set(re.findall(CODES, stdout + stderr))), full_output="encrypted diagnostics")
+            raise Blocked("exact committed native project prerequisites did not pass every required gate")
+        if run("verify project check preserved exact commit", "git", "rev-parse", "HEAD", cwd=work).strip() != head:
+            raise Blocked("native project prerequisites changed the checkpointed commit")
+        verify_material("after successful native project prerequisites")
+        receipt_paths = set(run("inspect native preparation receipt paths", "git", "diff", "HEAD", "--name-only", "-z", cwd=work).split("\0")) - {""}
+        if not receipt_paths <= {".decapod/governance.json"}:
+            raise Blocked("native project prerequisites changed source beyond its preparation journal")
+        if receipt_paths:
+            preparation_head = head
+            checkpoint_id = "billing-project-prerequisites-" + env["GITHUB_RUN_ID"] + "-" + env["GITHUB_RUN_ATTEMPT"]
+            doc("checkpoint authentic native preparation receipt", "govern", "artifacts", "checkpoint", "--id", checkpoint_id,
+                "--summary", "Preserve the native successful project-prerequisites receipt for " + preparation_head + "; this is preparation evidence only. Full publisher must prove the final exact candidate.",
+                "--proof-ref", SPEC_PREFIX + "VALIDATION.md", cwd=work)
+            if set(run("verify receipt checkpoint scope", "git", "diff", "HEAD", "--name-only", "-z", cwd=work).split("\0")) - {""} != {".decapod/governance.json"}:
+                raise Blocked("native preparation checkpoint exceeded governance-only scope")
+            verify_material("after native preparation receipt checkpoint")
+            run("stage authentic native preparation receipt", "git", "add", "--", ".decapod/governance.json", cwd=work)
+            run("commit authentic native preparation receipt", "git", "commit", "--signoff", "-m", "chore(governance): preserve native billing project prerequisites", cwd=work)
+            head = run("bind final receipt-bearing candidate", "git", "rev-parse", "HEAD", cwd=work).strip()
+            if run("verify receipt commit parent", "git", "rev-parse", head + "^", cwd=work).strip() != preparation_head:
+                raise Blocked("native receipt commit did not continue the exact prepared candidate")
+            if set(run("verify committed receipt-only delta", "git", "diff", "--name-only", "-z", preparation_head, head, cwd=work).split("\0")) - {""} != {".decapod/governance.json"}:
+                raise Blocked("committed native receipt changed non-governance material")
+            result.update(head_sha=head, tree=run("bind final receipt-bearing tree", "git", "rev-parse", "HEAD^{tree}", cwd=work).strip())
+            result["project_prerequisites"]["receipt_commit_sha"] = head
+            proof = doc("verify final receipt-bearing checkpoint lineage", "govern", "artifacts", "verify-checkpoints", "--base-branch", BASE, "--head-ref", head, "--target-base", "master", "--format", "json", cwd=work)
+            if not (proof.get("history_proven") is True and proof.get("inspection_complete") is True and proof.get("findings") == [] and proof.get("base_commit") == BASE and proof.get("head_commit") == head):
+                raise Blocked("final receipt-bearing candidate checkpoint lineage is not proven")
+            result["checkpoint_verification"] = proof
+        clean("verify clean final candidate after native preparation")
+        verify_material("exact final candidate after native preparation")
         archive = private / "candidate.bundle"
-        run("preserve continued checkpointed source", "git", "bundle", "create", str(archive), "HEAD", "^" + BASE, cwd=work)
-        run("verify preserved source bundle", "git", "bundle", "verify", str(archive), cwd=work)
+        run("preserve final checkpointed source", "git", "bundle", "create", str(archive), "HEAD", "^" + BASE, cwd=work)
+        run("verify preserved final source bundle", "git", "bundle", "verify", str(archive), cwd=work)
         result["candidate_bundle"] = encrypt(archive, "billing-candidate.der")
         fresh_target()
         current_remote()

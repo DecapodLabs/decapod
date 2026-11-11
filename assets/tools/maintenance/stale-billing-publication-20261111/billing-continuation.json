@@ -200,16 +200,16 @@
     }
   },
   "resume": {
-    "prior_run_id": "43115014473",
-    "prior_operations_sha": "0cf50ed2dfd70189eec830af211587b2fd1049ae",
-    "prior_report_sha256": "sha256:e884cac8b4e11f95b18251fabcc8d39702c4a2c5494bda4a684b0d31ee1d5d92",
+    "prior_run_id": "43116091778",
+    "prior_operations_sha": "a7efef8b2737a4b38c8040e00face07dbb6d4cec",
+    "prior_report_sha256": "sha256:89db3a331ab97c32aff9468962d9e1415fc1e248fcd7f9100903b496765b7f77",
     "prior_result": {
       "schema": "decapod.branch-publication.v1",
       "slug": "billing",
       "repository": "DecapodLabs/decapod",
       "base_sha": "c5de35a89b27e788169612ae71681e45c13bf71a",
       "source_sha": "26a499d9f0789a5ed00605d23cfc57f5392ae8fc",
-      "operations_sha": "0cf50ed2dfd70189eec830af211587b2fd1049ae",
+      "operations_sha": "a7efef8b2737a4b38c8040e00face07dbb6d4cec",
       "status": "blocked",
       "branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
       "task": "code_01m76aq15fea61e8",
@@ -223,9 +223,9 @@
       "pr_url": null,
       "resumed": true,
       "continuation_from": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
-      "prior_run_id": "43111757803",
+      "prior_run_id": "43115014473",
       "imported": true,
-      "incoming_transfer_id": "01M76BR4SYWMBE4NJ98NH30V59",
+      "incoming_transfer_id": "01M76CY9MZA01A2EC1FBYR76JE",
       "controller": {
         "release": "v0.138.2",
         "binary_sha256": "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723",
@@ -254,12 +254,14 @@
       },
       "admission_seed": {
         "artifact": "billing-admission-seed.der",
-        "plaintext_sha256": "sha256:fe2e96ed60c4dc3f135ac26e9920f75e2e63110621c88852262919c1f4f2a3ac",
-        "ciphertext_sha256": "sha256:e3415b2e59e7ccd19a8c7cceb41eb72fdc6ac92749527aa30ada113a10c4252b"
+        "plaintext_sha256": "sha256:1f8706cf2414fe8ce34c9185ea07277f595ae117d35c5906f6981a2703a85ef6",
+        "ciphertext_sha256": "sha256:214420cdacd3117a99c433a7179e53edc7a2db9924d72c04967b8217709f861f"
       },
-      "original_committed_journal": {
-        "blob": "82825c5e9fb294269958a21b6b373369b5d73f44",
+      "original_pending_journal": {
+        "blob": "0bb993c9a62b5d0df70cf1687c585d7e2d91588a",
         "source_commit": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
+        "pending_patch_sha256": "sha256:4bd2ed697dd65042aaf61fd1fdad82712ecceff70fe99107a48f1bd81b6c1136",
+        "prior_run_id": "43115014473",
         "exact_bytes_preserved": true
       },
       "prior_checkpoint_verification": {
@@ -290,89 +292,74 @@
         "carrier_approval": false,
         "execution_proof": false
       },
-      "native_projection_refresh": {
-        "id": "01M76CXYZ7YSFA28SM6JNHYSYK",
-        "success": true,
-        "receipt": {
-          "op": "specs.refresh",
-          "timestamp": "1794437479Z",
-          "inputs_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
-          "outputs_hash": "57666b4dcd94250701f431d741b5cfab59bf4a996a86567d2cd62e91568e27ec"
-        },
-        "result": {
-          "manifest_path": ".decapod/managed/specs/.manifest.json",
-          "refreshed_at": "1794437479Z",
-          "repo_signal_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f"
-        },
-        "allowed_next_ops": []
-      },
       "blocker": {
-        "stage": "record actual native gate repair evidence",
+        "stage": "refresh full official release surfaces through native project prerequisites",
         "exit_code": 1,
         "timeout": false,
         "codes": [],
-        "detail": "session: auto-acquired for agent 'chatgpt-stale-billing'.\nValidation error: invalid trajectory check status 'blocked': expected passed|failed|partial|unavailable\n",
+        "detail": "76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/Contract test fixtures\n  [external-integrations] Mock/stub implementations -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/Mock/stub implementations\n  [persistent-state] migrations/ directory for schema migrations -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/migrations/ directory for schema migrations\n  [persistent-state] storage/ or repository/ abstraction layer -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/storage/ or repository/ abstraction layer\n  [persistent-state] test fixtures for database integration tests -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/test fixtures for database integration tests\n  [persistent-state] .decapod/managed/artifacts/custody/ directory for epistemic custody artifacts -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/.decapod/managed/artifacts/custody/ directory for epistemic custody artifacts\n  [scheduled-jobs] schedules/ or cron/ directory -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/schedules/ or cron/ directory\n  [scheduled-jobs] Schedule test fixtures -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/Schedule test fixtures\n\n",
         "full_output": "encrypted diagnostics",
         "reason": "native or Git command failed; preserve its exact diagnosis"
       },
       "transfer": {
         "task_id": "code_01m76aq15fea61e8",
-        "transfer_id": "01M76CY9MZA01A2EC1FBYR76JE",
-        "receiver": "chatgpt-stale-billing-next",
+        "transfer_id": "01M76DE2RNCERKRCA9J5C23RXG",
+        "receiver": "chatgpt-stale-billing",
         "native_source_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
-        "native_source_branch": "billing-publication-control-eefdb3cc2f1a",
+        "native_source_branch": "billing-publication-control-acfe121a6fb2",
         "source_sealed": true,
         "candidate_sha": null,
         "candidate_branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
         "artifact": "billing-custody.der",
-        "plaintext_sha256": "sha256:0d1d1c1699212cc870d66c8495fc05dc0486dabd0a8b0e24374d65e8adbab343",
-        "ciphertext_sha256": "sha256:5dd04deb56916d280b1d015eecb2336da4c43aa248125a197a4aacb6403c9c28"
+        "plaintext_sha256": "sha256:d8ca6ffaef87b2ff63283eb1906e5f54f32b1e8ec5b53fdd5408cdfd1f614090",
+        "ciphertext_sha256": "sha256:e5d2590e57568e4b3da69fa11fb128bec0cde75146c1953859458e574150ced2"
       },
       "source_dirty_after_attempt": true,
       "final_head_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
       "recovery_candidate_bundle": {
         "artifact": "billing-candidate-recovery.der",
         "plaintext_sha256": "sha256:8b3988b9aa3857eebde86740ebddb4a03120f20f7ed71e49ec7f2cdf9773fafc",
-        "ciphertext_sha256": "sha256:bec17f31ba44688eddc01d5e0c54d2c78e0d0bee3bfb3d8b64130687919ad83f"
+        "ciphertext_sha256": "sha256:78349257532987d02369b223cd401fc2e95905feadd4062d0077937fcff46b5f"
       },
       "observed_remote_head_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
       "diagnostics": {
         "artifact": "billing-diagnostics.der",
-        "plaintext_sha256": "sha256:1d01239bafd6053d113ab3b129e12dfdd8959760fef9c9ea34b931c85c229514",
-        "ciphertext_sha256": "sha256:1e498292d2ee6b3f4c7a2afc8741bb074627d170268128048aa49a5a22c66bc4"
+        "plaintext_sha256": "sha256:e9a68455907aebbab6729c353b000a04afbcd9d59b65698fa010635507c502aa",
+        "ciphertext_sha256": "sha256:e530a188c98a0d7242a86b1829deb94bdb1aed696b5f405201e2c86be4d28be8"
       }
     },
     "task_id": "code_01m76aq15fea61e8",
     "branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
     "candidate_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
     "candidate_tree": "f08a124d242dbb85d9eb058a16f3c5bb68a039a3",
-    "receiver": "chatgpt-stale-billing-next",
+    "receiver": "chatgpt-stale-billing",
     "native_transfer": {
       "task_id": "code_01m76aq15fea61e8",
-      "transfer_id": "01M76CY9MZA01A2EC1FBYR76JE",
-      "receiver": "chatgpt-stale-billing-next",
+      "transfer_id": "01M76DE2RNCERKRCA9J5C23RXG",
+      "receiver": "chatgpt-stale-billing",
       "native_source_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
-      "native_source_branch": "billing-publication-control-eefdb3cc2f1a",
+      "native_source_branch": "billing-publication-control-acfe121a6fb2",
       "source_sealed": true,
       "candidate_sha": null,
       "candidate_branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
       "artifact": "billing-custody.der",
-      "plaintext_sha256": "sha256:0d1d1c1699212cc870d66c8495fc05dc0486dabd0a8b0e24374d65e8adbab343",
-      "ciphertext_sha256": "sha256:5dd04deb56916d280b1d015eecb2336da4c43aa248125a197a4aacb6403c9c28"
+      "plaintext_sha256": "sha256:d8ca6ffaef87b2ff63283eb1906e5f54f32b1e8ec5b53fdd5408cdfd1f614090",
+      "ciphertext_sha256": "sha256:e5d2590e57568e4b3da69fa11fb128bec0cde75146c1953859458e574150ced2"
     },
-    "package_sha256": "sha256:f369b89e44bacade9ed2ae701518c9acba271b7bd67268d38b5e68ce72eb70b3",
+    "package_sha256": "sha256:fbbc18a87f9a36debd0eb1eee259c275fd897fdfa1e0d62027659e5550c05986",
     "private_files": {
       "native-transfer.json": {
-        "sha256": "sha256:0d1d1c1699212cc870d66c8495fc05dc0486dabd0a8b0e24374d65e8adbab343",
-        "bytes": 53647
+        "sha256": "sha256:d8ca6ffaef87b2ff63283eb1906e5f54f32b1e8ec5b53fdd5408cdfd1f614090",
+        "bytes": 78645
       },
       "pending-tracked.patch": {
-        "sha256": "sha256:4bd2ed697dd65042aaf61fd1fdad82712ecceff70fe99107a48f1bd81b6c1136",
-        "bytes": 20246
+        "sha256": "sha256:e7c2e4dfa8a4d20b5a7172e7d472917337ff998cfef370d510202fe2a0f87420",
+        "bytes": 23087
       }
     },
     "pending_paths": [
       ".decapod/governance.json",
+      ".decapod/managed/Dockerfile.decapod",
       ".decapod/managed/specs/.manifest.json",
       ".decapod/managed/specs/ARCHITECTURE.md",
       ".decapod/managed/specs/INTENT.md",
@@ -382,6 +369,10 @@
       ".decapod/managed/specs/SECURITY.md",
       ".decapod/managed/specs/SEMANTICS.md",
       ".decapod/managed/specs/VALIDATION.md",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "CODEX.md",
+      "GEMINI.md",
       "docs/agent/config-schema.md",
       "docs/cloud-repository-billing.md",
       "src/decapod/lib.rs"
@@ -498,7 +489,7 @@
       "status": "needs_reconciliation"
     },
     "approved_baseline_inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
-    "recovery_scope": "Authenticated pending material from failed helper status-enum recording, after native source and doc repair but before checkpoint. Restore exact bytes, continue same task, and regenerate native release surfaces through supported project-check."
+    "recovery_scope": "Authenticated 18-path pending material from the actual native container prerequisite failure. Import the original task only inside a real native-prepared coordination container, restore exact source and journal, checkpoint, then run JSON project prerequisites. Preserve only native preparation receipt changes through a governance-only checkpoint before full publication."
   },
   "projection_reference_tree": "6b1963f1a66e6ec624972a9148fdd98a285998a8",
   "native_projection_comparison": {
@@ -522,5 +513,13 @@
     ],
     "every_other_manifest_field_exact": true,
     "no_manual_machine_state_normalization": true
+  },
+  "native_container_continuation": {
+    "host_role": "Native workspace coordination only; no original billing import, claim or export",
+    "original_task_owner": "Actual native-prepared container child, actual repository UID",
+    "launch_contract": "Exact native backup, labels, whole-repository bind, readonly snapshot, and private tmpfs; TTY removed, scoped runtime inputs added, ephemeral tools installed, only private tmpfs ownership changed before setpriv",
+    "project_check_order": "Restore authentic18 paths; native projection receipt/material guard; source checkpoint; JSON project prerequisites; native governance-only receipt checkpoint if needed; exact final full native publisher",
+    "project_check_is_publication_proof": false,
+    "host_custody_fallback": false
   }
 }
