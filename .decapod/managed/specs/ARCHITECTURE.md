@@ -820,7 +820,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
+- Repository signal fingerprint: `820ec8082a1c8f742ab294ca9cef2a1781608ff92ed1c972eaa7347c17b07f7f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1026,3 +1026,24 @@ constraints; task-owner/dependency keys have matching composite UNIQUE
 indexes; preferences use `UNIQUE(category,key)`. Runtime initializers stop
 recreating redundant trees. Reverse-key indexes remain. No data or proof
 encodings change; cloud PostgreSQL migration ownership stays with Propodus.
+
+## Cloud repository purchase handoff
+
+Before `run_init_apply`, `prepare_cloud_roster` in `src/decapod/lib.rs`
+collects the GitHub repository and requested usernames through explicit flags
+or the human interactive init flow. `RepoContext` persists
+`cloud_repository` and `cloud_github_users` without credentials. An existing
+GitHub origin must match purchase intent; a new project may name its intended
+repository before configuring origin. `cloud_generation_summary` adds that
+repository to the generation seed while preserving the authored summary.
+
+`src/decapod/core/cloud_backend.rs` normalizes the bounded roster and builds
+a fixed HTTPS approval URL. Human interactive init may open it; headless,
+proof, dry-run and noninteractive execution only print it. This init handoff
+does not invoke the legacy login bootstrap or create a cloud session. Explicit
+session acquisition retains its existing independent credential flow.
+
+The coordinated Propodus deployment must verify GitHub identity, repository
+admin permission and paid repository-specific seats. This CLI recovery does
+not deploy that service or prove its Stripe and native-RPC integrations; those
+dependencies remain recorded in `docs/cloud-repository-billing.md`.

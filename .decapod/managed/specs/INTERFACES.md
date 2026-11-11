@@ -1064,7 +1064,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
+- Repository signal fingerprint: `820ec8082a1c8f742ab294ca9cef2a1781608ff92ed1c972eaa7347c17b07f7f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1341,3 +1341,22 @@ operation, task revision, event sequence, transaction semantics, or cloud
 schema change. An unexpected historical index or missing unique enforcement
 raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
 Freed SQLite pages are reusable but are not auto-vacuumed.
+
+## Cloud purchase intent
+
+Both init surfaces accept `--cloud-repository owner/repo` and
+`--github-users alice,bob`. Cloud init requires 1–100 distinct valid GitHub
+usernames, lowercases/sorts them, and rejects a repository inconsistent with an
+existing GitHub origin before project-config writes. Refresh preserves the
+requested roster unless explicitly replaced. Non-secret TOML fields are
+`[repo].cloud_repository` and `[repo].cloud_github_users`; they grant neither
+access nor a datastore route override. Generation context and the test-only
+init registration carry the repository name.
+
+The purchase URL uses the fixed Propodus HTTPS `billing` destination and
+encoded repository/users intent. Interactive init may open the browser;
+headless, proof, dry-run and noninteractive modes print the URL. Init reports
+purchase approval and does not claim that a session or paid seat exists.
+The hosted service must independently derive price/quantity, verify admin
+authority and reconcile payment before granting repository-specific access.
+Its deployment and native client integration remain separately required.

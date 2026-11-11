@@ -29,7 +29,19 @@ fn run_decapod(dir: &Path, args: &[&str], agent: &str, token: &str) -> std::proc
 fn prepare_cloud_repo(dir: &Path, remote: &str) {
     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            remote
+                .trim_start_matches("git@github.com:")
+                .trim_end_matches(".git"),
+            "--github-users",
+            "alexhraber",
+        ])
         .current_dir(dir)
         .output()
         .expect("initialize cloud proof repository");

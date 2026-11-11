@@ -1051,7 +1051,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
+- Repository signal fingerprint: `820ec8082a1c8f742ab294ca9cef2a1781608ff92ed1c972eaa7347c17b07f7f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1419,3 +1419,33 @@ and record a distinct checkpoint for the replayed material. Earlier successful
 v0.137.4 execution remains historical evidence; the rebased commit requires
 fresh complete publication proof and execution of the documentation-index and
 real-executable regressions against the captured accepted target.
+
+## Recovered cloud purchase-intent boundary
+
+The source recovery preserves the CLI approval-link proposal from
+`26a499d9f0789a5ed00605d23cfc57f5392ae8fc` against accepted target
+`c5de35a89b27e788169612ae71681e45c13bf71a`, including accepted historical
+verification, Laya and documentation-index changes. Historical commits and
+prior checks remain evidence of their original candidates only.
+
+`tests/init_config_behavior.rs` checks both init surfaces, requested roster
+persistence, normalization, refresh preservation, duplicate rejection and
+repository/origin mismatch before config writes. Existing cloud storage,
+boundary and live-proof setup callers supply the newly required requested
+repository and usernames; the missing-roster regression intentionally omits
+them. Both `InitWithCli` construction sites carry the new fields and the
+existing `RepoContext` test literal retains default initialization.
+
+`cloud_init_prints_purchase_approval_without_creating_machine_session` in
+`tests/cloud_backend_storage.rs` replaces the obsolete automatic-login
+expectation. It requires the approval URL, no machine session file, no
+`Cloud setup ready` claim and no exposed mock credential. Independent explicit
+session-acquisition tests retain their original credential expectations.
+
+These are test obligations, not execution claims. Full native validation must
+execute the current candidate's configured source-CI contract before PR
+publication. This source change cannot prove hosted billing deployment,
+GitHub admin verification, Stripe sandbox purchase or native-client integration.
+The local preparation environment rejects AF_UNIX sockets before broker
+admission, so native task/workspace creation and proof execution require the
+supported hosted environment; no local governance or publication pass is claimed.

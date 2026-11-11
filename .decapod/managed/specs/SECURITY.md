@@ -553,7 +553,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
+- Repository signal fingerprint: `820ec8082a1c8f742ab294ca9cef2a1781608ff92ed1c972eaa7347c17b07f7f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -848,3 +848,21 @@ instructions and leave the record untouched. Native format, canonical path,
 ownership, single-link, byte-size and digest checks remain enforced. Model setup
 uses bounded credential-free public asset transport. Opaque user configuration
 extensions survive refresh but cannot enable evaluation or grant authority.
+
+## Requested roster and hosted purchase authority
+
+The CLI accepts a bounded repository and distinct GitHub usernames. Its public
+approval URL uses a fixed HTTPS destination and encoded allowlisted values;
+config cannot choose a payment host or embed credentials. An existing GitHub
+origin and requested purchase identity must match. Only non-secret request data
+is persisted. Editing the roster, changing a local role or visiting a return
+URL cannot establish cloud authorization.
+
+Propodus must verify managed numeric GitHub identity, live repository-admin
+permission for purchase, paid named repository seats and applicable directory
+grants. A non-admin can request approval without gaining purchase authority.
+Browser launch remains limited to human interactive init and respects
+`DECAPOD_HEADLESS`; proof and dry-run execution never initiate a purchase.
+`cloud_init_prints_purchase_approval_without_creating_machine_session` in
+`tests/cloud_backend_storage.rs` also requires that even explicit mock auth
+does not make the init handoff write a credential or claim cloud readiness.

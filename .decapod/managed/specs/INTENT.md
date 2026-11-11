@@ -287,7 +287,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
+- Repository signal fingerprint: `820ec8082a1c8f742ab294ca9cef2a1781608ff92ed1c972eaa7347c17b07f7f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -443,3 +443,19 @@ UNIQUE btrees' leftmost-key coverage. Do not delete rows, rewrite events, alter
 WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
 This is a bounded local SQLite optimization. Full semantic parity with
 Propodus Supabase remains a separately gated migration (Propodus #71).
+
+## Cloud repository purchase approval
+
+Cloud init carries repository identity into generated context, collects the
+requested GitHub roster and presents the hosted purchase-approval handoff.
+The preserved commercial contract is USD15 per named user per repository
+monthly, with payment approval owned by a verified repository owner/admin.
+The non-secret config records requested intent; it cannot establish a paid
+seat, a cloud credential or datastore authorization. Local use remains
+available without login or purchase.
+
+This recovery preserves the previously authored CLI contribution from
+`26a499d9f0789a5ed00605d23cfc57f5392ae8fc` on the current accepted source.
+Hosted billing deployment, sandbox purchase acceptance and released native
+client credential integration remain separate rollout requirements. A printed
+approval link alone cannot establish their completion.
