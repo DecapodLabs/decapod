@@ -375,7 +375,7 @@ fn arguments() -> Result<(usize, usize), Box<dyn Error>> {
     let reads: usize = std::env::var("DECAPOD_PROBE_READS")
         .unwrap_or_else(|_| "500".to_owned())
         .parse()?;
-    if !(64..=100_000).contains(&rows) || rows % 4 != 0 {
+    if !(64..=100_000).contains(&rows) || !rows.is_multiple_of(4) {
         return Err("DECAPOD_PROBE_ROWS must be divisible by four within 64..100000".into());
     }
     if !(1..=10_000).contains(&reads) {
