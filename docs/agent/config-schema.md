@@ -38,6 +38,9 @@ access has `read`, `write`, `maintainer`, and `owner` tiers, with expiring
 direct user grants for contractors. A client-selected agent ID or local
 `actor_roles` entry cannot elevate cloud authority. A contractor is a bounded
 delegation for the same agent interface, with no separate human CLI workflow.
+Propodus rechecks expiration and revocation on each operation. An expired direct
+grant remains an explicit denial over inherited group, team, or organization
+access; changing an agent ID or local role mapping cannot restore that access.
 
 `[laya] mode = "disabled"` is the default. Set `mode = "required"`
 and install the reviewed profile to opt in to post-proof Laya judgment.
