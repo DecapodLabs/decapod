@@ -4,11 +4,18 @@
 
 The historical candidate failed dependency denial on Tokio 1.52.3
 (`RUSTSEC-2026-0386`) and governance validation on `PR_MERGE_CONFLICT`.
-Reconciliation starts from accepted v0.137.2 master, retaining its Tokio 1.53.3
+Reconciliation retains accepted v0.137.4 master and its Tokio 1.53.3
 root lockfile, current release workflow, collector policy and controller
 allowlist. Genuine native task/workspace custody, current-source spec reviews,
 checkpoint history and final-candidate validation remain necessary; source
 reconciliation cannot retrospectively prove the original development history.
+
+An upstream advance invalidates the old publication base even when a previous
+candidate has successful source-CI receipts. Current integration preserves the
+accepted test-only plugin selection and its material validation contract. Old
+receipts retain their original base/head bindings; reconciliation onto the new
+accepted base requires native custody, checkpoints and fresh exact-candidate
+publication checks. `PUBLICATION_MATERIAL_BASE_CHANGED` is not a test waiver.
 
 The inactive `tests/fixtures/release_pinned_preparation.yml` retains isolated
 release-plz preparation after removal of retired Vega worker-lock commands.
@@ -994,7 +1001,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4ec4ddb81e1c00a418142dc568f2e1a93538318efcad93feb012fe5f012918f7`
+- Repository signal fingerprint: `7c658f17b23d0b0d1b30f95749f336270f68db689fb6dc0f6e7fcda6113852a2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1293,6 +1300,13 @@ included in the existing required `selective-plugins` source-CI target;
 their presence is a test obligation, not an executed passing result. They add
 no runtime seeding behavior, concurrency or hosted-storage qualification,
 performance measurement, or publication-readiness claim.
+
+Changes under `tests/plugins/` select that same complete plugin recipe, including
+`//:plugins_aptitude_tests`, even when production source is unchanged.
+`tests/source_ci_profile_policy.rs` checks the test-only selection, required job
+inventory, identical production/test recipes, and preservation of unrelated-path
+and release-only exclusions. A green `not_applicable` result cannot establish
+that the prompt-history regressions executed.
 
 ## Datastore production qualification (v0.137.0 review)
 
