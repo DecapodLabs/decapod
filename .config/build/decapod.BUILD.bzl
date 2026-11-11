@@ -212,7 +212,7 @@ def decapod_targets():
 
     rust_test(
         name = "core_tests",
-        srcs = ["tests/core/core.rs"],
+        srcs = ["tests/core/core.rs", "tests/datastore_relational_compaction.rs"],
         edition = "2024",
         crate_features = ["supabase-cloud"],
         rustc_env_files = [":cargo_pkg_env"],
