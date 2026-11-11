@@ -81,6 +81,61 @@ fn catalog_shape(catalog: &RequiredCatalog) -> Vec<(CheckKey, CheckKind, Invocat
 }
 
 #[test]
+fn preparation_research_preserves_release_boundaries_without_self_authorization() {
+    let proposed = include_bytes!("../../../../tests/fixtures/release_pinned_preparation.yml");
+    let proposed_text = std::str::from_utf8(proposed).unwrap();
+    let accepted = include_str!("../../../../.github/workflows/release.yml");
+    let artifact_jobs = "\n  # Run 'cargo dist plan'";
+    assert_eq!(
+        accepted.split_once(artifact_jobs).unwrap().1,
+        proposed_text.split_once(artifact_jobs).unwrap().1
+    );
+    let owner = |text: &str| {
+        text.split_once("\n  release-owner:")
+            .unwrap()
+            .1
+            .split_once("\n  release-publish:")
+            .unwrap()
+            .0
+            .to_owned()
+    };
+    assert_eq!(owner(accepted), owner(proposed_text));
+    let admission = |text: &str| {
+        text.split_once("\n  release-publish:")
+            .unwrap()
+            .1
+            .split_once("    steps:\n")
+            .unwrap()
+            .0
+            .to_owned()
+    };
+    assert_eq!(admission(accepted), admission(proposed_text));
+    assert!(!proposed_text.contains("vega-native"));
+    assert!(!proposed_text.contains("decapod-release-native-lock"));
+
+    let (mut declaration, mut sources, facts, _) = inputs();
+    sources.files.insert(
+        ".github/workflows/release.yml".into(),
+        bytes_digest(proposed),
+    );
+    declaration.reviewed_sources_digest = sources.digest().unwrap();
+    // Research fixtures and candidate-authored inventory pins cannot grant a
+    // new workflow execution contract, including with an accepted executor.
+    for executor in [None, Some(accepted_executor())] {
+        assert!(matches!(
+            required_source_catalog_with_executor(
+                Some(&declaration),
+                &sources,
+                &facts,
+                executor.as_ref(),
+            ),
+            Err(PlanningFailure::ControllerContractUnsupported(path))
+                if path == ".github/workflows/release.yml"
+        ));
+    }
+}
+
+#[test]
 fn accepted_executor_requires_complete_exact_compiled_closure_and_git_identities() {
     let expected = accepted_executor();
     assert_eq!(expected.revision(), "b".repeat(40));

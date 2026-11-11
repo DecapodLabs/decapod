@@ -33,3 +33,52 @@ compatible references also normalize, so it is not version-only evidence reuse.
 Actual four-archive derived-release execution and production lock-refresh parity
 remain #1399 obligations. Final exact-candidate evidence belongs in the follow-up
 PR and issue updates; no remaining umbrella is closed by these component checks.
+
+
+## Derived preparation research reconciled on 2026-11-11
+
+PR #1613 preserves the original development head
+`f475d0788e48185022b51c6f0db7fd2fd090430b` and reconciles its residual work with
+accepted `master` `53a55742dfbd100d2f0fd94a91d9b5bdd6c484ee` (v0.137.2).
+The preceding controller-version and native-worker statements describe their
+historical delivery context, not the current release configuration.
+
+The current kernel already verifies the exact root Cargo/changelog release
+delta and rejects root `Cargo.lock` mutation during cargo-dist packaging. Vega's
+separate workspace was retired by #1589/#1593. Its maintenance binary, worker
+lock projection, stale dependency pins and policy transition are not restored.
+The current root lockfile, accepted workflow, collector configuration and
+release ownership remain authoritative.
+
+`tests/fixtures/release_pinned_preparation.yml` retains the proposed isolated
+release-plz preparation and pinned setup actions as an **inactive review
+fixture**. Its source clone prepares the next release PR while publication
+continues to refer to the original accepted checkout. The obsolete Vega lock
+commands are removed. The release-owner boundary, release job admission and
+all downstream artifact jobs/matrices are byte-identical to the accepted
+workflow. The regression also requires the current controller to reject this
+unaccepted fixture's workflow bytes, even if a candidate refreshes its declared
+inventory digest. This file is neither an activated workflow nor independent
+controller acceptance; unknown execution contracts remain blocked.
+
+### Preserved historical execution evidence
+
+The original record at
+[`f475d078`](https://github.com/DecapodLabs/decapod/blob/f475d0788e48185022b51c6f0db7fd2fd090430b/docs/readiness-delivery-checklist.md)
+describes a real opt-in Rust diagnostic against committed source `16b8a32e`:
+pinned release-plz 0.3.171 computed 0.121.0 to 0.121.1, ran API compatibility
+checks successfully, changed the expected manifest/changelog/root-lock and
+then-existing worker-lock paths, and checked idempotent worker projection in
+72.3 seconds. No package, tag, release, registry upload or deployment followed.
+Those observations apply to that historical source; the diagnostic was not
+rerun by this reconciliation. The earlier official v0.121.0 controller's
+`CONTROLLER_CONTRACT_UNSUPPORTED` result is retained, not converted into a pass.
+
+### Remaining proof
+
+Issue #1399 still requires actual nonpublishing release preparation on the
+final candidate, cargo-dist production of all four configured platform
+archives, and the complete bound execution/collection graph. Unit fixtures,
+workflow equivalence, a green source test subset or the historical preparation
+observation cannot satisfy these obligations. Any future workflow activation
+requires separately reviewed controller support and exact-candidate validation.

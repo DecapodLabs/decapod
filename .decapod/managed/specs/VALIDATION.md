@@ -1,5 +1,39 @@
 # Validation
 
+## Derived release research reconciliation (#1613)
+
+The historical candidate failed dependency denial on Tokio 1.52.3
+(`RUSTSEC-2026-0386`) and governance validation on `PR_MERGE_CONFLICT`.
+Reconciliation starts from accepted v0.137.2 master, retaining its Tokio 1.53.3
+root lockfile, current release workflow, collector policy and controller
+allowlist. Genuine native task/workspace custody, current-source spec reviews,
+checkpoint history and final-candidate validation remain necessary; source
+reconciliation cannot retrospectively prove the original development history.
+
+The inactive `tests/fixtures/release_pinned_preparation.yml` retains isolated
+release-plz preparation after removal of retired Vega worker-lock commands.
+`core::readiness_profile::tests::preparation_research_preserves_release_boundaries_without_self_authorization`
+requires unchanged release-owner/admission boundaries and byte-identical
+downstream artifact jobs/matrices. It also requires the controller to reject
+the unaccepted fixture even with a refreshed candidate inventory digest or an
+accepted executor. The active workflow and accepted contract are not widened.
+
+This regression is a library unit test. For the actual changed source paths,
+the existing required, always-selected `supabase-consumer` source check runs
+its unfiltered `cargo test --locked --features supabase-cloud --lib` command
+alongside its listed integration targets. Its complete execution record and
+named unit-test result must establish execution. The selected `selective-core`
+check runs `entrypoint_correctness` for these paths; that job is not evidence
+that this library regression ran. A skipped, ignored, cached without required
+custody, or `not_applicable` result is not a fresh successful execution.
+
+Source regressions do not complete issue #1399. The preserved release-plz
+0.3.171 diagnostic belongs to its historical source. Current nonpublishing
+preparation, all four configured cargo-dist archives and the complete bound
+execution/collection graph remain separate obligations. No fixture, digest
+update, source-CI subset or generated checkpoint grants release authority or
+converts missing platform evidence into success.
+
 ## Immutable push-range ancestry
 
 A feature-branch push supplies the previous branch tip as its `base`,
@@ -960,7 +994,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
+- Repository signal fingerprint: `4ec4ddb81e1c00a418142dc568f2e1a93538318efcad93feb012fe5f012918f7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
