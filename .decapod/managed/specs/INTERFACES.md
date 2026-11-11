@@ -1,5 +1,35 @@
 # Interfaces
 
+## Cloud initialization, continuation, and readiness (#1628)
+
+`decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud
+TODO operations share `core::cloud_client::connect`. Missing custody starts a
+bounded sign-in and returns non-success `onboarding_pending` with a validated
+browser URL and headless resume instruction. A subsequent invocation polls once,
+exchanges only when ready, persists the issued session, and asks the service to
+confirm account completion. Init reports ready only after an authenticated
+read-only task lookup confirms current repository access.
+
+`action_required` describes a service-reported unresolved entitlement without
+inferring price, payment, membership, or seat authority. `repository_denied`
+propagates explicit access denial. `restart_required` preserves uncertainty
+after an interrupted one-time exchange or rotation. The explicit
+`--restart-cloud-signin` flag starts a fresh flow for this binding without
+replaying its old exchange. Normal data failures do not trigger unauthenticated
+retry, mutation replay, or local fallback.
+
+`decapod cloud status` reports only private local phase, credential presence,
+and expiry; its `server_readiness` remains `not_checked`. `--proof` on cloud
+initialization prepares configuration only and does not synthesize sign-in or
+claim readiness. The legacy `cloud login` alias uses the same managed flow.
+No new project provider, deployment, credential, price, or roster field exists.
+The fixture-only origin requires explicit test mode and literal loopback HTTP.
+
+The connector-enabled source requires the Dactyl #100 API and a corresponding
+published registry dependency before Decapod can pass its release-policy gate.
+Source-overlay integration results cannot be reported as package publication,
+real PostgreSQL, hosted account enforcement, or full remote governance proof.
+
 ## Agent delegation and cloud authorization interface
 
 Decapod is invoked by each contributor's coding agent in the repository.
@@ -1064,8 +1094,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `249f5acb280057e0d97b4b6d51afbba9f6a395af1a23c84fb9627f4d70c1301f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

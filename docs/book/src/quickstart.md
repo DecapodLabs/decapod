@@ -23,7 +23,7 @@ ambiguous authority fails closed.
 ## 2. Initialization
 
 Initialize your repository. This is the only human-facing setup command: use
-`--backend cloud` when the repository should use the Propodus todo service.
+`--backend cloud` when the repository should use the managed cloud task service.
 Initialization creates the `.decapod/` directory and scaffolds the initial
 agent entrypoints (`AGENTS.md`, etc.). `.decapod/` is the repo-native substrate
 where governed agent work records intent, context, custody, boundaries,
@@ -34,9 +34,17 @@ agent-driven autonomous upgrades (see [Configuration](configuration.md) and
 
 ```bash
 decapod init
-# For Propodus-backed todos:
+# For managed cloud tasks:
 decapod init --backend cloud
 ```
+
+Cloud initialization may return `onboarding_pending` with a one-time browser
+URL. Open it on a browser-capable device and rerun the same command, including
+from a headless terminal. Setup is ready only when the service confirms account
+completion and an authenticated repository read succeeds. The `--proof` flag
+prepares cloud configuration only; it does not authenticate or establish
+readiness. See [Cloud sign-in and task access](reference/propodus.md) for
+private custody, account requirements, and explicit interrupted-flow recovery.
 
 ## 3. Agent Documentation
 
@@ -54,7 +62,7 @@ Continue only when the prompt gate succeeds and returns `status: allow`.
 
 ## 4. The Agent Handshake
 
-Before performing governed work, an agent must acquire a session. This establishes the agent's identity and permissions for the current work period so later task, workspace, and proof records are attributable (see [CLI Reference](reference/cli.md#decapod-session)). For cloud repositories, session acquisition first establishes local custody and then reuses or refreshes the machine-local Propodus session. Human users should never call this.
+Before performing governed work, an agent must acquire a session. This establishes the agent's identity and permissions for the current work period so later task, workspace, and proof records are attributable (see [CLI Reference](reference/cli.md#decapod-session)). For cloud repositories, session acquisition first establishes local custody and then reuses or refreshes the private managed session through Dactyl. Human users should never call this.
 
 ```bash
 decapod session acquire

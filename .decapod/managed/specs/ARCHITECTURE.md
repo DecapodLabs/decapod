@@ -1,5 +1,37 @@
 # Architecture
 
+## Managed cloud connector and crash-safe custody (#1628)
+
+`core::cloud_client::connect` composes the public Dactyl `CloudConnector` with
+the private `core::cloud_session::SessionStore`. Dactyl resolves discovery and
+the physical route; the active init/session/TODO path does not use the legacy
+Propodus HTTP client or ambient provider/token selectors. Decapod supplies the
+Git-origin repository target and an opaque bearer to the managed bridge.
+
+The session binding contains the validated origin, repository, and canonical
+main-checkout identity. Linked worktrees share a binding; distinct clones and
+origins do not. Private Unix files, no-follow opened descriptors, ownership and
+link checks, bounded records, a stable exclusive lock, and synchronized atomic
+replacement protect durable custody. Credentials and pending bootstrap state
+are never stored in the project. Every persisted phase validates its required
+session/bootstrap/code shape before orchestration uses it.
+
+Preparing, code exchange, session exchange, and refresh persist an in-flight
+marker before dispatch. Reopening an interrupted one-time phase yields
+`RestartRequired`; no uncertain mutation is replayed. Status polling and
+same-session account completion resume safely. Received codes and rotations
+are durable before later requests. Explicit bearer rejection invalidates that
+same bearer under the refresh lock without discarding a newer concurrent
+rotation. Denied or unresolved entitlement retains a safely retryable account
+completion. `DactylTodoStore::check_read_access` uses an existing read-only,
+service-authorized task query; health checks never stand in for authorization.
+
+Unsupported cloud repository-datastore commands fail before local migration,
+presence, group-broker, or SQLite startup. Explicit file-only controls retain
+their own path; this is a capability boundary, not remote kernel parity.
+`tests/cloud_managed_session.rs` exercises the binary through local fixtures;
+it cannot establish server RLS, PostgreSQL atomicity, or protected hosted policy.
+
 ## Agent-invoked authority across local and cloud repositories
 
 The repository's agent remains Decapod's operational caller. Solo/local work
@@ -820,8 +852,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `249f5acb280057e0d97b4b6d51afbba9f6a395af1a23c84fb9627f4d70c1301f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

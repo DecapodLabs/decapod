@@ -1,5 +1,8 @@
 //! Local HTTP fixtures. These prove client composition, never PostgreSQL or
 //! service authorization. The real service profile lives in supabase_service.rs.
+#[path = "common/cloud_managed.rs"]
+mod managed;
+
 use std::path::Path;
 use std::process::{Command, Output};
 use tempfile::TempDir;
@@ -52,6 +55,20 @@ fn command_with_optional_datastore(
     token: Option<&str>,
     args: &[&str],
 ) -> Output {
+    let machine = TempDir::new().expect("private fixture machine");
+    if let Some(token) = token {
+        managed::seed_ready(
+            root,
+            machine.path(),
+            endpoint,
+            "example/supabase-proof",
+            decapod::core::cloud_session::Session {
+                access_token: token.into(),
+                refresh_token: Some(managed::REFRESH.into()),
+                expires_at: chrono::Utc::now().timestamp() + 900,
+            },
+        );
+    }
     let mut command = Command::new(
         std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod"))
             .expect("resolve decapod binary before changing working directory"),
@@ -61,21 +78,29 @@ fn command_with_optional_datastore(
         .args(args)
         .args(["--format", "json"])
         .current_dir(root)
-        .env("HOME", root)
-        .env("XDG_CONFIG_HOME", root.join("config"))
-        .env("XDG_DATA_HOME", root.join("data"))
+        .env("HOME", machine.path())
+        .env("XDG_CONFIG_HOME", machine.path().join("config"))
+        .env("XDG_DATA_HOME", machine.path().join("data"))
         .env("DECAPOD_HEADLESS", "1")
         .env("DECAPOD_AGENT_ID", "supabase-proof")
         .env_remove("DECAPOD_CLOUD_AUTH_MODE")
         .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
         .env_remove("DECAPOD_CLOUD_DATASTORE")
-        .env("DECAPOD_PROPODUS_API_URL", endpoint)
+        .env(
+            "DECAPOD_PROPODUS_API_URL",
+            "https://ignored-legacy.example.test",
+        )
+        .env("DECAPOD_CLOUD_TEST_ORIGIN", endpoint)
+        .env("DECAPOD_TEST_MODE", "1")
         .env_remove("DECAPOD_ACCESS_TOKEN");
     if let Some(selector) = selector {
         command.env("DECAPOD_CLOUD_DATASTORE", selector);
     }
-    if let Some(token) = token {
-        command.env("DECAPOD_ACCESS_TOKEN", token);
+    if token.is_some() {
+        command.env(
+            "DECAPOD_ACCESS_TOKEN",
+            "ambient-token-must-not-be-forwarded",
+        );
     }
     command.output().unwrap()
 }
@@ -86,7 +111,7 @@ fn assert_no_fallback(root: &Path) {
 }
 
 #[test]
-fn unsupported_selector_fails_through_production_cli_without_sqlite() {
+fn legacy_physical_selector_does_not_override_the_logical_cloud_connector() {
     let root = project();
     let output = command(
         root.path(),
@@ -96,7 +121,10 @@ fn unsupported_selector_fails_through_production_cli_without_sqlite() {
     );
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("unsupported cloud datastore"), "{stderr}");
+    #[cfg(feature = "supabase-cloud")]
+    assert!(stderr.contains("offline"), "{stderr}");
+    #[cfg(not(feature = "supabase-cloud"))]
+    assert!(stderr.contains("supabase-cloud"), "{stderr}");
     assert!(!stderr.contains("unsupported-secret-selector"));
     assert!(!stderr.contains("synthetic-bearer-secret"));
     assert_no_fallback(root.path());
@@ -165,22 +193,19 @@ fn cloud_runtime_deserialization_uses_its_selected_datastore() {
 }
 
 #[test]
-fn default_cloud_requires_service_endpoint_without_local_fallback() {
+fn logical_cloud_failure_never_requires_a_legacy_endpoint_or_falls_back() {
     let root = project();
     let output = command_with_optional_datastore(
         root.path(),
         None,
-        "",
+        "http://127.0.0.1:1",
         Some("synthetic-bearer-secret"),
         &["list"],
     );
     assert!(!output.status.success());
     let error = String::from_utf8_lossy(&output.stderr);
     #[cfg(feature = "supabase-cloud")]
-    assert!(
-        error.contains("explicit authenticated service endpoint"),
-        "{error}"
-    );
+    assert!(error.contains("offline"), "{error}");
     #[cfg(not(feature = "supabase-cloud"))]
     assert!(error.contains("supabase-cloud"), "{error}");
     assert!(!error.contains("synthetic-bearer-secret"));
@@ -210,6 +235,7 @@ mod enabled {
     ) -> (String, JoinHandle<Value>) {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let endpoint = format!("http://{}", listener.local_addr().unwrap());
+        let profile_origin = endpoint.clone();
         let handle = std::thread::spawn(move || {
             listener.set_nonblocking(true).unwrap();
             let deadline = std::time::Instant::now() + Duration::from_secs(10);
@@ -246,9 +272,32 @@ mod enabled {
                     }
                 };
                 let headers = String::from_utf8_lossy(&bytes[..body_start]).to_lowercase();
-                let is_reconciliation = path == "/batch" && headers.starts_with("post /query ");
-                assert!(is_reconciliation || headers.starts_with(&format!("post {path} ")));
+                if headers.starts_with("get /functions/v1/propodus-onboarding/config ") {
+                    assert!(!headers.contains("authorization:"));
+                    assert!(!headers.contains("apikey:"));
+                    let body = json!({"version":1,"project_origin":profile_origin,
+                        "publishable_key":"sb_publishable_fixture","schema":"dactyl_api"})
+                    .to_string();
+                    write!(stream, "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
+                    continue;
+                }
+                let rpc = headers.starts_with("post /rest/v1/rpc/");
+                let is_query = headers.starts_with("post /query ")
+                    || headers.starts_with("post /rest/v1/rpc/dactyl_query_v1 ");
+                let is_batch = headers.starts_with("post /batch ")
+                    || headers.starts_with("post /rest/v1/rpc/dactyl_batch_v1 ");
+                let is_reconciliation = path == "/batch" && is_query;
+                assert!(
+                    is_reconciliation
+                        || (path == "/query" && is_query)
+                        || (path == "/batch" && is_batch)
+                );
                 assert!(headers.contains("authorization: bearer synthetic-bearer-secret"));
+                assert!(!headers.contains("ambient-token-must-not-be-forwarded"));
+                if rpc {
+                    assert!(headers.contains("apikey: sb_publishable_fixture"));
+                    assert!(headers.contains("content-profile: dactyl_api"));
+                }
                 let length = headers
                     .lines()
                     .find_map(|line| line.strip_prefix("content-length:"))
@@ -262,8 +311,12 @@ mod enabled {
                     assert_ne!(read, 0);
                     bytes.extend_from_slice(&buffer[..read]);
                 }
-                let request: Value =
+                let mut request: Value =
                     serde_json::from_slice(&bytes[body_start..body_start + length]).unwrap();
+                if rpc {
+                    assert_eq!(request["request"]["version"], 1);
+                    request = request["request"].take();
+                }
                 if is_reconciliation {
                     assert_context(&request);
                     let sql = request["sql"].as_str().unwrap();
@@ -279,7 +332,11 @@ mod enabled {
                     write!(stream, "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
                     continue;
                 }
-                let body = response.take().unwrap()(&request).to_string();
+                let mut body = response.take().unwrap()(&request);
+                if rpc && status >= 400 && body.get("error").is_some() {
+                    body = body["error"].take();
+                }
+                let body = body.to_string();
                 write!(stream, "HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
                 break request;
             }
@@ -341,101 +398,79 @@ mod enabled {
     }
 
     #[test]
-    fn cloud_status_uses_the_selected_endpoint_session_without_network_io() {
-        use sha2::{Digest, Sha256};
-        const CHILD: &str = "DECAPOD_TEST_CLOUD_STATUS_CHILD";
-        if let Ok(expected) = std::env::var(CHILD) {
-            assert_eq!(
-                decapod::core::auth::is_token_valid(Path::new(".")),
-                expected == "configured"
-            );
-            return;
-        }
+    fn cloud_status_uses_the_bound_private_session_without_network_io() {
         let root = project();
-        let data = root.path().join("data/decapod");
+        let machine = TempDir::new().unwrap();
+        let data = machine.path().join("data/decapod");
         std::fs::create_dir_all(&data).unwrap();
         std::fs::write(
             data.join("session_token.json"),
             r#"{"token":"synthetic-neon-status-token"}"#,
         )
         .unwrap();
-        let endpoint = "https://selected.example.test";
-        let status = |selector: Option<&str>, endpoint: &str| {
-            let mut command =
-                Command::new(std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).unwrap());
-            command
-                .args(["cloud", "status"])
-                .current_dir(root.path())
-                .env("HOME", root.path())
-                .env("XDG_DATA_HOME", root.path().join("data"))
-                .env("XDG_CONFIG_HOME", root.path().join("config"))
-                .env_remove("DECAPOD_ACCESS_TOKEN")
-                .env_remove("DECAPOD_CLOUD_DATASTORE")
-                .env("DECAPOD_PROPODUS_API_URL", endpoint);
-            if let Some(selector) = selector {
-                command.env("DECAPOD_CLOUD_DATASTORE", selector);
-            }
-            let output = command.output().unwrap();
+        let selected = TcpListener::bind("127.0.0.1:0").unwrap();
+        selected.set_nonblocking(true).unwrap();
+        let endpoint = format!("http://{}", selected.local_addr().unwrap());
+        let other = TcpListener::bind("127.0.0.1:0").unwrap();
+        other.set_nonblocking(true).unwrap();
+        let other_endpoint = format!("http://{}", other.local_addr().unwrap());
+        let status = |origin: &str| {
+            let output =
+                Command::new(std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).unwrap())
+                    .args(["cloud", "status"])
+                    .current_dir(root.path())
+                    .env("HOME", machine.path())
+                    .env("XDG_DATA_HOME", machine.path().join("data"))
+                    .env("XDG_CONFIG_HOME", machine.path().join("config"))
+                    .env("DECAPOD_TEST_MODE", "1")
+                    .env("DECAPOD_CLOUD_TEST_ORIGIN", origin)
+                    .env("DECAPOD_CLOUD_DATASTORE", "neon")
+                    .env(
+                        "DECAPOD_ACCESS_TOKEN",
+                        "ambient-status-token-must-not-be-used",
+                    )
+                    .output()
+                    .unwrap();
             assert!(
                 output.status.success(),
                 "{}",
                 String::from_utf8_lossy(&output.stderr)
             );
             let text = String::from_utf8(output.stdout).unwrap();
-            let mut gate = Command::new(std::env::current_exe().unwrap());
-            gate.args([
-                "--exact",
-                "enabled::cloud_status_uses_the_selected_endpoint_session_without_network_io",
-                "--nocapture",
-            ])
-            .current_dir(root.path())
-            .env(
-                CHILD,
-                if text.contains("bearer configured") {
-                    "configured"
-                } else {
-                    "unavailable"
-                },
-            )
-            .env("HOME", root.path())
-            .env("XDG_DATA_HOME", root.path().join("data"))
-            .env_remove("DECAPOD_ACCESS_TOKEN")
-            .env_remove("DECAPOD_CLOUD_DATASTORE")
-            .env("DECAPOD_PROPODUS_API_URL", endpoint);
-            if let Some(selector) = selector {
-                gate.env("DECAPOD_CLOUD_DATASTORE", selector);
-            }
-            let gate_output = gate.output().unwrap();
-            assert!(
-                gate_output.status.success(),
-                "{}{}",
-                String::from_utf8_lossy(&gate_output.stdout),
-                String::from_utf8_lossy(&gate_output.stderr)
-            );
-            assert!(!text.contains("synthetic-") && !text.contains("selected.example.test"));
-            text
+            assert!(!text.contains("synthetic-") && !text.contains("ambient-status-token"));
+            assert!(!text.contains(origin));
+            let value: Value = serde_json::from_str(&text).unwrap();
+            assert_eq!(value["server_readiness"], "not_checked");
+            value
         };
-        assert!(
-            status(None, endpoint).contains("unavailable"),
-            "Supabase must ignore the legacy Neon session"
+        assert_eq!(status(&endpoint)["credential_present"], false);
+        managed::seed_ready(
+            root.path(),
+            machine.path(),
+            &endpoint,
+            "example/supabase-proof",
+            decapod::core::cloud_session::Session {
+                access_token: managed::ACCESS.into(),
+                refresh_token: Some(managed::REFRESH.into()),
+                expires_at: chrono::Utc::now().timestamp() + 900,
+            },
         );
-        let scoped = data
-            .join("services")
-            .join(format!("{:x}", Sha256::digest(endpoint.as_bytes())));
-        std::fs::create_dir_all(&scoped).unwrap();
-        std::fs::write(
-            scoped.join("session_token.json"),
-            r#"{"token":"synthetic-supabase-status-token"}"#,
-        )
-        .unwrap();
-        assert!(status(None, endpoint).contains("bearer configured"));
-        assert!(status(None, "https://other.example.test").contains("unavailable"));
-        assert!(status(Some("neon"), "").contains("bearer configured"));
+        assert_eq!(status(&endpoint)["credential_present"], true);
+        assert_eq!(status(&endpoint)["phase"], "ready");
+        assert_eq!(status(&other_endpoint)["credential_present"], false);
+        assert_eq!(
+            selected.accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
+        assert_eq!(
+            other.accept().unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock
+        );
         assert_no_fallback(root.path());
     }
 
     #[test]
-    fn backend_cloud_without_datastore_override_uses_supabase() {
+    fn backend_cloud_without_datastore_override_uses_managed_native_rpc() {
         let root = project();
         let (endpoint, server) =
             server(200, json!({"columns": [], "rows": [], "affected_rows": 0}));
@@ -831,64 +866,95 @@ mod enabled {
     }
 
     #[test]
-    fn supabase_never_sends_legacy_machine_credentials_to_the_preview_endpoint() {
+    fn managed_connector_never_sends_legacy_machine_credentials_or_ambient_token() {
         let root = project();
-        let credential_dir = root.path().join("data/decapod");
+        let machine = TempDir::new().unwrap();
+        let credential_dir = machine.path().join("data/decapod");
         std::fs::create_dir_all(&credential_dir).unwrap();
-        let legacy = json!({"access_token": "synthetic-old-access", "refresh_token": "synthetic-old-refresh", "session_id": "synthetic-old-session", "expires_at": "2000-01-01T00:00:00Z"}).to_string();
+        let legacy =
+            json!({"access_token":"synthetic-old-access","refresh_token":"synthetic-old-refresh",
+            "session_id":"synthetic-old-session","expires_at":"2000-01-01T00:00:00Z"})
+            .to_string();
         std::fs::write(credential_dir.join("session_token.json"), &legacy).unwrap();
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let endpoint = format!("http://{}", listener.local_addr().unwrap());
+        let profile_origin = endpoint.clone();
         listener.set_nonblocking(true).unwrap();
         let server = std::thread::spawn(move || {
-            let deadline = std::time::Instant::now() + Duration::from_secs(10);
-            let (mut stream, _) = loop {
-                match listener.accept() {
-                    Ok(stream) => break stream,
-                    Err(error)
-                        if error.kind() == std::io::ErrorKind::WouldBlock
-                            && std::time::Instant::now() < deadline =>
-                    {
-                        std::thread::sleep(Duration::from_millis(10))
+            for public_profile in [true, false] {
+                let deadline = std::time::Instant::now() + Duration::from_secs(10);
+                let (mut stream, _) = loop {
+                    match listener.accept() {
+                        Ok(stream) => break stream,
+                        Err(error)
+                            if error.kind() == std::io::ErrorKind::WouldBlock
+                                && std::time::Instant::now() < deadline =>
+                        {
+                            std::thread::sleep(Duration::from_millis(10))
+                        }
+                        Err(error) => panic!("managed fixture received no request: {error}"),
                     }
-                    Err(error) => panic!("onboarding fixture received no request: {error}"),
-                }
-            };
-            stream
-                .set_read_timeout(Some(Duration::from_secs(5)))
-                .unwrap();
-            let mut bytes = Vec::new();
-            loop {
-                let mut buffer = [0; 4096];
-                let count = stream.read(&mut buffer).unwrap();
-                assert_ne!(count, 0);
-                bytes.extend_from_slice(&buffer[..count]);
-                if let Some(start) = bytes.windows(4).position(|value| value == b"\r\n\r\n") {
-                    let headers = String::from_utf8_lossy(&bytes[..start]).to_lowercase();
-                    let length: usize = headers
-                        .lines()
-                        .find_map(|line| line.strip_prefix("content-length:"))
-                        .unwrap()
-                        .trim()
-                        .parse()
-                        .unwrap();
-                    if bytes.len() >= start + 4 + length {
-                        break;
+                };
+                stream.set_nonblocking(false).unwrap();
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(5)))
+                    .unwrap();
+                let mut bytes = Vec::new();
+                loop {
+                    let mut buffer = [0; 4096];
+                    let count = stream.read(&mut buffer).unwrap();
+                    assert_ne!(count, 0);
+                    bytes.extend_from_slice(&buffer[..count]);
+                    assert!(bytes.len() <= 64 * 1024);
+                    if let Some(start) = bytes.windows(4).position(|value| value == b"\r\n\r\n") {
+                        let headers = String::from_utf8_lossy(&bytes[..start]).to_lowercase();
+                        let length: usize = headers
+                            .lines()
+                            .find_map(|line| line.strip_prefix("content-length:"))
+                            .map_or(0, |length| length.trim().parse().unwrap());
+                        if bytes.len() >= start + 4 + length {
+                            break;
+                        }
                     }
                 }
+                let request = String::from_utf8(bytes).unwrap();
+                assert!(!request.contains("synthetic-old-"));
+                assert!(!request.contains("ambient-token-must-not-be-forwarded"));
+                assert!(!request.to_lowercase().contains("authorization:"));
+                let (status, body) = if public_profile {
+                    assert!(request.starts_with("GET /functions/v1/propodus-onboarding/config "));
+                    (
+                        200,
+                        json!({"version":1,"project_origin":profile_origin,
+                        "publishable_key":"sb_publishable_fixture","schema":"dactyl_api"}),
+                    )
+                } else {
+                    assert!(request.starts_with("POST /functions/v1/propodus-onboarding/start "));
+                    assert!(request.contains("example/supabase-proof"));
+                    (
+                        401,
+                        json!({"code":"invalid_token","message":"fixture denial"}),
+                    )
+                };
+                let body = body.to_string();
+                write!(stream, "HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
             }
-            let request = String::from_utf8(bytes).unwrap();
-            assert!(
-                !request.contains("synthetic-old-"),
-                "legacy credential left machine scope"
-            );
-            assert!(!request.starts_with("POST /query"));
-            assert!(!request.lines().next().unwrap().contains("refresh"));
-            assert!(!request.to_lowercase().contains("authorization: bearer"));
-            let body = r#"{"error":{"code":"invalid_token","message":"fixture denial"}}"#;
-            write!(stream, "HTTP/1.1 401 Unauthorized\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
         });
-        let output = command(root.path(), "supabase", &endpoint, None);
+        let output = Command::new(std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).unwrap())
+            .args(["todo", "list", "--format", "json"])
+            .current_dir(root.path())
+            .env("HOME", machine.path())
+            .env("XDG_CONFIG_HOME", machine.path().join("config"))
+            .env("XDG_DATA_HOME", machine.path().join("data"))
+            .env("DECAPOD_TEST_MODE", "1")
+            .env("DECAPOD_CLOUD_TEST_ORIGIN", &endpoint)
+            .env(
+                "DECAPOD_ACCESS_TOKEN",
+                "ambient-token-must-not-be-forwarded",
+            )
+            .env("DECAPOD_HEADLESS", "1")
+            .output()
+            .unwrap();
         assert!(!output.status.success());
         server.join().unwrap();
         assert_eq!(
@@ -939,7 +1005,7 @@ mod enabled {
             "request was not bounded"
         );
         let diagnostic = String::from_utf8_lossy(&output.stderr);
-        assert!(diagnostic.contains("transport failed"), "{diagnostic}");
+        assert!(diagnostic.contains("offline"), "{diagnostic}");
         assert!(!diagnostic.contains("synthetic-bearer-secret"));
         assert_no_fallback(root.path());
         server.join().unwrap();

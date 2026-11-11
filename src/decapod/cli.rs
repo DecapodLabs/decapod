@@ -279,9 +279,13 @@ pub(crate) struct InitGroupCli {
     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// It does not perform login, provisioning, or sync during init.
+    /// Init starts or resumes managed sign-in through Dactyl and reports readiness only after service confirmation.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
+    /// Explicitly restart an interrupted cloud sign-in or refresh without
+    /// replaying a one-time request whose outcome is unknown.
+    #[clap(long)]
+    pub restart_cloud_signin: bool,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -441,9 +445,13 @@ pub(crate) struct InitWithCli {
     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// It does not perform login, provisioning, or sync during init.
+    /// Init starts or resumes managed sign-in through Dactyl and reports readiness only after service confirmation.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
+    /// Explicitly restart an interrupted cloud sign-in or refresh without
+    /// replaying a one-time request whose outcome is unknown.
+    #[clap(long)]
+    pub restart_cloud_signin: bool,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -699,6 +707,21 @@ fn default_cloud_datastore() -> String {
 }
 
 impl CloudRuntimeConfig {
+    /// Runtime cloud commands select the logical Dactyl connector. The fields
+    /// retained on this type support explicit historical adapter consumers;
+    /// project policy does not select their physical implementation.
+    pub fn logical_cloud() -> Result<Self, crate::core::error::DecapodError> {
+        #[cfg(feature = "supabase-cloud")]
+        let origin = crate::core::cloud_client::selected_origin()?;
+        #[cfg(not(feature = "supabase-cloud"))]
+        let origin = "cloud-capability-unavailable".to_owned();
+        Ok(Self {
+            provider: "dactyl".into(),
+            api_url: origin,
+            datastore: "managed".into(),
+        })
+    }
+
     /// Fail before onboarding or todo I/O when the selected cloud route is invalid.
     pub fn validate_datastore(
         &self,
@@ -882,7 +905,7 @@ pub(crate) struct CloudCli {
 pub(crate) enum CloudCommand {
     /// Deprecated compatibility alias; use `decapod init --backend cloud` for human setup.
     Login,
-    /// Report whether a local or environment credential is available without printing it.
+    /// Inspect private managed-session state without network I/O or a live readiness claim.
     Status,
 }
 

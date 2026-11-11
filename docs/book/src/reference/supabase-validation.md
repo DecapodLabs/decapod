@@ -1,64 +1,65 @@
 # Supabase consumer validation
 
-The cloud backend selects the public Dactyl Supabase HTTP capability by
-default. The client uses the published `dactyl-db` 0.11.1 registry release.
-This dependency alignment does not migrate historical state, provision
-Supabase, or prove a production deployment. Local storage remains SQLite; Neon is an explicit cloud alternative.
+Ordinary project users select only `repo.backend = "local" | "cloud"`.
+The managed cloud flow goes through Dactyl public discovery, sign-in, account
+completion, and native data transport. Setup does not require a deployment
+URL, physical driver selector, copied credential, or project-level provider
+configuration. See [Cloud sign-in and task access](propodus.md) for the human
+flow, headless continuation, private custody, and explicit recovery.
 
-## Fresh activation
+## Package and implementation prerequisites
 
-1. Decapod consumes `dactyl-db` 0.11.1 from crates.io, including the Supabase
-   client capability reviewed in [Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92)
-   and released in [v0.11.1](https://github.com/DecapodLabs/dactyl/releases/tag/v0.11.1).
-   `Cargo.lock` records the registry source and checksum; there is no Git or
-   local-path dependency override. Build with `cargo build --locked`; the
-   default features include `supabase-cloud`. A `--no-default-features` build
-   retains SQLite and explicit Neon, and fails closed if the unavailable
-   Supabase route is selected. Nix vendoring uses the same lockfile checksum.
-   Before publishing Decapod, run `cargo package --locked` and
-   `cargo publish --locked --dry-run` to verify the packaged registry dependency.
-2. An operator must first provide a fresh compatible authenticated service
-   backed by PostgreSQL, its task/event schema, and resource permissions.
-   The client does not initialize hosted schemas or connect to PostgreSQL.
-3. In machine-local runtime configuration, set `DECAPOD_PROPODUS_API_URL` to
-   that service's HTTPS origin. No datastore override is required: omitted
-   `DECAPOD_CLOUD_DATASTORE` selects Supabase. Explicit `supabase` is also accepted. Literal-loopback HTTP is supported for disposable
-   test services only. This is neither a PostgreSQL DSN nor Supabase REST.
-4. Select `repo.backend = "cloud"`. Production use requires a service that
-   also implements the existing `decapod init --backend cloud` onboarding,
-   session exchange and refresh contract. A task-only `/query` and `/batch`
-   service does not provide those authentication endpoints. The isolated
-   conformance profile supplies disposable ordinary user tokens directly; it
-   does not establish production onboarding. Ordinary clients receive only
-   user/session credentials. Database passwords, operator credentials, and
-   service-role keys never enter Decapod.
-5. Run normal `todo list`, `add`, `get`, `show`, `claim`, `release`, and
-   `done` commands. `todo done --validated` remains unsupported pending the
-   separate remote proof-capture contract.
+The managed connector requires the public API delivered by
+[Dactyl #100](https://github.com/DecapodLabs/dactyl/issues/100). The existing
+`dactyl-db` 0.11.1 registry release provides the earlier explicit Supabase
+adapter, not this connector API. A coordinated source-overlay build can test
+the client integration before publication, but it cannot satisfy the registry
+dependency policy or establish a publishable Decapod package. The release
+handoff remains [#1380](https://github.com/DecapodLabs/decapod/issues/1380).
+Do not replace a missing registry artifact with a committed Git/path override
+or remove the release dependency checks.
 
-The selector is distinct from `repo.backend = local|cloud` and from the
-hosting-provider label. Its default is `supabase`. Set
-`DECAPOD_CLOUD_DATASTORE=neon` to select the retained Neon route explicitly; only
-that selection can use the legacy Neon service endpoint by default. An unknown
-selector, a build without `supabase-cloud`, an invalid endpoint, or a missing
-Supabase service endpoint fails closed before
-onboarding or todo I/O. Authentication, authorization, timeout, transport,
-protocol, and storage failures never initialize or fall back to local todos.
+Standard builds enable `supabase-cloud`; a build without that capability
+fails closed when the managed cloud backend is selected. Local SQLite remains
+independent. The logical cloud factory delegates its physical route to Dactyl.
+Historical Neon and Supabase adapters remain explicit library and conformance
+surfaces. Their legacy environment configuration does not select the ordinary
+managed CLI route or supply its credentials.
 
-Dactyl validates the Supabase endpoint before session onboarding or refresh.
-Both Supabase authentication and data requests refuse redirects so an HTTP
-redirect cannot forward a refresh body or user bearer to another origin.
-Supabase authentication passes bearer headers and JSON through the child
-transport's private stdin, not process arguments or a secret temporary file;
-ambient curl configuration is disabled for that path.
-Supabase sessions are stored in endpoint-scoped machine-local files. Switching
-service endpoints never reuses or refreshes the legacy global Neon session or
-another endpoint's session. A new endpoint requires its own onboarding. An
-explicit `DECAPOD_ACCESS_TOKEN` remains a controlled test/operator override;
-set it only for the selected service. Test fixtures isolate `HOME` and both
-XDG directories and use synthetic/disposable session material exclusively.
-No credentials appear in the versioned context, debug output, or repository
-configuration. The client selector is also omitted from the wire context.
+The managed CLI fixture origin is available only with explicit
+`DECAPOD_TEST_MODE=1` and `DECAPOD_CLOUD_TEST_ORIGIN` set to a literal-loopback
+HTTP origin. It is a disposable test seam, never project policy or a hosted
+operator configuration channel. Tests isolate HOME and both XDG directories;
+synthetic credentials are written through the private custody API.
+
+## Proof ownership
+
+`tests/cloud_managed_session.rs` drives the actual binary through discovery,
+bootstrap, exchanges, refresh, account completion, and an authorized task read.
+It covers resumable headless invocation, exact binding, serialization, lost
+responses, explicit denial, unresolved entitlement, and secret redaction.
+Cloud command failures cannot initialize SQLite; unsupported repository
+datastore commands fail before local startup. File-only control surfaces and
+local-backend behavior remain separate.
+
+The service owns schema, grants, membership, payment/seat readiness, and
+authorization. Dactyl carries validated transport; Decapod carries the target
+repository and opaque current bearer. A printed handoff, issued credential,
+health response, or payment alone does not establish repository access.
+Initialization checks service completion and an existing authenticated,
+read-only task statement. Every later data request is authorized again.
+
+The legacy production-command profiles below are currently unavailable with
+the managed CLI. Explicitly selecting them fails with
+`MANAGED_CLI_FIXTURE_UNAVAILABLE` before fixture reads, CLI execution or network
+access; their endpoint/token environment variables cannot select the managed
+origin or establish private custody. The retained fixtures, commands and
+assertions describe the real-service acceptance contract that a separately
+reviewed managed fixture must restore, not a runnable or completed proof. The
+explicit `PropodusClient` test in `propodus_live` still targets its declared
+legacy endpoint and does not establish managed CLI behavior. Native RPC and
+managed-account hosted acceptance remain independent requirements; loopback
+fixtures and the expected preflight failure do not satisfy them.
 
 ## Ownership and permissions
 

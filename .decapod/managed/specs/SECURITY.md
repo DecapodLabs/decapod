@@ -1,5 +1,33 @@
 # Security
 
+## Managed credential custody and server authority (#1628)
+
+`core::cloud_session::SessionStore` is the only durable custody owner in the
+managed CLI path. Its binding includes the validated service origin, exact
+repository spelling used by the current service contract, and canonical main
+checkout identity. The store rejects unsafe machine roots (including parent
+traversal), paths within any Git checkout, symlinks/hard links, non-private
+owners/modes, oversized records, invalid phase shapes, and binding mismatches.
+Files use no-follow opened descriptors and synchronized atomic replacement;
+refresh and rejection updates share a stable exclusive lock with a bounded
+wait. Credential material and pending one-time secrets never enter Git.
+
+`core::cloud_client` saves uncertainty before every one-time exchange or refresh
+and never infers successful rotation after response loss. Explicit restart is
+required for ambiguous one-time state. A rejection may invalidate only the
+exact bearer used by that request, preserving a newer concurrent rotation.
+Raw transport/service text and credentials are excluded from diagnostics.
+The deliberately displayed browser handoff is validated by Dactyl and remains
+a short-lived human sign-in capability, not repository authorization.
+
+Dactyl alone performs discovery/auth/account/data transport in the ordinary
+cloud path, with no redirect or ambient legacy token/provider adoption.
+Decapod validates returned repository and lifetime but does not evaluate price,
+membership, seat/payment authority, or privileged grants. Service-confirmed
+completion plus current authorized read is required before reporting setup
+ready; every subsequent request still requires server authorization. Offline
+fixtures cannot establish hosted PostgreSQL or managed-account enforcement.
+
 ## Historical validation trust boundary
 
 `core::validation_history` accepts full execution evidence only from the
@@ -553,8 +581,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `249f5acb280057e0d97b4b6d51afbba9f6a395af1a23c84fb9627f4d70c1301f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

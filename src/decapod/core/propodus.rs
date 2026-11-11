@@ -158,8 +158,8 @@ impl CurlTransport {
     /// data requests: refresh material must never follow an HTTP redirect.
     pub fn for_datastore(datastore: crate::core::backend::CloudDatastore) -> Self {
         Self {
-            follow_redirects: datastore != crate::core::backend::CloudDatastore::Supabase,
-            private_stdin: datastore == crate::core::backend::CloudDatastore::Supabase,
+            follow_redirects: datastore == crate::core::backend::CloudDatastore::Neon,
+            private_stdin: datastore != crate::core::backend::CloudDatastore::Neon,
             ..Self::default()
         }
     }
@@ -521,6 +521,12 @@ pub fn ensure_cloud_session_for_datastore(
     // cannot accidentally enable redirects or credential-bearing arguments.
     let transport = CurlTransport::for_datastore(datastore);
     let store = match datastore {
+        crate::core::backend::CloudDatastore::Managed => {
+            return Err(PropodusClientError::Configuration(
+                "Managed cloud authentication belongs to Dactyl and repository-bound custody"
+                    .into(),
+            ));
+        }
         crate::core::backend::CloudDatastore::Neon => auth::CloudSessionStore::legacy(),
         crate::core::backend::CloudDatastore::Supabase => {
             auth::CloudSessionStore::for_service(&config.api_url)

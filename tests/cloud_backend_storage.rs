@@ -97,30 +97,17 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
     assert!(!config.contains("token"));
     assert!(!dir.join(".decapod/session_token").exists());
 
-    let registration_path = dir.join(".decapod/managed/cloud/init-registration.json");
-    let registration = std::fs::read_to_string(registration_path)
-        .expect("cloud opt-in should create a mock init registration payload");
-    let registration: serde_json::Value =
-        serde_json::from_str(&registration).expect("parse cloud init registration");
-    assert_eq!(registration["provider"], "vercel");
-    assert_eq!(registration["api_url"], "https://project-oqn7i.vercel.app");
-    assert_eq!(
-        registration["route"],
-        "POST /query for task reads/writes; POST /batch for atomic task operations"
-    );
     assert!(
-        registration["writes"]
-            .as_array()
-            .expect("writes array")
-            .iter()
-            .any(|write| write["table"] == "tasks"
-                && write["operation"] == "Dactyl batch claim/complete"),
-        "registration should model the repo-scoped todo lifecycle"
+        !dir.join(".decapod/managed/cloud/init-registration.json")
+            .exists()
     );
+    let stdout = String::from_utf8_lossy(&init_out.stdout);
+    assert!(stdout.contains("sign-in and server readiness were not evaluated"));
+    assert!(!stdout.contains("Cloud setup ready"));
 }
 
 #[test]
-fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available() {
+fn proof_only_cloud_init_does_not_mint_mock_credentials_or_claim_readiness() {
     let tmp = TempDir::new().expect("tempdir");
     let data_home = TempDir::new().expect("credential data home");
     git(tmp.path(), &["init", "-q"]);
@@ -149,8 +136,8 @@ fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available()
         String::from_utf8_lossy(&init_out.stderr)
     );
     assert!(
-        data_home.path().join("decapod/session_token.json").exists(),
-        "canonical init should establish machine-local cloud custody"
+        !data_home.path().join("decapod/session_token.json").exists(),
+        "proof-only init must not mint a mock managed credential"
     );
     let output = format!(
         "{}{}",
@@ -158,9 +145,11 @@ fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available()
         String::from_utf8_lossy(&init_out.stderr)
     );
     assert!(
-        output.contains("Cloud setup ready"),
-        "unexpected init output: {output}"
+        output.contains("sign-in and server readiness were not evaluated"),
+        "unexpected proof-only init output: {output}"
     );
+    assert!(!output.contains("Cloud setup ready"));
+    assert!(!data_home.path().join("decapod/cloud-sessions").exists());
     assert!(!output.contains("decapod-test-mock-access"));
     assert!(!output.contains("decapod-test-mock-refresh"));
 }
@@ -192,7 +181,8 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
         .args(["todo", "list", "--format", "json"])
         .current_dir(&dir)
         .env_remove("DECAPOD_ACCESS_TOKEN")
-        .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
+        .env("DECAPOD_CLOUD_TEST_ORIGIN", "http://127.0.0.1:1")
+        .env("DECAPOD_TEST_MODE", "1")
         .env("XDG_DATA_HOME", data_home.path())
         .output()
         .expect("cloud list");
@@ -206,7 +196,7 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
         diagnostic["next_action"]
             .as_str()
             .unwrap()
-            .contains("rerun")
+            .contains("retry")
     );
     assert!(!error.contains("DECAPOD_ACCESS_TOKEN"));
     assert!(!error.contains("Bearer"));
@@ -247,7 +237,8 @@ fn canonical_backend_selection_uses_cloud_without_local_fallback() {
         .args(["todo", "list", "--format", "json"])
         .current_dir(&dir)
         .env_remove("DECAPOD_ACCESS_TOKEN")
-        .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
+        .env("DECAPOD_CLOUD_TEST_ORIGIN", "http://127.0.0.1:1")
+        .env("DECAPOD_TEST_MODE", "1")
         .env("XDG_DATA_HOME", data_home.path())
         .output()
         .expect("cloud todo list");
@@ -318,7 +309,8 @@ fn cloud_session_acquire_keeps_local_custody_when_cloud_preflight_fails() {
         .args(["session", "acquire"])
         .current_dir(tmp.path())
         .env_remove("DECAPOD_ACCESS_TOKEN")
-        .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
+        .env("DECAPOD_CLOUD_TEST_ORIGIN", "http://127.0.0.1:1")
+        .env("DECAPOD_TEST_MODE", "1")
         .env("XDG_DATA_HOME", data_home.path())
         .env("XDG_CONFIG_HOME", config_home.path())
         .output()
@@ -344,7 +336,7 @@ fn cloud_session_acquire_keeps_local_custody_when_cloud_preflight_fails() {
 }
 
 #[test]
-fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
+fn mock_onboarding_flags_do_not_bypass_managed_cloud_preflight() {
     let tmp = TempDir::new().expect("project tempdir");
     let data_home = TempDir::new().expect("credential data home");
     let config_home = TempDir::new().expect("config home");
@@ -371,27 +363,31 @@ fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
         .current_dir(tmp.path())
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .env("DECAPOD_CLOUD_AUTH_MODE", "mock")
+        .env("DECAPOD_TEST_MODE", "1")
+        .env("DECAPOD_CLOUD_TEST_ORIGIN", "http://127.0.0.1:1")
         .env("XDG_DATA_HOME", data_home.path())
         .env("XDG_CONFIG_HOME", config_home.path())
         .output()
         .expect("mock cloud session acquire");
     assert!(
-        session_out.status.success(),
-        "mock cloud session acquire failed: {}",
+        !session_out.status.success(),
+        "mock flags unexpectedly bypassed managed cloud preflight: {}",
         String::from_utf8_lossy(&session_out.stderr)
     );
-    assert!(String::from_utf8_lossy(&session_out.stdout).contains("Password: "));
+    let diagnostic: serde_json::Value = serde_json::from_slice(&session_out.stdout).unwrap();
+    assert_eq!(diagnostic["status"], "offline");
+    assert!(!String::from_utf8_lossy(&session_out.stdout).contains("Password: "));
     let output = format!(
         "{}{}",
         String::from_utf8_lossy(&session_out.stdout),
         String::from_utf8_lossy(&session_out.stderr)
     );
+    assert!(!output.contains("Cloud setup ready"));
+    assert!(!data_home.path().join("decapod/cloud-sessions").exists());
     assert!(!output.contains("decapod-test-mock-access"));
     assert!(!output.contains("decapod-test-mock-refresh"));
     let machine_session = data_home.path().join("decapod/session_token.json");
-    let stored = std::fs::read_to_string(machine_session).expect("mock machine session");
-    assert!(stored.contains("decapod-test-mock-access"));
-    assert!(stored.contains("decapod-test-mock-refresh"));
+    assert!(!machine_session.exists());
     assert!(!tmp.path().join(".decapod/data/decapod.db").exists());
 
     let agent_session = machine_session_files(config_home.path())

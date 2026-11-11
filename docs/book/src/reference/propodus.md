@@ -1,273 +1,187 @@
-# Cloud Todo Boundary
+# Cloud sign-in and task access
 
-Propodus is the hosted authentication and authorization boundary; Dactyl is
-the physical storage boundary. They are not interchangeable. `repo.backend =
-"cloud"` selects the cloud backend: Decapod authenticates through Propodus,
-opens Dactyl with a versioned storage context, and never silently falls back to
-local SQLite.
+Select `repo.backend = "cloud"` to use the managed cloud connector. The
+boundary is **agent → Decapod → Dactyl → hosted service**. Decapod owns the
+system interface, repository binding, and private session custody. Dactyl
+owns public discovery, the physical connector, sign-in and session transport,
+and subsequent data requests. The service decides who may access a repository.
 
-## Dactyl storage contract
+Project configuration needs only the logical choice:
 
-The Decapod bridge constructs local Dactyl SQLite or cloud Supabase HTTP
-routes by default; Neon HTTP remains an explicitly selected alternative.
-It does not set or trust ambient `DATASTORE`, `DATASTORE_ROUTE`, or
-`DATASTORE_TOKEN` during connection construction. The cloud route receives
-an opaque machine-session bearer and the versioned repository context.
-Individual SQL operations do not select a provider or interpret authorization.
-
-The Supabase HTTP capability, enabled in standard builds, is described in
-[Supabase consumer validation](supabase-validation.md). Decapod consumes the
-published `dactyl-db` 0.11.1 registry release containing the client reviewed in
-[Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92). The committed
-lockfile supplies its registry checksum; registry publication is not hosted
-service proof.
-Cloud selects Supabase unless `DECAPOD_CLOUD_DATASTORE=neon` is set. Local
-SQLite behavior is unchanged. Supabase still requires a configured compatible
-authenticated service endpoint; no production deployment is implied.
-
-| Operation | Dactyl request | Scope/authentication |
-|---|---|---|
-| Read/list | `POST /query` | SQL plus opaque versioned context |
-| Add/claim/release/complete | `POST /batch` | ordered Dactyl operations plus context |
-
-The bearer is sent in the HTTP `Authorization` header by Dactyl. The context
-is forwarded as an opaque JSON object; Propodus resolves its authenticated
-principal and repository authorization. Add, claim, release, and complete use
-a Dactyl batch containing the conditional state write, the matching event
-write, and a task observation. The event insert is conditioned on the state
-transition marker. The service must also require a successful preceding
-state mutation before writing an event, including when a stale request reuses
-a timestamp marker; a timestamp alone is not authorization for an event.
-
-The checked-in `tests/cloud_dactyl_boundary.rs` proof verifies `/query`, the
-bearer header, the versioned context, and the absence of a per-query backend
-field without contacting Vercel or Neon. The older Propodus fixture and
-`propodus_contract` test remain compatibility coverage for the legacy
-`/api/todos` client; they are not the active Decapod storage implementation.
-
-The deployed onboarding/session shape is recorded separately in
-`tests/fixtures/propodus/onboarding-contract-v1.json`: Decapod starts with the
-canonical `repo_id`, prints/opens the one-time URL, polls status, consumes the
-ready flow once, exchanges the returned code for a machine session, and
-rotates that session through the refresh route. Credentials stay outside the
-repository.
-
-The command boundary is covered by `tests/cloud_command_path.rs`, which proves
-that list, add, get, claim, release, and complete are routed through the
-backend-neutral `TodoStore` adapter. Unsupported local-only operations return
-an explicit error on the cloud backend.
-
-The production-dispatch proof is `tests/cloud_cli_boundary.rs`; it uses a
-mock Dactyl store factory and exercises the same `run_todo_cli` composition
-used by the binary. It proves config discovery, canonical-origin validation,
-credential preflight, list/add/get/show/claim/done routing, not-found behavior,
-and the absence of local SQLite initialization for cloud todo commands.
-
-The opt-in live proof is `tests/propodus_live.rs`. Run it only with
-`DECAPOD_PROPODUS_LIVE=1`, `DECAPOD_PROPODUS_API_URL`,
-`DECAPOD_PROPODUS_ACCESS_TOKEN`, and a
-disposable `DECAPOD_PROPODUS_DISPOSABLE_REPO_ID`:
-
-```text
-DECAPOD_PROPODUS_LIVE=1 \
-DECAPOD_PROPODUS_API_URL=https://your-stable-propodus.example \
-DECAPOD_PROPODUS_ACCESS_TOKEN=... \
-DECAPOD_PROPODUS_DISPOSABLE_REPO_ID=example/decapod-live-deny \
-cargo test --test propodus_live -- --ignored --nocapture
+```toml
+[repo]
+backend = "cloud"
 ```
 
-The proof creates one uniquely named todo in the canonical repository,
-claims it, completes it, and verifies that the disposable repository receives
-`403 repository_not_authorized`. It also verifies that an invalid bearer token
-is rejected with a 401 authentication failure. The command-level proof also
-uses two Decapod agents to verify shared visibility and rejects a fork before
-any request is sent. It does not delete the sentinel because the v1 client
-contract has no delete operation; remove it with Propodus operator tooling
-after the run. The test is ignored by default, and the CI job is manual,
-environment-protected, and gated by the `DECAPOD_PROPODUS_LIVE` repository
-variable.
+No deployment URL, physical driver, copied token, price, membership roster, or
+role assignment belongs in this configuration. Local mode works without cloud
+credentials or cloud discovery.
 
-Propodus also uses `403 organization_seat_required` when a valid GitHub bearer
-token lacks the required organization seat for the canonical repository.
+## Human setup and headless continuation
 
-## Backend-neutral storage context
+From a repository with a GitHub `origin`, run:
 
-Decapod's versioned `core::backend::StorageContext` is the handoff from
-logical backend selection to a physical driver. A local context contains only
-the repository-local SQLite route and has no organization, user, or cloud
-repository fields. A remote context contains the opaque service route and the
-logical repository scope derived from `origin`; it requires an authenticated
-session bearer, but the bearer is memory-only and is omitted from serialized
-context data.
+```text
+decapod init --backend cloud
+```
 
-The Dactyl bridge forwards the explicit route, versioned context envelope, and
-opaque bearer without interpreting membership or authorization. The bearer
-never enters ambient Dactyl environment variables. Context debug formatting
-redacts the bearer and endpoint; serialization excludes the bearer.
-The versioned context carries the target org/repo scope unchanged. Propodus remains
-responsible for resolving the authenticated principal, organization membership,
-and repository access. The Decapod bridge opens the canonical local
-`decapod.db` directly through Dactyl's local adapter and opens the cloud route
-through Dactyl's Supabase adapter by default (or explicit Neon); it does not create a snapshot or bundled
-compatibility database. Existing SQLite state is inspected and migrated by
-Decapod through the same Dactyl-backed facade. This keeps one canonical Dactyl
-authority and prevents cloud operations from silently falling back to local
-storage. See [Decapod
-#1254](https://github.com/DecapodLabs/decapod/issues/1254), [Dactyl
-#64](https://github.com/DecapodLabs/dactyl/issues/64), and [Propodus
-#79](https://github.com/DecapodLabs/propodus/issues/79).
+The same flow is used after manually changing the backend to `cloud`. A normal
+cloud task command or `decapod session acquire` starts or resumes the same
+repository-bound session. An existing unexpired session is reused; a session
+near expiry is refreshed while holding its private lock.
 
-## Credentials
+If sign-in is needed, Decapod prints a validated, one-time browser handoff and
+returns a non-success `onboarding_pending` result. Open that URL, complete the
+human sign-in, and rerun `decapod init --backend cloud`. Headless callers can
+open the same URL on a browser-capable device. Each invocation polls at most
+once and does not wait indefinitely for human action.
 
-Credentials are never read from `.decapod/config.toml`. Lookup precedence is:
+The URL and a successful browser redirect are not initialization success.
+Decapod accepts the issued session, asks the service to complete the account
+handoff, and performs an authenticated, read-only repository task lookup.
+Only a successful authorized read produces the setup-ready message. It proves
+current read access; the service independently authorizes every later write,
+claim, completion, or privileged operation.
 
-1. an explicit client credential;
-2. `DECAPOD_ACCESS_TOKEN` for controlled development and CI use;
-3. the selected endpoint-scoped machine session for Supabase, or the legacy
-   `~/.local/share/decapod/session_token.json` only for explicit Neon.
+The current service reports an unresolved account entitlement as
+`action_required`. The client does not guess whether payment or seat
+assignment will resolve it, and it does not invent an account-action URL.
+An explicit access denial is `repository_denied`. Both remain non-success
+outcomes. When a session has already been issued, a retry can recheck account
+completion with that same session without consuming another sign-in code.
 
-`cloud status` checks the same selected session store without network I/O.
+`decapod cloud status` inspects private local state without network requests
+or printing a token. Its phase is a custody state; `server_readiness` is
+`not_checked`, even when the saved phase is `ready`. Use initialization or a
+normal cloud command to obtain a current server decision. The deprecated
+`decapod cloud login` alias resumes the same setup flow.
 
-Run `decapod init --backend cloud` as the only human-facing cloud setup step.
-It starts or resumes the repository-bound browser handoff through Decapod's
-baked-in Propodus endpoint. Agents acquire custody with `decapod session
-acquire`, which reuses or refreshes the machine-local session without asking
-for another human action. Use `decapod cloud status` only to check whether a
-bearer is configured without printing the token. The deprecated `cloud login`
-compatibility alias remains for existing scripts and is not part of the setup
-flow.
-Interactive terminals open the URL when a browser launcher is available and
-always print it as a fallback; headless callers receive a bounded resume
-instruction. A completed exchange is stored machine-locally with restrictive
-permissions and expired sessions refresh through the provider. Bearer tokens
-are sent only in the `Authorization` header; Decapod never logs or writes
-them to repository configuration, generated governance, URLs, or commits.
+`decapod init --backend cloud --proof` prepares configuration only. It does
+not authenticate, create a synthetic credential, or claim server readiness.
 
-## Repeatable dogfood setup
+## Recovery and private custody
 
-From a fresh checkout of the canonical repository:
+Pending sign-in state and credentials are stored outside Git, under the
+machine data directory. Each record is bound to the selected service origin,
+the GitHub repository, and the canonical main checkout. Linked worktrees of
+that checkout share custody; separate clones do not. A different origin or
+repository cannot reuse the record.
 
-1. Run `decapod init --backend cloud --proof` and confirm `.decapod/config.toml`
-   contains only the backend selection `repo.backend = "cloud"` for cloud
-   composition. The Propodus endpoint and provider are binary-owned; no service
-   URL or project identifier is stored in project configuration.
-2. Ensure `origin` is an unambiguous GitHub remote. Decapod derives the
-   canonical owner/name from it and sends that binding to the provider; the
-   provider decides whether the authenticated session may use the repository.
-3. Run `decapod todo list`, `add`, `get`, `show`, `claim`, or `done`. If no
-   machine session exists, first complete `decapod init --backend cloud`; the
-   initialized machine state then resumes the one-time browser handoff on the
-   next invocation. A controlled `DECAPOD_ACCESS_TOKEN`
-   remains available for protected proofs.
-4. Cloud todo commands use the same `TodoStore` command boundary as local
-   todo commands, but compose Dactyl storage with the Propodus-authenticated
-   context instead of local SQLite. They do not acquire the local agent
-   session or create/migrate the local todo database. Missing credentials or a canonical
-   GitHub remote fail closed and never fall back to SQLite.
+Directories and files must have private ownership and permissions (`0700`
+and `0600` on Unix). The store rejects symlink and hard-link credential files,
+oversized or malformed records, binding mismatches, and storage located in a
+Git checkout. A stable, separate lock serializes updates and refresh. Atomic
+replacement synchronizes the file and parent directory before continuing.
 
-## Repository identity
+Decapod saves an in-flight marker before a one-time bootstrap exchange,
+session exchange, or refresh. It saves each received code or rotated session
+before making the next request. A later process can resume safe status polls
+and account-completion checks. If a one-time response was lost, or the process
+stopped before saving it, the outcome is explicitly uncertain. Decapod does
+not replay that request or treat an old refresh token as reusable.
 
-The cloud backend derives a canonical `owner/name` binding from the `origin` remote
-and rejects non-GitHub or ambiguous remotes. Forks remain distinct identities
-and are passed to the provider for authorization; Decapod does not maintain a
-repo allowlist or accept a project-configured repository identifier.
+For an uncertain exchange, expired handoff, or rejected managed credential,
+follow the reported recovery instruction:
 
-## Authenticated delegated agent authority
+```text
+decapod init --backend cloud --restart-cloud-signin
+```
 
-The agent is the operational caller. In local mode, a solo developer does not
-need cloud authentication: the local agent/session label is cooperative custody,
-not a verified human identity. In cloud mode, the same agent interface uses the
-user's managed Auth bearer. Propodus determines authorization independently
-from the bearer, active GitHub-linked identity, membership, repository grant,
-and entitlement. `DECAPOD_AGENT_ID`, project config, and task fields are
-never sources of cloud privileges.
+This explicitly clears the selected private flow and starts a new sign-in.
+It does not clear another repository's custody. A known rejected bearer is
+marked unusable; a late rejection of an old bearer cannot invalidate a newer
+rotation saved by another command.
 
-Propodus repository tiers are `read`, `write` (contributors), `maintainer`,
-and `owner`. Contractor access is a direct, repository-scoped user grant with
-a finite expiration; it is not a new agent type. Direct user grants take
-precedence over team, group, and organization inheritance, even after expiry,
-so revocation cannot silently restore inherited access. Operator-only
-provisioning/revocation functions do not enter the agent RPC surface.
+Access tokens, refresh tokens, PKCE verifiers, polling secrets, and exchanged
+codes never enter project configuration, Git artifacts, diagnostic messages,
+or process arguments. The browser handoff is intentionally shown to the human;
+treat it as a short-lived sign-in link. Dactyl sends credentials only through
+the selected validated transport and refuses cross-origin redirects.
 
-Cloud tasks store the agent label for coordination but enforce claim release
-and completion against the authenticated principal. Copying another agent's
-label cannot transfer custody. Maintainer/owner repair is a separately
-authorized, audited exception, and remote publication still requires its
-independent proof and merge checks.
+## Cloud task boundary
 
-The canonical enforcement and regression tests live in Propodus schema
-migration 007. An ordinary client contract test cannot establish actual
-PostgreSQL or hosted permission enforcement; the protected
-`supabase_service` profile must exercise two independently authenticated users
-with a deliberately spoofed agent label.
+Cloud `todo list`, `add`, `get`, `show`, `claim`, `release`, and `done` use the
+same `TodoStore` interface as local commands. The active cloud factory obtains
+the current managed session and passes its opaque bearer and versioned
+repository context to Dactyl's logical connector. It does not choose a hosting
+provider or physical database. It does not initialize or fall back to SQLite
+when discovery, authentication, authorization, or a data request fails.
 
-For that protected profile, first claim a task with one authenticated session.
-Then reuse the same agent label with a different principal's session and
-attempt both release and completion. Neither operation may mutate the task or
-append a successful event, and a rejected cloud call must never fall back to
-local SQLite. This tests authority independently of the agent's chosen name.
+Dactyl carries the service's native query and batch protocol. Decapod supplies
+reviewed task SQL and ordered atomic operations; the service must enforce
+repository scope, conditional transitions, event consistency, and transaction
+rollback. The startup read uses the existing authorized task-get statement,
+not a health endpoint or an unauthenticated `SELECT 1` shortcut.
 
-## Current governance limits
+`todo done --validated` remains unsupported because the current cloud task
+contract does not provide remote proof capture and verified completion. This
+client change does not establish full remote governance parity.
 
-The cloud Dactyl todo slice supports repo-scoped list/add/get/claim/release/
-complete operations. `get` and `show` use keyed reads through Dactyl rather
-than list-and-filter. Add, claim, release, and complete each use one Dactyl
-atomic batch for the conditional task transition, matching event, and final
-task observation. A compatible service must enforce that a zero-row task
-transition cannot create an event, even if a timestamp marker matches an older
-operation. Client checks of returned counts occur after the remote transaction
-and cannot alone enforce rollback. The Supabase service proof tests this
-server-side requirement; timestamps alone are not compare-and-swap authority. A missing item returns `status = "not_found"`.
-`todo done --validated` is intentionally rejected because v1 has no proof
-capture or verification-artifact contract. This is an explicit unsupported
-boundary, not full remote governance completion; a future proof-contract issue
-must define the service-side evidence model before Decapod can compose it;
-see [Decapod issue #1038](https://github.com/DecapodLabs/decapod/issues/1038).
+For a data mutation with a lost response, use the operation identity described
+in [Resuming cloud todo creation](cloud-todo-recovery.md). Session recovery
+does not replay a task mutation. A retry identity is not an authorization grant.
 
-## Delivery boundary
+## Identity and service-owned authority
+
+Decapod derives the requested `owner/name` from the GitHub `origin`. Forks
+remain distinct repositories. A project-configured identifier, email address,
+mutable SCM username, or agent label cannot grant access. The response must
+match the requested repository before it is accepted.
+
+The hosted service resolves the managed principal, linked identity, grants,
+membership, entitlement, and effective privilege. It also decides whether an
+account action is still pending. The client neither implements a price table
+nor infers authority from payment or seat assignment.
+
+`DECAPOD_AGENT_ID` identifies the operational caller for coordination. Copying
+another agent's label cannot transfer authenticated cloud custody. Exceptional
+maintainer or owner actions require their separate service authorization and
+audit trail. Publication and merge retain their independent governance gates.
+
+## Implementation and evidence boundaries
+
+The active orchestration is `core::cloud_client`; `core::cloud_session` owns
+private custody. `DactylBridge` resolves the managed route through
+`dactyl_db::CloudConnector`. Historical explicit adapters and Propodus client
+types remain compatibility APIs, not the ordinary cloud setup path. Ambient
+legacy endpoint, physical-selector, and access-token variables do not select
+or authenticate the managed CLI flow.
+
+`tests/cloud_managed_session.rs` exercises the actual CLI against disposable
+loopback HTTP fixtures: missing and reused sessions, headless continuation,
+serialized refresh, interrupted exchanges, account requirements and denial,
+binding isolation, redaction, and absence of SQLite fallback. Custody unit
+tests exercise private files, locks, phase shapes, and crash recovery.
+Existing task command, wire, idempotency, and explicit adapter tests retain
+their narrower contracts.
+
+These fixtures establish client behavior only. They are not real PostgreSQL,
+RLS, hosted policy, or production readiness evidence. Those separate gates
+remain in [#1377](https://github.com/DecapodLabs/decapod/issues/1377),
+[#1378](https://github.com/DecapodLabs/decapod/issues/1378), and
+[#1369](https://github.com/DecapodLabs/decapod/issues/1369). See
+[Supabase consumer validation](supabase-validation.md) for protected service
+profiles and their explicit evidence requirements.
+
+Connector-enabled builds require the public API delivered by
+[Dactyl #100](https://github.com/DecapodLabs/dactyl/issues/100). Registry
+dependency alignment and package publication remain
+[#1380](https://github.com/DecapodLabs/decapod/issues/1380). A temporary source
+overlay used to test both repositories together is not a published dependency
+and cannot satisfy Decapod's release dependency policy.
 
 ## Local SQLite maintenance
 
-Local operators can inspect and maintain the canonical store explicitly:
+Local operators retain explicit integrity, backup, and recovery commands:
 
 ```text
 decapod data db verify
-decapod data db backup --destination /same-directory-or-approved-backup/decapod.backup.db
+decapod data db backup --destination /approved-backup/decapod.backup.db
 decapod data db recover --preserve-original-at /same-directory/decapod.before-recovery.db
 ```
 
-`verify` is read-only and calls Dactyl v0.10.0's typed native integrity
-verification. `backup` uses Dactyl's SQLite online-backup contract, including
-WAL/SHM correctness, and publishes a standalone destination after verification.
-`recover` is an explicit operator action only: it invokes Dactyl's logical
-dump/reload workflow, preserves the original at the requested unused sibling
-path, and atomically replaces the active database only after the replacement
-passes verification. Dactyl reports rollback or recovery failures without
-silently repairing the store. The recovered database uses DELETE journal mode
-and preserves application rows, schema, `user_version`, and `application_id`.
-
-The canonical Decapod sidecar lock is held for each operation. Recovery also
-requires all cooperating Decapod writers and same-process Dactyl connections
-to be quiesced; backup requires normal cooperating-client coordination. The
-archive must not already exist and must be on the same filesystem where Dactyl
-can perform its atomic replacement. The sidecar does not coordinate arbitrary
-external SQLite writers or make unreliable network/container mounts safe.
-Lock contention, unavailable runtimes, malformed/corrupt stores, unsupported
-capabilities, and recovery/rollback failures remain explicit diagnostic
-outcomes. Decapod never runs repair during startup, validation, event append,
-or connection creation.
-
-This Decapod slice activates the explicit cloud todo command path,
-remote-derived repository identity, Propodus onboarding/session exchange,
-machine-local refresh, Dactyl 0.10.0 adapter-level command and event-atomicity proof, and a wire-level
-`/query` proof without moving hosted authentication, repository authorization,
-persistence, or deployment into Decapod. Local mode continues to use the same
-backend-neutral todo command boundary, with physical canonical storage owned
-by Dactyl. Live Neon/Vercel availability, Propodus/Dactyl service deployment,
-cross-organization isolation, schema/migration parity, and hosted event
-atomicity remain deployment-dependent proof gates; the client-side batch
-contract and local rollback proof do not claim those hosted properties.
-
-For interrupted cloud creation and auth-blocked custody, see
-[Resuming cloud todo creation](cloud-todo-recovery.md). A returned operation token
-is a retry identity, never an authorization grant or local task-store fallback.
+Dactyl owns physical integrity checks, online backup, and logical recovery.
+Decapod owns the canonical file, coordination lock, authorization, and approved
+destination. Recovery preserves the original and publishes a verified
+replacement only after quiescing cooperating writers. These commands require
+the local backend. Cloud sign-in never performs local database maintenance.

@@ -98,7 +98,7 @@ fn init_persists_remote_default_base_branch() {
 fn init_with_backend_cloud_saves_to_config() {
     let tmp = tempdir().expect("tempdir");
     let out = Command::new(resolve_decapod_bin())
-        .args(["init", "with", "--backend", "cloud", "--force"])
+        .args(["init", "with", "--backend", "cloud", "--force", "--proof"])
         .current_dir(tmp.path())
         .output()
         .expect("run decapod");
@@ -124,29 +124,14 @@ fn init_with_backend_cloud_saves_to_config() {
         "repo config must not contain credentials or legacy backend secrets: {config}"
     );
 
-    let registration_path = tmp
-        .path()
-        .join(".decapod/managed/cloud/init-registration.json");
-    let registration =
-        fs::read_to_string(registration_path).expect("read cloud init registration payload");
-    let registration: serde_json::Value =
-        serde_json::from_str(&registration).expect("parse cloud init registration");
-    assert_eq!(registration["provider"], "vercel");
-    assert_eq!(
-        registration["route"],
-        "POST /query for task reads/writes; POST /batch for atomic task operations",
-        "registration should target the Dactyl storage contract"
-    );
     assert!(
-        registration["writes"]
-            .as_array()
-            .expect("writes array")
-            .iter()
-            .any(|write| {
-                write["table"] == "tasks" && write["operation"] == "Dactyl query list/add"
-            }),
-        "registration should model repo-scoped todo access"
+        !tmp.path()
+            .join(".decapod/managed/cloud/init-registration.json")
+            .exists()
     );
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains("sign-in and server readiness were not evaluated"));
+    assert!(!stdout.contains("Cloud setup ready"));
 }
 
 #[test]
@@ -427,7 +412,7 @@ fn init_refresh_requires_an_existing_project() {
 fn init_cloud_opt_in_does_not_store_secret_environment_values() {
     let tmp = tempdir().expect("tempdir");
     let out = Command::new(resolve_decapod_bin())
-        .args(["init", "with", "--backend", "cloud", "--force"])
+        .args(["init", "with", "--backend", "cloud", "--force", "--proof"])
         .current_dir(tmp.path())
         .env("SUPABASE_URL", "https://private.supabase.local")
         .env("SUPABASE_KEY", "super-secret-service-role")
@@ -454,14 +439,20 @@ fn init_cloud_opt_in_does_not_store_secret_environment_values() {
     assert!(!config.contains("supabase_key"));
     assert!(!config.contains("access_token"));
 
-    let registration = fs::read_to_string(
-        tmp.path()
-            .join(".decapod/managed/cloud/init-registration.json"),
-    )
-    .expect("read cloud init registration");
-    assert!(!registration.contains("private.supabase.local"));
-    assert!(!registration.contains("super-secret-service-role"));
-    assert!(!registration.contains("repo-config-must-not-store-this"));
+    assert!(
+        !tmp.path()
+            .join(".decapod/managed/cloud/init-registration.json")
+            .exists()
+    );
+    let output = format!(
+        "{}{}",
+        String::from_utf8_lossy(&out.stdout),
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(!output.contains("private.supabase.local"));
+    assert!(!output.contains("super-secret-service-role"));
+    assert!(!output.contains("repo-config-must-not-store-this"));
+    assert!(!output.contains("Cloud setup ready"));
 }
 
 #[test]

@@ -1,5 +1,33 @@
 # Validation
 
+## Managed cloud client proof and package prerequisite (#1628)
+
+The configured complete source-CI profile remains required. New
+`tests/cloud_managed_session.rs` fixtures exercise the actual binary through
+headless sign-in, durable continuation, credential refresh, interrupted mutation,
+explicit restart and authenticated read readiness. The cloud backend, CLI,
+Supabase boundary, TODO resume and init regression suites preserve local
+independence and fail-closed cloud behavior. Unit coverage in
+`tests/unit/core/cloud_session_tests.rs` exercises private record permissions,
+path rejection, exact binding, phase invariants and serialized custody.
+
+These tests must run on the exact checkpointed candidate. Static review and
+source formatting do not establish compilation or execution. The managed API
+requires Dactyl #100 plus its corresponding published registry dependency.
+`tests/release_dependency_policy.rs`, Cargo manifests and source-CI configuration
+remain intact; an unpublished source overlay cannot establish release-policy or
+publication readiness. No local fixture claims hosted managed Auth, production
+entitlement policy, real PostgreSQL, deployment or full remote governance parity.
+
+The legacy protected CLI profiles in `tests/supabase_service.rs` and
+`tests/propodus_live.rs` fail explicitly with `MANAGED_CLI_FIXTURE_UNAVAILABLE`
+before inspecting fixture credentials or dispatching any CLI/network request.
+Their real-service assertions remain intact for a future managed fixture; no
+ignored profile is represented as passing. The explicit legacy PropodusClient
+API test retains its own service boundary. Account completion response loss
+resumes the idempotent confirmation using the same body and bearer; the binary
+fixture asserts that one-time token exchange is never replayed.
+
 ## Native Laya research reconciliation (#1614)
 
 The historical candidate failed dependency denial on Tokio 1.52.3
@@ -1051,8 +1079,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25b3d0543355ecf1a215f02103a68825af027ce636aba05a2b7786aff6164ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `249f5acb280057e0d97b4b6d51afbba9f6a395af1a23c84fb9627f4d70c1301f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
