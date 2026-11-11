@@ -1039,12 +1039,10 @@ fn asserted_local_owner_role_never_authorizes_cloud_without_a_session() {
     );
     std::fs::write(config_path, config).unwrap();
 
-    let output = command(
-        root.path(),
-        "supabase",
-        "http://127.0.0.1:1",
-        None,
+    let output = command(root.path(), "supabase", "http://127.0.0.1:1", None);
+    assert!(
+        !output.status.success(),
+        "asserted owner label must not substitute for Supabase Auth"
     );
-    assert!(!output.status.success(), "asserted owner label must not substitute for Supabase Auth");
     assert_no_fallback(root.path());
 }
