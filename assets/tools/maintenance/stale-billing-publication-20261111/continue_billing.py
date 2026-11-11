@@ -17,8 +17,8 @@ REPO = "DecapodLabs/decapod"
 BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
 SOURCE = "26a499d9f0789a5ed00605d23cfc57f5392ae8fc"
 OPS = "ops/stale-billing-publication-20261111"
-ACTOR = "chatgpt-stale-billing"
-RECEIVER = "chatgpt-stale-billing-next"
+ACTOR = "chatgpt-stale-billing-next"
+RECEIVER = "chatgpt-stale-billing"
 CONTROLLER = "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
 CONTROLLER_ARCHIVE = "718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06"
 CURRENT = "c7609e42bbbcff9c72af6be7a86333d4b0408922"
@@ -62,21 +62,25 @@ def main():
     prior = resume["prior_result"]
     task_id = "code_01m76aq15fea61e8"
     preserved_branch = "agent/chatgpt-stale-billing/" + task_id + "-cloud-approval"
-    native_digest = "sha256:ff6b1be07df35e9c75549e587a848ba8010ac524ac7a1a99fd6f468a1f766b1a"
+    native_digest = "sha256:0d1d1c1699212cc870d66c8495fc05dc0486dabd0a8b0e24374d65e8adbab343"
     approved_inventory = "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577"
     if (manifest.get("repository") != REPO or manifest.get("base_sha") != BASE
             or manifest.get("source_sha") != SOURCE or manifest.get("slug") != "billing"
             or resume.get("task_id") != task_id or resume.get("branch") != preserved_branch
-            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43111757803"
+            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43115014473"
             or resume.get("candidate_sha") != CURRENT or resume.get("candidate_tree") != CURRENT_TREE
             or resume.get("native_transfer", {}).get("plaintext_sha256") != native_digest
-            or resume.get("native_transfer", {}).get("transfer_id") != "01M76BR4SYWMBE4NJ98NH30V59"
+            or resume.get("native_transfer", {}).get("transfer_id") != "01M76CY9MZA01A2EC1FBYR76JE"
             or prior.get("task") != task_id or prior.get("branch") != preserved_branch
-            or prior.get("status") != "blocked" or prior.get("head_sha") != CURRENT
-            or prior.get("pushed") is not True or prior.get("checkpoints") is not True
+            or prior.get("status") != "blocked" or prior.get("head_sha") is not None
+            or prior.get("pushed") is not False or prior.get("checkpoints") is not False
+            or prior.get("observed_remote_head_sha") != CURRENT
+            or prior.get("prior_checkpoint_verification", {}).get("history_proven") is not True
+            or prior.get("prior_checkpoint_verification", {}).get("head_commit") != CURRENT
             or prior.get("custody_exported") is not True or prior.get("full_boundary_passed") is not False
-            or prior.get("final_head_sha") != CURRENT or prior.get("source_dirty_after_attempt") is not False
-            or set(resume.get("private_files", {})) != {"native-transfer.json"}
+            or prior.get("final_head_sha") != CURRENT or prior.get("source_dirty_after_attempt") is not True
+            or set(resume.get("private_files", {})) != {"native-transfer.json", "pending-tracked.patch"}
+            or len(resume.get("pending_paths", [])) != 13
             or resume.get("approved_baseline_inventory_digest") != approved_inventory
             or manifest.get("allowed_source_changes") != []
             or set(manifest.get("release_generated_paths", [])) != RELEASE_GENERATED
@@ -87,7 +91,7 @@ def main():
             or not re.fullmatch(r"[0-9a-f]{40}", repair.get("expected_material_tree", ""))
             or not re.fullmatch(r"[0-9a-f]{40}", manifest.get("projection_reference_tree", ""))
             or not 60 <= args.publish_timeout <= 5400):
-        parser.error("only the exact clean, pushed original task and independently reviewed gate repairs may continue")
+        parser.error("only the exact original published task and authenticated pending gate repairs may continue")
     incoming = args.resume_private_dir.resolve()
     if incoming.is_symlink():
         parser.error("private continuation directory cannot be a symlink")
@@ -353,7 +357,7 @@ def main():
         native = json.loads(native_file.read_bytes())
         if (native["receiver"] != ACTOR or native["transfer_id"] != resume["native_transfer"]["transfer_id"]
                 or native["projection"]["task"]["id"] != task_id or native["source_commit"] != BASE
-                or native["source_branch"] != "billing-publication-control-f256a1ec7502"):
+                or native["source_branch"] != "billing-publication-control-eefdb3cc2f1a"):
             raise Blocked("private native transfer does not match authenticated original task")
         observed_paths = {entry.split("\t", 2)[2] for entry in run("inspect approved repair patch paths", "git", "apply", "--numstat", "-z", data=patch).split("\0") if entry}
         release_paths = {entry.split("\t", 2)[2] for entry in run("inspect observed release drift paths", "git", "apply", "--numstat", "-z", data=release_patch).split("\0") if entry}
@@ -399,13 +403,25 @@ def main():
         if run("verify continued task source", "git", "rev-parse", "HEAD", cwd=work).strip() != CURRENT:
             raise Blocked("workspace did not continue the original published source")
         clean("verify exact source restoration cleanliness")
-        journal = run("bind original committed native journal", "git", "hash-object", ".decapod/governance.json", cwd=work).strip()
+        pending_file = incoming / "pending-tracked.patch"
+        pending_meta = resume["private_files"]["pending-tracked.patch"]
+        if (pending_file.is_symlink() or not pending_file.is_file()
+                or pending_file.stat().st_size != pending_meta["bytes"]
+                or digest(pending_file.read_bytes()) != pending_meta["sha256"]):
+            raise Blocked("authentic pending source/journal recovery differs")
+        pending = pending_file.read_text()
+        pending_paths = {entry.split("\t", 2)[2] for entry in run("inspect authenticated pending continuation paths", "git", "apply", "--numstat", "-z", data=pending).split("\0") if entry}
+        if pending_paths != set(resume["pending_paths"]) or not pending_paths <= REPAIR_SCOPE | RELEASE_GENERATED | ATTESTATION_SPECS | {".decapod/governance.json"}:
+            raise Blocked("authentic pending continuation exceeds approved scope")
+        run("check authentic pending continuation", "git", "apply", "--check", "-", cwd=work, data=pending)
+        run("restore authentic pending continuation", "git", "apply", "-", cwd=work, data=pending)
+        journal = run("bind restored authentic pending journal", "git", "hash-object", ".decapod/governance.json", cwd=work).strip()
         readmitted = doc("readmit preserved native task journal", "workspace", "ensure", "--branch", branch, cwd=work)
         if readmitted.get("can_work") is not True or readmitted.get("branch") != branch:
             raise Blocked("native readmission did not authorize original task continuation")
         if run("verify preserved journal after readmission", "git", "hash-object", ".decapod/governance.json", cwd=work).strip() != journal:
-            raise Blocked("native readmission altered the committed original journal before inspection")
-        result["original_committed_journal"] = dict(blob=journal, source_commit=CURRENT, exact_bytes_preserved=True)
+            raise Blocked("native readmission altered the authentic pending journal before inspection")
+        result["original_pending_journal"] = dict(blob=journal, source_commit=CURRENT, pending_patch_sha256=pending_meta["sha256"], prior_run_id=resume["prior_run_id"], exact_bytes_preserved=True)
         run("orient original billing task", "decapod", "infer", "orientation", "--task-id", task, cwd=work)
         run("read core doctrine", "decapod", "constitution", "get", "core/DECAPOD", cwd=work)
         doc("resolve current task context", "rpc", "--op", "context.resolve", cwd=work)
@@ -456,11 +472,15 @@ def main():
                 raise Blocked("accepted-base source digest differs: " + path)
         result["inventory_review"] = dict(inventory_digest=approved_inventory, independently_hashed_sources=105,
             candidate_inventory_equal_to_accepted_base=True, new_policy_changes=False, carrier_approval=False, execution_proof=False)
-        run("apply exact bounded lint and preserved documentation repair", "git", "apply", "--whitespace=error", "--include=src/decapod/lib.rs", "--include=docs/cloud-repository-billing.md", "-", cwd=work, data=patch)
+        for path, reviewed in reviewed_files.items():
+            if run("verify restored approved material " + path, "git", "hash-object", path, cwd=work).strip() != reviewed["after_blob"]:
+                raise Blocked("restored pending authored/doc material differs from independently approved gate repair")
         run("regenerate exact source-backed documentation natively", "decapod", "docs", "build", cwd=work)
         for path in NATIVE_DOCS:
             if run("verify native generated doc " + Path(path).stem, "git", "hash-object", path, cwd=work).strip() != reviewed_files[path]["after_blob"]:
                 raise Blocked("official native docs output differs from independently reviewed deterministic source rendering")
+        run("refresh full official release surfaces through native project prerequisites", "decapod", "govern", "project-check", "--refresh-specs", cwd=work)
+        result["project_prerequisites"] = dict(completed=True, publication_ready=False, command="decapod govern project-check --refresh-specs")
         native_refresh = doc("refresh official release projections", "rpc", "--op", "specs.refresh", cwd=work)
         result["native_projection_refresh"] = native_refresh
         for name in ("ARCHITECTURE", "INTERFACES", "SECURITY"):
@@ -470,9 +490,10 @@ def main():
         run_id = doc("inspect original native trajectory", "govern", "artifacts", "status", cwd=work)["sections"]["trajectory"]["run_id"]
         doc("record actual native gate repair evidence", "govern", "trajectory", "record", "--run-id", run_id, "--task-id", task,
             "--phase", "validation", "--scope", "billing", "--boundary", "Continue original transferred task and published source; no failed readiness is reused as proof",
-            "--command", "git merge --ff-only " + CURRENT, "--command", "decapod docs build", "--command", "decapod rpc --op specs.refresh",
-            "--check", "git-diff-whitespace=passed", "--check", "prior-full-publication=blocked", "--check", "current-full-workbranch-validation=unavailable",
-            "--evidence", "Native prior run 43111757803 stopped on actual source validation. Preserve original task and journal; correct independently reviewed clippy needless borrow, exact generated docs, and six official v0.138.2 release projections. All source/CI policy remains unchanged. Full native readiness must rerun for this new checkpoint.", cwd=work)
+            "--command", "git merge --ff-only " + CURRENT, "--command", "git apply authenticated pending snapshot " + pending_meta["sha256"],
+            "--command", "decapod docs build", "--command", "decapod govern project-check --refresh-specs", "--command", "decapod rpc --op specs.refresh",
+            "--check", "git-diff-whitespace=passed", "--check", "prior-full-publication=failed", "--check", "current-full-workbranch-validation=unavailable",
+            "--evidence", "Native run 43111757803 stopped on actual source validation; run 43115014473 restored the task and prepared repairs but rejected an unsupported trajectory status before checkpoint. Restore its authentic pending source and journal, use the supported failed status and native full-surface refresh; correct independently reviewed clippy needless borrow, exact generated docs, and six official v0.138.2 release projections. All source/CI policy remains unchanged. Full native readiness must rerun for this new checkpoint.", cwd=work)
         changed = set(run("inspect exact gate repair paths", "git", "diff", "HEAD", "--name-only", "-z", cwd=work).split("\0")) - {""}
         changed |= set(run("inspect untracked gate repair paths", "git", "ls-files", "--others", "--exclude-standard", "-z", cwd=work).split("\0")) - {""}
         if not changed <= REPAIR_SCOPE | RELEASE_GENERATED | ATTESTATION_SPECS | {".decapod/governance.json"}:

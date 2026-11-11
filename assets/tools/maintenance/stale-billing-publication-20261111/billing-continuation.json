@@ -200,45 +200,51 @@
     }
   },
   "resume": {
-    "prior_run_id": "43111757803",
-    "prior_operations_sha": "876d655f47cf65e995a7fdd417785e73baf8a867",
-    "prior_report_sha256": "sha256:875af5c0599ed1ce01f476e69404371531551533d8769e0a1ff23cb60c90b45d",
+    "prior_run_id": "43115014473",
+    "prior_operations_sha": "0cf50ed2dfd70189eec830af211587b2fd1049ae",
+    "prior_report_sha256": "sha256:e884cac8b4e11f95b18251fabcc8d39702c4a2c5494bda4a684b0d31ee1d5d92",
     "prior_result": {
       "schema": "decapod.branch-publication.v1",
       "slug": "billing",
       "repository": "DecapodLabs/decapod",
       "base_sha": "c5de35a89b27e788169612ae71681e45c13bf71a",
       "source_sha": "26a499d9f0789a5ed00605d23cfc57f5392ae8fc",
-      "operations_sha": "876d655f47cf65e995a7fdd417785e73baf8a867",
+      "operations_sha": "0cf50ed2dfd70189eec830af211587b2fd1049ae",
       "status": "blocked",
       "branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
       "task": "code_01m76aq15fea61e8",
-      "head_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
-      "tree": "f08a124d242dbb85d9eb058a16f3c5bb68a039a3",
-      "checkpoints": true,
-      "pushed": true,
+      "head_sha": null,
+      "tree": null,
+      "checkpoints": false,
+      "pushed": false,
       "publication_ready": false,
       "full_boundary_passed": false,
       "custody_exported": true,
       "pr_url": null,
       "resumed": true,
-      "prior_run_id": "43109741698",
+      "continuation_from": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
+      "prior_run_id": "43111757803",
       "imported": true,
-      "incoming_transfer_id": "01M76AR4H856WEE5MBGQ5CNFVE",
+      "incoming_transfer_id": "01M76BR4SYWMBE4NJ98NH30V59",
       "controller": {
-        "release": "v0.138.1",
-        "binary_sha256": "22f26c69e7f6de5f813c11ee21d8fc2a5776b6a1ce477e13d835a9e210c69217"
+        "release": "v0.138.2",
+        "binary_sha256": "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723",
+        "archive_sha256": "718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06",
+        "release_id": 442229037,
+        "asset_id": 737052855,
+        "release_tag_commit": "c5de35a89b27e788169612ae71681e45c13bf71a"
       },
       "prompt_evaluation": {
         "schema_version": "1.0.0",
         "status": "allow",
-        "prompt_sha256": "3df9988ceea699e2af9f6d126dc8bb33f491172d9e55c88a017c19e689f0ac9a",
-        "prompt_bytes": 443,
+        "prompt_sha256": "79d03a127a67e1999c11334b20a40248fb6d262379b597cfe7ba8ba23a770ff9",
+        "prompt_bytes": 741,
         "findings": [],
         "action": "Proceed with the prompt under the normal Decapod contract."
       },
       "custody_recipient_fingerprint": "sha256:c54fbd6b328ebc89c57a0b158cbdddc434e37f48b8283b0e9af532506600f6dc",
-      "patch_sha256": "sha256:f333d9c6ed61f4ff58602fa4d9c0fa43a8dd3154d8bf145f6816dc586cab98ab",
+      "repair_patch_sha256": "sha256:5a866a1c160e824e231f25eef1e1ce42c6ff943981a563fe23d083450dfd2a84",
+      "release_drift_sha256": "sha256:bca7b9940c6bde08cacadf1d1504a649c3d4bf0ed4b9ed6fb2500dbced2f6a00",
       "baseline_reconciliation": {
         "status": "needs_reconciliation",
         "inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
@@ -248,65 +254,15 @@
       },
       "admission_seed": {
         "artifact": "billing-admission-seed.der",
-        "plaintext_sha256": "sha256:c99d6e140eefcc7a009243217d06166e05e76e2439297f3501e3cf3cca777753",
-        "ciphertext_sha256": "sha256:e22aafe4b7d786797b462e68c5f78cb63c9ec3395bda012ffed8807b5eb9c6a1"
+        "plaintext_sha256": "sha256:fe2e96ed60c4dc3f135ac26e9920f75e2e63110621c88852262919c1f4f2a3ac",
+        "ciphertext_sha256": "sha256:e3415b2e59e7ccd19a8c7cceb41eb72fdc6ac92749527aa30ada113a10c4252b"
       },
-      "original_pending_journal": {
-        "blob": "76997a2d6ed0077a906bba1eeb911519762a296a",
-        "restored_from": "sha256:025caf8469c1540c0951c15f5484a49fa061222f08d0bdca6b5247f5974e21dc",
+      "original_committed_journal": {
+        "blob": "82825c5e9fb294269958a21b6b373369b5d73f44",
+        "source_commit": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
         "exact_bytes_preserved": true
       },
-      "source_history": "already_proven",
-      "expected_material_tree": "80de08071f5db88aca4aa3ffc496ec0aa2ac10c7",
-      "candidate_reconciliation": {
-        "status": "needs_reconciliation",
-        "inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
-        "repair_codes": [
-          "STALE_SOURCE_INVENTORY"
-        ]
-      },
-      "inventory_review": {
-        "mode": "accepted_baseline_only",
-        "base_sha": "c5de35a89b27e788169612ae71681e45c13bf71a",
-        "independently_hashed_sources": 105,
-        "candidate_inventory_equal_to_accepted_base": true,
-        "differences": [],
-        "allowed_source_changes": [],
-        "previous_declaration": "sha256:2aea2eef7fb20d5343821996f637449a9afe7aea0020b56355702218838e5e80",
-        "inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
-        "carrier_approval": false,
-        "execution_proof": false,
-        "independent_review_sha256": "sha256:6f547e2780ca6a249a7915bcccc1452e94d2bd66ecc42a9bda3d84754f60d270"
-      },
-      "final_reconciliation": {
-        "status": "proof_pending",
-        "inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
-        "repair_codes": []
-      },
-      "material_verification": [
-        {
-          "stage": "after native projection refresh",
-          "expected_material_tree": "80de08071f5db88aca4aa3ffc496ec0aa2ac10c7",
-          "complete_non_native_tree_equal": true,
-          "authored_spec_semantics_equal": true,
-          "policy_changes_bounded": true
-        },
-        {
-          "stage": "after native checkpoint",
-          "expected_material_tree": "80de08071f5db88aca4aa3ffc496ec0aa2ac10c7",
-          "complete_non_native_tree_equal": true,
-          "authored_spec_semantics_equal": true,
-          "policy_changes_bounded": true
-        },
-        {
-          "stage": "exact committed candidate",
-          "expected_material_tree": "80de08071f5db88aca4aa3ffc496ec0aa2ac10c7",
-          "complete_non_native_tree_equal": true,
-          "authored_spec_semantics_equal": true,
-          "policy_changes_bounded": true
-        }
-      ],
-      "checkpoint_verification": {
+      "prior_checkpoint_verification": {
         "schema": "decapod.checkpoint-history.v1",
         "scope": "checkpoint_history",
         "disposition": "proven",
@@ -320,73 +276,116 @@
         ],
         "findings": []
       },
-      "candidate_bundle": {
-        "artifact": "billing-candidate.der",
-        "plaintext_sha256": "sha256:8b3988b9aa3857eebde86740ebddb4a03120f20f7ed71e49ec7f2cdf9773fafc",
-        "ciphertext_sha256": "sha256:78a674388d3845a73b0ce992d5b092eac6d0bf01b90dd497365a24f4cf749a40"
+      "projection_reference_tree": "6b1963f1a66e6ec624972a9148fdd98a285998a8",
+      "candidate_reconciliation": {
+        "status": "proof_pending",
+        "inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
+        "repair_codes": []
       },
-      "tag_history_verified": true,
-      "publisher": {
-        "exit_code": 1,
-        "timeout": false,
-        "codes": [
-          "PUBLICATION_NOT_READY"
-        ],
-        "ci_identity_preserved": true,
-        "diagnostic_excerpt": "ation\",\"matrix\":{\"shard\":\"gatling-2\"},\"profile\":\"decapod.pr-readiness.v1/integration-gatling-2\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/integration-gatling-3\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/ci.yml\",\"job\":\"test-integration\",\"matrix\":{\"shard\":\"gatling-3\"},\"profile\":\"decapod.pr-readiness.v1/integration-gatling-3\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/integration-spec_conformance\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/ci.yml\",\"job\":\"test-integration\",\"matrix\":{\"shard\":\"spec_conformance\"},\"profile\":\"decapod.pr-readiness.v1/integration-spec_conformance\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/integration-substrate_integrity\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/ci.yml\",\"job\":\"test-integration\",\"matrix\":{\"shard\":\"substrate_integrity\"},\"profile\":\"decapod.pr-readiness.v1/integration-substrate_integrity\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/chaos-replay\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/ci.yml\",\"job\":\"test-rpc-suite\",\"matrix\":{},\"profile\":\"decapod.pr-readiness.v1/chaos-replay\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/daemonless-lifecycle\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/ci.yml\",\"job\":\"test-rpc-suite\",\"matrix\":{},\"profile\":\"decapod.pr-readiness.v1/daemonless-lifecycle\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/rpc-suite\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/ci.yml\",\"job\":\"test-rpc-suite\",\"matrix\":{},\"profile\":\"decapod.pr-readiness.v1/rpc-suite\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/workspace-lifecycle-docker\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/ci.yml\",\"job\":\"workspace-lifecycle-docker\",\"matrix\":{},\"profile\":\"decapod.pr-readiness.v1/workspace-lifecycle-docker\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/constitution-schema\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/constitution-sync.yml\",\"job\":\"validate-constitution\",\"matrix\":{},\"profile\":\"decapod.pr-readiness.v1/constitution-schema\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/standalone-validation\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/decapod-validate.yml\",\"job\":\"validate\",\"matrix\":{},\"profile\":\"decapod.pr-readiness.v1/standalone-validation\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/docs-build\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/docs.yml\",\"job\":\"build\",\"matrix\":{},\"profile\":\"decapod.pr-readiness.v1/docs-build\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/docs-drift\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/docs_sync.yml\",\"job\":\"sync-docs\",\"matrix\":{},\"profile\":\"decapod.pr-readiness.v1/docs-drift\"},\"disposition\":\"real\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Applicable actual PR source check or candidate build; real execution remains mandatory\",\"evidence_scope\":\"authenticated_execution_required\"},{\"stage\":\"decapod.pr-readiness.v1/migration-tests\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/ci.yml\",\"job\":\"migration-script-tests\",\"matrix\":{},\"profile\":\"decapod.pr-readiness.v1/migration-tests\"},\"disposition\":\"non_applicable\",\"policy\":\"decapod.source-ci.v1:migration-tests:selected=false\",\"reason\":\"Independently recomputed source applicability predicate is false\",\"evidence_scope\":\"source_predicate_exclusion_only\"},{\"stage\":\"decapod.pr-readiness.v1/selective-plugins\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/ci.yml\",\"job\":\"test\",\"matrix\":{\"target\":\"plugins\"},\"profile\":\"decapod.pr-readiness.v1/selective-plugins\"},\"disposition\":\"non_applicable\",\"policy\":\"decapod.source-ci.v1:selective-plugins:selected=false\",\"reason\":\"Independently recomputed source applicability predicate is false\",\"evidence_scope\":\"source_predicate_exclusion_only\"},{\"stage\":\"decapod.pr-readiness.v1/integration-release-policies\",\"key\":{\"provider\":\"buildkite\",\"workflow\":\".github/workflows/ci.yml\",\"job\":\"test-integration\",\"matrix\":{\"shard\":\"release-policies\"},\"profile\":\"decapod.pr-readiness.v1/integration-release-policies\"},\"disposition\":\"non_applicable\",\"policy\":\"decapod.source-ci.v1:integration-release-policies:selected=false\",\"reason\":\"Independently recomputed source applicability predicate is false\",\"evidence_scope\":\"source_predicate_exclusion_only\"},{\"stage\":\"github-pull-request-ci\",\"key\":null,\"disposition\":\"non_applicable\",\"policy\":\"decapod.buildkite-only-preflight.v1\",\"reason\":\"Ordinary GitHub pull-request CI remains independent; preflight requires the complete Buildkite source contract instead\",\"evidence_scope\":\"no_github_actions_execution_or_assurance_claim\"},{\"stage\":\"derived-release-packaging\",\"key\":null,\"disposition\":\"non_applicable\",\"policy\":\"decapod.source-pr-scope.v1\",\"reason\":\"Predictive release-only packaging is outside the actual source PR suite; issue #1399 remains unresolved\",\"evidence_scope\":\"no_release_packaging_assurance\"},{\"stage\":\"publish\",\"key\":null,\"disposition\":\"mocked\",\"policy\":\"decapod.source-pr-no-publication-side-effects.v1\",\"reason\":\"Validation may simulate publication/deployment intent; it does not perform these side effects\",\"evidence_scope\":\"simulation_only_no_execution_or_assurance_claim\"},{\"stage\":\"deploy\",\"key\":null,\"disposition\":\"mocked\",\"policy\":\"decapod.source-pr-no-publication-side-effects.v1\",\"reason\":\"Validation may simulate publication/deployment intent; it does not perform these side effects\",\"evidence_scope\":\"simulation_only_no_execution_or_assurance_claim\"}],\"blockers\":[{\"code\":\"SNAPSHOT_NOT_READY\",\"detail\":\"source Buildkite workflow completed without success: workflow=.github/workflows/decapod-validate.yml build=7910 uuid=01a1ccba-2f24-4917-9dea-ee169a4a38a3 state=failed blocked=false url=https://buildkite.com/decapodlabs/decapod/builds/7910\",\"check\":null}],\"evidence_path\":\"/tmp/decapod-snapshot-2eFVgp\"}\n"
+      "inventory_review": {
+        "inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
+        "independently_hashed_sources": 105,
+        "candidate_inventory_equal_to_accepted_base": true,
+        "new_policy_changes": false,
+        "carrier_approval": false,
+        "execution_proof": false
+      },
+      "native_projection_refresh": {
+        "id": "01M76CXYZ7YSFA28SM6JNHYSYK",
+        "success": true,
+        "receipt": {
+          "op": "specs.refresh",
+          "timestamp": "1794437479Z",
+          "inputs_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "outputs_hash": "57666b4dcd94250701f431d741b5cfab59bf4a996a86567d2cd62e91568e27ec"
+        },
+        "result": {
+          "manifest_path": ".decapod/managed/specs/.manifest.json",
+          "refreshed_at": "1794437479Z",
+          "repo_signal_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f"
+        },
+        "allowed_next_ops": []
       },
       "blocker": {
-        "stage": "native full workspace publisher",
-        "kind": "Blocked",
-        "reason": "native publisher did not confirm complete readiness and exact PR"
+        "stage": "record actual native gate repair evidence",
+        "exit_code": 1,
+        "timeout": false,
+        "codes": [],
+        "detail": "session: auto-acquired for agent 'chatgpt-stale-billing'.\nValidation error: invalid trajectory check status 'blocked': expected passed|failed|partial|unavailable\n",
+        "full_output": "encrypted diagnostics",
+        "reason": "native or Git command failed; preserve its exact diagnosis"
       },
       "transfer": {
         "task_id": "code_01m76aq15fea61e8",
-        "transfer_id": "01M76BR4SYWMBE4NJ98NH30V59",
-        "receiver": "chatgpt-stale-billing",
+        "transfer_id": "01M76CY9MZA01A2EC1FBYR76JE",
+        "receiver": "chatgpt-stale-billing-next",
         "native_source_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
-        "native_source_branch": "billing-publication-control-f256a1ec7502",
+        "native_source_branch": "billing-publication-control-eefdb3cc2f1a",
         "source_sealed": true,
-        "candidate_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
+        "candidate_sha": null,
         "candidate_branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
         "artifact": "billing-custody.der",
-        "plaintext_sha256": "sha256:ff6b1be07df35e9c75549e587a848ba8010ac524ac7a1a99fd6f468a1f766b1a",
-        "ciphertext_sha256": "sha256:19249487bd5a7fcc36ebb1f6308194e356f18ace09ddfacf73332d8b82552d06"
+        "plaintext_sha256": "sha256:0d1d1c1699212cc870d66c8495fc05dc0486dabd0a8b0e24374d65e8adbab343",
+        "ciphertext_sha256": "sha256:5dd04deb56916d280b1d015eecb2336da4c43aa248125a197a4aacb6403c9c28"
       },
-      "source_dirty_after_attempt": false,
+      "source_dirty_after_attempt": true,
       "final_head_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
+      "recovery_candidate_bundle": {
+        "artifact": "billing-candidate-recovery.der",
+        "plaintext_sha256": "sha256:8b3988b9aa3857eebde86740ebddb4a03120f20f7ed71e49ec7f2cdf9773fafc",
+        "ciphertext_sha256": "sha256:bec17f31ba44688eddc01d5e0c54d2c78e0d0bee3bfb3d8b64130687919ad83f"
+      },
       "observed_remote_head_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
       "diagnostics": {
         "artifact": "billing-diagnostics.der",
-        "plaintext_sha256": "sha256:1cc1d02e14a3fd1c7491bc1ee31c82c76c6e54b8165b8ea60ab21f46b5095633",
-        "ciphertext_sha256": "sha256:d557c9b6d21703ee3b93609e75c48baee8f38f2ac44af0b5fab5424db03ebe00"
+        "plaintext_sha256": "sha256:1d01239bafd6053d113ab3b129e12dfdd8959760fef9c9ea34b931c85c229514",
+        "ciphertext_sha256": "sha256:1e498292d2ee6b3f4c7a2afc8741bb074627d170268128048aa49a5a22c66bc4"
       }
     },
     "task_id": "code_01m76aq15fea61e8",
     "branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
     "candidate_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
     "candidate_tree": "f08a124d242dbb85d9eb058a16f3c5bb68a039a3",
-    "receiver": "chatgpt-stale-billing",
+    "receiver": "chatgpt-stale-billing-next",
     "native_transfer": {
       "task_id": "code_01m76aq15fea61e8",
-      "transfer_id": "01M76BR4SYWMBE4NJ98NH30V59",
-      "receiver": "chatgpt-stale-billing",
+      "transfer_id": "01M76CY9MZA01A2EC1FBYR76JE",
+      "receiver": "chatgpt-stale-billing-next",
       "native_source_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
-      "native_source_branch": "billing-publication-control-f256a1ec7502",
+      "native_source_branch": "billing-publication-control-eefdb3cc2f1a",
       "source_sealed": true,
-      "candidate_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
+      "candidate_sha": null,
       "candidate_branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
       "artifact": "billing-custody.der",
-      "plaintext_sha256": "sha256:ff6b1be07df35e9c75549e587a848ba8010ac524ac7a1a99fd6f468a1f766b1a",
-      "ciphertext_sha256": "sha256:19249487bd5a7fcc36ebb1f6308194e356f18ace09ddfacf73332d8b82552d06"
+      "plaintext_sha256": "sha256:0d1d1c1699212cc870d66c8495fc05dc0486dabd0a8b0e24374d65e8adbab343",
+      "ciphertext_sha256": "sha256:5dd04deb56916d280b1d015eecb2336da4c43aa248125a197a4aacb6403c9c28"
     },
-    "package_sha256": "sha256:208c75797295acc9fb8ec4501db77424bf9bc9881e2b934e3bf93ecb597fe7ac",
+    "package_sha256": "sha256:f369b89e44bacade9ed2ae701518c9acba271b7bd67268d38b5e68ce72eb70b3",
     "private_files": {
       "native-transfer.json": {
-        "sha256": "sha256:ff6b1be07df35e9c75549e587a848ba8010ac524ac7a1a99fd6f468a1f766b1a",
-        "bytes": 32346
+        "sha256": "sha256:0d1d1c1699212cc870d66c8495fc05dc0486dabd0a8b0e24374d65e8adbab343",
+        "bytes": 53647
+      },
+      "pending-tracked.patch": {
+        "sha256": "sha256:4bd2ed697dd65042aaf61fd1fdad82712ecceff70fe99107a48f1bd81b6c1136",
+        "bytes": 20246
       }
     },
+    "pending_paths": [
+      ".decapod/governance.json",
+      ".decapod/managed/specs/.manifest.json",
+      ".decapod/managed/specs/ARCHITECTURE.md",
+      ".decapod/managed/specs/INTENT.md",
+      ".decapod/managed/specs/INTERFACES.md",
+      ".decapod/managed/specs/OPERATIONS.md",
+      ".decapod/managed/specs/README.md",
+      ".decapod/managed/specs/SECURITY.md",
+      ".decapod/managed/specs/SEMANTICS.md",
+      ".decapod/managed/specs/VALIDATION.md",
+      "docs/agent/config-schema.md",
+      "docs/cloud-repository-billing.md",
+      "src/decapod/lib.rs"
+    ],
     "baseline_inventory": {
       "discovered_sources": {
         ".bazelrc": "sha256:0b64ac89d47e099bcd5b013fcb0b3c3e1fc2b1212abe16239caa1fd5a9ebed3e",
@@ -498,7 +497,8 @@
       "inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
       "status": "needs_reconciliation"
     },
-    "approved_baseline_inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577"
+    "approved_baseline_inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
+    "recovery_scope": "Authenticated pending material from failed helper status-enum recording, after native source and doc repair but before checkpoint. Restore exact bytes, continue same task, and regenerate native release surfaces through supported project-check."
   },
   "projection_reference_tree": "6b1963f1a66e6ec624972a9148fdd98a285998a8",
   "native_projection_comparison": {
