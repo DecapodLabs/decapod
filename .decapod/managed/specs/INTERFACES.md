@@ -1,5 +1,26 @@
 # Interfaces
 
+## Agent delegation and cloud authorization interface
+
+Decapod is invoked by each contributor's coding agent in the repository.
+Local `DECAPOD_AGENT_ID` labels and `[governance.rbac]` describe cooperative
+identity and exceptional local grants only. Cloud `todo` calls use a
+managed-Auth bearer, canonical repository binding, and backend-owned checks.
+Client role labels, task-assignee strings and `actor_roles` cannot substitute
+for that bearer or select a cloud privilege. The same agent command interface
+serves owners, maintainers, contributors and contractors; no contractor-specific
+human command is added.
+
+Propodus alone resolves the effective `read`, `write`, `maintainer`, or
+`owner` tier and enforces expiring direct user grants (including explicit
+revocation over inherited group/team/org grants). Cloud claim/release/complete
+must bind the acting authenticated principal independently from the
+caller-supplied agent label. The protected two-principal service proof checks
+both ordinary lifecycle concurrency and label impersonation. HTTP fixtures
+show client composition only; local mode never falls back from a failed cloud
+authorization. Merge readiness remains governed by the independently
+configured publication and proof gates.
+
 ## Version reporting
 
 `decapod system version` reports the installed binary version and existing

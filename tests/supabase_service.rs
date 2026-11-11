@@ -346,13 +346,21 @@ fn run(profile: &str) {
     // merely by copying its current agent label. Role assignment is service-
     // resolved; DECAPOD_AGENT_ID is never an authorization credential.
     for operation in ["release", "done"] {
-        rejected_transition(
+        let spoofed = cli(
             &fixture,
             other_root,
             actor,
             other_token,
             &[operation, "--id", id],
+        )
+        .output()
+        .unwrap();
+        assert_safe(&spoofed, &fixture);
+        assert!(
+            !spoofed.status.success(),
+            "a copied agent label must not transfer authenticated task custody"
         );
+        assert_no_fallback(other_root);
         // The original cross-agent claim remains forbidden too.
         rejected_transition(
             &fixture,
