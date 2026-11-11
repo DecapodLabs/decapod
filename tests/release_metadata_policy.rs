@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 #[path = "../assets/tools/source_ci_profile.rs"]
 mod source_ci_profile;
-use source_ci_profile::workflow_owned::release_classifier as release_metadata;
+use source_ci_profile::workflow_owned::release_classifier::implementation as release_metadata;
 
 use std::fs;
 use std::path::PathBuf;
