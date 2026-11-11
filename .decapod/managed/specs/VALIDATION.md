@@ -1,5 +1,43 @@
 # Validation
 
+## Native Laya research reconciliation (#1614)
+
+The historical candidate failed dependency denial on Tokio 1.52.3
+(`RUSTSEC-2026-0386`) and lacked a current-source Interfaces review. The
+reconciled source retains accepted v0.137.2's Tokio 1.53.3 root lockfile and
+sole-Laya kernel ownership. Native task/workspace admission, genuine current
+spec reviews, material checkpoints and exact-candidate validation must establish
+the new candidate's custody; neither an old result nor copied metadata does so.
+
+The original frozen fitting/evaluation corpus definitions replace unsupported
+placeholder families. Their partitions remain disjoint; the evaluation allows
+zero false-ready adverse controls and cannot be reused for tuning.
+`core::laya_readiness::fitting_cases::frozen_corpora_name_executable_and_disjoint_contract_families`
+executes the eight declared bounded Rust witnesses and checks partition
+separation. It generates no fitting/evaluation inputs, runs no model and
+produces no evaluation scores. The explicit bounded-process signal-module path
+supports compilation of shared source by the separate native worker workspace.
+
+The new regression is part of the library unit suite. The actual source paths
+select the existing required `supabase-consumer` check, whose second command
+runs unfiltered `cargo test --locked --features supabase-cloud --lib` with its
+listed integration targets. Execution requires the complete command record and
+the named test result. The narrower `selective-core` recipe selected by these
+paths runs `entrypoint_correctness`, not this regression. A green job with
+`not_applicable`, an ignored test, or compilation alone cannot establish that
+the bounded witnesses ran.
+
+The independent `assets/tools/laya-native` workspace remains unqualified.
+Root-library CI does not compile, audit or qualify that separate workspace;
+its preserved dependency set, including zip 1.3.1, requires its own remediation
+and verification before activation. The recorded fitted-worker diagnostic
+approved six of twenty adverse controls and rejected four of twelve ready
+controls. Those failures remain evidence, the held-out evaluation remains
+unscored, and no threshold, numerical tolerance, coefficient bound, model
+profile or policy requirement is relaxed. Native compilation, dependency
+checks, real backend/protocol execution and a separately justified successful
+qualification must precede any activation or readiness claim.
+
 ## Immutable push-range ancestry
 
 A feature-branch push supplies the previous branch tip as its `base`,
@@ -960,8 +998,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
+- Repository signal fingerprint: `70b01fca09e78c3fd6e57d97e6209daa065aa62eda2c2d50b94b804603491d35`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
