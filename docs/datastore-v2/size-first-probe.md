@@ -9,7 +9,7 @@ PR #1605 is insufficient to meet the size-first objective.
 
 ## Reproduction
 
-Run `cargo run --locked --features build-tools --bin decapod-storage-size-probe -- --rows 24000 --reads 500`.
+Run `DECAPOD_PROBE_ROWS=24000 DECAPOD_PROBE_READS=500 cargo test --locked --test storage_size_probe -- --ignored --nocapture`.
 All SQLite databases are disposable private temporary files; this command
 opens no live project database. It constructs equivalent logical events in five
 physical forms and compares decoded payloads to the original **byte-for-byte**.

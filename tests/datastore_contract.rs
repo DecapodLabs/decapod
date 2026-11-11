@@ -5,8 +5,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[test]
 fn logical_schema_inventory_is_structurally_valid_and_matches_runtime_core() {
-    let contract: Value = serde_json::from_str(include_str!("../docs/datastore-v2/logical_contract_v1.json"))
-        .expect("reviewed JSON contract");
+    let contract: Value = serde_json::from_str(include_str!(
+        "../docs/datastore-v2/logical_contract_v1.json"
+    ))
+    .expect("reviewed JSON contract");
     assert_eq!(contract["schema"], "decapod.logical-storage-inventory.v1");
     assert_eq!(contract["release"], env!("CARGO_PKG_VERSION"));
     let tables = contract["tables"].as_array().expect("tables");
@@ -16,7 +18,9 @@ fn logical_schema_inventory_is_structurally_valid_and_matches_runtime_core() {
         let name = table["logical_name"].as_str().expect("table name");
         assert!(names.insert(name), "duplicate table {name}");
         assert!(
-            table["authority"].as_str().is_some_and(|x| x != "unclassified"),
+            table["authority"]
+                .as_str()
+                .is_some_and(|x| x != "unclassified"),
             "unclassified authority: {name}"
         );
         let columns = table["columns"].as_array().expect("columns");
@@ -26,7 +30,10 @@ fn logical_schema_inventory_is_structurally_valid_and_matches_runtime_core() {
             .collect();
         assert_eq!(declared.len(), columns.len(), "duplicate field in {name}");
         for key in table["primary_key"].as_array().expect("primary key") {
-            assert!(declared.contains(key.as_str().expect("key name")), "{name}: invalid PK");
+            assert!(
+                declared.contains(key.as_str().expect("key name")),
+                "{name}: invalid PK"
+            );
         }
         for fk in table["foreign_keys"].as_array().expect("foreign keys") {
             let target = fk["ref_table"].as_str().expect("reference");
@@ -50,16 +57,34 @@ fn logical_schema_inventory_is_structurally_valid_and_matches_runtime_core() {
 
     let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
     let required: BTreeSet<&str> = [
-        "tasks", "events", "task_owners", "task_dependencies", "task_tags",
-        "task_verification", "agents", "meta", "risk_zones", "categories",
-        "nodes", "node_edges", "claims", "proof_events", "decisions",
-        "sessions", "preferences"
-    ].into_iter().collect();
+        "tasks",
+        "events",
+        "task_owners",
+        "task_dependencies",
+        "task_tags",
+        "task_verification",
+        "agents",
+        "meta",
+        "risk_zones",
+        "categories",
+        "nodes",
+        "node_edges",
+        "claims",
+        "proof_events",
+        "decisions",
+        "sessions",
+        "preferences",
+    ]
+    .into_iter()
+    .collect();
     let mut observed = BTreeMap::new();
     for table in tables {
         let name = table["logical_name"].as_str().unwrap();
         if !conn.has_table(name).unwrap() {
-            assert!(!required.contains(name), "current core table missing: {name}");
+            assert!(
+                !required.contains(name),
+                "current core table missing: {name}"
+            );
             // Optional and lazily created tables are audited when initialized.
             continue;
         }
@@ -70,8 +95,12 @@ fn logical_schema_inventory_is_structurally_valid_and_matches_runtime_core() {
             .unwrap()
             .collect::<Result<_, _>>()
             .unwrap();
-        let declared: Vec<&str> = table["columns"].as_array().unwrap().iter()
-            .map(|c| c["name"].as_str().unwrap()).collect();
+        let declared: Vec<&str> = table["columns"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|c| c["name"].as_str().unwrap())
+            .collect();
         let field_refs: Vec<&str> = fields.iter().map(String::as_str).collect();
         assert_eq!(field_refs, declared, "{name}: local schema drift");
         observed.insert(name.to_owned(), fields.len());
