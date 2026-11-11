@@ -40,6 +40,10 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
+          git clone --no-hardlinks --no-checkout "$GITHUB_WORKSPACE/subject" /root/issue1628-subject
+          cd /root/issue1628-subject
+          git remote set-url origin https://github.com/DecapodLabs/decapod.git
+          git checkout --detach c5de35a89b27e788169612ae71681e45c13bf71a
           git config user.name 'ChatGPT'
           git config user.email 'chatgpt@users.noreply.github.com'
           python3 "$GITHUB_WORKSPACE/operations/assets/tools/maintenance/issue1628-native-20261111/bootstrap.py" \
