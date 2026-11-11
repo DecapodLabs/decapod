@@ -470,7 +470,11 @@ fn validation_push_accepts_protected_base_update_but_rejects_rewrite_or_stale_ma
     let feature_head = repo.commit("feature head");
     assert!(
         release_metadata::validation_change_base(
-            &repo.0, "push", &feature_before, &feature_head, "master"
+            &repo.0,
+            "push",
+            &feature_before,
+            &feature_head,
+            "master"
         )
         .is_err(),
         "a feature branch that does not contain current accepted master must fail"
@@ -481,7 +485,11 @@ fn validation_push_accepts_protected_base_update_but_rejects_rewrite_or_stale_ma
     let rewritten_head = repo.commit("rewritten feature head");
     assert!(
         release_metadata::validation_change_base(
-            &repo.0, "push", &feature_before, &rewritten_head, &before
+            &repo.0,
+            "push",
+            &feature_before,
+            &rewritten_head,
+            &before
         )
         .is_err(),
         "a non-fast-forward branch rewrite must never qualify"
