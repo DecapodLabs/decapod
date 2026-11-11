@@ -146,6 +146,7 @@ fn active_cloud_commands_use_the_storage_adapter_without_local_fallback() {
             id: Some("cloud-1".into()),
             id_positional: None,
             validated: false,
+            commit: None,
             artifact: vec![],
         },
         &store,

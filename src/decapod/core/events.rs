@@ -132,6 +132,17 @@ fn subject_for_stream(stream: &str, event: &Value) -> (Option<String>, Option<St
                 .map(str::to_string);
             (Some("node".into()), id)
         }
+        VERIFICATION
+            if event.get("event_type").and_then(Value::as_str) == Some("validation.completed") =>
+        {
+            (
+                Some("commit".into()),
+                event
+                    .get("candidate_sha")
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+            )
+        }
         _ => (None, None),
     }
 }

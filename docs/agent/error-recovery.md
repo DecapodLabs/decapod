@@ -40,6 +40,30 @@ problem. The failure is neither a success receipt nor a rollback receipt.
 
 `PROOF_HOOK_FAILED` means a completion claim lacks current accepted proof; a
 historical green PR is not automatically a Decapod verification baseline.
+If full validation was recorded for the original candidate, inspect that exact
+SHA and complete or repair the original task through historical verification:
+
+```bash
+decapod qa verify commit <full-candidate-sha>
+decapod todo done <task-id> --validated --commit <full-candidate-sha>
+```
+
+This path verifies the original task and ownership lineage plus integration into
+the accepted branch. It does not revalidate a stale pre-merge workspace, create
+another pending PR or borrow another agent's workspace. It preserves the
+completion timestamp of an already-done task. A changed contract, incomplete
+lineage or unproven integration remains a blocker. Inspect the actual record;
+do not substitute the merge SHA for the candidate SHA that was validated.
+If the accepted objects are absent locally, fetch the accepted branch through
+the normal governed VCS path and retry the original command. This version's
+integration observer supports public GitHub HTTPS; private-repository integration
+requires a future supported transport. Squash/rebase integration must preserve
+the complete candidate tree in the bounded accepted history, not merely the
+task's patch. A new lease generation, including renewal, invalidates the old
+task binding and requires fresh proof.
+
+If no durable full record exists, historical completion is unavailable. Older
+temporary proof directories and prerequisite receipts are not silently promoted.
 For multiple completed tasks without captured artifacts, select current files
 relevant to each task and use the explicit batch capture path:
 

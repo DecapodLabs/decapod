@@ -182,6 +182,10 @@ pub struct ValidationReport {
     pub stage_dispositions: Vec<profile::StageDisposition>,
     pub blockers: Vec<Blocker>,
     pub evidence_path: Option<PathBuf>,
+    /// Owned completion from this invocation; excluded from the stable public
+    /// report. A path on disk alone can never mint durable validation history.
+    #[serde(skip)]
+    pub(crate) completed_evidence: Option<super::validation_history::CompletedReadinessEvidence>,
 }
 impl ValidationReport {
     pub fn exit_code(&self) -> i32 {
@@ -924,6 +928,7 @@ fn write_native_completion(
 /// result. This function cannot open a PR, push a work branch, or mint a receipt.
 pub fn validate(options: &Options, host: &mut dyn Host, cancel: &Cancellation) -> ValidationReport {
     let mut report = ValidationReport {
+        completed_evidence: None,
         ready: false,
         proof_ready: false,
 
@@ -1286,6 +1291,27 @@ fn run(
         return Err(invalid(format!(
             "STALE_POST_VALIDATION_DECISION: {error:?}"
         )));
+    }
+    if report.ready && report.proof_ready {
+        let completed = super::validation_history::CompletedReadinessEvidence::from_runtime(
+            &invocation,
+            report.scope,
+            &current.identity,
+            &initial_governance,
+            &trajectory_digest,
+            current_profile.plan(),
+            &result.evidence,
+            report
+                .laya_readiness
+                .as_ref()
+                .ok_or_else(|| invalid("successful readiness lacks a Laya disposition"))?,
+        )
+        .map_err(io::Error::other)?;
+        write_new(
+            &directory.join(super::validation_history::PROOF_FILE),
+            &serde_json::to_vec_pretty(&completed).map_err(io::Error::other)?,
+        )?;
+        report.completed_evidence = Some(completed);
     }
     let verdict_bytes = serde_json::to_vec_pretty(report).map_err(io::Error::other)?;
     // A receipt describes completed proof; it is never imported as authority.

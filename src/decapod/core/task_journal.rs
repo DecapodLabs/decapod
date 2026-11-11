@@ -734,6 +734,240 @@ fn check_complete_suffix(
     Ok(())
 }
 
+/// Execution meaning is unchanged by releasing custody or recording completion.
+/// Every omitted field is still checked through the allowed journal transitions.
+fn validation_contract_digest(projection: &TaskProjection) -> Result<String, DecapodError> {
+    let mut contract = projection.clone();
+    contract.task.status.clear();
+    contract.task.updated_at.clear();
+    contract.task.completed_at = None;
+    contract.task.closed_at = None;
+    contract.task.owner = None;
+    contract.task.assigned_to = None;
+    contract.task.assigned_at = None;
+    contract.task.lease_expires_at = None;
+    contract.task.lease_lifecycle = None;
+    contract.task.revision = 0;
+    contract.owners.clear();
+    // Bind declared task obligations while excluding changing execution results.
+    // The two gate names express the same full-validation requirement at
+    // different lifecycle stages; neither discharges any additional task gate.
+    let mut gates: Vec<String> = match &projection.verification {
+        Some(verification) => serde_json::from_str(&verification.proof_plan).map_err(|_| {
+            invalid("VALIDATION_HISTORY_TASK_STALE: malformed declared task proof plan")
+        })?,
+        None => vec!["validate_passes".into()],
+    };
+    if gates.is_empty() || gates.iter().any(|gate| gate.trim().is_empty()) {
+        return Err(invalid(
+            "VALIDATION_HISTORY_TASK_STALE: empty declared task proof plan",
+        ));
+    }
+    for gate in &mut gates {
+        if gate == "validated_commit" {
+            *gate = "validate_passes".into();
+        }
+    }
+    gates.sort();
+    gates.dedup();
+    contract.verification = Some(VerificationRow {
+        proof_plan: serde_json::to_string(&gates).map_err(|e| invalid(e.to_string()))?,
+        verification_artifacts: None,
+        last_verified_at: None,
+        last_verified_status: None,
+        last_verified_notes: None,
+        verification_policy_days: 0,
+        updated_at: String::new(),
+    });
+    digest(&contract)
+}
+
+pub(super) fn capture_validation_binding(
+    conn: &Connection,
+    task_id: &str,
+) -> Result<super::HistoricalTaskBinding, DecapodError> {
+    let ids = vec![task_id.to_owned()];
+    let journal = read_journal(conn, Some(&ids))?;
+    check_complete_suffix(conn, &journal, watermark(conn)?, None)?;
+    let head = journal.heads.get(task_id).ok_or_else(|| {
+        invalid("VALIDATION_HISTORY_TASK_UNBOUND: no complete canonical task checkpoint")
+    })?;
+    let current = capture_selected(conn, &ids)?;
+    if current.get(task_id) != Some(&head.projection) {
+        return Err(invalid(
+            "VALIDATION_HISTORY_TASK_UNBOUND: live task differs from its journal",
+        ));
+    }
+    let task = &head.projection.task;
+    let assignee = task.assigned_to.clone().unwrap_or_default();
+    if assignee.is_empty()
+        || assignee != crate::current_agent_id()
+        || !matches!(task.status.as_str(), "open" | "in_progress" | "done")
+        || task.lease_generation.unwrap_or(0) <= 0
+        || !super::LeaseLifecycle::parse(task.lease_lifecycle.as_deref()).holds_exclusive_custody()
+        || super::fleet_coord::lease_state(task.lease_expires_at.as_deref(), &super::now_iso())
+            != super::fleet_coord::LeaseState::Active
+    {
+        return Err(invalid(
+            "VALIDATION_HISTORY_TASK_UNBOUND: validation requires current exclusive task custody",
+        ));
+    }
+    Ok(super::HistoricalTaskBinding {
+        task_id: task_id.to_owned(),
+        revision: task.revision,
+        status: task.status.clone(),
+        contract_digest: validation_contract_digest(&head.projection)?,
+        checkpoint_digest: head.record_digest.clone(),
+        assignee,
+        lease_generation: task.lease_generation.unwrap_or(0),
+    })
+}
+
+/// A release/completion chronology may advance revision, but changed meaning,
+/// reassignment, restored history, or a new lease can never reuse old proof.
+pub(super) fn check_validation_binding(
+    conn: &Connection,
+    binding: &super::HistoricalTaskBinding,
+    allow_lifecycle_progress: bool,
+) -> Result<(), DecapodError> {
+    let ids = vec![binding.task_id.clone()];
+    let journal = read_journal(conn, Some(&ids))?;
+    check_complete_suffix(conn, &journal, watermark(conn)?, None)?;
+    let head = journal
+        .heads
+        .get(&binding.task_id)
+        .ok_or_else(|| invalid("VALIDATION_HISTORY_TASK_STALE: missing canonical task history"))?;
+    let current = capture_selected(conn, &ids)?;
+    if current.get(&binding.task_id) != Some(&head.projection) {
+        return Err(invalid(
+            "VALIDATION_HISTORY_TASK_STALE: live task differs from its journal",
+        ));
+    }
+    if !allow_lifecycle_progress && head.record_digest != binding.checkpoint_digest {
+        return Err(invalid(
+            "VALIDATION_HISTORY_TASK_STALE: task changed during validation",
+        ));
+    }
+    if !allow_lifecycle_progress {
+        // Time can revoke live validation custody without changing a journal
+        // row. Historical consumption intentionally does not require a live
+        // lease, but the producer must still hold it when appending success.
+        let task = &head.projection.task;
+        if task.assigned_to.as_deref() != Some(binding.assignee.as_str())
+            || !super::LeaseLifecycle::parse(task.lease_lifecycle.as_deref())
+                .holds_exclusive_custody()
+            || super::fleet_coord::lease_state(task.lease_expires_at.as_deref(), &super::now_iso())
+                != super::fleet_coord::LeaseState::Active
+        {
+            return Err(invalid(
+                "VALIDATION_HISTORY_TASK_STALE: live validation custody expired or was released before archival",
+            ));
+        }
+    }
+    let checkpoints = checkpoint_events(conn, Some(&ids))?;
+    let mut previous: Option<Checkpoint> = None;
+    let mut captured_watermark = None;
+    for record in checkpoints {
+        let checkpoint: Checkpoint =
+            serde_json::from_value(record.event.payload["payload"].clone())
+                .map_err(|error| invalid(error.to_string()))?;
+        if let Some(prior) = previous.as_ref() {
+            if !allow_lifecycle_progress {
+                return Err(invalid(
+                    "VALIDATION_HISTORY_TASK_STALE: task advanced during validation",
+                ));
+            }
+            check_validation_lifecycle_step(binding, prior, &checkpoint)?;
+        } else {
+            if checkpoint.record_digest != binding.checkpoint_digest {
+                continue;
+            }
+            let task = &checkpoint.projection.task;
+            if task.id != binding.task_id
+                || task.revision != binding.revision
+                || task.status != binding.status
+                || task.assigned_to.as_deref() != Some(binding.assignee.as_str())
+                || binding.assignee.is_empty()
+                || task.lease_generation != Some(binding.lease_generation)
+                || validation_contract_digest(&checkpoint.projection)? != binding.contract_digest
+            {
+                return Err(invalid(
+                    "VALIDATION_HISTORY_TASK_STALE: captured task identity differs",
+                ));
+            }
+            captured_watermark = Some(checkpoint.source_watermark);
+        }
+        previous = Some(checkpoint);
+    }
+    if previous.as_ref().map(|value| &value.record_digest) != Some(&head.record_digest) {
+        return Err(invalid(
+            "VALIDATION_HISTORY_TASK_STALE: captured checkpoint is absent",
+        ));
+    }
+    let altered_history: bool = conn.query_row(
+        "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND (subject_id=?1 OR subject_id IS NULL) AND seq>?2 AND event_type IN ('task.journal.restored','task.journal.gap_accepted'))",
+        params![binding.task_id, captured_watermark.unwrap_or(0)],
+        |row| row.get(0),
+    )?;
+    if altered_history {
+        return Err(invalid(
+            "VALIDATION_HISTORY_TASK_STALE: restored or incomplete chronology requires new proof",
+        ));
+    }
+    Ok(())
+}
+
+fn check_validation_lifecycle_step(
+    binding: &super::HistoricalTaskBinding,
+    previous: &Checkpoint,
+    current: &Checkpoint,
+) -> Result<(), DecapodError> {
+    let proof_only = matches!(
+        current.operation.as_str(),
+        "todo.proof.claimed" | "verify.history.complete" | "verify.persist"
+    );
+    let lifecycle = matches!(
+        current.operation.as_str(),
+        "todo.yield" | "todo.release" | "todo.session.cleanup" | "task.done"
+    );
+    let task = &current.projection.task;
+    let prior = &previous.projection.task;
+    let assigned = task.assigned_to.as_deref().unwrap_or("");
+    let same_status = task.status == prior.status;
+    let completing = current.operation == "task.done"
+        && matches!(prior.status.as_str(), "open" | "in_progress")
+        && task.status == "done";
+    let expected_revision = if proof_only {
+        prior.revision
+    } else {
+        prior
+            .revision
+            .checked_add(1)
+            .ok_or_else(|| invalid("task revision overflow"))?
+    };
+    if (!proof_only && !lifecycle)
+        || task.revision != expected_revision
+        || (!same_status && !completing)
+        || !matches!(task.status.as_str(), "open" | "in_progress" | "done")
+        || (!assigned.is_empty() && assigned != binding.assignee)
+        || task.lease_generation != Some(binding.lease_generation)
+        || validation_contract_digest(&current.projection)? != binding.contract_digest
+        || (proof_only && task != prior)
+    {
+        return Err(invalid(
+            "VALIDATION_HISTORY_TASK_STALE: task intent, dependency, custody or chronology changed",
+        ));
+    }
+    // Once released, an old record cannot renew authoring authority even under
+    // the same actor name. A normal new claim changes generation and is rejected.
+    if prior.assigned_to.as_deref().unwrap_or("").is_empty() && !assigned.is_empty() {
+        return Err(invalid(
+            "VALIDATION_HISTORY_TASK_STALE: released custody was reacquired",
+        ));
+    }
+    Ok(())
+}
+
 fn append_checkpoint(
     conn: &Connection,
     journal: &mut Journal,
@@ -1206,3 +1440,7 @@ fn write_children(conn: &Connection, projection: &TaskProjection) -> Result<(), 
 #[cfg(test)]
 #[path = "../../../tests/unit/core/task_journal_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "../../../tests/unit/core/task_journal_historical_tests.rs"]
+mod historical_tests;

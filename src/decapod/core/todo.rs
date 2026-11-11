@@ -41,6 +41,47 @@ mod authoring;
 mod task_journal;
 pub use authoring::{admit_authoring, check_authoring};
 
+/// The original task contract and custody captured before full validation.
+/// Revision changes are accepted only through the independently checked journal.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct HistoricalTaskBinding {
+    pub task_id: String,
+    pub revision: i64,
+    pub status: String,
+    pub contract_digest: String,
+    pub checkpoint_digest: String,
+    pub assignee: String,
+    pub lease_generation: i64,
+}
+
+pub(crate) fn capture_validation_binding(
+    store_root: &Path,
+    task_id: &str,
+) -> Result<HistoricalTaskBinding, error::DecapodError> {
+    let broker = DbBroker::new(store_root);
+    if broker.is_cloud() {
+        return Err(error::DecapodError::NotImplemented(
+            "VALIDATION_HISTORY_BACKEND_UNSUPPORTED: historical task proof requires the local canonical journal".into(),
+        ));
+    }
+    broker.with_conn(
+        &todo_db_path(store_root),
+        "decapod",
+        None,
+        "validation.history.task_binding",
+        |conn| task_journal::capture_validation_binding(conn, task_id),
+    )
+}
+
+pub(crate) fn check_validation_binding_on_conn(
+    conn: &Connection,
+    binding: &HistoricalTaskBinding,
+    allow_lifecycle_progress: bool,
+) -> Result<(), error::DecapodError> {
+    task_journal::check_validation_binding(conn, binding, allow_lifecycle_progress)
+}
+
 /// Task IDs are selected under the same write transaction as their mutation.
 /// New-task discovery uses only this transaction's task.add event range.
 pub(crate) enum TaskJournalSelection {
@@ -538,6 +579,14 @@ pub enum TodoCommand {
         /// Capture verification artifacts and proof baseline while marking done.
         #[clap(long)]
         validated: bool,
+        /// Reuse full validation recorded for this exact accepted source commit.
+        #[clap(
+            long,
+            requires = "validated",
+            conflicts_with = "artifact",
+            value_name = "SHA"
+        )]
+        commit: Option<String>,
         /// File path(s) to hash for drift detection. Defaults to AGENTS.md when --validated is set.
         #[clap(long = "artifact")]
         artifact: Vec<String>,
@@ -3546,6 +3595,24 @@ pub fn update_status(
     )
 }
 
+#[cfg(test)]
+pub(crate) fn complete_prepared_task_for_test(
+    store: &Store,
+    id: &str,
+    proof: &verify::PreparedTodoVerification,
+) -> Result<serde_json::Value, error::DecapodError> {
+    update_status_with_verification(
+        store,
+        id,
+        proof.expected_revision(),
+        proof.expected_status(),
+        "done",
+        "task.done",
+        serde_json::json!({}),
+        Some(proof),
+    )
+}
+
 #[allow(clippy::too_many_arguments)]
 fn update_status_with_verification(
     store: &Store,
@@ -3650,6 +3717,7 @@ fn update_status_with_verification(
                             "status": "conflict", "reason": "stale_completion_proof", "id": id
                         }));
                     }
+                    proof.check_task_binding_on_connection(conn)?;
                 } else if let Some(gate) = exclusive_lease_proof_gate_on_conn(conn, root, id)? {
                     return Ok(gate);
                 }
@@ -5050,7 +5118,7 @@ fn dependency_completion_gate(
     )
 }
 
-fn dependency_completion_gate_on_conn(
+pub(crate) fn dependency_completion_gate_on_conn(
     conn: &Connection,
     root: &Path,
     task_id: &str,
@@ -6926,7 +6994,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "list", "parameters": ["status", "scope", "tags", "title_search", "dir"] },
             { "name": "get", "parameters": ["id"] },
             { "name": "show", "parameters": ["id"] },
-            { "name": "done", "parameters": ["id", "validated", "artifact"] },
+            { "name": "done", "parameters": ["id", "validated", "artifact", "commit"] },
             { "name": "archive", "parameters": ["id"] },
             { "name": "comment", "parameters": ["id", "comment"] },
             { "name": "edit", "parameters": ["id", "title", "description", "owner", "category"] },
@@ -7796,6 +7864,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             id_positional,
             validated,
             artifact,
+            commit,
         } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
             let project_root = crate::core::store::find_decapod_project_root(
@@ -7809,7 +7878,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
                     .map(|p| p.to_path_buf())
                     .unwrap_or(std::env::current_dir().unwrap())
             });
-            if crate::plan_governance::load_plan(&project_root)?.is_some() {
+            if commit.is_none() && crate::plan_governance::load_plan(&project_root)?.is_some() {
                 crate::plan_governance::ensure_execute_ready(
                     crate::plan_governance::ExecuteCheckInput {
                         project_root: &project_root,
@@ -7820,7 +7889,19 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             }
             // Preparation executes actual verification while the task remains open.
             // The final transition rechecks dependencies and task revision under lock.
-            let prepared = if *validated {
+            if commit.is_some() && (!*validated || !artifact.is_empty()) {
+                return Err(error::DecapodError::ValidationError(
+                    "Historical completion requires --validated and cannot capture replacement --artifact inputs".into(),
+                ));
+            }
+            let prepared = if let Some(sha) = commit {
+                Some(verify::prepare_historical_completion(
+                    store,
+                    &project_root,
+                    &task_id,
+                    sha,
+                )?)
+            } else if *validated {
                 Some(verify::prepare_verified_completion(
                     store,
                     &project_root,
@@ -7833,21 +7914,43 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             let current = get_task(root, &task_id)?.ok_or_else(|| {
                 error::DecapodError::ValidationError(format!("Task {task_id} not found"))
             })?;
-            let (revision, status) = prepared
-                .as_ref()
-                .map_or((current.revision, current.status.as_str()), |proof| {
-                    (proof.expected_revision(), proof.expected_status())
-                });
-            let out = update_status_with_verification(
-                store,
-                &task_id,
-                revision,
-                status,
-                "done",
-                "task.done",
-                serde_json::json!({}),
-                prepared.as_ref(),
-            )?;
+            let mut out = if commit.is_some() && current.status == "done" {
+                let proof = prepared.as_ref().ok_or_else(|| {
+                    error::DecapodError::ValidationError(
+                        "Historical completion proof is missing".into(),
+                    )
+                })?;
+                verify::complete_historical_done_task(store, proof)?;
+                serde_json::json!({
+                    "ts": now_iso(), "cmd": "todo.done", "status": "ok", "id": task_id,
+                    "revision": current.revision,
+                    "completion": "historical_validation",
+                    "publication_ready": false,
+                    "candidate_sha": commit,
+                    "result": {"status":"ok", "id":task_id, "revision":current.revision},
+                })
+            } else {
+                let (revision, status) = prepared
+                    .as_ref()
+                    .map_or((current.revision, current.status.as_str()), |proof| {
+                        (proof.expected_revision(), proof.expected_status())
+                    });
+                update_status_with_verification(
+                    store,
+                    &task_id,
+                    revision,
+                    status,
+                    "done",
+                    "task.done",
+                    serde_json::json!({}),
+                    prepared.as_ref(),
+                )?
+            };
+            if commit.is_some() && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
+                out["completion"] = "historical_validation".into();
+                out["publication_ready"] = false.into();
+                out["candidate_sha"] = serde_json::json!(commit);
+            }
             if !*validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
                 mark_todo_claimed_pending_proof(store, &task_id)?;
             }
