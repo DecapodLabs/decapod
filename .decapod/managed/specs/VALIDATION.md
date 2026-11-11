@@ -1,5 +1,26 @@
 # Validation
 
+## Bazel archive cache acceptance (#1612)
+
+The source-CI cache proposal stores only the SHA-256 archive subtree, with
+accepted-master push jobs allowed to save and other events limited to restore.
+A miss must leave the required source check running against its unchanged
+upstream URLs and integrity checks. It must never substitute cached execution
+outputs or proof artifacts for a required check. The opt-in real-Bazel regression
+in `tests/bazel_repository_cache_test.py` requires an outage cache hit without
+another origin request and rejects corrupted cached bytes; its fixture archive
+origin is loopback-only, while Bazelisk/toolchain bootstrap may need the network.
+
+The historical PR head failed `governance-artifacts` with `PR_MERGE_CONFLICT`
+against v0.137.2 master. That failure is separate from cache behavior. The
+released controller still rejects changed carrier bytes with
+`CONTROLLER_CONTRACT_UNSUPPORTED`, even after a reviewed inventory digest is
+updated. Publication therefore requires genuine custody and checkpoint
+reconciliation, independently accepted controller support for the exact cache
+carrier, and authentic hosted cache save/restore observations. Historical local
+fixture results do not establish those properties for a new candidate; no
+required check may be weakened or reported as passed to bridge the gap.
+
 ## Immutable push-range ancestry
 
 A feature-branch push supplies the previous branch tip as its `base`,
@@ -960,8 +981,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
+- Repository signal fingerprint: `c8815eaefcee46c55ee10196a80890510abaee5eac0003555849b997e8c107e4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (220 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

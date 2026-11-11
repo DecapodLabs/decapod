@@ -54,6 +54,26 @@ outputs:
 runs:
   using: composite
   steps:
+    # Archive bytes only: never restore extracted repositories, action outputs,
+    # executables, source snapshots, or proof artifacts. Bazel rehashes every hit.
+    # Only accepted master pushes populate shared entries. Other events restore
+    # through the provider's existing repository/ref-scoped cache authorization.
+    - name: Restore Bazel SHA-256 archives (read only)
+      if: runner.os == 'Linux' && !(github.event_name == 'push' && github.ref == 'refs/heads/master')
+      uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ~/.cache/bazel/*/cache/repos/v1/content_addressable/sha256
+        key: bazel-download-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.bazelversion', 'MODULE.bazel.lock') }}-${{ github.run_id }}-${{ github.job }}-${{ github.run_attempt }}
+        restore-keys: |
+          bazel-download-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.bazelversion', 'MODULE.bazel.lock') }}-
+    - name: Persist accepted Bazel SHA-256 archives
+      if: runner.os == 'Linux' && github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+      with:
+        path: ~/.cache/bazel/*/cache/repos/v1/content_addressable/sha256
+        key: bazel-download-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.bazelversion', 'MODULE.bazel.lock') }}-${{ github.run_id }}-${{ github.job }}-${{ github.run_attempt }}
+        restore-keys: |
+          bazel-download-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.bazelversion', 'MODULE.bazel.lock') }}-
     - uses: dtolnay/rust-toolchain@master
       with:
         toolchain: 1.96.1
