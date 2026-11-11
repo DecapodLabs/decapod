@@ -307,10 +307,33 @@ re-authored in that worktree. Publication readiness must be established by a
 real staged checkpoint, exact-candidate validation, and independently observed
 provider results; neither the earlier draft nor this textual record proves them.
 
-This change remains documentation-only. Runtime gates, configuration, migration
-code and database behavior are unchanged. The runtime repairs and their proofs
-require separate admitted work and cannot be inferred from approval of this
-review. Review of this document does not confer production readiness.
+The source-bearing change in this review is limited to documentation, the
+reviewed required-profile source digest in `.decapod/config.toml`, and CLI-owned
+governance/release-bound projections. Runtime authorization gates, migration
+implementations, and database behavior remain unchanged. The runtime repairs and
+their proofs require separate admitted work and cannot be inferred from approval
+of this review. Review of this document does not confer production readiness.
+
+## PR branch ancestry and audit preservation
+
+The original unadmitted PR #1609 head (`2b40eaa7`) is retained at
+`archive/pr-1609-ungoverned-publication-2b40eaa7`. The replacement workstream
+originated at the accepted master, with two actual staged checkpoints and
+checkpoint history verified without findings. GitHub received the exact Git
+trees of both authored commits, including the generated spec and governance
+artifacts. Remote commit metadata differs from local because repository-object
+publication used the connected GitHub API in this network-isolated host.
+
+The single replacement push could not be fast-forwarded from the unadmitted
+original head: that original push event has unrelated `before` and `after`
+commits. The immutable push-context verifier correctly rejected its merge-base
+check. This is preserved as a failed push observation, not overwritten as a
+pass or bypassed by a source-check modification. A subsequent **forward** push
+must use the current governed remote head as its immediate predecessor and
+must pass the same ancestry and checkpoint gates on the exact updated candidate.
+The PR-triggered and push-triggered check results are distinct. Neither an
+archived source nor a successful standalone checkpoint assertion grants full
+publication readiness.
 
 [rbac-pr]: https://github.com/DecapodLabs/decapod/pull/1606
 [proof-ledger]: https://github.com/DecapodLabs/decapod/blob/82388e0c57197c0b0622cb023210f6f908d78abe/docs/datastore-v2/proof-ledger.json

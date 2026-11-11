@@ -522,6 +522,14 @@
         "docs/datastore-v2/production-readiness-v0.137.0.md",
         "src/decapod/core/readiness_profile.rs"
       ]
+    },
+    {
+      "id": "pr1609-fastforward-push-v3",
+      "summary": "Record actual archived branch-history context and restore fast-forward source-CI ancestry without changing any required gate",
+      "input_digest": "sha256:3c4a95ae09a2c1b66dee32aad19ea515570a88f11c936185b5d543651ef6c6c3",
+      "proof_refs": [
+        "/root/pr1609-verify-checkpoints-v2.json"
+      ]
     }
   ],
   "intents": {
@@ -562,21 +570,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled 80-item source inventory, verified all nine compiled workflow definitions, preserved unchanged ARCHITECTURE authored semantics and mandatory CI profile.",
+          "reason": "Current profile-reconciliation and CI lineage audit changes do not modify this spec domain; prior material review remains valid.",
           "reviewed_code_fingerprint": "efd39e6ead63862cdedbea60343f5b43e23a5f8f6515c6e502b7e91d09ac6490",
           "spec_material_hash": "ec1f8dc91a706a5715b879fb78f0d06134a8353867ece1b079ca4bc45b3fe9b5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled 80-item source inventory, verified all nine compiled workflow definitions, preserved unchanged INTERFACES authored semantics and mandatory CI profile.",
+          "reason": "Current profile-reconciliation and CI lineage audit changes do not modify this spec domain; prior material review remains valid.",
           "reviewed_code_fingerprint": "efd39e6ead63862cdedbea60343f5b43e23a5f8f6515c6e502b7e91d09ac6490",
           "spec_material_hash": "3e4cc0b5f8f932afff3e6bff27e846e9e1bc4ffc76b170d2061585118cab3006"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled 80-item source inventory, verified all nine compiled workflow definitions, preserved unchanged SECURITY authored semantics and mandatory CI profile.",
+          "reason": "Current profile-reconciliation and CI lineage audit changes do not modify this spec domain; prior material review remains valid.",
           "reviewed_code_fingerprint": "efd39e6ead63862cdedbea60343f5b43e23a5f8f6515c6e502b7e91d09ac6490",
           "spec_material_hash": "f51e675e74a6d2796094893aec00b89a4b2ccffc9d742590b1775e8519a5ccd1"
         }
@@ -589,21 +597,32 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794382267Z"
+      "updated_at": "1794382868Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Accepted master and original failed draft remain immutable evidence",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7ceab860fd04cf97b0ee02e16642bb9618b9a331093ca0c0d578ab20d067a41b",
+      "artifact_hash": "sha256:70bdb4b9c9adae28cbc66a7013dff572b76adb226630993e087db38e8396fcfe",
+      "blockers": [
+        "Direct Git transport unavailable in this container; exact remote source check pending"
+      ],
       "checks": [
         {
           "name": "documentation_structure",
           "status": "passed"
         },
         {
+          "name": "full_publication_profile",
+          "status": "unavailable"
+        },
+        {
           "name": "git_diff_check",
+          "status": "passed"
+        },
+        {
+          "name": "local_checkpoint_history",
           "status": "passed"
         },
         {
@@ -623,7 +642,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "repair",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -658,10 +677,17 @@
             "intent_id": "intent:change_01M74QH1HTFBNP3H5V0BMM6XCE",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M74QH1M4YHVHRKPXQE9ATES4",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M74QH1HTFBNP3H5V0BMM6XCE",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M74QH1M4YHVHRKPXQE9ATES4": {
@@ -736,6 +762,27 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "docs/datastore-v2/production-readiness-v0.137.0.md",
+                  "/root/pr1609-verify-checkpoints-v2.json"
+                ],
+                "proof_refs": [
+                  "local_checkpoint_history",
+                  "full_publication_profile"
+                ],
+                "scope": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "docs/datastore-v2/architecture.md",
+                  "docs/datastore-v2/production-readiness-v0.137.0.md",
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -744,8 +791,9 @@
       "declared_commands": [
         "decapod rpc --op specs.refresh"
       ],
-      "destination": "PR #1609 governed reauthoring",
+      "destination": "PR 1609 governed CI recovery",
       "evidence": [
+        "/root/pr1609-verify-checkpoints-v2.json",
         "GitHub Actions run 42975459164: missing governance diff and refreshed project projections",
         "Reviewed exact source inventory from 1512b61f to accepted master: 5 changed entries, 9 compiled workflow hashes matched",
         "Seven source-grounded findings and eleven open acceptance gates in docs/datastore-v2/production-readiness-v0.137.0.md"
