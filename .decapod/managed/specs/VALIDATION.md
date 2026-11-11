@@ -1,5 +1,19 @@
 # Validation
 
+## Version smoke regression
+
+The unchanged Nix workflow (`.github/workflows/nix-flake.yml`) smoke-checks the
+built binary with `system version`. The CLI regression
+`system_version_does_not_open_or_repair_project_storage` runs that command with
+invalid project configuration and datastore modes 0700, 0775 and 0777; metadata
+reporting must succeed without creating state or changing permissions. Stateful
+commands must continue rejecting unsafe storage. In `tests/trajectory_cli.rs`,
+`local_command_announces_a_detected_version_transition_once` checks that version
+reporting leaves the old release counter untouched, then a normal project
+command emits the pending migration notice exactly once. Full validation must
+execute the source tests; these contracts alone do not prove Nix packaging or
+post-merge reproducibility.
+
 ## Post-merge Gatling test-budget recovery (#1596)
 
 The `Tests (Full)` job in GitHub Actions run `42744631477` ended with a
@@ -933,7 +947,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58`
+- Repository signal fingerprint: `1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,5 +1,13 @@
 # Architecture
 
+## Storage-independent version dispatch
+
+`src/decapod/lib.rs::run` dispatches `system version` alongside the bootstrap
+commands before project discovery, session acquisition and migration. Binary
+version metadata has no project-store dependency. Normal project commands still
+initialize storage and report a detected migration once; version reporting
+neither consumes that notice nor repairs unsafe datastore permissions.
+
 ## Bounded macOS epoch enumeration
 
 `core::validation_epoch::input::mac_directory` enumerates a pinned directory
@@ -762,7 +770,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58`
+- Repository signal fingerprint: `1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

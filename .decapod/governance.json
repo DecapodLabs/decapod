@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "92f54bd12b30a54786395508cf40d0c9a96cd7cd",
+    "accepted_commit": "bf50c589f6e67ea7f0ae15cb5543ded2642b9d65",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -473,24 +473,73 @@
     }
   },
   "change": {
-    "id": "change_01M72CQRM8DEWA0941HRJ4YTQ2",
-    "base_commit": "92f54bd12b30a54786395508cf40d0c9a96cd7cd",
+    "id": "change_01M73XRF7BT5AEK05YHCD2H9GG",
+    "base_commit": "bf50c589f6e67ea7f0ae15cb5543ded2642b9d65",
     "target_base": "origin/master"
+  },
+  "claims": {
+    "nix-smoke-isolation": {
+      "statement": "Both Nix smoke scripts isolate execution from checkout storage, clean up scratch and propagate binary failure",
+      "falsifier": "Executed workflow regression observes checkout cwd, non-private scratch, leaked scratch or swallowed exit 23",
+      "status": "refuted",
+      "proof_refs": [
+        "Replaced by source-level storage-independent version fix; Nix workflow restored to accepted definition"
+      ]
+    },
+    "version-storage-independence": {
+      "statement": "System version reports binary metadata without opening project state, while stateful commands retain unsafe-permission rejection and migration notices",
+      "falsifier": "Version fails on damaged or unsafe storage, writes project state, or consumes migration notice; stateful commands accept unsafe permissions",
+      "status": "open",
+      "proof_refs": [
+        "tests/cli_contract_enforcement.rs",
+        "tests/trajectory_cli.rs"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "cicd_01m72cqb2s4gdv0y-gov-1602",
-      "summary": "Native-only Cachix publisher from accepted master, refreshed spec reviews/projections, CI regression target inputs repaired and temp export excluded",
-      "input_digest": "sha256:b5b0e8d65fd4f71880e42ce5b3b35b24ef0e2aeacae0b6611e93f21ac3bc6a27"
+      "id": "nix-smoke-isolation",
+      "summary": "Isolate Nix package and publication smoke checks from unsafe checkout storage; add executable regression coverage and refresh release-bound governance",
+      "input_digest": "sha256:e64cbc5d4bbded67d269a7529f2cbf32ccdd5c23399bc318d2811408d02224a0"
     },
     {
-      "id": "cicd_01m737qc5q4k5qxa-push-recovery",
-      "summary": "Document immutable GitHub force-push event rejection and safe fast-forward CI recovery in the governed existing PR branch",
-      "input_digest": "sha256:9f95c1d2178b0670432c95761c84818402cfb8f62013ff2cc18218e39958feb9"
+      "id": "nix-smoke-discovery-anchor",
+      "summary": "Anchor private smoke discovery, verify against actual binary and reconcile reviewed workflow definition and source inventory",
+      "input_digest": "sha256:63576d64dc8e4cee08b527f23cf3e88ea589a5bbae58d215dfc810f1b9f72c84"
+    },
+    {
+      "id": "nix-smoke-validation-retry",
+      "summary": "Record completed source reconciliation and request independent controller compatibility result",
+      "input_digest": "sha256:c730c4bd370975415398ac73703441ef6934f2d4bb6edd21f7ab58da67c99552"
+    },
+    {
+      "id": "nix-controller-blocker",
+      "summary": "Preserve exact unsupported-controller blocker and bounded smoke verification; PR not authorized by validation",
+      "input_digest": "sha256:eb89785296cd894bc95520f4bbc617bf26804c870298d22f51a022a986acbe7e"
+    },
+    {
+      "id": "version-storage-independence",
+      "summary": "Fix root cause by reporting system version before project storage startup; preserve stateful security and one-time migration notices; restore accepted Nix workflow",
+      "input_digest": "sha256:dda1375e6c9d97ee7f28e32fee1caddb6b3c6cf5b471add97b47736de6de878e"
+    },
+    {
+      "id": "accepted-source-inventory",
+      "summary": "Reconcile unchanged accepted build and CI source inventory for installed controller; retain complete strict validation profile",
+      "input_digest": "sha256:f640d0824f1948a3c719dee9e6111a49e0b14f1bee7e583d8e23436c38744f44"
+    },
+    {
+      "id": "refreshed-config-manifest",
+      "summary": "Refresh supported spec manifest after reviewed inventory update to resolve standalone CI projection drift",
+      "input_digest": "sha256:71a59c05a174dc05c2d9b72c7859a07ecc8a16e687a2d81abdf69a5ee4036879"
+    },
+    {
+      "id": "isolated-stateful-permission-fixture",
+      "summary": "Separate damaged configuration and unsafe storage fixture assertions to exercise each startup contract",
+      "input_digest": "sha256:eed7bf45d87671bcd3ed2249246aab93ed9500ae6a18272dc3bc5d7f3d75be57"
     }
   ],
   "intents": {
-    "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2": {
+    "intent:change_01M73XRF7BT5AEK05YHCD2H9GG": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -500,11 +549,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
+      "id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Cachix PR 1602 governance and CI repair\n\nRegenerate source review, checkpoints, and worktree from master while preserving Cachix release publisher contract",
-      "refined_intent": "Cachix PR 1602 governance and CI repair\n\nRegenerate source review, checkpoints, and worktree from master while preserving Cachix release publisher contract",
+      "raw_intent": "Fix GitHub CI job 130026729576 in dedicated PR",
+      "refined_intent": "Fix GitHub CI job 130026729576 in dedicated PR",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -517,119 +566,174 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Preserve merged Cachix packaging proof and publish Nix binaries only for verified release merges on native GitHub; keep Buildkite secret-free, reconcile controller source contract, fix CI and preserve governance evidence",
+      "intent": "Fix Nix smoke failure at its source: system version reports binary metadata without opening or mutating project storage; normal project commands retain storage security and migration reporting. Preserve accepted Nix workflow and validate before PR publication.",
       "phases": [],
       "proof_hooks": [
-        "Nix workflow policy and source inventory digests checked",
-        "All source CI and per-commit governance green",
-        "decapod validate full workbranch or explicit supported-controller blocker"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed release publication separation: existing credential-free Nix proof and new native-owner gated Cachix publisher independently build locked toolchain and verify binaries before upload; CI workflow and compiled source digest remain explicit",
-          "reviewed_code_fingerprint": "edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58",
-          "spec_material_hash": "bb8170b0431349b028f0faf667eb6a3fbb2410afd6ba2d9e5b554eaedea33ae0"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed this change against current code and specification; it changes Nix CI job boundaries, repository proof metadata and documentation, not the decapod CLI/RPC/public data interfaces",
-          "reviewed_code_fingerprint": "edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58",
-          "spec_material_hash": "4515647c945b367aec9b8ca84014d9b6a3e5e7f949c5a4a27ebe904962edc0ef"
+          "reason": "Early dispatch returns binary metadata; stateful configuration parsing and storage validation retain their order",
+          "reviewed_code_fingerprint": "1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af",
+          "spec_material_hash": "0eee077b350ba5f65fa70b6c2043aaa6c216ea14fa13752ea9a1580d84e3d827"
         },
         {
           "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Version reporting remains independent of config and storage; fixture separately checks stateful permissions after config parsing",
+          "reviewed_code_fingerprint": "1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af",
+          "spec_material_hash": "875c56849a6c844dd7ab621065044478e1baf487a2bae63b940e1c6d05786191"
+        },
+        {
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed Cachix trust boundary: only native GitHub release merges authorize publisher, Buildkite imports and forks do not resolve token, missing write credential fails closed, public cache key only verifies binary consumers",
-          "reviewed_code_fingerprint": "edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58",
+          "reason": "Unsafe storage remains rejected by stateful commands; regression controls damaged config and shared-group opt-in separately",
+          "reviewed_code_fingerprint": "1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af",
           "spec_material_hash": "9d41f7d722fd84a6f8fdda94e83c67918fe44969b04310bc0c57eecb547d9281"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Secure native Cachix release publisher after PR #1600",
+      "title": "Fix GitHub CI job 130026729576 in dedicated PR",
       "todo_ids": [
-        "cicd_01m737qc5q4k5qxa"
+        "bugs_01m73xpkqns9286n"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794331575Z"
+      "updated_at": "1794356246Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Retain storage security, source build and publication authority"
       ],
-      "artifact_hash": "sha256:b9a29a991e82f59ff9910a07170b114e40350bdf051275fbfdf8f78aedf9dd48",
+      "artifact_hash": "sha256:ada524be5b3adf98b48861863fd603db9b8456187ea46c2ad11476798e152a4b",
       "checks": [
         {
-          "name": "github-pr-1602-initial-ci",
+          "name": "actual-binary-smoke-reproduction",
+          "status": "passed"
+        },
+        {
+          "name": "failed-run-diagnosis",
+          "status": "passed"
+        },
+        {
+          "name": "full-validation",
           "status": "failed"
         },
         {
-          "name": "historical-force-push-context",
+          "name": "source-version-regressions",
           "status": "failed"
         },
         {
-          "name": "project-check-local",
-          "status": "failed"
+          "name": "workflow-script-isolation-and-exit-propagation",
+          "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M72CQRMW7XHAB4F0AXC4YGG0",
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M72CQRMW7XHAB4F0AXC4YGG0",
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M72CQRMW7XHAB4F0AXC4YGG0": {
+          "branch_01M73XRFA0ZXW5Q64PMWXJKEH2": {
             "evidence_only": true,
-            "id": "branch_01M72CQRMW7XHAB4F0AXC4YGG0",
-            "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
+            "id": "branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
+            "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
                   ".github/workflows/nix-flake.yml",
-                  "src/decapod/core/readiness_profile.rs",
                   ".github/workflows/nix-flake.yml",
                   "tests/source_ci_profile_policy.rs",
-                  "Previous PR tip 93d8c4ad includes temporary export unsupported by source inventory. New worktree starts from accepted 92f54bd with exact new spec reviews. Local project-check 201 pass 2 fail: container runtime missing and Gatekeeper patterns; no readiness claim.",
-                  "Source policy test moved to previously declared Bazel compile-data set and rustfmt newline reconciled."
+                  "docs/book/src/reference/nix.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "GitHub check 130026729576 resolves to Buildkite 6692 job 01a1c6a7-145a-45c5-ad8e-c0007e3989da: compilation succeeded; smoke failed STORAGE_UNSAFE_PERMISSIONS on checkout .decapod"
                 ],
                 "proof_refs": [
-                  "github-pr-1602-initial-ci",
-                  "project-check-local"
+                  "failed-run-diagnosis"
                 ],
                 "scope": [
                   "root"
@@ -641,19 +745,124 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  ".github/workflows/constitution-sync.yml",
-                  ".github/actions/ci-context/action.yml",
-                  "docs/book/src/reference/governance-artifacts.md",
-                  "docs/book/src/reference/governance-artifacts.md",
-                  "Historical push run 42792704104 referred to unreachable before 93d8c4ad; direct checkout cannot attest it. PR CI for 2478caf completed successfully; new fast-forward push will be checked independently."
+                  "src/decapod/core/readiness_profile.rs",
+                  ".decapod/config.toml",
+                  "Both workflow scripts tested with installed 0.136.3: old checkout invocation rejects 0777 .decapod; revised smoke passes. Fixture runs verify 0700 scratch and anchor, paths containing spaces, cleanup and exit 23 propagation.",
+                  "Reviewed full workflow diff: only two smoke run blocks change; jobs, conditions, matrix, credentials, build and reproducibility gates retained. Reconciled source inventory and compiled workflow review digest."
                 ],
                 "proof_refs": [
-                  "historical-force-push-context"
+                  "actual-binary-smoke-reproduction",
+                  "workflow-script-isolation-and-exit-propagation",
+                  "full-validation"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Source reconciliation completed; retry full validation to establish controller compatibility, which remains unproven until observed"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "blocked",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Exact candidate 72917b05: decapod validate returns CONTROLLER_CONTRACT_UNSUPPORTED for .github/workflows/nix-flake.yml after source inventory reconciliation. No full source tests or Nix rebuild executed by validation; direct installed-binary smoke and script fixtures are supplemental only."
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Root-cause inspection: lib.rs routes system version through datastore startup for initialized projects. Replace workflow-context workaround with storage-independent version dispatch; retain normal-command migration notice coverage. Worktree custody rebound after lease renewal."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "tests/cli_contract_enforcement.rs",
+                  "tests/trajectory_cli.rs",
+                  "Restored accepted Nix workflow, source-profile digests, workflow policy tests and Nix documentation. Final fix makes system version storage-independent and preserves one-time migration reporting on workspace status."
+                ],
+                "proof_refs": [
+                  "source-version-regressions",
+                  "full-validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Accepted source workflows/helpers/build inputs are unchanged from bf50c589. Read-only discovery reports inventory sha256:78d39990ac9aaab62f4574ea8f7823a7cbf64a72e8facdb3d1b1ebbd60c1c059; retained strict full profile and reconciled its stale reviewed source inventory declaration only."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Buildkite 6702 standalone-validation passed 190 prerequisite gates but rejected manifest config_input_hash drift after reviewed inventory update. Regenerated supported manifest through specs.refresh; no checks weakened."
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Buildkite 6705 contracts: version succeeds with malformed config and unsafe storage; stateful rejection assertion saw INVALID_CONFIG_SCHEMA before storage validation. Repair fixture by removing damaged config before independently checking unsafe-permission rejection; explicitly clear shared-group opt-in for that subprocess."
+                ],
+                "proof_refs": [
+                  "source-version-regressions"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 12,
                 "validation_findings": []
               }
             ]
@@ -663,33 +872,43 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Historical push run 42792704104 referred to unreachable before 93d8c4ad; direct checkout cannot attest it. PR CI for 2478caf completed successfully; new fast-forward push will be checked independently.",
-        "Previous PR tip 93d8c4ad includes temporary export unsupported by source inventory. New worktree starts from accepted 92f54bd with exact new spec reviews. Local project-check 201 pass 2 fail: container runtime missing and Gatekeeper patterns; no readiness claim.",
-        "Source policy test moved to previously declared Bazel compile-data set and rustfmt newline reconciled."
+        "Accepted source workflows/helpers/build inputs are unchanged from bf50c589. Read-only discovery reports inventory sha256:78d39990ac9aaab62f4574ea8f7823a7cbf64a72e8facdb3d1b1ebbd60c1c059; retained strict full profile and reconciled its stale reviewed source inventory declaration only.",
+        "Both workflow scripts tested with installed 0.136.3: old checkout invocation rejects 0777 .decapod; revised smoke passes. Fixture runs verify 0700 scratch and anchor, paths containing spaces, cleanup and exit 23 propagation.",
+        "Buildkite 6702 standalone-validation passed 190 prerequisite gates but rejected manifest config_input_hash drift after reviewed inventory update. Regenerated supported manifest through specs.refresh; no checks weakened.",
+        "Buildkite 6705 contracts: version succeeds with malformed config and unsafe storage; stateful rejection assertion saw INVALID_CONFIG_SCHEMA before storage validation. Repair fixture by removing damaged config before independently checking unsafe-permission rejection; explicitly clear shared-group opt-in for that subprocess.",
+        "Exact candidate 72917b05: decapod validate returns CONTROLLER_CONTRACT_UNSUPPORTED for .github/workflows/nix-flake.yml after source inventory reconciliation. No full source tests or Nix rebuild executed by validation; direct installed-binary smoke and script fixtures are supplemental only.",
+        "GitHub check 130026729576 resolves to Buildkite 6692 job 01a1c6a7-145a-45c5-ad8e-c0007e3989da: compilation succeeded; smoke failed STORAGE_UNSAFE_PERMISSIONS on checkout .decapod",
+        "Restored accepted Nix workflow, source-profile digests, workflow policy tests and Nix documentation. Final fix makes system version storage-independent and preserves one-time migration reporting on workspace status.",
+        "Reviewed full workflow diff: only two smoke run blocks change; jobs, conditions, matrix, credentials, build and reproducibility gates retained. Reconciled source inventory and compiled workflow review digest.",
+        "Root-cause inspection: lib.rs routes system version through datastore startup for initialized projects. Replace workflow-context workaround with storage-independent version dispatch; retain normal-command migration notice coverage. Worktree custody rebound after lease renewal.",
+        "Source reconciliation completed; retry full validation to establish controller compatibility, which remains unproven until observed"
       ],
       "inspected_files": [
-        ".github/actions/ci-context/action.yml",
-        ".github/workflows/constitution-sync.yml",
-        ".github/workflows/nix-flake.yml",
-        "docs/book/src/reference/governance-artifacts.md",
-        "src/decapod/core/readiness_profile.rs"
+        ".github/workflows/nix-flake.yml"
       ],
-      "intent_id": "intent:change_01M72CQRM8DEWA0941HRJ4YTQ2",
+      "intent_id": "intent:change_01M73XRF7BT5AEK05YHCD2H9GG",
       "modified_files": [
+        ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
         ".github/workflows/nix-flake.yml",
-        "docs/book/src/reference/governance-artifacts.md",
-        "tests/source_ci_profile_policy.rs"
+        "docs/book/src/reference/nix.md",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/lib.rs",
+        "tests/cli_contract_enforcement.rs",
+        "tests/source_ci_profile_policy.rs",
+        "tests/trajectory_cli.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Supply independently accepted controller supporting revised Nix workflow; rerun exact-candidate validation before opening PR"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M72CQRMW7XHAB4F0AXC4YGG0",
+      "run_id": "branch_01M73XRFA0ZXW5Q64PMWXJKEH2",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m737qc5q4k5qxa",
+      "task_id": "bugs_01m73xpkqns9286n",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

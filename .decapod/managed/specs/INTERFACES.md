@@ -1,5 +1,13 @@
 # Interfaces
 
+## Version reporting
+
+`decapod system version` reports the installed binary version and existing
+update guidance without reading configuration, acquiring a session, initializing
+a datastore or migrating project state. It works in uninitialized, damaged and
+unsafe-permission checkouts. Stateful commands retain storage permission
+rejection and the first normal command still reports a pending migration.
+
 ## Publication projection
 
 `interop.project` validation reports expose `proof_judgment` alongside
@@ -998,7 +1006,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `edd015622d0a8c8c44cf0dbcf5ed6a0c3f42c0080f46a3e95051c2f1cbc74a58`
+- Repository signal fingerprint: `1e08a6ad0676694aca7b1255aa2d5c08af399ae22de5f14d03ff4678ffc9a2af`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
