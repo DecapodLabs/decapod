@@ -1027,8 +1027,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `067c3b44cef3e629c13d231509b865a856985ea337ffdd417be23000e9a243ac`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
+- Repository signal fingerprint: `9179711a2f811eb5b1c71e78cb88ca37341fe630aab7070463d020ee6d4c36c2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1295,3 +1295,12 @@ update-check options. `init --laya-decisions[=true|false]` explicitly selects th
 optional assessment policy; omission preserves it. Init preserves current Laya
 settings and opaque user extension tables. Only `[laya]` has model-policy
 semantics. No retired model configuration or receipt type is an API alias.
+
+## Relational compaction compatibility
+
+The `sqlite.compact_redundant_relational_indexes.v001` forward migration
+changes only redundant local SQLite btree structures. No CLI/RPC, Dactyl
+operation, task revision, event sequence, transaction semantics, or cloud
+schema change. An unexpected historical index or missing unique enforcement
+raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
+Freed SQLite pages are reusable but are not auto-vacuumed.

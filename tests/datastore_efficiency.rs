@@ -58,8 +58,13 @@ fn operational_snapshot(conn: &Connection) -> Value {
         }
         let name = table.name.replace('"', "\"\"");
         let mut digest = Sha256::new();
+        let order = match table.name.as_str() {
+            "meta" => "namespace,key",
+            "task_tags" => "task_id,tag",
+            _ => "rowid",
+        };
         let mut stmt = conn
-            .prepare(&format!("SELECT * FROM \"{name}\" ORDER BY rowid"))
+            .prepare(&format!("SELECT * FROM \"{name}\" ORDER BY {order}"))
             .unwrap();
         let mut rows = stmt.query([]).unwrap();
         while let Some(row) = rows.next().unwrap() {

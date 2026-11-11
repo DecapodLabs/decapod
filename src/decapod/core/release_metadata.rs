@@ -158,15 +158,12 @@ pub fn validation_change_base(
     for revision in [base, head, accepted_base] {
         git(repo, &["cat-file", "-e", &format!("{revision}^{{commit}}")])?;
     }
-    // A PR base precedes its accepted target. An ordinary push's before SHA,
-    // however, is the *previous feature-branch tip*, often newer than the
-    // accepted target. Both the previous tip and accepted target must be
-    // ancestors of the pushed head, so force pushes and stale bases fail.
+    // PR contexts name their accepted target as B. Workbranch push contexts
+    // instead name the prior tip as B. A valid prior tip has a shared accepted
+    // merge base, but is normally NOT an ancestor of master. Verify the
+    // immutable range before inspecting the entire authored PR delta.
     if event == "pull_request" {
         git(repo, &["merge-base", "--is-ancestor", base, accepted_base])?;
-    } else {
-        git(repo, &["merge-base", "--is-ancestor", base, head])?;
-        git(repo, &["merge-base", "--is-ancestor", accepted_base, head])?;
     }
     let checkout = git(repo, &["rev-list", "--parents", "-n", "1", "HEAD"])?;
     let revisions: Vec<_> = checkout.split_whitespace().collect();
@@ -183,9 +180,19 @@ pub fn validation_change_base(
     if event == "pull_request" {
         Ok(git(repo, &["merge-base", base, head])?.trim().to_string())
     } else {
-        // Already verified above: the event's previous tip and the accepted
-        // target both precede this exact immutable push head.
-        Ok(base.to_string())
+        // The push's immutable before value must be an ancestor of H.
+        // Preserve the exact push delta on accepted-base pushes. On a feature
+        // branch, validate against the common accepted fork (never against
+        // only the previous feature commit), so a material reviewed spec can
+        // be authored once for the entire active change.
+        git(repo, &["merge-base", "--is-ancestor", base, head])?;
+        if git(repo, &["merge-base", "--is-ancestor", base, accepted_base]).is_ok() {
+            return Ok(base.to_string());
+        }
+        let fork = git(repo, &["merge-base", accepted_base, head])?;
+        let fork = fork.trim();
+        git(repo, &["merge-base", "--is-ancestor", fork, base])?;
+        Ok(fork.to_string())
     }
 }
 

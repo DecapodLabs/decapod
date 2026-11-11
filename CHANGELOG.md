@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.137.0](https://github.com/DecapodLabs/decapod/compare/v0.136.4...v0.137.0) - 2026-11-11
+
+### Added
+
+- *(storage)* bind repository and local principal context once per SQLite shard
+- *(storage)* compress cold LCM summary fields behind a lossless typed codec
+
+### Fixed
+
+- *(ci)* compile immutable push ancestry tests against shared classifier
+- *(ci)* validate immutable workbranch push ancestry against accepted fork
+- *(storage)* satisfy Rust 1.96 Clippy benchmark divisibility check
+- *(storage)* format compaction and scope code and simplify scope row type
+- *(storage)* pass borrowed connection into transactional compactor
+- *(storage)* preserve Bazel lock and rustfmt Rust-only benchmark suite
+
+### Other
+
+- *(storage)* prove lossless B-tree convergence, LCM compression and rollback
+- *(storage)* compare compact tables by stable primary key rather than rowid
+- *(storage)* avoid default-prompt growth and support compact table fixture snapshots
+- *(storage)* collapse composite primary key btrees in the same guarded migration
+- *(storage)* replace Python size probe with Rust byte-exact benchmark
+- *(storage)* initialize decision history before checking schema
+- *(storage)* pin exhaustive logical inventory and check runtime core drift
+- *(storage)* add reproducible size-first physical layout probe
+- *(storage)* execute compaction regressions in required core CI
+- *(specs)* refresh v0.136.4 release-bound projections from validated CI output
+- *(storage)* compact redundant SQLite indexes with guarded migration
+
 ## [0.136.4](https://github.com/DecapodLabs/decapod/compare/v0.136.3...v0.136.4) - 2026-11-11
 
 ### Fixed

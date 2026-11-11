@@ -4,7 +4,7 @@
 //! necessary migrations for schema updates, data transformations, etc.
 
 use crate::core::db;
-use crate::core::db::{Connection, OptionalExtension};
+use crate::core::db::{Connection, OptionalExtension, params};
 use crate::core::error;
 use crate::core::events;
 use crate::core::schemas;
@@ -172,6 +172,17 @@ pub fn all_migrations() -> Vec<Migration> {
             description: "Remove the redundant event sequence index after proving its unique replacement",
             up: migrate_compact_event_sequence_index,
         },
+        Migration {
+            id: "sqlite.compact_redundant_relational_indexes.v001",
+            sequence: 1100,
+            scope: "global",
+            kind: "rust",
+            script_path: None,
+            min_version: "0.136.3",
+            target_version: "0.136.3",
+            description: "Compact redundant indexes, composite-key btrees, and cold LCM text",
+            up: migrate_compact_redundant_relational_indexes,
+        },
     ]
 }
 
@@ -222,6 +233,108 @@ fn migrate_compact_event_sequence_index(root: &Path) -> Result<(), error::Decapo
             ));
         }
         conn.execute_batch("DROP INDEX IF EXISTS idx_events_stream_seq")?;
+        Ok(())
+    })();
+    match result {
+        Ok(()) => {
+            conn.execute_batch("COMMIT")?;
+            Ok(())
+        }
+        Err(error) => {
+            let _ = conn.execute_batch("ROLLBACK");
+            Err(error)
+        }
+    }
+}
+
+/// A UNIQUE constraint already provides a covering btree for lookups on its
+/// leftmost key(s). Do not maintain a second, nonunique copy on every write.
+fn migrate_compact_redundant_relational_indexes(root: &Path) -> Result<(), error::DecapodError> {
+    let path = root.join("data").join(schemas::LOCAL_DB_NAME);
+    if !path.exists() {
+        return Ok(());
+    }
+    let conn = db::db_connect(&path.to_string_lossy())?;
+    conn.execute_batch("BEGIN IMMEDIATE")?;
+    let result = (|| -> Result<(), error::DecapodError> {
+        // (table, redundant index, redundant key, authoritative UNIQUE key).
+        // Names are static; no caller-supplied SQL enters the DROP statement.
+        let redundant = [
+            ("categories", "idx_categories_name", "name", "name"),
+            (
+                "risk_zones",
+                "idx_risk_zones_name",
+                "zone_name",
+                "zone_name",
+            ),
+            (
+                "task_owners",
+                "idx_task_owners_task",
+                "task_id",
+                "task_id,agent_id",
+            ),
+            (
+                "task_dependencies",
+                "idx_task_dependencies_task",
+                "task_id",
+                "task_id,depends_on_task_id",
+            ),
+            (
+                "preferences",
+                "idx_preferences_category",
+                "category",
+                "category,key",
+            ),
+        ];
+        for (table, obsolete, key, unique_keys) in redundant {
+            let exists: bool = conn.query_row(
+                "SELECT EXISTS(SELECT 1 FROM sqlite_schema WHERE type='index' AND name=?1)",
+                [obsolete],
+                |row| row.get(0),
+            )?;
+            if !exists {
+                continue;
+            }
+            let key_count = unique_keys.split(',').count() as i64;
+            let replacement_valid: bool = conn.query_row(
+                r#"SELECT EXISTS(
+                    SELECT 1 FROM pragma_index_list(?1) AS i
+                    WHERE i."unique"=1 AND i.partial=0
+                      AND (SELECT count(*) FROM pragma_index_xinfo(i.name)
+                           WHERE key=1)=?3
+                      AND NOT EXISTS(
+                          SELECT 1 FROM pragma_index_xinfo(i.name)
+                          WHERE key=1 AND (coll<>'BINARY' OR desc<>0))
+                      AND (SELECT group_concat(name, ',') FROM (
+                          SELECT name FROM pragma_index_info(i.name)
+                          ORDER BY seqno))=?2)"#,
+                params![table, unique_keys, key_count],
+                |row| row.get(0),
+            )?;
+            let obsolete_valid: bool = conn.query_row(
+                r#"SELECT EXISTS(
+                    SELECT 1 FROM pragma_index_list(?1) AS i
+                    WHERE i.name=?2 AND i."unique"=0 AND i.partial=0
+                      AND (SELECT count(*) FROM pragma_index_xinfo(i.name)
+                           WHERE key=1)=1
+                      AND NOT EXISTS(
+                          SELECT 1 FROM pragma_index_xinfo(i.name)
+                          WHERE key=1 AND (coll<>'BINARY' OR desc<>0))
+                      AND (SELECT group_concat(name, ',') FROM (
+                          SELECT name FROM pragma_index_info(i.name)
+                          ORDER BY seqno))=?3)"#,
+                params![table, obsolete, key],
+                |row| row.get(0),
+            )?;
+            if !replacement_valid || !obsolete_valid {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "RELATIONAL_INDEX_COMPACTION_UNSAFE: {obsolete} has no proven matching UNIQUE replacement or was redefined; no indexes were removed"
+                )));
+            }
+            conn.execute_batch(&format!("DROP INDEX \"{obsolete}\""))?;
+        }
+        crate::core::storage_compaction::apply(&conn)?;
+        crate::core::storage_scope::ensure(&conn, &root.join("data"))?;
         Ok(())
     })();
     match result {
@@ -1409,12 +1522,7 @@ fn initialize_single_datastore_schema(conn: &Connection) -> Result<(), error::De
         schemas::TODO_DB_SCHEMA_INDEX_DIR,
         schemas::TODO_DB_SCHEMA_INDEX_HASH,
         schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS,
-        schemas::TODO_DB_SCHEMA_INDEX_CATEGORY_NAME,
-        schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME,
-        schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK,
-        schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK,
         schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON,
-        schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY,
         schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_KEY,
         schemas::APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS,
         schemas::APTITUDE_DB_SCHEMA_INDEX_PROMPT_CONTEXT,

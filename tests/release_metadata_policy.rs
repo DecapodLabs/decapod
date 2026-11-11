@@ -3,6 +3,7 @@
 #[path = "../assets/tools/source_ci_profile.rs"]
 mod source_ci_profile;
 use source_ci_profile::workflow_owned::release_classifier::implementation as release_metadata;
+use source_ci_profile::workflow_owned::release_classifier::implementation as change_context;
 
 use std::fs;
 use std::path::PathBuf;
@@ -155,6 +156,69 @@ fn synthetic_pr_with_new_base_code_requires_normal_checks() {
     repo.git(&["checkout", "-q", "release"]);
     assert!(repo.classified("pull_request", &newer_base, &head));
     assert!(!repo.classified("push", &newer_base, &head));
+}
+
+#[test]
+fn material_spec_range_on_workbranch_push_is_accepted_fork_not_previous_commit() {
+    let repo = Repo::new();
+    let accepted = repo.git(&["rev-parse", "HEAD"]);
+    repo.git(&["checkout", "-q", "-b", "feature"]);
+    fs::write(repo.0.join("src/lib.rs"), "pub fn first() {}\\n").unwrap();
+    let previous = repo.commit("first feature change");
+    fs::write(repo.0.join("src/lib.rs"), "pub fn second() {}\\n").unwrap();
+    let head = repo.commit("second feature change");
+    let comparison_base =
+        change_context::validation_change_base(&repo.0, "push", &previous, &head, &accepted)
+            .expect("validated prior feature tip must not be mistaken for accepted master");
+    assert_eq!(comparison_base, accepted);
+    // PR B is the accepted target, never an untrusted feature-branch previous tip.
+    assert!(
+        change_context::validation_change_base(
+            &repo.0,
+            "pull_request",
+            &previous,
+            &head,
+            &accepted,
+        )
+        .is_err()
+    );
+}
+
+#[test]
+fn material_spec_range_respects_advanced_master_and_rejects_unrelated_before() {
+    let repo = Repo::new();
+    let fork = repo.git(&["rev-parse", "HEAD"]);
+    repo.git(&["checkout", "-q", "-b", "feature"]);
+    fs::write(repo.0.join("src/lib.rs"), "pub fn feature() {}\\n").unwrap();
+    let previous = repo.commit("feature");
+    repo.git(&["checkout", "-q", "master"]);
+    fs::write(repo.0.join("CHANGELOG.md"), "# Accepted later change\\n").unwrap();
+    let latest_accepted = repo.commit("new master");
+    repo.git(&["checkout", "-q", "feature"]);
+    fs::write(repo.0.join("src/lib.rs"), "pub fn feature_next() {}\\n").unwrap();
+    let head = repo.commit("next feature");
+    assert_eq!(
+        change_context::validation_change_base(
+            &repo.0,
+            "push",
+            &previous,
+            &head,
+            &latest_accepted,
+        )
+        .unwrap(),
+        fork
+    );
+    assert!(
+        change_context::validation_change_base(
+            &repo.0,
+            "push",
+            &latest_accepted,
+            &head,
+            &latest_accepted,
+        )
+        .is_err(),
+        "a different ancestry must not be misrepresented as the prior feature tip"
+    );
 }
 
 #[test]

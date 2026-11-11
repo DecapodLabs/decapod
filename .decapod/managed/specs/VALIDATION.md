@@ -960,8 +960,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `067c3b44cef3e629c13d231509b865a856985ea337ffdd417be23000e9a243ac`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
+- Repository signal fingerprint: `9179711a2f811eb5b1c71e78cb88ca37341fe630aab7070463d020ee6d4c36c2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1229,3 +1229,13 @@ The socket lifecycle fixture likewise permits a bounded `AddrInUse` interval aft
 Supabase HTTP fixtures explicitly restore blocking mode on accepted connections before applying the existing five-second read timeout. This is necessary when the platform inherits the nonblocking listener flag. A delayed-header regression verifies that the fixture waits for a valid request instead of failing immediately with `WouldBlock`; production HTTP transport is unchanged.
 
 The delayed-header regression uses the approved Tokio networking API with a five-second overall deadline, while the fixture server deliberately uses blocking reads under its existing read timeout. No lint-policy exception or production networking change is required.
+
+## Local relational compaction proof
+
+`tests/datastore_relational_compaction.rs` proves historical index removal
+preserves nonempty multi-table row digests and uniqueness, is idempotent,
+rejects redefined historical indexes, atomically rolls back when a required
+UNIQUE replacement is missing, and stays compact after subsystem
+reinitialization. Any row/hash change, index recreation, partial mutation,
+or incorrect upgrade-success claim falsifies completion. Full independent
+candidate validation and CI remain required before publishing or merging.

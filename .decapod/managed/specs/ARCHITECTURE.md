@@ -790,8 +790,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `067c3b44cef3e629c13d231509b865a856985ea337ffdd417be23000e9a243ac`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
+- Repository signal fingerprint: `9179711a2f811eb5b1c71e78cb88ca37341fe630aab7070463d020ee6d4c36c2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -985,3 +985,14 @@ helpers contain no evaluator compatibility layer. `ValidationReport` exposes one
 assessment field, `laya_readiness`; generic historical replay normalization is
 unchanged. Retired model code and research corpora are absent from the current
 source tree; their immutable history remains in Git.
+
+## Guarded relational index compaction
+
+`core::migration::migrate_compact_redundant_relational_indexes` runs one
+`BEGIN IMMEDIATE` transaction over local `decapod.db`. For each of five
+nonunique indexes it verifies exact index shape and the full ascending/BINARY
+UNIQUE replacement before DROP. Category/risk-zone names already have UNIQUE
+constraints; task-owner/dependency keys have matching composite UNIQUE
+indexes; preferences use `UNIQUE(category,key)`. Runtime initializers stop
+recreating redundant trees. Reverse-key indexes remain. No data or proof
+encodings change; cloud PostgreSQL migration ownership stays with Propodus.

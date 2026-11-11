@@ -277,8 +277,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `067c3b44cef3e629c13d231509b865a856985ea337ffdd417be23000e9a243ac`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (215 files)
+- Repository signal fingerprint: `9179711a2f811eb5b1c71e78cb88ca37341fe630aab7070463d020ee6d4c36c2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (22 files), `docs/` (1 files), `src/` (221 files), `tests/` (216 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -424,3 +424,12 @@ documentation from the current tree. Preserve canonical proof/event bytes and
 historical Git commits. Resolve obsolete carried obligations through the
 supported governance CLI; historical resolution identifiers remain auditable
 until their accepted merge allows normal workstream compaction.
+
+## Relational index compaction intent (v0.136.4)
+
+Preserve all Decapod domain rows, stable IDs, proof bindings, journal history,
+and local isolation while eliminating nonunique indexes duplicated by existing
+UNIQUE btrees' leftmost-key coverage. Do not delete rows, rewrite events, alter
+WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
+This is a bounded local SQLite optimization. Full semantic parity with
+Propodus Supabase remains a separately gated migration (Propodus #71).

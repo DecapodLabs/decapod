@@ -70,7 +70,7 @@ pub const TODO_DB_SCHEMA_TASK_TAGS: &str = "CREATE TABLE IF NOT EXISTS task_tags
     tag TEXT NOT NULL,
     PRIMARY KEY(task_id, tag),
     FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE
-); CREATE INDEX IF NOT EXISTS idx_task_tags_tag ON task_tags(tag);";
+) WITHOUT ROWID; CREATE INDEX IF NOT EXISTS idx_task_tags_tag ON task_tags(tag);";
 
 /// Knowledge edges with optional metadata (#1128). Prefer node_edges over edges.
 pub const MEMORY_DB_SCHEMA_NODE_EDGES: &str = "CREATE TABLE IF NOT EXISTS node_edges (
@@ -194,7 +194,7 @@ pub const MEMORY_DB_SCHEMA_META: &str = "
         key TEXT NOT NULL,
         value TEXT NOT NULL,
         PRIMARY KEY(namespace, key)
-    )
+    ) WITHOUT ROWID
 ";
 
 pub const MEMORY_DB_SCHEMA_NODES: &str = "
@@ -431,7 +431,7 @@ pub const TODO_DB_SCHEMA_META: &str = "
         key TEXT NOT NULL,
         value TEXT NOT NULL,
         PRIMARY KEY(namespace, key)
-    )
+    ) WITHOUT ROWID
 ";
 
 pub const TODO_DB_SCHEMA_TASKS: &str = "
@@ -520,9 +520,6 @@ pub const TODO_DB_SCHEMA_CATEGORIES: &str = "
     )
 ";
 
-pub const TODO_DB_SCHEMA_INDEX_CATEGORY_NAME: &str =
-    "CREATE INDEX IF NOT EXISTS idx_categories_name ON categories(name)";
-
 #[deprecated(note = "use AGENTS_TABLE_SCHEMA category_claims_json (#1129)")]
 pub const TODO_DB_SCHEMA_AGENT_CATEGORY_CLAIMS: &str = "
     CREATE TABLE IF NOT EXISTS agent_category_claims (
@@ -575,9 +572,6 @@ pub const TODO_DB_SCHEMA_RISK_ZONES: &str = "
     )
 ";
 
-pub const TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME: &str =
-    "CREATE INDEX IF NOT EXISTS idx_risk_zones_name ON risk_zones(zone_name)";
-
 pub const TODO_DB_SCHEMA_TASK_OWNERS: &str = "
     CREATE TABLE IF NOT EXISTS task_owners (
         id TEXT PRIMARY KEY,
@@ -589,8 +583,6 @@ pub const TODO_DB_SCHEMA_TASK_OWNERS: &str = "
     )
 ";
 
-pub const TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK: &str =
-    "CREATE INDEX IF NOT EXISTS idx_task_owners_task ON task_owners(task_id)";
 pub const TODO_DB_SCHEMA_INDEX_TASK_OWNERS_UNIQUE: &str = "CREATE UNIQUE INDEX IF NOT EXISTS idx_task_owners_task_agent ON task_owners(task_id, agent_id)";
 
 pub const TODO_DB_SCHEMA_TASK_DEPENDENCIES: &str = "
@@ -605,8 +597,6 @@ pub const TODO_DB_SCHEMA_TASK_DEPENDENCIES: &str = "
     )
 ";
 
-pub const TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK: &str =
-    "CREATE INDEX IF NOT EXISTS idx_task_dependencies_task ON task_dependencies(task_id)";
 pub const TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON: &str = "CREATE INDEX IF NOT EXISTS idx_task_dependencies_depends_on ON task_dependencies(depends_on_task_id)";
 
 #[deprecated(note = "use AGENTS_TABLE_SCHEMA expertise_json (#1129)")]
@@ -702,8 +692,6 @@ pub const APTITUDE_DB_SCHEMA_AGENT_PROMPTS: &str = "
     )
 ";
 
-pub const APTITUDE_DB_SCHEMA_INDEX_PREF_CATEGORY: &str =
-    "CREATE INDEX IF NOT EXISTS idx_preferences_category ON preferences(category)";
 pub const APTITUDE_DB_SCHEMA_INDEX_PREF_KEY: &str =
     "CREATE INDEX IF NOT EXISTS idx_preferences_key ON preferences(key)";
 pub const APTITUDE_DB_SCHEMA_INDEX_PREF_ACCESS: &str =
@@ -749,7 +737,7 @@ pub const LCM_DB_SCHEMA_META: &str = "
         key TEXT NOT NULL,
         value TEXT NOT NULL,
         PRIMARY KEY(namespace, key)
-    )
+    ) WITHOUT ROWID
 ";
 
 pub const LCM_DB_INDEX_ORIGINALS_KIND: &str =
