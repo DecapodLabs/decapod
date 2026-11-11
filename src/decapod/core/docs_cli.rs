@@ -534,6 +534,36 @@ fn schema_code_list(values: &serde_json::Value) -> Result<String, error::Decapod
         .join(", "))
 }
 
+/// Retain historical completion guidance in generated command contracts.
+fn historical_validation_contract() -> &'static str {
+    r#"## Historical validation and task completion
+
+- **Inspect:** `decapod qa verify commit <full-candidate-sha>` reads the canonical
+  local full-validation history without session, migration or workspace mutation.
+  Historical inspection never grants publication readiness.
+- **Complete:** `decapod todo done <task-id> --validated --commit <full-candidate-sha>`
+  completes the original task from its own recorded full proof after verifiable
+  integration. The original task contract and supported ownership lineage must
+  remain intact. The normal session, dependency and atomic revision checks apply.
+- **Repair:** The same command can repair a done-but-unverified task without
+  reopening it or changing its completion timestamp. It does not require another
+  pending PR, a different task's admitted workspace or a fresh validation child.
+- **Evidence:** Full proof is stored outside the validated candidate and indexed
+  by its complete immutable SHA. `.decapod/governance.json` retains its legacy
+  prerequisite validation section; that section alone is insufficient.
+- **Limits:** Missing historical full proof cannot be reconstructed from a green
+  PR badge. A new candidate or task change requires fresh proof. Historical
+  completion permission never satisfies `workspace publish`. Cloud-backed
+  historical lookup/completion is unsupported; ordinary cloud validation is
+  unchanged.
+- **Integration boundary:** This version observes public GitHub accepted branches
+  over HTTPS. Fetch missing accepted Git objects through the normal governed VCS
+  path before retrying. Private-repository integration is unsupported. Ordinary
+  merge/fast-forward ancestry is sufficient; squash/rebase requires an exact
+  complete candidate tree in the bounded accepted history. New lease generations
+  and additional task-specific proof gates cannot inherit the old result."#
+}
+
 fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
     let current_dir = std::env::current_dir().map_err(error::DecapodError::IoError)?;
     let repo_root = find_repo_root(&current_dir)?;
@@ -612,6 +642,9 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                 _ => {}
             }
             writeln!(file)?;
+            if name == "obligation" {
+                writeln!(file, "{}\n", historical_validation_contract())?;
+            }
             if name == "validate" {
                 writeln!(file, "{}\n", specs_refresh_contract())?;
             }

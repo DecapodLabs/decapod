@@ -8,6 +8,7 @@ use crate::core::state_commit;
 use crate::core::store::Store;
 use crate::core::todo;
 use crate::core::validation_epoch::{ValidationEpochMetadata, active_validation_epoch};
+use crate::core::validation_history::{self, HistoricalValidationProof, IntegrationWitness};
 use crate::core::workspace;
 use crate::plugins::federation;
 use clap::{Parser, Subcommand};
@@ -46,6 +47,11 @@ pub struct DiagnoseCli {
 
 #[derive(Subcommand, Debug)]
 pub enum VerifyCommand {
+    /// Inspect recorded full validation for an immutable source commit; never publishes.
+    Commit {
+        #[clap(value_name = "SHA")]
+        sha: String,
+    },
     /// Verify a single TODO.
     Todo {
         #[clap(value_name = "ID")]
@@ -90,6 +96,11 @@ pub enum VerifyCommand {
     },
 }
 
+/// The application routes this before migrations, presence, and session writes.
+pub fn is_commit_lookup(cli: &VerifyCli) -> bool {
+    matches!(cli.command, Some(VerifyCommand::Commit { .. }))
+}
+
 #[derive(Debug, Clone)]
 struct VerifyTarget {
     todo_id: String,
@@ -121,6 +132,17 @@ struct VerificationArtifacts {
     validation_epoch: Option<ValidationEpochMetadata>,
     proof_plan_results: Vec<ProofPlanResult>,
     file_artifacts: Vec<FileArtifact>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    historical_validation: Option<HistoricalCompletionEvidence>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct HistoricalCompletionEvidence {
+    candidate_sha: String,
+    record_id: String,
+    record_digest: String,
+    integration: IntegrationWitness,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -854,14 +876,14 @@ fn verify_target(
         }
     };
 
-    let supported_proofs = ["validate_passes", "state_commit"];
+    let supported_proofs = ["validate_passes", "state_commit", "validated_commit"];
     if proof_plan
         .iter()
         .any(|p| !supported_proofs.iter().any(|sp| p == *sp))
     {
         result.status = "unknown".to_string();
         result.notes.push(
-            "Unsupported proof_plan. Supported: validate_passes, state_commit. Remediation: set proof_plan to [\"validate_passes\"] or [\"state_commit\"].".to_string(),
+            "Unsupported proof_plan. Supported gates: validate_passes, state_commit, validated_commit. Recapture evidence through the corresponding governed completion command.".to_string(),
         );
         return Ok(result);
     }
@@ -901,6 +923,12 @@ fn verify_target(
             target.todo_id, target.revision, target.todo_id,
         ));
         return Ok(result);
+    }
+
+    if artifacts.historical_validation.is_some()
+        || proof_plan.iter().any(|p| p == "validated_commit")
+    {
+        return verify_historical_target(target, store_root, repo_root, &proof_plan, &artifacts);
     }
 
     let expected_proof = artifacts
@@ -1165,6 +1193,104 @@ fn verify_target(
     Ok(result)
 }
 
+fn requires_current_validation(target: &VerifyTarget) -> bool {
+    let historical_gate = target
+        .proof_plan
+        .as_deref()
+        .and_then(|raw| serde_json::from_str::<Vec<String>>(raw).ok())
+        .is_some_and(|gates| gates.iter().any(|gate| gate == "validated_commit"));
+    let historical_artifacts = target
+        .artifacts
+        .as_deref()
+        .and_then(|raw| serde_json::from_str::<VerificationArtifacts>(raw).ok())
+        .is_some_and(|artifacts| artifacts.historical_validation.is_some());
+    // A corrupt or incomplete historical baseline must fail on its own terms;
+    // a fresh child run cannot repair or reinterpret the original source proof.
+    !historical_gate && !historical_artifacts
+}
+
+fn verify_historical_target(
+    target: &VerifyTarget,
+    store_root: &Path,
+    repo_root: &Path,
+    proof_plan: &[String],
+    artifacts: &VerificationArtifacts,
+) -> Result<VerifyTodoResult, error::DecapodError> {
+    let check = (|| -> Result<String, error::DecapodError> {
+        let history = artifacts.historical_validation.as_ref().ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "VALIDATION_HISTORY_MISSING: historical proof reference is absent".into(),
+            )
+        })?;
+        if proof_plan != ["validated_commit"]
+            || artifacts.proof_plan_results.len() != 1
+            || artifacts.proof_plan_results[0].proof_gate != "validated_commit"
+            || artifacts.proof_plan_results[0].status != "pass"
+            || artifacts.proof_plan_results[0].output_hash != history.record_digest
+            || !artifacts.file_artifacts.is_empty()
+        {
+            return Err(error::DecapodError::ValidationError(
+                "VALIDATION_HISTORY_INVALID: mixed or malformed historical proof".into(),
+            ));
+        }
+        let store = Store {
+            kind: crate::core::store::StoreKind::Repo,
+            root: store_root.to_path_buf(),
+        };
+        let proof = validation_history::lookup_record(
+            repo_root,
+            &store,
+            &history.candidate_sha,
+            &history.record_id,
+        )?;
+        if proof.task_binding().task_id != target.todo_id
+            || proof.record_id() != history.record_id
+            || proof.record_digest() != history.record_digest
+            || artifacts.validation_epoch.as_ref() != Some(proof.validation_epoch())
+            || history.integration.candidate_sha != proof.candidate_sha()
+            || history.integration.accepted_base != proof.accepted_base()
+        {
+            return Err(error::DecapodError::ValidationError(
+                "VALIDATION_HISTORY_BINDING_MISMATCH: historical source, task or evidence changed"
+                    .into(),
+            ));
+        }
+        proof.check_integration_witness(repo_root, &history.integration)?;
+        DbBroker::new(store_root).with_conn(
+            &todo::todo_db_path(store_root), "decapod", None, "verify.history.replay", |conn| {
+                ensure_target_unchanged(conn, target)?;
+                proof.recheck_on_conn(conn)?;
+                todo::check_validation_binding_on_conn(conn, proof.task_binding(), true)?;
+                if todo::dependency_completion_gate_on_conn(conn, store_root, &target.todo_id)?.is_some() {
+                    return Err(error::DecapodError::ValidationError("VALIDATION_HISTORY_DEPENDENCIES_BLOCKED: current task dependencies must be complete".into()));
+                }
+                Ok(())
+            },
+        )?;
+        Ok(history.record_digest.clone())
+    })();
+    let (status, hash, notes) = match check {
+        Ok(hash) => ("pass", Some(hash), Vec::new()),
+        Err(error) => ("fail", None, vec![error.to_string()]),
+    };
+    Ok(VerifyTodoResult {
+        todo_id: target.todo_id.clone(),
+        status: status.into(),
+        proofs: vec![ProofCheckResult {
+            gate: "validated_commit".into(),
+            status: status.into(),
+            expected_output_hash: artifacts
+                .historical_validation
+                .as_ref()
+                .map(|h| h.record_digest.clone()),
+            actual_output_hash: hash,
+            reason: notes.first().cloned(),
+        }],
+        artifacts: Vec::new(),
+        notes,
+    })
+}
+
 /// A passing validation bound to one task revision and the material it checked.
 /// Fields and construction stay private: a caller's `--validated` assertion is
 /// never sufficient to manufacture completion evidence.
@@ -1176,6 +1302,8 @@ pub(crate) struct PreparedTodoVerification {
     repo_root: PathBuf,
     artifact_paths: Vec<PathBuf>,
     artifacts: VerificationArtifacts,
+    historical: Option<HistoricalValidationProof>,
+    inspected_target: Option<VerifyTarget>,
 }
 
 impl PreparedTodoVerification {
@@ -1191,7 +1319,37 @@ impl PreparedTodoVerification {
         self.todo_id == id && self.expected_revision == revision && self.expected_status == status
     }
 
+    /// Run while the original task projection still exists under the caller's
+    /// completion transaction, before its status/revision update.
+    pub(crate) fn check_task_binding_on_connection(
+        &self,
+        conn: &crate::core::db::Connection,
+    ) -> Result<(), error::DecapodError> {
+        if let Some(proof) = &self.historical {
+            if proof.task_binding().assignee != crate::current_agent_id() {
+                return Err(error::DecapodError::ValidationError(
+                    "VALIDATION_HISTORY_OWNER_MISMATCH: historical completion requires the recorded task owner".into(),
+                ));
+            }
+            if let Some(target) = &self.inspected_target {
+                ensure_target_unchanged(conn, target)?;
+                ensure_historical_proof_plan(target.proof_plan.as_deref())?;
+            }
+            proof.recheck_on_conn(conn)?;
+            todo::check_validation_binding_on_conn(conn, proof.task_binding(), true)?;
+        }
+        Ok(())
+    }
+
     fn check_material(&self) -> Result<(), error::DecapodError> {
+        if let Some(history) = &self.artifacts.historical_validation {
+            let proof = self.historical.as_ref().ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "VALIDATION_HISTORY_MISSING: prepared historical proof is absent".into(),
+                )
+            })?;
+            return proof.check_integration_witness(&self.repo_root, &history.integration);
+        }
         let epoch = active_validation_epoch(&self.repo_root)?;
         if self.artifacts.validation_epoch.as_ref() != Some(&epoch) {
             return Err(error::DecapodError::ValidationError(
@@ -1233,6 +1391,7 @@ impl PreparedTodoVerification {
                 "Only completed tasks can recapture a verification baseline".into(),
             ));
         }
+        self.check_task_binding_on_connection(conn)?;
         self.persist_on_connection(conn, self.expected_revision)
     }
 
@@ -1257,15 +1416,23 @@ impl PreparedTodoVerification {
             ));
         }
         self.check_material()?;
+        if let Some(proof) = &self.historical {
+            proof.recheck_on_conn(conn)?;
+        }
         let ts = &self.artifacts.completed_at;
         let mut artifacts = self.artifacts.clone();
         artifacts.task_id = Some(self.todo_id.clone());
         artifacts.task_revision = Some(expected_revision);
         let artifacts_json = serde_json::to_string(&artifacts)
             .map_err(|err| error::DecapodError::ValidationError(err.to_string()))?;
+        let proof_plan = if self.historical.is_some() {
+            "[\"validated_commit\"]"
+        } else {
+            "[\"validate_passes\"]"
+        };
         conn.execute(
             "INSERT INTO task_verification(todo_id, proof_plan, verification_artifacts, last_verified_at, last_verified_status, last_verified_notes, verification_policy_days, updated_at)
-             VALUES(?1, '[\"validate_passes\"]', ?2, ?3, 'pass', 'baseline captured', 90, ?3)
+             VALUES(?1, ?4, ?2, ?3, 'pass', 'baseline captured', 90, ?3)
              ON CONFLICT(todo_id) DO UPDATE SET
                proof_plan=excluded.proof_plan,
                verification_artifacts=excluded.verification_artifacts,
@@ -1274,7 +1441,7 @@ impl PreparedTodoVerification {
                last_verified_notes=excluded.last_verified_notes,
                verification_policy_days=excluded.verification_policy_days,
                updated_at=excluded.updated_at",
-            crate::core::db::params![self.todo_id, artifacts_json, ts],
+            crate::core::db::params![self.todo_id, artifacts_json, ts, proof_plan],
         )?;
         events::append_on_conn(
             conn,
@@ -1287,7 +1454,7 @@ impl PreparedTodoVerification {
                 "task_id": self.todo_id,
                 "actor": "decapod",
                 "payload": {
-                    "proof_plan": ["validate_passes"],
+                    "proof_plan": serde_json::from_str::<serde_json::Value>(proof_plan).map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
                     "verification_artifacts": artifacts,
                     "last_verified_status": "pass",
                     "last_verified_notes": "baseline captured",
@@ -1308,6 +1475,152 @@ pub(crate) fn prepare_verified_completion(
     prepare_verified_completion_with(store, repo_root, todo_id, artifact_paths, || {
         run_validate_and_hash(&store.root, repo_root, Some(todo_id))
     })
+}
+
+/// Admit a prior full result for the same task and a proven accepted integration.
+/// This observes immutable evidence; it never executes current publication gates.
+fn ensure_historical_proof_plan(plan: Option<&str>) -> Result<(), error::DecapodError> {
+    let Some(raw) = plan else {
+        return Ok(());
+    };
+    let gates: Vec<String> = serde_json::from_str(raw).map_err(|_| {
+        error::DecapodError::ValidationError(
+            "VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED: malformed task proof plan".into(),
+        )
+    })?;
+    if gates.len() != 1 || !matches!(gates[0].as_str(), "validate_passes" | "validated_commit") {
+        return Err(error::DecapodError::ValidationError(
+            "VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED: recorded full validation cannot discharge additional or missing task proof obligations".into(),
+        ));
+    }
+    Ok(())
+}
+
+pub(crate) fn prepare_historical_completion(
+    store: &Store,
+    repo_root: &Path,
+    todo_id: &str,
+    candidate_sha: &str,
+) -> Result<PreparedTodoVerification, error::DecapodError> {
+    let targets = load_targets(store, Some(todo_id))?;
+    let target = targets
+        .into_iter()
+        .next()
+        .ok_or_else(|| error::DecapodError::NotFound(format!("TODO not found: {todo_id}")))?;
+    ensure_historical_proof_plan(target.proof_plan.as_deref())?;
+    if !matches!(target.status.as_str(), "open" | "in_progress" | "done") {
+        return Err(error::DecapodError::ValidationError(
+            "VALIDATION_HISTORY_TASK_STALE: archived tasks require their existing completion history".into(),
+        ));
+    }
+    let proof = validation_history::lookup(repo_root, store, candidate_sha)?;
+    if proof.task_binding().task_id != todo_id {
+        return Err(error::DecapodError::ValidationError(
+            "VALIDATION_HISTORY_TASK_MISMATCH: commit validation belongs to another task".into(),
+        ));
+    }
+    if proof.task_binding().assignee != crate::current_agent_id() {
+        return Err(error::DecapodError::ValidationError(
+            "VALIDATION_HISTORY_OWNER_MISMATCH: historical completion requires the recorded task owner".into(),
+        ));
+    }
+    // The remote read is outside the completion transaction. The immutable
+    // accepted revision is rechecked locally inside the transaction.
+    let integration = proof.verify_integration(repo_root)?;
+    prepare_historical_completion_from_evidence(store, repo_root, target, proof, integration)
+}
+
+/// The typed proof can only originate from the canonical producer journal.
+/// Keeping immutable preparation separate makes the transactional rechecks
+/// testable without substituting a network response or invoking validation.
+fn prepare_historical_completion_from_evidence(
+    store: &Store,
+    repo_root: &Path,
+    target: VerifyTarget,
+    proof: HistoricalValidationProof,
+    integration: IntegrationWitness,
+) -> Result<PreparedTodoVerification, error::DecapodError> {
+    ensure_historical_proof_plan(target.proof_plan.as_deref())?;
+    if !matches!(target.status.as_str(), "open" | "in_progress" | "done")
+        || proof.task_binding().task_id != target.todo_id
+    {
+        return Err(error::DecapodError::ValidationError(
+            "VALIDATION_HISTORY_TASK_MISMATCH: recorded validation does not bind this completable task".into(),
+        ));
+    }
+    let todo_id = target.todo_id.clone();
+    let epoch = proof.validation_epoch().clone();
+    let history = HistoricalCompletionEvidence {
+        candidate_sha: proof.candidate_sha().to_owned(),
+        record_id: proof.record_id().to_owned(),
+        record_digest: proof.record_digest().to_owned(),
+        integration,
+    };
+    let prepared = PreparedTodoVerification {
+        todo_id: todo_id.clone(),
+        expected_revision: target.revision,
+        expected_status: target.status.clone(),
+        repo_root: repo_root.to_path_buf(),
+        artifact_paths: Vec::new(),
+        artifacts: VerificationArtifacts {
+            completed_at: now_iso(),
+            task_id: Some(todo_id),
+            task_revision: Some(target.revision),
+            evaluator_epoch: Some(epoch.epoch_id.clone()),
+            validation_epoch: Some(epoch.clone()),
+            proof_plan_results: vec![ProofPlanResult {
+                proof_gate: "validated_commit".into(),
+                status: "pass".into(),
+                command: format!("decapod qa verify commit {}", proof.candidate_sha()),
+                output_hash: proof.record_digest().to_owned(),
+                evaluator_epoch: Some(epoch.epoch_id.clone()),
+                validation_epoch: Some(epoch),
+            }],
+            file_artifacts: Vec::new(),
+            historical_validation: Some(history),
+        },
+        historical: Some(proof),
+        inspected_target: Some(target),
+    };
+    DbBroker::new(&store.root).with_conn(
+        &todo::todo_db_path(&store.root),
+        "decapod",
+        None,
+        "verify.history.prepare",
+        |conn| prepared.check_task_binding_on_connection(conn),
+    )?;
+    prepared.check_material()?;
+    Ok(prepared)
+}
+
+/// Repair a completed task's proof without reopening it or changing completed_at.
+pub(crate) fn complete_historical_done_task(
+    store: &Store,
+    prepared: &PreparedTodoVerification,
+) -> Result<(), error::DecapodError> {
+    if prepared.historical.is_none() {
+        return Err(error::DecapodError::ValidationError(
+            "Historical completion requires recorded full validation".into(),
+        ));
+    }
+    todo::with_task_journal(
+        &DbBroker::new(&store.root),
+        &todo::todo_db_path(&store.root),
+        "decapod",
+        None,
+        "verify.history.complete",
+        todo::TaskJournalSelection::Ids(vec![prepared.todo_id.clone()]),
+        |conn| {
+            if todo::dependency_completion_gate_on_conn(conn, &store.root, &prepared.todo_id)?
+                .is_some()
+            {
+                return Err(error::DecapodError::ValidationError(
+                    "VALIDATION_HISTORY_DEPENDENCIES_BLOCKED: current task dependencies must be complete".into(),
+                ));
+            }
+            prepared.commit_recapture_on_connection(conn)
+        },
+    )
 }
 
 // Keep the outcome collector private. Tests can exercise failures without
@@ -1376,7 +1689,10 @@ fn prepare_verified_completion_with(
                     validation_epoch: Some(validation_epoch),
                 }],
                 file_artifacts,
+                historical_validation: None,
             },
+            historical: None,
+            inspected_target: None,
         };
         prepared.check_material()?;
         Ok(prepared)
@@ -1568,6 +1884,7 @@ fn refresh_batch_baselines_with_captures(
                     evaluator_epoch: Some(validation_epoch.epoch_id.clone()),
                     validation_epoch: Some(validation_epoch.clone()),
                     file_artifacts: capture.files.clone(),
+                    historical_validation: None,
                     proof_plan_results: vec![ProofPlanResult {
                         proof_gate: "validate_passes".into(),
                         status: "pass".into(),
@@ -1922,6 +2239,31 @@ pub fn run_verify_cli(
 ) -> Result<(), error::DecapodError> {
     if let Some(cmd) = &cli.command {
         match cmd {
+            VerifyCommand::Commit { sha } => {
+                if cli.stale {
+                    return Err(error::DecapodError::ValidationError(
+                        "--stale does not apply to immutable commit validation lookup".into(),
+                    ));
+                }
+                let proof = validation_history::lookup(repo_root, store, sha)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&serde_json::json!({
+                        "schema": "decapod.validation-history.lookup.v1",
+                        "scope": "historical_validation",
+                        "status": "passed",
+                        "publication_ready": false,
+                        "candidate_sha": proof.candidate_sha(),
+                        "accepted_base": proof.accepted_base(),
+                        "task": proof.task_binding(),
+                        "record_id": proof.record_id(),
+                        "record_digest": proof.record_digest(),
+                        "validation_epoch": proof.validation_epoch(),
+                    }))
+                    .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?
+                );
+                return Ok(());
+            }
             VerifyCommand::Regen { id, artifact } => {
                 capture_baseline_for_todo(store, repo_root, id, artifact.clone())?;
                 if !cli.json {
@@ -2111,7 +2453,8 @@ pub fn run_verify_cli(
     let target_ids_str = target_ids.join(",");
     let _verifying = VerifyingTodosGuard::enter(&target_ids_str);
 
-    let validation_snapshot = if single_id.is_none() {
+    let needs_current_validation = targets.iter().any(requires_current_validation);
+    let validation_snapshot = if single_id.is_none() && needs_current_validation {
         let (passed, output_hash) = run_validate_and_hash(&store.root, repo_root, None)?;
         Some(ValidationSnapshot {
             passed,
@@ -2437,3 +2780,7 @@ mod tests;
 #[cfg(test)]
 #[path = "../../../tests/unit/plugins/verify_completion_tests.rs"]
 mod completion_tests;
+
+#[cfg(test)]
+#[path = "../../../tests/unit/plugins/verify_historical_tests.rs"]
+mod historical_tests;
