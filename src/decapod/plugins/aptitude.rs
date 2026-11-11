@@ -269,8 +269,11 @@ pub fn initialize_aptitude_db(root: &Path) -> Result<(), error::DecapodError> {
         // Insert default agent prompts
         for (context, prompt, priority) in DEFAULT_AGENT_PROMPTS {
             conn.execute(
-                "INSERT OR IGNORE INTO agent_prompts(id, context, prompt_text, priority, active, usage_count, created_at)
-                 VALUES(?1, ?2, ?3, ?4, 1, 0, ?5)",
+                "INSERT INTO agent_prompts(id, context, prompt_text, priority, active, usage_count, created_at)
+                 SELECT ?1, ?2, ?3, ?4, 1, 0, ?5
+                 WHERE NOT EXISTS(
+                     SELECT 1 FROM agent_prompts WHERE context = ?2 AND prompt_text = ?3
+                 )",
                 params![crate::core::ulid::new_ulid(), context, prompt, priority, now],
             )?;
         }
