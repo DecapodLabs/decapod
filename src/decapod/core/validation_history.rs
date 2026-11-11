@@ -24,6 +24,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::{
+    ffi::OsStr,
     io::Read,
     path::{Path, PathBuf},
     process::{Command, Output},
@@ -85,12 +86,20 @@ fn governance(root: &Path) -> Result<(String, String, Value), DecapodError> {
     ))
 }
 
-fn repository_identity(
-    root: &Path,
-) -> Result<super::repo_identity::RepositoryIdentity, DecapodError> {
-    // The shared remote resolver predates the bounded Git reader. Reject
-    // ambient redirects before calling it, so its repository and our immutable
-    // object observations cannot silently describe different checkouts.
+fn ambient_git_override(name: &OsStr, value: &OsStr) -> bool {
+    // The reviewed source runner disables ambient config with these exact
+    // values. No path normalization or broader Git-config exception is safe.
+    const INERT_HARDENING: &[(&str, &str)] = &[
+        ("GIT_CONFIG_NOSYSTEM", "1"),
+        ("GIT_CONFIG_GLOBAL", "/dev/null"),
+        ("GIT_CONFIG_COUNT", "0"),
+    ];
+    if INERT_HARDENING
+        .iter()
+        .any(|&(key, expected)| name == OsStr::new(key) && value == OsStr::new(expected))
+    {
+        return false;
+    }
     const OVERRIDES: &[&str] = &[
         "GIT_DIR",
         "GIT_WORK_TREE",
@@ -107,10 +116,17 @@ fn repository_identity(
         "GIT_CEILING_DIRECTORIES",
         "GIT_DISCOVERY_ACROSS_FILESYSTEM",
     ];
-    if std::env::vars_os().any(|(name, _)| {
-        let name = name.to_string_lossy();
-        OVERRIDES.contains(&name.as_ref()) || name.starts_with("GIT_CONFIG_")
-    }) {
+    let name = name.to_string_lossy();
+    OVERRIDES.contains(&name.as_ref()) || name.starts_with("GIT_CONFIG_")
+}
+
+fn repository_identity(
+    root: &Path,
+) -> Result<super::repo_identity::RepositoryIdentity, DecapodError> {
+    // The shared remote resolver predates the bounded Git reader. Reject
+    // ambient redirects before calling it, so its repository and our immutable
+    // object observations cannot silently describe different checkouts.
+    if std::env::vars_os().any(|(name, value)| ambient_git_override(&name, &value)) {
         return Err(invalid(
             "ambient Git repository or configuration overrides must be removed before historical proof use",
         ));
@@ -942,12 +958,27 @@ fn accepted_target(program: &Path, remote: &str, branch_ref: &str) -> Result<Str
 fn reject_history_overrides(root: &Path) -> Result<(), DecapodError> {
     // Git ancestry must describe object parents, never a mutable graft file.
     // Alternates can disappear after the transaction and cannot own this proof.
+    // Resolve their common directory rather than --git-path: the isolated
+    // reader deliberately redirects GIT_GRAFT_FILE to /dev/null. Both physical
+    // metadata files belong to the common directory, including in worktrees.
+    let output = git_output(
+        root,
+        &["rev-parse", "--path-format=absolute", "--git-common-dir"],
+    )?;
+    if !output.status.success() {
+        return Err(invalid("Git common directory observation failed"));
+    }
+    let raw = String::from_utf8(output.stdout).map_err(invalid)?;
+    // Directory names may end in whitespace; trim only Git's terminal LF.
+    let common_dir = Path::new(
+        raw.strip_suffix('\n')
+            .ok_or_else(|| invalid("Git common directory output is incomplete"))?,
+    );
+    if !common_dir.is_absolute() {
+        return Err(invalid("Git common directory is not an absolute path"));
+    }
     for name in ["info/grafts", "objects/info/alternates"] {
-        let path = git_text(
-            root,
-            &["rev-parse", "--path-format=absolute", "--git-path", name],
-        )?;
-        match std::fs::symlink_metadata(path) {
+        match std::fs::symlink_metadata(common_dir.join(name)) {
             Ok(_) => {
                 return Err(invalid(
                     "historical integration does not support Git grafts or alternate object stores",
@@ -1198,6 +1229,53 @@ mod tests {
         record.proof.laya.binding.evidence_digest = digest(&record.proof.suite).unwrap();
         record.proof.laya.request_id = digest(&record.proof.laya.binding).unwrap();
         record.record_digest = record.calculated_digest().unwrap();
+    }
+
+    #[test]
+    fn runner_hardening_is_inert_but_active_git_overrides_are_rejected() {
+        for (name, value) in [
+            ("GIT_CONFIG_NOSYSTEM", "1"),
+            ("GIT_CONFIG_GLOBAL", "/dev/null"),
+            ("GIT_CONFIG_COUNT", "0"),
+        ] {
+            assert!(
+                !ambient_git_override(OsStr::new(name), OsStr::new(value)),
+                "reviewed runner hardening rejected: {name}={value}"
+            );
+        }
+        for (name, value) in [
+            ("GIT_CONFIG_NOSYSTEM", "0"),
+            ("GIT_CONFIG_NOSYSTEM", ""),
+            ("GIT_CONFIG_GLOBAL", "/tmp/injected-config"),
+            ("GIT_CONFIG_GLOBAL", "/dev/null "),
+            ("GIT_CONFIG_COUNT", "1"),
+            ("GIT_CONFIG_COUNT", "00"),
+            ("GIT_CONFIG", ""),
+            (
+                "GIT_CONFIG_PARAMETERS",
+                "'remote.origin.url=https://example.invalid'",
+            ),
+            ("GIT_CONFIG_KEY_0", "remote.origin.url"),
+            ("GIT_CONFIG_VALUE_0", "https://example.invalid"),
+            ("GIT_CONFIG_SYSTEM", "/dev/null"),
+            ("GIT_DIR", "/tmp/other-repository"),
+            ("GIT_WORK_TREE", "/tmp/other-worktree"),
+            ("GIT_COMMON_DIR", "/tmp/other-common-dir"),
+            ("GIT_INDEX_FILE", "/tmp/other-index"),
+            ("GIT_OBJECT_DIRECTORY", "/tmp/other-objects"),
+            ("GIT_ALTERNATE_OBJECT_DIRECTORIES", "/tmp/other-objects"),
+            ("GIT_GRAFT_FILE", "/dev/null"),
+            ("GIT_REPLACE_REF_BASE", "refs/other-replacements"),
+            ("GIT_NAMESPACE", "other-namespace"),
+            ("GIT_EXEC_PATH", "/tmp/other-git-tools"),
+            ("GIT_CEILING_DIRECTORIES", "/tmp/other-discovery-root"),
+            ("GIT_DISCOVERY_ACROSS_FILESYSTEM", "1"),
+        ] {
+            assert!(
+                ambient_git_override(OsStr::new(name), OsStr::new(value)),
+                "active or unsupported Git override accepted: {name}={value}"
+            );
+        }
     }
 
     #[test]

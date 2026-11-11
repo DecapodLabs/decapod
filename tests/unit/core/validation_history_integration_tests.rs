@@ -269,6 +269,116 @@ fn replacement_refs_cannot_forge_candidate_ancestry() {
 }
 
 #[test]
+fn physical_history_overrides_are_rejected_in_regular_and_linked_worktrees() {
+    let (dir, material) = fixture();
+    let root = dir.path();
+    let witness = integration_for_target(root, &material, &material.head_revision).unwrap();
+    let linked_parent = tempfile::tempdir().unwrap();
+    let linked = linked_parent.path().join("linked");
+    git(
+        root,
+        &[
+            "worktree",
+            "add",
+            "--quiet",
+            "--detach",
+            linked.to_str().unwrap(),
+            &material.head_revision,
+        ],
+    );
+    witness.recheck_local(&linked).unwrap();
+    let alternate = tempfile::tempdir().unwrap();
+    for (name, content) in [
+        ("info/grafts", format!("{}\n", material.head_revision)),
+        (
+            "objects/info/alternates",
+            format!("{}\n", alternate.path().display()),
+        ),
+    ] {
+        let path = root.join(".git").join(name);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, content).unwrap();
+        for checkout in [root, linked.as_path()] {
+            // The reader still ignores graft-based parent rewriting, while
+            // the admission guard rejects the physical mutable metadata.
+            assert!(
+                ancestor(
+                    checkout,
+                    &material.accepted_base_revision,
+                    &material.head_revision
+                )
+                .unwrap()
+            );
+            let error =
+                integration_for_target(checkout, &material, &material.head_revision).unwrap_err();
+            assert!(
+                error
+                    .to_string()
+                    .contains("Git grafts or alternate object stores")
+            );
+            assert!(witness.recheck_local(checkout).is_err());
+        }
+        std::fs::remove_file(path).unwrap();
+        witness.recheck_local(root).unwrap();
+        witness.recheck_local(&linked).unwrap();
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn dangling_history_metadata_symlinks_are_rejected() {
+    let (dir, material) = fixture();
+    let root = dir.path();
+    integration_for_target(root, &material, &material.head_revision).unwrap();
+    for name in ["info/grafts", "objects/info/alternates"] {
+        let path = root.join(".git").join(name);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::os::unix::fs::symlink(root.join("missing-metadata"), &path).unwrap();
+        assert!(!path.exists());
+        let error = reject_history_overrides(root).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("Git grafts or alternate object stores")
+        );
+        std::fs::remove_file(path).unwrap();
+    }
+    integration_for_target(root, &material, &material.head_revision).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn physical_metadata_checks_preserve_trailing_directory_whitespace() {
+    let (dir, material) = fixture();
+    let root = dir.path();
+    let metadata_parent = tempfile::tempdir().unwrap();
+    let common_dir = metadata_parent.path().join("metadata ");
+    git(
+        root,
+        &[
+            "init",
+            "--quiet",
+            "--separate-git-dir",
+            common_dir.to_str().unwrap(),
+        ],
+    );
+    integration_for_target(root, &material, &material.head_revision).unwrap();
+    for name in ["info/grafts", "objects/info/alternates"] {
+        let path = common_dir.join(name);
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::fs::write(&path, b"").unwrap();
+        let error = reject_history_overrides(root).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("Git grafts or alternate object stores")
+        );
+        std::fs::remove_file(path).unwrap();
+    }
+    integration_for_target(root, &material, &material.head_revision).unwrap();
+}
+
+#[test]
 fn replay_uses_original_git_objects_after_branch_removal_and_later_checkout() {
     let (dir, material) = fixture();
     let root = dir.path();

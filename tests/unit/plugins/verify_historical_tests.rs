@@ -167,9 +167,45 @@ fn prepare(fixture: &Fixture) -> PreparedTodoVerification {
     .unwrap()
 }
 
-fn event_count(fixture: &Fixture) -> i64 {
+#[derive(Debug, PartialEq, Eq)]
+struct TransactionalEventSnapshot {
+    stream: String,
+    seq: i64,
+    event_id: String,
+    ts: String,
+    subject_kind: Option<String>,
+    subject_id: Option<String>,
+    event_type: String,
+    payload: String,
+    actor: String,
+}
+
+fn transactional_events(fixture: &Fixture) -> Vec<TransactionalEventSnapshot> {
+    // Broker audits record attempted operations and these observations. The
+    // rollback contract preserves complete task and verification event rows.
     connection(&fixture.store, |conn| {
-        conn.query_row("SELECT COUNT(*) FROM events", [], |row| row.get(0))
+        let mut statement = conn
+            .prepare(
+                "SELECT stream,seq,event_id,ts,subject_kind,subject_id,event_type,payload,actor
+                 FROM events WHERE stream IN (?1,?2) ORDER BY stream,seq,event_id",
+            )
+            .unwrap();
+        statement
+            .query_map([events::TODO, events::VERIFICATION], |row| {
+                Ok(TransactionalEventSnapshot {
+                    stream: row.get(0)?,
+                    seq: row.get(1)?,
+                    event_id: row.get(2)?,
+                    ts: row.get(3)?,
+                    subject_kind: row.get(4)?,
+                    subject_id: row.get(5)?,
+                    event_type: row.get(6)?,
+                    payload: row.get(7)?,
+                    actor: row.get(8)?,
+                })
+            })
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
             .unwrap()
     })
 }
@@ -341,7 +377,7 @@ fn completed_claimed_task_repairs_at_same_revision_then_replays_after_new_epoch(
 fn failed_final_journal_append_rolls_back_status_proof_and_capture_events() {
     let fixture = fixture();
     let prepared = prepare(&fixture);
-    let before = event_count(&fixture);
+    let before = transactional_events(&fixture);
     connection(&fixture.store, |conn| {
         conn.execute(
             "CREATE TRIGGER reject_history_checkpoint BEFORE INSERT ON events
@@ -356,7 +392,7 @@ fn failed_final_journal_append_rolls_back_status_proof_and_capture_events() {
     assert_eq!(task.status, "in_progress");
     assert_eq!(task.revision, 7);
     assert!(task.artifacts.is_none());
-    assert_eq!(event_count(&fixture), before);
+    assert_eq!(transactional_events(&fixture), before);
 }
 
 #[test]
@@ -370,11 +406,11 @@ fn changed_task_cas_rejects_prepared_history_without_any_proof_write() {
         )?;
         Ok(())
     });
-    let before = event_count(&fixture);
+    let before = transactional_events(&fixture);
     let result = todo::complete_prepared_task_for_test(&fixture.store, ID, &prepared).unwrap();
     assert_eq!(result["status"], "conflict");
     assert!(target(&fixture).artifacts.is_none());
-    assert_eq!(event_count(&fixture), before);
+    assert_eq!(transactional_events(&fixture), before);
 }
 
 #[test]
@@ -389,7 +425,7 @@ fn completed_task_repair_rechecks_same_revision_baseline_before_writing() {
         )?;
         Ok(())
     });
-    let before = event_count(&fixture);
+    let before = transactional_events(&fixture);
     let error = complete_historical_done_task(&fixture.store, &prepared).unwrap_err();
     assert!(error.to_string().contains("STALE_TASK_VERIFICATION"));
     assert_eq!(target(&fixture).artifacts.as_deref(), Some("{}"));
@@ -397,7 +433,7 @@ fn completed_task_repair_rechecks_same_revision_baseline_before_writing() {
         target(&fixture).last_verified_status.as_deref(),
         Some("CLAIMED")
     );
-    assert_eq!(event_count(&fixture), before);
+    assert_eq!(transactional_events(&fixture), before);
 }
 
 #[test]
@@ -418,7 +454,7 @@ fn historical_completion_never_erases_additional_task_proof_obligations() {
     let fixture = fixture();
     let mut target = target(&fixture);
     target.proof_plan = Some("[\"validate_passes\",\"state_commit\"]".into());
-    let before = event_count(&fixture);
+    let before = transactional_events(&fixture);
     let error = prepare_historical_completion_from_evidence(
         &fixture.store,
         &fixture.repo,
@@ -428,7 +464,7 @@ fn historical_completion_never_erases_additional_task_proof_obligations() {
     )
     .unwrap_err();
     assert!(error.to_string().contains("TASK_PROOF_UNSUPPORTED"));
-    assert_eq!(event_count(&fixture), before);
+    assert_eq!(transactional_events(&fixture), before);
 }
 
 #[test]

@@ -535,6 +535,11 @@
       "id": "issue1610-8",
       "summary": "Implement issue #1610 with durable SHA-bound full validation history and atomic post-merge task completion. Reapply independently reviewed candidate 36b976c with its concrete Clippy and cloud-command fixture repairs in this fresh admitted v0.137.4 task. Preserve required proof contracts; no task authority or previous full validation success is transferred.",
       "input_digest": "sha256:1deb216ca1cfb93338c1d932740a097d219e0ed5a2ff9db4356d5c69ac240c30"
+    },
+    {
+      "id": "issue1610-10",
+      "summary": "Repair the concrete library failures observed in Buildkite 7629 for candidate 98b1e994: inspect physical common Git metadata instead of the isolated reader's /dev/null graft path, accept only the exact three inert CI configuration settings, and compare complete task/verification event rows without counting audit reads. Preserve all active-override, graft, alternates and replacement-object defenses. Add four focused Git regressions, including linked worktrees and whitespace metadata paths. Independent source review passed; no new execution success is claimed before the full configured suite validates this checkpoint.",
+      "input_digest": "sha256:7db7a708c042f5a313b99fcf4f64a98dfb854530c206b6bd146a7582307ed5e2"
     }
   ],
   "intents": {
@@ -579,21 +584,21 @@
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "Describe durable full-proof records, original task binding, atomic historical completion and separate current publication authority.",
-          "reviewed_code_fingerprint": "16d80cb8bdc5fd416646acfc425ce49124780650425ac157fba001f2ccfac8c6",
+          "reviewed_code_fingerprint": "9bdda056c363be2162066f47606374c3a58d1ea4e1d2bd76ed09e9e8f6aa061f",
           "spec_material_hash": "016135af30289e8b09270254bad9e78a180be5f43cbf3be8450c29009dea45e4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Specify commit lookup and historical todo completion, exact-record replay, conservative integration support and explicit unsupported transports.",
-          "reviewed_code_fingerprint": "16d80cb8bdc5fd416646acfc425ce49124780650425ac157fba001f2ccfac8c6",
+          "reviewed_code_fingerprint": "9bdda056c363be2162066f47606374c3a58d1ea4e1d2bd76ed09e9e8f6aa061f",
           "spec_material_hash": "c8d99624cba5965b01bd152ae3ce05edd407362ed99eec11a334e39398933247"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "Specify producer custody, task and lease continuity, bounded integration verification, and cooperative local trust limitations.",
-          "reviewed_code_fingerprint": "16d80cb8bdc5fd416646acfc425ce49124780650425ac157fba001f2ccfac8c6",
+          "reviewed_code_fingerprint": "9bdda056c363be2162066f47606374c3a58d1ea4e1d2bd76ed09e9e8f6aa061f",
           "spec_material_hash": "f3b3a9a0dcdfdfc0ce9c9f5fb251339e496d828291c10194d0aa549827f8dd73"
         }
       ],
@@ -605,14 +610,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794395750Z"
+      "updated_at": "1794397463Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Historical validation and task completion; publication gates retained"
       ],
-      "artifact_hash": "sha256:b095a17e883e9c3a099cffcf5eb602b5aca9fdf8855d5c4e06d90d75eb7a7b57",
+      "artifact_hash": "sha256:be970ea9ae75ba539641c7dfd2c17278851c99f7c41413586f1af1f8e07efcff",
       "checks": [
         {
           "name": "formatting",
@@ -648,10 +653,17 @@
             "intent_id": "intent:change_01M75539JH6TT0K5Z7D179X3XP",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M75539KFKHV6Z9GZHMNNK4H1",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M75539JH6TT0K5Z7D179X3XP",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M75539KFKHV6Z9GZHMNNK4H1": {
@@ -700,6 +712,28 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "command": "cargo fmt --all",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "tests/unit/plugins/verify_historical_tests.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "tests/unit/core/validation_history_integration_tests.rs",
+                  "Reviewed payload 76981beb3ea0ff68064ed1db709ac92d294ea9ad applied in this admitted workspace. Formatting and whitespace checks executed; full validation remains pending."
+                ],
+                "proof_refs": [
+                  "formatting",
+                  "git-diff-whitespace",
+                  "full-workbranch-validation"
+                ],
+                "scope": [
+                  "issue-1610",
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -710,7 +744,8 @@
       ],
       "destination": "pull request",
       "evidence": [
-        "Reviewed payload 12df14243550887754b0e0c93d21e4b4235d69bb applied in this admitted workspace. Formatting and whitespace checks executed; full validation remains pending."
+        "Reviewed payload 12df14243550887754b0e0c93d21e4b4235d69bb applied in this admitted workspace. Formatting and whitespace checks executed; full validation remains pending.",
+        "Reviewed payload 76981beb3ea0ff68064ed1db709ac92d294ea9ad applied in this admitted workspace. Formatting and whitespace checks executed; full validation remains pending."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M75539JH6TT0K5Z7D179X3XP",
