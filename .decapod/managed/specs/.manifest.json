@@ -17,7 +17,7 @@
   ],
   "capability_definition_version": "1.0.0",
   "config_input_hash": "97dc54973e3d7796e8ae0412c01ec1fb9673da530ae92d3d9688c97a6b754c21",
-  "spec_input_hash": "817e4d8bab3d9071823ba4eeb5411b762f9765e3fcfdb4987b5cdeb4fcf8aea9",
+  "spec_input_hash": "fd8695069ce352ca008ba9d03e279a77c1c894dcb0ebbf22e15787f0620b8ca4",
   "decapod_release": "0.136.4",
   "entrypoints": [
     {
@@ -61,13 +61,13 @@
     {
       "path": ".decapod/managed/specs/ARCHITECTURE.md",
       "template_hash": "2b28b729b2515295b98cdc7e1d69a6b2d9698151e9bf2c5f2b86191fbebc91df",
-      "content_hash": "66678369df5ec9a7959b09181d945628991c09286332c9dfc4533dff6a5de2e5",
+      "content_hash": "3aee6e853421113a7a79a02d2d12388571c936dca6d60c7037d2ed772bd43f61",
       "fingerprint": ""
     },
     {
       "path": ".decapod/managed/specs/INTERFACES.md",
       "template_hash": "6dd3c2a4490dc32996dbf9dc1510d8b11aa01ac518f0a0c553100aff7c19a19d",
-      "content_hash": "4d7b09f9a5bc5562f93f5b4ee631a91c622c5b95569a536ceb194dc2ab98f4c1",
+      "content_hash": "2778fd25e8b7ff55853894c64f3f35e3b660f36be03075a8f2b84bf4575dbd9f",
       "fingerprint": ""
     },
     {
