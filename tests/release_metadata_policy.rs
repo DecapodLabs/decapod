@@ -3,6 +3,7 @@
 #[path = "../assets/tools/source_ci_profile.rs"]
 mod source_ci_profile;
 use source_ci_profile::workflow_owned::release_classifier as release_metadata;
+use source_ci_profile::workflow_owned::release_classifier::implementation as change_context;
 
 use std::fs;
 use std::path::PathBuf;
@@ -166,14 +167,21 @@ fn material_spec_range_on_workbranch_push_is_accepted_fork_not_previous_commit()
     let previous = repo.commit("first feature change");
     fs::write(repo.0.join("src/lib.rs"), "pub fn second() {}\\n").unwrap();
     let head = repo.commit("second feature change");
-    let comparison_base = release_metadata::validation_change_base(
-        &repo.0, "push", &previous, &head, &accepted,
-    ).expect("validated prior feature tip must not be mistaken for accepted master");
+    let comparison_base =
+        change_context::validation_change_base(&repo.0, "push", &previous, &head, &accepted)
+            .expect("validated prior feature tip must not be mistaken for accepted master");
     assert_eq!(comparison_base, accepted);
     // PR B is the accepted target, never an untrusted feature-branch previous tip.
-    assert!(release_metadata::validation_change_base(
-        &repo.0, "pull_request", &previous, &head, &accepted,
-    ).is_err());
+    assert!(
+        change_context::validation_change_base(
+            &repo.0,
+            "pull_request",
+            &previous,
+            &head,
+            &accepted,
+        )
+        .is_err()
+    );
 }
 
 #[test]
@@ -189,12 +197,28 @@ fn material_spec_range_respects_advanced_master_and_rejects_unrelated_before() {
     repo.git(&["checkout", "-q", "feature"]);
     fs::write(repo.0.join("src/lib.rs"), "pub fn feature_next() {}\\n").unwrap();
     let head = repo.commit("next feature");
-    assert_eq!(release_metadata::validation_change_base(
-        &repo.0, "push", &previous, &head, &latest_accepted,
-    ).unwrap(), fork);
-    assert!(release_metadata::validation_change_base(
-        &repo.0, "push", &latest_accepted, &head, &latest_accepted,
-    ).is_err(), "a different ancestry must not be misrepresented as the prior feature tip");
+    assert_eq!(
+        change_context::validation_change_base(
+            &repo.0,
+            "push",
+            &previous,
+            &head,
+            &latest_accepted,
+        )
+        .unwrap(),
+        fork
+    );
+    assert!(
+        change_context::validation_change_base(
+            &repo.0,
+            "push",
+            &latest_accepted,
+            &head,
+            &latest_accepted,
+        )
+        .is_err(),
+        "a different ancestry must not be misrepresented as the prior feature tip"
+    );
 }
 
 #[test]
