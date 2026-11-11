@@ -960,7 +960,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `efd39e6ead63862cdedbea60343f5b43e23a5f8f6515c6e502b7e91d09ac6490`
+- Repository signal fingerprint: `6118ab93e9ac2637429133b6f0eb25c8f7ef1e40bb2ce1317ef9a78a9e7ef82d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1263,3 +1263,19 @@ deployment, hosted capacity, backup restoration, or this candidate's publication
 readiness. Unavailable checks remain unavailable. The review records both the earlier unadmitted publication and the current
 governed reconstruction. No missing validation receipt is claimed as passed,
 and this documentation cannot weaken the configured runtime proof profile.
+
+## Agent documentation index consistency
+
+The Documentation Index in `docs/agent/api-index.md` is the canonical agent
+document list, including the API index itself. The Markdown document links in
+`docs/agent/README.md` and the agent section of `docs/agent/llms.txt` must name the
+same files exactly once. The human book retains its separate section; a matching
+basename under another directory does not satisfy an agent document link.
+
+`tests/specs_refresh_docs.rs` compares both indexes with the canonical table and
+requires every indexed document to resolve through `assets::get_embedded_doc`.
+The Bazel test inputs include the inspected indexes, and the constitution
+compression inputs include `repository-readiness.md`, so sandboxed builds can
+embed that contract. This regression verifies documentation discovery and
+packaging. It does not replace exact-candidate governance, runtime or publication
+proof, and adding the regression does not establish that it has executed.

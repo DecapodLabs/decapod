@@ -98,8 +98,13 @@ Proceed only when the command exits successfully and returns `"status": "allow"`
 
 ## Documentation Index
 
+This table is the canonical agent document list. The Markdown document links in
+`docs/agent/README.md` and the agent section of `docs/agent/llms.txt` must match it.
+The human book remains a separate index in `llms.txt`.
+
 | Resource | Purpose |
 |---|---|
+| [API Index](api-index.md) | Primary agent entrypoint and canonical document list. |
 | [Command Contracts](command-contracts.md) | **Critical:** Mandatory preconditions and state transitions. |
 | [Payload Examples](payload-examples.md) | Correct JSON shapes for RPC and complex flags. |
 | [Error Recovery](error-recovery.md) | How to respond to Decapod exit codes and messages. |
@@ -107,5 +112,6 @@ Proceed only when the command exits successfully and returns `"status": "allow"`
 | [Config Schema](config-schema.md) | Policy keys that govern your behavior. |
 | [Contribution Conventions](contribution-conventions.md) | Project tooling standard, source layout, and per-PR governance artifact rules. |
 | [MCP Integration](mcp.md) | Using Decapod via Model Context Protocol. |
+| [Repository Readiness](repository-readiness.md) | Repository proof profiles and readiness contracts. |
 
 Do not attempt to bypass Decapod boundaries. If you encounter a block, resolve it through the governed policy path or ask the human operator.
