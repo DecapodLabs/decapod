@@ -130,6 +130,7 @@ def decapod_targets():
             "tests/fixtures/derived-release/.github_release.toml",
             "tests/fixtures/derived-release/dist-workspace.toml",
             "tests/fixtures/derived-release/dist.toml",
+            "tests/fixtures/release_pinned_preparation.yml",
         ]
         + native.glob(["src/decapod/core/snapshot_provider/source_execution/*.json"])
         # Public metadata regression fixtures and the authored policy they check.
