@@ -98,7 +98,17 @@ fn init_persists_remote_default_base_branch() {
 fn init_with_backend_cloud_saves_to_config() {
     let tmp = tempdir().expect("tempdir");
     let out = Command::new(resolve_decapod_bin())
-        .args(["init", "with", "--backend", "cloud", "--force"])
+        .args([
+            "init",
+            "with",
+            "--backend",
+            "cloud",
+            "--force",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(tmp.path())
         .output()
         .expect("run decapod");
@@ -115,6 +125,19 @@ fn init_with_backend_cloud_saves_to_config() {
         config.contains("backend = \"cloud\""),
         "explicit cloud backend must be recorded: {config}"
     );
+    assert!(config.contains("cloud_repository = \"DecapodLabs/decapod\""));
+    assert!(config.contains("cloud_github_users = [\"alice\"]"));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        stdout
+            .contains("/propodus-onboarding/billing?repository=DecapodLabs%2Fdecapod&users=alice")
+    );
+    assert!(
+        !stdout.contains("Cloud setup ready"),
+        "purchase link is not proof of access"
+    );
+    let intent = fs::read_to_string(tmp.path().join(".decapod/managed/specs/INTENT.md")).unwrap();
+    assert!(intent.contains("GitHub cloud repository: DecapodLabs/decapod"));
     assert!(!config.contains("[cloud]"));
     assert!(!config.contains("api_url"));
     assert!(!config.contains("project_id"));
@@ -146,6 +169,102 @@ fn init_with_backend_cloud_saves_to_config() {
                 write["table"] == "tasks" && write["operation"] == "Dactyl query list/add"
             }),
         "registration should model repo-scoped todo access"
+    );
+}
+
+#[test]
+fn cloud_init_requires_roster_and_rejects_remote_mismatch_before_config_writes() {
+    let project = tempdir().unwrap();
+    let missing = run_decapod(
+        project.path(),
+        &["init", "with", "--backend", "cloud", "--proof"],
+    );
+    assert!(!missing.status.success());
+    assert!(!project.path().join(".decapod/config.toml").exists());
+    run_git(
+        project.path(),
+        &["remote", "add", "origin", "git@github.com:example/real.git"],
+    );
+    let mismatch = run_decapod(
+        project.path(),
+        &[
+            "init",
+            "--backend",
+            "cloud",
+            "--proof",
+            "--cloud-repository",
+            "example/other",
+            "--github-users",
+            "alice",
+        ],
+    );
+    assert!(!mismatch.status.success());
+    assert!(String::from_utf8_lossy(&mismatch.stderr).contains("must match"));
+    assert!(!project.path().join(".decapod/config.toml").exists());
+}
+
+#[test]
+fn cloud_init_records_normalized_roster_and_preserves_it_on_refresh() {
+    let project = tempdir().unwrap();
+    let first = run_decapod(
+        project.path(),
+        &[
+            "init",
+            "with",
+            "--backend",
+            "cloud",
+            "--proof",
+            "--cloud-repository",
+            "example/repo",
+            "--github-users",
+            "Bob,alice",
+        ],
+    );
+    assert!(
+        first.status.success(),
+        "{}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+    let path = project.path().join(".decapod/config.toml");
+    let config: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    assert_eq!(
+        config["repo"]["cloud_github_users"].as_array().unwrap(),
+        &vec![
+            toml::Value::String("alice".into()),
+            toml::Value::String("bob".into())
+        ]
+    );
+    let refreshed = run_decapod(project.path(), &["init", "with", "--force", "--proof"]);
+    assert!(
+        refreshed.status.success(),
+        "{}",
+        String::from_utf8_lossy(&refreshed.stderr)
+    );
+    let after: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    assert_eq!(
+        after["repo"]["cloud_github_users"],
+        config["repo"]["cloud_github_users"]
+    );
+    assert_eq!(
+        after["repo"]["cloud_repository"],
+        config["repo"]["cloud_repository"]
+    );
+    let duplicate = run_decapod(
+        project.path(),
+        &[
+            "init",
+            "--backend",
+            "cloud",
+            "--proof",
+            "--github-users",
+            "Alice,alice",
+        ],
+    );
+    assert!(!duplicate.status.success());
+    let unchanged: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    assert_eq!(
+        unchanged["repo"]["cloud_github_users"],
+        after["repo"]["cloud_github_users"]
     );
 }
 
@@ -427,7 +546,17 @@ fn init_refresh_requires_an_existing_project() {
 fn init_cloud_opt_in_does_not_store_secret_environment_values() {
     let tmp = tempdir().expect("tempdir");
     let out = Command::new(resolve_decapod_bin())
-        .args(["init", "with", "--backend", "cloud", "--force"])
+        .args([
+            "init",
+            "with",
+            "--backend",
+            "cloud",
+            "--force",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(tmp.path())
         .env("SUPABASE_URL", "https://private.supabase.local")
         .env("SUPABASE_KEY", "super-secret-service-role")

@@ -42,6 +42,15 @@ Propodus rechecks expiration and revocation on each operation. An expired direct
 grant remains an explicit denial over inherited group, team, or organization
 access; changing an agent ID or local role mapping cannot restore that access.
 
+Cloud init additionally records non-secret purchase intent in
+`[repo].cloud_repository` and `[repo].cloud_github_users`. Both init surfaces
+accept `--cloud-repository` and `--github-users`; usernames are normalized
+and bounded to 100 distinct people. These fields are requested seats, never
+authorization. Only the hosted service can verify the GitHub repo admin and
+the USD15 monthly named seat for that specific repository. A non-admin receives
+an approval link to share with an admin. See `docs/cloud-repository-billing.md`.
+
+
 `[laya] mode = "disabled"` is the default. Set `mode = "required"`
 and install the reviewed profile to opt in to post-proof Laya judgment.
 Required accepted policy cannot be silently disabled.

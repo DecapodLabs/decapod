@@ -279,9 +279,15 @@ pub(crate) struct InitGroupCli {
     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// It does not perform login, provisioning, or sync during init.
+    /// Init provides a hosted GitHub-admin approval link for USD15 monthly named seats.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
+    /// Canonical GitHub owner/repository for cloud purchase approval.
+    #[clap(long)]
+    pub cloud_repository: Option<String>,
+    /// Requested named GitHub seats (repeatable or comma separated). No credentials.
+    #[clap(long = "github-users", value_delimiter = ',')]
+    pub github_users: Vec<String>,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -441,9 +447,15 @@ pub(crate) struct InitWithCli {
     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// It does not perform login, provisioning, or sync during init.
+    /// Init provides a hosted GitHub-admin approval link for USD15 monthly named seats.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
+    /// Canonical GitHub owner/repository for cloud purchase approval.
+    #[clap(long)]
+    pub cloud_repository: Option<String>,
+    /// Requested named GitHub seats (repeatable or comma separated). No credentials.
+    #[clap(long = "github-users", value_delimiter = ',')]
+    pub github_users: Vec<String>,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -769,6 +781,12 @@ pub struct RepoContext {
     /// Canonical repository backend selection.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backend: Option<BackendType>,
+    /// Requested purchase repository, independently verified by the cloud service.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cloud_repository: Option<String>,
+    /// Requested roster only. Paid seats and authorization remain server owned.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cloud_github_users: Vec<String>,
     #[serde(
         rename = "declared_capabilities",
         alias = "capabilities",

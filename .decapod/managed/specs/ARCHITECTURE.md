@@ -790,7 +790,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
+- Repository signal fingerprint: `51e1acb94bb697b149044225d3c4a8177ae1a78b0a407d1f440d9a768783b085`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -996,3 +996,20 @@ constraints; task-owner/dependency keys have matching composite UNIQUE
 indexes; preferences use `UNIQUE(category,key)`. Runtime initializers stop
 recreating redundant trees. Reverse-key indexes remain. No data or proof
 encodings change; cloud PostgreSQL migration ownership stays with Propodus.
+
+## Cloud repository purchase handoff
+
+Cloud init now collects the canonical GitHub repository plus requested usernames
+before `run_init_apply`, using explicit headless flags or interactive prompts.
+`RepoContext` persists `cloud_repository` and `cloud_github_users` without any
+credential. An existing GitHub origin must match purchase intent; a new project
+may name its intended remote before it is configured. The generation seed adds
+the repository to product context while preserving authored summary text.
+
+`core/cloud_backend.rs` validates and normalizes the requested roster and builds
+a fixed HTTPS hosted approval link. Interactive human init opens it unless
+headless; proof/dry-run/noninteractive init only prints it. The hosted Propodus
+page binds GitHub identity, checks admin permissions, shows USD15 monthly per
+person and sends approved admins to Stripe. Non-admins get a link to send their
+admin. This handoff is not a login or proof of cloud access; native datastore
+route/credential release integration remains a separate boundary.

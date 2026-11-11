@@ -35,7 +35,17 @@ fn test_cloud_opt_in_fails_closed_without_verified_remote() {
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -71,7 +81,17 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .env_remove("SUPABASE_URL")
         .env_remove("SUPABASE_KEY")
         .current_dir(&dir)
@@ -136,7 +156,17 @@ fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available()
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(tmp.path())
         .env("DECAPOD_CLOUD_AUTH_MODE", "mock")
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
@@ -171,7 +201,17 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
     let dir = tmp.path().to_path_buf();
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -222,7 +262,17 @@ fn canonical_backend_selection_uses_cloud_without_local_fallback() {
     let dir = tmp.path().to_path_buf();
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -298,7 +348,17 @@ fn cloud_session_acquire_keeps_local_custody_when_cloud_preflight_fails() {
     let config_home = TempDir::new().expect("config home");
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(tmp.path())
         .output()
         .expect("cloud init");
@@ -350,7 +410,17 @@ fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
     let config_home = TempDir::new().expect("config home");
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(tmp.path())
         .output()
         .expect("cloud init");

@@ -277,7 +277,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
+- Repository signal fingerprint: `51e1acb94bb697b149044225d3c4a8177ae1a78b0a407d1f440d9a768783b085`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -433,3 +433,14 @@ UNIQUE btrees' leftmost-key coverage. Do not delete rows, rewrite events, alter
 WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
 This is a bounded local SQLite optimization. Full semantic parity with
 Propodus Supabase remains a separately gated migration (Propodus #71).
+
+## Cloud repository billing
+
+When a human selects cloud, init must carry the repository into generation,
+collect the requested GitHub roster and route purchase approval through the
+hosted service. Cloud costs USD15 per named user per repository monthly, paid
+by a verified repository owner/admin. Non-admins receive an approval link to
+send to their admin. TOML is requested intent; Supabase alone verifies the paid
+repository seats for authenticated GitHub principals. Local backend behavior
+stays available without login or purchase. A purchase link never stands in for
+a verified login or usable native datastore client.

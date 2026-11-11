@@ -905,7 +905,7 @@ fn public_request<T: PropodusTransport>(
     }
 }
 
-fn try_open_browser(url: &str) {
+pub(crate) fn try_open_browser(url: &str) {
     if std::env::var_os("DECAPOD_HEADLESS").is_some() {
         return;
     }

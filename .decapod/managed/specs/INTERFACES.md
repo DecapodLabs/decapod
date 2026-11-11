@@ -1027,7 +1027,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
+- Repository signal fingerprint: `51e1acb94bb697b149044225d3c4a8177ae1a78b0a407d1f440d9a768783b085`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1304,3 +1304,22 @@ operation, task revision, event sequence, transaction semantics, or cloud
 schema change. An unexpected historical index or missing unique enforcement
 raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
 Freed SQLite pages are reusable but are not auto-vacuumed.
+
+## Cloud purchase intent
+
+Both init surfaces accept `--cloud-repository owner/repo` and
+`--github-users alice,bob`. Cloud init requires 1–100 distinct valid GitHub
+usernames, lowercases/sorts them, and rejects a purchase repository inconsistent
+with an existing GitHub origin before project-config writes. Init refresh keeps
+the saved requested roster unless explicitly replaced. Non-secret TOML fields
+are `[repo].cloud_repository` and `[repo].cloud_github_users`; neither is an
+authorization grant or a datastore route override. The generated specs context
+and mock init registration carry the repository name.
+
+The public purchase URL is a fixed Propodus HTTPS `billing` path with encoded
+repository/users intent. Interactive init opens the browser; other modes print
+the URL. The CLI reports purchase approval as pending and does not invoke the
+legacy login bootstrap or claim a paid seat/session. The hosted server detects
+admin rights from the authenticated GitHub account, derives price/quantity and
+waits for verified payment before repository-specific access. See
+`docs/cloud-repository-billing.md` for the coordinated deployment dependency.

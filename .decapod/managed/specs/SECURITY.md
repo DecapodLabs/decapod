@@ -533,7 +533,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3e796be7a4649dabf00062558b430819cbd5fbb189f976e21b82241d500e9785`
+- Repository signal fingerprint: `51e1acb94bb697b149044225d3c4a8177ae1a78b0a407d1f440d9a768783b085`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (23 files), `docs/` (1 files), `src/` (224 files), `tests/` (219 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -828,3 +828,17 @@ instructions and leave the record untouched. Native format, canonical path,
 ownership, single-link, byte-size and digest checks remain enforced. Model setup
 uses bounded credential-free public asset transport. Opaque user configuration
 extensions survive refresh but cannot enable evaluation or grant authority.
+
+## Local roster is not cloud authority
+
+Cloud init accepts only a bounded canonical repository and bounded distinct
+GitHub usernames. Its public approval URL uses a fixed HTTPS service destination
+and encoded allowlisted values; config cannot choose a payment host or embed
+credentials. Existing GitHub origin and requested purchase identity must match.
+Only non-secret request data is tracked. The local user cannot self-grant cloud
+access by adding a name, editing a role or visiting a successful return URL.
+Propodus must verify the managed numeric GitHub identity, live GitHub repository
+admin permission for purchase, paid named repository seat and existing directory
+grants. A non-admin can request approval, never trigger a subscription mutation.
+Browser launch remains limited to human interactive init and respects
+`DECAPOD_HEADLESS`; no init test should perform a real purchase.
