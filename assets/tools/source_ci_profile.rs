@@ -476,7 +476,9 @@ pub fn selected(check: &Check, paths: &[String], release_only: bool) -> bool {
     match check.selection {
         Selection::Always => true,
         Selection::Core => paths.iter().any(|p| p.contains("src/decapod/core/")),
-        Selection::Plugins => paths.iter().any(|p| p.contains("src/decapod/plugins/")),
+        Selection::Plugins => paths
+            .iter()
+            .any(|p| p.contains("src/decapod/plugins/") || p.starts_with("tests/plugins/")),
         Selection::Cli => paths.iter().any(|p| {
             ["src/decapod/cli", "src/decapod/lib", "src/main"]
                 .iter()
