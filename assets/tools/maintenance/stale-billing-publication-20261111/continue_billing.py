@@ -18,8 +18,8 @@ REPO = "DecapodLabs/decapod"
 BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
 SOURCE = "26a499d9f0789a5ed00605d23cfc57f5392ae8fc"
 OPS = "ops/stale-billing-publication-20261111"
-ACTOR = "chatgpt-stale-billing-next"
-RECEIVER = "chatgpt-stale-billing"
+ACTOR = "chatgpt-stale-billing"
+RECEIVER = "chatgpt-stale-billing-next"
 CONTROLLER = "dd30b7516c331ac0a6c3128f7a9c433833935bc9f380d311b188502037f857e0"
 MATERIAL_BASE = REMOTE_HEAD = "c7609e42bbbcff9c72af6be7a86333d4b0408922"
 CURRENT = "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b"
@@ -64,27 +64,31 @@ def main():
     manifest = json.loads(args.manifest.read_text())
     resume, repair = manifest["resume"], manifest["repair"]
     prior = resume["prior_result"]
+    prepared = resume["preparation_result"]
     task_id = "code_01m76aq15fea61e8"
     preserved_branch = "agent/chatgpt-stale-billing/" + task_id + "-cloud-approval"
-    native_digest = "sha256:14b825cfa91ac27bb20fe462a49f8e0f29c45e9212f38c789a0b633c98331a85"
+    native_digest = "sha256:eef72243d9122eaededaef0b86470d797c3b1c92d9743400328735a76cb8be69"
     approved_inventory = "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577"
     if (manifest.get("repository") != REPO or manifest.get("base_sha") != BASE
             or manifest.get("source_sha") != SOURCE or manifest.get("slug") != "billing"
             or resume.get("task_id") != task_id or resume.get("branch") != preserved_branch
-            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43123122460"
+            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43125176861"
             or resume.get("return_receiver") != RECEIVER or resume.get("remote_head_sha") != REMOTE_HEAD
-            or resume.get("prior_operations_sha") != "8f5a5a2d0a0bade9042866ea4e36a37d8a3b8858"
-            or resume.get("prior_report_sha256") != "sha256:412a64caf4324bca7fa03c812f7a58c565748dfd8c7829fb0c588becdc720873"
+            or resume.get("prior_operations_sha") != "d78062748657a26a6205b557c8ae8de815848060"
+            or resume.get("prior_report_sha256") != "sha256:c944c5214294fbf7684ef2eb4c10e68800048b61b429f9dd832d3cc284d55e60"
             or digest((json.dumps(prior, indent=2) + "\n").encode()) != resume.get("prior_report_sha256")
+            or resume.get("preparation_run_id") != "43123122460"
+            or resume.get("preparation_report_sha256") != "sha256:412a64caf4324bca7fa03c812f7a58c565748dfd8c7829fb0c588becdc720873"
+            or digest((json.dumps(prepared, indent=2) + "\n").encode()) != resume.get("preparation_report_sha256")
             or resume.get("candidate_sha") != CURRENT or resume.get("candidate_tree") != CURRENT_TREE
             or resume.get("native_transfer", {}).get("plaintext_sha256") != native_digest
-            or resume.get("native_transfer", {}).get("transfer_id") != "01M76GKZEF5THJVB26HEP9VA6F"
+            or resume.get("native_transfer", {}).get("transfer_id") != "01M76HH92KXCXKJ4V31HPSQV7P"
             or prior.get("task") != task_id or prior.get("branch") != preserved_branch
-            or prior.get("status") != "blocked" or prior.get("head_sha") != CURRENT
-            or prior.get("pushed") is not False or prior.get("checkpoints") is not True
+            or prior.get("status") != "blocked" or prior.get("head_sha") is not None
+            or prior.get("pushed") is not False or prior.get("checkpoints") is not False
             or prior.get("observed_remote_head_sha") != REMOTE_HEAD
-            or prior.get("checkpoint_verification", {}).get("history_proven") is not True
-            or prior.get("checkpoint_verification", {}).get("head_commit") != CURRENT
+            or prior.get("prior_checkpoint_verification", {}).get("history_proven") is not True
+            or prior.get("prior_checkpoint_verification", {}).get("head_commit") != CURRENT
             or prior.get("custody_exported") is not True or prior.get("full_boundary_passed") is not False
             or prior.get("final_head_sha") != CURRENT or prior.get("source_dirty_after_attempt") is not True
             or set(resume.get("private_files", {})) != {"native-transfer.json", "pending-tracked.patch", "candidate.bundle"}
@@ -136,7 +140,7 @@ def main():
     controller = None
     spec_files = set()
     reviewed_inventory_digest = None
-    preparation = prior["project_prerequisites"]
+    preparation = prepared["project_prerequisites"]
     project_report = preparation.get("native_json", {})
     validation_epoch = project_report.get("report", {}).get("validation_epoch", {})
     if (preparation.get("head_sha") != CURRENT or preparation.get("exit_code") != 0 or preparation.get("timeout") is not False
@@ -406,7 +410,7 @@ def main():
         native = json.loads(native_file.read_bytes())
         if (native["receiver"] != ACTOR or native["transfer_id"] != resume["native_transfer"]["transfer_id"]
                 or native["projection"]["task"]["id"] != task_id or native["source_commit"] != BASE
-                or native["source_branch"] != "billing-publication-control-ae8c343cdb01"):
+                or native["source_branch"] != "billing-publication-control-ec950971060a"):
             raise Blocked("private native transfer does not match authenticated original task")
         observed_paths = {entry.split("\t", 2)[2] for entry in run("inspect approved repair patch paths", "git", "apply", "--numstat", "-z", data=patch).split("\0") if entry}
         release_paths = {entry.split("\t", 2)[2] for entry in run("inspect observed release drift paths", "git", "apply", "--numstat", "-z", data=release_patch).split("\0") if entry}
@@ -517,11 +521,32 @@ def main():
         if (len(approved_map) != 105 or recomputed != approved_inventory
                 or set(approved_map) & REPAIR_SCOPE or baseline["discovered_sources"] != approved_map):
             raise Blocked("continued candidate is not exactly the reviewed accepted-baseline inventory")
+        accepted_modes = {}
+        for record in run("inspect accepted inventory Git modes", "git", "ls-tree", "-r", "-z", BASE, "--", *sorted(approved_map), cwd=work).split("\0"):
+            if record:
+                header, path = record.split("\t", 1)
+                mode, kind, oid = header.split()
+                if kind != "blob" or mode not in {"100644", "120000"}:
+                    raise Blocked("accepted inventory contains an unsupported Git object mode")
+                accepted_modes[path] = (mode, oid)
+        if set(accepted_modes) != set(approved_map):
+            raise Blocked("accepted inventory Git mode catalog differs")
         for path, expected_digest in approved_map.items():
             source = subprocess.run(["git", "show", BASE + ":" + path], cwd=work, env=env, capture_output=True, timeout=120)
             actual_source = work / path
-            if (source.returncode or digest(source.stdout) != expected_digest or actual_source.is_symlink()
-                    or not actual_source.is_file() or digest(actual_source.read_bytes()) != expected_digest):
+            mode, oid = accepted_modes[path]
+            if mode == "120000":
+                if (path != "rust-toolchain.toml" or oid != "7f77ea3839511a3c538d1c8000b480157a8cd73b"
+                        or not actual_source.is_symlink()):
+                    raise Blocked("accepted inventory symlink identity or filesystem mode differs")
+                actual_bytes = os.fsencode(os.readlink(actual_source))
+                if actual_bytes != b".config/build/rust-toolchain.toml":
+                    raise Blocked("accepted inventory symlink target differs")
+            else:
+                if actual_source.is_symlink() or not actual_source.is_file() or actual_source.stat().st_mode & 0o111:
+                    raise Blocked("accepted inventory regular-file mode differs")
+                actual_bytes = actual_source.read_bytes()
+            if source.returncode or digest(source.stdout) != expected_digest or digest(actual_bytes) != expected_digest:
                 raise Blocked("accepted-base source digest differs: " + path)
         result["inventory_review"] = dict(inventory_digest=approved_inventory, independently_hashed_sources=105,
             candidate_inventory_equal_to_accepted_base=True, new_policy_changes=False, carrier_approval=False, execution_proof=False)
@@ -541,7 +566,7 @@ def main():
         preserved_validation = restored_governance["sections"]["validation"]
         preserved_epoch = restored_governance["epochs"][validation_epoch["epoch_id"]]
         result["project_prerequisites"] = dict(preparation,
-            preserved_from_run=resume["prior_run_id"], native_reexecution=False,
+            preserved_from_run=resume["preparation_run_id"], native_reexecution=False,
             preparation_only=True, publication_ready=False)
         result["preparation_snapshot"] = dict(
             head_sha=CURRENT, pending_patch_sha256=pending_meta["sha256"],
@@ -552,7 +577,7 @@ def main():
         run("stage authentic native preparation snapshot", "git", "add", "--", *sorted(receipt_paths), cwd=work)
         checkpoint_id = "billing-preserved-preparation-" + env["GITHUB_RUN_ID"] + "-" + env["GITHUB_RUN_ATTEMPT"]
         doc("checkpoint authentic native preparation receipt", "govern", "artifacts", "checkpoint", "--id", checkpoint_id,
-            "--summary", "Preserve the authentic successful 206-pass/0-fail project-prerequisites receipt and native manifest timestamp from run " + resume["prior_run_id"] + " at " + CURRENT + "; preparation evidence only. The original transferred task continues unchanged, and the full publisher must prove the new exact candidate.",
+            "--summary", "Preserve the authentic successful 206-pass/0-fail project-prerequisites receipt and native manifest timestamp from run " + resume["preparation_run_id"] + " at " + CURRENT + "; preparation evidence only. The original transferred task continues unchanged, and the full publisher must prove the new exact candidate.",
             "--proof-ref", SPEC_PREFIX + "VALIDATION.md", cwd=work)
         run("stage native receipt checkpoint", "git", "add", "--", ".decapod/governance.json", cwd=work)
         if set(run("verify native receipt checkpoint scope", "git", "diff", "HEAD", "--name-only", "-z", cwd=work).split("\0")) - {""} != receipt_paths:

@@ -46,7 +46,7 @@ def main():
     manifest_bytes = args.manifest.read_bytes()
     manifest = json.loads(manifest_bytes)
     resume = manifest["resume"]
-    require(resume["task_id"] == TASK and resume["receiver"] == "chatgpt-stale-billing-next", "Wrong native task receiver")
+    require(resume["task_id"] == TASK and resume["receiver"] == "chatgpt-stale-billing", "Wrong native task receiver")
     root = args.directory.resolve()
     public = root / "public"
     if args.action == "prepare":
