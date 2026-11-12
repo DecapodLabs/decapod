@@ -2,6 +2,16 @@
 
 ## Cloud initialization, continuation, and readiness (#1628)
 
+The human's sole setup command is init; subsequent use belongs to the agent.
+`decapod cloud login` starts/resumes managed sign-in and checks current access;
+`--restart` explicitly replaces an expired, revoked or uncertain flow. The
+existing init restart flag remains compatible. `CloudAuthDiagnostic` and cloud
+TODO operation diagnostics add optional `authorization_url` (omitted when
+absent) without changing their v1 schema identifiers. Agents share the link,
+poll for up to five minutes and continue without waiting for a second chat
+message. A pending `todo add` retains its exact original operation identifier
+and arguments across login; authentication never certifies task creation.
+
 `decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud
 TODO operations share `core::cloud_client::connect`. Missing custody starts a
 bounded sign-in and returns non-success `onboarding_pending` with a validated
@@ -21,9 +31,15 @@ retry, mutation replay, or local fallback.
 `decapod cloud status` reports only private local phase, credential presence,
 and expiry; its `server_readiness` remains `not_checked`. `--proof` on cloud
 initialization prepares configuration only and does not synthesize sign-in or
-claim readiness. The legacy `cloud login` alias uses the same managed flow.
+claim readiness. The agent-owned `cloud login` command uses the same managed flow.
 No new project provider, deployment, credential, price, or roster field exists.
 The fixture-only origin requires explicit test mode and literal loopback HTTP.
+
+The connector currently accepts a canonical repository routing assertion, not
+an existing paid project ID. Selecting an account-directory project and binding
+this checkout to that server ID needs a supported upstream attachment contract;
+this client does not invent one or claim that SCM ownership or paid-project
+attachment has been verified. Browser directory registration remains distinct.
 
 The client consumes the published `dactyl-db 0.12.0` registry API. Pending
 secrets round-trip through its public Serde contract; authentication status and
@@ -1100,7 +1116,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
+- Repository signal fingerprint: `0d44292a5cb001066152bb9d46466827dc0320f7369533c1aea7dbfed4f81495`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

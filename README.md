@@ -36,6 +36,11 @@ cargo binstall decapod && decapod init
 
 Open your preferred coding agent and describe the change you want. Decapod supplies the project guidance and workflow the agent uses to plan, implement, and validate it.
 
+You run `decapod init` once per repository. Your agent handles Decapod after
+that. For cloud projects, it shares the browser sign-in link when needed,
+resumes the connection, and renews the privately stored session across later
+invocations. You keep chatting with your agent as usual.
+
 ## What Decapod governs
 
 | Concern | What stays with the project |

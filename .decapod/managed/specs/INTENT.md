@@ -2,6 +2,13 @@
 
 ## Governed cloud client and private custody (#1628)
 
+The human runs `decapod init` once per repository and then talks to the coding
+agent normally. The agent owns every subsequent Decapod invocation, including
+sharing a browser sign-in link, bounded continuation, private session reuse,
+refresh and explicit safe recovery. The user completes provider/account actions
+without operating the CLI again. Pending sign-in is an honest incomplete
+connection, not a reason to lose the user's task or create a duplicate task.
+
 Decapod's local-first governance kernel remains the system interface for agent
 work. Optional cloud selection changes the operational task backend without
 moving authorization policy into the agent or turning credentials into Git
@@ -307,7 +314,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
+- Repository signal fingerprint: `0d44292a5cb001066152bb9d46466827dc0320f7369533c1aea7dbfed4f81495`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

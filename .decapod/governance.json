@@ -522,6 +522,16 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "agent-owned-init-once": {
+      "statement": "After one human init, agent-owned login resumes saved sign-in, exposes only the validated browser handoff, preserves task-add operation identity, and provides explicit safe restart without weakening readiness or private custody.",
+      "falsifier": "The human is instructed to repeat CLI setup, a pending add loses its browser URL or operation ID, a fresh retry duplicates task identity, uncertain one-time requests are replayed, secrets enter diagnostics, or browser completion alone reports repository readiness.",
+      "status": "open",
+      "proof_refs": [
+        "docs/agent/error-recovery.md",
+        "src/decapod/core/cloud_client.rs",
+        "tests/common/cloud_managed_scenarios.rs"
+      ]
+    },
     "claim:decapod-cloud-client": {
       "statement": "Implement issue1628 client slice: logical project backend, all managed discovery/auth/account/data transport through Dactyl, repository/project/origin-bound private custody with serialized refresh and crash recovery, honest server-confirmed readiness, explicit account denial/action requirements, headless continuation and no cloud-to-SQLite fallback. Preserve local independence and existing governed publication/release dependency gates.",
       "falsifier": "Any project provider/token/price/roster requirement; direct legacy auth transport on managed init/session/TODO; cross-binding credential reuse; replay of uncertain one-time exchange/rotation; account privilege inferred locally; false ready message; leaked private credential; SQLite fallback; missing required checks or fixture results claimed as hosted evidence.",
@@ -627,6 +637,16 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "agent-owned-connection-handoff",
+      "summary": "Complete the init-once agent handoff on PR 1635 history, preserving private custody and server readiness",
+      "input_digest": "sha256:2e598a83ca9a10e45eb8fbb1292c549fd4051ae22898286787d8d4453382fcae",
+      "proof_refs": [
+        "docs/agent/error-recovery.md",
+        "src/decapod/core/cloud_client.rs",
+        "tests/common/cloud_managed_scenarios.rs"
+      ]
     }
   ],
   "intents": {
@@ -652,12 +672,12 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 51,
+        "file_touch_budget": 54,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement issue1628 client slice: logical project backend, all managed discovery/auth/account/data transport through Dactyl, repository/project/origin-bound private custody with serialized refresh and crash recovery, honest server-confirmed readiness, explicit account denial/action requirements, headless continuation and no cloud-to-SQLite fallback. Preserve local independence and existing governed publication/release dependency gates.",
+      "intent": "Preserve the existing PR 1635 Dactyl discovery/auth/account/data and private repository/project/origin custody implementation. Extend it so the human runs init once and then chats with their agent: expose the validated browser URL as structured handoff data, tell the agent to poll the saved connection without waiting for another user message, retain task operation identity through sign-in, and assign safe explicit restart to the agent. Preserve server-confirmed readiness, denied/account-action outcomes, unknown one-time outcomes, local independence and all proof requirements.",
       "phases": [],
       "proof_hooks": [
         "decapod workspace publish"
@@ -667,46 +687,47 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed successful managed CLI diagnostics on2f01156c and the clippy duplicate_mod failure. Shared scenarios now import a single crate-root private seed fixture in both mandatory boundary and standalone entries. All product assertions and production code are retained; no lint waiver or proof graph change.",
-          "reviewed_code_fingerprint": "b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c",
-          "spec_material_hash": "855b9020ffb388bfa7fd95f9168b54e06432c2921ad8caaea4ab640893304087"
+          "reason": "Reviewed adopted PR 1635 connector and custody architecture plus the current bounded agent handoff. Polling uses the existing managed flow; explicit cloud login restart retains the old one-time no-replay boundary. No daemon, new transport, local fallback or readiness shortcut was added.",
+          "reviewed_code_fingerprint": "0d44292a5cb001066152bb9d46466827dc0320f7369533c1aea7dbfed4f81495",
+          "spec_material_hash": "7d64fcff5272dde8ba4a1dbc3685417a98c4387d0aa98e0c067b1979d4837662"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed successful managed CLI diagnostics on2f01156c and the clippy duplicate_mod failure. Shared scenarios now import a single crate-root private seed fixture in both mandatory boundary and standalone entries. All product assertions and production code are retained; no lint waiver or proof graph change.",
-          "reviewed_code_fingerprint": "b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c",
-          "spec_material_hash": "65edb4f53b3f4c074e198bfeab6502152d7c23335dda29c62fcb21a915a7f817"
+          "reason": "Reviewed current CLI Login restart argument, optional authorization_url on both v1 diagnostics, stable operation-id propagation and one-init human handoff. Existing init restart remains compatible. Repository-only connector routing does not establish binding to a server directory project ID.",
+          "reviewed_code_fingerprint": "0d44292a5cb001066152bb9d46466827dc0320f7369533c1aea7dbfed4f81495",
+          "spec_material_hash": "1dc7b24d3ab01e25ffabc2493b4f15f30956daf1bbda2b93fd43c9bf5d0702ee"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed successful managed CLI diagnostics on2f01156c and the clippy duplicate_mod failure. Shared scenarios now import a single crate-root private seed fixture in both mandatory boundary and standalone entries. All product assertions and production code are retained; no lint waiver or proof graph change.",
-          "reviewed_code_fingerprint": "b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c",
-          "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
+          "reason": "Reviewed current source and synthetic scenarios for validated browser URL disclosure only, private session custody, token/code/PKCE redaction, original task operation identity, explicit uncertain-flow restart and independent server readiness. All existing authorization and no-replay boundaries remain required.",
+          "reviewed_code_fingerprint": "0d44292a5cb001066152bb9d46466827dc0320f7369533c1aea7dbfed4f81495",
+          "spec_material_hash": "e8b19b6c03b532e2461c57bed8708055bab51423ba82eb46c08c9823100f3725"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "fix: govern cloud sign-in and session custody through Dactyl",
+      "title": "Make cloud connection persistent and agent-owned after one init",
       "todo_ids": [
-        "code_01m76c1kqhjgr3yr"
+        "secu_01m773qqa1yk1h0y"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794461704Z"
+      "updated_at": "1794472951Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Consume a real published registry version without overrides or audit exemptions; private binding and authorized repository read remain mandatory",
         "Current claimed task and isolated work branch",
+        "Own claimed task and independently provisioned workspace; original PR head and audit history preserved, no edits to its active owner workspace",
         "Preserve original client checkpoints and accepted target history; backend-only project configuration, Dactyl-owned transport and server-owned prices/rosters remain explicit user requirements",
         "Preserve original refs and all six valid checkpoints; use same-task supported recovery, no force-push or history waiver",
         "Preserve two original checkpoints and accepted target; regenerate only supported projections and retain Buildkite plus registry gates",
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:4ae6e546fde5f1017f9335367393d6846f4e331d1881a2628b30c2909cbfb96b",
+      "artifact_hash": "sha256:319adbdf1f422d889c93ede38e4f7a4dc713b1cdcc843db0c7e17d728029cca1",
       "checks": [
         {
           "name": "accepted-consumer",
@@ -741,6 +762,10 @@
           "status": "passed"
         },
         {
+          "name": "current-candidate-proof",
+          "status": "unavailable"
+        },
+        {
           "name": "current-full-Buildkite",
           "status": "unavailable"
         },
@@ -753,12 +778,28 @@
           "status": "passed"
         },
         {
+          "name": "current-tests",
+          "status": "unavailable"
+        },
+        {
+          "name": "diff-integrity",
+          "status": "passed"
+        },
+        {
+          "name": "docs-generation",
+          "status": "passed"
+        },
+        {
           "name": "duplicate-helper-clippy",
           "status": "failed"
         },
         {
           "name": "entrypoint-first-validation",
           "status": "failed"
+        },
+        {
+          "name": "formatting",
+          "status": "passed"
         },
         {
           "name": "full-workbranch-proof-result",
@@ -817,7 +858,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -929,10 +970,24 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:19",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 19
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 19,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -1182,6 +1237,47 @@
                 ],
                 "sequence": 17,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "User authorized publishing or fixing an open PR. PR 1635 already contains validated foundation ee44e5f8773697b5341107c0d3153de4ebe28bfb; adopted that exact history by fast-forward in a separately provisioned own task workspace. Original persistent-cloud-auth branch 6b0e8add remains intact, not a completion proof. This continuation narrows changes to agent-owned handoff, operation identity and documentation; original hosted acceptance limits remain."
+                ],
+                "proof_refs": [
+                  "current-candidate-proof"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 18,
+                "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:19",
+                "observations": [
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/error.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "tests/common/cloud_managed_scenarios.rs",
+                  "Focused continuation: agent-owned cloud login and explicit restart, optional validated browser URL propagated through task-add preflight, bounded polling guidance without a second human message, and init handoff prose. Existing mandatory managed scenario target gains one pending-add test and exercises login/restart with the original no-replay and server-readiness assertions. No manual build or tests; plain validation owns execution. External Propodus project-directory registration handoff identifies a repository-versus-server-project-ID attachment gap, explicitly documented rather than invented."
+                ],
+                "proof_refs": [
+                  "formatting",
+                  "diff-integrity",
+                  "docs-generation",
+                  "current-tests"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 19,
+                "validation_findings": []
               }
             ]
           }
@@ -1208,14 +1304,23 @@
         "Diagnostic GitHub job130935222490 on exact0bff2528 rejected MODULE.bazel.lock because the normalized Cargo.lock extension input changed, instructing bazel mod deps --lockfile_mode=update. Ran this metadata-only recovery with pinned9.3.0 in batch mode. Source inventory changes only MODULE.bazel.lock; default lockfile_mode=error and complete required Buildkite graph remain unchanged. GitHub clippy/dependency-lint results do not substitute for actual Buildkite proof. Current candidate requires fresh validation and all managed fixture checks.",
         "Exact source c5de35a89b27e788169612ae71681e45c13bf71a; original sealed task imported and readmitted. Full native validation has not run; unavailable describes the absent proof result, not an observed provider failure. The accepted source-CI contract and release dependency policy remain intact; no unpublished source overlay is substituted.",
         "Expanded the existing pending account CLI scenario to assert each published entitlement, unassigned-seat and quote-confirmation reason independently. It requires action_required, retained session, no read and no repeated exchanges; executable coverage is pending configured CI.",
+        "Focused continuation: agent-owned cloud login and explicit restart, optional validated browser URL propagated through task-add preflight, bounded polling guidance without a second human message, and init handoff prose. Existing mandatory managed scenario target gains one pending-add test and exercises login/restart with the original no-replay and server-readiness assertions. No manual build or tests; plain validation owns execution. External Propodus project-directory registration handoff identifies a repository-versus-server-project-ID attachment gap, explicitly documented rather than invented.",
         "Inspected complete required consumer invocation: new managed-session file was absent from its explicit targets. Added cloud_managed_session while preserving every existing target and library suite. Verified all105 source inventory hashes: only assets/tools/source_ci_profile.rs differs from last reviewed build inventory, none removed. Updated the user-editable reviewed digest to c53140addf3e7ed22a94d556f806db545cb3cec5925ab29339e3ab4bd953b57b. Native discovery now proof_pending, no policy reconciliation blocker. Moved Bazel metadata explanation back to authored VALIDATION to retain original51-file scope, not a broader generic guide change.",
         "Published Dactyl 0.12.0 cloud.rs maps dropped response transport to Unavailable. Completion now preserves the saved credential and checking_readiness state for Unavailable, Transport and Timeout; existing lost completion CLI fixture is mandatory execution coverage. This source review is not executed product proof.",
         "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task. Correction run 43124963685 passed the exact formatted source checks and then stopped after native specs.refresh and trajectory recording because the authored VALIDATION hash included one duplicate blank line. Supported capability-overlay refresh collapses three consecutive newlines to two; approved prose is unchanged, and generated fingerprint changes stay inside existing marker blocks. The revised insertion removes only its final newline and pins the observed authored hash sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849. The failed attempt made no checkpoint, commit or push. Its uncommitted native journal is preserved by encrypted diagnostics archive sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967 and reconstructed journal digest sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8. Archived trajectory branch_01M76ECD20HF9M6Q15W5AKE2WQ event event:5, sequence 5, has step digest sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d (UTF-8 sorted-key compact JSON); native trajectory artifact hash sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083. This archived step is historical evidence, not restored current authority. The latest sealed task continues on the same committed journal through native CLI recording; no raw projection bytes are restored. Exact source, authored-spec, checkpoint and publication boundaries remain enforced.",
+        "User authorized publishing or fixing an open PR. PR 1635 already contains validated foundation ee44e5f8773697b5341107c0d3153de4ebe28bfb; adopted that exact history by fast-forward in a separately provisioned own task workspace. Original persistent-cloud-auth branch 6b0e8add remains intact, not a completion proof. This continuation narrows changes to agent-owned handoff, operation identity and documentation; original hosted acceptance limits remain.",
         "Verified operator handoff and imported original sealed task 01M76J985NNC1F519D2CE4V9Y7. Candidate d85650bafa610dc952fbc91acd91ba5e28b329b7 remains unmodified. Accepted master advanced to d3358e1c after billing PR1631 and release1632; merge reconciliation will remove the new mandatory project roster/pricing client behavior in accordance with issue1628 and the current explicit user boundary, while retaining unrelated accepted changes. Dactyl run43131221323 artifacts verified by ciphertext/plaintext and per-file hashes: both native groups and all14 checks passed on86ed55d; publication/readback failed. Registry still only0.11.1, so client compilation/product execution remain blocked."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
+        "tests/common/cloud_managed_scenarios.rs"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
@@ -1226,7 +1331,7 @@
       "run_id": "branch_01M76ECD20HF9M6Q15W5AKE2WQ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m76c1kqhjgr3yr",
+      "task_id": "secu_01m773qqa1yk1h0y",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

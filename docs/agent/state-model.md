@@ -13,6 +13,19 @@ establishes meaning; an isolated workspace supplies the filesystem for execution
 todos supply coordination and durable custody. None replaces the others. Missing
 workspace-local coordination state is not evidence that the request was lost.
 
+## Cloud connection custody
+
+Managed cloud sessions and pending browser flows live outside the repository
+under `$XDG_DATA_HOME/decapod/cloud-sessions`, defaulting to
+`~/.local/share/decapod/cloud-sessions`. The scope binds the service origin,
+repository and canonical main checkout; linked worktrees share custody.
+Separate clones have independent records. A bounded lock serializes refresh
+and atomic writes preserve session progress between agent invocations.
+Browser completion alone does not establish access: the service must confirm
+the account handoff and an authorized repository read. Private local phase
+inspection does not establish live readiness. These cloud credentials are
+distinct from the cooperative local agent session and workspace lease.
+
 ## 1. Tasks (Todos)
 The primary coordination unit of work, not the sole authority for request meaning.
 - **States:** `open` -> `claimed` -> `done` | `archived`.

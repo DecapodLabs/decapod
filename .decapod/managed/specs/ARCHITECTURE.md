@@ -2,6 +2,14 @@
 
 ## Managed cloud connector and crash-safe custody (#1628)
 
+The agent-facing handoff carries a validated `authorization_url` separately from
+recovery text. `core::cloud_client::pending` directs the caller to poll
+`decapod cloud login` at two-second intervals for at most five minutes and then
+resume its original task. Individual invocations stay bounded and daemonless.
+`cloud login --restart` is the explicit agent recovery entrypoint for uncertain
+one-time state; it never repeats the interrupted exchange. `core::todo` retains
+the original add operation ID and browser URL when connection preflight fails.
+
 `core::cloud_client::connect` composes the public Dactyl `CloudConnector` with
 the private `core::cloud_session::SessionStore`. Dactyl resolves discovery and
 the physical route; the active init/session/TODO path does not use the legacy
@@ -852,7 +860,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
+- Repository signal fingerprint: `0d44292a5cb001066152bb9d46466827dc0320f7369533c1aea7dbfed4f81495`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

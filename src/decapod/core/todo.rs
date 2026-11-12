@@ -7465,11 +7465,16 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
             if let (Some(operation), Some(journal)) = (&operation, journal) {
                 let kind = cloud_todo_operation::failure_kind(&error);
                 let _ = journal.finish(operation, Outcome::BlockedBeforeSubmit, Some(kind));
-                return Err(error::DecapodError::CloudTodo(CloudTodoDiagnostic::new(
-                    operation,
-                    Outcome::BlockedBeforeSubmit,
-                    kind,
-                )));
+                let mut diagnostic =
+                    CloudTodoDiagnostic::new(operation, Outcome::BlockedBeforeSubmit, kind);
+                if let error::DecapodError::CloudAuth(auth) = &error {
+                    diagnostic.authorization_url = auth.authorization_url.clone();
+                    diagnostic.next_action = format!(
+                        "{} Resume the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add.",
+                        auth.next_action, operation.operation_id
+                    );
+                }
+                return Err(error::DecapodError::CloudTodo(diagnostic));
             }
             return Err(error);
         }

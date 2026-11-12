@@ -1,5 +1,19 @@
 # Validation
 
+## Init-once agent continuation
+
+This continuation adopts PR #1635's exact `ee44e5f8773697b5341107c0d3153de4ebe28bfb`
+history in an independently admitted workspace. Earlier proof belongs to that
+candidate; it does not establish readiness for the new changes. Required
+managed scenarios now resume the first init through agent-owned `cloud login`,
+then use the saved session for ordinary task access. A new pending-add scenario
+checks the structured browser URL, preserved operation identity, reuse of the
+same flow and absence of data dispatch. Existing lost-response scenarios now
+exercise `cloud login --restart` while retaining the one-time no-replay checks.
+All changes still require plain full `decapod validate` on their exact commit.
+Hosted provider login, entitlement/payment execution and attachment to an
+existing directory project ID remain unexecuted or unsupported contract limits.
+
 ## Recovery and accepted-target reconciliation (#1628)
 
 The client continues from both original checkpoints, including
@@ -1196,7 +1210,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
+- Repository signal fingerprint: `0d44292a5cb001066152bb9d46466827dc0320f7369533c1aea7dbfed4f81495`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

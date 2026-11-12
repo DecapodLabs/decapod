@@ -398,11 +398,14 @@ fn challenge(secret: &str) -> String {
 }
 
 #[test]
-fn fresh_headless_init_resumes_the_same_private_flow_and_checks_repository_read_access() {
+fn init_once_then_agent_login_resumes_the_private_flow_and_checks_repository_read_access() {
     let fixture = Fixture::new("DecapodLabs/ManagedFixture");
     let first = fixture.init();
     failed(&first, "onboarding_pending");
     assert!(output(&first).contains("/begin?flow_id="));
+    assert!(output(&first).contains("\"authorization_url\""));
+    assert!(output(&first).contains("without waiting for another user message"));
+    assert!(output(&first).contains("your agent handles Decapod from here"));
     let config: toml::Value = toml::from_str(
         &std::fs::read_to_string(fixture.project.path().join(".decapod/config.toml")).unwrap(),
     )
@@ -425,7 +428,7 @@ fn fresh_headless_init_resumes_the_same_private_flow_and_checks_repository_read_
     assert_eq!(fixture.count(STATUS), 0);
     assert_eq!(fixture.status()["phase"], "waiting");
 
-    let second = fixture.init();
+    let second = fixture.run(&["cloud", "login"]);
     assert!(second.status.success(), "{}", output(&second));
     assert!(output(&second).contains("Cloud setup ready for DecapodLabs/ManagedFixture"));
     assert_eq!(fixture.status()["phase"], "ready");
@@ -476,6 +479,51 @@ fn fresh_headless_init_resumes_the_same_private_flow_and_checks_repository_read_
         assert_repository_excludes(fixture.project.path(), secret);
     }
     drop(requests);
+    let listed = fixture.run(&["todo", "list", "--format", "json"]);
+    assert!(listed.status.success(), "{}", output(&listed));
+    assert_eq!(
+        fixture.count(START),
+        1,
+        "normal agent use must reuse sign-in"
+    );
+    assert_eq!(fixture.count(QUERY), 2);
+    fixture.assert_no_fallback();
+}
+
+#[test]
+fn pending_task_creation_keeps_the_browser_link_and_original_operation_id() {
+    let fixture = Fixture::new("example/managed-proof");
+    fixture.proof();
+    fixture.service.lock().unwrap().authentication_status = "pending";
+    let first = fixture.run(&["todo", "add", "Preserve this task", "--format", "json"]);
+    failed(&first, "onboarding_pending");
+    let first: Value = serde_json::from_slice(&first.stdout).unwrap();
+    let url = first["authorization_url"].as_str().unwrap();
+    assert!(url.starts_with(&fixture.origin));
+    assert!(url.contains("/begin?flow_id="));
+    let operation = first["operation_id"].as_str().unwrap();
+    let action = first["next_action"].as_str().unwrap();
+    assert!(action.contains("decapod cloud login"));
+    assert!(action.contains(&format!("--operation-id {operation}")));
+    let retry = fixture.run(&[
+        "todo",
+        "add",
+        "Preserve this task",
+        "--format",
+        "json",
+        "--operation-id",
+        operation,
+    ]);
+    failed(&retry, "onboarding_pending");
+    let retry: Value = serde_json::from_slice(&retry.stdout).unwrap();
+    assert_eq!(retry["operation_id"], first["operation_id"]);
+    assert_eq!(retry["authorization_url"], first["authorization_url"]);
+    assert_eq!(fixture.count(START), 1);
+    assert_eq!(
+        fixture.count(QUERY),
+        0,
+        "pending login must not dispatch task data"
+    );
     fixture.assert_no_fallback();
 }
 
@@ -579,13 +627,7 @@ fn lost_one_time_responses_require_explicit_restart_and_are_never_replayed() {
             1,
             "one-time request was replayed after loss: {route}"
         );
-        let restart = fixture.run(&[
-            "init",
-            "--backend",
-            "cloud",
-            "--force",
-            "--restart-cloud-signin",
-        ]);
+        let restart = fixture.run(&["cloud", "login", "--restart"]);
         failed(&restart, "onboarding_pending");
         assert_eq!(fixture.status()["phase"], "waiting");
         fixture.assert_no_fallback();
