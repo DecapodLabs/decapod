@@ -287,7 +287,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
+- Repository signal fingerprint: `6fdaefea0e6e9f592f4984bdcbc01ed2e9ff01e0897ddef19e16b13e670b4f23`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -444,18 +444,13 @@ WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
 This is a bounded local SQLite optimization. Full semantic parity with
 Propodus Supabase remains a separately gated migration (Propodus #71).
 
-## Cloud repository purchase approval
+## Cloud account readiness documentation
 
-Cloud init carries repository identity into generated context, collects the
-requested GitHub roster and presents the hosted purchase-approval handoff.
-The preserved commercial contract is USD15 per named user per repository
-monthly, with payment approval owned by a verified repository owner/admin.
-The non-secret config records requested intent; it cannot establish a paid
-seat, a cloud credential or datastore authorization. Local use remains
-available without login or purchase.
-
-This recovery preserves the previously authored CLI contribution from
-`26a499d9f0789a5ed00605d23cfc57f5392ae8fc` on the current accepted source.
-Hosted billing deployment, sandbox purchase acceptance and released native
-client credential integration remain separate rollout requirements. A printed
-approval link alone cannot establish their completion.
+The public cloud guide describes only generic account, session, capacity,
+assignment and authorization contracts. Commercial terms and private service
+implementation assertions are outside this repository. Existing roster flags
+remain request metadata; a printed handoff establishes neither a managed session
+nor effective data access. The accepted consumer still pins Dactyl 0.11.1;
+Dactyl 0.12.0 connector adoption and its actual released/hosted proof remain an
+independent integration dependency tracked by issue #1628. This documentation
+change preserves the active implementation's custody and makes no runtime change.

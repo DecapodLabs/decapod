@@ -820,7 +820,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
+- Repository signal fingerprint: `6fdaefea0e6e9f592f4984bdcbc01ed2e9ff01e0897ddef19e16b13e670b4f23`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1047,3 +1047,9 @@ The coordinated Propodus deployment must verify GitHub identity, repository
 admin permission and paid repository-specific seats. This CLI recovery does
 not deploy that service or prove its Stripe and native-RPC integrations; those
 dependencies remain recorded in `docs/cloud-repository-billing.md`.
+That guide now distinguishes the accepted consumer's legacy endpoint builders
+and Dactyl0.11.1 pin from the newer connector's native RPC/managed Auth contract.
+It does not identify a private migration or payment adapter as deployed proof.
+Account identity, work custody, managed cloud sessions, physical connections,
+repository assignments and decision history retain distinct meanings. A captured
+connection bearer must be replaced on refresh before the next data request.

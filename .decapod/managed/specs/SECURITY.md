@@ -553,7 +553,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
+- Repository signal fingerprint: `6fdaefea0e6e9f592f4984bdcbc01ed2e9ff01e0897ddef19e16b13e670b4f23`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -866,3 +866,13 @@ Browser launch remains limited to human interactive init and respects
 `cloud_init_prints_purchase_approval_without_creating_machine_session` in
 `tests/cloud_backend_storage.rs` also requires that even explicit mock auth
 does not make the init handoff write a credential or claim cloud readiness.
+
+## Public account-readiness documentation
+
+Commercial context remains outside public account/session documentation. The
+public guide makes no claim that a named private adapter or migration supplies a
+working deployment. Managed identity/session validity, membership, grant and
+explicit assignment remain service-owned authority. Local rosters, agent IDs and
+browser returns never grant data or privileged governance access. Credential
+rotation must update the consumer connection and preserve serialized private
+custody; unknown mutation outcomes cannot trigger blind retries.

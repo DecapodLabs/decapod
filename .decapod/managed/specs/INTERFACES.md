@@ -1064,7 +1064,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
+- Repository signal fingerprint: `6fdaefea0e6e9f592f4984bdcbc01ed2e9ff01e0897ddef19e16b13e670b4f23`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1360,3 +1360,14 @@ purchase approval and does not claim that a session or paid seat exists.
 The hosted service must independently derive price/quantity, verify admin
 authority and reconcile payment before granting repository-specific access.
 Its deployment and native client integration remain separately required.
+
+## Public cloud guide evidence boundary
+
+`docs/cloud-repository-billing.md` records the generic client/service readiness
+contract without pricing or private implementation claims. Existing cloud init
+roster fields are non-authorizing request metadata. New managed-session/native
+connector behavior is conditional on actual compatible dependency adoption,
+credential custody and hosted proof; a URL or browser return supplies none of
+those results. The guide requires an actual new bearer on the next data request,
+current server authorization, explicit native route selection and no cloud-to-
+SQLite fallback. This documentation change does not rewrite runtime envelopes.
