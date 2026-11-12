@@ -1076,6 +1076,17 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
                 .unwrap()
                 .is_none()
         );
+        assert!(
+            !workspace
+                .join(decapod::core::capsule_policy::GENERATED_POLICY_REL_PATH)
+                .exists(),
+            "fresh worktrees must not need an ignored policy cache to admit proof"
+        );
+        let prepared_status = git(&workspace, &["status", "--porcelain"]);
+        assert!(
+            prepared_status.is_empty(),
+            "prepared candidate must be clean: {prepared_status}"
+        );
         let output = governed_cli(&workspace, &storage, &["validate", "--format", "json"]);
         let result: serde_json::Value =
             serde_json::from_slice(&output.stdout).unwrap_or_else(|error| {
@@ -1092,6 +1103,11 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
             ));
         }
         assert_eq!(result["publication_ready"], succeeds, "{result}");
+        let final_status = git(&workspace, &["status", "--porcelain"]);
+        assert!(
+            final_status.is_empty(),
+            "full validation must preserve the committed candidate: {final_status}"
+        );
         let readiness = &result["readiness"];
         let evidence = PathBuf::from(
             readiness["evidence_path"]

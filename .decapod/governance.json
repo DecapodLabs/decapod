@@ -650,6 +650,15 @@
       "proof_refs": [
         "/private/tmp/validation-bootstrap-132-cli-task-binding-diagnostic.txt"
       ]
+    },
+    {
+      "id": "validation-bootstrap-runtime-cache-scaffold-v13",
+      "summary": "Keep ignored policy cache absence from rewriting frozen source while preserving actual policy validation and missing source repair",
+      "input_digest": "sha256:ff322014928d375d880d33c313a6e8dc90d0f1f8c9703eed43d5438a3b31fba2",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-8023-dirty-scaffold-diagnostic.json",
+        "/private/tmp/validation-bootstrap-gov-typo-recovery.diagnostic.json"
+      ]
     }
   ],
   "intents": {
@@ -693,24 +702,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Compatibility follow-up only: actor scoping applies to complete managed branch shape, while legacy task refs retain prior behavior; architecture remains unchanged.",
-          "reviewed_code_fingerprint": "b3a6b3a1645364e37a12a04b574e8eee97d6bb1458a28727504121d06549f671",
-          "spec_material_hash": "8ebd18b07ea40a599cc2262ee5fc4e1d8c2d651ae76317ffc7bf1db2a76560e7"
+          "reason": "Distinguish ignored runtime policy cache from tracked source scaffold; fresh worktrees lazily create validated cache without rewriting committed specs manifest before proof.",
+          "reviewed_code_fingerprint": "123ee43dfe50e373895f97e013b5222a29812ee50a9f6b7b3d9f16b7dd07fc42",
+          "spec_material_hash": "5a87d7918290e60cbcea35f5b68eba731bcf192eec164b4f6c312e29916ad03d"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Explicitly preserve legacy agent/<task> references alongside bare task refs; only complete agent/<actor>/<topic> excludes actor from task extraction.",
-          "reviewed_code_fingerprint": "b3a6b3a1645364e37a12a04b574e8eee97d6bb1458a28727504121d06549f671",
+          "reason": "Public policy and proof interfaces remain unchanged; runtime cache is still lazily materialized and validated, and only inappropriate source scaffold admission is corrected.",
+          "reviewed_code_fingerprint": "123ee43dfe50e373895f97e013b5222a29812ee50a9f6b7b3d9f16b7dd07fc42",
           "spec_material_hash": "d552fd3e108d74b4a5d35bde3d015e49274e6bc07f0ff4bfc97338b465821386"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve legacy extraction compatibility while retaining canonical actor isolation and actual topic task mismatch rejection; no security authority or evidence policy changes.",
-          "reviewed_code_fingerprint": "b3a6b3a1645364e37a12a04b574e8eee97d6bb1458a28727504121d06549f671",
+          "reason": "Capsule policy loading, schema/tier/risk checks and invalidoverride rejection remain intact. Removing ignoredcache from sourcepresencepredicate preserves clean candidate custody without weakening source or proof gates.",
+          "reviewed_code_fingerprint": "123ee43dfe50e373895f97e013b5222a29812ee50a9f6b7b3d9f16b7dd07fc42",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -724,17 +733,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794468903Z"
+      "updated_at": "1794471484Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Do not rename actor or docs task, weaken real task bindings, alter CI helpers/checks/budgets, or authorize own source with candidate controller",
         "Keep accepted 300-second aggregate budget and trusted profile/graph unchanged; no manual builds/tests or native quota retry on known failing source",
+        "Keep clean candidate and capsule policy validation strict; validation-lifecycle-only predicate fix, no init/account/carrier/helper/budget changes; independent released controller owns fullsource readiness",
         "Preserve current controller0.138.3 and actual native quota blocker; source diagnostics do not authorize readiness",
         "Scope actor exclusion only to complete canonical agent/<actor>/<topic>; retain legacy agent/<task> and bare task parsing, multi-task topics and actual task mismatch rejection"
       ],
-      "artifact_hash": "sha256:310c67d199f44937dd5d1e78a4f10457ed05a9a347de47271568750e80403a34",
+      "artifact_hash": "sha256:82fed4ae05a098c3836da6c18f5bdd008e941a96cd6ae47ad0e09eac258e220a",
       "checks": [
         {
           "name": "accepted_release_inventory_review",
@@ -771,6 +781,18 @@
         {
           "name": "exact_3327_native",
           "status": "unavailable"
+        },
+        {
+          "name": "exact_8023_cli",
+          "status": "failed"
+        },
+        {
+          "name": "exact_8023_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "exact_8023_library",
+          "status": "passed"
         },
         {
           "name": "exact_fd6_cli",
@@ -829,6 +851,10 @@
           "status": "partial"
         },
         {
+          "name": "policy_cache_source_peer_review",
+          "status": "passed"
+        },
+        {
           "name": "selected_cli_regression_v7",
           "status": "failed"
         },
@@ -841,7 +867,7 @@
           "status": "failed"
         }
       ],
-      "completion_claim": "Compatibility source audit after883e found malformed/legacy two-component agent/<task> refs must retain historical parse. Correct fallback to legacy scoped text when no third segment; replace ambiguous actor-only two-component assertion with actual legacy task regression. Real canonical docs actor collision remains fixed; no runtime proof claimed before new CI.",
+      "completion_claim": "Actual8023 CLI68pass1fail reached193staticpasses then UNCOMMITTED_PUBLICATION_CONTENT because ignored context policycache missing in freshworktree was treated as missing source scaffold. Init/scaffold creates this cache, but Git checkout omits it; lazy policyloader recreates and validates it without sourcehealing. Remove only cachepresence requirement. Canonicaltests remove initializedcache to model checkout; absentcache mustnothealmanifest, missingtrackedINTENT muststillheal; genuineCLI asserts absentcache and clean candidate before/after fullvalidate. Peer reviewed source/test setup. A resolved trace note was mistakenly recorded with --assumption in an uncommitted draft; root authorized exactdraftbackup plus Git restore only gov to authentic8023 and replay this genuine evidence. Backups/hashes preserved; no committedhistory, task, actor or trajectory reset, no new checkpoint/commit/fullvalidate occurred before recovery. No native readiness claimed.",
       "current_phase": "repair",
       "custody": {
         "events": [
@@ -954,10 +980,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 18,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1290,6 +1323,38 @@
                 ],
                 "sequence": 17,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/scaffold.rs",
+                  "src/decapod/core/capsule_policy.rs",
+                  "src/decapod/lib.rs",
+                  "tests/unit/lib_validation_proof_tests.rs",
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/validation-bootstrap-8023-dirty-scaffold-diagnostic.json",
+                  "/private/tmp/validation-bootstrap-8023-unit-diagnostic.txt",
+                  "/private/tmp/validation-bootstrap-gov-typo-recovery.diagnostic.json"
+                ],
+                "proof_refs": [
+                  "exact_8023_library",
+                  "exact_8023_clippy",
+                  "exact_8023_cli",
+                  "policy_cache_source_peer_review"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 18,
+                "validation_findings": []
               }
             ]
           }
@@ -1304,8 +1369,11 @@
         "/private/tmp/validation-bootstrap-132-core-timing-diagnostic.txt",
         "/private/tmp/validation-bootstrap-3327-cli-diagnostic.txt",
         "/private/tmp/validation-bootstrap-3327-unit-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-8023-dirty-scaffold-diagnostic.json",
+        "/private/tmp/validation-bootstrap-8023-unit-diagnostic.txt",
         "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
         "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-gov-typo-recovery.diagnostic.json",
         "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",
         "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
         "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
@@ -1328,12 +1396,15 @@
         "v4 own local controller cancelled and reaped after reviewed defects; final diagnostic SNAPSHOT_NOT_READY public read cancelled, last provider_terminal_wait579867ms, report /private/tmp/validation-bootstrap-full-v4.json. No remote/unrelated jobs cancelled; no pass/source-test failure claimed."
       ],
       "inspected_files": [
+        "src/decapod/core/capsule_policy.rs",
+        "src/decapod/core/scaffold.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/validation_rules.rs",
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/workspace.rs",
         "src/decapod/core/workunit.rs",
+        "src/decapod/lib.rs",
         "tests/consumer_readiness.rs"
       ],
       "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
@@ -1349,11 +1420,13 @@
         "src/decapod/core/validation_runtime/tests.rs",
         "src/decapod/core/workspace.rs",
         "src/decapod/core/workunit.rs",
+        "src/decapod/lib.rs",
         "tests/cli_contracts.rs",
         "tests/consumer_readiness.rs",
         "tests/unit/core/validate_tests.rs",
         "tests/unit/core/workspace_tests.rs",
-        "tests/unit/core/workunit_journal_tests.rs"
+        "tests/unit/core/workunit_journal_tests.rs",
+        "tests/unit/lib_validation_proof_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks",

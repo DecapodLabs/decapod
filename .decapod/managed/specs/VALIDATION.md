@@ -1051,7 +1051,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b3a6b3a1645364e37a12a04b574e8eee97d6bb1458a28727504121d06549f671`
+- Repository signal fingerprint: `123ee43dfe50e373895f97e013b5222a29812ee50a9f6b7b3d9f16b7dd07fc42`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1457,3 +1457,5 @@ Issue #1629 separates proof admission from proof consumption. A fresh governed d
 Review regressions cover expiry during terminal evaluation and native receipt staging, a distinct mandatory project workunit obligation without a declaration, and a declared current workunit reaching the actual rule evaluator with a generated capsule, bound living spec, current execution journal and retained proof bytes. Explicit epoch mismatches, corrupted capsule/source and deleted manifests remain failures.
 
 The fresh governed docs regression has its actual `#[test]` entrypoint in `tests/cli_contracts.rs`, calling the shared fixture in `consumer_readiness.rs`. The accepted selector schedules CLI contracts when that entrypoint changes. Merely compiling a standalone consumer test or observing a green `not_applicable` CLI selection does not prove this regression executed; evidence must retain that distinction.
+
+The same full-CLI fixture starts without the ignored policy cache and verifies a clean committed candidate before and after validation. Canonical scaffold regressions ensure an absent runtime cache causes no source healing or manifest rewrite, while a missing tracked living spec still triggers repair. Existing policy validation continues rejecting malformed or unsupported policy contracts.
