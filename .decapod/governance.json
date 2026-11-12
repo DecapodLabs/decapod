@@ -533,6 +533,11 @@
       "id": "cloud-docs-source-boundary",
       "summary": "Replace stale commercial claims with source-grounded account, session, repository capacity and proof contracts.",
       "input_digest": "sha256:5dab738d7bedbadc01da2477f31e0bccb1befa023d83dc70a09b9125c6333fd2"
+    },
+    {
+      "id": "cloud-docs-inventory",
+      "summary": "Reconcile current controller inventory of unchanged accepted proof sources without dropping checks.",
+      "input_digest": "sha256:63dceb00aa4138d541dba88dd8a889585b1efd399e255afe9b1954683021367c"
     }
   ],
   "intents": {
@@ -574,21 +579,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Clarifies consumer and server authority boundaries without claiming deployed runtime readiness.",
+          "reason": "Generic account consumer boundary, with the complete accepted strict source-CI contract retained.",
           "reviewed_code_fingerprint": "6fdaefea0e6e9f592f4984bdcbc01ed2e9ff01e0897ddef19e16b13e670b4f23",
           "spec_material_hash": "dab5dfa96d4c9270a9cae06a71d94bc5a9df0a414b11aeba24543b8b4da76bb3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documents generic native session and capacity contract proof obligations.",
+          "reason": "Generic native session and capacity contracts; source inventory reconciliation changes no execution obligations.",
           "reviewed_code_fingerprint": "6fdaefea0e6e9f592f4984bdcbc01ed2e9ff01e0897ddef19e16b13e670b4f23",
           "spec_material_hash": "bf4eb172d2949f5be6cbda567e23fd4ffcc789beb232f9b0f8716762912b7aa1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Removes commercial readiness claims and preserves current authorization boundaries.",
+          "reason": "No runtime authorization change; current source-grounded documentation and complete proof gates retained.",
           "reviewed_code_fingerprint": "6fdaefea0e6e9f592f4984bdcbc01ed2e9ff01e0897ddef19e16b13e670b4f23",
           "spec_material_hash": "a19713c64486df7c3e7b5361e9723f6d6ea081e373b7516c5499d38d2bc025ac"
         }
@@ -601,21 +606,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794454756Z"
+      "updated_at": "1794454854Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Generic public technical documentation only; session implementation retains its existing task custody."
       ],
-      "artifact_hash": "sha256:1c345538fe5a10dcfdc25f6ab8d87736e73cbd7c6477df6083f02b67075be5ca",
+      "artifact_hash": "sha256:61458323d4a3614ef8c6be65f1ef305daaa33fb54eb24507b46c4ca44409327a",
       "checks": [
         {
           "name": "documentation_diff",
           "status": "passed"
+        },
+        {
+          "name": "full_validation",
+          "status": "failed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -636,10 +645,17 @@
             "intent_id": "intent:change_01M76WYX27VNEW7VYBM3KSZRV1",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M76WYX56RYB46P72NGG8J2H9",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M76WYX27VNEW7VYBM3KSZRV1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76WYX56RYB46P72NGG8J2H9": {
@@ -665,6 +681,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  "/private/tmp/decapod-cloud-docs-validation-01.json",
+                  "Current controller inventory includes 105 accepted source files. Compared all 105 hashes with origin/master: zero candidate changes. Reviewed strict source profile and retained every required check."
+                ],
+                "proof_refs": [
+                  "full_validation"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "paths:[\"docs/cloud-repository-billing.md\""
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -673,6 +707,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/decapod-cloud-docs-validation-01.json",
+        "Current controller inventory includes 105 accepted source files. Compared all 105 hashes with origin/master: zero candidate changes. Reviewed strict source profile and retained every required check.",
         "Source comparison against accepted master d3358e1; no runtime or hosted acceptance claimed."
       ],
       "inspected_files": [
@@ -681,6 +717,7 @@
       ],
       "intent_id": "intent:change_01M76WYX27VNEW7VYBM3KSZRV1",
       "modified_files": [
+        ".decapod/config.toml",
         "docs/cloud-repository-billing.md"
       ],
       "next_transitions": [
