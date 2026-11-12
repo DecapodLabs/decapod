@@ -441,47 +441,6 @@
         "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
         "status": "open"
       },
-      "history-recovery:402c588af141811a98a40136b77f01ed171f75f0": {
-        "actor": "codex-onboarding",
-        "assessment": {
-          "base_commit": "d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
-          "disposition": "unproven_history",
-          "findings": [
-            {
-              "code": "GOVERNANCE_CHECKPOINT_MISSING",
-              "commit": "402c588af141811a98a40136b77f01ed171f75f0",
-              "detail": "GOVERNANCE_CHECKPOINT_MISSING: commit 402c588af141811a98a40136b77f01ed171f75f0 needs a new checkpoint bound to its exact material tree and governance inputs",
-              "disposition": "unproven_history",
-              "expected_input_digest": "sha256:e1468c82537b9e2234914b97a381dbef761062f1f505aa37cc0eededd2234f91",
-              "obligation": "checkpoint_for_material",
-              "prior_event_can_be_regenerated": false,
-              "recovery": "A checkpoint written now cannot establish that this immutable commit carried a checkpoint. Preserve the source ref and evidence; create a fresh claimed workspace from the accepted target, reauthor the reviewed material with current intent/spec reviews and checkpoints, and rerun independent validation. No current policy authorizes a candidate-local history waiver.",
-              "tree": "236d0ea172145dfca5403ebe264e73e8b7319feb"
-            }
-          ],
-          "head_commit": "402c588af141811a98a40136b77f01ed171f75f0",
-          "history_proven": false,
-          "inspection_complete": true,
-          "publication_ready": false,
-          "schema": "decapod.checkpoint-history.v1",
-          "scope": "checkpoint_history",
-          "verified_commits": [
-            "12054fe8ffc1846bbbbef533dccd5813ecd479f6",
-            "bb4e4b429c15722d3ee8ef6eac7c051e3bf0b141"
-          ]
-        },
-        "authority": "current_task_custody_only",
-        "destination_base": "d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
-        "destination_change": "change_01M7742C8M9Y4385TJS1NEG96V",
-        "exception_authorized": false,
-        "historical_proof": "not_proven",
-        "reason": "The last refinement commit was authored after its checkpoint was rejected while workspace lease rebinding was still pending. Preserve that exact source branch and present-time gap evidence. Reauthor reviewed product changes under this fresh task and workstream; do not assert that the old commit was checkpointed.",
-        "recovery": "reauthor_and_obtain_fresh_proof",
-        "schema": "decapod.history-recovery.v1",
-        "source_commit": "402c588af141811a98a40136b77f01ed171f75f0",
-        "source_governance_blob": "2f2dd6315e1b207f358962ce96e343f4ae082d53",
-        "source_tree": "236d0ea172145dfca5403ebe264e73e8b7319feb"
-      },
       "plan:3109ff52b1ce422e": "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
       "plan:7f9060fac006b60a": "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof.",
       "trajectory:01e30f48c2e7df81": "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
@@ -569,6 +528,17 @@
     "base_commit": "d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
     "target_base": "origin/master"
   },
+  "resolutions": {
+    "history-recovery:402c588af141811a98a40136b77f01ed171f75f0": {
+      "obligation_digest": "sha256:135728ac96465ba3142d6b211fbe5b64a30b6bd41ba85bcaafaf1ec0f9fd46ee",
+      "resolution": "The present-time gap observation is archived in f2612990. Product changes were reviewed and reauthored from accepted d3358e1c under the fresh task and exact-material checkpoint. The original source branch and commit remain preserved with historical proof not proven; this disposition grants no retrospective checkpoint or validation waiver. Current required validation remains mandatory.",
+      "proof_refs": [
+        "git:402c588af141811a98a40136b77f01ed171f75f0",
+        "git:f2612990",
+        "tests/init_cli.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "onboarding-reviewed-candidate",
@@ -578,6 +548,15 @@
         "48 PTY, config and Git tests passed after unattended bootstrap repair; one existing skip",
         "git diff --check",
         "history-recovery:402c588af141811a98a40136b77f01ed171f75f0"
+      ]
+    },
+    {
+      "id": "onboarding-history-disposition",
+      "summary": "Record current recovery disposition and observed focused unit evidence while preserving the archived source gap",
+      "input_digest": "sha256:1894ee0930892c89f4f03b0179d3ef1b0da20041af998b59a737c24d3f84cf03",
+      "proof_refs": [
+        "34 init_prompt_tests and 2 layout tests passed on byte-identical product source",
+        "git:f2612990"
       ]
     }
   ],
@@ -659,8 +638,16 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:746924aee77e966a0f60ef0f40bd0ece1c8d2f75e4006b58b57dcd26f24fccca",
+      "artifact_hash": "sha256:4c50c5f75f7d5ec9d0b3f30740a76b35e1008731307b902287bfe3e9ef1aabc5",
       "checks": [
+        {
+          "name": "current-init-unit-tests",
+          "status": "passed"
+        },
+        {
+          "name": "current-layout-tests",
+          "status": "passed"
+        },
         {
           "name": "full-validation",
           "status": "unavailable"
@@ -695,10 +682,17 @@
             "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7742CC2WSBGWSRWRSWJEBMW": {
@@ -737,6 +731,29 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Current presentation source passed all 34 init_prompt_tests plus 2 onboarding layout tests. The separate final config/Git/PTY and targeted Clippy run continues. Fresh candidate f2612990 archives the observed source-history gap and reauthored product changes; the original 402c588a source history remains unproven and preserved. No full-validation success is claimed."
+                ],
+                "proof_refs": [
+                  "current-init-unit-tests",
+                  "current-layout-tests"
+                ],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"docs/book/src/quickstart.md\"",
+                  "\"src/decapod/core/scaffold.rs\"",
+                  "\"src/decapod/onboarding.rs\"",
+                  "\"tests/init_cli.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  "paths:[\"src/decapod/lib.rs\""
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -745,6 +762,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Current presentation source passed all 34 init_prompt_tests plus 2 onboarding layout tests. The separate final config/Git/PTY and targeted Clippy run continues. Fresh candidate f2612990 archives the observed source-history gap and reauthored product changes; the original 402c588a source history remains unproven and preserved. No full-validation success is claimed.",
         "Recovery preserves immutable source 402c588af141811a98a40136b77f01ed171f75f0 and its checkpoint gap. Reauthored product files and only authored semantic spec sections in this fresh admitted workstream. Earlier focused evidence: 33 setup unit tests, 2 layout tests, 5 PTY tests and 5 Git tests passed; config suite had 37 pass, 1 fail, 1 pre-existing ignored test. Its failure exposed a changed unattended Git bootstrap order; the shared mutation helper now restores that contract while interactive setup still confirms first. Current regression rerun is pending. Product/test bytes are verified identical between this workstream and the existing cache checkout used for focused tests; same accepted base d3358e1c. Full readiness remains unproven; GitHub provider rate limit resets at epoch 1794463204. The source inventory review found only the accepted release version bump in Cargo.toml/Cargo.lock since c7609e42; refreshed the reviewed digest without changing providers or required checks."
       ],
       "inspected_files": [
