@@ -1064,8 +1064,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1360,3 +1360,13 @@ purchase approval and does not claim that a session or paid seat exists.
 The hosted service must independently derive price/quantity, verify admin
 authority and reconcile payment before granting repository-specific access.
 Its deployment and native client integration remain separately required.
+
+## Public metadata quota waits
+
+No new project setting, credential or provider interface is required for quota
+pacing. Successful anonymous GitHub response headers may delay later discovery or
+a new request after known exhaustion. The wait remains cancellable and shares the
+original validation deadline. HTTP 403/429 still return the existing redacted
+failure diagnostics and do not trigger automatic retry or another authentication
+route. A later supported replay independently remeasures the exact candidate and
+accepted target; quota hints cannot make pending or incomplete proof ready.

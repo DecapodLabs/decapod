@@ -820,8 +820,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1047,3 +1047,21 @@ The coordinated Propodus deployment must verify GitHub identity, repository
 admin permission and paid repository-specific seats. This CLI recovery does
 not deploy that service or prove its Stripe and native-RPC integrations; those
 dependencies remain recorded in `docs/cloud-repository-billing.md`.
+
+## Public GitHub quota pacing
+
+`src/decapod/core/snapshot_provider/github_quota.rs` keeps advisory quota hints
+inside the existing invocation `Budget`. The explicitly anonymous reader records
+only bounded, unambiguous decimal remaining/reset headers from successful HTTP
+200 responses. Nested artifact budgets share that in-process state while retaining
+their existing capture sizes and original deadline. Provider records and execution
+receipts are never cached or authorized by quota hints.
+
+An incomplete discovery poll that used the public GitHub API spreads further
+polling over the reported window, retaining half the observed allowance as
+headroom for collection and fresh final checks. Polls using only direct Buildkite
+envelopes retain their original cadence. After a successful response reports zero
+remaining requests, a later read waits for its known reset within the same deadline
+and cancellation budget; an ambiguous reset blocks another request. Counters are
+advisory because other callers and regions can change the allowance. HTTP denial
+still terminates the invocation immediately without retry or identity changes.

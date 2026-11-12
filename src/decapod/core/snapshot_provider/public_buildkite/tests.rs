@@ -1104,6 +1104,7 @@ fn timeout_retry_shares_deadline_and_respects_denied_authorization() {
         deadline: Instant::now(),
         cancel: &cancel,
         max_bytes: 4096,
+        github_quota: Default::default(),
     };
     assert_eq!(
         reader.get(&timeout_request(), &budget).unwrap_err().kind(),

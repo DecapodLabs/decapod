@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
-    "release": "v0.138.2",
+    "accepted_commit": "d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -80,6 +79,14 @@
         "owner": "Decapod build maintainers",
         "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
         "status": "deferred"
+      },
+      "claim:claim:billing-cloud-approval": {
+        "falsifier": "Unreviewed source changes, unapproved cloud action, dropped local/cloud boundary, missing current tests, stale target or any missing native readiness evidence.",
+        "proof_refs": [
+          ".decapod/managed/specs/VALIDATION.md"
+        ],
+        "statement": "Recover the reviewed cloud-init requested-seat and purchase-approval handoff onto accepted master; repair obsolete session assertions; preserve native governance and proof boundaries without deploying billing or claiming paid cloud is operational.",
+        "status": "open"
       },
       "claim:claim:container-work-preservation": {
         "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
@@ -517,188 +524,135 @@
     }
   },
   "change": {
-    "id": "change_01M76AQCWJRC5YNRQNFHQ3HPAG",
-    "base_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
+    "id": "change_01M77EJ4FZFRDV331WWPVRF36S",
+    "base_commit": "d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:billing-cloud-approval": {
-      "statement": "Recover the reviewed cloud-init requested-seat and purchase-approval handoff onto accepted master; repair obsolete session assertions; preserve native governance and proof boundaries without deploying billing or claiming paid cloud is operational.",
-      "falsifier": "Unreviewed source changes, unapproved cloud action, dropped local/cloud boundary, missing current tests, stale target or any missing native readiness evidence.",
+    "github-quota-pacing": {
+      "statement": "Anonymous GitHub metadata discovery is paced from successful quota headers; known exhaustion waits only before a new request, within the original deadline and cancellation budget.",
+      "falsifier": "Required tests show a second request before a known reset, loss of cancellation/deadline bounds, overflow on a large reset, or pacing of direct Buildkite-only polls.",
       "status": "open",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
+        "src/decapod/core/snapshot_provider/github_quota.rs"
+      ]
+    },
+    "github-quota-proof-boundary": {
+      "statement": "Quota hints never cache or authorize execution evidence. Required final registry, source/ref/base and Buildkite custody checks remain fresh; denied HTTP403/429 requests remain single attempts without fallback.",
+      "falsifier": "Any skipped final recheck, cached green provider state accepted as proof, second request after a denial, alternate credential/client selection, or weakened required source obligation.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/snapshot_provider/automatic/tests.rs",
+        "src/decapod/core/snapshot_provider/github_quota.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "billing-cloud-approval",
-      "summary": "Resume the original native billing task and preserved pending source; correct only the independently reviewed accepted-baseline source declaration, refresh native projections, and checkpoint the reviewed cloud/local approval boundary. Full readiness remains pending.",
-      "input_digest": "sha256:1e0f812a3d37bdba4a8375d5add5f7cadd2f10aab7c24cb6bbf7ade210c534dd",
+      "id": "issue1573-quota-pacing",
+      "summary": "Implement successful-header public GitHub quota pacing with six offline regression fixtures, shared nested invocation budgets and preserved final verification. Rust formatting and whitespace checks passed; compilation and product tests remain unproven. Accepted target advanced to c87e4f49; preserve this first native checkpoint before merging accepted history and validating the reconciled candidate.",
+      "input_digest": "sha256:fbcfb421686e30900ce51b40dc0740bd2b37be32d279a85a21d4155795b2ef58",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "billing-v1382-measured-gate-repair",
-      "summary": "Continue original billing task at its published checkpoint; fix measured lint, regenerate exact source docs preserving accepted prose, and refresh six official release surfaces. Full readiness must rerun.",
-      "input_digest": "sha256:35d682caaecee788ae44809fa05e9eb491d39079dd35537be336995394ad0375",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
-      ]
-    },
-    {
-      "id": "billing-preserved-preparation-43126315508-1",
-      "summary": "Preserve the authentic successful 206-pass/0-fail project-prerequisites receipt and native manifest timestamp from run 43123122460 at 04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b; preparation evidence only. The original transferred task continues unchanged, and the full publisher must prove the new exact candidate.",
-      "input_digest": "sha256:fd9538169038abd61fd4fe7eb2f9eab55fc0739831f1904d48cf2b797e6d4967",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md"
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/snapshot_provider/github_quota.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG": {
+    "intent:change_01M77EJ4FZFRDV331WWPVRF36S": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "paths:[\"src/decapod/core/snapshot_provider\"",
+        "\"src/decapod/core/validation_runtime/snapshot\"",
+        "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+        "\"tests\"",
+        "\".decapod/managed/specs\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG",
+      "id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "feat(init): recover cloud repository purchase approval handoff\n\nRecover the reviewed cloud-init requested-seat and purchase-approval handoff onto accepted master; repair obsolete session assertions; preserve native governance and proof boundaries without deploying billing or claiming paid cloud is operational.",
-      "refined_intent": "feat(init): recover cloud repository purchase approval handoff\n\nRecover the reviewed cloud-init requested-seat and purchase-approval handoff onto accepted master; repair obsolete session assertions; preserve native governance and proof boundaries without deploying billing or claiming paid cloud is operational.",
+      "raw_intent": "Fix #1573 public-reader quota exhaustion during readiness collection\n\nIndependent follow-up while PR1635 awaits merge. Diagnose and repair bounded public GitHub metadata collection and polling so required exact-candidate Buildkite evidence can be gathered without exhausting quota unnecessarily. Preserve authentication identity, strict before/after source and accepted-target checks, required workflow coverage, cancellation, denial and unknown-outcome behavior. No SDK release, deployment, hosted activation or changes to PR1635. Publish a separately validated PR when gates permit.",
+      "refined_intent": "Fix #1573 public-reader quota exhaustion during readiness collection\n\nIndependent follow-up while PR1635 awaits merge. Diagnose and repair bounded public GitHub metadata collection and polling so required exact-candidate Buildkite evidence can be gathered without exhausting quota unnecessarily. Preserve authentication identity, strict before/after source and accepted-target checks, required workflow coverage, cancellation, denial and unknown-outcome behavior. No SDK release, deployment, hosted activation or changes to PR1635. Publish a separately validated PR when gates permit.",
       "status": "refined",
       "updated_sequence": 3
-    }
-  },
-  "epochs": {
-    "ve_374307117d754267": {
-      "constitution_hash": "sha256:27c3a78e5546640f5ef8da0460decda605aca8f82b9019482bb27a8f0b6d8a5d",
-      "constitution_version": "embedded-docs@0.138.2",
-      "epoch_id": "ve_374307117d754267",
-      "evaluator_identity": "decapod-validate@0.138.2",
-      "evaluator_set_hash": "sha256:364dab4609ec1d7772e23123f7588bec3a529a2f126a2cf842a69b12fb90b187",
-      "generated_specs_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
-      "generated_specs_manifest_hash": "sha256:642a6ff37e04a841bbe86f512262b37884313c48daabcd734fd5f430707f42f4",
-      "material_hashes": {
-        "constitution:core/DECAPOD": "sha256:27c3a78e5546640f5ef8da0460decda605aca8f82b9019482bb27a8f0b6d8a5d",
-        "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:28a904dca7f2023dab8ed89669a7174607e059446c6379742ae71b059f6e1a10",
-        "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:57323f3d6867545494cb24869a36e95f300191ba74183cef99e5b29ad303b537",
-        "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:9c1f859a1d402960bc96fb1bb50c3c2907cc5ec80b2907ef29687a4c1d33085b",
-        "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:44f374d5a5ae5ce7cf825a72e41d9124823285e5bded2896387f07a3f6d74ada",
-        "generated_spec:.decapod/managed/specs/README.md": "sha256:f26b20c96a54df781a67dd89403991b15e08cd5bd0355ae28f5d5397eeb17775",
-        "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:e5edfe4047e88c8a82c5b0b14e842b5cc9cb4c6df604676e703c6a002ad9108a",
-        "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:0c3dab1cd6ded799acf2797d97a0993368b9ba657222dc8355b39a535073b537",
-        "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:79d2b857cfa3a92a21dabc59ed3be9d87baab1e33d9c2718a3861c81326da00e",
-        "generated_specs_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
-        "generated_specs_manifest": "sha256:642a6ff37e04a841bbe86f512262b37884313c48daabcd734fd5f430707f42f4",
-        "governance_context": "sha256:a51e19255afd04d3956cfb180276a433c862efaf045c8ee30d9280497ab8c8fe",
-        "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:5f65ee3e42ab5c556b9bc9ddd9e12081fe186eb3e641363a3f29d6ffbb9c54e5",
-        "governance_material:AGENTS.md": "sha256:465f81b79748e422dc604a5d3c98d1a3d6e0d64a20207187d7cc62e2e9278a72",
-        "governance_material:CLAUDE.md": "sha256:23e6c0ad0bfb5088cd6c086aa59d099e63abd1da588ae33f64bff88c20b87641",
-        "governance_material:CODEX.md": "sha256:df9b66f1e5a9c6eb0973c8139b7a793b954a4970b8ff441a84d595952af27c36",
-        "governance_material:GEMINI.md": "sha256:b459b7b7a8fcb35c4006bf6e72bcc24762a168814811a58937865a55f93f127b",
-        "governance_section:claims": "sha256:065edaffb62282d613d1d4013750c3dfc1f58a45bd1cba116ff82c02a2a689c4",
-        "governance_section:plan": "sha256:fca3898d5f34b034244f42d7e6da571c235aaf23aba53a6f7597dfc6d72de269",
-        "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:2abef7c024c78f47e368f59e41963a48f3f474f1fa01db724e83a8f410c709bc",
-        "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:831ed24b7d84227536c328947502e4e47c29abe648775cbcddc7e75484eabdb1",
-        "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:4ee67aebac958a1aac7f08e6cc0655b591911c02c023ed4ae45bebcc61756a47",
-        "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:1d3e29277d53611989f0ecc92d40beebbee3283a59eb8bafa1369d3b4dce5a98",
-        "living_spec_material:.decapod/managed/specs/README.md": "sha256:b438399f5c0f241858ccea303abbd1076a8728d2560509e7a15e012dd698765c",
-        "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365",
-        "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:9d018633011f35a358599d2a446443272ac8abad4c2bdc0a811e97fdaad7c365",
-        "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:90a5f15a733df37456966f4cedbf1bb91edabb2cb09ef42d84ea6a50cd92e725",
-        "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-        "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
-      },
-      "proof_rubric": "decapod-validate/current-proof-v1",
-      "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
-      "schema_version": "1.0.0",
-      "validation_profile": "default",
-      "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
     }
   },
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 36,
+        "file_touch_budget": 28,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Recover the reviewed cloud-init requested-seat and purchase-approval handoff onto accepted master; repair obsolete session assertions; preserve native governance and proof boundaries without deploying billing or claiming paid cloud is operational.",
+      "intent": "Independently address Decapod issue1573 while PR1635 awaits user merge. Pace anonymous GitHub discovery from successful response quota headers; wait for a known exhausted window only before a new request, within the original cancellation/deadline budget. Keep fresh exact-head registry, run/build, repository, source/ref/base and complete Buildkite custody verification. HTTP403/429 and authorization failures remain terminal, with no credential extraction, alternate transport or identity, proof substitution or retry of denied requests. Unknown/malformed hints must not create readiness.",
       "phases": [],
       "proof_hooks": [
-        "decapod workspace publish",
-        "decapod govern artifacts verify-checkpoints --base-branch c5de35a89b27e788169612ae71681e45c13bf71a --head-ref HEAD --target-base master --format json"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Continuation changes only measured lint, exact generated documentation with preserved existing authorization prose, and official release projections; accepted feature contracts and rollout boundaries remain unchanged.",
-          "reviewed_code_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
-          "spec_material_hash": "2abef7c024c78f47e368f59e41963a48f3f474f1fa01db724e83a8f410c709bc"
+          "reason": "Reviewed exact current source/spec after whitespace cleanup. Quota hints pace anonymous reads within the existing deadline/cancellation budget; they cannot authorize proof or alter provider identity, TLS, access denial, final source/base/registry checks or required Buildkite coverage. Native fixture execution remains unproven until full validation.",
+          "reviewed_code_fingerprint": "8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23",
+          "spec_material_hash": "94f8a9c520258af2bd81667238a4545229448181252064619aad69335e850ef3"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Continuation changes only measured lint, exact generated documentation with preserved existing authorization prose, and official release projections; accepted feature contracts and rollout boundaries remain unchanged.",
-          "reviewed_code_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
-          "spec_material_hash": "4ee67aebac958a1aac7f08e6cc0655b591911c02c023ed4ae45bebcc61756a47"
+          "reason": "Reviewed exact current source/spec after whitespace cleanup. Quota hints pace anonymous reads within the existing deadline/cancellation budget; they cannot authorize proof or alter provider identity, TLS, access denial, final source/base/registry checks or required Buildkite coverage. Native fixture execution remains unproven until full validation.",
+          "reviewed_code_fingerprint": "8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23",
+          "spec_material_hash": "1359f6987216eb393150a02db60816ccb800ee3e23ecad7831fc267e901c08d4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Continuation changes only measured lint, exact generated documentation with preserved existing authorization prose, and official release projections; accepted feature contracts and rollout boundaries remain unchanged.",
-          "reviewed_code_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
+          "reason": "Reviewed exact current source/spec after whitespace cleanup. Quota hints pace anonymous reads within the existing deadline/cancellation budget; they cannot authorize proof or alter provider identity, TLS, access denial, final source/base/registry checks or required Buildkite coverage. Native fixture execution remains unproven until full validation.",
+          "reviewed_code_fingerprint": "8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "feat(init): recover cloud repository purchase approval handoff",
+      "stop_conditions": [
+        "Explicit decision gate, access denial or source collision requiring new authority; preserve exact blocker."
+      ],
+      "title": "Fix #1573 public-reader quota exhaustion during readiness collection",
       "todo_ids": [
-        "code_01m76aq15fea61e8"
+        "bugs_01m77egytxsez3hd"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794441326Z"
+      "updated_at": "1794475435Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Continue original transferred task and published source; no failed readiness is reused as proof",
         "Current claimed task and isolated work branch",
-        "Original billing task resumed through native custody; no historical proof or completed readiness claimed"
+        "Preserve fresh final registry/source/base checks, required provider proof, public reader identity, immediate denied-request failure and the existing 7200-second maximum budget."
       ],
-      "artifact_hash": "sha256:a0a713df147c31a176c6c95f629d5be212896a83c7bb35c12de0ccdc4bb394b1",
+      "artifact_hash": "sha256:f957d69b61122a4f49089ac64043d6679dcea3d309b9803ad2190225dedc5e43",
       "checks": [
         {
-          "name": "current-full-workbranch-validation",
-          "status": "unavailable"
+          "name": "accepted_target",
+          "status": "partial"
         },
         {
-          "name": "decapod validate",
+          "name": "formatting",
           "status": "passed"
         },
         {
-          "name": "full-workbranch-validation",
+          "name": "product_tests",
           "status": "unavailable"
         },
         {
-          "name": "git-diff-whitespace",
+          "name": "workspace_admission",
           "status": "passed"
-        },
-        {
-          "name": "prior-full-publication",
-          "status": "failed"
         }
       ],
       "current_phase": "validation",
@@ -706,34 +660,34 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M76AQCXFVXPYJPPTC76PV506",
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M76AQCXFVXPYJPPTC76PV506",
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M76AQCXFVXPYJPPTC76PV506",
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           }
@@ -742,62 +696,80 @@
         "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M76AQCXFVXPYJPPTC76PV506": {
+          "branch_01M77EJ4KJ409S85KKXV55SAT1": {
             "evidence_only": true,
-            "id": "branch_01M76AQCXFVXPYJPPTC76PV506",
-            "intent_id": "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG",
+            "id": "branch_01M77EJ4KJ409S85KKXV55SAT1",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "steps": [
               {
-                "action": "validation",
-                "command": "git apply authenticated pending material sha256:025caf8469c1540c0951c15f5484a49fa061222f08d0bdca6b5247f5974e21dc",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Original task imported and re-admitted with authenticated pending journal/source intact. Exact accepted-baseline inventory declaration corrected after independent review of 105 sources. Historical source 26a499d9f0789a5ed00605d23cfc57f5392ae8fc recorded as already_proven. Complete native publication remains required on the checkpointed candidate."
+                  "src/decapod/core/snapshot_provider/automatic.rs",
+                  "src/decapod/core/snapshot_provider/mod.rs",
+                  "src/decapod/core/snapshot_provider/read_authorization.rs",
+                  "src/decapod/core/snapshot_provider/provider.rs",
+                  "Native Podman admission reports can_work=true and in_container=true with the actual runtime container ID a746884071f9cd15441394a7b6634ca20a8ab454d874dcd5b04202c82a6e2b83; accepted base d3358e1ce2cdb137dc57445c64592cb6d327a6ff. No product tests have run yet."
                 ],
                 "proof_refs": [
-                  "git-diff-whitespace",
-                  "full-workbranch-validation"
+                  "workspace_admission",
+                  "product_tests"
                 ],
                 "scope": [
-                  "root"
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "User authorized independent maintenance while PR1635 awaits merge; selected existing issue1573 from current backlog, with no changes to the pending cloud branch. GitHub quota hints advise pacing only and cannot establish execution readiness."
+                ]
               },
               {
                 "action": "validation",
-                "command": "git merge --ff-only c7609e42bbbcff9c72af6be7a86333d4b0408922",
+                "command": "cargo fmt --all (host rustfmt1.9.0-stable 31fca3adb2)",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Native run 43111757803 stopped on actual source validation. Run 43116091778 preserved the original task and all 18 pending paths after native release healing, but project prerequisites correctly required an actual container. This continuation imports that exact native custody and journal only inside the native-prepared real container, preserves reviewed lint/docs/release material, and records a checkpoint before rerunning JSON project prerequisites and full native publication. No failed or partial check is reused as proof; source and CI policy remain unchanged."
+                  "src/decapod/core/snapshot_provider/github_quota.rs",
+                  "src/decapod/core/snapshot_provider/mod.rs",
+                  "src/decapod/core/snapshot_provider/automatic.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite.rs",
+                  "src/decapod/core/snapshot_provider/public_buildkite/custody.rs",
+                  "Source implements bounded successful-header quota hints shared by nested budgets, cold-discovery pacing, fresh final registry/source/base checks, and no retry on denial. Six new fixtures are authored but have not executed. Canonical ARCHITECTURE/INTERFACES/SECURITY spec reviews recorded through native CLI. Container-private Git configuration backed up, official gh configured for authorized Git publication before proof; anonymous API reader remains credential-free."
                 ],
                 "proof_refs": [
-                  "git-diff-whitespace",
-                  "prior-full-publication",
-                  "current-full-workbranch-validation"
+                  "formatting",
+                  "product_tests"
                 ],
                 "scope": [
-                  "billing",
-                  "root"
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
                 ],
                 "sequence": 5,
-                "validation_findings": []
+                "validation_findings": [
+                  "Native exact-candidate Buildkite proof remains required. Current released controller may expose the separately tracked fresh-validation prerequisite issue1629; preserve any actual blocker instead of using candidate-built controller authority."
+                ]
               },
               {
-                "action": "validation",
-                "command": "decapod validate",
+                "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".decapod/governance.json",
-                  ".decapod/governance.json",
-                  "validation epoch ve_374307117d754267 completed with zero failures"
+                  "Fetched accepted master advanced from d3358e1ce2cdb137dc57445c64592cb6d327a6ff to c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8 by merge of PR1635. Preserve current authored source with native checkpoint before reconciling accepted history; no validation claim on this unmerged candidate."
                 ],
                 "proof_refs": [
-                  "decapod validate"
+                  "accepted_target"
                 ],
                 "scope": [
-                  "billing",
-                  "root"
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
                 ],
                 "sequence": 6,
                 "validation_findings": []
@@ -807,299 +779,48 @@
         }
       },
       "declared_commands": [
-        "decapod docs build",
-        "decapod rpc --op specs.refresh",
-        "decapod validate",
-        "git apply authenticated pending material sha256:025caf8469c1540c0951c15f5484a49fa061222f08d0bdca6b5247f5974e21dc",
-        "git apply authenticated pending snapshot sha256:e7c2e4dfa8a4d20b5a7172e7d472917337ff998cfef370d510202fe2a0f87420",
-        "git merge --ff-only c7609e42bbbcff9c72af6be7a86333d4b0408922"
+        "cargo fmt --all (host rustfmt1.9.0-stable 31fca3adb2)"
       ],
       "destination": "pull request",
       "evidence": [
-        "Native run 43111757803 stopped on actual source validation. Run 43116091778 preserved the original task and all 18 pending paths after native release healing, but project prerequisites correctly required an actual container. This continuation imports that exact native custody and journal only inside the native-prepared real container, preserves reviewed lint/docs/release material, and records a checkpoint before rerunning JSON project prerequisites and full native publication. No failed or partial check is reused as proof; source and CI policy remain unchanged.",
-        "Original task imported and re-admitted with authenticated pending journal/source intact. Exact accepted-baseline inventory declaration corrected after independent review of 105 sources. Historical source 26a499d9f0789a5ed00605d23cfc57f5392ae8fc recorded as already_proven. Complete native publication remains required on the checkpointed candidate.",
-        "validation epoch ve_374307117d754267 completed with zero failures"
+        "Fetched accepted master advanced from d3358e1ce2cdb137dc57445c64592cb6d327a6ff to c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8 by merge of PR1635. Preserve current authored source with native checkpoint before reconciling accepted history; no validation claim on this unmerged candidate.",
+        "Native Podman admission reports can_work=true and in_container=true with the actual runtime container ID a746884071f9cd15441394a7b6634ca20a8ab454d874dcd5b04202c82a6e2b83; accepted base d3358e1ce2cdb137dc57445c64592cb6d327a6ff. No product tests have run yet.",
+        "Source implements bounded successful-header quota hints shared by nested budgets, cold-discovery pacing, fresh final registry/source/base checks, and no retry on denial. Six new fixtures are authored but have not executed. Canonical ARCHITECTURE/INTERFACES/SECURITY spec reviews recorded through native CLI. Container-private Git configuration backed up, official gh configured for authorized Git publication before proof; anonymous API reader remains credential-free."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M76AQCWJRC5YNRQNFHQ3HPAG",
+      "inspected_files": [
+        "src/decapod/core/snapshot_provider/automatic.rs",
+        "src/decapod/core/snapshot_provider/mod.rs",
+        "src/decapod/core/snapshot_provider/provider.rs",
+        "src/decapod/core/snapshot_provider/read_authorization.rs"
+      ],
+      "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
       "modified_files": [
-        ".decapod/governance.json"
+        "src/decapod/core/snapshot_provider/automatic.rs",
+        "src/decapod/core/snapshot_provider/github_quota.rs",
+        "src/decapod/core/snapshot_provider/mod.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite.rs",
+        "src/decapod/core/snapshot_provider/public_buildkite/custody.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks",
-        "publish"
+        "Checkpoint exact candidate and run plain decapod validate through required Buildkite profile",
+        "Checkpoint source, merge current accepted target without replacing active governance journal, refresh projections and revalidate exact reconciled candidate.",
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "billing",
-        "root"
+        "\".decapod/managed/specs\"]",
+        "\"src/decapod/core/validation_runtime/snapshot\"",
+        "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+        "\"tests\"",
+        "paths:[\"src/decapod/core/snapshot_provider\""
       ],
-      "run_id": "branch_01M76AQCXFVXPYJPPTC76PV506",
+      "run_id": "branch_01M77EJ4KJ409S85KKXV55SAT1",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m76aq15fea61e8",
+      "task_id": "bugs_01m77egytxsez3hd",
       "tool_calls": [],
-      "unresolved_assumptions": []
-    },
-    "validation": {
-      "ci_prediction": {
-        "confidence": "medium",
-        "recommendations": [
-          "Review the reported validation warnings before relying on the CI result.",
-          "Use `decapod validate -v --format json` to inspect the affected gate output."
-        ],
-        "result": "review"
-      },
-      "decapod_release": "0.138.2",
-      "drift_findings": [],
-      "elapsed_ms": 2506,
-      "epoch_ref": "ve_374307117d754267",
-      "fail_count": 0,
-      "failures": [],
-      "gate_timings": [
-        {
-          "elapsed_ms": 578,
-          "name": "validate_machine_contract"
-        },
-        {
-          "elapsed_ms": 540,
-          "name": "validate_project_specs_docs"
-        },
-        {
-          "elapsed_ms": 469,
-          "name": "validate_markdown_primitives_roundtrip_gate"
-        },
-        {
-          "elapsed_ms": 212,
-          "name": "validate_validation_rules"
-        },
-        {
-          "elapsed_ms": 153,
-          "name": "validate_obligations"
-        },
-        {
-          "elapsed_ms": 96,
-          "name": "validate_legacy_jsonl_retired"
-        },
-        {
-          "elapsed_ms": 91,
-          "name": "validate_stale_workspaces"
-        },
-        {
-          "elapsed_ms": 90,
-          "name": "validate_git_workspace_context"
-        },
-        {
-          "elapsed_ms": 53,
-          "name": "validate_archive_integrity"
-        },
-        {
-          "elapsed_ms": 28,
-          "name": "validate_control_plane_contract"
-        },
-        {
-          "elapsed_ms": 24,
-          "name": "validate_plan_governed_execution_gate"
-        },
-        {
-          "elapsed_ms": 23,
-          "name": "validate_schema_determinism"
-        },
-        {
-          "elapsed_ms": 15,
-          "name": "validate_no_legacy_namespaces"
-        },
-        {
-          "elapsed_ms": 13,
-          "name": "validate_federation_gates"
-        },
-        {
-          "elapsed_ms": 9,
-          "name": "validate_lineage_hard_gate"
-        },
-        {
-          "elapsed_ms": 8,
-          "name": "validate_embedded_self_contained"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_knowledge_promotions_if_present"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_watcher_audit"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_lcm_immutability"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_lcm_rebuild_gate"
-        },
-        {
-          "elapsed_ms": 6,
-          "name": "validate_repomap_determinism"
-        },
-        {
-          "elapsed_ms": 5,
-          "name": "validate_git_protected_branch"
-        },
-        {
-          "elapsed_ms": 5,
-          "name": "validate_git_push_pr_gate"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_database_schema_versions"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_interface_contract_bootstrap"
-        },
-        {
-          "elapsed_ms": 3,
-          "name": "validate_knowledge_integrity"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_health_cache_integrity"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_policy_integrity"
-        },
-        {
-          "elapsed_ms": 2,
-          "name": "validate_gatekeeper_gate"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_generated_artifact_whitelist"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_health_purity"
-        },
-        {
-          "elapsed_ms": 1,
-          "name": "validate_override_authority"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_trajectory_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_project_config_toml"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_research_claims_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_validation_receipt_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_recursive_improvement_passes_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_entrypoint_invariants"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_heartbeat_invocation_gate"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_repo_map"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_project_scoped_state"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_canon_mutation"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_watcher_purity"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_context_capsule_policy_contract"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_spec_drift"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_risk_map_violations"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_docs_templates_bucket"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_state_commit_gate"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_internalization_artifacts_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_eval_gate_if_required"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_workunit_manifests_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_context_capsules_if_present"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_root_dockerfile_seed_detection"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_risk_map"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_coplayer_policy_tightening"
-        },
-        {
-          "elapsed_ms": 0,
-          "name": "validate_tooling_gate"
-        }
-      ],
-      "git_revision": "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b",
-      "kind": "validation_receipt",
-      "parallelism": 1,
-      "pass_count": 206,
-      "prediction_uses_warnings": true,
-      "receipt_hash": "sha256:fe50d3e9eec3c7a490757f4fe36bbf9dc6e5a3b1fda71423726291eb372002f7",
-      "repo_signal_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
-      "schema_version": "1.0.0",
-      "status": "ok",
-      "temporary_artifacts_cleaned": 0,
-      "trajectory_artifact_hash": "sha256:a0a713df147c31a176c6c95f629d5be212896a83c7bb35c12de0ccdc4bb394b1",
-      "trajectory_run_id": "branch_01M76AQCXFVXPYJPPTC76PV506",
-      "warn_count": 5,
-      "warnings": [
-        "Risk map missing (run `decapod riskmap init`)",
-        "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v4' while current scaffolding is 'scaffold-v5'; living spec content remains authoritative.",
-        "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (unregistered_workspace: workspace ownership is unverified; --force does not authorize deleting unrelated directories. Inspect and preserve or remove this directory explicitly), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning)",
-        "Watcher audit trail missing (run `decapod govern watcher run`)",
-        "Workspace branch 'agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval' has unpushed commits or does not exist on origin. Branch pushes and iteration are allowed before preflight; hold PR creation until intent is converged, the branch is mergeable, and full `decapod validate` succeeds against the exact current candidate and accepted target."
+      "unresolved_assumptions": [
+        "Native exact-candidate Buildkite proof remains required. Current released controller may expose the separately tracked fresh-validation prerequisite issue1629; preserve any actual blocker instead of using candidate-built controller authority.",
+        "User authorized independent maintenance while PR1635 awaits merge; selected existing issue1573 from current backlog, with no changes to the pending cloud branch. GitHub quota hints advise pacing only and cannot establish execution readiness."
       ]
     }
   },

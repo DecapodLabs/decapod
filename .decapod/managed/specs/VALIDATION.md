@@ -1051,8 +1051,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1449,3 +1449,21 @@ GitHub admin verification, Stripe sandbox purchase or native-client integration.
 The local preparation environment rejects AF_UNIX sockets before broker
 admission, so native task/workspace creation and proof execution require the
 supported hosted environment; no local governance or publication pass is claimed.
+
+## Public GitHub quota regressions (#1573)
+
+The six tests in `src/decapod/core/snapshot_provider/github_quota.rs` belong to
+the existing required library suite. Pure fixtures cover discovery headroom,
+unchanged direct-Buildkite cadence, exhausted versus unknown/reset windows,
+malformed and duplicate headers, integer overflow, deadline expiry and
+cancellation. Unix subprocess fixtures count actual synthetic-curl launches:
+a successful exhausted response cannot cause another read before reset or after
+budget expiry, and HTTP 403/429 each stop after one attempt without fallback.
+The existing automatic-provider tests still require a fresh final registry and
+reject changed source, base, workflow/build identity and authorization.
+
+These offline fixtures are test obligations until the exact-candidate native
+validation completes. They do not prove that concurrent external callers can
+never exhaust a shared GitHub allowance, or authorize readiness from a partial
+provider observation. No required workflow, check, capture bound, authentication
+route or invocation timeout is relaxed by this change.
