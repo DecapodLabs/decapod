@@ -580,6 +580,11 @@
       "id": "native-complete-fixture-contracts",
       "summary": "Enforce pre-I/O capability denial and align actual managed-session CLI fixtures with strict native contracts",
       "input_digest": "sha256:636c92f8e9f09bc972bb765d20011e5fdcbce207ab1822e324aacb398cfcdb89"
+    },
+    {
+      "id": "native-cli-format",
+      "summary": "Apply canonical Rust formatting to the reviewed native CLI capability and resume regressions",
+      "input_digest": "sha256:cbeb70757be2e916c4846a135b8a6233d9369d3c8f337db73662ee3cc1890a05"
     }
   ],
   "intents": {
@@ -624,22 +629,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed actual source-CI failures: proof init defers to headless session acquire; unsupported validated cloud completion now fails before network preparation.",
-          "reviewed_code_fingerprint": "0e0f46656e0f8b341f921ba0c455ff352f339044149c5e83776834898c41c09c",
+          "reason": "Re-reviewed current source after formatting the pre-I/O unsupported completion fence and supported headless continuation regression.",
+          "reviewed_code_fingerprint": "09395fdfc1baa1dc0d60ee5cc69c6883159a9db4300accbabdbd4216d7b9ef11",
           "spec_material_hash": "00a2b10104a300c1701e8d97a4fffb3f08e05616702d5c385fec10c5a5c6e2ad"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed exact mandatory RPC generated_keys envelope, current sign-in status wording, typed Offline timeout and explicit session-resume assertions.",
-          "reviewed_code_fingerprint": "0e0f46656e0f8b341f921ba0c455ff352f339044149c5e83776834898c41c09c",
+          "reason": "Current source retains strict result envelopes, session readiness distinction, selected-service credential scope and typed timeout.",
+          "reviewed_code_fingerprint": "09395fdfc1baa1dc0d60ee5cc69c6883159a9db4300accbabdbd4216d7b9ef11",
           "spec_material_hash": "fb6c440a4098ba2482458369fded1ebd8870f505b95480c3619708bbca3255f2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed no-network unsupported capability denial, no fallback, token redaction and unpaid managed-session denial; all source-CI checks retained.",
-          "reviewed_code_fingerprint": "0e0f46656e0f8b341f921ba0c455ff352f339044149c5e83776834898c41c09c",
+          "reason": "Current source preserves no network for unsupported proof capture, token redaction, no cloud fallback and independent repository authorization.",
+          "reviewed_code_fingerprint": "09395fdfc1baa1dc0d60ee5cc69c6883159a9db4300accbabdbd4216d7b9ef11",
           "spec_material_hash": "41e595bfa1120d80081a4c979c3532b984f8494286e1c09facaf5f5dc2ca801a"
         }
       ],
@@ -651,7 +656,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794468482Z"
+      "updated_at": "1794468712Z"
     },
     "trajectory": {
       "active_boundaries": [

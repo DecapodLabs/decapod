@@ -541,7 +541,10 @@ mod enabled {
                     .env("DECAPOD_AGENT_ID", "supabase-init-session-proof")
                     .env("DECAPOD_CLOUD_DATASTORE", "supabase")
                     .env("DACTYL_CLOUD_ORIGIN", &origin)
-                    .env("DACTYL_CLOUD_PUBLISHABLE_KEY", "sb_publishable_test_fixture")
+                    .env(
+                        "DACTYL_CLOUD_PUBLISHABLE_KEY",
+                        "sb_publishable_test_fixture",
+                    )
                     .env("DECAPOD_ACCESS_TOKEN", "synthetic-bearer-secret")
                     .env_remove("DECAPOD_CLOUD_AUTH_MODE")
                     .output()
@@ -564,16 +567,26 @@ mod enabled {
             let request = server.join().unwrap();
             assert_eq!(request["version"], 1);
             assert_eq!(request["request_id"].as_str().unwrap().len(), 36);
-            let binding = project.path().join("data/decapod/services")
+            let binding = project
+                .path()
+                .join("data/decapod/services")
                 .join(format!("{:x}", Sha256::digest(origin.as_bytes())))
-                .join(format!("project-{:x}.json", Sha256::digest(b"example/supabase-proof")));
+                .join(format!(
+                    "project-{:x}.json",
+                    Sha256::digest(b"example/supabase-proof")
+                ));
             let binding: Value = serde_json::from_slice(&std::fs::read(binding).unwrap()).unwrap();
             assert_eq!(binding["project_id"], PROJECT);
             for output in [&initialized, &resumed] {
-                assert!(!String::from_utf8_lossy(&output.stdout).contains("synthetic-bearer-secret"));
-                assert!(!String::from_utf8_lossy(&output.stderr).contains("synthetic-bearer-secret"));
+                assert!(
+                    !String::from_utf8_lossy(&output.stdout).contains("synthetic-bearer-secret")
+                );
+                assert!(
+                    !String::from_utf8_lossy(&output.stderr).contains("synthetic-bearer-secret")
+                );
             }
-            let config = std::fs::read_to_string(project.path().join(".decapod/config.toml")).unwrap();
+            let config =
+                std::fs::read_to_string(project.path().join(".decapod/config.toml")).unwrap();
             assert!(!config.contains(PROJECT));
             assert!(!config.contains("synthetic-bearer-secret"));
             assert_no_fallback(project.path());

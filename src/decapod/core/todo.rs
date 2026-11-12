@@ -7453,7 +7453,13 @@ fn cloud_add_request(command: &TodoCommand) -> Option<JsonValue> {
 }
 
 fn require_supported_cloud_completion(command: &TodoCommand) -> Result<(), error::DecapodError> {
-    if matches!(command, TodoCommand::Done { validated: true, .. }) {
+    if matches!(
+        command,
+        TodoCommand::Done {
+            validated: true,
+            ..
+        }
+    ) {
         return Err(error::DecapodError::NotImplemented(
             "cloud todo --validated is intentionally unsupported until the remote Dactyl storage contract carries proof-capture data. Complete the remote task first, then run a separate local/remote proof workflow; see docs/book/src/reference/propodus.md".to_string(),
         ));
@@ -7696,9 +7702,7 @@ async fn run_cloud_todo_command_with_store_async(
             })
         }
         TodoCommand::Done {
-            id,
-            id_positional,
-            ..
+            id, id_positional, ..
         } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
             let task = store
