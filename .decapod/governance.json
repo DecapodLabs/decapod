@@ -689,6 +689,17 @@
         "https://github.com/DecapodLabs/decapod/issues/1629",
         "tests/consumer_readiness.rs"
       ]
+    },
+    {
+      "id": "validation-bootstrap-reviewed-release01390-v16",
+      "summary": "Review actual accepted0.139 release inventory version delta and include authentic native release-bound projection refresh; retain exact prerequisite failures as nonpublication diagnostics",
+      "input_digest": "sha256:acf9be6fe06b3c1daeefe5ded12e0f42b14deae99d59358ec5aad1355a68fef9",
+      "proof_refs": [
+        ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
+        "git:19acd21f7ff50656323d037915273f03cdedc04e",
+        "https://github.com/DecapodLabs/decapod/issues/1629"
+      ]
     }
   ],
   "intents": {
@@ -732,23 +743,23 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled accepted19ac whole-product cloud architecture and preserved validation admission/terminal evidence boundaries; native refresh follows measured fixture consolidation",
+          "reason": "Reviewed accepted release0.139 package-version-only inventory reconciliation and native projection healing alter no architecture; prior terminal lifecycle and accepted cloud architecture remain exact",
           "reviewed_code_fingerprint": "f311a8df4d0a0abce92265fb6d0a6e476fbccd7fdfaf510e19027bf5591e96e8",
           "spec_material_hash": "9de697bbc5132ebd94a55fde84ed3cd8f2ce530ccce688e6f14bd18a19bd2dbf"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved accepted19ac cloud/API interfaces while retaining runtime-owned complete evidence and fail-closed declared-workunit contracts; fixture target transport remains adapter-only",
+          "reason": "The reviewed105file inventory and native0.139 release projections change no public API, runtime-owned terminal evidence, workunit applicability, accepted executor or source-check contract",
           "reviewed_code_fingerprint": "f311a8df4d0a0abce92265fb6d0a6e476fbccd7fdfaf510e19027bf5591e96e8",
           "spec_material_hash": "35177dfb04e0c07501c6ea3c70be0d2d75c3d2a173a2fc2a9bad64d8ae3374af"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Inherited actual accepted19ac whole-product security unchanged; fixture consolidation preserves production native ELF/HTTPS/URL guards, private custody and source/governing evidence integrity",
+          "reason": "Accepted package-version metadata and nativegenerated release pins preserve existing security model; no authentication, transport, trust boundary, source authorization or proof gate weakened",
           "reviewed_code_fingerprint": "f311a8df4d0a0abce92265fb6d0a6e476fbccd7fdfaf510e19027bf5591e96e8",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
@@ -763,7 +774,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794477497Z"
+      "updated_at": "1794478266Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -776,10 +787,14 @@
         "Preserve real Git ELF and HTTPS/no-rewrite guards; CI-local admission never authorizes publication; real sealed current-suite execution and terminal evidence remain mandatory; carrier/aggregatebudget unchanged",
         "Scope actor exclusion only to complete canonical agent/<actor>/<topic>; retain legacy agent/<task> and bare task parsing, multi-task topics and actual task mismatch rejection"
       ],
-      "artifact_hash": "sha256:a6e1470027973d25706ab62396d82179523a02e0023bf0c3a01e6be7ef40cc51",
+      "artifact_hash": "sha256:1c3d71fda9e3cc6559eef49e659d77ed59a35af9c493a24a0a728d8eae49832f",
       "checks": [
         {
           "name": "accepted19ac_source_preservation_review",
+          "status": "passed"
+        },
+        {
+          "name": "accepted_release_inventory_metadata",
           "status": "passed"
         },
         {
@@ -789,6 +804,10 @@
         {
           "name": "authored_source_review",
           "status": "passed"
+        },
+        {
+          "name": "current_source_configured_execution",
+          "status": "unavailable"
         },
         {
           "name": "exact_132_cli",
@@ -919,11 +938,23 @@
           "status": "passed"
         },
         {
+          "name": "post_heal_source_inventory",
+          "status": "passed"
+        },
+        {
+          "name": "project_preparation",
+          "status": "failed"
+        },
+        {
           "name": "selected_cli_regression_v7",
           "status": "failed"
         },
         {
           "name": "source_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "source_execution_not_run",
           "status": "unavailable"
         },
         {
@@ -935,7 +966,7 @@
           "status": "passed"
         }
       ],
-      "completion_claim": "Implementation remains unproven on reconciled candidate until configured exact-source CI and independent full native validation succeed; no old result rebound",
+      "completion_claim": "Current source CI and full independent released-controller readiness remain pending; prerequisite evidence grants no publication authority",
       "current_phase": "repair",
       "custody": {
         "events": [
@@ -1069,10 +1100,24 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 20
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:21",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 21
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:22",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 22
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 20,
+        "next_sequence": 22,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1496,6 +1541,60 @@
                 ],
                 "sequence": 20,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:21",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "src/decapod/core/init_reconciliation/mod.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Read-only exact105-file Git inventory matches production source roots and serialized BTreeMap digest. Cloud parentc87e inventory8f21 matches prior declaration. Actual accepted19ac release changes ONLY Cargo.toml and Cargo.lock package version0.138.3 to0.139.0; accepted release and candidate both hashc8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174; accepted-to-candidate inventory delta empty.",
+                  "/private/tmp/validation-bootstrap-source-inventory-19ac-audit.json and private exact config backup preserved; no builds/tests/manual preflight/controller changes/provider evidence or helper changes"
+                ],
+                "proof_refs": [
+                  "accepted_release_inventory_metadata",
+                  "current_source_configured_execution"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 21,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:22",
+                "observations": [
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Supported govern project-check prerequisites-only native healing regenerated release0.139.0 entrypoint fingerprints and managed image/version pins. Report scope project_prerequisites,205passed4failed,publication_ready=false,readiness=null. No source/provider execution: host-container prerequisite and unrelated doneTODO bugs_01m73xpkqns9286n proof hook remain diagnostics, not waived; oldHEAD entrypoint/currency failures addressable by committing authentic generated projections.",
+                  "Post-heal current filesystem inventory reread all105source files, same c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 digest as actual accepted19ac. Four generated entrypoints and managed Dockerfile are outside source definition inventory; no helper/workflow/carrier change. Private raw diagnostic and provenance retained outside Git."
+                ],
+                "proof_refs": [
+                  "post_heal_source_inventory",
+                  "project_preparation",
+                  "source_execution_not_run"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 22,
+                "validation_findings": []
               }
             ]
           }
@@ -1519,6 +1618,7 @@
         "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
         "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt",
         "/private/tmp/validation-bootstrap-gov-typo-recovery.diagnostic.json",
+        "/private/tmp/validation-bootstrap-source-inventory-19ac-audit.json and private exact config backup preserved; no builds/tests/manual preflight/controller changes/provider evidence or helper changes",
         "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",
         "Actual accepted master advanced d3358e1ce2cdb137dc57445c64592cb6d327a6ff ->19acd21f7ff50656323d037915273f03cdedc04e. fab7 push early CI merge-base-context failures precede execution. Genuine merge retains original fork metadata and14 committed checkpoint history; incoming baseline unresolved obligations unchanged and incoming claim:decapod-cloud-client carried natively with exact statement/falsifier/status and acceptedcommit proofref.",
         "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
@@ -1533,19 +1633,26 @@
         "Full v1 report /private/tmp/validation-bootstrap-full-v1.json: reviewed source inventory stale before execution",
         "GH Clippy and actual required Buildkite8060 clippy measured E0308 at validation_rules.rs2182: resolve_capsule_policy requested_limit is usize, not Option; exact source log /private/tmp/validation-bootstrap-build8060-clippy.log",
         "Own v5 local controller cancelled and fully reaped before source repair; report /private/tmp/validation-bootstrap-full-v5.json says CI operation cancelled, publication_ready=false. Actual failed compiler subcheck remains distinct from interrupted aggregate proof. No remote jobs cancelled.",
+        "Post-heal current filesystem inventory reread all105source files, same c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 digest as actual accepted19ac. Four generated entrypoints and managed Dockerfile are outside source definition inventory; no helper/workflow/carrier change. Private raw diagnostic and provenance retained outside Git.",
         "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
+        "Read-only exact105-file Git inventory matches production source roots and serialized BTreeMap digest. Cloud parentc87e inventory8f21 matches prior declaration. Actual accepted19ac release changes ONLY Cargo.toml and Cargo.lock package version0.138.3 to0.139.0; accepted release and candidate both hashc8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174; accepted-to-candidate inventory delta empty.",
         "Read-only peer review confirmed incoming cloud source and trusted helper/workflow/config/MODULElock accepted bytes preserved; own lib delta is validation cache predicate only. Independent registry controller remains0.138.3; native environment notice reports no new migration, ignored applied/catalog inspected through sequence1100.",
         "Review repairs: original budget checked around terminal reads, before proof and atomic receipt/ready-verdict publication; optional exemption exact kernel id+authority; regression evaluates actual current declared workunit rule with generated capsule, living spec, current journal and retained artifact; separate mandatory project obligation remains required.",
         "Same actor task lease expired during proof/review; source edits preserved before AUTHORING_CUSTODY_STALE surfaced. Inspected sole unchanged ownership, supported same-task reclaim+4h renew+workspace rebind; lease_generation2. No v5 authored commit preceded recovery.",
         "Same exact independent native controller v6 blocked by public GitHub403 with explicit reset1794459593; source change gets new checkpoint/branch push; next full native only after reset+grace.",
         "Source review: workunit checkpoint ExecutionStateBinding positively binds current validation_epoch_digest; optional legacy manifest epochs need only reject explicit mismatches. Positive actual journal contract regression added; artifact mutation/deletion remain strict.",
         "Source trace: prerequisite demands own receipt and unconditionally demands workunit outputs",
+        "Supported govern project-check prerequisites-only native healing regenerated release0.139.0 entrypoint fingerprints and managed image/version pins. Report scope project_prerequisites,205passed4failed,publication_ready=false,readiness=null. No source/provider execution: host-container prerequisite and unrelated doneTODO bugs_01m73xpkqns9286n proof hook remain diagnostics, not waived; oldHEAD entrypoint/currency failures addressable by committing authentic generated projections.",
         "Verified capsule_policy.rs207 signature; fixture corrected Some(1) to1, rustfmt/diff hygiene only; full source execution remains pending independent next proof",
         "v4 own local controller cancelled and reaped after reviewed defects; final diagnostic SNAPSHOT_NOT_READY public read cancelled, last provider_terminal_wait579867ms, report /private/tmp/validation-bootstrap-full-v4.json. No remote/unrelated jobs cancelled; no pass/source-test failure claimed."
       ],
       "inspected_files": [
         ".decapod/managed/specs/VALIDATION.md",
+        "Cargo.lock",
+        "Cargo.toml",
         "src/decapod/core/capsule_policy.rs",
+        "src/decapod/core/init_reconciliation/mod.rs",
+        "src/decapod/core/readiness_profile.rs",
         "src/decapod/core/scaffold.rs",
         "src/decapod/core/snapshot_provider/snapshot.rs",
         "src/decapod/core/validate.rs",
@@ -1561,9 +1668,14 @@
       "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
         "src/decapod/core/validate.rs",
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/validation_rules.rs",
@@ -1581,6 +1693,7 @@
       ],
       "next_transitions": [
         "Checkpoint actual accepted-target reconciliation and measured fixture-cost consolidation, then execute unchanged required CI and independent full native validation",
+        "Checkpoint reviewed actual accepted-release source inventory, then wait current-source CI before independent full native proof",
         "Refine plan and declare falsifiable checks",
         "checkpoint"
       ],
