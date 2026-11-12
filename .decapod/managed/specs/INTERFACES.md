@@ -1,5 +1,41 @@
 # Interfaces
 
+## Cloud initialization, continuation, and readiness (#1628)
+
+`decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud
+TODO operations share `core::cloud_client::connect`. Missing custody starts a
+bounded sign-in and returns non-success `onboarding_pending` with a validated
+browser URL and headless resume instruction. A subsequent invocation polls once,
+exchanges only when ready, persists the issued session, and asks the service to
+confirm account completion. Init reports ready only after an authenticated
+read-only task lookup confirms current repository access.
+
+`action_required` describes a service-reported unresolved entitlement without
+inferring price, payment, membership, or seat authority. `repository_denied`
+propagates explicit access denial. `restart_required` preserves uncertainty
+after an interrupted one-time exchange or rotation. The explicit
+`--restart-cloud-signin` flag starts a fresh flow for this binding without
+replaying its old exchange. Normal data failures do not trigger unauthenticated
+retry, mutation replay, or local fallback.
+
+`decapod cloud status` reports only private local phase, credential presence,
+and expiry; its `server_readiness` remains `not_checked`. `--proof` on cloud
+initialization prepares configuration only and does not synthesize sign-in or
+claim readiness. The legacy `cloud login` alias uses the same managed flow.
+No new project provider, deployment, credential, price, or roster field exists.
+The fixture-only origin requires explicit test mode and literal loopback HTTP.
+
+The client consumes the published `dactyl-db 0.12.0` registry API. Pending
+secrets round-trip through its public Serde contract; authentication status and
+code exchange return strings, and completion confirms the session handoff.
+The caller retains its exact origin/repository/checkout binding and saved flow
+deadline, and an authorized repository read remains the readiness requirement.
+Lost responses to one-time mutations require explicit restart; a lost idempotent
+completion response keeps the issued session and can be checked again.
+The release-policy test binds the registry version and actual crate checksum.
+Source-overlay integration results cannot be reported as package publication,
+real PostgreSQL, hosted account enforcement, or full remote governance proof.
+
 ## Agent delegation and cloud authorization interface
 
 Decapod is invoked by each contributor's coding agent in the repository.
@@ -1064,8 +1100,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
+- Repository signal fingerprint: `4f7a21fa9e38e70d2c53e9753b488c546d097c8ba0d396162ae147e8e5146633`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1341,25 +1377,6 @@ operation, task revision, event sequence, transaction semantics, or cloud
 schema change. An unexpected historical index or missing unique enforcement
 raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
 Freed SQLite pages are reusable but are not auto-vacuumed.
-
-## Cloud purchase intent
-
-Both init surfaces accept `--cloud-repository owner/repo` and
-`--github-users alice,bob`. Cloud init requires 1–100 distinct valid GitHub
-usernames, lowercases/sorts them, and rejects a repository inconsistent with an
-existing GitHub origin before project-config writes. Refresh preserves the
-requested roster unless explicitly replaced. Non-secret TOML fields are
-`[repo].cloud_repository` and `[repo].cloud_github_users`; they grant neither
-access nor a datastore route override. Generation context and the test-only
-init registration carry the repository name.
-
-The purchase URL uses the fixed Propodus HTTPS `billing` destination and
-encoded repository/users intent. Interactive init may open the browser;
-headless, proof, dry-run and noninteractive modes print the URL. Init reports
-purchase approval and does not claim that a session or paid seat exists.
-The hosted service must independently derive price/quantity, verify admin
-authority and reconcile payment before granting repository-specific access.
-Its deployment and native client integration remain separately required.
 
 ## Public metadata quota waits
 

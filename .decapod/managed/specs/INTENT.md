@@ -1,5 +1,25 @@
 # Intent
 
+## Governed cloud client and private custody (#1628)
+
+Decapod's local-first governance kernel remains the system interface for agent
+work. Optional cloud selection changes the operational task backend without
+moving authorization policy into the agent or turning credentials into Git
+state. `repo.backend = local|cloud` is the only project-level composition
+choice. Dactyl owns discovery, physical connector selection, authentication
+transport, account-completion transport, and cloud data I/O; Decapod owns
+machine-private session custody and the bounded human-facing continuation.
+
+The client must reuse valid sessions, serialize refresh, preserve interrupted
+one-time outcomes, and expose pending/denied/action-required outcomes honestly.
+Only service-confirmed completion plus an authenticated repository read permits
+the init-ready message. This establishes current read access, not future write
+or privileged authority. Local mode requires no cloud account. The implemented
+task slice does not add full remote governance parity, pricing policy, hosted
+PostgreSQL acceptance, or a release exception for an unpublished dependency.
+Source: `core/cloud_client.rs`, `core/cloud_session.rs`, `core/todo.rs`, and
+`lib.rs`. Fixture evidence and protected real-service evidence stay distinct.
+
 ## Current bounded-reader repair (#1571)
 
 Restore ordinary local validation liveness on macOS by enumerating pinned
@@ -287,8 +307,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
+- Repository signal fingerprint: `4f7a21fa9e38e70d2c53e9753b488c546d097c8ba0d396162ae147e8e5146633`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -443,22 +463,6 @@ UNIQUE btrees' leftmost-key coverage. Do not delete rows, rewrite events, alter
 WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
 This is a bounded local SQLite optimization. Full semantic parity with
 Propodus Supabase remains a separately gated migration (Propodus #71).
-
-## Cloud repository purchase approval
-
-Cloud init carries repository identity into generated context, collects the
-requested GitHub roster and presents the hosted purchase-approval handoff.
-The preserved commercial contract is USD15 per named user per repository
-monthly, with payment approval owned by a verified repository owner/admin.
-The non-secret config records requested intent; it cannot establish a paid
-seat, a cloud credential or datastore authorization. Local use remains
-available without login or purchase.
-
-This recovery preserves the previously authored CLI contribution from
-`26a499d9f0789a5ed00605d23cfc57f5392ae8fc` on the current accepted source.
-Hosted billing deployment, sandbox purchase acceptance and released native
-client credential integration remain separate rollout requirements. A printed
-approval link alone cannot establish their completion.
 
 ## Provider quota and proof authority
 

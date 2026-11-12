@@ -556,6 +556,15 @@
         ".decapod/managed/specs/VALIDATION.md",
         "src/decapod/core/snapshot_provider/github_quota.rs"
       ]
+    },
+    {
+      "id": "issue1573-accepted-cloud-merge",
+      "summary": "Reconcile accepted cloud PR1635 at c87e4f49 using a normal merge, retaining the active quota journal and both semantic spec contributions. Rust formatting/whitespace only are proven; six new product fixtures and full native validation remain unexecuted. Origin/master has additionally advanced to release0.139.0 at19acd21; that accepted release will be merged next before final proof.",
+      "input_digest": "sha256:5a81b92cccecb2dcc4e6198b8f5fef38e1b04e30fb2b0a3860dfba9619bb7116",
+      "proof_refs": [
+        "b55ee3f8",
+        "c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8"
+      ]
     }
   ],
   "intents": {
@@ -600,23 +609,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed exact current source/spec after whitespace cleanup. Quota hints pace anonymous reads within the existing deadline/cancellation budget; they cannot authorize proof or alter provider identity, TLS, access denial, final source/base/registry checks or required Buildkite coverage. Native fixture execution remains unproven until full validation.",
-          "reviewed_code_fingerprint": "8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23",
-          "spec_material_hash": "94f8a9c520258af2bd81667238a4545229448181252064619aad69335e850ef3"
+          "reason": "Reconciled current accepted PR1635 with the independent quota fix. Preserve accepted cloud semantics and original quota section; successful-header hints only pace current public metadata reads. No new credential or authority path, no skipped final source/base/registry checks, and no relaxed proof coverage or deadline. Product fixture results remain pending exact native validation.",
+          "reviewed_code_fingerprint": "4f7a21fa9e38e70d2c53e9753b488c546d097c8ba0d396162ae147e8e5146633",
+          "spec_material_hash": "a38124863959731db9d3a0f745c73ca366e23e2836a1de90c1832b5752da48dd"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed exact current source/spec after whitespace cleanup. Quota hints pace anonymous reads within the existing deadline/cancellation budget; they cannot authorize proof or alter provider identity, TLS, access denial, final source/base/registry checks or required Buildkite coverage. Native fixture execution remains unproven until full validation.",
-          "reviewed_code_fingerprint": "8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23",
-          "spec_material_hash": "1359f6987216eb393150a02db60816ccb800ee3e23ecad7831fc267e901c08d4"
+          "reason": "Reconciled current accepted PR1635 with the independent quota fix. Preserve accepted cloud semantics and original quota section; successful-header hints only pace current public metadata reads. No new credential or authority path, no skipped final source/base/registry checks, and no relaxed proof coverage or deadline. Product fixture results remain pending exact native validation.",
+          "reviewed_code_fingerprint": "4f7a21fa9e38e70d2c53e9753b488c546d097c8ba0d396162ae147e8e5146633",
+          "spec_material_hash": "febcd9686559c312f7f751d2476ea2d4fad52df752520090626910f39a55cd46"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed exact current source/spec after whitespace cleanup. Quota hints pace anonymous reads within the existing deadline/cancellation budget; they cannot authorize proof or alter provider identity, TLS, access denial, final source/base/registry checks or required Buildkite coverage. Native fixture execution remains unproven until full validation.",
-          "reviewed_code_fingerprint": "8174adf140899671fbf422f52663435883b19ce4538a39bfc7baa4af79453c23",
-          "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
+          "reason": "Reconciled current accepted PR1635 with the independent quota fix. Preserve accepted cloud semantics and original quota section; successful-header hints only pace current public metadata reads. No new credential or authority path, no skipped final source/base/registry checks, and no relaxed proof coverage or deadline. Product fixture results remain pending exact native validation.",
+          "reviewed_code_fingerprint": "4f7a21fa9e38e70d2c53e9753b488c546d097c8ba0d396162ae147e8e5146633",
+          "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
       "state": "APPROVED",
@@ -629,18 +638,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794475435Z"
+      "updated_at": "1794475832Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve fresh final registry/source/base checks, required provider proof, public reader identity, immediate denied-request failure and the existing 7200-second maximum budget."
       ],
-      "artifact_hash": "sha256:f957d69b61122a4f49089ac64043d6679dcea3d309b9803ad2190225dedc5e43",
+      "artifact_hash": "sha256:298cef08aba6edb2201bc4a94fef2d07def5a5eb9ef0870cb1abf0f09eb22507",
       "checks": [
         {
           "name": "accepted_target",
-          "status": "partial"
+          "status": "passed"
         },
         {
           "name": "formatting",
@@ -690,10 +699,17 @@
             "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77EJ4KJ409S85KKXV55SAT1": {
@@ -773,6 +789,26 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Initial governed quota checkpoint committed as b55ee3f8. Normal merge of accepted c87e4f49 produced ten conflicts limited to the active journal and specs. Git resolution preserves exact current native journal from b55ee3f8 and accepted specs/manifest from c87e4f49, with only the four authored quota sections reapplied. Accepted historical governance remains in the incoming parent; projections and canonical spec reviews refreshed through CLI. No source conflict or cloud behavior edit was needed."
+                ],
+                "proof_refs": [
+                  "accepted_target",
+                  "product_tests"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -784,6 +820,7 @@
       "destination": "pull request",
       "evidence": [
         "Fetched accepted master advanced from d3358e1ce2cdb137dc57445c64592cb6d327a6ff to c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8 by merge of PR1635. Preserve current authored source with native checkpoint before reconciling accepted history; no validation claim on this unmerged candidate.",
+        "Initial governed quota checkpoint committed as b55ee3f8. Normal merge of accepted c87e4f49 produced ten conflicts limited to the active journal and specs. Git resolution preserves exact current native journal from b55ee3f8 and accepted specs/manifest from c87e4f49, with only the four authored quota sections reapplied. Accepted historical governance remains in the incoming parent; projections and canonical spec reviews refreshed through CLI. No source conflict or cloud behavior edit was needed.",
         "Native Podman admission reports can_work=true and in_container=true with the actual runtime container ID a746884071f9cd15441394a7b6634ca20a8ab454d874dcd5b04202c82a6e2b83; accepted base d3358e1ce2cdb137dc57445c64592cb6d327a6ff. No product tests have run yet.",
         "Source implements bounded successful-header quota hints shared by nested budgets, cold-discovery pacing, fresh final registry/source/base checks, and no retry on denial. Six new fixtures are authored but have not executed. Canonical ARCHITECTURE/INTERFACES/SECURITY spec reviews recorded through native CLI. Container-private Git configuration backed up, official gh configured for authorized Git publication before proof; anonymous API reader remains credential-free."
       ],
@@ -804,6 +841,7 @@
       "next_transitions": [
         "Checkpoint exact candidate and run plain decapod validate through required Buildkite profile",
         "Checkpoint source, merge current accepted target without replacing active governance journal, refresh projections and revalidate exact reconciled candidate.",
+        "Checkpoint/commit accepted-target merge, verify immutable history, run plain decapod validate outside CI.",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [

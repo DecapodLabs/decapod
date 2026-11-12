@@ -2,6 +2,10 @@
 //! service. The external fixture owner creates and destroys a disposable
 //! database/namespace, provisions policy, and checks the event ledger. This
 //! test never treats the local HTTP fixture as PostgreSQL proof.
+//!
+//! The legacy fixture cannot bind the managed CLI route or private custody.
+//! Explicit profile selection fails before fixture reads, CLI or network I/O;
+//! the real-service assertions remain for a separately reviewed fixture update.
 #![cfg(feature = "supabase-cloud")]
 
 use serde::Deserialize;
@@ -9,6 +13,12 @@ use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::TempDir;
+
+fn require_managed_cli_fixture() -> Result<(), &'static str> {
+    Err(
+        "MANAGED_CLI_FIXTURE_UNAVAILABLE: legacy endpoint/token environment fixtures cannot bind the managed CLI origin or private custody; unavailable is not a pass",
+    )
+}
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -89,6 +99,7 @@ fn project(repository: &str) -> TempDir {
 }
 
 fn cli(fixture: &Fixture, root: &Path, actor: &str, token: &str, args: &[&str]) -> Command {
+    require_managed_cli_fixture().expect("protected production-command proof is unavailable");
     let mut command = Command::new(
         std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod"))
             .expect("resolve decapod binary before changing working directory"),
@@ -155,6 +166,7 @@ fn rejected_transition(fixture: &Fixture, root: &Path, actor: &str, token: &str,
 }
 
 fn run(profile: &str) {
+    require_managed_cli_fixture().expect("protected production-command proof is unavailable");
     let path = std::env::var_os("DECAPOD_SUPABASE_FIXTURE").expect(
         "DECAPOD_SUPABASE_FIXTURE must name a protected fixture file; unavailable is not a pass",
     );
@@ -514,13 +526,19 @@ fn run(profile: &str) {
 }
 
 #[test]
-#[ignore = "requires authenticated disposable PostgreSQL service fixture and external cleanup"]
+#[ignore = "unavailable until the protected fixture binds the managed CLI; real PostgreSQL acceptance remains required"]
 fn local_postgres_service_contract() {
     run("local-postgres");
 }
 
 #[test]
-#[ignore = "requires protected opt-in hosted Supabase fixture and external disposable-data cleanup"]
+#[ignore = "unavailable until the protected fixture binds the managed CLI; hosted acceptance remains required"]
 fn protected_hosted_supabase_service_contract() {
     run("hosted-supabase");
+}
+
+#[test]
+#[should_panic(expected = "MANAGED_CLI_FIXTURE_UNAVAILABLE")]
+fn legacy_cli_profile_fails_before_fixture_or_network_access() {
+    run("local-postgres");
 }
