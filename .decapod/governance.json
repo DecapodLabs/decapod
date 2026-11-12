@@ -565,6 +565,11 @@
       "id": "native-dependency-discovery-bound",
       "summary": "Preserve complete generated lock data with bounded JSON formatting and review the actual complete dependency inventory.",
       "input_digest": "sha256:73ea36a22a64150c57f3b4fa53b1795b198eda0174fdcb3efef494b1d3d43b98"
+    },
+    {
+      "id": "native-consumer-denial-diagnostics",
+      "summary": "Keep explicit denial category assertions case-insensitive and retain redacted diagnostics for fixture failures.",
+      "input_digest": "sha256:743c9f626ee7655e9c374e6c98d899ba534bf0de7bf6c22acf98b4c9d0ae51a9"
     }
   ],
   "intents": {
@@ -609,22 +614,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Registry connector architecture and complete dependency closure remain current; generated lock formatting preserves every semantic record.",
-          "reviewed_code_fingerprint": "c3f1014dfa499b13271c3ff347a11a39cd61e78bed34eb0a3a9784d6a42b9eac",
+          "reason": "Registry/native architecture unchanged; service proof preserves typed denial stages after account preflight.",
+          "reviewed_code_fingerprint": "461e9b3d3f541429effc7bdfcb255ad75be3403364a54ca59790df21bbcb9365",
           "spec_material_hash": "00a2b10104a300c1701e8d97a4fffb3f08e05616702d5c385fec10c5a5c6e2ad"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Native session/account contracts unchanged; all required proof inputs remain included under the same bounded discovery policy.",
-          "reviewed_code_fingerprint": "c3f1014dfa499b13271c3ff347a11a39cd61e78bed34eb0a3a9784d6a42b9eac",
+          "reason": "Account and data denial categories remain independently asserted without depending on display capitalization.",
+          "reviewed_code_fingerprint": "461e9b3d3f541429effc7bdfcb255ad75be3403364a54ca59790df21bbcb9365",
           "spec_material_hash": "35bac824ab9892d7bd060565ee2409d5464dbd8e18608520b172983ee083608d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No proof/discovery limit was relaxed; JSON equality and exact registry archive binding preserve the dependency content.",
-          "reviewed_code_fingerprint": "c3f1014dfa499b13271c3ff347a11a39cd61e78bed34eb0a3a9784d6a42b9eac",
+          "reason": "Independent consumer still requires every denied operation to fail and protects token and task-row redaction.",
+          "reviewed_code_fingerprint": "461e9b3d3f541429effc7bdfcb255ad75be3403364a54ca59790df21bbcb9365",
           "spec_material_hash": "41e595bfa1120d80081a4c979c3532b984f8494286e1c09facaf5f5dc2ca801a"
         }
       ],
@@ -636,7 +641,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794456909Z"
+      "updated_at": "1794458036Z"
     },
     "trajectory": {
       "active_boundaries": [

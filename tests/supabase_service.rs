@@ -564,8 +564,10 @@ fn run(profile: &str) {
             assert!(!denied.status.success(), "{} must be denied", denial.case);
             let diagnostic = String::from_utf8_lossy(&denied.stderr);
             assert!(
-                diagnostic.contains(&denial.expected_error),
-                "{} returned wrong error category",
+                diagnostic
+                    .to_ascii_lowercase()
+                    .contains(&denial.expected_error.to_ascii_lowercase()),
+                "{} returned wrong error category: {diagnostic}",
                 denial.case
             );
             assert!(!diagnostic.contains("Supabase disposable command proof"));
