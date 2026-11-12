@@ -64,8 +64,8 @@ fn branch_task_ids_do_not_match_inside_agent_names() {
         Vec::<String>::new()
     );
     assert_eq!(
-        extract_task_ids_from_branch("agent/docs-bootstrap"),
-        Vec::<String>::new()
+        extract_task_ids_from_branch("agent/docs_123456"),
+        vec!["docs_123456".to_string()]
     );
     assert_eq!(
         extract_task_ids_from_branch("agent/release-pr-validation/bugs_01m4pf92p0r108x1"),
