@@ -340,9 +340,9 @@ impl Host for LocalHost {
                 || result["publication_ready"] != false
                 || result.get("readiness") != Some(&serde_json::Value::Null)
                 || result["report"]["fail_count"] != 0
-                || !result["report"]["pass_count"]
+                || result["report"]["pass_count"]
                     .as_u64()
-                    .is_some_and(|count| count > 0)
+                    .is_none_or(|count| count == 0)
             {
                 return Err(io::Error::other(format!(
                     "actual CLI prerequisite admission failed: {result}\n{}",

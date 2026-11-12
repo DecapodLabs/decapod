@@ -700,6 +700,16 @@
         "git:19acd21f7ff50656323d037915273f03cdedc04e",
         "https://github.com/DecapodLabs/decapod/issues/1629"
       ]
+    },
+    {
+      "id": "validation-bootstrap-clippy-v17",
+      "summary": "Simplify equivalent fail-closed fixture pass-count condition from actual exact-source Clippy diagnostic; preserve all source, admission and terminal proof assertions",
+      "input_digest": "sha256:21b607672dcd965482e887480c628f044dbfa76244b455b45255074fc31ddc6e",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/43198189246/job/131114983611",
+        "https://github.com/DecapodLabs/decapod/issues/1629",
+        "tests/consumer_readiness.rs"
+      ]
     }
   ],
   "intents": {
@@ -745,22 +755,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed accepted release0.139 package-version-only inventory reconciliation and native projection healing alter no architecture; prior terminal lifecycle and accepted cloud architecture remain exact",
-          "reviewed_code_fingerprint": "f311a8df4d0a0abce92265fb6d0a6e476fbccd7fdfaf510e19027bf5591e96e8",
+          "reason": "Equivalent test-only Clippy boolean simplification preserves actual CLI admission, full source execution, terminal receipt and transport/security contracts; reviewed accepted-release inventory and product specs remain unchanged",
+          "reviewed_code_fingerprint": "2ebe601304523ad6313d502c4ceab00f44188231cd9377468e41bbe3e748c93f",
           "spec_material_hash": "9de697bbc5132ebd94a55fde84ed3cd8f2ce530ccce688e6f14bd18a19bd2dbf"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The reviewed105file inventory and native0.139 release projections change no public API, runtime-owned terminal evidence, workunit applicability, accepted executor or source-check contract",
-          "reviewed_code_fingerprint": "f311a8df4d0a0abce92265fb6d0a6e476fbccd7fdfaf510e19027bf5591e96e8",
+          "reason": "Equivalent test-only Clippy boolean simplification preserves actual CLI admission, full source execution, terminal receipt and transport/security contracts; reviewed accepted-release inventory and product specs remain unchanged",
+          "reviewed_code_fingerprint": "2ebe601304523ad6313d502c4ceab00f44188231cd9377468e41bbe3e748c93f",
           "spec_material_hash": "35177dfb04e0c07501c6ea3c70be0d2d75c3d2a173a2fc2a9bad64d8ae3374af"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted package-version metadata and nativegenerated release pins preserve existing security model; no authentication, transport, trust boundary, source authorization or proof gate weakened",
-          "reviewed_code_fingerprint": "f311a8df4d0a0abce92265fb6d0a6e476fbccd7fdfaf510e19027bf5591e96e8",
+          "reason": "Equivalent test-only Clippy boolean simplification preserves actual CLI admission, full source execution, terminal receipt and transport/security contracts; reviewed accepted-release inventory and product specs remain unchanged",
+          "reviewed_code_fingerprint": "2ebe601304523ad6313d502c4ceab00f44188231cd9377468e41bbe3e748c93f",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -774,7 +784,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794478266Z"
+      "updated_at": "1794478873Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -787,8 +797,20 @@
         "Preserve real Git ELF and HTTPS/no-rewrite guards; CI-local admission never authorizes publication; real sealed current-suite execution and terminal evidence remain mandatory; carrier/aggregatebudget unchanged",
         "Scope actor exclusion only to complete canonical agent/<actor>/<topic>; retain legacy agent/<task> and bare task parsing, multi-task topics and actual task mismatch rejection"
       ],
-      "artifact_hash": "sha256:1c3d71fda9e3cc6559eef49e659d77ed59a35af9c493a24a0a728d8eae49832f",
+      "artifact_hash": "sha256:41b1bcb7f6643488b4ae43bb9db8c04b6e42fd03efc58d8536421887098e2561",
       "checks": [
+        {
+          "name": "17_configured_source_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "17_source_format",
+          "status": "passed"
+        },
+        {
+          "name": "41e_actual_source_clippy",
+          "status": "failed"
+        },
         {
           "name": "accepted19ac_source_preservation_review",
           "status": "passed"
@@ -966,7 +988,7 @@
           "status": "passed"
         }
       ],
-      "completion_claim": "Current source CI and full independent released-controller readiness remain pending; prerequisite evidence grants no publication authority",
+      "completion_claim": "New source remains pending actual configured tests and complete independent native proof; prior41e failures preserved",
       "current_phase": "repair",
       "custody": {
         "events": [
@@ -1114,10 +1136,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 22
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:23",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 23
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 22,
+        "next_sequence": 23,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1595,6 +1624,30 @@
                 ],
                 "sequence": 22,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:23",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "tests/consumer_readiness.rs",
+                  "Official sourceCI GH job131114983611/run43198189246 on exact41e86d3f accepted19ac failed cargo clippy --all-targets --all-features -- -D warnings: nonminimal_bool at consumer_readiness.rs343. Corresponding Buildkite8399 Clippy push check131116039493 also reports failure; raw native provider proof not yet collected.",
+                  "Apply Clippy equivalent is_none_or(count==0) to optional integer pass count. Missing and zero remain rejected; positive nonzero remains admitted only alongside all existing actualscope/failurecount/readiness/clean-source checks. rustfmt only, no manual build/tests, guards or required budgets changed."
+                ],
+                "proof_refs": [
+                  "41e_actual_source_clippy",
+                  "17_source_format",
+                  "17_configured_source_execution"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 23,
+                "validation_findings": []
               }
             ]
           }
@@ -1623,6 +1676,7 @@
         "Actual accepted master advanced d3358e1ce2cdb137dc57445c64592cb6d327a6ff ->19acd21f7ff50656323d037915273f03cdedc04e. fab7 push early CI merge-base-context failures precede execution. Genuine merge retains original fork metadata and14 committed checkpoint history; incoming baseline unresolved obligations unchanged and incoming claim:decapod-cloud-client carried natively with exact statement/falsifier/status and acceptedcommit proofref.",
         "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
         "Actualfab7 PR job131088359791 explicitly passed fresh_docs_cli_admission_then_complete_runtime_proves_current_source and existing real_source_failure; aggregate target then timedout300.1s at final workunit recovery test. New source removes duplicate governed negative preparation/admission and strengthens existing real negative receipt/history/verdict assertions; no budget/test/selector change.",
+        "Apply Clippy equivalent is_none_or(count==0) to optional integer pass count. Missing and zero remain rejected; positive nonzero remains admitted only alongside all existing actualscope/failurecount/readiness/clean-source checks. rustfmt only, no manual build/tests, guards or required budgets changed.",
         "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
         "Authored tests not executed yet; full accepted-controller validation owns builds and all test execution",
         "Buildkite8037 required standalone-validation source build E0282: explicit String map key type required; raw actual provider log /private/tmp/validation-bootstrap-build8037.log",
@@ -1632,6 +1686,7 @@
         "Fixture repair uses supported canonical governance_document::migrate; ignores data runtime and exact managed governance-document.lock before Git accepted-source commit. Genuine CLI fixture removes only its initial adapter proof-only config before real init creates full schema, then retains actual command/source review. Production schemas, gates, actor and docs task kind unchanged.",
         "Full v1 report /private/tmp/validation-bootstrap-full-v1.json: reviewed source inventory stale before execution",
         "GH Clippy and actual required Buildkite8060 clippy measured E0308 at validation_rules.rs2182: resolve_capsule_policy requested_limit is usize, not Option; exact source log /private/tmp/validation-bootstrap-build8060-clippy.log",
+        "Official sourceCI GH job131114983611/run43198189246 on exact41e86d3f accepted19ac failed cargo clippy --all-targets --all-features -- -D warnings: nonminimal_bool at consumer_readiness.rs343. Corresponding Buildkite8399 Clippy push check131116039493 also reports failure; raw native provider proof not yet collected.",
         "Own v5 local controller cancelled and fully reaped before source repair; report /private/tmp/validation-bootstrap-full-v5.json says CI operation cancelled, publication_ready=false. Actual failed compiler subcheck remains distinct from interrupted aggregate proof. No remote jobs cancelled.",
         "Post-heal current filesystem inventory reread all105source files, same c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 digest as actual accepted19ac. Four generated entrypoints and managed Dockerfile are outside source definition inventory; no helper/workflow/carrier change. Private raw diagnostic and provenance retained outside Git.",
         "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
@@ -1693,6 +1748,7 @@
       ],
       "next_transitions": [
         "Checkpoint actual accepted-target reconciliation and measured fixture-cost consolidation, then execute unchanged required CI and independent full native validation",
+        "Checkpoint exact Clippy correction then wait current source CI and required provider execution before independent full native proof",
         "Checkpoint reviewed actual accepted-release source inventory, then wait current-source CI before independent full native proof",
         "Refine plan and declare falsifiable checks",
         "checkpoint"
