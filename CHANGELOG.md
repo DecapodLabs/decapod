@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.140.1](https://github.com/DecapodLabs/decapod/compare/v0.140.0...v0.140.1) - 2026-11-12
+
+### Added
+
+- *(storage)* add bounded native storage inventory
+
 ## [0.140.0](https://github.com/DecapodLabs/decapod/compare/v0.139.1...v0.140.0) - 2026-11-12
 
 ### Fixed

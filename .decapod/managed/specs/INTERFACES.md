@@ -1100,10 +1100,22 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5af17205c56359a16f8eec7d270f0d8815bca9451c607213a4139fe32acb6f2d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
+- Repository signal fingerprint: `61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Bounded local storage inspection
+
+CLI `data database inspect` and RPC `data.database.inspect` expose
+`decapod.storage-inventory.v1`. Options bound rows, decoded scan bytes, report
+bytes and duration; reads beyond five seconds require an explicit option.
+Missing stores remain missing; sampled, unavailable and partial metrics are
+labeled. Incomplete inspection has a typed limitation and nonzero exit.
+The effective catalog digest covers tables, indexes, triggers and views without
+emitting DDL. Checkpoint and prefix metadata samples retain separate coverage.
+RPC framing is capped at 32 MiB before JSON decoding. See
+`docs/storage-inventory.md` for interpretation and bounds.
 
 ## Plan contract revision boundary
 
@@ -1378,14 +1390,6 @@ schema change. An unexpected historical index or missing unique enforcement
 raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
 Freed SQLite pages are reusable but are not auto-vacuumed.
 
-## Explicit managed project routing
-
-`cloud projects` and `cloud project use|create` consume the existing version-one account status/register channel. A saved numbered choice references the exact prior directory for its managed account. Creation persists an immutable UUID/name before the request and retains the response reference after success; ambiguous outcomes reconcile the same UUID. Selected project status must echo its project and managed account before use. Text output shows names/status; credentials and routing records remain outside repository configuration.
-
-`tests/supabase_service.rs` declares the separate `local-native-projects-v1` consumer profile. An independent fixture owner supplies two ordinary managed bearers, disposable loopback PostgREST, and private client/receipt paths. The first phase selects a real account project and observes a shared native task through two CLI processes; the second phase requires the owner to revoke one account before checking its next operation. Missing provisioned services are unavailable. Modeled session issuance, HTTP fixtures, real local PostgreSQL, hosted authentication and released artifacts remain distinct proof categories.
-
-The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
-
 ## Human setup and cloud handoff presentation
 
 Interactive `decapod init` presents Project, Preferences and Review with
@@ -1410,6 +1414,14 @@ Validation evidence rules execute at the terminal publication boundary. `validat
 Only the kernel optional workunit-completion rule can become inapplicable when the authoritative journal reports no declaration. A separate mandatory project or task rule still evaluates and fails when required workunit evidence is absent. Optional manifest epoch fields constrain evidence when provided; the supported current execution binding positively binds the actual epoch when those legacy fields are unset.
 
 Task binding on a managed `agent/<actor>/<topic>` branch reads task identifiers from the topic. A task-shaped actor name does not declare another task. Legacy unnamespaced and `agent/<task>` branches and multiple task identifiers in a topic retain their existing matching and mismatch checks.
+
+## Explicit managed project routing
+
+`cloud projects` and `cloud project use|create` consume the existing version-one account status/register channel. A saved numbered choice references the exact prior directory for its managed account. Creation persists an immutable UUID/name before the request and retains the response reference after success; ambiguous outcomes reconcile the same UUID. Selected project status must echo its project and managed account before use. Text output shows names/status; credentials and routing records remain outside repository configuration.
+
+`tests/supabase_service.rs` declares the separate `local-native-projects-v1` consumer profile. An independent fixture owner supplies two ordinary managed bearers, disposable loopback PostgREST, and private client/receipt paths. The first phase selects a real account project and observes a shared native task through two CLI processes; the second phase requires the owner to revoke one account before checking its next operation. Missing provisioned services are unavailable. Modeled session issuance, HTTP fixtures, real local PostgreSQL, hosted authentication and released artifacts remain distinct proof categories.
+
+The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
 
 ## Versioned cloud mutation receipts
 

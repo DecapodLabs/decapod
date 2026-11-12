@@ -1196,10 +1196,42 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5af17205c56359a16f8eec7d270f0d8815bca9451c607213a4139fe32acb6f2d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
+- Repository signal fingerprint: `61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Native inventory qualification
+
+The required CLI suite includes seven inventory regressions: UTF-8/reuse and
+redaction; sampled/budget-limited coverage; ordinary DDL and generated columns;
+trigger/view binding without DDL disclosure; checkpoints outside the ordinary
+event prefix; missing-store CLI/direct/stdin RPC without initialization; and
+bounded framing before startup. The registry dependency/version/checksum guard
+remains enabled for Dactyl v0.13.0. Read-only live captures use a CI-produced
+binary with database trees mounted read-only and only existing locks writable.
+Those captures bind their actual historical source/binary identity; they cannot
+establish publication readiness for the current candidate.
+
+The candidate preserves accepted managed-cloud, terminal onboarding and
+first-proof admission changes through v0.140.0 at fc1e2b94. Its release-bound
+entrypoints and managed image pin require regeneration through the independently
+published matching controller. Canonical spec reviews follow the final source
+and authored-spec edits. Complete exact-candidate Buildkite proof and current
+accepted-target verification remain required before publication; earlier passing
+stages, GitHub diagnostics and checkpoint-history checks cannot replace them.
+
+The CLI contract target runs exclusively in Bazel. Two hosted attempts of the
+previous 74-case candidate exhausted its 300-second deadline during the final
+existing workunit-recovery case after all seven inventory regressions passed;
+the same suite previously completed in 252 seconds. Rust's single test thread
+did not isolate real CLI fixtures from the concurrent entrypoint target.
+Exclusive scheduling let that complete suite pass in 293.7 seconds, leaving
+insufficient margin under the previous aggregate ceiling. The expanded target
+therefore uses Bazel's existing finite 900-second class, like the other large
+CLI suites. Every case, assertion and individual operation deadline remains
+required. Fresh execution must establish complete current-suite success;
+earlier partial runs do not prove it.
 
 ### Validation-owned candidate execution
 
@@ -1608,3 +1640,9 @@ The independent disposable native service consumer executed project selection, a
 ## Versioned cloud mutation receipts
 
 Mixed-release cache regressions require legacy rows and unknown outcomes to survive migration, the released array-only reader shape to reject v2, unsupported future versions to remain untouched, and oversized encoded upgrades to preserve their original bytes. These are additional full-profile obligations; no manual build or standalone test supplies current publication readiness.
+
+## Accepted inventory release reconciliation
+
+The accepted target `1d04f232c46864eecfadb9c8b9b23069ca0e906e` adds bounded local storage inventory and releases Decapod 0.140.1. Its declared registry dependency is Dactyl 0.13.0, checksum `ba334815ca49f203b6a933d559b84b5aca5559686237be9791f48d71b3cb6292`; the later registry releases are not this consumer artifact. The actual 105-source inventory is reviewed as `sha256:be2b53094dcaddbe64037a722a82763ac837d7090dc2b7bf280f7c94452d5a57`. The accepted Bazel delta adds storage-inventory fixture inputs and preserves its finite CLI aggregate deadline and exclusive scheduling. The generated module lock changes the registry Dactyl references consistently. No required check, executor, workflow or selector is removed. The public managed-project branch preserves those accepted definitions.
+
+The earlier full 0.140.0 attempt returned `SNAPSHOT_NOT_READY` after the accepted target advanced; it is not current readiness. The 0.140.1 registry controller is installed through supported `session acquire` with a temporary scoped auto-update opt-in, then restores that preference. Release projections are generated through the controller. Both the version-two receipt tests and native project consumer require fresh execution for the resulting exact source, accepted target and registry artifact. Prior source-specific native evidence remains historical and cannot authorize publication of this new candidate.

@@ -307,10 +307,19 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5af17205c56359a16f8eec7d270f0d8815bca9451c607213a4139fe32acb6f2d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
+- Repository signal fingerprint: `61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Bounded native storage inventory (#1630)
+
+Measure Decapod, Dactyl and Propodus dogfooding stores before selecting a compact
+representation. Native CLI/RPC inspection exposes exact counts, explicit bounded
+samples and redacted size/reuse observations. Retain all stored history and the
+accepted managed-cloud behavior. This PR supplies the measurement prerequisite;
+field contracts, representation, migration, retention and full domain parity
+remain coordinated work requiring measured budgets and further proof.
 
 ## Laya readiness scope
 
@@ -464,12 +473,6 @@ WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
 This is a bounded local SQLite optimization. Full semantic parity with
 Propodus Supabase remains a separately gated migration (Propodus #71).
 
-## Explicit managed project routing
-
-Managed cloud commands must distinguish the local Git checkout from a service-issued project reference. `cloud projects` lists authenticated project names; `cloud project use` selects an exact name or a previously shown entry; `cloud project create` explicitly materializes a project through the existing idempotent account contract. Selection does not grant access. Existing session custody and local operation remain independent of this account-routing cache.
-
-The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
-
 ## Refined terminal onboarding and managed cloud setup
 
 Human setup follows Project, Preferences and Review, with recommended defaults,
@@ -483,3 +486,9 @@ owns pricing, account requirements, assignments and repository access; the TUI
 does not infer authority from a local roster. A pending or denied handoff is not
 setup success. Managed-project selection and the protected paid customer journey
 remain separate work and are not claimed by this presentation change.
+
+## Explicit managed project routing
+
+Managed cloud commands must distinguish the local Git checkout from a service-issued project reference. `cloud projects` lists authenticated project names; `cloud project use` selects an exact name or a previously shown entry; `cloud project create` explicitly materializes a project through the existing idempotent account contract. Selection does not grant access. Existing session custody and local operation remain independent of this account-routing cache.
+
+The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.

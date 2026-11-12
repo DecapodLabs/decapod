@@ -852,10 +852,19 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5af17205c56359a16f8eec7d270f0d8815bca9451c607213a4139fe32acb6f2d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
+- Repository signal fingerprint: `61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Native inventory boundary
+
+`core::storage_inventory` owns semantic measurement, sampling and redaction;
+`DactylBridge::inspect_snapshot` delegates physical reads to released Dactyl's
+bounded read-only transaction. CLI/RPC inspection dispatches before mutating
+startup. Filesystem observations remain separate from SQL snapshot consistency.
+Exact checkpoint/other totals and a distinct checkpoint sample avoid prefix
+blindness, with shared scan/time/VM budgets. No retention or authority changes.
 
 ## Accepted executor and candidate source
 
@@ -1059,12 +1068,6 @@ indexes; preferences use `UNIQUE(category,key)`. Runtime initializers stop
 recreating redundant trees. Reverse-key indexes remain. No data or proof
 encodings change; cloud PostgreSQL migration ownership stays with Propodus.
 
-## Explicit managed project routing
-
-`core/cloud_project.rs` owns bounded project-directory selection and the pending creation receipt. `SessionGuard` stores this auxiliary record under the same stable lock and exact checkout/service custody binding, without changing the credential record format or refresh state machine. `cloud_client::acquire` reuses accepted authentication; `connect` resolves the selected project after refresh. The todo factory uses that resolved data reference when opening the consumer connection. No data or authentication transport is implemented outside Dactyl.
-
-The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
-
 ## Terminal setup over the managed cloud boundary
 
 `src/decapod/onboarding.rs` owns terminal sizing, presentation, keyboard input and
@@ -1089,6 +1092,12 @@ Full validation has separate admission and terminal evidence boundaries. `core/v
 The terminal boundary shares the original invocation deadline. It checks the remaining budget around evidence reads and before issuing proof; native success files remain private until an atomic bundle publication that rechecks that deadline. Remote ready verdicts likewise stage privately before publication. A deadline expiry cannot turn completed checks into late publication authority.
 
 A fresh worktree may lack the ignored context-capsule policy cache. The policy loader materializes and validates that cache when needed; its absence is not a missing source scaffold and must not trigger a rewrite of the committed specs manifest before proof. Missing tracked scaffold surfaces retain their repair path.
+
+## Explicit managed project routing
+
+`core/cloud_project.rs` owns bounded project-directory selection and the pending creation receipt. `SessionGuard` stores this auxiliary record under the same stable lock and exact checkout/service custody binding, without changing the credential record format or refresh state machine. `cloud_client::acquire` reuses accepted authentication; `connect` resolves the selected project after refresh. The todo factory uses that resolved data reference when opening the consumer connection. No data or authentication transport is implemented outside Dactyl.
+
+The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
 
 ## Versioned cloud mutation receipts
 

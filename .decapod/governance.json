@@ -591,6 +591,15 @@
       "proof_refs": [
         "/private/tmp/decapod-managed-project-validation-05.json"
       ]
+    },
+    {
+      "id": "managed-project-1401-inventory-merge",
+      "summary": "Reconcile accepted storage inventory and 0.140.1 release, preserve managed-project routing and v2 mutation receipts; regenerate release projections through supported registry controller and retain full proof obligations.",
+      "input_digest": "sha256:90f179523f1bd9e088eb036b95730b81919a9fd49899bf580b3faebd8e09bc99",
+      "proof_refs": [
+        "/private/tmp/decapod-managed-project-validation-05.json",
+        "/private/tmp/decapod-project-init-1401.json"
+      ]
     }
   ],
   "intents": {
@@ -633,23 +642,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Versioned local operation receipt envelope protects resolved route binding from older array-only clients, with stable-lock legacy migration and no credential/server protocol change.",
-          "reviewed_code_fingerprint": "5af17205c56359a16f8eec7d270f0d8815bca9451c607213a4139fe32acb6f2d",
-          "spec_material_hash": "3061ae561d80ed920d90f30e5cea492e32106fdcb69b72940d5e4037349c780a"
+          "reason": "Preserve accepted storage inventory and validation lifecycle; project selection remains auxiliary machine-private routing, while v2 receipts prevent older writers dropping resolved route binding.",
+          "reviewed_code_fingerprint": "61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce",
+          "spec_material_hash": "be89820f5ea62d2c18d322d6c2a17b1c38e44531498769c57fcab4e097731a30"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Private operation cache v2 supports legacy arrays, rejects unsupported future versions and old writer shapes, while preserving current server/session contracts and uncertain operation IDs.",
-          "reviewed_code_fingerprint": "5af17205c56359a16f8eec7d270f0d8815bca9451c607213a4139fe32acb6f2d",
-          "spec_material_hash": "0555b79a081e6d6b39f8d3d69d47e05a9af4a08380d01e8473f0712054d38923"
+          "reason": "Review project list/use/create, versioned cache migration and local-native-projects-v1 consumer profile together with accepted bounded storage inspection; no server authorization or credential schema change.",
+          "reviewed_code_fingerprint": "61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce",
+          "spec_material_hash": "8887810c9db620555274f23ad133605e7eac9cff88608e0a731d83f8113103bc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Older clients cannot silently discard route bindings. Strict encoded-byte checks precede atomic replacement, preserving migration evidence and future-version files without truncation.",
-          "reviewed_code_fingerprint": "5af17205c56359a16f8eec7d270f0d8815bca9451c607213a4139fe32acb6f2d",
-          "spec_material_hash": "d79557e0021c4cbb73a17451be729171569a62238a4efa3fbea7524d2e3e77e1"
+          "reason": "Preserve accepted read-only inventory privacy; selected route and cache are never authority, current account/project readiness precedes each connection, older cache writers fail closed, unknown writes retain reconciliation identity.",
+          "reviewed_code_fingerprint": "61ea31d0b34563a92a0a27c0adf71d6050f6593683e64a79c2ed5d17c0d583ce",
+          "spec_material_hash": "eb711ea23ca1a300f364802f19b0a439525770022ee54e22de70a7762130d4ea"
         }
       ],
       "state": "APPROVED",
@@ -662,17 +671,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794493066Z"
+      "updated_at": "1794493697Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Preserve all required checks and accepted storage inventory; no manual build or tests; no hosted or payment readiness claim."
       ],
-      "artifact_hash": "sha256:5d2630c6727dc0d7d41c492a6e6046eeb403bf9ee3f5e074c2388a17602559e8",
+      "artifact_hash": "sha256:3766c4a24fea9c7b4a7fdc8841e902a512c08b118a33c7154293b8fb47fa8de3",
       "checks": [
         {
           "name": "accepted_target_merge",
           "status": "partial"
+        },
+        {
+          "name": "full-validation-05",
+          "status": "failed"
         },
         {
           "name": "implementation",
@@ -723,7 +737,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "merge-reconciliation",
       "custody": {
         "events": [
           {
@@ -793,10 +807,17 @@
             "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77JY4X7Q7EW3YNCPBEC72WV": {
@@ -964,15 +985,44 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "merge-reconciliation",
+                "command": "supported session updater installed registry controller 0.140.1; temporary opt-in restored",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Cargo.lock",
+                  ".config/build/decapod.BUILD.bzl",
+                  "MODULE.bazel.lock",
+                  "src/decapod/core/cloud_todo_operation.rs",
+                  "/private/tmp/decapod-managed-project-validation-05.json",
+                  "/private/tmp/decapod-project-supported-update-1401.stderr"
+                ],
+                "proof_refs": [
+                  "full-validation-05"
+                ],
+                "scope": [
+                  "src/decapod/core/cloud_client",
+                  "src/decapod/core/cloud_project",
+                  "tests"
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical."
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "supported session updater installed registry controller 0.140.1; temporary opt-in restored"
+      ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/decapod-managed-project-validation-05.json",
         "/private/tmp/decapod-project-orientation-20261112.json",
+        "/private/tmp/decapod-project-supported-update-1401.stderr",
         "15f5237f full collection failed public GithubObjects403 with explicit reset1794487263; source checks later failed current-target admission after accepted releasefc1e2b94. No proof or readiness substituted. Independent local service profile subsequently passed exact15f5237f sharing/revocation phases with real native database; modeled login/Edge envelope remain distinct.",
         "557d5ae4 stopped before proof: accepted master advanced again to f1a6c7a0 via1633. Incorporate actual second parent and its accepted validation lifecycle/input wiring; preserve active PR custody and regenerate supported projections. No passing readiness is carried forward.",
         "Added separate native project consumer profile; independent real PostgreSQL fixture proof remains pending.",
@@ -989,9 +1039,13 @@
         "Use existing official registry0.139.1 controller from supported peer session update; SHA256 fb461bb5b06ea2f2df3e691caef9c1ebdee9bc144a9c6ab7d25b720268cba72c; docs unchanged, applied migration notice none. Reconciled unchanged required graph inventory for accepted version-only Cargo inputs; no check removed."
       ],
       "inspected_files": [
+        ".config/build/decapod.BUILD.bzl",
+        "Cargo.lock",
+        "MODULE.bazel.lock",
         "src/decapod/core/cloud_client.rs",
         "src/decapod/core/cloud_project.rs",
         "src/decapod/core/cloud_session.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
         "src/decapod/core/todo.rs",
         "tests/supabase_service.rs"
       ],
@@ -1015,6 +1069,7 @@
       "task_id": "cicd_01m77jnnap2xt5qt",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
         "Native account projects have service-owned references distinct from Git labels. Reuse accepted session custody and preserve credential record format; account IDs and metadata are routing facts, never authorization.",
         "Neighboring session/onboarding owners confirmed project binding is outside their scopes. Full source validation owns build/tests; no separate manual test was run. Real native service evidence remains separate from modeled HTTP."
       ]
