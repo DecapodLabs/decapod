@@ -162,6 +162,20 @@ The persistent, shared understanding of the project.
 
 ## 7. Governance and Proof Artifacts
 
+After human initialization, the agent operates the engineering lifecycle
+through Decapod. Record the request and scope in the governed plan and
+trajectory, claim the task and enter its workspace, then keep execution and
+recovery attached to that intent. Use `decapod validate` to run the configured
+checks and collect source-bound evidence. Inspect the returned evidence path
+and receipt before reporting completion, and provide the proof reference to
+the user. Preserve failed checks and retry with fresh proof after repairs.
+The user should not have to sequence these commands. Human decisions and
+browser/account actions remain explicit when Decapod requires them.
+
+Receipts identify their scope and governing source. Repository-local proof
+does not establish hosted cloud, billing or deployment acceptance; CI-local
+checks do not establish publication readiness.
+
 - **Intent and Plans:** The human supplies intent; the agent records and updates its governed interpretation through Decapod. Plans are execution state, not proof by themselves.
 - **Claims:** Falsifiable repository-owned statements linked to a baseline, failure mode, measurement, and proof gate. They change as research evidence changes.
 - **Trajectories:** Agent-recorded custody evidence for intent, boundaries, inspected and modified files, assumptions, tool calls, checks, and proof references across a run.

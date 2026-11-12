@@ -9,6 +9,14 @@ refresh and explicit safe recovery. The user completes provider/account actions
 without operating the CLI again. Pending sign-in is an honest incomplete
 connection, not a reason to lose the user's task or create a duplicate task.
 
+The agent carries the engineering request through Decapod's intent, task,
+workspace, execution-history, validation and publication interfaces. It owns
+sequencing and supported recovery, and returns an inspectable proof reference
+bound to the checked source. The user supplies the outcome and required human
+decisions, without manually orchestrating the command lifecycle. Decapod's
+governance and configured validation remain the authority for admissibility
+and readiness; an agent's completion message is not evidence.
+
 Decapod's local-first governance kernel remains the system interface for agent
 work. Optional cloud selection changes the operational task backend without
 moving authorization policy into the agent or turning credentials into Git
@@ -314,8 +322,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `279581132ea4d1e42fe4d22b960154f8bb719f8483c0a612a43b1c748e9e5a74`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `a6a34e9f1d6171897ff1d874ab9ca581eda3694b7031133c1c4a6fc1ef0a1f65`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (228 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -470,3 +478,17 @@ UNIQUE btrees' leftmost-key coverage. Do not delete rows, rewrite events, alter
 WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
 This is a bounded local SQLite optimization. Full semantic parity with
 Propodus Supabase remains a separately gated migration (Propodus #71).
+
+## Refined terminal onboarding and managed cloud setup
+
+Human setup follows Project, Preferences and Review, with recommended defaults,
+focused customization and an explicit apply/edit/cancel decision. Interactive
+setup creates no project, Git, governance or cloud sign-in state before approval.
+Existing settings and full proof definitions survive refresh, with private
+backups before changed config replacement. Local operation needs no account.
+
+Cloud setup uses the accepted Dactyl-managed session flow after apply. The service
+owns pricing, account requirements, assignments and repository access; the TUI
+does not infer authority from a local roster. A pending or denied handoff is not
+setup success. Managed-project selection and the protected paid customer journey
+remain separate work and are not claimed by this presentation change.

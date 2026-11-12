@@ -41,6 +41,12 @@ that. For cloud projects, it shares the browser sign-in link when needed,
 resumes the connection, and renews the privately stored session across later
 invocations. You keep chatting with your agent as usual.
 
+Your agent carries the request through Decapod: it records intent and scope,
+claims the task, works in the governed workspace, runs Decapod validation,
+repairs failed checks, and returns an inspectable proof artifact. The artifact
+identifies the source and required checks that actually ran. You describe the
+engineering outcome; the agent operates these steps through Decapod.
+
 ## What Decapod governs
 
 | Concern | What stays with the project |

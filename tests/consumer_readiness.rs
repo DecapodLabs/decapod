@@ -490,9 +490,35 @@ fn fresh_non_cargo_consumer_executes_every_required_source_check_in_snapshot() {
 }
 
 #[test]
-fn real_source_failure_is_not_ready_and_committed_repair_runs_new_proof() {
+fn governed_intent_survives_source_failure_repair_and_native_proof() {
     let fixture = Fixture::new();
     fs::write(fixture.options.root.join("payload.txt"), "broken\n").unwrap();
+    // Use Decapod's real intent custody, not a synthetic receipt or an agent's
+    // completion claim. The source adapter below executes the actual checks.
+    fs::write(
+        fixture.options.root.join(".decapod/governance.json"),
+        serde_json::to_vec(&decapod::core::governance_document::GovernanceDocument::default())
+            .unwrap(),
+    )
+    .unwrap();
+    let intent = "Repair the consumer source while preserving both required checks";
+    decapod::core::trajectory::init_trajectory(
+        &fixture.options.root,
+        decapod::core::trajectory::TrajectoryInit {
+            run_id: "consumer_repair".into(),
+            task_id: Some("consumer_source_repair".into()),
+            intent_id: None,
+            original_intent: intent.into(),
+            derived_intent: "Restore payload.txt and collect fresh source-bound proof".into(),
+            active_boundaries: vec!["payload.txt".into()],
+            repo_scope: vec!["payload.txt".into()],
+            destination: Some("validated source repair with an inspectable receipt".into()),
+            current_phase: Some("execution".into()),
+            next_transitions: vec!["validation".into()],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
     fixture.commit("introduce source defect");
     let mut host = fixture.host();
     let failed = fixture.validate(&mut host);
@@ -532,10 +558,53 @@ fn real_source_failure_is_not_ready_and_committed_repair_runs_new_proof() {
         "{failed:?}: {stderr}"
     );
     fs::write(fixture.options.root.join("payload.txt"), "ready\n").unwrap();
+    decapod::core::trajectory::record_trajectory(
+        &fixture.options.root,
+        "consumer_repair",
+        decapod::core::trajectory::TrajectoryUpdate {
+            modified_files: vec!["payload.txt".into()],
+            current_phase: Some("validation".into()),
+            tool_calls: vec!["repair payload.txt after the required source check failed".into()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
     fixture.commit("repair actual source defect");
     let repaired = fixture.validate(&mut fixture.host());
     assert!(repaired.ready, "{repaired:?}");
     assert_ne!(failed.evidence_path, repaired.evidence_path);
+    let directory = repaired.evidence_path.unwrap();
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(directory.join("completion/native-readiness-receipt.json")).unwrap(),
+    )
+    .unwrap();
+    let governance = fs::read(fixture.options.root.join(".decapod/governance.json")).unwrap();
+    let document: serde_json::Value = serde_json::from_slice(&governance).unwrap();
+    let trajectory =
+        decapod::core::trajectory::load_trajectory(&fixture.options.root, "consumer_repair")
+            .unwrap();
+    assert_eq!(trajectory.original_intent, intent);
+    assert_eq!(
+        trajectory.task_id.as_deref(),
+        Some("consumer_source_repair")
+    );
+    assert_eq!(trajectory.modified_files, ["payload.txt"]);
+    assert_eq!(receipt["status"], "ok");
+    assert_eq!(receipt["scope"], "repository_local_readiness");
+    assert_eq!(
+        receipt["material"]["head_revision"],
+        git(&fixture.options.root, &["rev-parse", "HEAD"])
+    );
+    use sha2::{Digest, Sha256};
+    assert_eq!(
+        receipt["governance_digest"],
+        format!("sha256:{:x}", Sha256::digest(&governance))
+    );
+    assert_eq!(
+        receipt["trajectory_digest"],
+        decapod::core::readiness_evidence::digest(&document["sections"]["trajectory"]).unwrap()
+    );
+    assert!(!directory.starts_with(&fixture.options.root));
 }
 
 #[test]

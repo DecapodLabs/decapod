@@ -13,6 +13,1019 @@
       "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and changes preserve schema compatibility or explicitly version it."
     },
     "unresolved": {
+      "accepted-governance:bc0a71971bce8ee036a24562b7fc4a9b771f2f40": {
+        "document": {
+          "baseline": {
+            "accepted_commit": "d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
+            "policy": {
+              "change_control": {
+                "requires_human_review": true,
+                "requires_issue": true,
+                "requires_validation": true
+              },
+              "new_capability_rule": "Every new kernel capability must map to one existing claim or introduce a new falsifiable claim before it is treated as research-relevant. A feature description alone is not evidence.",
+              "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and changes preserve schema compatibility or explicitly version it."
+            },
+            "unresolved": {
+              "claim:accepted-executor-candidate-build": {
+                "falsifier": "A changed carrier, altered accepted executor, missing or mismatched dual-root identity, incomplete required graph, or unauthenticated artifact can establish readiness; or candidate helper changes require a separate manual build despite a supported accepted executor.",
+                "proof_refs": [
+                  "src/decapod/core/readiness_profile/tests.rs",
+                  "src/decapod/core/snapshot_provider/source_execution/tests.rs",
+                  "src/decapod/core/validation_runtime/executor_contract.rs"
+                ],
+                "statement": "For the supported remote source-CI carrier, plain validation admits candidate helper changes using an independently captured accepted executor, retains the full build/test graph and final controller verdict, and rejects substituted authority or custody.",
+                "status": "open"
+              },
+              "claim:atomic-completion": {
+                "falsifier": "An unresolved dependency or unproven exclusive task can commit done through a direct mutation",
+                "statement": "Every task done mutation enforces dependency and lease proof within its transaction",
+                "status": "open"
+              },
+              "claim:basic-shared-optin": {
+                "falsifier": "The default permits such claims, the switch permits an untrusted or primary claim, stronger trust or approvals are bypassed, or success lacks a transactional use record.",
+                "statement": "The default-off main-config switch allows basic agents only as secondary owners of a task with an existing different primary owner, records a policy-use event atomically, and leaves stored trust and independent policy gates unchanged.",
+                "status": "open"
+              },
+              "claim:bootstrap-order": {
+                "falsifier": "Any generated initialization path or quickstart runs task orientation outside its governed worktree.",
+                "statement": "Generated entrypoints enter claimed isolated worktree before orientation and preserve orientation before implementation.",
+                "status": "open"
+              },
+              "claim:bounded-integration-matrix": {
+                "falsifier": "A selected target or test is omitted/duplicated, compilation repeats inside shard runs, or any successful selective-test step takes 300 seconds or more.",
+                "statement": "PR integration test execution uses one shared build and complete non-overlapping Gatling shards; every selective-test step finishes in under five minutes.",
+                "status": "open"
+              },
+              "claim:bounded-preflight-latency": {
+                "falsifier": "A stale, missing, malformed, denied, cancelled, failed or mismatched input yields readiness; any applicable source obligation is dropped; bounded resource use is exceeded; or comparable measured collection has no material improvement.",
+                "statement": "The collector removes repeated exact-request reads and overlaps bounded independent metadata retrieval, while preserving all exact-source and terminal custody checks; CI optimizations reduce measured critical-path overhead without skipping applicable execution.",
+                "status": "open"
+              },
+              "claim:broker-caller-custody": {
+                "falsifier": "Required two/eight caller returned, persisted or audit identities differ; twenty concurrent mutators fail progress; physical opens recur per request.",
+                "proof_refs": [
+                  "tests/group_broker.rs"
+                ],
+                "statement": "Concurrent broker requests retain originating caller context and make bounded progress through a foreground reusable connection.",
+                "status": "open"
+              },
+              "claim:broker-identity-reuse": {
+                "falsifier": "Any of eight callers receives or persists another caller identity, storage opens per caller, uncommitted data leaks across leases, or a worker survives parent loss",
+                "proof_refs": [
+                  "src/decapod/core/storage_owner.rs",
+                  "tests/group_broker.rs"
+                ],
+                "statement": "Opt-in supervised physical connection reuse preserves each queued callers returned and persisted task identity",
+                "status": "open"
+              },
+              "claim:broker-uncertain-lifecycle": {
+                "falsifier": "A post-start same-ID retry executes again, a disconnected reply ends a leader with queued work, or later callers inherit transaction/configuration state.",
+                "proof_refs": [
+                  "src/decapod/core/storage_owner.rs",
+                  "tests/unit/core/group_broker_tests.rs"
+                ],
+                "statement": "Lost acknowledgements never authorize mutation replay; owner loss rolls back unfinished work and releases lifecycle resources.",
+                "status": "open"
+              },
+              "claim:build-layout-compatibility:question:bazel-root-marker-policy": {
+                "decision_impact": "Determines whether the root lockfile remains an intentional exception to the canonical build configuration directory.",
+                "id": "bazel-root-marker-policy",
+                "owner": "Decapod build maintainers",
+                "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
+                "status": "deferred"
+              },
+              "claim:claim:billing-cloud-approval": {
+                "falsifier": "Unreviewed source changes, unapproved cloud action, dropped local/cloud boundary, missing current tests, stale target or any missing native readiness evidence.",
+                "proof_refs": [
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "statement": "Recover the reviewed cloud-init requested-seat and purchase-approval handoff onto accepted master; repair obsolete session assertions; preserve native governance and proof boundaries without deploying billing or claiming paid cloud is operational.",
+                "status": "open"
+              },
+              "claim:claim:container-work-preservation": {
+                "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
+                "proof_refs": [
+                  "tests/unit/plugins/container_tests.rs"
+                ],
+                "statement": "Automatic container workspace deletion requires successful command completion, branch foldback, verified ownership and a clean Git worktree; failed, unsynced, dirty or unverifiable work remains available with recovery diagnostics.",
+                "status": "open"
+              },
+              "claim:claim:recovery-aptitude": {
+                "falsifier": "Unreviewed runtime or workflow changes, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+                "proof_refs": [
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "statement": "The candidate recovers only reviewed residual tests/documentation with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct.",
+                "status": "open"
+              },
+              "claim:claim:recovery-docs": {
+                "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+                "proof_refs": [
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Reconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
+                "status": "open"
+              },
+              "claim:committed-scope-enforcement": {
+                "falsifier": "A clean committed forbidden edit, deletion, rename source or over-budget delta reaches provider execution or readiness",
+                "proof_refs": [
+                  "src/decapod/core/validation_runtime/tests.rs"
+                ],
+                "statement": "Full readiness rejects forbidden-path and file-budget violations across complete accepted-base candidate delta on native and provider routes",
+                "status": "open"
+              },
+              "claim:complete-prepush-readiness": {
+                "falsifier": "An empty, stale, skipped-required, mocked-code or missing-provider result authorizes publication, or CLI/RPC/publish bypasses the same boundary",
+                "statement": "Public validate can authorize source PR publication only after all applicable actual source checks and candidate builds pass with genuine current material/provider evidence; release-only packaging is explicitly outside core source scope",
+                "status": "open"
+              },
+              "claim:consumer-local-proof": {
+                "falsifier": "Real non-Cargo failure passes, stale contract or target passes, or strict profile can downgrade",
+                "proof_refs": [
+                  "tests/consumer_readiness.rs"
+                ],
+                "statement": "Reviewed consumer local proof executes required commands against exact candidate and target without weakening strict Decapod CI proof",
+                "status": "open"
+              },
+              "claim:container-boundary-integrity": {
+                "falsifier": "A failed execution invokes push or PR; raw gh bypasses readiness; divergent host history is overwritten; or successful cleanup deletes hidden tracked edits or new/changed stash, side branch or tag refs.",
+                "proof_refs": [
+                  "tests/unit/plugins/container_tests.rs"
+                ],
+                "statement": "Container completion never publishes failed or local-only runs, PR requests use the common governed publisher, branch foldback rejects non-fast-forward updates, and cleanup retains index-hidden work plus refs added or changed beyond the returned branch.",
+                "status": "open"
+              },
+              "claim:created-context": {
+                "falsifier": "A changed, unrelated, dirty, missing-base or tampered event obtains no-change status or readiness evidence",
+                "statement": "Only a provider-declared ordinary first push at the verified accepted target is classified as no change; actual candidate ranges remain strict",
+                "status": "open"
+              },
+              "claim:current-authority-resume": {
+                "falsifier": "Changed source, branch lineage, intent, plan, required approval, task revision or lease owner can pass resume; or committing only checkpoint bookkeeping invalidates unchanged continuation.",
+                "proof_refs": [
+                  "src/decapod/core/trajectory/execution.rs"
+                ],
+                "statement": "Execution continuation checks the checkpoint against current material, accepted intent, plan, scope, policy approvals and task custody; a valid checkpoint hash alone does not grant continuation or publication readiness.",
+                "status": "open"
+              },
+              "claim:current-obligation-evidence": {
+                "falsifier": "A required regression accepts stale cached proof, cached dependency completion, malformed requirements, dangling edges or cycles, or an unmet verify/graph command exits zero.",
+                "proof_refs": [
+                  "tests/plugins/health.rs",
+                  "tests/plugins/obligation.rs",
+                  "tests/unit/plugins/health_tests.rs"
+                ],
+                "statement": "Obligation readiness derives from current transitive dependencies and authoritative HealthEngine evidence, not advisory caches; corrupt graphs and unmet CLI verification fail closed.",
+                "status": "open"
+              },
+              "claim:current-task-proof": {
+                "falsifier": "A stale or unbound pass completes a work claim, unlocks dependency admission, bypasses aggregate verification, or stale verifier overwrites newer evidence",
+                "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
+                "status": "open"
+              },
+              "claim:dagger-removed": {
+                "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
+                "proof_refs": [
+                  "PR source diff and pending remote validation"
+                ],
+                "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
+                "status": "open"
+              },
+              "claim:durable-artifact-publication": {
+                "falsifier": "Parent sync failure reports success, recovery follows a substituted parent symlink, a partial history is returned as complete, or admitted append crosses its recovery size bound.",
+                "proof_refs": [
+                  "src/decapod/core/atomic.rs",
+                  "tests/unit/core/events_tests.rs"
+                ],
+                "statement": "Unix atomic artifact publication requires file and containing-directory synchronization; an error after rename reports unconfirmed durability without claiming rollback, and bounded journal admission cannot append an unreadable head.",
+                "status": "open"
+              },
+              "claim:fresh-provider-metadata-batching": {
+                "falsifier": "An invalid or denied batch falls back to another route, a metadata response is reused across invocations, changed source/provider identity passes, or batching exceeds the existing concurrency/deadline bound.",
+                "statement": "Independent current provider metadata reads use bounded authorized batches; all identity, cancellation, output-bound and final freshness checks remain mandatory.",
+                "status": "open"
+              },
+              "claim:full-proof-preserved": {
+                "falsifier": "Any missing, failed, stale, mismatched or skipped required proof can produce readiness, or an original check command is omitted",
+                "statement": "All currently applicable source checks, per-check receipts, exact-source bindings and final freshness remain required under bounded transport and same-checkout grouping",
+                "status": "open"
+              },
+              "claim:gatling-full-suite-bounded-ci": {
+                "falsifier": "The Bazel target uses the old 300-second moderate timeout, excludes cases, disables assertions, drops or masks nonzero test exits, or allows an unbounded runtime.",
+                "statement": "Bazel assigns the complete //:gatling 50-case CLI test suite a finite 900-second budget without omitting any assertions, retrying failures, or changing test-thread parallelism.",
+                "status": "open"
+              },
+              "claim:governance-recovery-liveness": {
+                "falsifier": "A tip checkpoint retroactively proves an uncheckpointed commit, an unauthorized or stale exception changes admission, or the documented supported recovery cannot reach its declared result.",
+                "proof_refs": [
+                  "src/decapod/core/governance_document.rs"
+                ],
+                "statement": "Missing immutable checkpoint evidence is precisely discoverable and has an explicit authorized recovery outcome without being reclassified as independently proven history.",
+                "status": "open"
+              },
+              "claim:governed-context:question:task-class-benefit": {
+                "decision_impact": "Determines routing policy and whether context selection should optimize for class-specific outcomes.",
+                "id": "task-class-benefit",
+                "owner": "Decapod context maintainers",
+                "question": "Which task classes benefit most from narrowing, and when is additional context worth its cost?",
+                "status": "open"
+              },
+              "claim:independent-entrypoint-history": {
+                "falsifier": "Tamper then restore to canonical HEAD can pass the full native or Buildkite readiness boundary",
+                "proof_refs": [
+                  "src/decapod/core/entrypoint_integrity/history/tests.rs"
+                ],
+                "statement": "Complete validation rejects unauthorized entrypoint rewrites in candidate history independently of provider-local Git gate skips",
+                "status": "open"
+              },
+              "claim:intent-durability:question:sample-size": {
+                "decision_impact": "Determines benchmark power and whether the claim can move beyond instrumented status.",
+                "id": "sample-size",
+                "owner": "Decapod research maintainers",
+                "question": "How many tasks and agent/tool combinations are needed to separate custody effects from model variance?",
+                "status": "open"
+              },
+              "claim:kernel-bootstrap-custody": {
+                "falsifier": "Distinct independent tasks cannot author in isolated checkouts, incompatible bindings coexist, stale handoffs succeed, or missing prompt input is reported as evaluated.",
+                "proof_refs": [
+                  "tests/kernel_bootstrap.rs",
+                  "tests/plugins/todo.rs"
+                ],
+                "statement": "Independent task source overlap does not reserve a repository; task and observed checkout custody remain exclusive with fenced handoff and typed evaluation recovery.",
+                "status": "open"
+              },
+              "claim:measured-latency-reduction": {
+                "falsifier": "Completed comparable successful runs do not show material reduction, or queue and overlapping timings are misrepresented",
+                "statement": "The revised collector and grouped runtime lane materially reduce comparable successful preflight costs; no five-minute claim without measurement",
+                "status": "open"
+              },
+              "claim:multi-agent-custody:question:shared-interface-scale": {
+                "decision_impact": "Determines whether shared-interface workflows need an additional claim, protocol, or merge proof.",
+                "id": "shared-interface-scale",
+                "owner": "Decapod workspace maintainers",
+                "question": "How does custody scale when tasks intentionally share an interface or require coordinated changes across workspaces?",
+                "status": "open"
+              },
+              "claim:native-diagnostic-recovery": {
+                "falsifier": "A diagnostic cannot identify its check and capture files, or it changes proof or readiness authority",
+                "proof_refs": [
+                  "tests/consumer_readiness.rs"
+                ],
+                "statement": "Executed native checks preserve machine-readable diagnostic identity, termination and check-level errors alongside existing private output without granting readiness",
+                "status": "open"
+              },
+              "claim:native-discovery-deadline": {
+                "falsifier": "A near-expired real Rust slow probe obtains a fresh discovery budget or launches after expiry.",
+                "statement": "Supplemental Rust discovery shares the original absolute validation deadline.",
+                "status": "open"
+              },
+              "claim:native-release-owner": {
+                "falsifier": "The extracted owner script emits true for the sanitized importer, missing/unknown runner identity or explicit Buildkite markers, or false for the configured native hosted identity.",
+                "statement": "Only the configured native GitHub-hosted owner identity selects release mutation; sanitized Buildkite imports and missing or unknown runner identity remain false before credential-bearing jobs.",
+                "status": "open"
+              },
+              "claim:pr1609-governed-publication": {
+                "falsifier": "Any authored commit lacks a staged-material checkpoint, governance artifact, or required generated projection; exact-candidate validation fails",
+                "proof_refs": [
+                  ".decapod/governance.json"
+                ],
+                "statement": "Every authored commit on the replacement PR candidate has current Decapod checkpoint lineage and current release-bound projections",
+                "status": "open"
+              },
+              "claim:pr1609-source-audit": {
+                "falsifier": "Any finding lacks a precise source, misstates implemented behavior, or marks unexecuted runtime fixes as complete",
+                "proof_refs": [
+                  "docs/datastore-v2/production-readiness-v0.137.0.md"
+                ],
+                "statement": "Documentation review accurately records source-backed datastore gaps and does not claim unrun proof or implementation",
+                "status": "open"
+              },
+              "claim:precise-file-claims": {
+                "falsifier": "Disjoint basic-trust claims conflict solely on root directory, real file overlaps pass, or shared trust/policy gates weaken",
+                "proof_refs": [
+                  "tests/plugins/todo.rs",
+                  "tests/unit/core/fleet_coord_tests.rs"
+                ],
+                "statement": "Explicit bounded file-set scopes allow disjoint exclusive claims without promoting trust while retaining real path and independent policy conflicts",
+                "status": "open"
+              },
+              "claim:project-spec-purpose": {
+                "falsifier": "A non-Decapod fixture acquires a Decapod or provider identity, a narrow task replaces product purpose, or supported refresh rewrites authored material.",
+                "proof_refs": [
+                  "tests/project_spec_authoring.rs",
+                  "tests/unit/core/project_specs_tests.rs"
+                ],
+                "statement": "Generic specs scaffolding and context extraction preserve the configured whole-project purpose across narrow task work; all Decapod specs describe the full product.",
+                "status": "open"
+              },
+              "claim:proof-backed-completion:question:predictive-proof": {
+                "decision_impact": "Determines future validation policy and whether additional proof gates are warranted.",
+                "id": "predictive-proof",
+                "owner": "Decapod validation maintainers",
+                "question": "Which proof gates best predict production-relevant correctness, and how should warning-heavy but passing runs be classified?",
+                "status": "open"
+              },
+              "claim:proof-before-done": {
+                "falsifier": "Missing or failing proof leaves task done or success event committed",
+                "statement": "Validated completion and captured successful proof commit atomically",
+                "status": "open"
+              },
+              "claim:proof-recovery-no-deadlock:question:historical-proof-ownership": {
+                "decision_impact": "Determines whether recovery can be automatic for legacy backlogs or must return tasks to an actionable open state.",
+                "id": "historical-proof-ownership",
+                "owner": "Decapod governance maintainers",
+                "question": "When a task was completed by an agent whose proof record is missing, what minimum repository-native evidence is sufficient for a later agent to recover verification without recreating the original execution context?",
+                "status": "open"
+              },
+              "claim:quinn-importer-compatibility": {
+                "falsifier": "Any old mixed unknown or changed importer identity validates, or full proof accepts malformed source/structural evidence",
+                "proof_refs": [
+                  "Targeted Rust importer identity tests and full decapod validate required"
+                ],
+                "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
+                "status": "open"
+              },
+              "claim:recovery-workspace-artifact-lookup": {
+                "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
+                "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
+                "status": "open"
+              },
+              "claim:regular-release-artifact": {
+                "falsifier": "The staged upload path is a symlink or differs in bytes from the compiled Bazel output.",
+                "statement": "The release-build uploader consumes an owned regular file containing exactly the successfully built Bazel binary.",
+                "status": "open"
+              },
+              "claim:release-cpus": {
+                "falsifier": "CPU quota/affinity is exceeded, matrix targets drift, or publication gates are broadened",
+                "statement": "Release artifact compilation uses runner-effective CPU parallelism without altering global defaults, target matrix or publication gates",
+                "status": "open"
+              },
+              "claim:release-ownership": {
+                "falsifier": "Non-owner release changes task assignment, owners or events",
+                "statement": "A different local actor cannot release current exclusive custody",
+                "status": "open"
+              },
+              "claim:release-pr-provider-parity": {
+                "falsifier": "An imported Buildkite job retrieves release secrets or executes a release mutation, a native release path loses its owner gate, or PR-only dispatch invokes package publishing.",
+                "proof_refs": [
+                  "tests/release_workflow_policy.rs"
+                ],
+                "statement": "Native GitHub Actions is the sole release mutation owner; Buildkite imports skip credential-bearing release jobs and do not count as publication proof. Explicit PR-only dispatch preserves normal native push behavior.",
+                "status": "open"
+              },
+              "claim:release-version-stable-bazel": {
+                "falsifier": "A version-only candidate fails stale-lock setup, or changed dependencies build without a reviewed lock refresh",
+                "proof_refs": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/38277266024/job/114905883943"
+                ],
+                "statement": "A version-only release with unchanged dependency resolution can build through strict Bazel setup while dependency drift remains fail-closed",
+                "status": "open"
+              },
+              "claim:renewed-plan-acceptance": {
+                "falsifier": "A changed intent, scope, proof or phase contract retains accepted state or phase completion, or phase progression promotes an unapproved plan",
+                "statement": "Material plan or phase contract changes revoke previous accepted state and progress before execution can continue; no-op changes preserve state",
+                "status": "open"
+              },
+              "claim:repeatable-bootstrap": {
+                "falsifier": "Forced init resets tracker or reviewed contract, or generated workflow lacks immutable context",
+                "proof_refs": [
+                  "tests/init_ci_scaffolding.rs",
+                  "tests/init_config_behavior.rs"
+                ],
+                "statement": "Both init entrypoints preserve omitted authored config choices; generated CI includes immutable range and full history",
+                "status": "open"
+              },
+              "claim:reviewed-importer-01027": {
+                "falsifier": "An observed green result or arbitrary version/digest tuple authorizes import; any required proof/profile/custody check is removed; or the selected controller artifact lacks verified accepted-executor and source provenance.",
+                "proof_refs": [
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+                ],
+                "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
+                "status": "open"
+              },
+              "claim:strict-protocol-rollout": {
+                "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
+                "proof_refs": [
+                  "src/decapod/core/readiness_profile/tests.rs",
+                  "tests/source_ci_profile_policy.rs"
+                ],
+                "statement": "Initial protocol rollout preserves strict independently pinned single-root compatibility, and unsupported workflow or execution contracts remain actionable blockers rather than self-authorizing a candidate controller.",
+                "status": "open"
+              },
+              "claim:task-journal-reconstruction": {
+                "falsifier": "A supported mutation loses journal custody, replay changes verification bytes or revision, a contradictory chain is accepted, or recovery overwrites an unrelated current projection.",
+                "proof_refs": [
+                  "src/decapod/core/task_journal.rs",
+                  "tests/unit/core/task_journal_tests.rs"
+                ],
+                "statement": "Modern local task mutation and exact revision, lease, owner, dependency and proof projection checkpoints commit together in the canonical event store; recovery preserves incomplete legacy history and rejects divergent live authority.",
+                "status": "open"
+              },
+              "claim:trajectory-journal-recoverability": {
+                "falsifier": "Changing run ID discards uncommitted failures, assumptions, blockers or Jev evidence without Git recovery",
+                "proof_refs": [
+                  "tests/unit/core/trajectory_tests.rs"
+                ],
+                "statement": "Starting a different trajectory cannot replace an uncommitted governance journal through supported APIs",
+                "status": "open"
+              },
+              "claim:validation-without-operator-receipt": {
+                "falsifier": "The first checked validation push needs an operator receipt; a changed command/root/head/ref/repository inherits the seal; or unrelated write/provider restrictions are bypassed.",
+                "proof_refs": [
+                  "src/decapod/core/snapshot_provider/snapshot/tests.rs"
+                ],
+                "statement": "Configured validation can create, fast-forward or reuse its exact governed workspace branch without asking the human for a separate local policy receipt; unrelated writes, altered requests and provider/executable denials remain blocked.",
+                "status": "open"
+              },
+              "claim:version-storage-independence": {
+                "falsifier": "Version fails on damaged or unsafe storage, writes project state, or consumes migration notice; stateful commands accept unsafe permissions",
+                "proof_refs": [
+                  "tests/cli_contract_enforcement.rs",
+                  "tests/trajectory_cli.rs"
+                ],
+                "statement": "System version reports binary metadata without opening project state, while stateful commands retain unsafe-permission rejection and migration notices",
+                "status": "open"
+              },
+              "claim:workunit-journal-recovery": {
+                "falsifier": "Concurrent mutations lose updates, stale prepared state overwrites the journal, a retry overwrites a divergent projection, or replay refreshes a retained passing proof artifact.",
+                "proof_refs": [
+                  "tests/cli_contract_enforcement.rs",
+                  "tests/unit/core/workunit_journal_tests.rs"
+                ],
+                "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
+                "status": "open"
+              },
+              "plan:3109ff52b1ce422e": "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
+              "plan:7f9060fac006b60a": "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof.",
+              "trajectory:01e30f48c2e7df81": "Native worker decoder fixtures have moved to portable worker tests but have not executed; root CI cannot substitute for these or native acceptance.",
+              "trajectory:0369d7ba53eadf4c": "Candidate-assisted normal admission is not independent publication proof",
+              "trajectory:06645c9215349379": "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
+              "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
+              "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
+              "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
+              "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
+              "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
+              "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
+              "trajectory:280aab34e7c0084a": "Source-built generator is used solely for report-prescribed Markdown regeneration and grants no kernel authority. No native build or scientific test executed on132because source docs proof failed. All earlier failed reports retained. Return to official1191 plain validate on exact repaired candidate; no bootstrap exception or manual shadow preflight.",
+              "trajectory:306f3433d7e5e778": "Final candidate and provider proof remain required; local macOS failures are not waived.",
+              "trajectory:30ef4cc2d51da604": "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification.",
+              "trajectory:331b4335c37f48d2": "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback.",
+              "trajectory:3a8cce72f404c6a2": "Explicit latest user decision replaces only research qualification prerequisite, retains all deterministic and functional required active-model gates. Original task/custody/branch preserved; current remoteHEADfef84896/master7371ad25, clean. Prior12modelrequests all actual singletonreject; constructed baseline discloses nonexecution and unassessed trajectory so not a meaningful ready positive. Need faithful production-shaped known-outcome cases, shared code, unchanged model/calibration/tolerances, preserve failures and no cherry-picking.",
+              "trajectory:3ce44b0c351b9137": "Existing exact-source branch create, fast-forward and reuse already need no operator receipt; this change adds explicit authorized retry guidance, not a policy bypass.",
+              "trajectory:3e14f62d9baafc47": "New user response do what you know is best delegated safe-abstention interpretation; prompt gateALLOW69e5f7124ee6af1940ffdf80b881644b9126467b4b0aa77ec95b368fa3ce4542. Preserve all12frozen labels/97b4667e and original59ea22of24 mismatch; do not claim all-positive or old research passed. Verification qualification requires actual approval on each backend and every adverse/protocol case; safe abstention only on ready controls, with mismatch and non-ready verdict retained. Main model input, model/calibration/threshold/math/tolerance and runtime predicate unchanged. Two additional native tests authored, require full exact-candidate official validation. Public signed-push replay recovered39source steps but produced duplicate auxiliary builds; released controller rejected them, no deletion or guard waiver. This genuine qualification/documentation checkpoint uses original branch/task/custody and fresh required CI; no new infrastructure/prerequisite/branch/merge/release.",
+              "trajectory:42a30b6dcb8fd580": "Provider scheduling and ARM execution currently exceed the five-minute full target; only completed comparable runs can establish gain",
+              "trajectory:448419562500c551": "Actual40 native tests and real Metal primitive checks pass, but download failures and incomplete CPU holdout with false-ready outcomes are not model parity or production calibration. Preserve later diagnostics on early strict aggregate error without making collection success readiness. Pin/error reporting preserves denial kinds and all setup safety. New source must run through official1191 validation; no manual builds or source-proof reuse as current scientific acceptance.",
+              "trajectory:44ab164f90c301d9": "The existing traversal regression expected compact human output to contain every failure; use the complete structured failure list and preserve the exact traversal rejection assertion.",
+              "trajectory:4d4fa5c9f32018c3": "Focused tests and live GET are diagnostic; full released-controller validation remains required.",
+              "trajectory:4daee12c8c51710b": "Fullvalidate5635stoppedbefore native because public docs workflow2290failed generatedconfigschema. Followed actualreport source-built docs build via reviewed existing docs-repairscript; no candidatecontrollergovernance. GitHubClippydiagnostic found single needlessborrow newly extracted sharedfunction. Fixwithoutlint suppression, preservefailedreport, rerunexactcandidate. No previousnativepassisclaimedforthisnewcode.",
+              "trajectory:50af5d188a338fdf": "First rollout cannot retroactively teach the existing released controller this new protocol; use independently built supported controller custody without claiming automatic replacement.",
+              "trajectory:54138daaebe9eade": "A declared human decision reference is provenance, not authenticated publication authority; candidate-only exception records cannot waive proof.",
+              "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
+              "trajectory:5fe8315a1e8b30f0": "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
+              "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
+              "trajectory:6279504af9ea3fac": "Substantive evidence/spec reconciliation only; implementation/model/recipe/criteria unchanged. 719 sourceCI passes but BuildkiteCI helper failed before workflow parsing, latest full validation has public403. Public logs are diagnostics, not substituted proof. 23-lineage agent-proxy holdout has related cases and four positives without P2P; all byte bounds do not imply token bounds. Native719 repairs and model holdout remain unexecuted; no PR readiness claim.",
+              "trajectory:629235671bebf582": "The explicit opt-in operates under a cooperative local filesystem boundary; same-user edits and caller labels are not authenticated.",
+              "trajectory:63e29ae0c70a9499": "All failure history and scientific criteria remain. New4.5MiBpublic fixture initiallyplaced underexecutable-discoveryroot triggeredDISCOVERY_BLOCKED; movedunchanged into existingtests/fixtures data boundary, hash50ce9421unchanged; executableauditor remains discovered. Reviewed allchanged authored sources/coverage and explicit user-configbf95 pin withoutchanging workflow/executor/requiredness/recipe/model/calibration. No newprerequisite/manualtest or candidatecontrollerauthority. Newcorpus sourceaudit is provisional, not independentlyadjudicated labels or risk proof; no newinference/fitting/holdoutselection basedon model results.",
+              "trajectory:672a93d99366b57c": "Metadata-onlycommandcompletedexit0; identicaldependencygraph andlocksize, one generatedinputhash repaired. Currentlibrary/native scientifictests mustexecute through freshdecapodvalidate, previous30015measurements remain scoped. PublicGithubreader403reset22:46:31UTCmustbehonored without automaticauthswitch/artifactimport. Pushcorrectedsamebranch so realCI canexecute; rerunnormalvalidateafterreset. Frozenv2calibrationfailure remains mandatoryunresolvedacceptance, no PRuntilgenuinelygreen.",
+              "trajectory:67bb86b5fbf52859": "24c706f5 executed1445 library tests with0 failures and3 ignored; CLI enforcement160.3s/contracts107.1s/entrypoints111.8s passed, including init refresh and portable parent retry policy. All CI jobs except dependency lint passed. Scope parking_lot to GPU targets/features, no lint waiver. Reviewed inventory d39eff26f37bdb8e49140867f78e116c4a9b93698ba5e20da8a486c2cca65f78. Native worker still uncompiled/unexecuted.",
+              "trajectory:6ae1a28b7236a4ce": "Observed complete enforcement suite281.7s in separate contracts job versus300.1s timeout under selective CLI concurrency; cli_contracts180.8s passed. Move two existing recovery cases unchanged into required cli_contracts suite; retain all assertions, source graph and300s limits. Verified relocation byte-for-byte after dedent. Reviewed inventory dda50695ae419697531da494338a3fd98a008204df34a7e744b7c7c5b431dd1d; only additional declared test module/build input changes, no CI policy mapping changed. Current repair not executed yet; native recipe/reference/holdout blockers remain.",
+              "trajectory:70205730dee26930": "Official validation source upload cannot authenticate GitTransport; gh auth status reports no logged-in hosts and supported environment catalog is empty.",
+              "trajectory:754f2eaee0aa202d": "Successful clean-run ignored outputs and extra refs/stashes remain outside worktree preservation scope",
+              "trajectory:760c8a45e61249ac": "E0603 is a separate-worker interface error, not a failed model comparison or permission issue. Local nonce syntax validation replaces the inaccessible helper without changing model-installation API visibility, required acceptance or filesystem invariants. Preserve all reports and rerun official controller against exact repaired source; no manual build/test or candidate-controller authority.",
+              "trajectory:77ee70aff183fb2e": "ConcretefixtureIncompletePlan failurepreserved. Sourceandcandidate-build requiredkinds unchanged; actualnativeexecutable suppliesbuildartifact hash, notafakeartifact orverifierwaiver. Newregressionmustreject removal. Functionalcasebytes/labels frozenbeforefirstinference unchanged; nofit/tuning ormodel/calibration/tolerance change. Newtestsauthorednotpassed; normalvalidateownsallverification. Originaltask/branch/custody unchanged.",
+              "trajectory:790a50c1b5645599": "No code test failed in the inspected source-CI logs; reported blockers were stale target/base custody.",
+              "trajectory:7d1680219f61cd41": "Separate native-validation prerequisite feat_01m55h3p8vy7d94x is inspected, draft and yielded; root-scope overlap rejected. Original feature task reclaimed only after supported yield/category registration, original identity/provenance retained.",
+              "trajectory:7d90d3eaf34454b7": "Five-minute end-to-end target remains subject to measured queue and unavoidable execution costs.",
+              "trajectory:7ef3c7e2168ec922": "Source-inspected shared-memory hazard is repaired narrowly in separate pinned subpackage; no claim of executed repair or functional causality before prescribed validation. New independent scalar primitive oracle uses no candidate math. Cargo targeted resolver normalized existing Windows-only edges without version changes; Windows unverified. External model/calibration/corpus and numerical/risk criteria unchanged; long-context, full productionfallback and independentlabel gaps remain.",
+              "trajectory:7efb2c6e6bb53134": "New companion binding/probe/classifier/receipt changes and regressions authored, no Rust tests executed for this candidate. Actual worker build/Metal/model/parity/calibration unavailable under current released native-proof contract; no manual build, shadow preflight, Python or artifact workaround used. Preserved native/reference/holdout blockers. Prerequisite5cee green but publication awaits public API rate reset; its candidate controller is not adopted.",
+              "trajectory:7f4efe210a8e96a8": "No productioncodefixjustified bycontractaudit. Correctevidenceattribution/documentationonly; no newmodelinference/fitting/threshold/rubricchange. MetadataJSON/digestconsistencyreviewandgitdiffcheckare notunit/modelacceptance tests. Perlatestexplicituserinstruction stopidenticalfullvalidationandpreparepreciseproductdecisionwhenreadinesscapability/admissiblelabels insufficient. Newdoccommitnotpublicationvalidated; allgates remainrequired, noPR. Proposedscopechangeonlyafterexplicitmaintainerdecision.",
+              "trajectory:832c680f315def69": "Onlyimportandidentityconsistentfixturecorrected; retainfullfailurehistory, publicsource50ce data, baselineweights/upstreamcalibration andstrictv2criterion. Mainplanobligation testsactualpass1461, sixnewnativetestsnotyetexecuted. No sourceorcontrolstatechangeswhileactivevalidation. Pushsamebranch, allowactualsourceCIterminalcollection andnormalfullvalidate; publicCIreadingisnotshadowbuild/proofimport, allrequiredchecksremain.",
+              "trajectory:844b15c92b3dbce1": "No candidate model outputs or evaluation/fitting exist. Preserve v1 construction in Git and preregister explicit v2 addition of contradictory-evidence abstention cases, keeping same pinned dataset, existing cases and project split. Existing user requirement includes contradictory results. Add required-abstention reporting/criterion rather than treating confident rejection of ambiguous cases as correct abstention; no numerical risk/tolerance or upstream calibration change.",
+              "trajectory:85ab507d85803a47": "Actual9a5source39passedandGitHubCIgreen, thenpublicGithubObjectscommitrecheck403quotareset1792469427before native. Preserve report, do not auth-fallback/newprerequisite. Usewaitforreversible27-line shared final-gate/refREADMEcorrection; current noindependentreadinesslabels, no modelclaims. Reviewedd6cb helperinventory with unchangedd6d98runrecipe. Existingpublicationregression exercisesextractedfunction; no modelgateweakening. Retryplainvalidateafter04:10:27UTCresetexactnewsource/target, no identicalexposedv2run.",
+              "trajectory:89475bf5c998bfde": "The accepted source executor closure changed in merged PR1462; final publication requires an official controller independently supporting that accepted closure, not this candidate authorizing itself",
+              "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
+              "trajectory:8a7663240329d9ea": "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
+              "trajectory:8a97ab0f9510847b": "Author shared projection seam and regression coverage; preserve all scientific failures and production authority. User requires complete functional integration, rejects prior inactive-stage proposal. Public related execution/release issues are consumed boundaries, not automatically closure scope.",
+              "trajectory:92d20e7a29fe6436": "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
+              "trajectory:9cae7985f5372144": "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
+              "trajectory:9ccc878a4150c313": "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
+              "trajectory:9ec958ffca8a0a63": "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
+              "trajectory:ac23859f7db4e13e": "Preserve explicit cancellation and all remote sourcepass evidence. Late final report failure must dominate earlier readiness; this repair changes no scientific threshold or model result. Sourcepass is not nativeverification. Continue official validate exactnewcandidate on originalbranch; no new ownership, manual tests, forcepush, PR while acceptance fails, merge or release.",
+              "trajectory:ad78b8b133b57577": "Only released119 snapshot blocker retired: merged fix is officially published1191. Native/parity/calibration acceptance remains unverified and required recipe remains nonaccepting until actual evidence; authored inputs and frozen criteria unchanged.",
+              "trajectory:afd7f835abf45cbd": "Native full graph still requires actual platform capabilities; current Mac does not by itself establish Linux or four-archive release execution",
+              "trajectory:b2b784d1dd82ea8a": "Mac-only offline metadata does not prove cached dependency resolution on every platform; normalized lock references are not version-only proof reuse",
+              "trajectory:b46ecf7eafdfd416": "CUDA/NVIDIA is the initial non-Apple accelerator; AMD/Intel use CPU fallback. New worker paths are authored, not compiled or executed.",
+              "trajectory:ba2463fc9d91ddb4": "User clarification concerns product flow and instructions, not a waiver of scientific acceptance. Preserve all checks and original ownership. After quota reset run plain validate on genuinely changed candidate; no empty retry commit, authentication substitution for denied public read, manual build or shadow preflight. OAuth timed out with no credentials; public diagnostics remain readable without login.",
+              "trajectory:bcd92ac4414c0831": "Pinned transformersv5.3.0 aad13b87ed59f2afcfaebc985f403301887a35fc modeling_qwen3_5.py SHA0e7410f5251e5c324a5628c5340ee3551f7a6a505ce398569fcc3b5f3ac07f7a read as mathematical specification only, never executed. Source config b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204, weight SHA04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696 independently pinned. Metadata range only read, not installed or used as inference proof.",
+              "trajectory:be3ba7edc9e65ad8": "Normalpostresetvalidateef3clearedremoteproof/custodyandnativefullsnapshotpreparation, thennativecompilationfailedE0599atnewexportwrite_all becauseWrite trait wasnotinscope. Addsamefunctionlocaltraitimportusedbyexistingexporter, no manualbuild/test. Staticreviewalsofoundrelated-repository syntheticfixture stillusedoriginalreviewURLafterrepochange; correctbothfixtureURLs toretainstrictidentitycheckandaddwrong-URLassertion. Allsixnewnative testsremainunexecuted, notpassingclaims; main1461/source39passed. No model/calibration/corpus/math/tolerance/8runrecipe/deadline/authoritychange. Preserveef3failureandallolderhistory; exactnewcandidate mustrerunofficialvalidate.",
+              "trajectory:d2ed52f5ef441b6a": "Source fixtures are synthetic and generated at runtime; no real credential hidden or scanner exemption added. Existing scanner/redaction regressions must execute again. Native model/reference/holdout proof remains unexecuted.",
+              "trajectory:d347ed41a83079c8": "Historical README report is scoped to873ab797 and f2073bd4 and is not current candidate proof",
+              "trajectory:d7af311d2cbb71e4": "Hosted Buildkite source validation cannot be completed without network access; CI results must be independently verified",
+              "trajectory:d9ace8c29a759626": "All six frozen v2 holdout shards completed: each backend executed102 cases with36 unsupported lengths,52 abstentions,29 acceptances and23 false-ready proxy outcomes. Preserve this failure and original corpus/criteria. Actual source1459 tests, native43 tests and138/314/4096-token fixed numerical comparisons passed. Public review corpus remains prospective and unverified; no fitting or heldout inference has used it. Inspection confirmed projection includes plan.intent only, omitting proof_hooks/deferred questions/stop conditions and phase gates. Add bounded obligation facts without whole-plan metadata, model changes, relaxed gates or fabricated rationale. Final source/material/governance identity checks remain authoritative.",
+              "trajectory:da69bbaf7f07e535": "Legacy event history is incomplete and cannot prove full reconstruction; establish explicit current-state migration baseline without synthesizing historical custody.",
+              "trajectory:e0f0a51392feb190": "Actual benchmark model evaluation has not executed. A last-stage bounded evaluation must report partial/error/abstention separately and keep final acceptance unsatisfied when risk or label authority is inadequate.",
+              "trajectory:e59eda56341d71a3": "New tests/MetalCPUproductiondiagnostics authored and require prescribed validate; no new pass claims. User rejects inactive stage; fitting source only inspected, no Python executed. Current official upstream has old base+two generic adapters and incompatible universal port/stats engine, none demonstrated readiness-qualified. Reviewed24source candidates still zero admissible complete final units. Preserve old study/failures and every required original criterion. Final admission stays missing rather than repeating exposed final data. No branch/custody/controller changes.",
+              "trajectory:e6b0bb96ddfbd405": "Preserve040d sourceCI lock failure and separate officialvalidator publicGithubCommitChecks403/reset1792449991. Actual anonymous publicBuildkite setup log confirms MODULE.bazel.lock stale because Cargo.toml packagingexclusion changed; prescribed repair is bazel mod deps --lockfile_mode=update. Installed officialHomebrewBazelisk1.29 afterreading officialformula/installerdocs, restored Homebrew developer modeoff. Run batch metadata regeneration only underrepositorypinnedBazel9.3, notmanualbuild/test orshadowpreflight; preserve dependencies, scientificgates and failedholdout. No native execution on040d is claimed. Newfullvalidation mustwaitreportedpublicAPIreset and bindcorrectedexactcandidate.",
+              "trajectory:e75f5b9f6163b9ce": "the maintainers create the decapod Cachix cache and the CACHIX_AUTH_TOKEN secret; until then the publish step is skipped",
+              "trajectory:e765d893d1533fc1": "Standalone integration targets are not automatically scheduled by the finite accepted CI recipe; include the three consumer regression modules in required cli_contracts.",
+              "trajectory:e8f66e34f627d476": "Direct Git transport unavailable in this container; exact remote source check pending",
+              "trajectory:e99e15278c8de6ad": "User explicitly authorizes functional acceptance replacingresearchqualification, not fabricatedsuccess/accuracy. Fixedcasebytes97b4667e frozen before firstmodelrun, nofitting/threshold/model/calibration/tolerancechange. Actualcontractchecksrun beforeobservationconstruction; three meaningful positives, negative/uncertain/manipulated/declared-proof and failed/stale controls. Sharedproduction code andstrictfinalreducer rederiveoutcomes; oldstudiesfailures preserved. Issue1445andbroader1052/1069/1070/1398/1024updated; closeonlyfullyresolved1445. Sourceconfigreview0e9afdd8 unchanged8runargs; no newprereq/task/branch. Preserve originaltask/branch andfullfinalvalidationgates.",
+              "trajectory:ec49216a39e5bf93": "The config decision is cooperative; its author and agent labels are not authenticated.",
+              "trajectory:ecfec9650d4ed288": "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved.",
+              "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
+              "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
+              "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
+            }
+          },
+          "change": {
+            "base_commit": "d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
+            "id": "change_01M7742C8M9Y4385TJS1NEG96V",
+            "target_base": "origin/master"
+          },
+          "checkpoints": [
+            {
+              "id": "onboarding-reviewed-candidate",
+              "input_digest": "sha256:5d9548ba9333759b6e9cf02a5a03b07d188aa6020a562320fcdb2fa37e748290",
+              "proof_refs": [
+                "48 PTY, config and Git tests passed after unattended bootstrap repair; one existing skip",
+                "git diff --check",
+                "history-recovery:402c588af141811a98a40136b77f01ed171f75f0"
+              ],
+              "summary": "Reauthor refined terminal onboarding from the accepted base and archive observed source-history gaps; preserve unattended compatibility and explicit unknown context"
+            },
+            {
+              "id": "onboarding-history-disposition",
+              "input_digest": "sha256:1894ee0930892c89f4f03b0179d3ef1b0da20041af998b59a737c24d3f84cf03",
+              "proof_refs": [
+                "34 init_prompt_tests and 2 layout tests passed on byte-identical product source",
+                "git:f2612990"
+              ],
+              "summary": "Record current recovery disposition and observed focused unit evidence while preserving the archived source gap"
+            },
+            {
+              "id": "onboarding-final-verification",
+              "input_digest": "sha256:40c4c20ff13e46194b5fe1c52630074b17730055b802595f1b647c1992a3a9e3",
+              "proof_refs": [
+                "84 focused tests passed; one pre-existing ignored test",
+                "cargo clippy --lib --test init_cli -- -D warnings",
+                "cargo fmt --all --check"
+              ],
+              "summary": "Verify the portable PTY harness, final terminal presentation and all focused regression checks"
+            },
+            {
+              "id": "onboarding-cloud-reconciliation-01",
+              "input_digest": "sha256:d3d2ad9e487c701ec83782b45a23b4439c3de353e39831902708b8f43f74cb4c",
+              "summary": "Reconcile the refined terminal setup with accepted0.139.0 cloud sessions in a real merge; preserve prior checkpoints, defer all interactive writes/auth until review, remove local pricing/rosters and add cloud-cancellation PTY coverage. Full new-candidate execution remains pending."
+            },
+            {
+              "id": "onboarding-reviewed-01390-inventory",
+              "input_digest": "sha256:2a2c5782e0669fb26e9e2b832e6c1f7fdd5c238365a2114843adf7c7014623dd",
+              "summary": "Renew the explicitly reviewed source digest after comparing all105 inputs with accepted0.139.0 master; retain unchanged required graph and record the stopped validation and proof boundaries."
+            }
+          ],
+          "intents": {
+            "intent:change_01M7742C8M9Y4385TJS1NEG96V": {
+              "acceptance_criteria": [],
+              "assumptions": [],
+              "boundaries": [
+                "Current claimed task and isolated work branch"
+              ],
+              "constraints": [
+                "paths:[\"src/decapod/lib.rs\"",
+                "\"src/decapod/onboarding.rs\"",
+                "\"src/decapod/core/scaffold.rs\"",
+                "\"tests/init_cli.rs\"",
+                "\"tests/unit/lib_init_prompt_tests.rs\"",
+                "\"docs/book/src/quickstart.md\"",
+                "\".decapod/config.toml\"",
+                "\".decapod/managed/specs\"]"
+              ],
+              "created_sequence": 1,
+              "id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+              "out_of_scope": [],
+              "proof_requirements": [],
+              "raw_intent": "Refine terminal onboarding with reviewed checkpoint history\n\nComplete the authorized terminal onboarding overhaul: recommended first-run setup, focused customization, review before mutation, private config backups and clear agent handoff. Preserve and recover source branch 402c588a through the governed history-recovery path because its last refinement commit was authored after a checkpoint failed during lease rebinding. Reauthor the reviewed source in a fresh workspace; keep the original branch intact and retain observed test evidence. Parent task retains original user intent.",
+              "refined_intent": "Refine terminal onboarding with reviewed checkpoint history\n\nComplete the authorized terminal onboarding overhaul: recommended first-run setup, focused customization, review before mutation, private config backups and clear agent handoff. Preserve and recover source branch 402c588a through the governed history-recovery path because its last refinement commit was authored after a checkpoint failed during lease rebinding. Reauthor the reviewed source in a fresh workspace; keep the original branch intact and retain observed test evidence. Parent task retains original user intent.",
+              "status": "refined",
+              "updated_sequence": 3
+            }
+          },
+          "legacy_digests": {
+            ".decapod/governance/claims.json": "sha256:8f810aa7c70f812f74f283553df4094c6c4b59fbbad7d7a506d20b81a3000712",
+            ".decapod/governance/plan.json": "sha256:ca4344858263b306ee2c7af5c8f22610b78e8256a71adca473b7e9ad4e636a07",
+            ".decapod/governance/trajectory.json": "sha256:663de8d495bce0a4eb624af211626850879cb4daace607b28676fb1739b8988e",
+            ".decapod/governance/validation.json": "sha256:1ab71c7dd43b89e6aa332a2fbfa3799d0607888026ddd027d7bce7cde4d42f1c"
+          },
+          "resolutions": {
+            "history-recovery:402c588af141811a98a40136b77f01ed171f75f0": {
+              "obligation_digest": "sha256:135728ac96465ba3142d6b211fbe5b64a30b6bd41ba85bcaafaf1ec0f9fd46ee",
+              "proof_refs": [
+                "git:402c588af141811a98a40136b77f01ed171f75f0",
+                "git:f2612990",
+                "tests/init_cli.rs"
+              ],
+              "resolution": "The present-time gap observation is archived in f2612990. Product changes were reviewed and reauthored from accepted d3358e1c under the fresh task and exact-material checkpoint. The original source branch and commit remain preserved with historical proof not proven; this disposition grants no retrospective checkpoint or validation waiver. Current required validation remains mandatory."
+            }
+          },
+          "schema_version": "1.0.0",
+          "sections": {
+            "plan": {
+              "constraints": {
+                "file_touch_budget": null,
+                "forbidden_paths": []
+              },
+              "deferred_questions": [],
+              "human_questions": [],
+              "intent": "Reconcile the existing PR1636 with accepted master19acd21 and release0.139.0, preserving the refined three-step terminal setup, reviewed mutation boundary, private config backups and unattended behavior. Use the accepted Dactyl-managed cloud sign-in and server-confirmed access flow; remove obsolete client-side pricing and roster presentation. Preserve all prior checkpoints in real merge history. Managed-project binding, portal rollout, payment activation and the protected customer journey remain separately owned work.",
+              "phases": [],
+              "proof_hooks": [
+                "decapod validate"
+              ],
+              "schema_version": "1.1.0",
+              "spec_reviews": [
+                {
+                  "disposition": "updated",
+                  "path": ".decapod/managed/specs/ARCHITECTURE.md",
+                  "reason": "Reviewed current source after accepted release inventory reconciliation: terminal review/apply and Dactyl-managed sign-in compose without changes to cloud custody, transport or authorization. All105 inventoried inputs match accepted master; no workflow, executor or required-check policy changed. Current full execution remains pending.",
+                  "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
+                  "spec_material_hash": "2e83c560d0bc53b1d130317a9bab677b9fdc3db7cb46b61b94996e184ccd1304"
+                },
+                {
+                  "disposition": "updated",
+                  "path": ".decapod/managed/specs/INTERFACES.md",
+                  "reason": "Reviewed current source after accepted release inventory reconciliation: terminal review/apply and Dactyl-managed sign-in compose without changes to cloud custody, transport or authorization. All105 inventoried inputs match accepted master; no workflow, executor or required-check policy changed. Current full execution remains pending.",
+                  "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
+                  "spec_material_hash": "89f0d2d623341656e789694578a335cc62b7d140ed5d357eca3be8384cd7ab57"
+                },
+                {
+                  "disposition": "unchanged_with_reason",
+                  "path": ".decapod/managed/specs/SECURITY.md",
+                  "reason": "Reviewed current source after accepted release inventory reconciliation: terminal review/apply and Dactyl-managed sign-in compose without changes to cloud custody, transport or authorization. All105 inventoried inputs match accepted master; no workflow, executor or required-check policy changed. Current full execution remains pending.",
+                  "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
+                  "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
+                }
+              ],
+              "state": "APPROVED",
+              "stop_conditions": [],
+              "title": "Refine terminal onboarding and setup review",
+              "todo_ids": [
+                "code_01m7740n3ywajp3a"
+              ],
+              "unknowns": [],
+              "unresolved_contradictions": [],
+              "updated_at": "1794480074Z"
+            },
+            "trajectory": {
+              "active_boundaries": [
+                "Current claimed task and isolated work branch",
+                "Keep accepted cloud custody, transport and service authorization; no project binding or billing implementation"
+              ],
+              "artifact_hash": "sha256:64ff74003f8c38c8404aeebbf00eb3f9961ac3c60407b56c60c5d287c385e38d",
+              "checks": [
+                {
+                  "name": "current-cli-regressions",
+                  "status": "passed"
+                },
+                {
+                  "name": "current-init-unit-tests",
+                  "status": "passed"
+                },
+                {
+                  "name": "current-layout-tests",
+                  "status": "passed"
+                },
+                {
+                  "name": "formatting",
+                  "status": "passed"
+                },
+                {
+                  "name": "full-validation",
+                  "status": "unavailable"
+                },
+                {
+                  "name": "full_validation_29b5686d",
+                  "status": "failed"
+                },
+                {
+                  "name": "inventory_review",
+                  "status": "passed"
+                },
+                {
+                  "name": "master_merge",
+                  "status": "passed"
+                },
+                {
+                  "name": "preserved-source-pty-tests",
+                  "status": "passed"
+                },
+                {
+                  "name": "preserved-source-unit-tests",
+                  "status": "passed"
+                },
+                {
+                  "name": "project_preparation",
+                  "status": "failed"
+                },
+                {
+                  "name": "targeted-clippy",
+                  "status": "passed"
+                }
+              ],
+              "current_phase": "verification",
+              "custody": {
+                "events": [
+                  {
+                    "event_id": "event:2",
+                    "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+                    "kind": "created",
+                    "sequence": 2
+                  },
+                  {
+                    "event_id": "event:3",
+                    "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+                    "kind": "refined",
+                    "sequence": 3
+                  },
+                  {
+                    "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+                    "event_id": "event:4",
+                    "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+                    "kind": "trajectory_step_recorded",
+                    "sequence": 4
+                  },
+                  {
+                    "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+                    "event_id": "event:5",
+                    "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+                    "kind": "trajectory_step_recorded",
+                    "sequence": 5
+                  },
+                  {
+                    "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+                    "event_id": "event:6",
+                    "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+                    "kind": "trajectory_step_recorded",
+                    "sequence": 6
+                  },
+                  {
+                    "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+                    "event_id": "event:7",
+                    "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+                    "kind": "trajectory_step_recorded",
+                    "sequence": 7
+                  },
+                  {
+                    "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+                    "event_id": "event:8",
+                    "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+                    "kind": "trajectory_step_recorded",
+                    "sequence": 8
+                  },
+                  {
+                    "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+                    "event_id": "event:9",
+                    "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+                    "kind": "trajectory_step_recorded",
+                    "sequence": 9
+                  }
+                ],
+                "knowledge_candidates": [],
+                "next_sequence": 9,
+                "schema_version": "1.0.0",
+                "trajectories": {
+                  "branch_01M7742CC2WSBGWSRWRSWJEBMW": {
+                    "evidence_only": true,
+                    "id": "branch_01M7742CC2WSBGWSRWRSWJEBMW",
+                    "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+                    "steps": [
+                      {
+                        "action": "trajectory.record",
+                        "custody_event_id": "event:4",
+                        "observations": [
+                          "src/decapod/lib.rs",
+                          "src/decapod/lib.rs",
+                          "src/decapod/onboarding.rs",
+                          "src/decapod/core/scaffold.rs",
+                          "tests/init_cli.rs",
+                          "tests/unit/lib_init_prompt_tests.rs",
+                          "docs/book/src/quickstart.md",
+                          ".decapod/config.toml",
+                          "Recovery preserves immutable source 402c588af141811a98a40136b77f01ed171f75f0 and its checkpoint gap. Reauthored product files and only authored semantic spec sections in this fresh admitted workstream. Earlier focused evidence: 33 setup unit tests, 2 layout tests, 5 PTY tests and 5 Git tests passed; config suite had 37 pass, 1 fail, 1 pre-existing ignored test. Its failure exposed a changed unattended Git bootstrap order; the shared mutation helper now restores that contract while interactive setup still confirms first. Current regression rerun is pending. Product/test bytes are verified identical between this workstream and the existing cache checkout used for focused tests; same accepted base d3358e1c. Full readiness remains unproven; GitHub provider rate limit resets at epoch 1794463204. The source inventory review found only the accepted release version bump in Cargo.toml/Cargo.lock since c7609e42; refreshed the reviewed digest without changing providers or required checks."
+                        ],
+                        "proof_refs": [
+                          "preserved-source-unit-tests",
+                          "preserved-source-pty-tests",
+                          "full-validation"
+                        ],
+                        "scope": [
+                          "\".decapod/config.toml\"",
+                          "\".decapod/managed/specs\"]",
+                          "\"docs/book/src/quickstart.md\"",
+                          "\"src/decapod/core/scaffold.rs\"",
+                          "\"src/decapod/onboarding.rs\"",
+                          "\"tests/init_cli.rs\"",
+                          "\"tests/unit/lib_init_prompt_tests.rs\"",
+                          "paths:[\"src/decapod/lib.rs\""
+                        ],
+                        "sequence": 4,
+                        "validation_findings": []
+                      },
+                      {
+                        "action": "trajectory.record",
+                        "custody_event_id": "event:5",
+                        "observations": [
+                          "Current presentation source passed all 34 init_prompt_tests plus 2 onboarding layout tests. The separate final config/Git/PTY and targeted Clippy run continues. Fresh candidate f2612990 archives the observed source-history gap and reauthored product changes; the original 402c588a source history remains unproven and preserved. No full-validation success is claimed."
+                        ],
+                        "proof_refs": [
+                          "current-init-unit-tests",
+                          "current-layout-tests"
+                        ],
+                        "scope": [
+                          "\".decapod/config.toml\"",
+                          "\".decapod/managed/specs\"]",
+                          "\"docs/book/src/quickstart.md\"",
+                          "\"src/decapod/core/scaffold.rs\"",
+                          "\"src/decapod/onboarding.rs\"",
+                          "\"tests/init_cli.rs\"",
+                          "\"tests/unit/lib_init_prompt_tests.rs\"",
+                          "paths:[\"src/decapod/lib.rs\""
+                        ],
+                        "sequence": 5,
+                        "validation_findings": []
+                      },
+                      {
+                        "action": "trajectory.record",
+                        "custody_event_id": "event:6",
+                        "observations": [
+                          "Final focused verification passed: 34 setup unit tests, 2 layout tests, 5 real PTY tests, 5 Git bootstrap tests and 38 config tests, with 1 pre-existing ignored config test. The final PTY test was rerun after using a portable raw pointer for Linux/macOS; cargo clippy --lib --test init_cli -- -D warnings passed. Product/test bytes matched this fresh workstream and the test cache checkout. Manual visual inspection confirmed concise unknown context, optional purpose, review, cancellation and restored terminal state. Checkpoint history for f2612990 and 6e2ad2e6 is proven. Full validation still lacks admission: its most recent attempt returned public GitHub HTTP 403 rate limiting, with no alternate authentication or bypass. A final exact-candidate retry follows this evidence checkpoint."
+                        ],
+                        "proof_refs": [
+                          "current-cli-regressions",
+                          "targeted-clippy",
+                          "formatting",
+                          "full-validation"
+                        ],
+                        "scope": [
+                          "\".decapod/config.toml\"",
+                          "\".decapod/managed/specs\"]",
+                          "\"docs/book/src/quickstart.md\"",
+                          "\"src/decapod/core/scaffold.rs\"",
+                          "\"src/decapod/onboarding.rs\"",
+                          "\"tests/init_cli.rs\"",
+                          "\"tests/unit/lib_init_prompt_tests.rs\"",
+                          "paths:[\"src/decapod/lib.rs\""
+                        ],
+                        "sequence": 6,
+                        "validation_findings": []
+                      },
+                      {
+                        "action": "implementation",
+                        "command": "git merge --no-commit --no-ff -X theirs origin/master with temporary current-PR governance preservation driver",
+                        "custody_event_id": "event:7",
+                        "observations": [
+                          "src/decapod/core/cloud_client.rs",
+                          "src/decapod/cli.rs",
+                          "src/decapod/lib.rs",
+                          "tests/init_cli.rs",
+                          "tests/unit/lib_init_prompt_tests.rs",
+                          "docs/book/src/quickstart.md",
+                          "Real pending merge with accepted19acd21; original first-parent candidate58f95d34 and all3 checkpoints preserved. Current PR governance remained byte-identical through Git merge, then updated through the native CLI. New cloud cancellation PTY test is authored but not yet executed."
+                        ],
+                        "proof_refs": [
+                          "master_merge",
+                          "formatting"
+                        ],
+                        "scope": [
+                          "\".decapod/config.toml\"",
+                          "\".decapod/managed/specs\"]",
+                          "\"docs/book/src/quickstart.md\"",
+                          "\"src/decapod/core/scaffold.rs\"",
+                          "\"src/decapod/onboarding.rs\"",
+                          "\"tests/init_cli.rs\"",
+                          "\"tests/unit/lib_init_prompt_tests.rs\"",
+                          "paths:[\"src/decapod/lib.rs\""
+                        ],
+                        "sequence": 7,
+                        "validation_findings": []
+                      },
+                      {
+                        "action": "verification",
+                        "custody_event_id": "event:8",
+                        "observations": [
+                          "tests/init_cli.rs",
+                          ".decapod/managed/specs/INTENT.md",
+                          ".decapod/managed/specs/ARCHITECTURE.md",
+                          ".decapod/managed/specs/INTERFACES.md",
+                          "Native project-check refreshed release-bound entrypoints and managed Docker pin to0.139.0. Its host-only prerequisite report remains failed for required container custody, pending-merge ancestry/dirty material, a historical done-unverified root task and broad scanner findings before integration. No pass or publication readiness is inferred. All application execution remains pending the configured complete provider proof after checkpointing the real merge. Accepted cloud-client/session/CLI and Cargo/Bazel files compare identical to origin/master."
+                        ],
+                        "proof_refs": [
+                          "project_preparation"
+                        ],
+                        "scope": [
+                          "\".decapod/config.toml\"",
+                          "\".decapod/managed/specs\"]",
+                          "\"docs/book/src/quickstart.md\"",
+                          "\"src/decapod/core/scaffold.rs\"",
+                          "\"src/decapod/onboarding.rs\"",
+                          "\"tests/init_cli.rs\"",
+                          "\"tests/unit/lib_init_prompt_tests.rs\"",
+                          "Terminal initialization, PTY regression coverage, quickstart and authored setup specs",
+                          "paths:[\"src/decapod/lib.rs\""
+                        ],
+                        "sequence": 8,
+                        "validation_findings": []
+                      },
+                      {
+                        "action": "verification",
+                        "custody_event_id": "event:9",
+                        "observations": [
+                          ".decapod/config.toml",
+                          ".decapod/managed/specs/VALIDATION.md",
+                          "Full29b5686d validation stopped before provider execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Independently compared every one of the105 discovered build/workflow/helper inputs with accepted19acd21: all byte-identical. Only Cargo.toml and Cargo.lock package versions differ from the accepted cloud mergec87e4f49, both0.138.3 to0.139.0. Backed up current config and renewed only reviewed_sources_digest from8f21b5eb to c8786efc. Required profile, CI-attested mapping, workflow/carrier, executor and checks are unchanged."
+                        ],
+                        "proof_refs": [
+                          "full_validation_29b5686d",
+                          "inventory_review"
+                        ],
+                        "scope": [
+                          "\".decapod/config.toml\"",
+                          "\".decapod/managed/specs\"]",
+                          "\"docs/book/src/quickstart.md\"",
+                          "\"src/decapod/core/scaffold.rs\"",
+                          "\"src/decapod/onboarding.rs\"",
+                          "\"tests/init_cli.rs\"",
+                          "\"tests/unit/lib_init_prompt_tests.rs\"",
+                          "Terminal initialization, PTY regression coverage, quickstart and authored setup specs",
+                          "paths:[\"src/decapod/lib.rs\""
+                        ],
+                        "sequence": 9,
+                        "validation_findings": []
+                      }
+                    ]
+                  }
+                }
+              },
+              "declared_commands": [
+                "git merge --no-commit --no-ff -X theirs origin/master with temporary current-PR governance preservation driver"
+              ],
+              "destination": "existing PR1636",
+              "evidence": [
+                "Current presentation source passed all 34 init_prompt_tests plus 2 onboarding layout tests. The separate final config/Git/PTY and targeted Clippy run continues. Fresh candidate f2612990 archives the observed source-history gap and reauthored product changes; the original 402c588a source history remains unproven and preserved. No full-validation success is claimed.",
+                "Final focused verification passed: 34 setup unit tests, 2 layout tests, 5 real PTY tests, 5 Git bootstrap tests and 38 config tests, with 1 pre-existing ignored config test. The final PTY test was rerun after using a portable raw pointer for Linux/macOS; cargo clippy --lib --test init_cli -- -D warnings passed. Product/test bytes matched this fresh workstream and the test cache checkout. Manual visual inspection confirmed concise unknown context, optional purpose, review, cancellation and restored terminal state. Checkpoint history for f2612990 and 6e2ad2e6 is proven. Full validation still lacks admission: its most recent attempt returned public GitHub HTTP 403 rate limiting, with no alternate authentication or bypass. A final exact-candidate retry follows this evidence checkpoint.",
+                "Full29b5686d validation stopped before provider execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Independently compared every one of the105 discovered build/workflow/helper inputs with accepted19acd21: all byte-identical. Only Cargo.toml and Cargo.lock package versions differ from the accepted cloud mergec87e4f49, both0.138.3 to0.139.0. Backed up current config and renewed only reviewed_sources_digest from8f21b5eb to c8786efc. Required profile, CI-attested mapping, workflow/carrier, executor and checks are unchanged.",
+                "Native project-check refreshed release-bound entrypoints and managed Docker pin to0.139.0. Its host-only prerequisite report remains failed for required container custody, pending-merge ancestry/dirty material, a historical done-unverified root task and broad scanner findings before integration. No pass or publication readiness is inferred. All application execution remains pending the configured complete provider proof after checkpointing the real merge. Accepted cloud-client/session/CLI and Cargo/Bazel files compare identical to origin/master.",
+                "Real pending merge with accepted19acd21; original first-parent candidate58f95d34 and all3 checkpoints preserved. Current PR governance remained byte-identical through Git merge, then updated through the native CLI. New cloud cancellation PTY test is authored but not yet executed.",
+                "Recovery preserves immutable source 402c588af141811a98a40136b77f01ed171f75f0 and its checkpoint gap. Reauthored product files and only authored semantic spec sections in this fresh admitted workstream. Earlier focused evidence: 33 setup unit tests, 2 layout tests, 5 PTY tests and 5 Git tests passed; config suite had 37 pass, 1 fail, 1 pre-existing ignored test. Its failure exposed a changed unattended Git bootstrap order; the shared mutation helper now restores that contract while interactive setup still confirms first. Current regression rerun is pending. Product/test bytes are verified identical between this workstream and the existing cache checkout used for focused tests; same accepted base d3358e1c. Full readiness remains unproven; GitHub provider rate limit resets at epoch 1794463204. The source inventory review found only the accepted release version bump in Cargo.toml/Cargo.lock since c7609e42; refreshed the reviewed digest without changing providers or required checks."
+              ],
+              "inspected_files": [
+                "src/decapod/cli.rs",
+                "src/decapod/core/cloud_client.rs",
+                "src/decapod/lib.rs"
+              ],
+              "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+              "modified_files": [
+                ".decapod/config.toml",
+                ".decapod/managed/specs/ARCHITECTURE.md",
+                ".decapod/managed/specs/INTENT.md",
+                ".decapod/managed/specs/INTERFACES.md",
+                ".decapod/managed/specs/VALIDATION.md",
+                "docs/book/src/quickstart.md",
+                "src/decapod/core/scaffold.rs",
+                "src/decapod/lib.rs",
+                "src/decapod/onboarding.rs",
+                "tests/init_cli.rs",
+                "tests/unit/lib_init_prompt_tests.rs"
+              ],
+              "next_transitions": [
+                "Checkpoint and commit the exact real merge, then full decapod validate",
+                "Refine plan and declare falsifiable checks",
+                "Refresh managed projections, re-review current specs, checkpoint the merged candidate and run full exact-target validation"
+              ],
+              "repo_scope": [
+                "\".decapod/config.toml\"",
+                "\".decapod/managed/specs\"]",
+                "\"docs/book/src/quickstart.md\"",
+                "\"src/decapod/core/scaffold.rs\"",
+                "\"src/decapod/onboarding.rs\"",
+                "\"tests/init_cli.rs\"",
+                "\"tests/unit/lib_init_prompt_tests.rs\"",
+                "Terminal initialization, PTY regression coverage, quickstart and authored setup specs",
+                "paths:[\"src/decapod/lib.rs\""
+              ],
+              "run_id": "branch_01M7742CC2WSBGWSRWRSWJEBMW",
+              "schema_version": "1.1.0",
+              "shortcut_risk_signals": [],
+              "task_id": "code_01m7740n3ywajp3a",
+              "tool_calls": [],
+              "unresolved_assumptions": []
+            }
+          }
+        },
+        "meaning": "Historical accepted governance context; not current-candidate readiness.",
+        "source_commit": "bc0a71971bce8ee036a24562b7fc4a9b771f2f40",
+        "source_document_sha256": "sha256:a786307b1bedeaa509fb9f584ff361b36252f7265ad11096f22afd822a562824"
+      },
       "claim:accepted-executor-candidate-build": {
         "falsifier": "A changed carrier, altered accepted executor, missing or mismatched dual-root identity, incomplete required graph, or unauthenticated artifact can establish readiness; or candidate helper changes require a separate manual build despite a supported accepted executor.",
         "proof_refs": [
@@ -696,6 +1709,11 @@
         "AGENTS.md",
         "docs/agent/state-model.md"
       ]
+    },
+    {
+      "id": "reconcile-1391-and-governed-lifecycle",
+      "summary": "Merge current accepted 0.139.1 setup, preserve both governance histories under the approved scoped conflict resolution, and bind the agent-owned through-Decapod lifecycle to source-repair proof. Required full proof remains pending.",
+      "input_digest": "sha256:ca13bb2124851764405c60a76863e9082d4f56a7977f9bb0efe6d7447b68339b"
     }
   ],
   "intents": {
@@ -726,32 +1744,32 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Preserve the existing PR 1635 Dactyl discovery/auth/account/data and private repository/project/origin custody implementation. Extend it so the human runs init once and then chats with their agent: expose the validated browser URL as structured handoff data, tell the agent to poll the saved connection without waiting for another user message, retain task operation identity through sign-in, and assign safe explicit restart to the agent. Preserve server-confirmed readiness, denied/account-action outcomes, unknown one-time outcomes, local independence and all proof requirements.",
+      "intent": "After one human init, the agent carries engineering intent, execution, validation and an inspectable proof artifact through Decapod; cloud browser handoff and private session renewal preserve the original task without manual command orchestration.",
       "phases": [],
       "proof_hooks": [
-        "decapod workspace publish"
+        "Required consumer_readiness regression binds native source repair and execution evidence to Decapod intent custody and an inspectable receipt; full validate and workspace publish remain the publication gates."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the current agent UX source and managed session state documentation after native 0.139.0 projection regeneration. Runtime behavior and security boundaries remain unchanged; the state model now correctly distinguishes managed project-scoped expiring/refreshable credentials from the legacy token file. Release pins and fingerprints are generated by the published matching controller, with the temporary update opt-in removed.",
-          "reviewed_code_fingerprint": "279581132ea4d1e42fe4d22b960154f8bb719f8483c0a612a43b1c748e9e5a74",
-          "spec_material_hash": "7d64fcff5272dde8ba4a1dbc3685417a98c4387d0aa98e0c067b1979d4837662"
+          "reason": "Reviewed the merged 0.139.1 terminal setup and agent handoff: interactive output stays owned by the terminal wizard, structured login remains parseable, and only Dactyl-validated browser URLs cross the sanitized error boundary. Persistent session custody and hosted authority are unchanged. The source-repair regression binds recorded Decapod intent to native execution and a repository-local receipt; it does not claim hosted or publication readiness. Generated release surfaces were refreshed with the matching released controller.",
+          "reviewed_code_fingerprint": "a6a34e9f1d6171897ff1d874ab9ca581eda3694b7031133c1c4a6fc1ef0a1f65",
+          "spec_material_hash": "38f7623e944eee494c9b779c342af01c5249e44752bd108f6d8a54c45a4950da"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the current agent UX source and managed session state documentation after native 0.139.0 projection regeneration. Runtime behavior and security boundaries remain unchanged; the state model now correctly distinguishes managed project-scoped expiring/refreshable credentials from the legacy token file. Release pins and fingerprints are generated by the published matching controller, with the temporary update opt-in removed.",
-          "reviewed_code_fingerprint": "279581132ea4d1e42fe4d22b960154f8bb719f8483c0a612a43b1c748e9e5a74",
-          "spec_material_hash": "1dc7b24d3ab01e25ffabc2493b4f15f30956daf1bbda2b93fd43c9bf5d0702ee"
+          "reason": "Reviewed the merged 0.139.1 terminal setup and agent handoff: interactive output stays owned by the terminal wizard, structured login remains parseable, and only Dactyl-validated browser URLs cross the sanitized error boundary. Persistent session custody and hosted authority are unchanged. The source-repair regression binds recorded Decapod intent to native execution and a repository-local receipt; it does not claim hosted or publication readiness. Generated release surfaces were refreshed with the matching released controller.",
+          "reviewed_code_fingerprint": "a6a34e9f1d6171897ff1d874ab9ca581eda3694b7031133c1c4a6fc1ef0a1f65",
+          "spec_material_hash": "7dad509a7c98472656c5410508bcbe585497863df62703cfa45b387a9e0cd0cd"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the current agent UX source and managed session state documentation after native 0.139.0 projection regeneration. Runtime behavior and security boundaries remain unchanged; the state model now correctly distinguishes managed project-scoped expiring/refreshable credentials from the legacy token file. Release pins and fingerprints are generated by the published matching controller, with the temporary update opt-in removed.",
-          "reviewed_code_fingerprint": "279581132ea4d1e42fe4d22b960154f8bb719f8483c0a612a43b1c748e9e5a74",
+          "reason": "Reviewed the merged 0.139.1 terminal setup and agent handoff: interactive output stays owned by the terminal wizard, structured login remains parseable, and only Dactyl-validated browser URLs cross the sanitized error boundary. Persistent session custody and hosted authority are unchanged. The source-repair regression binds recorded Decapod intent to native execution and a repository-local receipt; it does not claim hosted or publication readiness. Generated release surfaces were refreshed with the matching released controller.",
+          "reviewed_code_fingerprint": "a6a34e9f1d6171897ff1d874ab9ca581eda3694b7031133c1c4a6fc1ef0a1f65",
           "spec_material_hash": "0b18b2deee00ec20ff5cf50aa23c778107a9524cef9f13c1cf958f169ed4c3a4"
         }
       ],
@@ -763,7 +1781,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794476772Z"
+      "updated_at": "1794483700Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -776,7 +1794,7 @@
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:430f54b505b925657bb5af71882dce80bccc4324e770226b04c53e039a146665",
+      "artifact_hash": "sha256:1be9b9f0057c4887ff219cc25145193db8bc8ceb96c2b306e93e2536ab4bf3c8",
       "checks": [
         {
           "name": "accepted-consumer",
@@ -875,6 +1893,10 @@
           "status": "failed"
         },
         {
+          "name": "format-and-diff",
+          "status": "passed"
+        },
+        {
           "name": "formatting",
           "status": "passed"
         },
@@ -885,6 +1907,10 @@
         {
           "name": "managed-cli-diagnostics",
           "status": "passed"
+        },
+        {
+          "name": "matching-0.139.1-projection-preparation",
+          "status": "partial"
         },
         {
           "name": "pending-account-coverage",
@@ -1108,10 +2134,17 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 24
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:25",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 25
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 24,
+        "next_sequence": 25,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -1494,6 +2527,29 @@
                 ],
                 "sequence": 24,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:25",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "tests/consumer_readiness.rs",
+                  "README.md",
+                  "docs/agent/state-model.md",
+                  "User-approved merge of accepted bc0a719: preserve all 18 immutable active checkpoints and exact accepted governance as historical baseline context; no historical readiness promoted.",
+                  "Latest user intent: agent owns the lifecycle through Decapod; real native source failure/repair proof regression authored; full validation still required.",
+                  "Reviewed source inventory delta: accepted Cargo package/lock version 0.139.0 to 0.139.1 only; graph, workflow, helper bytes and required proof policy unchanged. Pin reconciled to c9d2697."
+                ],
+                "proof_refs": [
+                  "matching-0.139.1-projection-preparation",
+                  "format-and-diff"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 25,
+                "validation_findings": []
               }
             ]
           }
@@ -1525,22 +2581,30 @@
         "Expanded the existing pending account CLI scenario to assert each published entitlement, unassigned-seat and quote-confirmation reason independently. It requires action_required, retained session, no read and no repeated exchanges; executable coverage is pending configured CI.",
         "Focused continuation: agent-owned cloud login and explicit restart, optional validated browser URL propagated through task-add preflight, bounded polling guidance without a second human message, and init handoff prose. Existing mandatory managed scenario target gains one pending-add test and exercises login/restart with the original no-replay and server-readiness assertions. No manual build or tests; plain validation owns execution. External Propodus project-directory registration handoff identifies a repository-versus-server-project-ID attachment gap, explicitly documented rather than invented.",
         "Inspected complete required consumer invocation: new managed-session file was absent from its explicit targets. Added cloud_managed_session while preserving every existing target and library suite. Verified all105 source inventory hashes: only assets/tools/source_ci_profile.rs differs from last reviewed build inventory, none removed. Updated the user-editable reviewed digest to c53140addf3e7ed22a94d556f806db545cb3cec5925ab29339e3ab4bd953b57b. Native discovery now proof_pending, no policy reconciliation blocker. Moved Bazel metadata explanation back to authored VALIDATION to retain original51-file scope, not a broader generic guide change.",
+        "Latest user intent: agent owns the lifecycle through Decapod; real native source failure/repair proof regression authored; full validation still required.",
         "PR 1635 merged into master as c87e4f49 while Buildkite 8320 jobs waited. Git merge-base verification then correctly failed before fmt/contracts/specs execution because candidate lacked the new accepted target. Fetched and merged that exact target with no source conflicts. The full journal is retained: optional compact begin-pr was refused because the added follow-up checkpoints are still unaccepted. Original a096 source consumer job 131083920439 passed 1674 library tests with 8 ignored and 33 boundary tests including all 13 managed scenarios; this proof is not reused as readiness. Deliver remaining UX through a new follow-up PR after full exact-candidate proof.",
         "Published Dactyl 0.12.0 cloud.rs maps dropped response transport to Unavailable. Completion now preserves the saved credential and checking_readiness state for Unavailable, Transport and Timeout; existing lost completion CLI fixture is mandatory execution coverage. This source review is not executed product proof.",
+        "Reviewed source inventory delta: accepted Cargo package/lock version 0.139.0 to 0.139.1 only; graph, workflow, helper bytes and required proof policy unchanged. Pin reconciled to c9d2697.",
         "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task. Correction run 43124963685 passed the exact formatted source checks and then stopped after native specs.refresh and trajectory recording because the authored VALIDATION hash included one duplicate blank line. Supported capability-overlay refresh collapses three consecutive newlines to two; approved prose is unchanged, and generated fingerprint changes stay inside existing marker blocks. The revised insertion removes only its final newline and pins the observed authored hash sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849. The failed attempt made no checkpoint, commit or push. Its uncommitted native journal is preserved by encrypted diagnostics archive sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967 and reconstructed journal digest sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8. Archived trajectory branch_01M76ECD20HF9M6Q15W5AKE2WQ event event:5, sequence 5, has step digest sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d (UTF-8 sorted-key compact JSON); native trajectory artifact hash sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083. This archived step is historical evidence, not restored current authority. The latest sealed task continues on the same committed journal through native CLI recording; no raw projection bytes are restored. Exact source, authored-spec, checkpoint and publication boundaries remain enforced.",
         "Source review found that moving the browser URL out of next_action hid it from interactive text errors. Both auth and task-operation Display now render the same validated URL. The existing new pending-add regression also parses clean cloud login JSON and checks that deliberate text handoff. bd0c1baa source diagnostics passed clippy, material specs and all checkpoint history but were still executing consumer tests; required Buildkite proof and public metadata access remain pending. No prior readiness is reused for this source change.",
         "User authorized publishing or fixing an open PR. PR 1635 already contains validated foundation ee44e5f8773697b5341107c0d3153de4ebe28bfb; adopted that exact history by fast-forward in a separately provisioned own task workspace. Original persistent-cloud-auth branch 6b0e8add remains intact, not a completion proof. This continuation narrows changes to agent-owned handoff, operation identity and documentation; original hosted acceptance limits remain.",
+        "User-approved merge of accepted bc0a719: preserve all 18 immutable active checkpoints and exact accepted governance as historical baseline context; no historical readiness promoted.",
         "Verified operator handoff and imported original sealed task 01M76J985NNC1F519D2CE4V9Y7. Candidate d85650bafa610dc952fbc91acd91ba5e28b329b7 remains unmodified. Accepted master advanced to d3358e1c after billing PR1631 and release1632; merge reconciliation will remove the new mandatory project roster/pricing client behavior in accordance with issue1628 and the current explicit user boundary, while retaining unrelated accepted changes. Dactyl run43131221323 artifacts verified by ciphertext/plaintext and per-file hashes: both native groups and all14 checks passed on86ed55d; publication/readback failed. Registry still only0.11.1, so client compilation/product execution remain blocked."
       ],
-      "inspected_files": [],
+      "inspected_files": [
+        "tests/consumer_readiness.rs"
+      ],
       "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
       "modified_files": [
+        "README.md",
+        "docs/agent/state-model.md",
         "src/decapod/cli.rs",
         "src/decapod/core/cloud_client.rs",
         "src/decapod/core/error.rs",
         "src/decapod/core/todo.rs",
         "src/decapod/lib.rs",
-        "tests/common/cloud_managed_scenarios.rs"
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/consumer_readiness.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
