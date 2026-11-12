@@ -550,7 +550,7 @@
       "falsifier": "An identity or artifact digest differs from the authenticated reports, a pending deletion is described as executed, or historical proof is relabeled as current-candidate readiness.",
       "status": "supported",
       "proof_refs": [
-        "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8",
+        "git:19acd21f7ff50656323d037915273f03cdedc04e",
         "sha256:5d67910ce4cc15925bd918f707a8788174466a40df82b625ce47573ed4c46195",
         "sha256:6253526f77a83cc146154ab6207dad5591ed905ae52e5d05e006c8eb151f2cc9"
       ]
@@ -583,6 +583,17 @@
       "proof_refs": [
         "docs/maintenance/stale-branch-audit-20261112.md",
         "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43111223693",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43133190463"
+      ]
+    },
+    {
+      "id": "billing-audit-release-4",
+      "summary": "Incorporate accepted release PR1637 and authenticate official v0.139.0 GNU controller on an actual compatible rootless Ubuntu runtime; preserve its incomplete proof history and publish a nonsecret audit of authenticated historical artifacts, original branch dispositions, current finding status and pending retirement gates. No current readiness claimed; all105 declared inventory entries match accepted19a and no runtime/test/workflow/helper delta remains.",
+      "input_digest": "sha256:8aaabe983548fa0e19a73adeadce446183c83ef9bd282d976530b8e115dcf16d",
+      "proof_refs": [
+        "docs/maintenance/stale-branch-audit-20261112.md",
+        "git:19acd21f7ff50656323d037915273f03cdedc04e",
         "https://github.com/DecapodLabs/decapod/actions/runs/43111223693",
         "https://github.com/DecapodLabs/decapod/actions/runs/43133190463"
       ]
@@ -637,21 +648,21 @@
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "The current architecture separates a static public audit from executable controllers, native state and private custody, and follows the accepted Dactyl implementation instead of restoring the superseded purchase flow.",
-          "reviewed_code_fingerprint": "b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c",
+          "reviewed_code_fingerprint": "bdd00aa7dd26de9b23483000ad9aebb5a00383a006d17f5b938a565c9c039dd0",
           "spec_material_hash": "4c7878f1fc967694e80916caaa143fea417597fd407a5e4164a4bbb34de55dd7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The current authored interface describes dated public evidence and its approval limits. It distinguishes absent refs, accepted integration and full readiness; no runtime CLI or credential interface is changed from accepted c87.",
-          "reviewed_code_fingerprint": "b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c",
+          "reason": "The current authored interface describes dated public evidence and its approval limits. It distinguishes absent refs, accepted integration and full readiness; no runtime CLI or credential interface is changed from accepted19a.",
+          "reviewed_code_fingerprint": "bdd00aa7dd26de9b23483000ad9aebb5a00383a006d17f5b938a565c9c039dd0",
           "spec_material_hash": "76dbbcc2204061654726750e7293a67c84871c07517b3006094dde871b44bf48"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Runtime, tests and credential transports match accepted c87 byte for byte. The new audit contains public commit/run identities and digests only; private keys, sessions, plaintext custody, datastore backups and raw machine logs are excluded from Git.",
-          "reviewed_code_fingerprint": "b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c",
+          "reason": "Runtime, tests and credential transports match accepted19a byte for byte. The new audit contains public commit/run identities and digests only; private keys, sessions, plaintext custody, datastore backups and raw machine logs are excluded from Git.",
+          "reviewed_code_fingerprint": "bdd00aa7dd26de9b23483000ad9aebb5a00383a006d17f5b938a565c9c039dd0",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -665,7 +676,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794476886Z"
+      "updated_at": "1794480277Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -674,8 +685,12 @@
         "No pricing, CI carrier, release, original task custody or unrelated branch changes.",
         "This is documentation and authentic generated governance only. No current readiness, retirement completion, legacy API removal, new commercial behavior or original-custody import is claimed."
       ],
-      "artifact_hash": "sha256:9c34267e69ad297c2a824dc132d1938e64ee0f3d16da1d5506e34813dd6ecba1",
+      "artifact_hash": "sha256:808eb5769ce90b81f86cc828740e9694cf630d9e20d9a404239ed579dbfbb38d",
       "checks": [
+        {
+          "name": "accepted_inventory_19a",
+          "status": "passed"
+        },
         {
           "name": "accepted_inventory_c87",
           "status": "passed"
@@ -751,10 +766,17 @@
             "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M771D5V85D3H40VVCZ3QCJMH",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M771D5V85D3H40VVCZ3QCJMH": {
@@ -867,6 +889,40 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "command": "Compare the four downloaded artifact/report hashes to expected values; inspect terminal-native success, six-ref report, accepted Git ancestry and exact absence of runtime/test/workflow/helper deltas. Compare all105 inventory entries to accepted19a bytes, including the real toolchain symlink.",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "docs/maintenance/stale-branch-audit-20261112.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/config.toml",
+                  "/run/decapod-billing-fix-private/audit.document-consistency-139.json",
+                  "/run/decapod-billing-fix-private/inventory.accepted-19a-comparison.json",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43133190463",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43111223693"
+                ],
+                "proof_refs": [
+                  "historical_artifact_hashes",
+                  "accepted_inventory_19a",
+                  "superseded_source_withdrawn",
+                  "historical_accepted_ancestry"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/lib.rs\"",
+                  "\"tests/unit/core/propodus_tests.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  ".decapod/managed/specs",
+                  "docs/maintenance/stale-branch-audit-20261112.md",
+                  "paths:[\"src/decapod/core/propodus.rs\""
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -874,6 +930,7 @@
       },
       "declared_commands": [
         "Compare the four downloaded artifact/report hashes to expected values; inspect terminal-native success, six-ref report, accepted Git ancestry and exact absence of runtime/test/workflow/helper deltas. Compare all105 inventory entries to accepted c87 bytes, including the real toolchain symlink.",
+        "Compare the four downloaded artifact/report hashes to expected values; inspect terminal-native success, six-ref report, accepted Git ancestry and exact absence of runtime/test/workflow/helper deltas. Compare all105 inventory entries to accepted19a bytes, including the real toolchain symlink.",
         "Full native validation observed failed source Buildkite 8170 for exact af132112; corresponding GitHub job logs identify E0277 in two new expect_err calls.",
         "Merge accepted c87e4f49 without committing, preserve the current native journal, and restore all four superseded Rust/test files to exact accepted bytes.",
         "Stopped owned native publisher by SIGINT after current master advanced to c87e4f49; native report returned SNAPSHOT_NOT_READY, CI operation cancelled, exit1. Backed up the actual state and retained raw report/handoff. No PR was created.",
@@ -882,8 +939,10 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "/run/decapod-billing-fix-private/audit.document-consistency-139.json",
         "/run/decapod-billing-fix-private/audit.document-consistency.json",
         "/run/decapod-billing-fix-private/candidate-af132-ci/diagnostic-excerpts.json",
+        "/run/decapod-billing-fix-private/inventory.accepted-19a-comparison.json",
         "/run/decapod-billing-fix-private/inventory.accepted-c87-comparison.json",
         "/run/decapod-billing-fix-private/inventory.accepted-comparison.json",
         "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8",

@@ -6,6 +6,11 @@ integration observed here is `c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8`
 2026-11-12T09:21:09Z). It is a dated audit, not a current-readiness receipt or
 permission to execute a historical workflow.
 
+Release [#1637](https://github.com/DecapodLabs/decapod/pull/1637) subsequently
+advanced accepted source to `19acd21f7ff50656323d037915273f03cdedc04e`
+(v0.139.0), changing only the changelog and root package/lock metadata. The
+c87e4f49 reference below remains the managed sign-in behavior boundary.
+
 ## Merged billing recovery
 
 [#1631](https://github.com/DecapodLabs/decapod/pull/1631) was merged by
