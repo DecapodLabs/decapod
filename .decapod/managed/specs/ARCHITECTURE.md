@@ -820,8 +820,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `0f263f736fa6d9bb4512faa8b691103a7621185f330968e4811e5da606ba3a02`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1047,3 +1047,13 @@ The coordinated Propodus deployment must verify GitHub identity, repository
 admin permission and paid repository-specific seats. This CLI recovery does
 not deploy that service or prove its Stripe and native-RPC integrations; those
 dependencies remain recorded in `docs/cloud-repository-billing.md`.
+
+### Terminal setup presentation and mutation boundary
+
+`src/decapod/onboarding.rs` owns setup presentation, width-aware wrapping, color policy, and bounded terminal input. `src/decapod/lib.rs` retains repository inference, configuration preservation, setup decisions, review, and application. The short recommended path and focused customization share `setup_review_rows`, so the final plan reflects current choices, including existing cloud and proof settings. `review_setup` precedes directory creation, Git initialization, and `run_init_apply`; explicit `--refresh` seeds the same flow with authored config.
+
+The Unix terminal guard uses native termios with RAII restoration. Escape input is bounded rather than waiting indefinitely for an arrow sequence. Text remains UTF-8, closed line input cancels, and closed approval menus reject arbitrary typed values. Output respects `NO_COLOR` and `TERM=dumb`; raw selection requires both input and output to be terminals. Unsupported terminals retain numbered line selection. Cards and active-option descriptions wrap to terminal width.
+
+`write_project_config` preserves changed prior config bytes under ignored, private `.decapod/data/config-backups/<sha256>.toml` before atomic replacement; unchanged and dry-run writes create no backup. Scaffold dry runs skip target, runtime, Docker, policy, and custody directory creation. The CLI keeps its detailed unattended receipt and uses a compact terminal receipt and an agent handoff that leaves required proof explicitly unrun. Detailed reconciliation stays available through unattended init.
+
+Unattended init retains its established Git bootstrap ordering before cloud-roster validation. Interactive directory and Git creation remain after final confirmation; prepare_init_directory_and_git shares the actual mutation path without moving unattended bootstrap behind interactive review.

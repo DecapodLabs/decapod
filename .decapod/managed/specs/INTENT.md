@@ -287,8 +287,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `0f263f736fa6d9bb4512faa8b691103a7621185f330968e4811e5da606ba3a02`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -459,3 +459,9 @@ This recovery preserves the previously authored CLI contribution from
 Hosted billing deployment, sandbox purchase acceptance and released native
 client credential integration remain separate rollout requirements. A printed
 approval link alone cannot establish their completion.
+
+### Refined terminal onboarding
+
+REQ-ONBOARDING: The human-facing `decapod init` journey should make a project understandable before exposing governance controls. With terminal input and output, first-run setup and explicit `--refresh` present Project, Preferences, and Review. The recommended path retains detected or authored values and keeps new projects local without an account. Focused customization preserves access to project context, isolation, cloud consent and billing context, task trackers, proof settings, permissions, diagrams, and CI.
+
+The user reviews the actual plan, can edit it, and confirms before a newly selected directory, Git repository, or governance scaffold is created. Setup ends with an agent-oriented next action and explicitly leaves required proof unrun. Configuration updates preserve private copies of prior bytes. These behaviors are exercised through the real terminal in `tests/init_cli.rs`; automation continues to use the existing unattended CLI contract.

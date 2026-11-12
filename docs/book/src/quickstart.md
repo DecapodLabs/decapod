@@ -38,6 +38,12 @@ decapod init
 decapod init --backend cloud
 ```
 
+The terminal setup moves through **Project → Preferences → Review**. Describe what you are building, accept **Recommended** to keep detected settings, then review the setup plan. New projects use local storage without an account. **Customize** opens focused settings for the project, workspace isolation, connections, and advanced options; **Edit choices** returns there from review.
+
+Setup creates the selected project directory and initializes Git only after **Apply setup**. **Cancel** leaves a newly selected project uncreated. A dry run shows a preview without creating project, Git, or governance state. Existing configuration values remain the defaults, and changed config bytes are backed up privately under `.decapod/data/config-backups/`.
+
+When setup finishes, open your coding agent in the project and describe your next task. It reads the generated agent instructions and handles the remaining governance and validation work. Initialization does not establish proof or cloud access. To revisit setup, ask your agent to run `decapod init --refresh`. Scripted `init with`, `--proof`, and redirected output use the unattended path.
+
 ## 3. Agent Documentation
 
 Before using Decapod, the agent loads the command contracts and evaluates the
