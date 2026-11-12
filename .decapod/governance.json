@@ -615,6 +615,16 @@
         "docs/maintenance/stale-branch-audit-20261112.md",
         "git:fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b"
       ]
+    },
+    {
+      "id": "billing-audit-current-master-7",
+      "summary": "Retain accepted storage inventory and release source1d04, preserve the intact native journal and authored audit, and independently compare all105 inventory bytes. Preserve failed08b42 publication as failed rather than readiness. No remaining ref deletion or custody import occurred; fresh native validation follows this checkpoint.",
+      "input_digest": "sha256:e61e9c3dbe63c687821d101639f40d1da44e826b10644982b66169b12ad55060",
+      "proof_refs": [
+        "/run/decapod-billing-fix-private/inventory.accepted-1d04-comparison.json",
+        "docs/maintenance/stale-branch-audit-20261112.md",
+        "git:1d04f232c46864eecfadb9c8b9b23069ca0e906e"
+      ]
     }
   ],
   "intents": {
@@ -654,34 +664,34 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Publish a bounded nonsecret maintenance audit after accepted PR1635 superseded the prepared billing patch. Preserve historical b984/c5 proof binding, distinguish current accepted integration from readiness, account for the six retired original refs, retain the two unique drafts and state the two pending deletions and recovery gates truthfully. Keep accepted runtime and tests byte-identical to c87e4f49. The previous3638 proposal remains historical incomplete work and is withdrawn from the final source delta.",
+      "intent": "Publish the bounded nonsecret audit of billing recovery proof, six retired original refs, two retained drafts, current finding status and pending exact-ref retirement. Retain all accepted runtime, tests, workflows, helpers and build definitions at 1d04f232, including onboarding, validation lifecycle and storage inventory; the audit proposes no runtime change. Historical b984/c5 evidence and failed later attempts remain dated records rather than current readiness. The obsolete billing source patch remains withdrawn.",
       "phases": [],
       "proof_hooks": [
         "decapod validate",
-        "Compare public artifact hashes and audit source references with authenticated historical outputs and accepted Git objects."
+        "Compare artifact hashes, accepted Git identities and all105 inventory entries, preserving symlink bytes."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted global architecture, including onboarding and validation lifecycle, is preserved. The added audit section separates public evidence from executable authority and private custody; no runtime delta is proposed.",
-          "reviewed_code_fingerprint": "841d552cd5b5e885d212e00cd6cf25edeb0fb9c66b82405eb4142fbee8fdabc8",
-          "spec_material_hash": "cba1f8f6c798a720c75934712e319bdb82c9535a2cde102359aabf3d3c7aa504"
+          "reason": "Retain accepted global architecture and storage inventory, plus the authored separation of static audit evidence from executable authority and private custody. Runtime and build definitions match accepted1d04.",
+          "reviewed_code_fingerprint": "4e385d0ec8c65a10076faf3d3158030ed020e94d7978596d7f38aff35e437620",
+          "spec_material_hash": "6ec42a33cb5c10f38cd0f1ebb49573cf5cdad9ef31d5040900989ad5fc1c8ff3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Accepted interfaces are preserved. The audit adds dated identities, digests and explicit incomplete retirement boundaries, without changing runtime contracts or claiming historical proof as current readiness.",
-          "reviewed_code_fingerprint": "841d552cd5b5e885d212e00cd6cf25edeb0fb9c66b82405eb4142fbee8fdabc8",
-          "spec_material_hash": "2cb766d29d289a106761b62278cf11b8c6fe76735f36220a973b1180f02e4e0c"
+          "reason": "Retain accepted global interfaces, including bounded storage inventory. The audit adds only dated public evidence and incomplete retirement requirements; it changes no runtime interface.",
+          "reviewed_code_fingerprint": "4e385d0ec8c65a10076faf3d3158030ed020e94d7978596d7f38aff35e437620",
+          "spec_material_hash": "38d20dac2c525e4a32371d6ba54eec445b6e85e2a11bcfd1d1659369bbc8453a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Security prose and implementation match acceptedfc1e; public evidence excludes keys, credentials, sessions, plaintext custody, datastore backups and raw machine logs. Native proof and deletion gates remain required.",
-          "reviewed_code_fingerprint": "841d552cd5b5e885d212e00cd6cf25edeb0fb9c66b82405eb4142fbee8fdabc8",
-          "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
+          "reason": "Security remains the accepted1d04 implementation and prose. The audit excludes secrets, sessions, plaintext custody, databases and raw logs. Its digests and historical bindings confer no execution permission.",
+          "reviewed_code_fingerprint": "4e385d0ec8c65a10076faf3d3158030ed020e94d7978596d7f38aff35e437620",
+          "spec_material_hash": "b8095677dc08420d4a01a49b17f3fa7d14064a8b465f2f596046b22c8aafc311"
         }
       ],
       "state": "APPROVED",
@@ -694,20 +704,29 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794489503Z"
+      "updated_at": "1794493139Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
+        "Documentation and required native governance only. No runtime delta, retirement execution, custody import, merge or release publication. Full fresh exact-candidate proof is required.",
         "Documentation audit and authentic release projections only. Runtime, tests, workflows, helpers and build definitions match acceptedfc1e. Original billing custody and pending stale refs remain untouched.",
         "Historical test and publication evidence is not current readiness. No legacy purchase flow is restored, no source/test change is proposed, and stale-ref retirement remains separately blocked on authenticating private recovery.",
         "No pricing, CI carrier, release, original task custody or unrelated branch changes.",
         "This is documentation and authentic generated governance only. No current readiness, retirement completion, legacy API removal, new commercial behavior or original-custody import is claimed."
       ],
-      "artifact_hash": "sha256:5ecd1a55c92cc488229ce5697c3dd34be26edcd2d09afd77c360961296f22e84",
+      "artifact_hash": "sha256:02f1afeba49800bb2d43f0c30dfb94365490efed79cce975fd7fdd56e1598fa7",
       "checks": [
         {
+          "name": "accepted_implementation_preserved",
+          "status": "passed"
+        },
+        {
           "name": "accepted_inventory_19a",
+          "status": "passed"
+        },
+        {
+          "name": "accepted_inventory_1d04",
           "status": "passed"
         },
         {
@@ -749,6 +768,10 @@
         {
           "name": "native_journal_restoration",
           "status": "passed"
+        },
+        {
+          "name": "native_publication_08b42",
+          "status": "failed"
         },
         {
           "name": "native_publication_3638",
@@ -830,10 +853,17 @@
             "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M771D5V85D3H40VVCZ3QCJMH",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M771D5V85D3H40VVCZ3QCJMH": {
@@ -1033,6 +1063,33 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "reconciliation",
+                "command": "Native attempt6 stopped at its explicit GitHub rate-limit gate. After cooldown, plugin CI rejected a changed merge base and native publication attempt2 returned GOVERNANCE_PR_BASE_MISMATCH. The actual reports, exit1 and native backups were preserved; no PR was created.",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "/run/decapod-billing-fix-private/publication.attempt2.stderr.txt",
+                  "/run/decapod-billing-fix-private/buildkite-8627-plugins.download.response",
+                  "/run/decapod-billing-fix-private/inventory.accepted-1d04-comparison.json",
+                  "git:1d04f232c46864eecfadb9c8b9b23069ca0e906e"
+                ],
+                "proof_refs": [
+                  "native_publication_08b42",
+                  "accepted_inventory_1d04",
+                  "accepted_implementation_preserved"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/lib.rs\"",
+                  "\"tests/unit/core/propodus_tests.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  ".decapod/managed/specs",
+                  "docs/maintenance/stale-branch-audit-20261112.md",
+                  "paths:[\"src/decapod/core/propodus.rs\""
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -1044,7 +1101,9 @@
         "Compare the four downloaded artifact/report hashes to expected values; inspect terminal-native success, six-ref report, accepted Git ancestry and exact absence of runtime/test/workflow/helper deltas. Compare all105 inventory entries to accepted19a bytes, including the real toolchain symlink.",
         "Full native validation observed failed source Buildkite 8170 for exact af132112; corresponding GitHub job logs identify E0277 in two new expect_err calls.",
         "Merge accepted c87e4f49 without committing, preserve the current native journal, and restore all four superseded Rust/test files to exact accepted bytes.",
+        "Native attempt6 stopped at its explicit GitHub rate-limit gate. After cooldown, plugin CI rejected a changed merge base and native publication attempt2 returned GOVERNANCE_PR_BASE_MISMATCH. The actual reports, exit1 and native backups were preserved; no PR was created.",
         "Native validation attempt5 stopped before push with ENTRYPOINT_COMMIT_DISCIPLINE. Reviewed native init dry run and regenerated the four canonical entrypoints with official139. Restored user-editable config exactly from its reviewed backup, retaining all required proof and CI settings. Only release/fingerprint metadata changed in the entrypoint payloads.",
+        "Reconciled accepted storage PR1645 and release1646 at1d04 using the same reviewed whole-journal merge driver. Preserved current journal f1c16429564b33df4f7e33ae39db17600202a1ef, retained accepted global prose with unchanged generated spec blocks, and compared all105 native inventory entries to accepted Git bytes. Official140 and accepted entrypoints both remain140; the newer release record alone is not binary provenance.",
         "Saved the uncommitted automatic merge after its trajectory-hash error, aborted it, and reapplied accepted source while retaining the exact native journal blob91a33f6d7855b03c2698243ef9fc27f4fc94ffae. Native140 artifact status and agent.init then succeeded. No journal hash was hand-edited.",
         "Stopped owned native publisher by SIGINT after current master advanced to c87e4f49; native report returned SNAPSHOT_NOT_READY, CI operation cancelled, exit1. Backed up the actual state and retained raw report/handoff. No PR was created.",
         "cargo fmt --all (host formatting, exit 0)",
@@ -1055,15 +1114,19 @@
         "/run/decapod-billing-fix-private/audit.document-consistency-139.json",
         "/run/decapod-billing-fix-private/audit.document-consistency.json",
         "/run/decapod-billing-fix-private/audit.scope-check140.json",
+        "/run/decapod-billing-fix-private/buildkite-8627-plugins.download.response",
         "/run/decapod-billing-fix-private/candidate-af132-ci/diagnostic-excerpts.json",
         "/run/decapod-billing-fix-private/controller140-gnu-authentication.json",
         "/run/decapod-billing-fix-private/entrypoint-repair.scope-check.json",
         "/run/decapod-billing-fix-private/inventory.accepted-19a-comparison.json",
+        "/run/decapod-billing-fix-private/inventory.accepted-1d04-comparison.json",
         "/run/decapod-billing-fix-private/inventory.accepted-c87-comparison.json",
         "/run/decapod-billing-fix-private/inventory.accepted-comparison.json",
         "/run/decapod-billing-fix-private/inventory.accepted-fc1e-comparison.json",
+        "/run/decapod-billing-fix-private/publication.attempt2.stderr.txt",
         "/run/decapod-billing-fix-private/validate.attempt5.stderr.txt",
         "git:1c0f9f6c:.decapod/governance.json",
+        "git:1d04f232c46864eecfadb9c8b9b23069ca0e906e",
         "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8",
         "git:d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
         "git:fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b",

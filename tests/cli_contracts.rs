@@ -197,6 +197,9 @@ mod init_config_behavior;
 #[path = "support/justfile_inventory.rs"]
 mod justfile_inventory;
 
+#[path = "support/storage_inventory.rs"]
+mod storage_inventory;
+
 // Keep every recovery case in the required selective CLI matrix while balancing
 // the two real-process suites within their unchanged 300-second budgets.
 #[path = "support/cli_workunit_recovery.rs"]

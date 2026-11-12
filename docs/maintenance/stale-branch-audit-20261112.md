@@ -13,8 +13,16 @@ c87e4f49 reference below remains the managed sign-in behavior boundary.
 
 Accepted onboarding #1636, validation lifecycle #1633 and their releases later
 advanced source to `fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b` (v0.140.0).
-Their accepted implementation is retained. The c87e4f49 reference still identifies
+Their accepted implementation is retained. Accepted storage inventory #1645 and
+release #1646 subsequently advanced master to
+`1d04f232c46864eecfadb9c8b9b23069ca0e906e` (v0.140.1). Their runtime,
+test and build changes are also retained. The c87e4f49 reference still identifies
 where the original billing findings changed; it is not a later readiness claim.
+
+The audit candidate 08b42a3d reached hosted CI, but master advanced before its
+publication. A plugin job rejected that changed merge base and the native
+publisher returned `GOVERNANCE_PR_BASE_MISMATCH`. That attempt did not publish
+a PR or establish current readiness. Reconciliation requires fresh exact proof.
 
 ## Merged billing recovery
 
