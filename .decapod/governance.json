@@ -555,6 +555,11 @@
       "id": "native-service-project-selector",
       "summary": "Exercise the public existing-project selector in the independent native service consumer.",
       "input_digest": "sha256:1b82345ae6070be40048f29a88d6f2742ffe2085efdf60e93b3f1bcdae24bb75"
+    },
+    {
+      "id": "native-registry-bazel-lock",
+      "summary": "Regenerate strict Bazel dependency metadata and update registry provenance and optional-roster policy assertions.",
+      "input_digest": "sha256:e7cc7c4da523f2cdb1ed550a4796acb65c5bae3c8f4f31b7feb04e8b004ac4ed"
     }
   ],
   "intents": {
@@ -599,22 +604,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Connector architecture unchanged; real-service fixture now composes through public project selection.",
-          "reviewed_code_fingerprint": "d5e9d16bf2767b798962ffc15af8d9085ea2d2c12a30d46f9279057a860a81ab",
+          "reason": "Registry/native session architecture remains current; Cargo and strict Bazel dependency projections now agree.",
+          "reviewed_code_fingerprint": "c3f1014dfa499b13271c3ff347a11a39cd61e78bed34eb0a3a9784d6a42b9eac",
           "spec_material_hash": "00a2b10104a300c1701e8d97a4fffb3f08e05616702d5c385fec10c5a5c6e2ad"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing-project selection is exercised by the independent service consumer without a fabricated local binding.",
-          "reviewed_code_fingerprint": "d5e9d16bf2767b798962ffc15af8d9085ea2d2c12a30d46f9279057a860a81ab",
+          "reason": "Optional context rosters and explicit server-authorized shared-project selection remain consistent across current tests.",
+          "reviewed_code_fingerprint": "c3f1014dfa499b13271c3ff347a11a39cd61e78bed34eb0a3a9784d6a42b9eac",
           "spec_material_hash": "35bac824ab9892d7bd060565ee2409d5464dbd8e18608520b172983ee083608d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fixture setup no longer bypasses the generic project-selection path; session fixtures remain distinct from hosted Auth.",
-          "reviewed_code_fingerprint": "d5e9d16bf2767b798962ffc15af8d9085ea2d2c12a30d46f9279057a860a81ab",
+          "reason": "Same immutable registry checksum is bound in both dependency locks; no override, weakened gate or source self-authorization.",
+          "reviewed_code_fingerprint": "c3f1014dfa499b13271c3ff347a11a39cd61e78bed34eb0a3a9784d6a42b9eac",
           "spec_material_hash": "41e595bfa1120d80081a4c979c3532b984f8494286e1c09facaf5f5dc2ca801a"
         }
       ],
@@ -626,13 +631,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794456352Z"
+      "updated_at": "1794456817Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:bb0de0ba416b8cc70271a66d7fb6e4f6a4b77a8760516ccc9995d1dfb75d4f66",
+      "artifact_hash": "sha256:fab0e338731991d7ac06584c2200b53508456a01fe6f2bf3a5699fb184d782b1",
       "checks": [
         {
           "name": "existing_checkpoint_history",
@@ -641,6 +646,10 @@
         {
           "name": "hosted_acceptance",
           "status": "unavailable"
+        },
+        {
+          "name": "previous_source_ci",
+          "status": "failed"
         },
         {
           "name": "prior_provider_attempt",
@@ -689,10 +698,17 @@
             "intent_id": "intent:change_01M76XWS3AKPY8RFY12X65CSXM",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M76XWS6FDKB72FD182Y8NVPJ",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M76XWS3AKPY8RFY12X65CSXM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76XWS6FDKB72FD182Y8NVPJ": {
@@ -790,6 +806,30 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "MODULE.bazel.lock",
+                  "tests/release_dependency_policy.rs",
+                  "tests/init_config_behavior.rs",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8045",
+                  "The actual accepted executor rejected stale MODULE.bazel.lock after dependency adoption. Regenerated only dependency metadata through bazel mod deps; no manual build/test. The local Bazel server was shut down. Current full validation remains required."
+                ],
+                "proof_refs": [
+                  "previous_source_ci"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "Generic connector, account/session custody, native data integration, dependency artifact and technical tests/docs.",
+                  "docs/book/src/reference/supabase-validation.md",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -803,7 +843,9 @@
         "Existing source commits 82fd18f0 and 4d7d32ca have proven checkpoint history. History recovery command correctly reports NOT_APPLICABLE. Preserve old source ref; adapt reviewed implementation in this new admitted candidate, without copying old validation or journal authority.",
         "First attempt stopped on a public GitHub rate limit; this materially stronger candidate requires new full proof.",
         "Native independent consumer fixture now exercises the public existing-project selector, instead of writing a private registration file by hand. It still uses explicit fixture-managed session credentials and makes no hosted Auth claim.",
-        "Registry archive checksum independently verified; source pin and lock now use dactyl-db 0.12.0. Reviewed all 105 source inputs: only Cargo.toml/Cargo.lock differ from accepted target; no required check was removed. Full exact-candidate proof has not run yet."
+        "Registry archive checksum independently verified; source pin and lock now use dactyl-db 0.12.0. Reviewed all 105 source inputs: only Cargo.toml/Cargo.lock differ from accepted target; no required check was removed. Full exact-candidate proof has not run yet.",
+        "The actual accepted executor rejected stale MODULE.bazel.lock after dependency adoption. Regenerated only dependency metadata through bazel mod deps; no manual build/test. The local Bazel server was shut down. Current full validation remains required.",
+        "https://buildkite.com/decapodlabs/decapod/builds/8045"
       ],
       "inspected_files": [
         "src/decapod/core/auth.rs",
@@ -814,9 +856,12 @@
       "modified_files": [
         "Cargo.lock",
         "Cargo.toml",
+        "MODULE.bazel.lock",
         "src/decapod/core/cloud_account.rs",
         "src/decapod/core/cloud_session.rs",
         "tests/cloud_supabase_boundary.rs",
+        "tests/init_config_behavior.rs",
+        "tests/release_dependency_policy.rs",
         "tests/supabase_service.rs",
         "tests/unit/core/cloud_account_tests.rs"
       ],

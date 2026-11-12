@@ -170,14 +170,19 @@ fn init_with_backend_cloud_saves_to_config() {
 }
 
 #[test]
-fn cloud_init_requires_roster_and_rejects_remote_mismatch_before_config_writes() {
+fn cloud_init_accepts_optional_roster_and_rejects_remote_mismatch_before_config_writes() {
     let project = tempdir().unwrap();
     let missing = run_decapod(
         project.path(),
         &["init", "with", "--backend", "cloud", "--proof"],
     );
-    assert!(!missing.status.success());
-    assert!(!project.path().join(".decapod/config.toml").exists());
+    assert!(
+        missing.status.success(),
+        "{}",
+        String::from_utf8_lossy(&missing.stderr)
+    );
+    assert!(String::from_utf8_lossy(&missing.stdout).contains("Cloud setup deferred"));
+    let before = fs::read(project.path().join(".decapod/config.toml")).unwrap();
     run_git(
         project.path(),
         &["remote", "add", "origin", "git@github.com:example/real.git"],
@@ -197,7 +202,10 @@ fn cloud_init_requires_roster_and_rejects_remote_mismatch_before_config_writes()
     );
     assert!(!mismatch.status.success());
     assert!(String::from_utf8_lossy(&mismatch.stderr).contains("must match"));
-    assert!(!project.path().join(".decapod/config.toml").exists());
+    assert_eq!(
+        fs::read(project.path().join(".decapod/config.toml")).unwrap(),
+        before
+    );
 }
 
 #[test]

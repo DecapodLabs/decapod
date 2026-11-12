@@ -140,7 +140,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
 }
 
 #[test]
-fn cloud_init_prints_purchase_approval_without_creating_machine_session() {
+fn cloud_init_defers_account_setup_without_creating_machine_session() {
     let tmp = TempDir::new().expect("tempdir");
     let data_home = TempDir::new().expect("credential data home");
     git(tmp.path(), &["init", "-q"]);
@@ -176,12 +176,12 @@ fn cloud_init_prints_purchase_approval_without_creating_machine_session() {
         .expect("cloud init");
     assert!(
         init_out.status.success(),
-        "cloud init should record purchase intent: {}",
+        "cloud init should record source context: {}",
         String::from_utf8_lossy(&init_out.stderr)
     );
     assert!(
         !data_home.path().join("decapod/session_token.json").exists(),
-        "purchase intent must not establish a machine-local cloud session"
+        "source context must not establish a machine-local cloud session"
     );
     let output = format!(
         "{}{}",
@@ -194,7 +194,7 @@ fn cloud_init_prints_purchase_approval_without_creating_machine_session() {
     );
     assert!(
         !output.contains("Cloud setup ready"),
-        "purchase approval must not claim an authenticated session: {output}"
+        "deferred setup must not claim an authenticated session: {output}"
     );
     assert!(!output.contains("decapod-test-mock-access"));
     assert!(!output.contains("decapod-test-mock-refresh"));
