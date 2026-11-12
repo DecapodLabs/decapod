@@ -2,7 +2,7 @@
 
 ## Agent-owned cloud session regressions
 
-`tests/cloud_session_cli.rs` drives the production binary from one cloud init
+`tests/support/cloud_session_lifecycle.rs` drives the production binary from one cloud init
 through structured sign-in handoff, process restart, saved PKCE-flow resume,
 managed code exchange, server repository finalization and native RPC. It also
 checks recovery from a rejected still-current bearer and independent custody
@@ -1066,7 +1066,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ca0edaf7312e19a119429b5b041b000e663999a40df7dbe2b1d7e7a401b39bcd`
+- Repository signal fingerprint: `aed633e1d2011448d4152c0bfd2c9f7d223ed048eee9578e191b3a397be951cd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

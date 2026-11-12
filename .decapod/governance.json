@@ -531,11 +531,11 @@
   "claims": {
     "persistent-repository-auth": {
       "statement": "After one repository init, agent commands resume browser sign-in, reuse or renew a private repository-scoped managed session, and use authenticated native RPC without local task fallback.",
-      "falsifier": "The CLI lifecycle test requires repeated init, reuses another repository session, exposes managed credentials, retries a submitted rejected data operation, or creates a local replacement task database; concurrency and interruption tests reveal refresh replay or lost custody.",
+      "falsifier": "The CLI lifecycle requires repeated init, reuses another repository session, exposes managed credentials, retries a submitted rejected operation, or creates a local replacement task database; concurrency/interruption tests reveal replay or lost custody.",
       "status": "open",
       "proof_refs": [
         "src/decapod/core/cloud_session.rs",
-        "tests/cloud_session_cli.rs"
+        "tests/support/cloud_session_lifecycle.rs"
       ]
     }
   },
@@ -556,6 +556,15 @@
       "proof_refs": [
         "tests/cloud_session_cli.rs",
         "tests/unit/core/cloud_todo_retry_tests.rs"
+      ]
+    },
+    {
+      "id": "persistent-cloud-auth-ci-repair",
+      "summary": "Repair source-CI compile/lint/documentation findings and bind the full agent session lifecycle regression to the required Supabase consumer target; renew current-content spec reviews.",
+      "input_digest": "sha256:1f913b2847a16fa6a2b2b07adfc03f3892366cc0eec9d38986a10b19cdd49fc8",
+      "proof_refs": [
+        "tests/cloud_supabase_boundary.rs",
+        "tests/support/cloud_session_lifecycle.rs"
       ]
     }
   ],
@@ -600,22 +609,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current authored semantics against one-init agent-owned managed cloud sessions, private repository scope, native RPC, bounded recovery and synthetic-versus-hosted proof limits.",
-          "reviewed_code_fingerprint": "a64eba2e23eb800bf097fc216277a5acafe0d07b2eebe8b5da5d918df1b9d875",
+          "reason": "Re-reviewed current code after preserving task-creation handoff, simplifying rejected-bearer comparison and wiring the production CLI lifecycle into the required Supabase suite. Custody, server authority and evidence limits remain explicit.",
+          "reviewed_code_fingerprint": "aed633e1d2011448d4152c0bfd2c9f7d223ed048eee9578e191b3a397be951cd",
           "spec_material_hash": "46864d66ec0e579d8c720f4108d51ee7bde5e86129ad6d1fc8bc42469310b39f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed optional auth URL propagation through blocked todo-add diagnostics, stable operation custody and bounded agent polling without a second human chat message.",
-          "reviewed_code_fingerprint": "ca0edaf7312e19a119429b5b041b000e663999a40df7dbe2b1d7e7a401b39bcd",
+          "reason": "Re-reviewed current code after preserving task-creation handoff, simplifying rejected-bearer comparison and wiring the production CLI lifecycle into the required Supabase suite. Custody, server authority and evidence limits remain explicit.",
+          "reviewed_code_fingerprint": "aed633e1d2011448d4152c0bfd2c9f7d223ed048eee9578e191b3a397be951cd",
           "spec_material_hash": "2b36a4cc97533a5d1d934fea8350245b5d70c9b24a07190984f5fab8ad2283c5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current authored semantics against one-init agent-owned managed cloud sessions, private repository scope, native RPC, bounded recovery and synthetic-versus-hosted proof limits.",
-          "reviewed_code_fingerprint": "a64eba2e23eb800bf097fc216277a5acafe0d07b2eebe8b5da5d918df1b9d875",
+          "reason": "Re-reviewed current code after preserving task-creation handoff, simplifying rejected-bearer comparison and wiring the production CLI lifecycle into the required Supabase suite. Custody, server authority and evidence limits remain explicit.",
+          "reviewed_code_fingerprint": "aed633e1d2011448d4152c0bfd2c9f7d223ed048eee9578e191b3a397be951cd",
           "spec_material_hash": "b942e33744b672969071e8d0a12abb86998ef4272322568c87991043fac1b82c"
         }
       ],
@@ -627,13 +636,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794463080Z"
+      "updated_at": "1794468394Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:23cd31e1a801de46c35d5813bf258e99cbc7f12fd1eb62c7257609bc8bd4a194",
+      "artifact_hash": "sha256:8ab04ad97ec9fc81b9764b635a70bc431a8a28f3699e6d7187bf873da180bafa",
       "checks": [
         {
           "name": "formatting",
@@ -645,7 +654,7 @@
         },
         {
           "name": "required_tests",
-          "status": "unavailable"
+          "status": "failed"
         }
       ],
       "current_phase": "validation",
@@ -690,10 +699,17 @@
             "intent_id": "intent:change_01M773RFTPFPJXCQ8R6MNGKGDQ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M773RFXVQZAJQ3XYYXJEY4VM",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M773RFTPFPJXCQ8R6MNGKGDQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M773RFXVQZAJQ3XYYXJEY4VM": {
@@ -781,6 +797,27 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Authenticated read-only CI inspection found real failures at candidate 9053bac: private cli module reference in the Supabase integration fixture, Clippy nonminimal_bool, generated command-contract drift, and code-bound spec reviews stale after follow-up source changes. Fixed these without changing required checks or weakening policy. New lifecycle test is now included as a support module in the existing required cloud_supabase_boundary target. Docs build regenerated documentation; all three canonical reviews were rebound to current source. Existing GitHub source CI execution is diagnostic evidence only and is not substituted for the required Buildkite readiness result.",
+                  "Public cloud deployment discovery returned HTTP 200, v1, matching project origin and dactyl_api with a public publishable key; no session or task was created. This proves public discovery only, not hosted login or authorization.",
+                  "Second full validation reached provider_terminal_wait then failed anonymous GithubCommitChecks with HTTP 403, reset 1794466932; no changed controller, proxy route, fabricated artifact or manual build/test was used."
+                ],
+                "proof_refs": [
+                  "required_tests",
+                  "full_validation"
+                ],
+                "scope": [
+                  "Supabase datastore composition and documentation",
+                  "cloud authentication",
+                  "initialization",
+                  "session lifecycle"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -791,11 +828,14 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Authenticated read-only CI inspection found real failures at candidate 9053bac: private cli module reference in the Supabase integration fixture, Clippy nonminimal_bool, generated command-contract drift, and code-bound spec reviews stale after follow-up source changes. Fixed these without changing required checks or weakening policy. New lifecycle test is now included as a support module in the existing required cloud_supabase_boundary target. Docs build regenerated documentation; all three canonical reviews were rebound to current source. Existing GitHub source CI execution is diagnostic evidence only and is not substituted for the required Buildkite readiness result.",
         "Existing connector candidate is uncommitted in separate codex-connector-flow workspace; inspect and selectively integrate source, never modify its custody or claim its unexecuted proof.",
         "Full validation of candidate 43c9818b686cec568e4b320f088384ac1ce62e78 stopped at public GithubObjects GET with HTTP 403 and rate_limit_reset_unix=1794463204 before provider build/test collection. Existing workspace branch was pushed by the configured validator; no alternate authentication route, manual test or gate bypass was used. Follow-up review found todo-add preflight diagnostics discarded the browser handoff; now they retain the optional authorization URL and original operation ID, with bounded polling instructions and regression coverage.",
         "Per-repository global custody, agent authorization_url, finalization-before-publication, refresh serialization, and next-invocation recovery from rejected bearers are implemented. No data mutation retries were added.",
+        "Public cloud deployment discovery returned HTTP 200, v1, matching project origin and dactyl_api with a public publishable key; no session or task was created. This proves public discovery only, not hosted login or authorization.",
         "Reviewed and adapted existing connector source; adopted published dactyl-db 0.12.0 with registry checksum and upstream source 598415953b5ee568f6d42652982897c58b4433cc. Regenerated Bazel dependency lock using mod deps, without compiling or running tests. Formatting and git diff --check passed; required builds/tests remain unexecuted until full validation.",
-        "Reviewed proof-source delta: only Cargo.toml, Cargo.lock and generated MODULE.bazel.lock change dependency inputs. Published Dactyl 0.12.0 matches registry VCS source. Bazel mod deps --lockfile_mode=error passed after normalizing generated lock JSON indentation to stay within the unchanged 1 MiB discovery bound; values are unchanged. All source CI workflows, required checks and executor helpers remain unchanged. Config was backed up privately before updating the reviewed source digest. Candidate builds/tests have not run separately."
+        "Reviewed proof-source delta: only Cargo.toml, Cargo.lock and generated MODULE.bazel.lock change dependency inputs. Published Dactyl 0.12.0 matches registry VCS source. Bazel mod deps --lockfile_mode=error passed after normalizing generated lock JSON indentation to stay within the unchanged 1 MiB discovery bound; values are unchanged. All source CI workflows, required checks and executor helpers remain unchanged. Config was backed up privately before updating the reviewed source digest. Candidate builds/tests have not run separately.",
+        "Second full validation reached provider_terminal_wait then failed anonymous GithubCommitChecks with HTTP 403, reset 1794466932; no changed controller, proxy route, fabricated artifact or manual build/test was used."
       ],
       "inspected_files": [
         "src/decapod/core/auth.rs",

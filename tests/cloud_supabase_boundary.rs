@@ -4,6 +4,11 @@ use std::path::Path;
 use std::process::{Command, Output};
 use tempfile::TempDir;
 
+// Keep the agent lifecycle in the existing required Supabase consumer suite.
+#[cfg(feature = "supabase-cloud")]
+#[path = "support/cloud_session_lifecycle.rs"]
+mod agent_session_lifecycle;
+
 fn project() -> TempDir {
     let root = tempfile::tempdir().unwrap();
     for args in [
@@ -136,7 +141,7 @@ fn cloud_runtime_deserialization_uses_its_selected_datastore() {
         use decapod::CloudRuntimeConfig;
         let neon: CloudRuntimeConfig = serde_json::from_str(r#"{"datastore":"neon"}"#).unwrap();
         assert_eq!(neon.datastore, "neon");
-        assert_eq!(neon.api_url, decapod::cli::PROPODUS_VERCEL_NEON_ENTRYPOINT);
+        assert_eq!(neon.api_url, "https://project-oqn7i.vercel.app");
         assert!(neon.validate_datastore().is_ok());
         let neon_explicit = CloudRuntimeConfig {
             api_url: "https://neon.example.test".to_string(),

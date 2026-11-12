@@ -190,7 +190,7 @@ fn reject_bearer_in_store(
     store: &CloudSessionStore,
     bearer: &str,
 ) -> Result<(), PropodusClientError> {
-    if !custody(store.load_machine_session())?.is_some_and(|saved| saved.token == bearer) {
+    if custody(store.load_machine_session())?.is_none_or(|saved| saved.token != bearer) {
         return Ok(());
     }
     let directory = custody(store.scope_directory())?;

@@ -36,7 +36,7 @@ the next agent invocation refreshes or reauthenticates without invalidating a
 newer concurrent session. Permission denials remain access errors.
 
 `tests/cloud_supabase_boundary.rs` covers native client composition and denial
-propagation with synthetic HTTP. `tests/cloud_session_cli.rs` covers init once,
+propagation with synthetic HTTP. `tests/support/cloud_session_lifecycle.rs` covers init once,
 agent handoff, resumed login, bearer rejection recovery and repository isolation.
 Neither fixture establishes real hosted OAuth or database atomicity.
 `tests/cloud_dactyl_boundary.rs`, `propodus_contract` and the historical onboarding
