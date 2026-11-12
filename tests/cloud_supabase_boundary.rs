@@ -7,7 +7,7 @@ mod managed;
 // Keep the managed scenarios in its required execution, as well as their
 // independently runnable integration target.
 #[cfg(feature = "supabase-cloud")]
-#[path = "cloud_managed_session.rs"]
+#[path = "common/cloud_managed_scenarios.rs"]
 mod managed_session;
 
 use std::path::Path;

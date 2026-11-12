@@ -29,9 +29,10 @@ required `generated_keys` field, and three human-diagnostic assertions assumed
 lowercase status text. Complete successful fixtures now supply an empty key
 list; the diagnostic assertions match the released transport classification
 and actual status spelling. Existing negative, no-fallback, bounded timeout
-and redaction assertions remain required. This diagnostic run is not Buildkite
-readiness; the twelve managed sign-in scenarios and current-target full proof
-still require successful execution on the corrected exact candidate.
+and redaction assertions remain required. This diagnostic run was not Buildkite
+readiness and had not executed the twelve managed sign-in scenarios. Their
+later successful diagnostic execution is recorded below; the current exact
+candidate still requires complete native proof.
 The released connector classifies a dropped non-timeout authentication response
 as `Unavailable`. Completion recovery must retain the saved session and return
 `onboarding_pending` for this kind as well as transport/timeout failures; the
@@ -50,8 +51,8 @@ dependency lint, but Bazel setup rejected the stale `MODULE.bazel.lock` before
 the Bazel tests could run. The reported recovery, repository-pinned Bazel 9.3.0
 `mod deps --lockfile_mode=update`, regenerates the extension's Cargo inputs.
 The committed build policy remains `lockfile_mode=error`; no test/build gate is
-replaced by this metadata preparation. Fresh Buildkite proof and the managed
-client's unit/CLI execution remain required.
+replaced by this metadata preparation. Fresh Buildkite proof on the current
+exact candidate remains required.
 
 The generated lock was 1,053,030 bytes, exceeding bounded discovery by 4,454
 bytes. Reformatting its complete JSON with one-space indentation yields
@@ -103,10 +104,12 @@ is consumed from the published Dactyl 0.12.0 registry dependency.
 The accepted source-CI executor retains its own required recipe. Its diagnostic
 record on `ee288c86` showed that a candidate helper edit did not add a new target
 to that recipe. The existing required `cloud_supabase_boundary` target now
-includes `cloud_managed_session` as a Rust test module, so all twelve scenarios
-execute under the accepted recipe without changing executor authority. The
-private seed helper derives its nested harness name and preserves independent
-standalone execution. Every existing required command/target remains intact.
+includes the shared `common/cloud_managed_scenarios.rs` test module, so all
+twelve scenarios execute under the accepted recipe without changing executor
+authority. The standalone `cloud_managed_session` entry uses the same scenarios.
+Both entries include the private seed helper once at their crate root; this
+avoids the `clippy::duplicate_mod` failure observed on `2f01156c` without a lint
+exemption. Every existing required command/target remains intact.
 
 That diagnostic run passed 1,674 library tests (eight ignored) and nineteen of
 twenty existing boundary tests. Its remaining failure showed that unsupported
@@ -114,7 +117,20 @@ twenty existing boundary tests. Its remaining failure showed that unsupported
 capture. A shared guard now rejects it before connector construction, while
 retaining the direct-store guard and the existing no-network/no-mutation test.
 The full native validation of that superseded candidate was interrupted; it
-does not supply a final readiness verdict. Fresh complete proof is required.
+does not supply a final readiness verdict.
+
+On `2f01156cfebd9622cc9ae6f43aa80403054a2461`, GitHub consumer job
+`130991125949` passed all 1,674 library tests (eight ignored), including all
+eighteen custody tests, and all thirty-three boundary tests. The boundary
+results explicitly include all twelve managed CLI scenarios and the corrected
+proof-before-network case. Other selected cloud/registry integration targets
+also passed; the two protected Supabase profiles remained ignored. This is
+diagnostic execution, not a full Buildkite readiness receipt. The follow-up
+test layout removes only the duplicate seed-helper inclusion (thirty-two
+boundary tests) to resolve clippy while retaining every product assertion.
+Native validation hit the public metadata reader's rate limit before obtaining
+readiness. A fresh complete verdict on the final exact candidate remains
+required; neither GitHub success nor a rate-limit failure supplies it.
 `tests/release_dependency_policy.rs`, Cargo manifests and source-CI configuration
 remain intact; an unpublished source overlay cannot establish release-policy or
 publication readiness. No local fixture claims hosted managed Auth, production
@@ -1180,8 +1196,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a3e09115adaaad6056fdcc2341eebdc9cdffb3089658f170baf45be9ce33a849`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
+- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
