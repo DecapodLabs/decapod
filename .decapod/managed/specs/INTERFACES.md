@@ -1100,8 +1100,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2080f91a36ac7aa2bb1c8eb1efd2c79ef8157018d2e1464875e828175837bb31`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (229 files)
+- Repository signal fingerprint: `1ada811f01a7d6882f14b4b0525018ee0f327becdb06fca3bb126f1656713e08`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1377,6 +1377,23 @@ operation, task revision, event sequence, transaction semantics, or cloud
 schema change. An unexpected historical index or missing unique enforcement
 raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
 Freed SQLite pages are reusable but are not auto-vacuumed.
+
+## Human setup and cloud handoff presentation
+
+Interactive `decapod init` presents Project, Preferences and Review with
+Recommended/Customize and Apply/Edit/Cancel choices. Arrow keys, typed choices,
+Enter and Escape work in supported terminals; redirected output and `--proof`
+retain unattended behavior. Preview writes nothing; cancellation before apply
+does not create a new directory or initiate cloud authentication. Reinitialization
+preserves existing backend, isolation and structured proof settings.
+
+The cloud review describes account sign-in and service-confirmed repository
+access. It accepts no seat roster, provider credential or local price declaration.
+After apply, the accepted managed-session flow may return `onboarding_pending`,
+`action_required` or a denial; these remain non-success and cannot produce the
+terminal ready receipt. Existing headless continuation, private custody, explicit
+restart and server-readiness contracts are preserved. No managed-project selector
+or protected hosted-payment assurance is added here.
 
 ## Validation proof lifecycle
 

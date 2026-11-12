@@ -307,8 +307,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2080f91a36ac7aa2bb1c8eb1efd2c79ef8157018d2e1464875e828175837bb31`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (229 files)
+- Repository signal fingerprint: `1ada811f01a7d6882f14b4b0525018ee0f327becdb06fca3bb126f1656713e08`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -463,3 +463,17 @@ UNIQUE btrees' leftmost-key coverage. Do not delete rows, rewrite events, alter
 WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
 This is a bounded local SQLite optimization. Full semantic parity with
 Propodus Supabase remains a separately gated migration (Propodus #71).
+
+## Refined terminal onboarding and managed cloud setup
+
+Human setup follows Project, Preferences and Review, with recommended defaults,
+focused customization and an explicit apply/edit/cancel decision. Interactive
+setup creates no project, Git, governance or cloud sign-in state before approval.
+Existing settings and full proof definitions survive refresh, with private
+backups before changed config replacement. Local operation needs no account.
+
+Cloud setup uses the accepted Dactyl-managed session flow after apply. The service
+owns pricing, account requirements, assignments and repository access; the TUI
+does not infer authority from a local roster. A pending or denied handoff is not
+setup success. Managed-project selection and the protected paid customer journey
+remain separate work and are not claimed by this presentation change.
