@@ -475,8 +475,7 @@ pub fn wait_for_source_runs(
         }
         // Pace only a poll that actually used the anonymous GitHub reader.
         // Direct Buildkite envelope polling keeps its existing interval.
-        let interval = budget.public_github_poll_interval(requests_before, interval)?;
-        budget.wait(interval.min(budget.remaining()?))?;
+        budget.wait_for_public_github_poll(requests_before, interval)?;
     }
     provider::verify_remote_binding(runner, snapshot, budget)?;
     let result = TerminalSourceRuns {

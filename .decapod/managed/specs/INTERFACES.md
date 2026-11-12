@@ -1100,7 +1100,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4f7a21fa9e38e70d2c53e9753b488c546d097c8ba0d396162ae147e8e5146633`
+- Repository signal fingerprint: `34f3091e9c1fd37ac7629ea6769d55a536c6b7f3cd62809b4f111ecafb997a06`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1387,3 +1387,5 @@ original validation deadline. HTTP 403/429 still return the existing redacted
 failure diagnostics and do not trigger automatic retry or another authentication
 route. A later supported replay independently remeasures the exact candidate and
 accepted target; quota hints cannot make pending or incomplete proof ready.
+If a quota-paced wait reaches its deadline, its diagnostic retains the bounded
+numeric reset time so a later authorized replay can respect the reported window.

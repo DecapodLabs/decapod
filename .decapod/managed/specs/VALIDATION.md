@@ -1196,7 +1196,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4f7a21fa9e38e70d2c53e9753b488c546d097c8ba0d396162ae147e8e5146633`
+- Repository signal fingerprint: `34f3091e9c1fd37ac7629ea6769d55a536c6b7f3cd62809b4f111ecafb997a06`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1582,3 +1582,10 @@ validation completes. They do not prove that concurrent external callers can
 never exhaust a shared GitHub allowance, or authorize readiness from a partial
 provider observation. No required workflow, check, capture bound, authentication
 route or invocation timeout is relaxed by this change.
+
+The accepted 0.139.0 release changes only Cargo package-version metadata in the
+105-file source-proof inventory inherited from validated PR1635. Each current
+source hash and the previous complete inventory digest were independently
+checked; only Cargo.toml and Cargo.lock differ. The reviewed declaration is
+updated to the actual release inventory without changing the graph, carrier,
+recipes, checks or provider authorization.

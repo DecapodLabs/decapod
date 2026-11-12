@@ -18,6 +18,15 @@ fn now_unix() -> u64 {
         .as_secs()
 }
 
+fn wait_error(error: std::io::Error, reset: u64) -> std::io::Error {
+    std::io::Error::new(
+        error.kind(),
+        format!(
+            "public GitHub quota wait ended: {error}; rate_limit_reset_unix={reset}; no request was made during the wait"
+        ),
+    )
+}
+
 // Accept one bounded decimal header; duplicate or malformed hints are unknown.
 // Never retain arbitrary headers, cookies, response bodies or diagnostics.
 fn decimal_header(bytes: &[u8], name: &str) -> Option<u64> {
@@ -66,8 +75,8 @@ impl GithubQuota {
         if requests == 0 || reset <= now {
             return interval;
         }
-        // Spend at most half the observed allowance on continued discovery;
-        // leave headroom for collection and fresh final identity checks.
+        // Estimate further discovery polls against half the current allowance
+        // to leave headroom for collection and fresh final identity checks.
         // Other users/regions can change the counter: it is advice, not a grant.
         let polls = ((remaining / 2) / requests).max(1);
         interval.max(Duration::from_secs((reset - now).div_ceil(polls)))
@@ -94,26 +103,46 @@ impl Budget<'_> {
 
     pub(super) fn wait_for_public_github_quota(&self) -> Result<()> {
         self.remaining()?;
-        let delay = self
-            .github_quota
-            .lock()
-            .map_err(|_| invalid("public GitHub quota tracking unavailable"))?
-            .request_delay(now_unix())?;
+        let (delay, reset) = {
+            let quota = self
+                .github_quota
+                .lock()
+                .map_err(|_| invalid("public GitHub quota tracking unavailable"))?;
+            (quota.request_delay(now_unix())?, quota.reset_unix)
+        };
         // Untrusted epoch values cannot overflow Instant or extend the original
         // invocation deadline. The existing wait also observes cancellation.
-        self.wait(delay.min(self.remaining()?))
+        let result = self
+            .remaining()
+            .and_then(|remaining| self.wait(delay.min(remaining)));
+        match reset {
+            Some(reset) if !delay.is_zero() => result.map_err(|error| wait_error(error, reset)),
+            _ => result,
+        }
     }
 
-    pub(super) fn public_github_poll_interval(
+    pub(super) fn wait_for_public_github_poll(
         &self,
         before: u64,
         interval: Duration,
-    ) -> Result<Duration> {
-        Ok(self
-            .github_quota
-            .lock()
-            .map_err(|_| invalid("public GitHub quota tracking unavailable"))?
-            .poll_interval(before, interval, now_unix()))
+    ) -> Result<()> {
+        let (delay, reset) = {
+            let quota = self
+                .github_quota
+                .lock()
+                .map_err(|_| invalid("public GitHub quota tracking unavailable"))?;
+            (
+                quota.poll_interval(before, interval, now_unix()),
+                quota.reset_unix,
+            )
+        };
+        let result = self
+            .remaining()
+            .and_then(|remaining| self.wait(delay.min(remaining)));
+        match reset {
+            Some(reset) if delay > interval => result.map_err(|error| wait_error(error, reset)),
+            _ => result,
+        }
     }
 }
 
@@ -184,10 +213,18 @@ mod tests {
         budget
             .observe_public_github_quota(&response("0", &u64::MAX.to_string()))
             .unwrap();
-        assert_eq!(
-            budget.wait_for_public_github_quota().unwrap_err().kind(),
-            std::io::ErrorKind::TimedOut
-        );
+        let error = budget.wait_for_public_github_quota().unwrap_err();
+        assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+        assert!(error.to_string().contains("rate_limit_reset_unix="));
+        let budget = Budget::new(Duration::from_millis(10), 4096, &cancel).unwrap();
+        budget
+            .observe_public_github_quota(&response("58", &u64::MAX.to_string()))
+            .unwrap();
+        let error = budget
+            .wait_for_public_github_poll(0, Duration::from_secs(5))
+            .unwrap_err();
+        assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
+        assert!(error.to_string().contains("rate_limit_reset_unix="));
         let budget = Budget::new(Duration::from_secs(5), 4096, &cancel).unwrap();
         budget
             .observe_public_github_quota(&response("0", "invalid"))

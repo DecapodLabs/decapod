@@ -852,7 +852,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4f7a21fa9e38e70d2c53e9753b488c546d097c8ba0d396162ae147e8e5146633`
+- Repository signal fingerprint: `34f3091e9c1fd37ac7629ea6769d55a536c6b7f3cd62809b4f111ecafb997a06`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1069,8 +1069,8 @@ their existing capture sizes and original deadline. Provider records and executi
 receipts are never cached or authorized by quota hints.
 
 An incomplete discovery poll that used the public GitHub API spreads further
-polling over the reported window, retaining half the observed allowance as
-headroom for collection and fresh final checks. Polls using only direct Buildkite
+polling over the reported window, using half the current allowance as its
+discovery estimate to leave collection headroom. Polls using only direct Buildkite
 envelopes retain their original cadence. After a successful response reports zero
 remaining requests, a later read waits for its known reset within the same deadline
 and cancellation budget; an ambiguous reset blocks another request. Counters are
