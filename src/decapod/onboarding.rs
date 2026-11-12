@@ -1,11 +1,21 @@
 //! Presentation and terminal lifecycle for the human-facing setup journey.
 //! Project configuration and all mutations remain in the init command.
 
-use std::io::{self, IsTerminal, Read, Write};
+use std::io::{self, IsTerminal};
+#[cfg(unix)]
+use std::io::{Read, Write};
 use std::path::Path;
 
 pub(super) fn interactive(base_init: bool, proof: bool) -> bool {
     base_init && !proof && io::stdin().is_terminal() && io::stdout().is_terminal()
+}
+
+pub(super) fn navigation_hint() -> &'static str {
+    if cfg!(unix) && !std::env::var("TERM").is_ok_and(|term| term == "dumb") {
+        "↑/↓ to move · type to choose · Enter to continue · Esc to cancel"
+    } else {
+        "Type a name or number · Enter to continue · Ctrl-C to cancel"
+    }
 }
 
 fn color_enabled() -> bool {
@@ -46,6 +56,20 @@ pub(super) fn width() -> usize {
         }
     }
     80
+}
+
+pub(super) fn height() -> usize {
+    #[cfg(unix)]
+    {
+        use std::os::fd::AsRawFd;
+        let mut size: libc::winsize = unsafe { std::mem::zeroed() };
+        if unsafe { libc::ioctl(io::stdout().as_raw_fd(), libc::TIOCGWINSZ, &mut size) } == 0
+            && size.ws_row > 0
+        {
+            return usize::from(size.ws_row);
+        }
+    }
+    24
 }
 
 pub(super) fn wrap(text: &str, columns: usize) -> Vec<String> {
@@ -213,12 +237,9 @@ pub(super) fn ready(path: &Path, dry_run: bool, repair_count: usize) {
             "For example: \"Read AGENTS.md, orient to this project, and help me build my next feature.\"",
         );
     }
+    note("Required validation has not run.");
     if repair_count > 0 {
-        note(&format!(
-            "Your agent has {repair_count} setup/proof follow-up(s) to review. Initialization does not run validation."
-        ));
-    } else {
-        note("Initialization is complete. Required validation has not run.");
+        note("Your agent will review the remaining setup and run the required checks.");
     }
     note("To revisit these choices, ask your agent to run decapod init --refresh.");
     println!();

@@ -38,6 +38,7 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::io;
 use std::io::IsTerminal;
+use std::io::Read;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
@@ -397,12 +398,16 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
     }
 }
 
-fn seed_init_generated_state(target_dir: &Path, dry_run: bool) -> Result<(), error::DecapodError> {
+fn seed_init_generated_state(
+    target_dir: &Path,
+    dry_run: bool,
+    interactive: bool,
+) -> Result<(), error::DecapodError> {
     if dry_run {
         return Ok(());
     }
 
-    if core::research_claims::ensure_template(target_dir, false)? {
+    if core::research_claims::ensure_template(target_dir, false)? && !interactive {
         println!(
             "Governance: created {} (replace the template claim through issue-scoped review)",
             core::research_claims::CLAIMS_PATH
@@ -1039,11 +1044,21 @@ fn selector_default_index(options: &[&str], default: &[String]) -> Option<usize>
         .and_then(|d| options.iter().position(|o| d.eq_ignore_ascii_case(o)))
 }
 
+fn selector_visible_options() -> usize {
+    let width_limit = if onboarding::width() < 44 {
+        3
+    } else {
+        SELECTOR_VISIBLE_OPTIONS
+    };
+    width_limit.min(onboarding::height().saturating_sub(9).max(2))
+}
+
 fn selector_window_start(options_len: usize, selected: usize) -> usize {
-    if options_len <= SELECTOR_VISIBLE_OPTIONS {
+    let visible = selector_visible_options();
+    if options_len <= visible {
         0
     } else {
-        selected.min(options_len - SELECTOR_VISIBLE_OPTIONS)
+        selected.min(options_len - visible)
     }
 }
 
@@ -1061,15 +1076,27 @@ fn selector_render_lines(
     } else {
         typed.to_string()
     };
-    let mut lines = onboarding::wrap(
-        &format!("{prompt}{input}"),
-        onboarding::width().saturating_sub(4),
-    )
-    .into_iter()
-    .map(|line| format!("    {line}"))
-    .collect::<Vec<_>>();
+    let columns = onboarding::width().saturating_sub(4);
+    let query = onboarding::clean(&format!("{prompt}{input}"));
+    let query = query.trim_start();
+    let query = if query.chars().count() > columns {
+        format!(
+            "…{}",
+            query
+                .chars()
+                .rev()
+                .take(columns.saturating_sub(1))
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .collect::<String>()
+        )
+    } else {
+        query.to_string()
+    };
+    let mut lines = vec![format!("    {query}")];
     let window_start = selector_window_start(options.len(), selected);
-    let window_end = (window_start + SELECTOR_VISIBLE_OPTIONS).min(options.len());
+    let window_end = (window_start + selector_visible_options()).min(options.len());
     if window_start > 0 {
         lines.push("    ↑ more".to_string());
     }
@@ -1108,7 +1135,7 @@ fn selector_render_lines(
     }
     if window_end < options.len() {
         lines.push("    ↓ more".to_string());
-    } else if options.len() > SELECTOR_VISIBLE_OPTIONS {
+    } else if options.len() > selector_visible_options() {
         lines.push("    ↓ wraps to 1".to_string());
     }
     lines
@@ -1268,11 +1295,7 @@ fn prompt_setup_choice(
     descriptions: &[&str],
     default: &str,
 ) -> Result<String, error::DecapodError> {
-    onboarding::field(
-        label,
-        "↑/↓ to move · type to choose · Enter to continue · Esc to cancel",
-        "",
-    );
+    onboarding::field(label, onboarding::navigation_hint(), "");
     loop {
         let choice = prompt_terminal_selector(
             options,
@@ -1325,7 +1348,8 @@ fn parse_language_choice(choice: &str) -> Vec<String> {
             trimmed
                 .parse::<usize>()
                 .ok()
-                .and_then(|n| LANGUAGES.get(n.saturating_sub(1)))
+                .and_then(|n| n.checked_sub(1))
+                .and_then(|n| LANGUAGES.get(n))
                 .map(|lang| (*lang).to_string())
                 .unwrap_or_else(|| normalize_language(trimmed))
         })
@@ -2026,6 +2050,7 @@ fn customize_setup(
     repo: &mut RepoContext,
     init: &mut InitWithCli,
 ) -> Result<(), error::DecapodError> {
+    let mut default = "Project";
     loop {
         let section = prompt_setup_choice(
             "Make it yours",
@@ -2037,7 +2062,7 @@ fn customize_setup(
                 "Proof, permissions, context, diagrams, and CI.",
                 "Return to the setup review.",
             ],
-            "Done",
+            default,
         )?;
         match section.as_str() {
             "Project" => {
@@ -2158,13 +2183,14 @@ fn customize_setup(
                     &init.proof_commands.join(","),
                 )?;
                 apply_init_proof_command_input(init, &proof);
+                onboarding::note(
+                    "Laya requires a separately installed runtime and pinned model data.",
+                );
                 init.laya_decisions = Some(prompt_yes_no(
                     "Require optional Laya readiness decisions?",
                     init.laya_decisions.unwrap_or(false),
                 )?);
-                onboarding::note(
-                    "Laya requires a separately installed runtime and pinned model data.",
-                );
+                onboarding::note("No runs the full proof suite on this machine.");
                 init.validation_buildkite_preflights = Some(prompt_yes_no(
                     "Run the full proof suite on Buildkite?",
                     init.validation_buildkite_preflights.unwrap_or(false),
@@ -2185,6 +2211,7 @@ fn customize_setup(
             }
             _ => return Ok(()),
         }
+        default = "Done";
     }
 }
 
@@ -2868,7 +2895,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 )?;
             }
             record_cloud_init_registration(&target_dir, &config, init_with.dry_run)?;
-            seed_init_generated_state(&target_dir, init_with.dry_run)?;
+            seed_init_generated_state(&target_dir, init_with.dry_run, is_interactive)?;
             let reconciliation = core::init_reconciliation::inspect(
                 &target_dir,
                 &config.proof,
@@ -2876,20 +2903,6 @@ pub fn run() -> Result<(), error::DecapodError> {
             );
             if !is_interactive {
                 print_init_reconciliation(&reconciliation);
-            } else if !reconciliation.repair_tasks.is_empty() {
-                onboarding::card(
-                    "For your agent",
-                    &reconciliation
-                        .repair_tasks
-                        .iter()
-                        .map(|task| {
-                            (
-                                "Follow-up",
-                                format!("[{}] {} — {}", task.code, task.title, task.action),
-                            )
-                        })
-                        .collect::<Vec<_>>(),
-                );
             }
             if config.repo.effective_backend().is_cloud() {
                 let link = cloud_backend::cloud_billing_approval_url(

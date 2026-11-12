@@ -27,6 +27,31 @@ fn binary() -> PathBuf {
         .join("decapod")
 }
 
+fn terminal_pair() -> (File, File) {
+    let (mut master, mut slave) = (-1, -1);
+    let mut size = libc::winsize {
+        ws_row: 30,
+        ws_col: 80,
+        ws_xpixel: 0,
+        ws_ypixel: 0,
+    };
+    assert_eq!(
+        unsafe {
+            libc::openpty(
+                &mut master,
+                &mut slave,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                &mut size,
+            )
+        },
+        0
+    );
+    let master = unsafe { File::from_raw_fd(master) };
+    let slave = unsafe { File::from_raw_fd(slave) };
+    (master, slave)
+}
+
 struct SetupTerminal {
     child: Child,
     master: File,
@@ -38,27 +63,7 @@ struct SetupTerminal {
 
 impl SetupTerminal {
     fn start(directory: &Path, args: &[&str]) -> Self {
-        let (mut master, mut slave) = (-1, -1);
-        let size = libc::winsize {
-            ws_row: 30,
-            ws_col: 80,
-            ws_xpixel: 0,
-            ws_ypixel: 0,
-        };
-        assert_eq!(
-            unsafe {
-                libc::openpty(
-                    &mut master,
-                    &mut slave,
-                    std::ptr::null_mut(),
-                    std::ptr::null(),
-                    &size,
-                )
-            },
-            0
-        );
-        let master = unsafe { File::from_raw_fd(master) };
-        let slave = unsafe { File::from_raw_fd(slave) };
+        let (master, slave) = terminal_pair();
         let mut termios = unsafe { std::mem::zeroed() };
         assert_eq!(
             unsafe { libc::tcgetattr(slave.as_raw_fd(), &mut termios) },
@@ -277,4 +282,45 @@ fn preview_creates_neither_git_nor_governance_state() {
         0,
         "preview wrote project state"
     );
+}
+
+#[test]
+fn redirected_output_never_waits_for_terminal_setup_input() {
+    let project = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let (_master, slave) = terminal_pair();
+    let mut child = Command::new(binary())
+        .args(["init", "--dir", ".", "--dry-run"])
+        .current_dir(project.path())
+        .env_clear()
+        .env("PATH", std::env::var_os("PATH").unwrap_or_default())
+        .env("HOME", home.path())
+        .env("TERM", "xterm-256color")
+        .stdin(Stdio::from(slave))
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let deadline = Instant::now() + Duration::from_secs(30);
+    while child.try_wait().unwrap().is_none() {
+        if Instant::now() >= deadline {
+            let _ = child.kill();
+            let output = child.wait_with_output().unwrap();
+            panic!(
+                "redirected output opened an interactive prompt: {}",
+                String::from_utf8_lossy(&output.stdout)
+            );
+        }
+        std::thread::sleep(Duration::from_millis(15));
+    }
+    let output = child.wait_with_output().unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(!stdout.contains("What are you building?"));
+    assert!(!stdout.contains("How would you like to set up?"));
+    assert_eq!(fs::read_dir(project.path()).unwrap().count(), 0);
 }
