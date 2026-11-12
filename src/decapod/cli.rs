@@ -279,15 +279,13 @@ pub(crate) struct InitGroupCli {
     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// Init provides a hosted GitHub-admin approval link for USD15 monthly named seats.
+    /// Init starts or resumes managed sign-in through Dactyl and reports readiness only after service confirmation.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
-    /// Canonical GitHub owner/repository for cloud purchase approval.
+    /// Explicitly restart an interrupted cloud sign-in or refresh without
+    /// replaying a one-time request whose outcome is unknown.
     #[clap(long)]
-    pub cloud_repository: Option<String>,
-    /// Requested named GitHub seats (repeatable or comma separated). No credentials.
-    #[clap(long = "github-users", value_delimiter = ',')]
-    pub github_users: Vec<String>,
+    pub restart_cloud_signin: bool,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -447,15 +445,13 @@ pub(crate) struct InitWithCli {
     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// Init provides a hosted GitHub-admin approval link for USD15 monthly named seats.
+    /// Init starts or resumes managed sign-in through Dactyl and reports readiness only after service confirmation.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
-    /// Canonical GitHub owner/repository for cloud purchase approval.
+    /// Explicitly restart an interrupted cloud sign-in or refresh without
+    /// replaying a one-time request whose outcome is unknown.
     #[clap(long)]
-    pub cloud_repository: Option<String>,
-    /// Requested named GitHub seats (repeatable or comma separated). No credentials.
-    #[clap(long = "github-users", value_delimiter = ',')]
-    pub github_users: Vec<String>,
+    pub restart_cloud_signin: bool,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
     #[clap(long = "git", action = clap::ArgAction::SetTrue)]
     pub git: bool,
@@ -711,6 +707,21 @@ fn default_cloud_datastore() -> String {
 }
 
 impl CloudRuntimeConfig {
+    /// Runtime cloud commands select the logical Dactyl connector. The fields
+    /// retained on this type support explicit historical adapter consumers;
+    /// project policy does not select their physical implementation.
+    pub fn logical_cloud() -> Result<Self, crate::core::error::DecapodError> {
+        #[cfg(feature = "supabase-cloud")]
+        let origin = crate::core::cloud_client::selected_origin()?;
+        #[cfg(not(feature = "supabase-cloud"))]
+        let origin = "cloud-capability-unavailable".to_owned();
+        Ok(Self {
+            provider: "dactyl".into(),
+            api_url: origin,
+            datastore: "managed".into(),
+        })
+    }
+
     /// Fail before onboarding or todo I/O when the selected cloud route is invalid.
     pub fn validate_datastore(
         &self,
@@ -781,12 +792,6 @@ pub struct RepoContext {
     /// Canonical repository backend selection.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backend: Option<BackendType>,
-    /// Requested purchase repository, independently verified by the cloud service.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub cloud_repository: Option<String>,
-    /// Requested roster only. Paid seats and authorization remain server owned.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub cloud_github_users: Vec<String>,
     #[serde(
         rename = "declared_capabilities",
         alias = "capabilities",
@@ -900,7 +905,7 @@ pub(crate) struct CloudCli {
 pub(crate) enum CloudCommand {
     /// Deprecated compatibility alias; use `decapod init --backend cloud` for human setup.
     Login,
-    /// Report whether a local or environment credential is available without printing it.
+    /// Inspect private managed-session state without network I/O or a live readiness claim.
     Status,
 }
 

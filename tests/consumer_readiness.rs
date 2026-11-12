@@ -544,6 +544,7 @@ fn real_source_failure_is_not_ready_and_committed_repair_runs_new_proof() {
     let fixture = Fixture::new();
     fs::write(fixture.options.root.join("payload.txt"), "broken\n").unwrap();
     fixture.commit("introduce source defect");
+    let failed_head = git(&fixture.options.root, &["rev-parse", "HEAD"]);
     let mut host = fixture.host();
     let failed = fixture.validate(&mut host);
     assert!(!failed.ready, "{failed:?}");
@@ -557,8 +558,21 @@ fn real_source_failure_is_not_ready_and_committed_repair_runs_new_proof() {
             .join("completion/native-readiness-receipt.json")
             .exists()
     );
+    assert!(!failed_path.join("completion/verdict.json").exists());
+    assert!(!failed_path.join("historical-proof.json").exists());
     let evidence: SuiteEvidence =
         serde_json::from_slice(&fs::read(failed_path.join("observations.json")).unwrap()).unwrap();
+    assert_eq!(
+        evidence.results.len(),
+        2,
+        "every reviewed command must execute"
+    );
+    assert!(
+        evidence
+            .results
+            .iter()
+            .all(|result| matches!(result.observation, Observation::Executed { .. }))
+    );
     let executed: Vec<_> = evidence
         .results
         .iter()
@@ -583,9 +597,21 @@ fn real_source_failure_is_not_ready_and_committed_repair_runs_new_proof() {
     );
     fs::write(fixture.options.root.join("payload.txt"), "ready\n").unwrap();
     fixture.commit("repair actual source defect");
+    assert_ne!(
+        git(&fixture.options.root, &["rev-parse", "HEAD"]),
+        failed_head
+    );
     let repaired = fixture.validate(&mut fixture.host());
     assert!(repaired.ready, "{repaired:?}");
     assert_ne!(failed.evidence_path, repaired.evidence_path);
+    let repaired_path = repaired.evidence_path.unwrap();
+    for artifact in [
+        "completion/native-readiness-receipt.json",
+        "completion/verdict.json",
+        "historical-proof.json",
+    ] {
+        assert!(repaired_path.join(artifact).is_file(), "{artifact}");
+    }
 }
 
 #[test]
@@ -934,6 +960,7 @@ fn governed_ok(root: &Path, storage: &Path, args: &[&str]) -> serde_json::Value 
 #[cfg(unix)]
 pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
     use decapod::core::governance_document;
+    let started = std::time::Instant::now();
     let mut fixture = Fixture::new();
     let storage = fixture._storage.path().to_path_buf();
     let root = fixture.options.root.clone();
@@ -1053,178 +1080,143 @@ pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
         toml::to_string_pretty(&config).unwrap(),
     )
     .unwrap();
-    let mut previous_candidate: Option<(String, PathBuf)> = None;
-    for succeeds in [true, false] {
-        fs::write(
-            workspace.join("payload.txt"),
-            if succeeds { "ready\n" } else { "invalid\n" },
-        )
-        .unwrap();
-        governed_ok(&workspace, &storage, &["rpc", "--op", "specs.refresh"]);
-        for name in ["ARCHITECTURE", "INTERFACES", "SECURITY"] {
-            governed_ok(
-                &workspace,
-                &storage,
-                &[
-                    "govern",
-                    "plan",
-                    "review-spec",
-                    "--path",
-                    &format!(".decapod/managed/specs/{name}.md"),
-                    "--disposition",
-                    "unchanged-with-reason",
-                    "--reason",
-                    "Documentation fixture retains product architecture, interfaces and security; reviewed command environment binds the actual managed workspace",
-                ],
-            );
-        }
-        git(&workspace, &["add", "-A"]);
+    fs::write(workspace.join("payload.txt"), "ready\n").unwrap();
+    governed_ok(&workspace, &storage, &["rpc", "--op", "specs.refresh"]);
+    for name in ["ARCHITECTURE", "INTERFACES", "SECURITY"] {
         governed_ok(
             &workspace,
             &storage,
             &[
                 "govern",
-                "artifacts",
-                "checkpoint",
-                "--id",
-                if succeeds {
-                    "docs-first-proof"
-                } else {
-                    "docs-failed-command-proof"
-                },
-                "--summary",
-                "Fresh documentation source and real reviewed command contract",
+                "plan",
+                "review-spec",
+                "--path",
+                &format!(".decapod/managed/specs/{name}.md"),
+                "--disposition",
+                "unchanged-with-reason",
+                "--reason",
+                "Documentation fixture retains product architecture, interfaces and security; reviewed command environment binds the actual managed workspace",
             ],
         );
-        git(&workspace, &["add", governance_document::GOVERNANCE_PATH]);
-        git(
-            &workspace,
-            &[
-                "commit",
-                "-m",
-                if succeeds {
-                    "docs: describe first governed proof"
-                } else {
-                    "docs: exercise failed source proof"
-                },
-            ],
-        );
-        governed_ok(
-            &workspace,
-            &storage,
-            &["workspace", "ensure", "--branch", &branch],
-        );
-        assert!(
-            governance_document::read_section(&workspace, "validation")
-                .unwrap()
-                .is_none()
-        );
-        if succeeds {
-            assert!(
-                !workspace
-                    .join(decapod::core::capsule_policy::GENERATED_POLICY_REL_PATH)
-                    .exists(),
-                "fresh worktrees must not need an ignored policy cache to admit proof"
-            );
-        }
-        let prepared_status = git(&workspace, &["status", "--porcelain"]);
-        assert!(
-            prepared_status.is_empty(),
-            "prepared candidate must be clean: {prepared_status}"
-        );
-        let head = git(&workspace, &["rev-parse", "HEAD"]);
-        let mut host = fixture.host();
-        host.governed_admission = Some(storage.clone());
-        let readiness = fixture.validate(&mut host);
-        let admission = host.observed_admission.as_ref().unwrap_or_else(|| {
-            governed_failure(format!(
-                "Actual CLI admission must pass before source proof: {readiness:?}"
-            ))
-        });
-        assert_eq!(admission["scope"], "ci_local");
-        assert_eq!(admission["publication_ready"], false);
-        assert_eq!(admission["report"]["fail_count"], 0);
-        if readiness.ready != succeeds {
-            governed_failure(format!(
-                "Expected complete runtime ready={succeeds}: {readiness:?}"
-            ));
-        }
-        assert_eq!(readiness.exit_code(), i32::from(!succeeds));
-        assert_eq!(host.execution_attempts, 1);
-        assert_eq!(git(&workspace, &["rev-parse", "HEAD"]), head);
-        let final_status = git(&workspace, &["status", "--porcelain"]);
-        assert!(
-            final_status.is_empty(),
-            "CLI admission and complete runtime must preserve the candidate: {final_status}"
-        );
-        let evidence = readiness
-            .evidence_path
-            .as_ref()
-            .expect("real proof must have executed, not failed at prerequisites");
-        if let Some((prior_head, prior_evidence)) = &previous_candidate {
-            assert_ne!(&head, prior_head, "negative proof needs its own candidate");
-            assert_ne!(
-                evidence, prior_evidence,
-                "negative proof cannot reuse success"
-            );
-        }
-        let observations: SuiteEvidence =
-            serde_json::from_slice(&fs::read(evidence.join("observations.json")).unwrap()).unwrap();
-        assert_eq!(
-            observations.results.len(),
-            2,
-            "every reviewed command must execute"
-        );
-        assert!(
-            observations
-                .results
-                .iter()
-                .all(|result| matches!(result.observation, Observation::Executed { .. }))
-        );
-        if !succeeds {
-            let stderr = fs::read_to_string(evidence.join("native-0.stderr")).unwrap_or_default()
-                + &fs::read_to_string(evidence.join("native-1.stderr")).unwrap_or_default();
-            if !stderr.contains("consumer source is invalid") {
-                governed_failure(format!(
-                    "Negative proof must observe the actual failed source assertion: {readiness:?}\n{stderr}"
-                ));
-            }
-        }
-        assert_eq!(
-            evidence
-                .join("completion/native-readiness-receipt.json")
-                .exists(),
-            succeeds
-        );
-        assert_eq!(evidence.join("completion/verdict.json").exists(), succeeds);
-        assert_eq!(evidence.join("historical-proof.json").exists(), succeeds);
-        // A prerequisite receipt must never appear as a substitute for full proof.
-        assert!(
-            governance_document::read_section(&workspace, "validation")
-                .unwrap()
-                .is_none()
-        );
-        if succeeds {
-            assert!(readiness.proof_ready);
-            let rules: serde_json::Value =
-                serde_json::from_slice(&fs::read(evidence.join("terminal-rules.json")).unwrap())
-                    .unwrap();
-            assert_eq!(rules["overall_verdict"], "pass");
-            assert!(
-                rules["results"].as_array().unwrap().iter().any(|rule| {
-                    rule["rule_id"] == "decapod.evidence.required_and_fresh"
-                        && rule["verdict"] == "pass"
-                }),
-                "the docs evidence rule must consume the actual complete proof"
-            );
-            assert!(
-                !rules["results"]
-                    .as_array()
-                    .unwrap()
-                    .iter()
-                    .any(|rule| rule["rule_id"] == "decapod.evidence.proof_backed_completion")
-            );
-        }
-        previous_candidate = Some((head, evidence.clone()));
     }
+    git(&workspace, &["add", "-A"]);
+    governed_ok(
+        &workspace,
+        &storage,
+        &[
+            "govern",
+            "artifacts",
+            "checkpoint",
+            "--id",
+            "docs-first-proof",
+            "--summary",
+            "Fresh documentation source and real reviewed command contract",
+        ],
+    );
+    git(&workspace, &["add", governance_document::GOVERNANCE_PATH]);
+    git(
+        &workspace,
+        &["commit", "-m", "docs: describe first governed proof"],
+    );
+    governed_ok(
+        &workspace,
+        &storage,
+        &["workspace", "ensure", "--branch", &branch],
+    );
+    assert!(
+        governance_document::read_section(&workspace, "validation")
+            .unwrap()
+            .is_none()
+    );
+    assert!(
+        !workspace
+            .join(decapod::core::capsule_policy::GENERATED_POLICY_REL_PATH)
+            .exists(),
+        "fresh worktrees must not need an ignored policy cache to admit proof"
+    );
+    let prepared_status = git(&workspace, &["status", "--porcelain"]);
+    assert!(
+        prepared_status.is_empty(),
+        "prepared candidate must be clean: {prepared_status}"
+    );
+    let head = git(&workspace, &["rev-parse", "HEAD"]);
+    let mut host = fixture.host();
+    host.governed_admission = Some(storage.clone());
+    let readiness = fixture.validate(&mut host);
+    let admission = host.observed_admission.as_ref().unwrap_or_else(|| {
+        governed_failure(format!(
+            "Actual CLI admission must pass before source proof: {readiness:?}"
+        ))
+    });
+    assert_eq!(admission["scope"], "ci_local");
+    assert_eq!(admission["publication_ready"], false);
+    assert_eq!(admission["report"]["fail_count"], 0);
+    if !readiness.ready {
+        governed_failure(format!(
+            "Expected complete runtime readiness: {readiness:?}"
+        ));
+    }
+    assert_eq!(readiness.exit_code(), 0);
+    assert_eq!(host.execution_attempts, 1);
+    assert_eq!(git(&workspace, &["rev-parse", "HEAD"]), head);
+    let final_status = git(&workspace, &["status", "--porcelain"]);
+    assert!(
+        final_status.is_empty(),
+        "CLI admission and complete runtime must preserve the candidate: {final_status}"
+    );
+    let evidence = readiness
+        .evidence_path
+        .as_ref()
+        .expect("real proof must have executed, not failed at prerequisites");
+    let observations: SuiteEvidence =
+        serde_json::from_slice(&fs::read(evidence.join("observations.json")).unwrap()).unwrap();
+    assert_eq!(
+        observations.results.len(),
+        2,
+        "every reviewed command must execute"
+    );
+    assert!(
+        observations
+            .results
+            .iter()
+            .all(|result| matches!(result.observation, Observation::Executed { .. }))
+    );
+    for artifact in [
+        "completion/native-readiness-receipt.json",
+        "completion/verdict.json",
+        "historical-proof.json",
+    ] {
+        assert!(evidence.join(artifact).is_file(), "{artifact}");
+    }
+    // A prerequisite receipt must never appear as a substitute for full proof.
+    assert!(
+        governance_document::read_section(&workspace, "validation")
+            .unwrap()
+            .is_none()
+    );
+    assert!(readiness.proof_ready);
+    let rules: serde_json::Value =
+        serde_json::from_slice(&fs::read(evidence.join("terminal-rules.json")).unwrap()).unwrap();
+    assert_eq!(rules["overall_verdict"], "pass");
+    assert!(
+        rules["results"].as_array().unwrap().iter().any(|rule| {
+            rule["rule_id"] == "decapod.evidence.required_and_fresh" && rule["verdict"] == "pass"
+        }),
+        "the docs evidence rule must consume the actual complete proof"
+    );
+    assert!(
+        !rules["results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|rule| rule["rule_id"] == "decapod.evidence.proof_backed_completion")
+    );
+    let _ = io::Write::write_all(
+        &mut io::stderr(),
+        format!(
+            "Fresh docs CLI admission and complete runtime: {:?}\n",
+            started.elapsed()
+        )
+        .as_bytes(),
+    );
 }

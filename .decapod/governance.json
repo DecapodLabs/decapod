@@ -529,6 +529,15 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "claim:decapod-cloud-client": {
+      "statement": "Implement issue1628 client slice: logical project backend, all managed discovery/auth/account/data transport through Dactyl, repository/project/origin-bound private custody with serialized refresh and crash recovery, honest server-confirmed readiness, explicit account denial/action requirements, headless continuation and no cloud-to-SQLite fallback. Preserve local independence and existing governed publication/release dependency gates.",
+      "falsifier": "Any project provider/token/price/roster requirement; direct legacy auth transport on managed init/session/TODO; cross-binding credential reuse; replay of uncertain one-time exchange/rotation; account privilege inferred locally; false ready message; leaked private credential; SQLite fallback; missing required checks or fixture results claimed as hosted evidence.",
+      "status": "open",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "git:19acd21f7ff50656323d037915273f03cdedc04e:.decapod/governance.json#/claims/claim:decapod-cloud-client"
+      ]
+    },
     "validation-bootstrap": {
       "statement": "Fresh governed tasks can execute their first full proof without a prior receipt; terminal readiness requires actual current bound proof and declared workunit gates",
       "falsifier": "A fresh docs task cannot reach a reviewed command, a failing command obtains readiness, or stale/forged/mismatched evidence passes terminal rules",
@@ -669,6 +678,17 @@
         "/private/tmp/validation-bootstrap-custody-audit-v14.json",
         "/private/tmp/validation-bootstrap-custody-renew-v14.json"
       ]
+    },
+    {
+      "id": "validation-bootstrap-accepted19ac-v15",
+      "summary": "Reconcile actual accepted19ac with authentic prior checkpoint journal and carried open cloud claim; consolidate measured duplicate governed negative proof into existing real-source regression without weakening checks or budgets",
+      "input_digest": "sha256:f82643ff88d2929dffcb201c11690ed88eea2a18fa6963ceb05e517e378690bf",
+      "proof_refs": [
+        "git:19acd21f7ff50656323d037915273f03cdedc04e",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43189965235/job/131088359791",
+        "https://github.com/DecapodLabs/decapod/issues/1629",
+        "tests/consumer_readiness.rs"
+      ]
     }
   ],
   "intents": {
@@ -712,25 +732,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only regression transport/admission seam changes: same actual CLI project admission and complete sealed public runtime validate the existing lifecycle; production architecture and transport guards remain unchanged.",
-          "reviewed_code_fingerprint": "f448a0a180476a2ad14b86673cf70383857fb4f2d7a60536b770d1eb65e5c812",
-          "spec_material_hash": "5a87d7918290e60cbcea35f5b68eba731bcf192eec164b4f6c312e29916ad03d"
+          "reason": "Reconciled accepted19ac whole-product cloud architecture and preserved validation admission/terminal evidence boundaries; native refresh follows measured fixture consolidation",
+          "reviewed_code_fingerprint": "f311a8df4d0a0abce92265fb6d0a6e476fbccd7fdfaf510e19027bf5591e96e8",
+          "spec_material_hash": "9de697bbc5132ebd94a55fde84ed3cd8f2ce530ccce688e6f14bd18a19bd2dbf"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No public interface changes: component coverage now states actual CI-local CLI admission plus existing complete-runtime Host API; real ELF/HTTPS/no-rewrite guards and nonpublication semantics are unchanged.",
-          "reviewed_code_fingerprint": "f448a0a180476a2ad14b86673cf70383857fb4f2d7a60536b770d1eb65e5c812",
-          "spec_material_hash": "d552fd3e108d74b4a5d35bde3d015e49274e6bc07f0ff4bfc97338b465821386"
+          "reason": "Preserved accepted19ac cloud/API interfaces while retaining runtime-owned complete evidence and fail-closed declared-workunit contracts; fixture target transport remains adapter-only",
+          "reviewed_code_fingerprint": "f311a8df4d0a0abce92265fb6d0a6e476fbccd7fdfaf510e19027bf5591e96e8",
+          "spec_material_hash": "35177dfb04e0c07501c6ea3c70be0d2d75c3d2a173a2fc2a9bad64d8ae3374af"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Unsupported Git shellshim removed rather than weakening ELF or HTTPS/rewrite checks. CI-local observation is explicitly nonpublication; actual sealed source execution and terminal evidence authorize only the isolated consumer runtime.",
-          "reviewed_code_fingerprint": "f448a0a180476a2ad14b86673cf70383857fb4f2d7a60536b770d1eb65e5c812",
-          "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
+          "reason": "Inherited actual accepted19ac whole-product security unchanged; fixture consolidation preserves production native ELF/HTTPS/URL guards, private custody and source/governing evidence integrity",
+          "reviewed_code_fingerprint": "f311a8df4d0a0abce92265fb6d0a6e476fbccd7fdfaf510e19027bf5591e96e8",
+          "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
       "state": "APPROVED",
@@ -743,20 +763,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794474850Z"
+      "updated_at": "1794477497Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Do not rename actor or docs task, weaken real task bindings, alter CI helpers/checks/budgets, or authorize own source with candidate controller",
+        "Do not weaken accepted executor, ELF/HTTPS transport, source checks, strict20s/300s budgets, or terminal evidence integrity; no source proof claimed from diagnostics",
         "Keep accepted 300-second aggregate budget and trusted profile/graph unchanged; no manual builds/tests or native quota retry on known failing source",
         "Keep clean candidate and capsule policy validation strict; validation-lifecycle-only predicate fix, no init/account/carrier/helper/budget changes; independent released controller owns fullsource readiness",
         "Preserve current controller0.138.3 and actual native quota blocker; source diagnostics do not authorize readiness",
         "Preserve real Git ELF and HTTPS/no-rewrite guards; CI-local admission never authorizes publication; real sealed current-suite execution and terminal evidence remain mandatory; carrier/aggregatebudget unchanged",
         "Scope actor exclusion only to complete canonical agent/<actor>/<topic>; retain legacy agent/<task> and bare task parsing, multi-task topics and actual task mismatch rejection"
       ],
-      "artifact_hash": "sha256:6fea0719b41077cf0a616a9f222fc3ce5596a29899017ab456ca47cd2db06d40",
+      "artifact_hash": "sha256:a6e1470027973d25706ab62396d82179523a02e0023bf0c3a01e6be7ef40cc51",
       "checks": [
+        {
+          "name": "accepted19ac_source_preservation_review",
+          "status": "passed"
+        },
         {
           "name": "accepted_release_inventory_review",
           "status": "passed"
@@ -834,6 +859,18 @@
           "status": "unavailable"
         },
         {
+          "name": "fab7_aggregate_cli_budget",
+          "status": "failed"
+        },
+        {
+          "name": "fab7_fresh_docs_cli_and_complete_runtime",
+          "status": "passed"
+        },
+        {
+          "name": "fab7_push_trusted_context",
+          "status": "failed"
+        },
+        {
           "name": "full_docs_cli_regression_execution",
           "status": "unavailable"
         },
@@ -870,6 +907,10 @@
           "status": "passed"
         },
         {
+          "name": "new_candidate_configured_tests",
+          "status": "unavailable"
+        },
+        {
           "name": "parser_legacy_contract",
           "status": "partial"
         },
@@ -894,7 +935,7 @@
           "status": "passed"
         }
       ],
-      "completion_claim": "Actual5a83 exposed rejected Git shellshim and aggregate300s timeout. Root-approved supported split uses one realfreshdocs CLI task/workspace and samecandidate: Host.project_check runs genuineCLI explicitci_local, actualexit0/nonemptychecks/zeroerrors/pubfalse/readinessnull and cleanunchangedHEAD required. Existing sealed production RepositoryHost executes completeactualPython suite+terminalrules; only acceptedtargettransport uses freshactualbareGitread. Second separatelycheckpointed candidate intentionallyfails source, with actualstderr required and nonewreceipt; uniqueHEAD/evidence prevent priorproofreuse. CLIcalls bounded30s withinoriginalruntimebudget. Read-only peerreview foundboundaries/authorizations sound. Currenttaskunexpectedly becameopenunassigned revision5 updated1794472134 despiteearlier4hlease; firstmetadatawrite rejected withoutmutation. Sameactorreclaimedoriginaltask and renewed4hgen4; claimlocalcontainerprep pending due omittedautorunoff, atomicclaim/renew committed, onlyownlocalclaim cancelledexit130fullyreaped; nativecurrentownerverified and workspaceensure autorunoff fullycompletedcan_worktrue beforethisrecord. No owner/category/run substitution, newcheckpoint/commit/fullvalidate duringcustodygap, guardweakening or native ownsource readiness claim.",
+      "completion_claim": "Implementation remains unproven on reconciled candidate until configured exact-source CI and independent full native validation succeed; no old result rebound",
       "current_phase": "repair",
       "custody": {
         "events": [
@@ -1021,10 +1062,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 19
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:20",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 20,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1418,12 +1466,43 @@
                 ],
                 "sequence": 19,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "command": "git merge --no-commit origin/master (actual second parent19acd21f7ff50656323d037915273f03cdedc04e)",
+                "custody_event_id": "event:20",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Actualfab7 PR job131088359791 explicitly passed fresh_docs_cli_admission_then_complete_runtime_proves_current_source and existing real_source_failure; aggregate target then timedout300.1s at final workunit recovery test. New source removes duplicate governed negative preparation/admission and strengthens existing real negative receipt/history/verdict assertions; no budget/test/selector change.",
+                  "Actual accepted master advanced d3358e1ce2cdb137dc57445c64592cb6d327a6ff ->19acd21f7ff50656323d037915273f03cdedc04e. fab7 push early CI merge-base-context failures precede execution. Genuine merge retains original fork metadata and14 committed checkpoint history; incoming baseline unresolved obligations unchanged and incoming claim:decapod-cloud-client carried natively with exact statement/falsifier/status and acceptedcommit proofref.",
+                  "Read-only peer review confirmed incoming cloud source and trusted helper/workflow/config/MODULElock accepted bytes preserved; own lib delta is validation cache predicate only. Independent registry controller remains0.138.3; native environment notice reports no new migration, ignored applied/catalog inspected through sequence1100."
+                ],
+                "proof_refs": [
+                  "fab7_fresh_docs_cli_and_complete_runtime",
+                  "fab7_aggregate_cli_budget",
+                  "fab7_push_trusted_context",
+                  "accepted19ac_source_preservation_review",
+                  "new_candidate_configured_tests"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 20,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "git merge --no-commit origin/master (actual second parent19acd21f7ff50656323d037915273f03cdedc04e)",
         "rustfmt --edition 2024 on changed Rust files"
       ],
       "destination": "pull request",
@@ -1441,7 +1520,9 @@
         "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt",
         "/private/tmp/validation-bootstrap-gov-typo-recovery.diagnostic.json",
         "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",
+        "Actual accepted master advanced d3358e1ce2cdb137dc57445c64592cb6d327a6ff ->19acd21f7ff50656323d037915273f03cdedc04e. fab7 push early CI merge-base-context failures precede execution. Genuine merge retains original fork metadata and14 committed checkpoint history; incoming baseline unresolved obligations unchanged and incoming claim:decapod-cloud-client carried natively with exact statement/falsifier/status and acceptedcommit proofref.",
         "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
+        "Actualfab7 PR job131088359791 explicitly passed fresh_docs_cli_admission_then_complete_runtime_proves_current_source and existing real_source_failure; aggregate target then timedout300.1s at final workunit recovery test. New source removes duplicate governed negative preparation/admission and strengthens existing real negative receipt/history/verdict assertions; no budget/test/selector change.",
         "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
         "Authored tests not executed yet; full accepted-controller validation owns builds and all test execution",
         "Buildkite8037 required standalone-validation source build E0282: explicit String map key type required; raw actual provider log /private/tmp/validation-bootstrap-build8037.log",
@@ -1453,6 +1534,7 @@
         "GH Clippy and actual required Buildkite8060 clippy measured E0308 at validation_rules.rs2182: resolve_capsule_policy requested_limit is usize, not Option; exact source log /private/tmp/validation-bootstrap-build8060-clippy.log",
         "Own v5 local controller cancelled and fully reaped before source repair; report /private/tmp/validation-bootstrap-full-v5.json says CI operation cancelled, publication_ready=false. Actual failed compiler subcheck remains distinct from interrupted aggregate proof. No remote jobs cancelled.",
         "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
+        "Read-only peer review confirmed incoming cloud source and trusted helper/workflow/config/MODULElock accepted bytes preserved; own lib delta is validation cache predicate only. Independent registry controller remains0.138.3; native environment notice reports no new migration, ignored applied/catalog inspected through sequence1100.",
         "Review repairs: original budget checked around terminal reads, before proof and atomic receipt/ready-verdict publication; optional exemption exact kernel id+authority; regression evaluates actual current declared workunit rule with generated capsule, living spec, current journal and retained artifact; separate mandatory project obligation remains required.",
         "Same actor task lease expired during proof/review; source edits preserved before AUTHORING_CUSTODY_STALE surfaced. Inspected sole unchanged ownership, supported same-task reclaim+4h renew+workspace rebind; lease_generation2. No v5 authored commit preceded recovery.",
         "Same exact independent native controller v6 blocked by public GitHub403 with explicit reset1794459593; source change gets new checkpoint/branch push; next full native only after reset+grace.",
@@ -1462,6 +1544,7 @@
         "v4 own local controller cancelled and reaped after reviewed defects; final diagnostic SNAPSHOT_NOT_READY public read cancelled, last provider_terminal_wait579867ms, report /private/tmp/validation-bootstrap-full-v4.json. No remote/unrelated jobs cancelled; no pass/source-test failure claimed."
       ],
       "inspected_files": [
+        ".decapod/managed/specs/VALIDATION.md",
         "src/decapod/core/capsule_policy.rs",
         "src/decapod/core/scaffold.rs",
         "src/decapod/core/snapshot_provider/snapshot.rs",
@@ -1497,6 +1580,7 @@
         "tests/unit/lib_validation_proof_tests.rs"
       ],
       "next_transitions": [
+        "Checkpoint actual accepted-target reconciliation and measured fixture-cost consolidation, then execute unchanged required CI and independent full native validation",
         "Refine plan and declare falsifiable checks",
         "checkpoint"
       ],

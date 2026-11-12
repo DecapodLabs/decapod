@@ -196,7 +196,10 @@ pub fn failure_kind(error: &DecapodError) -> FailureKind {
             CloudAuthStatus::Unauthorized
             | CloudAuthStatus::UnauthorizedIdentity
             | CloudAuthStatus::RepositoryDenied
-            | CloudAuthStatus::Revoked => FailureKind::Authorization,
+            | CloudAuthStatus::ActionRequired => FailureKind::Authorization,
+            CloudAuthStatus::Revoked | CloudAuthStatus::RestartRequired => {
+                FailureKind::Authentication
+            }
             CloudAuthStatus::Offline => FailureKind::Offline,
             CloudAuthStatus::ProviderUnavailable => FailureKind::Unavailable,
             _ => FailureKind::Authentication,
