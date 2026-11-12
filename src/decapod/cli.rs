@@ -1604,6 +1604,17 @@ pub(crate) struct DatabaseCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum DatabaseCommand {
+    /// Inventory local storage through Dactyl without initialization or maintenance.
+    Inspect {
+        /// Non-secret repository label for independently attributed reports.
+        #[clap(long, default_value = "repository")]
+        scope: String,
+        /// Output format: json or text.
+        #[clap(long, default_value = "json", value_parser = ["json", "text"])]
+        format: String,
+        #[clap(flatten)]
+        options: crate::core::storage_inventory::InventoryOptions,
+    },
     /// Run Dactyl's read-only SQLite integrity check without modifying storage.
     Verify,
     /// Create a Dactyl online-backup snapshot at an operator-selected path.
