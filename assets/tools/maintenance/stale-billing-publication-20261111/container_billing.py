@@ -131,7 +131,6 @@ def inside(context):
     child_home = Path("/tmp/decapod-home")
     child_home.mkdir(mode=0o700, exist_ok=False)
     env["HOME"] = str(child_home)
-    env["GIT_CONFIG_GLOBAL"] = str(child_home / ".gitconfig")
     env["PATH"] = str(controller.parent) + ":" + env.get("PATH", "/usr/local/bin:/usr/bin:/bin")
     os.chdir(root)
     command = [sys.executable, str(assets / "continue_billing.py"),
