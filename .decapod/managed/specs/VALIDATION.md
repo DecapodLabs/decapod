@@ -9,6 +9,12 @@ the public runtime and native executor with an independently read local Git
 target. It establishes repository-local readiness only; it is not hosted
 cloud, billing, provider OAuth or publication acceptance.
 
+The accepted `tests/entrypoint_correctness.rs` test
+`fresh_docs_cli_admission_then_complete_runtime_proves_current_source` also
+exercises real CLI initialization, claimed workspace admission and first-proof
+execution through `tests/support/fresh_docs_readiness.rs`. The cloud handoff
+must preserve that Decapod lifecycle and its terminal evidence checks.
+
 ## Init-once agent continuation
 
 This continuation adopts PR #1635's exact `ee44e5f8773697b5341107c0d3153de4ebe28bfb`
@@ -1237,8 +1243,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a6a34e9f1d6171897ff1d874ab9ca581eda3694b7031133c1c4a6fc1ef0a1f65`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (228 files)
+- Repository signal fingerprint: `106a69824c2a350f103f0b7f3fe4d00a8f2305cc4962e1f92a851aab2944f3b6`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1621,3 +1627,23 @@ from the preceding accepted cloud mergec87e4f49. Renewing the inventory digest
 retains the same source adapter, accepted executor, required graph and verdict
 policy. A matching inventory is preparation, and full exact-candidate validation
 remains mandatory after every source or target change.
+
+## Validation proof lifecycle
+
+Issue #1629 separates proof admission from proof consumption. A fresh governed docs task must reach its first reviewed source command through full `decapod validate`, without supplying an earlier receipt or an undeclared workunit. Terminal publication rules consume the live runtime's verified complete suite before readiness receipts or historical completion are written. Full candidate/accepted-target/material/governance bindings remain required. Explicit workunit contracts retain journal, proof-artifact, source, current epoch, living-spec and capsule lineage checks; an absent projection cannot erase a durable declaration. Regression coverage must observe real command execution, reject failed commands without readiness/receipts, and retain unknown, forged, stale and mismatched evidence failures. Component fixtures may substitute only accepted-target transport, not source checks or execution observations.
+
+Review regressions cover expiry during terminal evaluation and native receipt staging, a distinct mandatory project workunit obligation without a declaration, and a declared current workunit reaching the actual rule evaluator with a generated capsule, bound living spec, current execution journal and retained proof bytes. Explicit epoch mismatches, corrupted capsule/source and deleted manifests remain failures.
+
+The fresh governed docs regression has its actual `#[test]` entrypoint in the already required `tests/entrypoint_correctness.rs` target, calling `tests/support/fresh_docs_readiness.rs` with helper-only `tests/common/consumer_readiness_fixture.rs`. Real CLI commands create and claim the docs task, ensure its managed workspace, approve its plan, refresh/review specs, checkpoint and commit. The public runtime's prerequisite callback runs the real CLI with explicit `ci_local` scope and requires observed success, nonempty passed checks, zero failures, no publication readiness and an unchanged clean candidate. The same runtime invocation then executes the complete real source suite and terminal rules; only accepted-target transport is substituted with a fresh read of the actual local bare Git upstream. This is CLI-admission plus complete-runtime coverage, not an end-to-end CLI HTTPS transport test. The unchanged selective-CLI recipe executes the same entrypoint, CLI-contract and contract-enforcement targets. All 16 preexisting consumer API cases remain in `consumer_readiness.rs` under CLI contracts; helper support contains no test cases. The genuine fresh docs case runs once in the entrypoint target, preventing the measured 65-second case from overloading CLI contracts. A green `not_applicable` selection is not execution evidence.
+
+The fixture starts without a prior prerequisite receipt or ignored policy cache and verifies clean committed candidates throughout. The fresh docs fixture covers the positive first proof once. The existing real-source failure/committed-repair regression separately requires an actual failed assertion, distinct candidate and evidence identities, no failed-attempt readiness, ready-completion verdict or history artifacts, and fresh complete proof after repair. This avoids a duplicate governed preparation and admission cycle within the unchanged CLI target budget. Canonical scaffold regressions ensure an absent runtime cache causes no source healing or manifest rewrite, while a missing tracked living spec still triggers repair. Existing policy validation continues rejecting malformed or unsupported policy contracts. CLI fixture calls have finite 30-second limits, additionally capped by the runtime's original remaining budget during admission; the accepted aggregate CI budget remains unchanged.
+
+The actual accepted 0.139.0 release at `19acd21f` changes only the Decapod package versions in inventoried `Cargo.toml` and `Cargo.lock` relative to its cloud-client parent. Its 105-file source inventory is reviewed as `sha256:c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174`; the pre-extraction candidate inherits those source definitions exactly. Updating the declaration records that measured accepted release delta; it grants no execution or publication evidence and changes no controller, executor, workflow, helper or source-selection contract.
+
+Shared fixture extraction adds only declared Rust source inputs for the existing Bazel consumer and entrypoint targets. At placement commit `cff3a3c3`, the reviewed 105-file inventory hashes to `sha256:50c5532ad4dca740a8216688204d2c0446459da2782a66de9377aacb30d360c8`; `.config/build/decapod.BUILD.bzl` is the sole changed definition relative to then-accepted `19acd21f`. The accepted executor, three selected target names, commands, serial test threads, finite budgets, selectors, workflows and compiled carriers remain unchanged. Before/after named-case inventories preserve every existing case and the single fresh docs case; actual configured CI must establish execution after this placement change.
+
+The accepted target subsequently advanced through onboarding PR #1636 and the actual 0.139.1 release, ending at `bc0a71971bce8ee036a24562b7fc4a9b771f2f40`. Reconciliation retains incoming onboarding source, tests and whole-product specifications, the existing validation lifecycle work and every prior native checkpoint. All 140 carried baseline obligations are unchanged; the incoming current journal declares no additional claim or unresolved decision. Source inventory changes since the placement commit are exactly the accepted `Cargo.toml`/`Cargo.lock` package-version bytes. The actual 105-file candidate inventory is reviewed as `sha256:31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40`; its only definition difference from the accepted target is the already reviewed additive Rust-input wiring. In that reconciliation, independent controller, compiled carrier, required graph, selectors and finite budgets remained unchanged.
+
+Standalone source validation compares the repository after native `validate --refresh-specs` and rejects release-bound drift. The actual 0.139.1 evaluator exposed 0.139.0 entrypoint, managed-image and manifest pins after the accepted release advanced; those projections must be regenerated by an independently released 0.139.1 controller. Registry installation through the supported native session-update path is environment bootstrap, never candidate proof. The project auto-update preference is restored after scoped bootstrap, and projection-only preparation remains nonpublication evidence. The source inventory remains the same reviewed 105-file `sha256:31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40` set.
+
+Actual pre-refresh candidate `c626fa46` confirmed the unchanged selected target bounds: CLI contracts passed in 281.6 seconds and contract enforcement in 274.2 seconds; the entrypoint target completed in 207.4 seconds with only the prior-release template mismatch failing. Its genuine fresh docs proof passed in 75.2473 seconds. These source-CI diagnostics confirm placement and retain the failure honestly; the regenerated candidate still requires its own complete configured execution and independent full native validation.

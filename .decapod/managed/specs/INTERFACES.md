@@ -1116,8 +1116,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a6a34e9f1d6171897ff1d874ab9ca581eda3694b7031133c1c4a6fc1ef0a1f65`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (228 files)
+- Repository signal fingerprint: `106a69824c2a350f103f0b7f3fe4d00a8f2305cc4962e1f92a851aab2944f3b6`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1410,3 +1410,11 @@ After apply, the accepted managed-session flow may return `onboarding_pending`,
 terminal ready receipt. Existing headless continuation, private custody, explicit
 restart and server-readiness contracts are preserved. No managed-project selector
 or protected hosted-payment assurance is added here.
+
+## Validation proof lifecycle
+
+Validation evidence rules execute at the terminal publication boundary. `validation_proof` identifies the actual current invocation's complete-suite proof, not the legacy prerequisite receipt in `governance.json#/sections/validation`. That legacy receipt keeps its direct `receipt_hash` shape and integrity check. Workunit completion applies only to a current task with an explicit durable workunit declaration; journal lookup failures and missing, invalid or stale declared projections block instead of becoming an absent contract.
+
+Only the kernel optional workunit-completion rule can become inapplicable when the authoritative journal reports no declaration. A separate mandatory project or task rule still evaluates and fails when required workunit evidence is absent. Optional manifest epoch fields constrain evidence when provided; the supported current execution binding positively binds the actual epoch when those legacy fields are unset.
+
+Task binding on a managed `agent/<actor>/<topic>` branch reads task identifiers from the topic. A task-shaped actor name does not declare another task. Legacy unnamespaced and `agent/<task>` branches and multiple task identifiers in a topic retain their existing matching and mismatch checks.

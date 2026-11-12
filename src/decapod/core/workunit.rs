@@ -1561,4 +1561,4 @@ pub fn verify_capsule_policy_lineage_for_task(
 
 #[cfg(test)]
 #[path = "../../../tests/unit/core/workunit_journal_tests.rs"]
-mod journal_tests;
+pub(crate) mod journal_tests;
