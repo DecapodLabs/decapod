@@ -16,6 +16,7 @@
 use crate::core::error::DecapodError;
 use crate::core::rpc::{Blocker, BlockerKind};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 
 pub mod reflection;
@@ -866,12 +867,10 @@ impl MentorEngine {
                                         .unwrap_or(path)
                                         .to_string_lossy()
                                         .into_owned(),
-                                    hash: Some(
-                                        crate::core::governance_document::digest(
-                                            &serde_json::json!(content),
-                                        )
-                                        .unwrap_or_default(),
-                                    ),
+                                    hash: Some(format!(
+                                        "sha256:{:x}",
+                                        Sha256::digest(content.as_bytes())
+                                    )),
                                     timestamp: None,
                                 }),
                             });

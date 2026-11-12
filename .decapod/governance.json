@@ -567,6 +567,15 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "reflection-1639-source-repair",
+      "summary": "Repair CLI module qualification and harden source snapshot/progress alias handling; preserve external provider 403 blocker and add adversarial coverage without claiming runtime pass.",
+      "input_digest": "sha256:7f03a8984d26e89eff1dc6859e3750e928ab66a5cc740d82c38cf8b7a763c14c",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -613,22 +622,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rechecked composed mentor, task custody and bounded current-plan journal; existing full proof catalog and provider policy are unchanged.",
-          "reviewed_code_fingerprint": "3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210",
-          "spec_material_hash": "25b731a843bf8146a1cdc971154dd9bf3eba5e074e2d69e2d7d22ad3f637eb2c"
+          "reason": "Reviewed shared captured ADR bytes, bounded reads, case-folded progress identities and existing custody/document locking; no new authority or datastore.",
+          "reviewed_code_fingerprint": "754ecb0297fcaf22e01238d8dcf5c6d6f7860641baf36477b784c3e4332ec335",
+          "spec_material_hash": "6b2487506065634e448fe3a9d255a87fc53d19b9557ef23ee2ce4d998d61e7c2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rechecked final optional request/outcome contract and compatibility after reviewed release-inventory reconciliation; no authority or proof bypass.",
-          "reviewed_code_fingerprint": "3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210",
+          "reason": "Reviewed repaired CLI module qualification and unchanged optional JSON contract; all approval and proof boundaries remain.",
+          "reviewed_code_fingerprint": "754ecb0297fcaf22e01238d8dcf5c6d6f7860641baf36477b784c3e4332ec335",
           "spec_material_hash": "0cc5afe81a0949f80846cc50b58d91f1ec4e584a7b323380166ce2b5d60876f5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed inventory repair changes only the source digest after the accepted package-version bump; local trust, human authority, secrets handling and proof gates remain unchanged.",
-          "reviewed_code_fingerprint": "3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210",
+          "reason": "Snapshot and alias hardening preserve existing cooperative local trust and human approval. Public-reader HTTP 403 is retained as unavailable proof; no alternate authentication or publication bypass.",
+          "reviewed_code_fingerprint": "754ecb0297fcaf22e01238d8dcf5c6d6f7860641baf36477b784c3e4332ec335",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -642,13 +651,16 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794481524Z"
+      "updated_at": "1794481970Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c86a6e1c1ace1aefd3fd1b3a284f2759f1a2f0df8270f307cb73067c00f44660",
+      "artifact_hash": "sha256:ee02ada1b7a6d097a285db29343df4ad808704baee5e8dbbf5f305f348675825",
+      "blockers": [
+        "SNAPSHOT_NOT_READY: configured public GithubCommitChecks GET returned HTTP 403; reset epoch 1794483759. No alternate authentication route or substitute readiness proof."
+      ],
       "checks": [
         {
           "name": "formatting",
@@ -656,10 +668,10 @@
         },
         {
           "name": "full-validation",
-          "status": "failed"
+          "status": "unavailable"
         }
       ],
-      "current_phase": "validating",
+      "current_phase": "source-repair",
       "custody": {
         "events": [
           {
@@ -701,10 +713,17 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -811,6 +830,32 @@
                 "validation_findings": [
                   "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required."
                 ]
+              },
+              {
+                "action": "source-repair",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/mentor/reflection.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43206246190"
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness."
+                ]
               }
             ]
           }
@@ -826,6 +871,7 @@
       "evidence": [
         ".decapod/managed/specs/VALIDATION.md",
         "docs/architecture/bounded-reflection.md",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43206246190",
         "https://github.com/DecapodLabs/decapod/issues/1639",
         "https://github.com/DecapodLabs/decapod/issues/1640"
       ],
@@ -865,6 +911,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Behavioral, latency and growth measurements await configured validation; authored tests are not proof.",
+        "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
         "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
         "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics."
       ]

@@ -12853,9 +12853,10 @@ fn run_infer_orientation(
     }
 
     if let Some(input) = &cli.reflection {
-        let request: mentor::reflection::Request = serde_json::from_str(input).map_err(|e| {
-            error::DecapodError::ValidationError(format!("Invalid reflection: {e}"))
-        })?;
+        let request: crate::core::mentor::reflection::Request = serde_json::from_str(input)
+            .map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid reflection: {e}"))
+            })?;
         if cli
             .task_id
             .as_ref()
@@ -12865,7 +12866,7 @@ fn run_infer_orientation(
                 "REFLECTION_TASK_MISMATCH".into(),
             ));
         }
-        let outcome = mentor::reflection::submit(project_root, &request)?;
+        let outcome = crate::core::mentor::reflection::submit(project_root, &request)?;
         packet.next_action = outcome.next_action.clone();
         packet.reflection = Some(outcome);
     }

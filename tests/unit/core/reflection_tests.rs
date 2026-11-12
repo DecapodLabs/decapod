@@ -357,12 +357,14 @@ fn retries_conflicting_tokens_and_interrupted_invocations_preserve_exact_state()
 }
 
 #[test]
-fn release_or_task_change_invalidates_custody_without_changing_journal() {
+fn yielded_lease_invalidates_custody_without_changing_journal() {
     let (temp, request) = fixture(vec![]);
     let first = submit(temp.path(), &request).unwrap();
     let store = temp.path().join(".decapod/data");
     let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".into());
-    todo::release_task_as_actor(&store, &request.task_id, &actor).unwrap();
+    let yielded =
+        todo::yield_claim_lease(&store, &request.task_id, &actor, "Interrupted work").unwrap();
+    assert_eq!(yielded["status"], "ok");
     let before = bytes(temp.path());
     assert!(submit(temp.path(), &next(&request, &first, "released")).is_err());
     assert_eq!(before, bytes(temp.path()));
@@ -395,4 +397,45 @@ fn aliases_broad_paths_and_operation_rewording_cannot_hide_binding_conflicts() {
     request.op = "change".into();
     request.touched_paths = vec!["src/../src/mutations.rs".into()];
     assert!(submit(temp.path(), &request).is_err());
+}
+
+#[test]
+fn case_only_path_changes_are_not_progress() {
+    let (temp, request) = fixture(vec!["src/mutations.rs".into()]);
+    let first = submit(temp.path(), &request).unwrap();
+    let mut revised = next(&request, &first, "case-paraphrase");
+    revised.touched_paths = vec!["SRC/MUTATIONS.RS".into(), "SRC/READ_ADAPTER.RS".into()];
+    let outcome = submit(temp.path(), &revised).unwrap();
+    assert_eq!(outcome.disposition, Disposition::Blocked);
+    assert_eq!(outcome.reason, "no_observable_progress");
+}
+
+#[test]
+fn source_capture_and_detector_use_the_same_adr_bytes() {
+    let (temp, request) = fixture(vec![]);
+    let root = temp.path();
+    fs::create_dir_all(root.join("docs/decisions")).unwrap();
+    let file = root.join("docs/decisions/ADR-001.md");
+    let original = "Decided: src/mutations.rs\nImmediate mutation visibility is required.";
+    fs::write(&file, original).unwrap();
+    let adrs = adr_candidates(root).unwrap();
+    let plan = plan_governance::load_plan(root).unwrap().unwrap();
+    let before = context_with_adrs(root, &plan, &[], &adrs).unwrap();
+    fs::write(file, "A concurrently edited advisory document").unwrap();
+    let pending = challenges(root, &plan, &request, &adrs).unwrap();
+    assert_eq!(
+        pending.len(),
+        1,
+        "detector consumes captured bytes, not a second read"
+    );
+    assert_eq!(
+        pending[0].sources[0].hash,
+        format!("sha256:{:x}", Sha256::digest(original.as_bytes()))
+    );
+    assert_eq!(context_with_adrs(root, &plan, &[], &adrs).unwrap(), before);
+    assert_ne!(
+        context(root, &plan, &[]).unwrap(),
+        before,
+        "the final freshness check detects the changed live source"
+    );
 }

@@ -7,6 +7,7 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::fs;
+use std::io::Read;
 use std::path::{Component, Path};
 
 pub const ROUND_LIMIT: usize = 3;
@@ -141,7 +142,12 @@ fn source_hash(root: &Path, path: &str) -> Result<String, DecapodError> {
     let path = root.join(path);
     match fs::metadata(&path) {
         Ok(meta) if meta.is_file() && meta.len() <= MAX_SOURCE_BYTES => {
-            let bytes = fs::read(path).map_err(DecapodError::IoError)?;
+            let mut bytes = Vec::new();
+            fs::File::open(path)
+                .map_err(DecapodError::IoError)?
+                .take(MAX_SOURCE_BYTES + 1)
+                .read_to_end(&mut bytes)
+                .map_err(DecapodError::IoError)?;
             if bytes.len() as u64 > MAX_SOURCE_BYTES {
                 return Err(invalid("SOURCE_LIMIT"));
             }
@@ -184,7 +190,7 @@ fn adr_candidates(root: &Path) -> Result<Vec<CandidateSource>, DecapodError> {
     let mut candidates = Vec::new();
     for entry in fs::read_dir(dir).map_err(DecapodError::IoError)? {
         let path = entry.map_err(DecapodError::IoError)?.path();
-        if !path.extension().is_some_and(|ext| ext == "md") {
+        if path.extension().is_none_or(|ext| ext != "md") {
             continue;
         }
         if candidates.len() == MAX_ADRS {
@@ -195,8 +201,13 @@ fn adr_candidates(root: &Path) -> Result<Vec<CandidateSource>, DecapodError> {
             .map_err(|_| invalid("SOURCE_SCOPE"))?
             .to_string_lossy()
             .into_owned();
-        source_hash(root, &relative)?;
-        let content = fs::read_to_string(&path).map_err(DecapodError::IoError)?;
+        check_path(root, &relative)?;
+        let mut content = String::new();
+        fs::File::open(&path)
+            .map_err(DecapodError::IoError)?
+            .take(MAX_SOURCE_BYTES + 1)
+            .read_to_string(&mut content)
+            .map_err(DecapodError::IoError)?;
         if content.len() as u64 > MAX_SOURCE_BYTES {
             return Err(invalid("SOURCE_LIMIT"));
         }
@@ -214,18 +225,30 @@ fn context(
     plan: &GovernedPlan,
     evidence: &[SourceRef],
 ) -> Result<String, DecapodError> {
+    context_with_adrs(root, plan, evidence, &adr_candidates(root)?)
+}
+
+fn context_with_adrs(
+    root: &Path,
+    plan: &GovernedPlan,
+    evidence: &[SourceRef],
+    adrs: &[CandidateSource],
+) -> Result<String, DecapodError> {
     let mut sources = Vec::new();
     for path in ["AGENTS.md", ".decapod/config.toml", ".decapod/OVERRIDE.md"] {
         sources.push((path.to_string(), source_hash(root, path)?));
     }
-    for candidate in adr_candidates(root)? {
-        if let CandidateSource::Adr { path, .. } = candidate {
+    for candidate in adrs {
+        if let CandidateSource::Adr { path, content } = candidate {
             let path = path
                 .strip_prefix(root)
                 .map_err(|_| invalid("SOURCE_SCOPE"))?
                 .to_string_lossy()
                 .into_owned();
-            sources.push((path.clone(), source_hash(root, &path)?));
+            sources.push((
+                path,
+                format!("sha256:{:x}", Sha256::digest(content.as_bytes())),
+            ));
         }
     }
     for reference in evidence {
@@ -272,6 +295,7 @@ fn challenges(
     root: &Path,
     plan: &GovernedPlan,
     request: &Request,
+    adrs: &[CandidateSource],
 ) -> Result<Vec<Challenge>, DecapodError> {
     let mut result = Vec::new();
     let plan_source = SourceRef {
@@ -304,7 +328,7 @@ fn challenges(
                 || folded.starts_with(&format!("{forbidden}/"))
                 || forbidden.starts_with(&format!("{folded}/"))
             {
-                result.push(challenge(&format!("forbidden_path:{path}"),
+                result.push(challenge(&format!("forbidden_path:{folded}"),
                     format!("How will the proposed action avoid changing {path}, which the current plan excludes?"),
                     plan_source.clone(), true)?);
             }
@@ -341,18 +365,18 @@ fn challenges(
         high_risk: false,
     };
     // Share the existing detector, not the unrelated ranked memory/coplayer scan.
-    let candidates = adr_candidates(root)?;
-    for conflict in engine.detect_contradictions(&engine.score_candidates(&candidates, &ctx), &ctx)
-    {
+    for conflict in engine.detect_contradictions(&engine.score_candidates(adrs, &ctx), &ctx) {
         if let Some(source) = conflict.source {
             result.push(challenge(
-                &format!("mentor:{}", conflict.description),
+                &format!("mentor:{}", conflict.description.to_ascii_lowercase()),
                 format!(
                     "How will this proposed action preserve the cited repository decision? {}",
                     conflict.description
                 ),
                 SourceRef {
-                    hash: source_hash(root, &source.id)?,
+                    hash: source
+                        .hash
+                        .ok_or_else(|| invalid("SOURCE_IDENTITY_MISSING"))?,
                     ref_path: source.id,
                 },
                 false,
@@ -400,7 +424,7 @@ fn validate_request(root: &Path, request: &Request) -> Result<(), DecapodError> 
     let mut seen = BTreeSet::new();
     for path in &request.touched_paths {
         check_path(root, path)?;
-        if !seen.insert(path) {
+        if !seen.insert(path.to_ascii_lowercase()) {
             return Err(invalid("DUPLICATE_PATH"));
         }
     }
@@ -493,8 +517,9 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
             }
             reference.hash = expected;
         }
-        let context_digest = context(root, &plan, &evidence)?;
-        let mut pending = challenges(root, &plan, request)?;
+        let adrs = adr_candidates(root)?;
+        let context_digest = context_with_adrs(root, &plan, &evidence, &adrs)?;
+        let mut pending = challenges(root, &plan, request, &adrs)?;
         let database = todo::todo_db_path(&find_governance_root(root).join(".decapod/data"));
         let conn = crate::core::db::db_connect_for_validate(
             database.to_str().ok_or_else(|| invalid("STORE_PATH"))?,
@@ -515,7 +540,11 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
             return Err(invalid("STATE_LIMIT: too many applicable gaps"));
         }
         let progress_digest = digest(&pending_ids)?;
-        let mut paths = request.touched_paths.clone();
+        let mut paths: Vec<_> = request
+            .touched_paths
+            .iter()
+            .map(|path| path.to_ascii_lowercase())
+            .collect();
         paths.sort();
         let last = previous.and_then(|j| j.receipts.last());
         let resolved_ids: Vec<String> = last

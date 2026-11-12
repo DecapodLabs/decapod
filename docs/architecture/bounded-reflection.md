@@ -127,3 +127,8 @@ existing scope/validation gates check actual changes. Local actor labels and
 declared approvals retain their existing cooperative trust boundary. Repeated
 invocations exercise replay/interruption recovery through the existing atomic
 writer; this corpus does not simulate power loss or evaluate a model agent.
+
+Validation currently remains incomplete: the configured provider stopped on
+HTTP 403 while reading commit statuses (reset epoch `1794483759`), preserving
+private snapshot evidence. Independent GitHub diagnostics exposed and informed
+repair of CLI module qualification; they are not accepted readiness proof.
