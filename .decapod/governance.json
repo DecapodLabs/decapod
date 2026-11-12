@@ -575,6 +575,11 @@
         "19acd21f7ff50656323d037915273f03cdedc04e",
         "src/decapod/core/snapshot_provider/github_quota.rs"
       ]
+    },
+    {
+      "id": "issue1573-controller139-assets",
+      "summary": "Refresh generated release assets through verified official0.139.0 after CI exposed stale0.138.3 entrypoints; preserve original three checkpoints, native transfer custody and failed proof evidence.",
+      "input_digest": "sha256:a59465b5cfa61d1d2fac1ce2aa2499d0ba3d061c71e07f384b4d856cafc253a7"
     }
   ],
   "intents": {
@@ -620,26 +625,26 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current content reviewed after accepted0.139.0 merge and explicit105-input inventory reconciliation; only two Cargo package-version inputs changed, with no carrier/workflow/check changes. Quota hints advise pacing only, use existing deadlines/cancellation and retain safe reset diagnostics; no credential, TLS, authorization, fresh final verification or proof-coverage change. Six new fixtures still require exact native execution.",
+          "reason": "Reviewed against released0.139.0 regenerated assets. Quota metadata stays advisory; fresh final identity and complete Buildkite evidence remain required. Six quota fixtures passed in CI838b (1680 library,8 ignored), but exact refreshed candidate full native readiness remains unproven. Security transport and denial behavior unchanged.",
           "reviewed_code_fingerprint": "34f3091e9c1fd37ac7629ea6769d55a536c6b7f3cd62809b4f111ecafb997a06",
           "spec_material_hash": "9f65acf195cfa65ca0b090726277ffc2fc32433018a12cd48307a5ecac8baf38"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current content reviewed after accepted0.139.0 merge and explicit105-input inventory reconciliation; only two Cargo package-version inputs changed, with no carrier/workflow/check changes. Quota hints advise pacing only, use existing deadlines/cancellation and retain safe reset diagnostics; no credential, TLS, authorization, fresh final verification or proof-coverage change. Six new fixtures still require exact native execution.",
+          "reason": "Reviewed against released0.139.0 regenerated assets. Quota metadata stays advisory; fresh final identity and complete Buildkite evidence remain required. Six quota fixtures passed in CI838b (1680 library,8 ignored), but exact refreshed candidate full native readiness remains unproven. Security transport and denial behavior unchanged.",
           "reviewed_code_fingerprint": "34f3091e9c1fd37ac7629ea6769d55a536c6b7f3cd62809b4f111ecafb997a06",
           "spec_material_hash": "b2091dbfe675a1b707896c0a801c85d951dfff011de623fac7c68c71e6465058"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current content reviewed after accepted0.139.0 merge and explicit105-input inventory reconciliation; only two Cargo package-version inputs changed, with no carrier/workflow/check changes. Quota hints advise pacing only, use existing deadlines/cancellation and retain safe reset diagnostics; no credential, TLS, authorization, fresh final verification or proof-coverage change. Six new fixtures still require exact native execution.",
+          "reason": "Reviewed against released0.139.0 regenerated assets. Quota metadata stays advisory; fresh final identity and complete Buildkite evidence remain required. Six quota fixtures passed in CI838b (1680 library,8 ignored), but exact refreshed candidate full native readiness remains unproven. Security transport and denial behavior unchanged.",
           "reviewed_code_fingerprint": "34f3091e9c1fd37ac7629ea6769d55a536c6b7f3cd62809b4f111ecafb997a06",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [
         "Explicit decision gate, access denial or source collision requiring new authority; preserve exact blocker."
       ],
@@ -649,18 +654,30 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794476830Z"
+      "updated_at": "1794480233Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve fresh final registry/source/base checks, required provider proof, public reader identity, immediate denied-request failure and the existing 7200-second maximum budget."
       ],
-      "artifact_hash": "sha256:5833c367e5441a9e33be8cb0b88e6febbcc311c68a82d5f6bbcae83aac51e867",
+      "artifact_hash": "sha256:133db0aef9a25544db5745533a6e729601ecfd09ed4083ce18a6b73d0dc0acd0",
       "checks": [
         {
           "name": "accepted_target",
           "status": "passed"
+        },
+        {
+          "name": "candidate838-consumer",
+          "status": "passed"
+        },
+        {
+          "name": "candidate838-entrypoint-alignment",
+          "status": "failed"
+        },
+        {
+          "name": "candidate838-standalone-validation",
+          "status": "failed"
         },
         {
           "name": "formatting",
@@ -728,10 +745,17 @@
             "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77EJ4KJ409S85KKXV55SAT1": {
@@ -854,6 +878,30 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "command": "released0.139.0 workspace ensure; infer orientation; context.resolve; agent.init; specs.refresh",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43195371875/job/131105695413: 1680 library passed,8 ignored; six quota fixtures passed;32 boundary passed. Source unchanged after838b.",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43195371875/job/131105696067:31 entrypoint tests passed,1 stale-release fixture failed,4 ignored. Standalone43195371851:190 passed then generated release drift rejected.",
+                  "Verified official v0.139.0 LinuxAArch64 release archive sha256:24b5153ce3a04d6ab0c37d6d4be2428c623066b4b864c86116524371ca542649; isolated newcontroller image not published. Native successor01M77N7N2XK4M9KE1CB1435JBW imported once into empty private tmpfs with notmpcopyup; claim+workspace can_work true. First destination import rejected old host revision1 and replaced no state. Old owned source container stopped after fresh claim."
+                ],
+                "proof_refs": [
+                  "candidate838-consumer",
+                  "candidate838-entrypoint-alignment",
+                  "candidate838-standalone-validation"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -861,7 +909,8 @@
       },
       "declared_commands": [
         "Native workspace publisher executes the same full run_current_workbranch_readiness contract as plain CLI validate before any PR creation; request it once to avoid a second redundant public collection after separate validation.",
-        "cargo fmt --all (host rustfmt1.9.0-stable 31fca3adb2)"
+        "cargo fmt --all (host rustfmt1.9.0-stable 31fca3adb2)",
+        "released0.139.0 workspace ensure; infer orientation; context.resolve; agent.init; specs.refresh"
       ],
       "destination": "pull request",
       "evidence": [
@@ -869,7 +918,10 @@
         "Initial governed quota checkpoint committed as b55ee3f8. Normal merge of accepted c87e4f49 produced ten conflicts limited to the active journal and specs. Git resolution preserves exact current native journal from b55ee3f8 and accepted specs/manifest from c87e4f49, with only the four authored quota sections reapplied. Accepted historical governance remains in the incoming parent; projections and canonical spec reviews refreshed through CLI. No source conflict or cloud behavior edit was needed.",
         "Merged accepted release19acd21f7ff50656323d037915273f03cdedc04e after preserving native checkpoint87bdf449. Native agent.init reported STALE_SOURCE_INVENTORY; independently checked all105 current hashes and previous validated c87 inventory digest8f21b5e. Only Cargo.toml/Cargo.lock own-package version fields changed; configured actual digestc8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 after backing up config. No source graph/carrier/check change. Source review also preserves numeric reset diagnostics when quota waits reach the original deadline.",
         "Native Podman admission reports can_work=true and in_container=true with the actual runtime container ID a746884071f9cd15441394a7b6634ca20a8ab454d874dcd5b04202c82a6e2b83; accepted base d3358e1ce2cdb137dc57445c64592cb6d327a6ff. No product tests have run yet.",
-        "Source implements bounded successful-header quota hints shared by nested budgets, cold-discovery pacing, fresh final registry/source/base checks, and no retry on denial. Six new fixtures are authored but have not executed. Canonical ARCHITECTURE/INTERFACES/SECURITY spec reviews recorded through native CLI. Container-private Git configuration backed up, official gh configured for authorized Git publication before proof; anonymous API reader remains credential-free."
+        "Source implements bounded successful-header quota hints shared by nested budgets, cold-discovery pacing, fresh final registry/source/base checks, and no retry on denial. Six new fixtures are authored but have not executed. Canonical ARCHITECTURE/INTERFACES/SECURITY spec reviews recorded through native CLI. Container-private Git configuration backed up, official gh configured for authorized Git publication before proof; anonymous API reader remains credential-free.",
+        "Verified official v0.139.0 LinuxAArch64 release archive sha256:24b5153ce3a04d6ab0c37d6d4be2428c623066b4b864c86116524371ca542649; isolated newcontroller image not published. Native successor01M77N7N2XK4M9KE1CB1435JBW imported once into empty private tmpfs with notmpcopyup; claim+workspace can_work true. First destination import rejected old host revision1 and replaced no state. Old owned source container stopped after fresh claim.",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43195371875/job/131105695413: 1680 library passed,8 ignored; six quota fixtures passed;32 boundary passed. Source unchanged after838b.",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43195371875/job/131105696067:31 entrypoint tests passed,1 stale-release fixture failed,4 ignored. Standalone43195371851:190 passed then generated release drift rejected."
       ],
       "inspected_files": [
         "src/decapod/core/snapshot_provider/automatic.rs",
@@ -888,6 +940,7 @@
       ],
       "next_transitions": [
         "Checkpoint exact candidate and run plain decapod validate through required Buildkite profile",
+        "Checkpoint regenerated0.139.0 assets, commit, verify immutable history, push exact candidate, complete full native Buildkite proof and publish only when ready.",
         "Checkpoint source, merge current accepted target without replacing active governance journal, refresh projections and revalidate exact reconciled candidate.",
         "Checkpoint/commit accepted-target merge, verify immutable history, run plain decapod validate outside CI.",
         "Checkpoint/commit exact release-reconciled candidate, verify history, run native workspace publish for full required Buildkite validation and PR creation only if ready.",
