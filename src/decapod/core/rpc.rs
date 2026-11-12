@@ -327,6 +327,24 @@ pub struct SchemaGetResult {
     pub json_schema: serde_json::Value,
 }
 
+/// Read-only repository-local inventory. Resource limits are semantic policy;
+/// physical snapshot execution remains owned by Dactyl.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct StorageInventoryParams {
+    pub scope: String,
+    pub options: crate::core::storage_inventory::InventoryOptions,
+}
+
+impl Default for StorageInventoryParams {
+    fn default() -> Self {
+        Self {
+            scope: "repository".into(),
+            options: crate::core::storage_inventory::InventoryOptions::default(),
+        }
+    }
+}
+
 // Store Subsystem
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StoreUpsertParams {
@@ -882,6 +900,12 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 description: "Get authoritative JSON schemas for entities".to_string(),
                 stability: "stable".to_string(),
                 cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.inspect".to_string(),
+                description: "Bounded read-only local storage inventory without startup migrations or maintenance".to_string(),
+                stability: "beta".to_string(),
+                cost: "bounded_scan".to_string(),
             },
             Capability {
                 name: "store.upsert".to_string(),

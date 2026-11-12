@@ -248,6 +248,9 @@ def decapod_targets():
                 "tests/group_broker.rs",
                 "tests/validate_termination.rs",
                 "tests/cli_contract_enforcement.rs",
+                # This aggregate launches real CLI fixtures sequentially. Its
+                # 300s deadline also needs isolation from the entrypoint suite.
+                "tests/cli_contracts.rs",
             ] else [],
             srcs = [path] + [
                 "tests/consumer_readiness.rs",
@@ -255,6 +258,7 @@ def decapod_targets():
                 "tests/init_config_behavior.rs",
                 "tests/support/cli_workunit_recovery.rs",
                 "tests/support/justfile_inventory.rs",
+                "tests/support/storage_inventory.rs",
                 "tests/fixtures/justfile_consumer/src/lib.rs",
                 "tests/fixtures/justfile_consumer/src/distance.rs",
                 "tests/fixtures/justfile_consumer/src/temperature.rs",
