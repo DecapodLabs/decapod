@@ -1051,7 +1051,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
+- Repository signal fingerprint: `f9a42147a35a1aec8b43047f236620938836c6ac583a89d8421168d14db4c10f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1442,10 +1442,26 @@ expectation. It requires the approval URL, no machine session file, no
 `Cloud setup ready` claim and no exposed mock credential. Independent explicit
 session-acquisition tests retain their original credential expectations.
 
+`tests/unit/core/propodus_tests.rs` requires actionable session-acquisition
+guidance from actual missing-credential, invalid-refresh, unusable-refresh and
+HTTP 401 diagnostic paths, while retaining status distinctions and excluding
+provider secrets. `tests/unit/lib_init_prompt_tests.rs` covers first init,
+ordinary repeat init, explicit refresh, headless and proof prompting policy.
+It also exercises noninteractive roster preparation to prove that stored
+values are normalized and invalid stored rosters still fail.
+
+The required-profile inventory declaration is reconciled to the accepted
+v0.138.3 source: all 105 discovered entries match Git bytes at d3358e1c,
+including the literal mode-120000 toolchain alias. Only Cargo.toml and
+Cargo.lock differ from historical c5de35a8. The digest update declares those
+accepted release bytes; it does not authorize a changed CI carrier.
+
 These are test obligations, not execution claims. Full native validation must
 execute the current candidate's configured source-CI contract before PR
 publication. This source change cannot prove hosted billing deployment,
 GitHub admin verification, Stripe sandbox purchase or native-client integration.
-The local preparation environment rejects AF_UNIX sockets before broker
-admission, so native task/workspace creation and proof execution require the
-supported hosted environment; no local governance or publication pass is claimed.
+The earlier recovery environment rejected AF_UNIX sockets before broker
+admission. Its successful hosted publication in run 43133190463 proves only
+candidate b984a386 against accepted target c5de35a8. This follow-up requires
+its own admitted task, isolated workspace and exact-candidate native proof;
+historical recovery evidence cannot establish its readiness.

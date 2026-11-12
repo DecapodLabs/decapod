@@ -232,6 +232,15 @@ fn record_cloud_init_registration(
     Ok(())
 }
 
+fn init_prompts_enabled(
+    init: &InitWithCli,
+    base_init_invocation: bool,
+    is_refresh: bool,
+    is_terminal: bool,
+) -> bool {
+    base_init_invocation && is_terminal && (init.refresh || !is_refresh) && !init.proof
+}
+
 fn prepare_cloud_roster(
     target: &Path,
     repo: &mut RepoContext,
@@ -2667,19 +2676,16 @@ pub fn run() -> Result<(), error::DecapodError> {
             // Existing projects normally refresh non-interactively. Explicit
             // `init --refresh` reopens the questionnaire with current values
             // as defaults while keeping the non-destructive refresh path.
-            if base_init_invocation
-                && io::stdin().is_terminal()
-                && (init_with.refresh || !is_refresh)
-                && !init_with.proof
-            {
+            let prompt_for_init = init_prompts_enabled(
+                &init_with,
+                base_init_invocation,
+                is_refresh,
+                io::stdin().is_terminal(),
+            );
+            if prompt_for_init {
                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
             }
-            prepare_cloud_roster(
-                &init_target,
-                &mut repo_ctx,
-                &init_with,
-                base_init_invocation && io::stdin().is_terminal() && !init_with.proof,
-            )?;
+            prepare_cloud_roster(&init_target, &mut repo_ctx, &init_with, prompt_for_init)?;
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
             let mut config = config_from_init_with(&init_with, repo_ctx);
             if let Some(existing) = existing_config.as_ref() {

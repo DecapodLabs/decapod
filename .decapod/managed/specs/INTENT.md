@@ -287,7 +287,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
+- Repository signal fingerprint: `f9a42147a35a1aec8b43047f236620938836c6ac583a89d8421168d14db4c10f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -459,3 +459,11 @@ This recovery preserves the previously authored CLI contribution from
 Hosted billing deployment, sandbox purchase acceptance and released native
 client credential integration remain separate rollout requirements. A printed
 approval link alone cannot establish their completion.
+
+Machine-credential recovery is a separate operation from purchase setup.
+Credential, refresh and authentication diagnostics direct agents to
+`decapod session acquire`; they must not present another purchase-init pass
+as credential renewal. Ordinary repeat init reuses and validates the stored
+roster without reopening questions. First initialization and explicit refresh
+retain their interactive questionnaire when a human terminal is available.
+This correction changes neither pricing nor backend authorization.

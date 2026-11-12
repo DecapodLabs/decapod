@@ -134,7 +134,7 @@ fn auth_diagnostic_schema_is_stable_and_secret_free() {
     let diagnostic = CloudAuthDiagnostic::new(
         CloudAuthStatus::Unauthorized,
         "the cloud service rejected the machine session",
-        cloud_init_action("to renew the machine session"),
+        cloud_session_action("to renew the machine session"),
     );
     let value = serde_json::to_value(&diagnostic).expect("serialize diagnostic");
     assert_eq!(
@@ -143,12 +143,114 @@ fn auth_diagnostic_schema_is_stable_and_secret_free() {
             "schema_version": "decapod.cloud.auth.v1",
             "status": "unauthorized",
             "message": "the cloud service rejected the machine session",
-            "next_action": "run `decapod init --backend cloud` to renew the machine session"
+            "next_action": "run `decapod session acquire` to renew the machine session"
         })
     );
     let rendered = serde_json::to_string(&value).unwrap();
     for secret in ["access-token", "refresh-token", "Bearer", "flow-opaque"] {
         assert!(!rendered.contains(secret), "diagnostic leaked {secret}");
+    }
+}
+
+#[test]
+fn missing_machine_credential_requires_explicit_session_acquisition() {
+    let config = PropodusConfig {
+        api_url: "https://propodus.example.test".to_string(),
+        repo_id: "DecapodLabs/decapod".to_string(),
+    };
+    let transport = NoRequestTransport::default();
+    let error = PropodusClient::with_transport(&config, "", transport.clone())
+        .expect_err("an empty credential must be rejected");
+    let diagnostic = cloud_auth_diagnostic(&error).unwrap();
+    assert_eq!(diagnostic.status, CloudAuthStatus::AuthRequired);
+    assert_eq!(
+        diagnostic.next_action,
+        "run `decapod session acquire` to complete the browser handoff, then rerun the original command"
+    );
+    assert_eq!(*transport.calls.lock().unwrap(), 0);
+}
+
+#[test]
+fn refresh_failures_direct_the_user_to_session_acquire() {
+    #[derive(Clone)]
+    struct UnusableRefreshTransport;
+
+    impl PropodusTransport for UnusableRefreshTransport {
+        fn request(
+            &self,
+            method: &str,
+            url: &str,
+            _bearer: &str,
+            _body: Option<&[u8]>,
+        ) -> Result<PropodusHttpResponse, PropodusClientError> {
+            assert_eq!(method, "POST");
+            assert!(url.ends_with("/api/auth/session/refresh"));
+            Ok(PropodusHttpResponse {
+                status: 200,
+                body: br#"{}"#.to_vec(),
+            })
+        }
+    }
+
+    let config = PropodusConfig {
+        api_url: "https://propodus.example.test".to_string(),
+        repo_id: "DecapodLabs/decapod".to_string(),
+    };
+    let transport = NoRequestTransport::default();
+    let invalid_request = refresh_cloud_session(&config, "", "refresh-private", &transport)
+        .expect_err("invalid refresh credentials must fail before a provider request");
+    assert_eq!(*transport.calls.lock().unwrap(), 0);
+    let unusable_response = refresh_cloud_session(
+        &config,
+        "session-opaque",
+        "refresh-private",
+        &UnusableRefreshTransport,
+    )
+    .expect_err("a successful HTTP response without usable credentials must fail");
+
+    for error in [invalid_request, unusable_response] {
+        let diagnostic = cloud_auth_diagnostic(&error).unwrap();
+        assert_eq!(diagnostic.status, CloudAuthStatus::RefreshFailed);
+        assert_eq!(
+            diagnostic.next_action,
+            "run `decapod session acquire` to renew the machine session"
+        );
+        assert!(!error.to_string().contains("refresh-private"));
+    }
+}
+
+#[test]
+fn rejected_machine_sessions_preserve_status_and_require_session_acquire() {
+    for (code, expected) in [
+        ("session_revoked", CloudAuthStatus::Revoked),
+        ("revoked", CloudAuthStatus::Revoked),
+        ("token_expired", CloudAuthStatus::Expired),
+        ("session_expired", CloudAuthStatus::Expired),
+        (
+            "identity_not_authorized",
+            CloudAuthStatus::UnauthorizedIdentity,
+        ),
+        (
+            "unauthorized_identity",
+            CloudAuthStatus::UnauthorizedIdentity,
+        ),
+        ("other", CloudAuthStatus::Unauthorized),
+    ] {
+        let error = map_http_error(PropodusHttpResponse {
+            status: 401,
+            body: serde_json::to_vec(&serde_json::json!({
+                "error": {"code": code, "message": "provider-private"}
+            }))
+            .unwrap(),
+        });
+        let diagnostic = cloud_auth_diagnostic(&error).unwrap();
+        assert_eq!(diagnostic.status, expected, "{code}");
+        assert_eq!(
+            diagnostic.next_action,
+            "run `decapod session acquire` to renew the machine session, then rerun the original command",
+            "{code}"
+        );
+        assert!(!error.to_string().contains("provider-private"));
     }
 }
 

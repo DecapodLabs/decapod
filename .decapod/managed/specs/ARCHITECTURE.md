@@ -820,7 +820,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
+- Repository signal fingerprint: `f9a42147a35a1aec8b43047f236620938836c6ac583a89d8421168d14db4c10f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1042,6 +1042,14 @@ a fixed HTTPS approval URL. Human interactive init may open it; headless,
 proof, dry-run and noninteractive execution only print it. This init handoff
 does not invoke the legacy login bootstrap or create a cloud session. Explicit
 session acquisition retains its existing independent credential flow.
+
+The shared `init_prompts_enabled` policy gates both the general questionnaire
+and roster prompts. Roster preparation still runs when prompting is disabled,
+so stored values remain subject to normalization and validation.
+`cloud_session_action` in `src/decapod/core/propodus.rs` constructs recovery
+guidance for machine-session lookup, refresh, onboarding exchange and storage
+failures. It uses the explicit session-acquisition command while the purchase
+handoff remains owned by init.
 
 The coordinated Propodus deployment must verify GitHub identity, repository
 admin permission and paid repository-specific seats. This CLI recovery does

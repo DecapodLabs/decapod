@@ -1064,7 +1064,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
+- Repository signal fingerprint: `f9a42147a35a1aec8b43047f236620938836c6ac583a89d8421168d14db4c10f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1360,3 +1360,14 @@ purchase approval and does not claim that a session or paid seat exists.
 The hosted service must independently derive price/quantity, verify admin
 authority and reconcile payment before granting repository-specific access.
 Its deployment and native client integration remain separately required.
+
+An ordinary repeat init does not prompt for the cloud repository or roster.
+First initialization and explicit `init --refresh` may prompt; headless,
+proof and explicit `init with` paths remain noninteractive. Disabling prompts
+does not disable validation of the stored roster.
+
+The `decapod.cloud.auth.v1` diagnostic schema and status vocabulary remain
+unchanged. Machine-credential recovery, including refresh failures and HTTP
+401 responses, names `decapod session acquire` as its next action. Purchase
+setup retains its init command; a purchase approval link cannot renew a
+machine credential.
