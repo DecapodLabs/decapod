@@ -1,5 +1,21 @@
 # Semantics
 
+## Reflection, progress and authority
+
+A source citation establishes current identity, not verified understanding or
+passing tests. Source-bound removal of a challenge or strict scope narrowing is
+observable structural progress. Different prose or arbitrary citations are not.
+Plan constraints and existing human decision gates retain their binding meaning;
+mentor ADR heuristics cannot create policy. `proceed` clears only reflection.
+Exact retries do not write or consume rounds; stale tokens, conflicting reuse,
+changed custody and stale evidence preserve state. Relevant source changes
+invalidate conclusions without renewing the budget. Stagnation terminates in
+round two; unresolved progress exhausts round three. Reinitializing or editing
+the plan cannot erase that journal. A terminal stop requires a new governed
+workstream. Superseded/deprecated federation records remain historical;
+disputed records require judgment; inferred/imported records remain proposals,
+regardless of an informal accepted tag.
+
 ## Semantics Overview
 
 Decapod gives intent, coordination, execution, evidence, and publication distinct
@@ -294,7 +310,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (229 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

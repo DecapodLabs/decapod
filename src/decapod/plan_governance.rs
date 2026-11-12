@@ -103,6 +103,9 @@ pub struct GovernedPlan {
     /// Agent-authored review evidence, never a claim of independent semantic proof.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub spec_reviews: Vec<SpecReview>,
+    /// Bounded continuation receipts; never plan acceptance or execution proof.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reflection: Option<crate::core::mentor::reflection::Journal>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, clap::ValueEnum)]
@@ -289,6 +292,8 @@ pub fn init_plan(
     input: InitPlanInput,
 ) -> Result<GovernedPlan, error::DecapodError> {
     crate::core::governance_document::with_lock(project_root, || {
+        // Reinitializing a plan must not erase a live or exhausted budget.
+        let reflection = load_plan(project_root)?.and_then(|plan| plan.reflection);
         let plan = GovernedPlan {
             schema_version: PLAN_SCHEMA_VERSION.to_string(),
             title: input.title,
@@ -304,6 +309,7 @@ pub fn init_plan(
             constraints: input.constraints,
             phases: input.phases,
             spec_reviews: Vec::new(),
+            reflection,
             updated_at: crate::core::time::now_epoch_z(),
         };
         save_plan(project_root, &plan)?;
@@ -699,6 +705,12 @@ pub fn ensure_execute_ready(
     }
 
     enforce_scope_constraints(input.project_root, &plan.constraints)?;
+    crate::core::mentor::reflection::check_execute(
+        input.project_root,
+        input.store_root,
+        &plan,
+        input.todo_id,
+    )?;
 
     Ok(plan)
 }

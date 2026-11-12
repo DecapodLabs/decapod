@@ -40,7 +40,11 @@ pub fn list_nodes(
 
         let sql = format!(
             "SELECT id, node_type, status, priority, confidence, title, body, scope, tags,
-                        created_at, updated_at, effective_from, effective_to, actor
+                        created_at, updated_at, effective_from, effective_to, actor,
+                        (SELECT COALESCE(json_group_array(json_extract(metadata, '$.source')), '[]')
+                         FROM (SELECT metadata FROM node_edges
+                               WHERE source_id = nodes.id AND edge_type = 'source'
+                               ORDER BY json_extract(metadata, '$.source'))) AS sources_json
                  FROM nodes WHERE {} ORDER BY updated_at DESC",
             conditions.join(" AND ")
         );
@@ -65,7 +69,15 @@ pub fn list_nodes(
                 effective_from: row.get(11)?,
                 effective_to: row.get(12)?,
                 actor: row.get(13)?,
-                sources: None,
+                sources: Some(
+                    serde_json::from_str(&row.get::<_, String>(14)?).map_err(|e| {
+                        crate::core::db::Error::FromSqlConversionFailure(
+                            14,
+                            crate::core::db::types::Type::Text,
+                            Box::new(e),
+                        )
+                    })?,
+                ),
                 edges: None,
             })
         })?;

@@ -18,6 +18,8 @@ use crate::core::rpc::{Blocker, BlockerKind};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
+pub mod reflection;
+
 /// An obligation item - a pointer to relevant context
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Obligation {
@@ -90,6 +92,9 @@ pub struct Contradiction {
     pub prior: String,
     /// Suggested resolution
     pub resolution_hint: String,
+    /// A potential text match is context, never independent policy or proof.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<Evidence>,
 }
 
 /// Input context for computing obligations
@@ -299,6 +304,10 @@ impl MentorEngine {
             }
         }
 
+        candidates.sort_by_key(|candidate| match candidate {
+            CandidateSource::Adr { path, .. } => path.clone(),
+            _ => PathBuf::new(),
+        });
         Ok(candidates)
     }
 
@@ -850,6 +859,21 @@ impl MentorEngine {
                                 resolution_hint:
                                     "Review ADR or create new ADR if decision has changed"
                                         .to_string(),
+                                source: Some(Evidence {
+                                    source: "repository_document_advisory".into(),
+                                    id: path
+                                        .strip_prefix(&self.repo_root)
+                                        .unwrap_or(path)
+                                        .to_string_lossy()
+                                        .into_owned(),
+                                    hash: Some(
+                                        crate::core::governance_document::digest(
+                                            &serde_json::json!(content),
+                                        )
+                                        .unwrap_or_default(),
+                                    ),
+                                    timestamp: None,
+                                }),
                             });
                         }
                     }

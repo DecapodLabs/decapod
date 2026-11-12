@@ -1,5 +1,16 @@
 # Intent
 
+## Evidence-grounded reflection before consequential action
+
+Decapod helps agents reconsider a proposed action through optional bounded
+reflection in orientation and mentor. It challenges a conflict with the current
+plan or a literal ADR match, then recognizes an inspectable scope correction or
+separately resolved governing gap. The ordinary orientation path remains simple.
+Reflection is a reasoning aid: it establishes neither human authorization nor
+semantic correctness, executed proof or completion. The kernel remains local,
+daemonless and deterministic, with no model or new memory service.
+See `core/mentor/reflection.rs` and `docs/architecture/bounded-reflection.md`.
+
 ## Governed cloud client and private custody (#1628)
 
 Decapod's local-first governance kernel remains the system interface for agent
@@ -307,8 +318,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (229 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

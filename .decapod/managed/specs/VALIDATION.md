@@ -1,5 +1,21 @@
 # Validation
 
+## Reflection adversarial proof contract
+
+`tests/unit/core/reflection_tests.rs` covers routine fast-path behavior,
+protected mutation-path conflict, source-bound scope correction, persuasive
+nonsense, changed governing sources, untrusted instructions, human authority,
+bounded stagnation/exhaustion, replay, competing submissions and custody loss.
+`tests/infer_precision.rs` exercises the CLI-to-RPC continuation and legacy
+response compatibility. `state_knowledge_tests.rs` uses canonical federation
+operations to test supersession, withdrawal, dispute, inferred/imported labels,
+scope and source preservation. Tests emit latency, response bytes and governance
+growth, and check no datastore file growth. A receipt's completion-proven flag
+must remain false and original plan acceptance/proof hooks must remain intact.
+These are deterministic protocol checks, not model-agent intelligence measures.
+Authorship alone is not passing evidence; configured `decapod validate` owns
+candidate builds/tests and exact-target publication readiness.
+
 ## Recovery and accepted-target reconciliation (#1628)
 
 The client continues from both original checkpoints, including
@@ -1196,8 +1212,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (229 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

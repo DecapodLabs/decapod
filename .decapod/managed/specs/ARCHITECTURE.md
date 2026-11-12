@@ -1,5 +1,20 @@
 # Architecture
 
+## Composed reflection continuation
+
+`core/mentor/reflection.rs` composes the existing mentor ADR detector, canonical
+plan constraints, execution-custody capture and governance-document lock/atomic
+writer. Orientation and `mentor.obligations` share this implementation. One
+optional journal in `GovernedPlan` preserves at most three compact receipts and
+a terminal stop; it adds no database table, index, event stream or transcript.
+Current plan/accepted-base, policy, ADR and supplied source identities invalidate
+dependent conclusions. The existing plan execution, trajectory checkpoint/resume
+and validation boundaries reject binding unresolved or stale reflection.
+The unchanged approval and exact-candidate publication gates remain necessary.
+Mentor text matches stay advisory. `state::project_federation_decision` now
+honors lifecycle before labels and preserves confidence, scope and provenance;
+an inferred/imported accepted tag cannot become a human-confirmed decision.
+
 ## Managed cloud connector and crash-safe custody (#1628)
 
 `core::cloud_client::connect` composes the public Dactyl `CloudConnector` with
@@ -852,8 +867,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (229 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -2172,6 +2172,9 @@ pub(crate) struct InferOrientationCli {
     /// Optional specific task ID
     #[clap(long)]
     pub task_id: Option<String>,
+    /// Optional bounded reflection request JSON (task, submission, operation, paths).
+    #[clap(long)]
+    pub reflection: Option<String>,
     /// Format output: json | text
     #[clap(long, default_value = "json")]
     pub format: String,

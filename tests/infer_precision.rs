@@ -76,6 +76,95 @@ fn test_infer_orientation_simple_task() {
     assert_eq!(json["governed_plan"]["status"], "missing");
     assert!(json["decision_gates"].as_array().unwrap().is_empty());
     assert!(json["next_action"].as_str().unwrap().contains("research"));
+    assert!(
+        json.get("reflection").is_none(),
+        "legacy orientation stays stateless"
+    );
+}
+
+#[test]
+fn test_orientation_and_mentor_share_the_reflection_continuation() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    init_git_repo(root);
+    assert!(run_cmd(root, &["init", "--force"]).status.success());
+    assert!(run_cmd(root, &["session", "acquire"]).status.success());
+    let added = run_cmd(root, &["todo", "add", "Accelerate fresh reads"]);
+    let task = extract_json(&added)["id"].as_str().unwrap().to_string();
+    assert!(
+        run_cmd(root, &["todo", "claim", "--id", &task])
+            .status
+            .success()
+    );
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "init",
+                "--title",
+                "Fresh reads",
+                "--intent",
+                "Preserve concurrent mutation visibility",
+                "--todo-id",
+                &task,
+                "--proof-hook",
+                "visibility regression",
+                "--forbidden-path",
+                "src/mutations.rs"
+            ]
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_cmd(root, &["govern", "plan", "approve"])
+            .status
+            .success()
+    );
+    let first = serde_json::json!({
+        "task_id": task, "submission_id":"initial", "op":"change",
+        "touched_paths":["src/mutations.rs","src/read_adapter.rs"],
+        "rationale":"Cache at the mutation source"
+    });
+    let orientation = run_cmd(
+        root,
+        &[
+            "infer",
+            "orientation",
+            "--task-id",
+            &task,
+            "--reflection",
+            &first.to_string(),
+        ],
+    );
+    assert!(orientation.status.success());
+    let first = extract_json(&orientation)["reflection"].clone();
+    assert_eq!(first["disposition"], "reflect");
+    assert_eq!(first["execution_blocked"], true);
+    let revision = serde_json::json!({"reflection": {
+        "task_id":task, "submission_id":"adapter-only", "expected_token":first["token"],
+        "op":"change", "touched_paths":["src/read_adapter.rs"],
+        "evidence":first["challenge"]["sources"],
+        "rationale":"Keep the mutation source unchanged and independently test fresh reads"
+    }});
+    let rpc = run_cmd(
+        root,
+        &[
+            "rpc",
+            "--op",
+            "mentor.obligations",
+            "--params",
+            &revision.to_string(),
+        ],
+    );
+    assert!(rpc.status.success());
+    let rpc = extract_json(&rpc);
+    assert_eq!(rpc["result"]["reflection"]["disposition"], "proceed");
+    assert_eq!(rpc["result"]["reflection"]["completion_proven"], false);
+    assert_eq!(rpc["result"]["reflection"]["round"], 2);
+    assert!(rpc["blocked_by"].as_array().unwrap().is_empty());
 }
 
 #[test]

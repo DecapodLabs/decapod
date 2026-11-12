@@ -1,5 +1,22 @@
 # Interfaces
 
+## Optional reflection on existing interfaces
+
+`infer orientation --task-id <id> --reflection '<JSON>'` and
+`mentor.obligations`' optional `reflection` parameter accept the same typed
+request: task/submission ID, operation (`change|modify|update`), literal proposed
+paths, optional expected token, explanation and evidence references. Existing
+calls omit the extension and preserve their response contract. Responses add
+`reflection` with `decapod.reflection.v1`, disposition
+(`proceed|reflect|human_decision|blocked`), reason, one optional challenge,
+token, context digest, round/remaining budget, terminal/execution-blocked flags,
+next action and always-false completion proof. Challenges expose a stable ID,
+bounded question, trigger, source references, investigation and binding flag.
+`state.resolve` decision records add optional `knowledge` provenance.
+The default round limit is three; one plan supports one current local task
+continuation. Source/path/input limits fail explicitly. No new RPC operation,
+authority hierarchy or persistence format is introduced.
+
 ## Cloud initialization, continuation, and readiness (#1628)
 
 `decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud
@@ -1100,8 +1117,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (229 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
