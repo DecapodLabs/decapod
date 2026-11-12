@@ -38,6 +38,20 @@ decapod init
 decapod init --backend cloud
 ```
 
+Terminal setup follows **Project → Preferences → Review**. Describe the project,
+keep **Recommended** defaults, or use **Customize** to adjust project details,
+workspace isolation, connections and advanced settings. Local storage needs no
+account. Existing authored settings remain the defaults.
+
+**Apply setup** creates the selected directory, Git repository and governance
+files. **Edit choices** returns to preferences; **Cancel** leaves a newly selected
+project uncreated. A dry run writes no project state. Changed configuration is
+backed up privately under `.decapod/data/config-backups/`.
+
+Cloud sign-in starts after applying the reviewed setup. Pricing, seat assignment
+and repository authorization remain service-owned; setup does not collect a
+credential or maintain an access roster in TOML.
+
 Cloud initialization may return `onboarding_pending` with a one-time browser
 URL. Open it on a browser-capable device and rerun the same command, including
 from a headless terminal. Setup is ready only when the service confirms account
@@ -45,6 +59,12 @@ completion and an authenticated repository read succeeds. The `--proof` flag
 prepares cloud configuration only; it does not authenticate or establish
 readiness. See [Cloud sign-in and task access](reference/propodus.md) for
 private custody, account requirements, and explicit interrupted-flow recovery.
+
+When setup succeeds, open your coding agent in the project and describe the next
+task. It reads the generated instructions and handles remaining validation.
+Initialization does not establish proof. Ask the agent to run `decapod init
+--refresh` to revisit setup; scripted `init with`, `--proof` and redirected output
+retain the unattended path.
 
 ## 3. Agent Documentation
 

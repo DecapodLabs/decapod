@@ -852,8 +852,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (228 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1058,3 +1058,20 @@ constraints; task-owner/dependency keys have matching composite UNIQUE
 indexes; preferences use `UNIQUE(category,key)`. Runtime initializers stop
 recreating redundant trees. Reverse-key indexes remain. No data or proof
 encodings change; cloud PostgreSQL migration ownership stays with Propodus.
+
+## Terminal setup over the managed cloud boundary
+
+`src/decapod/onboarding.rs` owns terminal sizing, presentation, keyboard input and
+terminal restoration. `lib.rs::{enrich_repo_context_interactive,customize_setup,
+review_setup}` collects a configuration draft; `prepare_init_directory_and_git`
+and `run_init_apply` execute only after interactive approval. Changed configuration
+is backed up privately before replacement. Preview and cancellation do not create
+project state. Unattended initialization retains its direct execution path.
+
+Cloud initialization then calls the accepted `bootstrap_cloud_session` and
+`core::cloud_client::connect` path. Session custody and Dactyl transport retain
+their existing owners. The terminal does not implement billing, duplicate account
+policy, or grant authority from local settings. Errors leave setup non-successful;
+the ready receipt follows successful service-confirmed access only. Real PTY
+coverage verifies that reviewing/canceling cloud setup does not contact even the
+loopback fixture service before consent.
