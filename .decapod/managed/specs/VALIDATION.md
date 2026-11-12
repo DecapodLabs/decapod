@@ -37,6 +37,10 @@ as `Unavailable`. Completion recovery must retain the saved session and return
 `onboarding_pending` for this kind as well as transport/timeout failures; the
 existing lost-completion fixture verifies the repeated idempotent confirmation
 and the absence of repeated one-time exchanges.
+The pending-account scenario exercises the published `entitlement_required`,
+`seat_unassigned` and `quote_confirmation_required` reasons individually. Each
+must retain the issued session, return action-required, avoid the repository
+read and avoid replaying either exchange until the service confirms completion.
 The 0.12.0 lockfile also downgrades inactive HTTP/3 dependencies under Dactyl
 MSRV bounds; the required dependency audit must pass without exemptions.
 
@@ -1161,7 +1165,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f8d408db819bd4641ba023101c1ba4f905aa8c9a46665f4e2773b9664d4bad2e`
+- Repository signal fingerprint: `66344e0cda2b53e9db72df8379d6260f0a23ca4135e4ecbafc099e67f246721f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -656,19 +656,24 @@ fn browser_completion_and_pending_entitlement_never_claim_ready() {
     failed(&fixture.init(), "onboarding_pending");
     assert_eq!(fixture.count(EXCHANGE), 0);
     fixture.service.lock().unwrap().authentication_status = "ready";
-    // Seat/payment details are server-owned. The managed contract represents
-    // unresolved account access as entitlement_required, never local success.
-    fixture.service.lock().unwrap().complete_error = Some("entitlement_required");
-    failed(&fixture.init(), "action_required");
-    assert_eq!(fixture.status()["phase"], "checking_readiness");
-    assert_eq!(fixture.count(QUERY), 0);
-    failed(&fixture.init(), "action_required");
-    assert_eq!(fixture.count(EXCHANGE), 1);
-    assert_eq!(fixture.count(TOKEN), 1);
+    // Payment/seat/quote requirements are server-owned. Each supported reason
+    // keeps the issued credential pending; no browser result implies access.
+    for reason in [
+        "entitlement_required",
+        "seat_unassigned",
+        "quote_confirmation_required",
+    ] {
+        fixture.service.lock().unwrap().complete_error = Some(reason);
+        failed(&fixture.init(), "action_required");
+        assert_eq!(fixture.status()["phase"], "checking_readiness");
+        assert_eq!(fixture.count(QUERY), 0);
+        assert_eq!(fixture.count(EXCHANGE), 1);
+        assert_eq!(fixture.count(TOKEN), 1);
+    }
     fixture.service.lock().unwrap().complete_error = None;
     let ready = fixture.init();
     assert!(ready.status.success(), "{}", output(&ready));
-    assert_eq!(fixture.count(COMPLETE), 3);
+    assert_eq!(fixture.count(COMPLETE), 4);
     assert_eq!(fixture.count(QUERY), 1);
 }
 

@@ -595,6 +595,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "issue1628-pending-account-reasons",
+      "summary": "Cover published entitlement, seat and quote requirements without inferring cloud readiness",
+      "input_digest": "sha256:dc591bada40f1ac813fa131a9ed1790a414a11e0aacf10084a888aa1d9357840",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -635,22 +643,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rechecked Dactyl 0.12.0 completion error classification: client keeps saved private session and idempotent confirmation for Unavailable, retaining the existing architecture.",
-          "reviewed_code_fingerprint": "f8d408db819bd4641ba023101c1ba4f905aa8c9a46665f4e2773b9664d4bad2e",
+          "reason": "Reviewed current published-contract fixtures, including individual entitlement, seat_unassigned and quote_confirmation_required responses. Existing architecture, private custody and server authority remain unchanged.",
+          "reviewed_code_fingerprint": "66344e0cda2b53e9db72df8379d6260f0a23ca4135e4ecbafc099e67f246721f",
           "spec_material_hash": "855b9020ffb388bfa7fd95f9168b54e06432c2921ad8caaea4ab640893304087"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed published Dactyl transport contract and actual RPC fixtures; Unavailable completion remains pending and no one-time exchange is replayed.",
-          "reviewed_code_fingerprint": "f8d408db819bd4641ba023101c1ba4f905aa8c9a46665f4e2773b9664d4bad2e",
+          "reason": "Reviewed current published-contract fixtures, including individual entitlement, seat_unassigned and quote_confirmation_required responses. Existing architecture, private custody and server authority remain unchanged.",
+          "reviewed_code_fingerprint": "66344e0cda2b53e9db72df8379d6260f0a23ca4135e4ecbafc099e67f246721f",
           "spec_material_hash": "65edb4f53b3f4c074e198bfeab6502152d7c23335dda29c62fcb21a915a7f817"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed retained credential custody and no-fallback invariants after adding the released Unavailable classification to safe completion recovery.",
-          "reviewed_code_fingerprint": "f8d408db819bd4641ba023101c1ba4f905aa8c9a46665f4e2773b9664d4bad2e",
+          "reason": "Reviewed current published-contract fixtures, including individual entitlement, seat_unassigned and quote_confirmation_required responses. Existing architecture, private custody and server authority remain unchanged.",
+          "reviewed_code_fingerprint": "66344e0cda2b53e9db72df8379d6260f0a23ca4135e4ecbafc099e67f246721f",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -662,7 +670,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794458456Z"
+      "updated_at": "1794458604Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -674,7 +682,7 @@
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:bc1bbfbd4c375cb6a251448ad3667188e36782f609648b38255b46061b89e947",
+      "artifact_hash": "sha256:c5c0b60750c6c818cd1d3e3a1c0f5053cba606daf4b05d1b261a5bf892fbf252",
       "checks": [
         {
           "name": "bazel-lock-consistency",
@@ -723,6 +731,10 @@
         {
           "name": "full-workbranch-proof-result",
           "status": "unavailable"
+        },
+        {
+          "name": "pending-account-coverage",
+          "status": "passed"
         },
         {
           "name": "prior-buildkite7937-compilation",
@@ -849,10 +861,17 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -1037,6 +1056,22 @@
                 ],
                 "sequence": 13,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "Expanded the existing pending account CLI scenario to assert each published entitlement, unassigned-seat and quote-confirmation reason independently. It requires action_required, retained session, no read and no repeated exchanges; executable coverage is pending configured CI."
+                ],
+                "proof_refs": [
+                  "pending-account-coverage"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 14,
+                "validation_findings": []
               }
             ]
           }
@@ -1060,6 +1095,7 @@
         "Dactyl main advanced to598415953b5ee568f6d42652982897c58b4433cc via merged PR102 and release103 during execution, and crates.io published0.12.0 with checksum b9d8eda3a7bad7490d23dbca5c468bf89b28de4c8b4fd566034b342334ba481e. Downloaded crate checksum, cargo_vcs_info and cloud.rs bytes match the release. Client now uses its public Serde restoration and string/unit auth API; private origin/repository/checkout/flow deadline and actual authorized read retain isolation/readiness. One-time transport/protocol/availability failures demand restart; idempotent completion response loss preserves its issued session. Registry policy pins actual0.12.0 and checksum. Cargo resolves inactive quinn-proto0.11.9 under upstream MSRV bounds; dependency denial remains mandatory without exemptions. Reviewed source inventory changes only Cargo manifest/lock and required coverage is unchanged. Prior7ffeb668 validation reached real Buildkite8022 and failed; no product pass is inherited.",
         "Diagnostic GitHub job130935222490 on exact0bff2528 rejected MODULE.bazel.lock because the normalized Cargo.lock extension input changed, instructing bazel mod deps --lockfile_mode=update. Ran this metadata-only recovery with pinned9.3.0 in batch mode. Source inventory changes only MODULE.bazel.lock; default lockfile_mode=error and complete required Buildkite graph remain unchanged. GitHub clippy/dependency-lint results do not substitute for actual Buildkite proof. Current candidate requires fresh validation and all managed fixture checks.",
         "Exact source c5de35a89b27e788169612ae71681e45c13bf71a; original sealed task imported and readmitted. Full native validation has not run; unavailable describes the absent proof result, not an observed provider failure. The accepted source-CI contract and release dependency policy remain intact; no unpublished source overlay is substituted.",
+        "Expanded the existing pending account CLI scenario to assert each published entitlement, unassigned-seat and quote-confirmation reason independently. It requires action_required, retained session, no read and no repeated exchanges; executable coverage is pending configured CI.",
         "Published Dactyl 0.12.0 cloud.rs maps dropped response transport to Unavailable. Completion now preserves the saved credential and checking_readiness state for Unavailable, Transport and Timeout; existing lost completion CLI fixture is mandatory execution coverage. This source review is not executed product proof.",
         "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task. Correction run 43124963685 passed the exact formatted source checks and then stopped after native specs.refresh and trajectory recording because the authored VALIDATION hash included one duplicate blank line. Supported capability-overlay refresh collapses three consecutive newlines to two; approved prose is unchanged, and generated fingerprint changes stay inside existing marker blocks. The revised insertion removes only its final newline and pins the observed authored hash sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849. The failed attempt made no checkpoint, commit or push. Its uncommitted native journal is preserved by encrypted diagnostics archive sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967 and reconstructed journal digest sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8. Archived trajectory branch_01M76ECD20HF9M6Q15W5AKE2WQ event event:5, sequence 5, has step digest sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d (UTF-8 sorted-key compact JSON); native trajectory artifact hash sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083. This archived step is historical evidence, not restored current authority. The latest sealed task continues on the same committed journal through native CLI recording; no raw projection bytes are restored. Exact source, authored-spec, checkpoint and publication boundaries remain enforced.",
         "Verified operator handoff and imported original sealed task 01M76J985NNC1F519D2CE4V9Y7. Candidate d85650bafa610dc952fbc91acd91ba5e28b329b7 remains unmodified. Accepted master advanced to d3358e1c after billing PR1631 and release1632; merge reconciliation will remove the new mandatory project roster/pricing client behavior in accordance with issue1628 and the current explicit user boundary, while retaining unrelated accepted changes. Dactyl run43131221323 artifacts verified by ciphertext/plaintext and per-file hashes: both native groups and all14 checks passed on86ed55d; publication/readback failed. Registry still only0.11.1, so client compilation/product execution remain blocked."
