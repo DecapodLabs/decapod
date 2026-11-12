@@ -1752,11 +1752,9 @@ pub fn blend_overrides(
 pub fn scaffold_project_entrypoints(
     opts: &ScaffoldOptions,
 ) -> Result<ScaffoldSummary, error::DecapodError> {
-    eprintln!("DEBUG: target_dir: {:?}", opts.target_dir);
-
     // Ensure target_dir exists before any scaffolding operations
     // This is critical - without it, all subsequent file operations will fail
-    if !opts.target_dir.exists() {
+    if !opts.dry_run && !opts.target_dir.exists() {
         fs::create_dir_all(&opts.target_dir).map_err(|e| {
             error::DecapodError::IoError(std::io::Error::other(format!(
                 "Failed to create target directory '{}': {e}",
@@ -1768,8 +1766,9 @@ pub fn scaffold_project_entrypoints(
     let data_dir_rel = ".decapod/data";
 
     // Ensure .decapod/data directory exists (constitution is embedded, not scaffolded)
-    if let Err(e) =
-        crate::core::fs_permissions::ensure_storage_dir(&opts.target_dir.join(data_dir_rel))
+    if !opts.dry_run
+        && let Err(e) =
+            crate::core::fs_permissions::ensure_storage_dir(&opts.target_dir.join(data_dir_rel))
     {
         eprintln!("warning: Failed to create .decapod/data directory: {e}");
     }
@@ -1866,76 +1865,80 @@ pub fn scaffold_project_entrypoints(
     // Use get_legacy_entrypoint_contents() to read them and return to the agent.
     // The agent will manually consolidate content into appropriate OVERRIDE.md sections.
 
-    // Generate .decapod/managed/Dockerfile.decapod from Rust-owned template component.
-    let generated_dir = opts.target_dir.join(".decapod/managed");
-    if let Err(e) = crate::core::fs_permissions::ensure_private_dir(&generated_dir) {
-        eprintln!("warning: Failed to create {}: {e}", generated_dir.display());
-    }
-    if let Err(e) =
-        crate::core::fs_permissions::ensure_private_dir(&generated_dir.join("migrations"))
-    {
-        eprintln!("warning: Failed to create migrations dir: {e}");
-    }
-    let managed_dir = opts.target_dir.join(".decapod/managed");
-    if let Err(e) = crate::core::fs_permissions::ensure_private_dir(&managed_dir) {
-        eprintln!("warning: Failed to create {}: {e}", managed_dir.display());
-    }
-    if let Err(e) = crate::plugins::container::migrate_legacy_managed_dockerfile(&opts.target_dir) {
-        eprintln!("warning: Failed to migrate legacy managed Dockerfile: {e}");
-    }
-    let dockerfile_path = crate::plugins::container::managed_dockerfile_path(&opts.target_dir);
-    if !dockerfile_path.exists() {
-        let dockerfile_content =
-            crate::plugins::container::generated_dockerfile_for_repo(&opts.target_dir);
-        if let Err(e) =
-            crate::core::atomic::write_atomic(&dockerfile_path, dockerfile_content.as_bytes())
-        {
-            eprintln!("warning: Failed to write Dockerfile: {e}");
-        }
-    } else if let Err(e) =
-        crate::plugins::container::refresh_managed_dockerfile_release(&opts.target_dir)
-    {
-        eprintln!("warning: Failed to refresh Dockerfile release header: {e}");
-    }
-    let version_counter_path = generated_dir.join("version_counter.json");
-    if !version_counter_path.exists() {
-        let now = crate::core::time::now_epoch_z();
-        let version_counter = serde_json::json!({
-            "schema_version": "1.0.0",
-            "version_count": 1,
-            "initialized_with_version": env!("CARGO_PKG_VERSION"),
-            "last_seen_version": env!("CARGO_PKG_VERSION"),
-            "updated_at": now,
-        });
-        if let Ok(body) = serde_json::to_string_pretty(&version_counter)
-            && let Err(e) =
-                crate::core::atomic::write_atomic(&version_counter_path, body.as_bytes())
-        {
-            eprintln!("warning: Failed to write version_counter.json: {e}");
-        }
-    }
-
-    let generated_policy_path = opts.target_dir.join(GENERATED_POLICY_REL_PATH);
-    if !generated_policy_path.exists()
-        && let Ok(policy_body) = default_policy_json_pretty()
-        && let Some(parent) = generated_policy_path.parent()
-    {
-        if let Err(e) = crate::core::fs_permissions::ensure_private_dir(parent) {
-            eprintln!("warning: Failed to create policy directory: {e}");
+    if !opts.dry_run {
+        // Generate .decapod/managed/Dockerfile.decapod from Rust-owned template component.
+        let generated_dir = opts.target_dir.join(".decapod/managed");
+        if let Err(e) = crate::core::fs_permissions::ensure_private_dir(&generated_dir) {
+            eprintln!("warning: Failed to create {}: {e}", generated_dir.display());
         }
         if let Err(e) =
-            crate::core::atomic::write_atomic(&generated_policy_path, policy_body.as_bytes())
+            crate::core::fs_permissions::ensure_private_dir(&generated_dir.join("migrations"))
         {
-            eprintln!("warning: Failed to write policy JSON: {e}");
+            eprintln!("warning: Failed to create migrations dir: {e}");
         }
-    }
+        let managed_dir = opts.target_dir.join(".decapod/managed");
+        if let Err(e) = crate::core::fs_permissions::ensure_private_dir(&managed_dir) {
+            eprintln!("warning: Failed to create {}: {e}", managed_dir.display());
+        }
+        if let Err(e) =
+            crate::plugins::container::migrate_legacy_managed_dockerfile(&opts.target_dir)
+        {
+            eprintln!("warning: Failed to migrate legacy managed Dockerfile: {e}");
+        }
+        let dockerfile_path = crate::plugins::container::managed_dockerfile_path(&opts.target_dir);
+        if !dockerfile_path.exists() {
+            let dockerfile_content =
+                crate::plugins::container::generated_dockerfile_for_repo(&opts.target_dir);
+            if let Err(e) =
+                crate::core::atomic::write_atomic(&dockerfile_path, dockerfile_content.as_bytes())
+            {
+                eprintln!("warning: Failed to write Dockerfile: {e}");
+            }
+        } else if let Err(e) =
+            crate::plugins::container::refresh_managed_dockerfile_release(&opts.target_dir)
+        {
+            eprintln!("warning: Failed to refresh Dockerfile release header: {e}");
+        }
+        let version_counter_path = generated_dir.join("version_counter.json");
+        if !version_counter_path.exists() {
+            let now = crate::core::time::now_epoch_z();
+            let version_counter = serde_json::json!({
+                "schema_version": "1.0.0",
+                "version_count": 1,
+                "initialized_with_version": env!("CARGO_PKG_VERSION"),
+                "last_seen_version": env!("CARGO_PKG_VERSION"),
+                "updated_at": now,
+            });
+            if let Ok(body) = serde_json::to_string_pretty(&version_counter)
+                && let Err(e) =
+                    crate::core::atomic::write_atomic(&version_counter_path, body.as_bytes())
+            {
+                eprintln!("warning: Failed to write version_counter.json: {e}");
+            }
+        }
 
-    // Always create epistemic custody artifacts directory (core Decapod infrastructure)
-    let custody_dir = opts.target_dir.join(".decapod/managed/artifacts/custody");
-    if !custody_dir.exists()
-        && let Err(e) = crate::core::fs_permissions::ensure_private_dir(&custody_dir)
-    {
-        eprintln!("warning: Failed to create custody directory: {e}");
+        let generated_policy_path = opts.target_dir.join(GENERATED_POLICY_REL_PATH);
+        if !generated_policy_path.exists()
+            && let Ok(policy_body) = default_policy_json_pretty()
+            && let Some(parent) = generated_policy_path.parent()
+        {
+            if let Err(e) = crate::core::fs_permissions::ensure_private_dir(parent) {
+                eprintln!("warning: Failed to create policy directory: {e}");
+            }
+            if let Err(e) =
+                crate::core::atomic::write_atomic(&generated_policy_path, policy_body.as_bytes())
+            {
+                eprintln!("warning: Failed to write policy JSON: {e}");
+            }
+        }
+
+        // Always create epistemic custody artifacts directory (core Decapod infrastructure)
+        let custody_dir = opts.target_dir.join(".decapod/managed/artifacts/custody");
+        if !custody_dir.exists()
+            && let Err(e) = crate::core::fs_permissions::ensure_private_dir(&custody_dir)
+        {
+            eprintln!("warning: Failed to create custody directory: {e}");
+        }
     }
 
     // Capability-driven scaffolding proposals (non-fatal if this fails)

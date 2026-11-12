@@ -1064,8 +1064,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `355408d84a7f1aa219571bde6f2481da4034f4e5ecd9044eb4ce00b1693e7568`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1360,3 +1360,11 @@ purchase approval and does not claim that a session or paid seat exists.
 The hosted service must independently derive price/quantity, verify admin
 authority and reconcile payment before granting repository-specific access.
 Its deployment and native client integration remain separately required.
+
+### First-run terminal setup contract
+
+REQ-ONBOARDING is implemented by the existing `decapod init` command without a new flag or machine schema. Interactive first-run setup and `init --refresh` offer a recommended path, focused customization, a plan review with Apply (or Preview), Edit choices, and Cancel. An explicit `--dir` selects the current project directly; the directory chooser can defer creating a new project until confirmation. Existing flags, scripted `init with`, `--proof`, and redirected output retain unattended operation.
+
+Project review includes purpose, architecture, languages, effective isolation, storage, selected agent files, living specs, CI, diagram notation, proof provider and custom command count, plus Git initialization when needed. Cloud selection remains explicit and displays experimental status, account/seat requirements, and existing billing consent. Review and setup completion do not confer cloud access, passed validation, or publication readiness.
+
+Arrow selection supports typing, numbers, Enter, Escape, Ctrl-C, and Ctrl-D. Invalid yes/no input is retried; EOF cancels instead of silently accepting defaults. On Unix, terminal state is restored on return and error. Narrow terminal rendering and color-free operation do not change stored values. `tests/init_cli.rs` checks the recommended journey, revision and cancellation, lone Escape restoration, and a mutation-free preview using a real PTY.
