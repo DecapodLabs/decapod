@@ -25,6 +25,22 @@ Client unit/CLI tests and current-target Buildkite readiness remain unproven.
 The 0.12.0 lockfile also downgrades inactive HTTP/3 dependencies under Dactyl
 MSRV bounds; the required dependency audit must pass without exemptions.
 
+The first registry candidate reached actual Buildkite execution. Independent
+GitHub diagnostics on that same candidate passed all-feature clippy and
+dependency lint, but Bazel setup rejected the stale `MODULE.bazel.lock` before
+the Bazel tests could run. The reported recovery, repository-pinned Bazel 9.3.0
+`mod deps --lockfile_mode=update`, regenerates the extension's Cargo inputs.
+The committed build policy remains `lockfile_mode=error`; no test/build gate is
+replaced by this metadata preparation. Fresh Buildkite proof and the managed
+client's unit/CLI execution remain required.
+
+The generated lock was 1,053,030 bytes, exceeding bounded discovery by 4,454
+bytes. Reformatting its complete JSON with one-space indentation yields
+1,029,040 bytes; parsed JSON equality verifies that no value was removed or
+changed. Pinned Bazel accepts the result with `lockfile_mode=error`. Source and
+runtime discovery limits remain unchanged. This is metadata consistency proof,
+not an executed client test or full-readiness result.
+
 The first current-target validation stopped before Buildkite because the
 immutable candidate still carried v0.138.2 entrypoint headers while the installed
 released controller was v0.138.3. Supported initialization regenerates the four
