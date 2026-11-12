@@ -5,7 +5,10 @@
 `authorization_url` exposes only Dactyl's validated, short-lived browser handoff.
 It never includes the polling secret, verifier, exchanged code, access token or
 refresh token. A task-add diagnostic preserves that handoff and its non-secret
-operation ID without exposing task text or credentials. The agent performs an
+operation ID without exposing task text or credentials. Recovery instructions
+are fixed; raw authentication messages and recovery
+text do not cross into task-operation diagnostics. Only the explicit validated
+browser handoff field is carried for an onboarding-pending result. The agent performs an
 explicit `cloud login --restart` after uncertain one-time outcomes; polling and
 idempotent account confirmation do not authorize replaying those mutations.
 The service remains authoritative for account requirements and repository access.
@@ -595,7 +598,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f25c995fb8ed74e8bfa0d2cd40276893fa23f40d6da1482cd2407f19de38b122`
+- Repository signal fingerprint: `0da3c038776e2f0d2ae4414d399dbcee1ac2fbdf50ecb144082d513f5abccb05`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

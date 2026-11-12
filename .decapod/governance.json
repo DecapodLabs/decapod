@@ -656,6 +656,16 @@
         "src/decapod/core/error.rs",
         "tests/common/cloud_managed_scenarios.rs"
       ]
+    },
+    {
+      "id": "fixed-public-task-recovery",
+      "summary": "Keep private authentication recovery text out of public task diagnostics while preserving the validated browser handoff",
+      "input_digest": "sha256:41a3abd569c3dd01dd698d4b22d942a08c99950642dc95e5ef7764aaeb66017b",
+      "proof_refs": [
+        "src/decapod/core/todo.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_todo_retry_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -696,23 +706,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the current source after preserving the validated short-lived browser URL in text error rendering as well as structured diagnostics. Managed session, server readiness and no-replay boundaries remain intact; the pending-add scenario also parses clean agent login JSON and checks the intentional browser link in text output without exposing credentials.",
-          "reviewed_code_fingerprint": "f25c995fb8ed74e8bfa0d2cd40276893fa23f40d6da1482cd2407f19de38b122",
+          "reason": "Reviewed source after the real consumer redaction regression. Task preflight now constructs fixed agent recovery text and carries only the explicit validated URL for onboarding-pending auth; raw authentication message and next_action are never copied. The existing secret-redaction unit test remains unchanged, and CLI handoff/operation identity coverage remains required.",
+          "reviewed_code_fingerprint": "0da3c038776e2f0d2ae4414d399dbcee1ac2fbdf50ecb144082d513f5abccb05",
           "spec_material_hash": "7d64fcff5272dde8ba4a1dbc3685417a98c4387d0aa98e0c067b1979d4837662"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the current source after preserving the validated short-lived browser URL in text error rendering as well as structured diagnostics. Managed session, server readiness and no-replay boundaries remain intact; the pending-add scenario also parses clean agent login JSON and checks the intentional browser link in text output without exposing credentials.",
-          "reviewed_code_fingerprint": "f25c995fb8ed74e8bfa0d2cd40276893fa23f40d6da1482cd2407f19de38b122",
+          "reason": "Reviewed source after the real consumer redaction regression. Task preflight now constructs fixed agent recovery text and carries only the explicit validated URL for onboarding-pending auth; raw authentication message and next_action are never copied. The existing secret-redaction unit test remains unchanged, and CLI handoff/operation identity coverage remains required.",
+          "reviewed_code_fingerprint": "0da3c038776e2f0d2ae4414d399dbcee1ac2fbdf50ecb144082d513f5abccb05",
           "spec_material_hash": "1dc7b24d3ab01e25ffabc2493b4f15f30956daf1bbda2b93fd43c9bf5d0702ee"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the current source after preserving the validated short-lived browser URL in text error rendering as well as structured diagnostics. Managed session, server readiness and no-replay boundaries remain intact; the pending-add scenario also parses clean agent login JSON and checks the intentional browser link in text output without exposing credentials.",
-          "reviewed_code_fingerprint": "f25c995fb8ed74e8bfa0d2cd40276893fa23f40d6da1482cd2407f19de38b122",
-          "spec_material_hash": "e8b19b6c03b532e2461c57bed8708055bab51423ba82eb46c08c9823100f3725"
+          "reason": "Reviewed source after the real consumer redaction regression. Task preflight now constructs fixed agent recovery text and carries only the explicit validated URL for onboarding-pending auth; raw authentication message and next_action are never copied. The existing secret-redaction unit test remains unchanged, and CLI handoff/operation identity coverage remains required.",
+          "reviewed_code_fingerprint": "0da3c038776e2f0d2ae4414d399dbcee1ac2fbdf50ecb144082d513f5abccb05",
+          "spec_material_hash": "0b18b2deee00ec20ff5cf50aa23c778107a9524cef9f13c1cf958f169ed4c3a4"
         }
       ],
       "state": "APPROVED",
@@ -723,7 +733,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794473871Z"
+      "updated_at": "1794474572Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -736,7 +746,7 @@
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:870ffb95dbf3935dca90c99457d01324503f36957c0f6747e5eaaff225dc6383",
+      "artifact_hash": "sha256:79dee2dca013793d4c64a77f558abbd6f10c387cc48ec4243b7d5d1ad968de9d",
       "checks": [
         {
           "name": "accepted-consumer",
@@ -749,6 +759,10 @@
         {
           "name": "bounded-source-discovery",
           "status": "passed"
+        },
+        {
+          "name": "candidate-2c7-redaction",
+          "status": "failed"
         },
         {
           "name": "compilation-and-product-tests",
@@ -1004,10 +1018,17 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 20
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:21",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 21
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 20,
+        "next_sequence": 21,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -1316,6 +1337,24 @@
                 ],
                 "sequence": 20,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:21",
+                "observations": [
+                  "Actual source-CI consumer job 131078135474 on 2c7e51b5 passed 1673 library tests and failed the existing cloud_auth_blocked_add_resumes_after_onboarding_without_touching_project redaction assertion because the new wrapper copied raw auth next_action. Corrected the production wrapper to fixed recovery guidance and onboarding-only validated URL propagation. The existing test and secret list are unchanged; integration scenarios did not run after the library failure. Required full Buildkite evidence remains pending; no failure is waived."
+                ],
+                "proof_refs": [
+                  "candidate-2c7-redaction",
+                  "formatting",
+                  "current-tests"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 21,
+                "validation_findings": []
               }
             ]
           }
@@ -1333,6 +1372,7 @@
       "destination": "pull request",
       "evidence": [
         "Actual pinned Bazel regenerated the module lock from the registry0.12 Cargo graph. Generated indentation exceeded the1MiB source bound by4454bytes; one-space JSON encoding preserves all parsed values and reduces the complete file to1029040bytes. Pinned Bazel mod deps --lockfile_mode=error accepts it. Every discovered source hash was verified; only MODULE.bazel.lock changed relative to the previous reviewed build-source inventory. Neither required checks nor limits nor default stale-lock rejection were changed. Current Buildkite candidate0bff2528 failed in CI build8025; diagnostics identified the stale Bazel metadata. Fresh exact-candidate execution remains required.",
+        "Actual source-CI consumer job 131078135474 on 2c7e51b5 passed 1673 library tests and failed the existing cloud_auth_blocked_add_resumes_after_onboarding_without_touching_project redaction assertion because the new wrapper copied raw auth next_action. Corrected the production wrapper to fixed recovery guidance and onboarding-only validated URL propagation. The existing test and secret list are unchanged; integration scenarios did not run after the library failure. Required full Buildkite evidence remains pending; no failure is waived.",
         "After renewing the lease to generation2, the original workspace authoring binding was stale. A chained execution mistakenly committed the two-file documentation correction45785a6b despite failed checkpointing, and native validation pushed that work ref before later history verification. Immutable inspection confirms its checkpoint is missing. The original pushed ref is preserved unchanged; no later checkpoint is offered as proof for45785a6b. Supported workspace ensure created the same task recovery branch from accepted d3358e1c, preserved its fresh admission seed and fast-forwarded to the proven2afbd191 containing both original1289a80/d85650b checkpoints and all four later valid checkpoints. Native readmission refreshed the generation2 binding. Only the two reviewed documentation changes were reauthored on this branch, with fresh reviews/checkpoint;45785a6b is not an ancestor. The public GitHub readiness reader also returned a403 rate limit with reset1794459593; it will be retried only after that reset using the same reader, without alternate authentication.",
         "CI 43143251997: all eighteen custody unit tests passed; consumer RPC fixtures lacked required generated_keys; corrected successful envelopes and explicit unavailable/offline diagnostics without weakening negative coverage. Fresh recovery branch preserves six verified checkpoints; uncheckpointed 45785a6b is excluded and left intact on original ref.",
         "CI43156962327 consumer job130979818729 on ee288c86 passed1674 library tests (8ignored), including18 custody tests, and19 of20 boundary cases. Remaining case attempted discovery before rejecting cloud --validated proof capture. Moved shared guard before factory construction and retained direct-store enforcement. Its authenticated dual-root execution record uses accepted d3358e1c commands, excluding candidate helper additions. Thus restored the unchanged recipe and reviewed8f21b5eb inventory; included all12 managed scenarios as a module of the existing mandatory cloud_supabase_boundary target. Seed helper strips only the crate prefix from module_path for exact nested test selection. Interrupted this workspace native validation via SIGINT after real failure diagnosis; no final verdict or readiness claimed. Preserved snapshot1ALZwM and private logs. Scope50 files stays under original51 budget.",

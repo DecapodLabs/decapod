@@ -7468,10 +7468,15 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
                 let mut diagnostic =
                     CloudTodoDiagnostic::new(operation, Outcome::BlockedBeforeSubmit, kind);
                 if let error::DecapodError::CloudAuth(auth) = &error {
-                    diagnostic.authorization_url = auth.authorization_url.clone();
+                    if auth.status == crate::core::error::CloudAuthStatus::OnboardingPending {
+                        diagnostic.authorization_url = auth.authorization_url.clone();
+                    }
+                    // Auth message/recovery text can contain private adapter
+                    // details. Only its explicit validated handoff crosses
+                    // into the public task receipt; guidance stays fixed.
                     diagnostic.next_action = format!(
-                        "{} Resume the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add.",
-                        auth.next_action, operation.operation_id
+                        "Agent: share authorization_url when present, then run `decapod cloud login --format json` and follow its structured recovery. While sign-in is pending, retry login every 2 seconds for up to 5 minutes. Continue without waiting for another user message; preserve the saved connection if still pending. Resume the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add. The user does not need another CLI command.",
+                        operation.operation_id
                     );
                 }
                 return Err(error::DecapodError::CloudTodo(diagnostic));
