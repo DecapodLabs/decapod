@@ -210,6 +210,66 @@ fn journal_survives_interruption_and_never_downgrades_a_confirmed_success() {
 }
 
 #[test]
+fn receipt_envelope_migrates_legacy_rows_and_blocks_older_writers() {
+    let temp = tempfile::tempdir().unwrap();
+    let journal = Journal::at(temp.path().join("operations"));
+    let mut old = record();
+    old.status = Outcome::OutcomeUnknown;
+    journal.prepare(&old).unwrap();
+    let path = temp.path().join("operations/operations.json");
+    std::fs::write(&path, serde_json::to_vec(&vec![old.clone()]).unwrap()).unwrap();
+    assert_eq!(journal.list().unwrap(), vec![old.clone()]);
+    let bytes = std::fs::read(&path).unwrap();
+    assert_eq!(
+        serde_json::from_slice::<serde_json::Value>(&bytes).unwrap()["version"],
+        CACHE_VERSION
+    );
+    // This is the reader shape used by the released array-only client. It
+    // cannot rewrite v2 and silently remove the new route binding.
+    assert!(serde_json::from_slice::<Vec<OperationRecord>>(&bytes).is_err());
+    let legacy_route = digest(b"original-repository");
+    let bound = journal
+        .bind_route(&old, &legacy_route, &legacy_route)
+        .unwrap();
+    assert_eq!(bound.status, Outcome::OutcomeUnknown);
+    assert_eq!(
+        journal.list().unwrap()[0].routing_fingerprint,
+        Some(legacy_route)
+    );
+}
+
+#[test]
+fn future_receipt_versions_are_preserved_without_mutation() {
+    let temp = tempfile::tempdir().unwrap();
+    let journal = Journal::at(temp.path().join("operations"));
+    let original = record();
+    journal.prepare(&original).unwrap();
+    let path = temp.path().join("operations/operations.json");
+    let future =
+        serde_json::to_vec(&serde_json::json!({"version":99,"records":[original]})).unwrap();
+    std::fs::write(&path, &future).unwrap();
+    assert!(journal.prepare(&record()).is_err());
+    assert_eq!(std::fs::read(path).unwrap(), future);
+}
+
+#[test]
+fn receipt_upgrade_checks_encoded_bytes_before_replacing_evidence() {
+    let temp = tempfile::tempdir().unwrap();
+    let journal = Journal::at(temp.path().join("operations"));
+    let mut old = record();
+    journal.prepare(&old).unwrap();
+    old.task_id.clear();
+    let overhead = serde_json::to_vec(&vec![old.clone()]).unwrap().len();
+    old.task_id = "x".repeat(MAX_METADATA_BYTES - overhead - 4);
+    let original = serde_json::to_vec(&vec![old]).unwrap();
+    assert_eq!(original.len(), MAX_METADATA_BYTES - 4);
+    let path = temp.path().join("operations/operations.json");
+    std::fs::write(&path, &original).unwrap();
+    assert!(journal.list().is_err());
+    assert_eq!(std::fs::read(path).unwrap(), original);
+}
+
+#[test]
 fn journal_retains_unresolved_records_when_at_capacity() {
     let temp = tempfile::tempdir().unwrap();
     let journal = Journal::at(temp.path().join("operations"));

@@ -583,6 +583,14 @@
       "proof_refs": [
         "/private/tmp/decapod-managed-project-validation-04.json"
       ]
+    },
+    {
+      "id": "mixed-release-operation-cache-v2",
+      "summary": "Version private mutation receipts so older array-only clients refuse instead of erasing route bindings; preserve legacy/future evidence and enforce encoded bytes before replacement. New full-profile regressions not yet executed; prior420 validation failed target freshness.",
+      "input_digest": "sha256:ab10a0d09c459b03e0aeb8c2122b497d691456416ede10d8081f2f5551bb857d",
+      "proof_refs": [
+        "/private/tmp/decapod-managed-project-validation-05.json"
+      ]
     }
   ],
   "intents": {
@@ -618,30 +626,30 @@
       "intent": "Reuse accepted managed session custody and the existing account connector to route current native operations to explicitly chosen server project references. Add account/project selection and idempotent creation through an agent-friendly cloud command, preserving current server authorization, exact account/checkout binding, uncertainty recovery, legacy native routes and independent local operation.",
       "phases": [],
       "proof_hooks": [
-        "Exact candidate full governed source CI and meaningful existing managed-session CLI tests; independent real native service proof separately from modeled OAuth and hosted acceptance."
+        "Full exact-candidate source proof and independent native service consumer; additionally prove legacy receipt migration, rejection by older array-only readers, future-version refusal and encoded-byte bounds before atomic cache replacement."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted140 release changes version metadata only; existing onboarding, terminal proof lifecycle, account project selection, resolved native writes and bind-once routing are preserved.",
-          "reviewed_code_fingerprint": "70fd286cc01b94ca39cd551d1375f65f53c0e60e238f4fb892fea535061cf410",
-          "spec_material_hash": "15fec422daad88270a6f612c713dc3dcdcdb7baad4419e63eca8872d3a80d8d3"
+          "reason": "Versioned local operation receipt envelope protects resolved route binding from older array-only clients, with stable-lock legacy migration and no credential/server protocol change.",
+          "reviewed_code_fingerprint": "5af17205c56359a16f8eec7d270f0d8815bca9451c607213a4139fe32acb6f2d",
+          "spec_material_hash": "3061ae561d80ed920d90f30e5cea492e32106fdcb69b72940d5e4037349c780a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing version-one account/data transports and generic project commands retained; native consumer phases are independent of default HTTP fixtures and require exact current source proof.",
-          "reviewed_code_fingerprint": "70fd286cc01b94ca39cd551d1375f65f53c0e60e238f4fb892fea535061cf410",
-          "spec_material_hash": "506a265b3672402976d682344a36ad1a6dfd57347d0df64b0d109e9fb528922e"
+          "reason": "Private operation cache v2 supports legacy arrays, rejects unsupported future versions and old writer shapes, while preserving current server/session contracts and uncertain operation IDs.",
+          "reviewed_code_fingerprint": "5af17205c56359a16f8eec7d270f0d8815bca9451c607213a4139fe32acb6f2d",
+          "spec_material_hash": "0555b79a081e6d6b39f8d3d69d47e05a9af4a08380d01e8473f0712054d38923"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current server identity, membership, assignment/grant and data authority remain required; no project record or agent label grants authority and no uncertain write can move to another route.",
-          "reviewed_code_fingerprint": "70fd286cc01b94ca39cd551d1375f65f53c0e60e238f4fb892fea535061cf410",
-          "spec_material_hash": "01025606e9b26996aac1242b6ff748d540c573a71859c4ef9035d585548b894f"
+          "reason": "Older clients cannot silently discard route bindings. Strict encoded-byte checks precede atomic replacement, preserving migration evidence and future-version files without truncation.",
+          "reviewed_code_fingerprint": "5af17205c56359a16f8eec7d270f0d8815bca9451c607213a4139fe32acb6f2d",
+          "spec_material_hash": "d79557e0021c4cbb73a17451be729171569a62238a4efa3fbea7524d2e3e77e1"
         }
       ],
       "state": "APPROVED",
@@ -654,13 +662,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794488240Z"
+      "updated_at": "1794493066Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:dc5b05c518f063f2f4040b635956b82085802608c9f1a7471fadd101e55c1c24",
+      "artifact_hash": "sha256:5d2630c6727dc0d7d41c492a6e6046eeb403bf9ee3f5e074c2388a17602559e8",
       "checks": [
         {
           "name": "accepted_target_merge",
@@ -677,6 +685,10 @@
         {
           "name": "interface-audit",
           "status": "passed"
+        },
+        {
+          "name": "mixed_release_receipts",
+          "status": "partial"
         },
         {
           "name": "native_project_profile",
@@ -704,6 +716,10 @@
         },
         {
           "name": "validation_04",
+          "status": "failed"
+        },
+        {
+          "name": "validation_05",
           "status": "failed"
         }
       ],
@@ -770,10 +786,17 @@
             "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77JY4X7Q7EW3YNCPBEC72WV": {
@@ -922,6 +945,25 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Exact420 full140 validation stopped with accepted base or transport ref changed; accepted master moved through1645 storage inventory and1646 release1401. Preserve /private/tmp/decapod-managed-project-validation-05.json; no readiness claimed.",
+                  "Source review of released array-only receipt reader found it would discard an optional routing field on rewrite. New v2 envelope makes old writers reject before dispatch; controlled legacy/future/bounded-byte regressions added. Native credential format and server protocol unchanged; tests remain unexecuted until full validation."
+                ],
+                "proof_refs": [
+                  "validation_05",
+                  "mixed_release_receipts"
+                ],
+                "scope": [
+                  "src/decapod/core/cloud_client",
+                  "src/decapod/core/cloud_project",
+                  "tests"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -936,10 +978,12 @@
         "Added separate native project consumer profile; independent real PostgreSQL fixture proof remains pending.",
         "Adjacent session/onboarding owners confirmed no project-binding overlap; plan uncertainty resolved.",
         "Exact 12d95951 Buildkite CI/docs failed Git merge-base admission as accepted master advanced through1636/1641; native GitHub Clippy independently found collapsible_if. No publication readiness.",
+        "Exact420 full140 validation stopped with accepted base or transport ref changed; accepted master moved through1645 storage inventory and1646 release1401. Preserve /private/tmp/decapod-managed-project-validation-05.json; no readiness claimed.",
         "Fixed controller is official registry decapod 0.139.0 from supported session update; SHA256 1e0d9f8704a62f10e51169e6efb659fd7b069f8e1e91f2922a0560d3b2e1bfde.",
         "Full validation 01 failed before tests on candidate 8022cae release entrypoints: /private/tmp/decapod-managed-project-validation-01.json",
         "Independent required Propodus PostgreSQL run on9375325 executed12d95951 and exposed blocked-before-submit add because Task.repo_id retained Git label after native project selection. New repair carries resolved repository and fences operation retries to a bind-once route. Peer session owner confirms Journal serialization outside their scope.",
         "Real merge in progress frombc0a71971bce8ee036a24562b7fc4a9b771f2f40. Git restores existing a8d2b65e generated governance/spec baseline rather than inventing JSON; accepted onboarding semantic additions preserved alongside project routing, generated projections refreshed by native CLI. Checkpoints from this active PR remain cumulative, accepted branch custody remains in the real second parent.",
+        "Source review of released array-only receipt reader found it would discard an optional routing field on rewrite. New v2 envelope makes old writers reject before dispatch; controlled legacy/future/bounded-byte regressions added. Native credential format and server protocol unchanged; tests remain unexecuted until full validation.",
         "Supported project-check repaired generated release projections; its host prerequisite findings do not establish full readiness.",
         "Supported1391 session updater with temporary backed-up explicit opt-in and private CARGO_INSTALL_ROOT installed registry0.140.0; original config restored. Fixed controllerSHA2560f84af347d2a5c51a4a649606baa40a2db8d093b71a98a5cf0a54d7d984a03f5; docs unchanged and migrations notice none. Reviewed same105-source graph for accepted version-only Cargo bytes; all required checks retained.",
         "Use existing official registry0.139.1 controller from supported peer session update; SHA256 fb461bb5b06ea2f2df3e691caef9c1ebdee9bc144a9c6ab7d25b720268cba72c; docs unchanged, applied migration notice none. Reconciled unchanged required graph inventory for accepted version-only Cargo inputs; no check removed."

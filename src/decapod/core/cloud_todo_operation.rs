@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 const MAX_RECORDS: usize = 256;
+const MAX_METADATA_BYTES: usize = 1024 * 1024;
+const CACHE_VERSION: u16 = 2;
 const COMPLETED_RETENTION_SECONDS: i64 = 7 * 24 * 60 * 60;
 pub const INTENT_PREFIX: &str = "decapod.todo.add.v1:";
 
@@ -58,6 +60,20 @@ pub struct OperationRecord {
     pub status: Outcome,
     pub failure_kind: Option<FailureKind>,
     pub updated_at: i64,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct StoredOperations {
+    version: u16,
+    records: Vec<OperationRecord>,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum StoredOperationsInput {
+    Versioned(StoredOperations),
+    Legacy(Vec<OperationRecord>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -299,9 +315,18 @@ impl Journal {
         let path = self.directory.join("operations.json");
         let mut records = read_records(&path)?;
         let value = operation(&mut records)?;
-        let bytes = serde_json::to_vec_pretty(&records).map_err(|_| {
+        // A versioned envelope makes older array-only clients fail before
+        // dispatch instead of discarding an unknown project-binding field.
+        let stored = StoredOperations {
+            version: CACHE_VERSION,
+            records,
+        };
+        let bytes = serde_json::to_vec_pretty(&stored).map_err(|_| {
             DecapodError::ValidationError("Cannot encode cloud todo operation metadata".into())
         })?;
+        if bytes.len() > MAX_METADATA_BYTES {
+            return Err(DecapodError::ValidationError("Cloud todo metadata exceeds its encoded byte bound; existing receipts were preserved.".into()));
+        }
         crate::core::atomic::write_atomic(&path, &bytes).map_err(DecapodError::IoError)?;
         Ok(value)
     }
@@ -398,15 +423,20 @@ fn read_records(path: &Path) -> Result<Vec<OperationRecord>, DecapodError> {
     let file = crate::core::fs_permissions::open_private_file(path, OpenOptions::new().read(true))
         .map_err(DecapodError::IoError)?;
     let mut bytes = Vec::new();
-    file.take(1024 * 1024 + 1)
+    file.take(MAX_METADATA_BYTES as u64 + 1)
         .read_to_end(&mut bytes)
         .map_err(DecapodError::IoError)?;
-    if bytes.len() > 1024 * 1024 {
+    if bytes.len() > MAX_METADATA_BYTES {
         return Err(DecapodError::ValidationError(
             "Cloud todo metadata exceeds its bounded size".into(),
         ));
     }
-    let records: Vec<OperationRecord> = serde_json::from_slice(&bytes).map_err(|_| DecapodError::ValidationError("Invalid cloud todo operation metadata; preserve it for review rather than starting duplicate work.".into()))?;
+    let stored: StoredOperationsInput = serde_json::from_slice(&bytes).map_err(|_| DecapodError::ValidationError("Invalid cloud todo operation metadata; preserve it for review rather than starting duplicate work.".into()))?;
+    let records = match stored {
+        StoredOperationsInput::Legacy(records) => records,
+        StoredOperationsInput::Versioned(stored) if stored.version == CACHE_VERSION => stored.records,
+        StoredOperationsInput::Versioned(_) => return Err(DecapodError::ValidationError("Unsupported cloud todo metadata version; upgrade the CLI before retrying and preserve the existing receipts.".into())),
+    };
     if records.len() > MAX_RECORDS
         || records.iter().any(|r| {
             r.routing_fingerprint

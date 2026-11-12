@@ -34,3 +34,10 @@ Reauthentication as a different managed account requires an explicit new selecti
 Existing explicitly supported canonical-repository native routes continue to work when no managed selection is recorded. Discovery and authentication still travel through Dactyl. Each command constructs its data connection after refresh, so the next request carries the current bearer.
 
 Offline CLI fixtures establish routing and recovery behavior. Disposable PostgreSQL/PostgREST, released artifacts and protected hosted sign-in remain separate evidence; none is inferred from a local fixture or successful selection.
+
+Cloud task retry receipts use a versioned private cache so older clients cannot
+rewrite away a selected-project binding. Upgrade an older client when it refuses
+the cache; keep the receipts for reconciliation. Legacy records migrate under the
+existing lock, and unsupported future versions or oversized upgrades preserve
+the original file. Deleting a receipt is not evidence that a timed-out write
+rolled back. Local storage remains independent of this cloud-only cache.
