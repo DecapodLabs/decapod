@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.140.3](https://github.com/DecapodLabs/decapod/compare/v0.140.2...v0.140.3) - 2026-11-12
+
+### Other
+
+- run terminal onboarding in the required CLI suite
+
 ## [0.140.2](https://github.com/DecapodLabs/decapod/compare/v0.140.1...v0.140.2) - 2026-11-12
 
 ### Fixed
