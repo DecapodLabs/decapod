@@ -35,7 +35,17 @@ fn test_cloud_opt_in_fails_closed_without_verified_remote() {
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -71,7 +81,17 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .env_remove("SUPABASE_URL")
         .env_remove("SUPABASE_KEY")
         .current_dir(&dir)
@@ -120,7 +140,7 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
 }
 
 #[test]
-fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available() {
+fn cloud_init_prints_purchase_approval_without_creating_machine_session() {
     let tmp = TempDir::new().expect("tempdir");
     let data_home = TempDir::new().expect("credential data home");
     git(tmp.path(), &["init", "-q"]);
@@ -136,7 +156,17 @@ fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available()
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(tmp.path())
         .env("DECAPOD_CLOUD_AUTH_MODE", "mock")
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
@@ -145,12 +175,12 @@ fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available()
         .expect("cloud init");
     assert!(
         init_out.status.success(),
-        "cloud init should complete setup: {}",
+        "cloud init should record purchase intent: {}",
         String::from_utf8_lossy(&init_out.stderr)
     );
     assert!(
-        data_home.path().join("decapod/session_token.json").exists(),
-        "canonical init should establish machine-local cloud custody"
+        !data_home.path().join("decapod/session_token.json").exists(),
+        "purchase intent must not establish a machine-local cloud session"
     );
     let output = format!(
         "{}{}",
@@ -158,8 +188,15 @@ fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available()
         String::from_utf8_lossy(&init_out.stderr)
     );
     assert!(
-        output.contains("Cloud setup ready"),
+        output.contains("Cloud purchase approval:")
+            && output.contains(
+                "/propodus-onboarding/billing?repository=DecapodLabs%2Fdecapod&users=alice"
+            ),
         "unexpected init output: {output}"
+    );
+    assert!(
+        !output.contains("Cloud setup ready"),
+        "purchase approval must not claim an authenticated session: {output}"
     );
     assert!(!output.contains("decapod-test-mock-access"));
     assert!(!output.contains("decapod-test-mock-refresh"));
@@ -171,7 +208,17 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
     let dir = tmp.path().to_path_buf();
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -222,7 +269,17 @@ fn canonical_backend_selection_uses_cloud_without_local_fallback() {
     let dir = tmp.path().to_path_buf();
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(&dir)
         .output()
         .expect("decapod init");
@@ -298,7 +355,17 @@ fn cloud_session_acquire_keeps_local_custody_when_cloud_preflight_fails() {
     let config_home = TempDir::new().expect("config home");
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(tmp.path())
         .output()
         .expect("cloud init");
@@ -350,7 +417,17 @@ fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
     let config_home = TempDir::new().expect("config home");
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .args([
+            "init",
+            "--backend",
+            "cloud",
+            "--force",
+            "--proof",
+            "--cloud-repository",
+            "DecapodLabs/decapod",
+            "--github-users",
+            "alice",
+        ])
         .current_dir(tmp.path())
         .output()
         .expect("cloud init");

@@ -19,6 +19,82 @@ pub const CLOUD_SESSION_TTL_DEFAULT_SECS: u64 = 4 * 60 * 60;
 pub const CLOUD_SESSION_TTL_MAX_SECS: u64 = 6 * 60 * 60;
 pub const CLOUD_SESSION_TTL_ENV: &str = "DECAPOD_CLOUD_SESSION_TTL_SECS";
 
+/// Public purchase UI only; this is never a datastore route or credential store.
+pub const CLOUD_BILLING_APPROVAL: &str =
+    "https://goyxpcmxetztjlrrcwew.supabase.co/functions/v1/propodus-onboarding/billing";
+
+pub fn validate_cloud_roster(repository: &str, users: &str) -> Result<Vec<String>, DecapodError> {
+    let invalid = || {
+        DecapodError::ValidationError(
+            concat!(
+                "Cloud requires a GitHub owner/repository and 1–100 distinct GitHub usernames; ",
+                "use --cloud-repository and --github-users."
+            )
+            .to_string(),
+        )
+    };
+    let parts: Vec<_> = repository.split('/').collect();
+    if repository.len() > 200
+        || parts.len() != 2
+        || parts.iter().any(|p| {
+            p.is_empty()
+                || !p
+                    .bytes()
+                    .all(|b| b.is_ascii_alphanumeric() || b"_.-".contains(&b))
+        })
+    {
+        return Err(invalid());
+    }
+    let mut names: Vec<_> = users
+        .split(',')
+        .map(|s| s.trim().to_ascii_lowercase())
+        .collect();
+    if names.is_empty()
+        || names.len() > 100
+        || names.iter().any(|s| {
+            s.is_empty()
+                || s.len() > 39
+                || s.starts_with('-')
+                || s.ends_with('-')
+                || s.contains("--")
+                || !s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
+        })
+    {
+        return Err(invalid());
+    }
+    names.sort();
+    if names.windows(2).any(|p| p[0] == p[1]) {
+        return Err(invalid());
+    }
+    Ok(names)
+}
+
+pub fn cloud_billing_approval_url(
+    repository: &str,
+    users: &[String],
+) -> Result<String, DecapodError> {
+    let names = validate_cloud_roster(repository, &users.join(","))?;
+    // Both values have a strict ASCII allowlist. Only the query delimiters need
+    // encoding; arbitrary URLs, tokens, fragments and callbacks cannot enter.
+    Ok(format!(
+        "{CLOUD_BILLING_APPROVAL}?repository={}&users={}",
+        repository.replace('/', "%2F"),
+        names.join("%2C")
+    ))
+}
+
+pub fn cloud_generation_summary(repo: &crate::cli::RepoContext) -> Option<String> {
+    match (&repo.product_summary, &repo.cloud_repository) {
+        (Some(summary), Some(repository)) if repo.effective_backend().is_cloud() => {
+            Some(format!("{summary}\nGitHub cloud repository: {repository}."))
+        }
+        (None, Some(repository)) if repo.effective_backend().is_cloud() => {
+            Some(format!("GitHub cloud repository: {repository}."))
+        }
+        (summary, _) => summary.clone(),
+    }
+}
+
 pub fn requested_cloud_session_ttl_secs() -> u64 {
     std::env::var(CLOUD_SESSION_TTL_ENV)
         .ok()

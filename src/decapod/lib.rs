@@ -218,7 +218,7 @@ fn record_cloud_init_registration(
     let registration = cloud_backend::CloudInitRegistration::for_init(
         &cloud.provider,
         &cloud.api_url,
-        "",
+        config.repo.cloud_repository.as_deref().unwrap_or_default(),
         target_dir,
     );
     if let Some(path) =
@@ -229,6 +229,59 @@ fn record_cloud_init_registration(
             path.display()
         );
     }
+    Ok(())
+}
+
+fn prepare_cloud_roster(
+    target: &Path,
+    repo: &mut RepoContext,
+    init: &InitWithCli,
+    interactive: bool,
+) -> Result<(), error::DecapodError> {
+    if !init.backend.is_cloud() {
+        return Ok(());
+    }
+    repo.set_backend(init.backend);
+    let remote = core::repo_identity::resolve_repository_identity(target).ok();
+    let default_repo = init
+        .cloud_repository
+        .clone()
+        .or_else(|| remote.as_ref().map(|r| r.canonical_name.clone()))
+        .or_else(|| repo.cloud_repository.clone())
+        .unwrap_or_default();
+    let repository = if interactive {
+        prompt_text_field(
+            "Cloud repository",
+            "GitHub owner/repository; your admin approves paid access.",
+            &default_repo,
+        )?
+    } else {
+        default_repo
+    };
+    if let Some(remote) = remote
+        && !repository.eq_ignore_ascii_case(&remote.canonical_name)
+    {
+        return Err(error::DecapodError::ValidationError(
+            "Cloud purchase repository must match the GitHub origin remote.".to_string(),
+        ));
+    }
+    let default_users = if init.github_users.is_empty() {
+        repo.cloud_github_users.join(",")
+    } else {
+        init.github_users.join(",")
+    };
+    let users = if interactive {
+        prompt_text_field(
+            "GitHub users",
+            "Comma-separated named seats, USD15 per person monthly. Config does not grant access.",
+            &default_users,
+        )?
+    } else {
+        default_users
+    };
+    let users = cloud_backend::validate_cloud_roster(&repository, &users)?;
+    repo.cloud_repository = Some(repository);
+    repo.cloud_github_users = users;
     Ok(())
 }
 
@@ -371,6 +424,8 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
         ctx.detected_surfaces = existing_cfg.repo.detected_surfaces.clone();
         ctx.capabilities = existing_cfg.repo.capabilities.clone();
         ctx.migration_validation = existing_cfg.repo.migration_validation.clone();
+        ctx.cloud_repository = existing_cfg.repo.cloud_repository.clone();
+        ctx.cloud_github_users = existing_cfg.repo.cloud_github_users.clone();
     }
 
     let authored_product_name = ctx.product_name.is_some();
@@ -1642,6 +1697,8 @@ fn init_with_from_config(
         existing_laya: config.laya.clone(),
         laya_decisions: Some(config.laya.mode == core::laya_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
+        cloud_repository: config.repo.cloud_repository.clone(),
+        github_users: config.repo.cloud_github_users.clone(),
         backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
         } else {
@@ -2061,7 +2118,8 @@ fn enrich_repo_context_interactive(
         println!();
         println!("Decapod Cloud is experimental.");
         println!("It syncs governed operational state for this repo.");
-        println!("Local state remains canonical unless cloud sync is enabled.");
+        println!("Each named GitHub user costs USD15 per month for this repository.");
+        println!("A repository owner/admin approves purchases through Stripe.");
         println!();
         if prompt_yes_no("Continue?", false)? {
             crate::cli::BackendType::Cloud
@@ -2231,7 +2289,7 @@ fn run_init_apply(
         },
         specs_seed: Some(scaffold::SpecsSeed {
             product_name: repo_ctx.product_name.clone(),
-            product_summary: repo_ctx.product_summary.clone(),
+            product_summary: cloud_backend::cloud_generation_summary(repo_ctx),
             architecture_direction: repo_ctx.architecture_direction.clone(),
             product_type: repo_ctx.product_type.clone(),
             primary_languages: repo_ctx.primary_languages.clone(),
@@ -2519,6 +2577,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
                             backend: init_group.backend,
+                            cloud_repository: init_group.cloud_repository.clone(),
+                            github_users: init_group.github_users.clone(),
                             git: init_group.git,
                             no_git: init_group.no_git,
                         }
@@ -2614,6 +2674,12 @@ pub fn run() -> Result<(), error::DecapodError> {
             {
                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
             }
+            prepare_cloud_roster(
+                &init_target,
+                &mut repo_ctx,
+                &init_with,
+                base_init_invocation && io::stdin().is_terminal() && !init_with.proof,
+            )?;
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
             let mut config = config_from_init_with(&init_with, repo_ctx);
             if let Some(existing) = existing_config.as_ref() {
@@ -2653,11 +2719,21 @@ pub fn run() -> Result<(), error::DecapodError> {
                 config.repo.product_name.as_deref(),
             );
             print_init_reconciliation(&reconciliation);
-            if !init_with.dry_run
-                && config.repo.effective_backend().is_cloud()
-                && let Err(error) = bootstrap_cloud_session(&target_dir)
-            {
-                println!("Cloud setup is pending: {error}");
+            if config.repo.effective_backend().is_cloud() {
+                let link = cloud_backend::cloud_billing_approval_url(
+                    config.repo.cloud_repository.as_deref().unwrap_or_default(),
+                    &config.repo.cloud_github_users,
+                )?;
+                println!("Cloud purchase approval: {link}");
+                println!(
+                    "USD15 per GitHub user per month for this repository. Sign in to detect GitHub admin access; otherwise send this link to an admin."
+                );
+                println!(
+                    "The config roster is a request. Cloud access requires a verified paid seat."
+                );
+                if !init_with.dry_run && !init_with.proof && io::stdin().is_terminal() {
+                    core::propodus::try_open_browser(&link);
+                }
             }
         }
         Command::Govern(GovernCli {
@@ -5820,7 +5896,7 @@ fn heal_validation_scaffold(
         diagram_style,
         specs_seed: Some(scaffold::SpecsSeed {
             product_name: repo_ctx.product_name.clone(),
-            product_summary: repo_ctx.product_summary.clone(),
+            product_summary: cloud_backend::cloud_generation_summary(&repo_ctx),
             architecture_direction: repo_ctx.architecture_direction.clone(),
             product_type: repo_ctx.product_type.clone(),
             primary_languages: repo_ctx.primary_languages.clone(),
