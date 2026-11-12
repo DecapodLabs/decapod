@@ -543,6 +543,14 @@
       "id": "managed-project-routing-20261112-01",
       "summary": "Implement explicit managed project selection, idempotent creation receipt and private route binding on accepted session custody, with actual CLI routing/recovery proofs.",
       "input_digest": "sha256:df0ddf040e5a7e9952c90fdceae3f9819f05c93184e358d48f341ba306592e5d"
+    },
+    {
+      "id": "managed-project-release-and-native-profile",
+      "summary": "Refresh supported 0.139 release projections, require current project association on creation, and declare independently provisioned two-client native PostgreSQL/revocation proof; no full passing evidence yet.",
+      "input_digest": "sha256:352e9c4a14791f5051821efd44e526603e04344a70be09f9b1f4205fc99e488d",
+      "proof_refs": [
+        "/private/tmp/decapod-managed-project-validation-01.json"
+      ]
     }
   ],
   "intents": {
@@ -585,22 +593,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reuse accepted managed authentication and credential format; add auxiliary project custody under the same stable lock, explicit selection and resolved native context.",
-          "reviewed_code_fingerprint": "8aab94c00c06b026c2ac0d21a71e7cce9edc6f4037f90be65d749b30c13b181a",
+          "reason": "Existing credential schema is unchanged; auxiliary project routing uses its stable machine-private session lock and current server account/project checks before constructing a native connection.",
+          "reviewed_code_fingerprint": "d6a7be658f4bd64e82a6fe579e7c4bc6ca5474a34813df52c8f1902cea791ae1",
           "spec_material_hash": "b62cade66246869936d649caae458354a68951c3d9b9ec3553b4d21ce3eb9c36"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "New cloud project commands use existing account status/register API, versioned CLI output, stable saved directory choices and durable idempotent creation identity; no new transport or billing contract.",
-          "reviewed_code_fingerprint": "8aab94c00c06b026c2ac0d21a71e7cce9edc6f4037f90be65d749b30c13b181a",
-          "spec_material_hash": "d5e0f960c58958f57c2a49b1fb40be139150235450babb24d94eedb063ca7506"
+          "reason": "Version-one account status/register powers explicit project commands and immutable creation retries. Separate two-phase local native consumer profile requires independent PostgreSQL provisioning and revocation; HTTP models and hosted/release proof stay distinct.",
+          "reviewed_code_fingerprint": "d6a7be658f4bd64e82a6fe579e7c4bc6ca5474a34813df52c8f1902cea791ae1",
+          "spec_material_hash": "099fd6259ff3f7f7996eed13dbffceca2512eafbab13dde766024301410388ab"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fresh server eligibility, account-bound private routing, denied forged context, no local fallback, serialized creation recovery and post-refresh consumer capture remain explicit proof obligations.",
-          "reviewed_code_fingerprint": "8aab94c00c06b026c2ac0d21a71e7cce9edc6f4037f90be65d749b30c13b181a",
+          "reason": "Project reference never authorizes; current account association, entitlement and data boundary remain required. Creation cannot select an unconfirmed association; identity changes, forged routing and revoked access fail without local fallback.",
+          "reviewed_code_fingerprint": "d6a7be658f4bd64e82a6fe579e7c4bc6ca5474a34813df52c8f1902cea791ae1",
           "spec_material_hash": "453df2f763da55cd5e63a98beb86e5297970cb40c22c58c95f623742b7fa2186"
         }
       ],
@@ -612,17 +620,15 @@
       "todo_ids": [
         "cicd_01m77jnnap2xt5qt"
       ],
-      "unknowns": [
-        "Session/onboarding owners are coordinating their current file footprints; keep new project state separate from credential record format."
-      ],
+      "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794479449Z"
+      "updated_at": "1794481165Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8caa9c1079b6c93e7390563a77a39b3b37d237c69fabdd02e38cd1e1f9b260df",
+      "artifact_hash": "sha256:6dda41e7bd4ae33091a307b4514e77815e83dcaec99a08bda1608b33a238dbc1",
       "checks": [
         {
           "name": "implementation",
@@ -631,6 +637,22 @@
         {
           "name": "interface-audit",
           "status": "passed"
+        },
+        {
+          "name": "native_project_profile",
+          "status": "unavailable"
+        },
+        {
+          "name": "release_projection_preparation",
+          "status": "partial"
+        },
+        {
+          "name": "scope_coordination",
+          "status": "passed"
+        },
+        {
+          "name": "validation_01",
+          "status": "failed"
         }
       ],
       "current_phase": "intent",
@@ -661,10 +683,17 @@
             "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77JY4X7Q7EW3YNCPBEC72WV": {
@@ -714,6 +743,32 @@
                 "validation_findings": [
                   "Neighboring session/onboarding owners confirmed project binding is outside their scopes. Full source validation owns build/tests; no separate manual test was run. Real native service evidence remains separate from modeled HTTP."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/cloud_project.rs",
+                  "tests/supabase_service.rs",
+                  "Adjacent session/onboarding owners confirmed no project-binding overlap; plan uncertainty resolved.",
+                  "Full validation 01 failed before tests on candidate 8022cae release entrypoints: /private/tmp/decapod-managed-project-validation-01.json",
+                  "Fixed controller is official registry decapod 0.139.0 from supported session update; SHA256 1e0d9f8704a62f10e51169e6efb659fd7b069f8e1e91f2922a0560d3b2e1bfde.",
+                  "Supported project-check repaired generated release projections; its host prerequisite findings do not establish full readiness.",
+                  "Added separate native project consumer profile; independent real PostgreSQL fixture proof remains pending."
+                ],
+                "proof_refs": [
+                  "scope_coordination",
+                  "validation_01",
+                  "release_projection_preparation",
+                  "native_project_profile"
+                ],
+                "scope": [
+                  "src/decapod/core/cloud_client",
+                  "src/decapod/core/cloud_project",
+                  "tests"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -722,12 +777,19 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/decapod-project-orientation-20261112.json"
+        "/private/tmp/decapod-project-orientation-20261112.json",
+        "Added separate native project consumer profile; independent real PostgreSQL fixture proof remains pending.",
+        "Adjacent session/onboarding owners confirmed no project-binding overlap; plan uncertainty resolved.",
+        "Fixed controller is official registry decapod 0.139.0 from supported session update; SHA256 1e0d9f8704a62f10e51169e6efb659fd7b069f8e1e91f2922a0560d3b2e1bfde.",
+        "Full validation 01 failed before tests on candidate 8022cae release entrypoints: /private/tmp/decapod-managed-project-validation-01.json",
+        "Supported project-check repaired generated release projections; its host prerequisite findings do not establish full readiness."
       ],
       "inspected_files": [
         "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
         "src/decapod/core/cloud_session.rs",
-        "src/decapod/core/todo.rs"
+        "src/decapod/core/todo.rs",
+        "tests/supabase_service.rs"
       ],
       "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
       "modified_files": [

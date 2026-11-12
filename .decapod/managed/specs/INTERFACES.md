@@ -1100,7 +1100,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8aab94c00c06b026c2ac0d21a71e7cce9edc6f4037f90be65d749b30c13b181a`
+- Repository signal fingerprint: `d6a7be658f4bd64e82a6fe579e7c4bc6ca5474a34813df52c8f1902cea791ae1`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1381,3 +1381,5 @@ Freed SQLite pages are reusable but are not auto-vacuumed.
 ## Explicit managed project routing
 
 `cloud projects` and `cloud project use|create` consume the existing version-one account status/register channel. A saved numbered choice references the exact prior directory for its managed account. Creation persists an immutable UUID/name before the request and retains the response reference after success; ambiguous outcomes reconcile the same UUID. Selected project status must echo its project and managed account before use. Text output shows names/status; credentials and routing records remain outside repository configuration.
+
+`tests/supabase_service.rs` declares the separate `local-native-projects-v1` consumer profile. An independent fixture owner supplies two ordinary managed bearers, disposable loopback PostgREST, and private client/receipt paths. The first phase selects a real account project and observes a shared native task through two CLI processes; the second phase requires the owner to revoke one account before checking its next operation. Missing provisioned services are unavailable. Modeled session issuance, HTTP fixtures, real local PostgreSQL, hosted authentication and released artifacts remain distinct proof categories.

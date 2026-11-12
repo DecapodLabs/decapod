@@ -248,6 +248,19 @@ fn new_request_id() -> Result<String, DecapodError> {
     ))
 }
 
+fn require_association(response: &Response) -> Result<(), DecapodError> {
+    if matches!(
+        response.status.as_str(),
+        "registration_required" | "admin_approval_required" | "code_host_link_required"
+    ) {
+        return Err(attention(
+            "The service did not confirm this account's project association.",
+            "Ask the project administrator to review membership and assignment, then retry.",
+        ));
+    }
+    Ok(())
+}
+
 fn pending_creation() -> DecapodError {
     attention(
         "A cloud project creation has an unresolved outcome. No new project or data operation was attempted.",
@@ -331,15 +344,7 @@ pub(crate) fn execute(
                 matches.into_iter().next().expect("one selected project")
             };
             let response = status(connector, bearer, &current.account_id, &project.project_id)?;
-            if matches!(
-                response.status.as_str(),
-                "registration_required" | "admin_approval_required" | "code_host_link_required"
-            ) {
-                return Err(attention(
-                    "The service did not confirm this account's project association.",
-                    "Ask the project administrator to review membership and assignment, then retry.",
-                ));
-            }
+            require_association(&response)?;
             let view = ProjectView {
                 name: project.name.clone(),
                 status: response.status,
@@ -375,6 +380,7 @@ pub(crate) fn execute(
             };
             if let Some(project_id) = &creation.project_id {
                 let checked = status(connector, bearer, &creation.account_id, project_id)?;
+                require_association(&checked)?;
                 record.selection = Some(Selection {
                     account_id: creation.account_id.clone(),
                     project: Project {
@@ -418,6 +424,7 @@ pub(crate) fn execute(
             }
             let project_id = response.project_id.ok_or_else(invalid)?;
             let checked = status(connector, bearer, &creation.account_id, &project_id)?;
+            require_association(&checked)?;
             record.selection = Some(Selection {
                 account_id: creation.account_id.clone(),
                 project: Project {

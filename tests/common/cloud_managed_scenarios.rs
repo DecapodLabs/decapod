@@ -106,6 +106,7 @@ struct Service {
     project_allowed: bool,
     registrations: BTreeMap<String, String>,
     lose_registration_once: bool,
+    register_associated: bool,
 }
 
 impl Service {
@@ -189,7 +190,7 @@ impl Service {
                     .entry(operation)
                     .or_insert_with(|| PROJECT.into())
                     .clone();
-                if !self.projects.iter().any(|(p, _)| p == &id) {
+                if self.register_associated && !self.projects.iter().any(|(p, _)| p == &id) {
                     self.projects.push((id.clone(), name));
                 }
                 if self.lose_registration_once {
@@ -261,6 +262,7 @@ impl Fixture {
             project_allowed: true,
             registrations: BTreeMap::new(),
             lose_registration_once: false,
+            register_associated: true,
         }));
         let stop = Arc::new(AtomicBool::new(false));
         let request_log = requests.clone();
@@ -988,6 +990,39 @@ fn managed_project_creation_recovers_one_request_and_retains_its_receipt() {
         .iter()
         .filter(|r| r.path == ACCOUNT_REGISTER)
         .collect();
+    assert_eq!(creates[0].body, creates[1].body);
+    assert_eq!(f.service.lock().unwrap().registrations.len(), 1);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn managed_project_creation_requires_current_account_association() {
+    let f = Fixture::new("example/project-association");
+    f.proof();
+    f.seed(false);
+    f.service.lock().unwrap().register_associated = false;
+    failed(
+        &f.run(&["cloud", "project", "create", "Team repository"]),
+        "action_required",
+    );
+    assert!(
+        !f.run(&["todo", "list", "--format", "json"])
+            .status
+            .success()
+    );
+    assert_eq!(f.count(QUERY), 0);
+    f.service.lock().unwrap().register_associated = true;
+    assert!(
+        f.run(&["cloud", "project", "create", "Team repository"])
+            .status
+            .success()
+    );
+    let requests = f.requests.lock().unwrap();
+    let creates: Vec<_> = requests
+        .iter()
+        .filter(|r| r.path == ACCOUNT_REGISTER)
+        .collect();
+    assert_eq!(creates.len(), 2);
     assert_eq!(creates[0].body, creates[1].body);
     assert_eq!(f.service.lock().unwrap().registrations.len(), 1);
     f.assert_no_fallback();
