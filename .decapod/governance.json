@@ -566,6 +566,14 @@
         "tests/cloud_supabase_boundary.rs",
         "tests/support/cloud_session_lifecycle.rs"
       ]
+    },
+    {
+      "id": "persistent-cloud-auth-registry-proof",
+      "summary": "Update exact registry version/checksum policy to the independently verified published Dactyl 0.12.0 archive; retain all release feature and source restrictions.",
+      "input_digest": "sha256:c10d8d92efe9e784e3087190f758bd68ccbcda0fd5b3e2186f642c91a6af536a",
+      "proof_refs": [
+        "tests/release_dependency_policy.rs"
+      ]
     }
   ],
   "intents": {
@@ -609,22 +617,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed current code after preserving task-creation handoff, simplifying rejected-bearer comparison and wiring the production CLI lifecycle into the required Supabase suite. Custody, server authority and evidence limits remain explicit.",
-          "reviewed_code_fingerprint": "aed633e1d2011448d4152c0bfd2c9f7d223ed048eee9578e191b3a397be951cd",
+          "reason": "Reviewed final current source including the published Dactyl 0.12.0 release policy, verified archive checksum and required Supabase lifecycle test module. No runtime trust boundary changed in this repair.",
+          "reviewed_code_fingerprint": "de325f61e98257156c89b7dfeee3ab21227e8efb8fdec6e1e761e4be860d1b6a",
           "spec_material_hash": "46864d66ec0e579d8c720f4108d51ee7bde5e86129ad6d1fc8bc42469310b39f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed current code after preserving task-creation handoff, simplifying rejected-bearer comparison and wiring the production CLI lifecycle into the required Supabase suite. Custody, server authority and evidence limits remain explicit.",
-          "reviewed_code_fingerprint": "aed633e1d2011448d4152c0bfd2c9f7d223ed048eee9578e191b3a397be951cd",
+          "reason": "Reviewed final current source including the published Dactyl 0.12.0 release policy, verified archive checksum and required Supabase lifecycle test module. No runtime trust boundary changed in this repair.",
+          "reviewed_code_fingerprint": "de325f61e98257156c89b7dfeee3ab21227e8efb8fdec6e1e761e4be860d1b6a",
           "spec_material_hash": "2b36a4cc97533a5d1d934fea8350245b5d70c9b24a07190984f5fab8ad2283c5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-reviewed current code after preserving task-creation handoff, simplifying rejected-bearer comparison and wiring the production CLI lifecycle into the required Supabase suite. Custody, server authority and evidence limits remain explicit.",
-          "reviewed_code_fingerprint": "aed633e1d2011448d4152c0bfd2c9f7d223ed048eee9578e191b3a397be951cd",
+          "reason": "Reviewed final current source including the published Dactyl 0.12.0 release policy, verified archive checksum and required Supabase lifecycle test module. No runtime trust boundary changed in this repair.",
+          "reviewed_code_fingerprint": "de325f61e98257156c89b7dfeee3ab21227e8efb8fdec6e1e761e4be860d1b6a",
           "spec_material_hash": "b942e33744b672969071e8d0a12abb86998ef4272322568c87991043fac1b82c"
         }
       ],
@@ -636,13 +644,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794468394Z"
+      "updated_at": "1794468553Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8ab04ad97ec9fc81b9764b635a70bc431a8a28f3699e6d7187bf873da180bafa",
+      "artifact_hash": "sha256:2923f236f7802b5a2ce0f54c85debd023e8c1b2092c4bad9b51ac014fdccd286",
       "checks": [
         {
           "name": "formatting",
@@ -706,10 +714,17 @@
             "intent_id": "intent:change_01M773RFTPFPJXCQ8R6MNGKGDQ",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M773RFXVQZAJQ3XYYXJEY4VM",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M773RFTPFPJXCQ8R6MNGKGDQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M773RFXVQZAJQ3XYYXJEY4VM": {
@@ -818,6 +833,22 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Reviewed published dactyl-db 0.12.0 archive SHA-256 b9d8eda3a7bad7490d23dbca5c468bf89b28de4c8b4fd566034b342334ba481e against Cargo.lock and package VCS source; updated the existing exact-version/checksum release policy test while retaining registry-only/no-override and feature assertions. Standalone lifecycle source was moved under tests/support and included in the existing required Supabase target so the accepted test recipe executes it. All canonical spec reviews refreshed after the final test-source change."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "Supabase datastore composition and documentation",
+                  "cloud authentication",
+                  "initialization",
+                  "session lifecycle"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -835,6 +866,7 @@
         "Public cloud deployment discovery returned HTTP 200, v1, matching project origin and dactyl_api with a public publishable key; no session or task was created. This proves public discovery only, not hosted login or authorization.",
         "Reviewed and adapted existing connector source; adopted published dactyl-db 0.12.0 with registry checksum and upstream source 598415953b5ee568f6d42652982897c58b4433cc. Regenerated Bazel dependency lock using mod deps, without compiling or running tests. Formatting and git diff --check passed; required builds/tests remain unexecuted until full validation.",
         "Reviewed proof-source delta: only Cargo.toml, Cargo.lock and generated MODULE.bazel.lock change dependency inputs. Published Dactyl 0.12.0 matches registry VCS source. Bazel mod deps --lockfile_mode=error passed after normalizing generated lock JSON indentation to stay within the unchanged 1 MiB discovery bound; values are unchanged. All source CI workflows, required checks and executor helpers remain unchanged. Config was backed up privately before updating the reviewed source digest. Candidate builds/tests have not run separately.",
+        "Reviewed published dactyl-db 0.12.0 archive SHA-256 b9d8eda3a7bad7490d23dbca5c468bf89b28de4c8b4fd566034b342334ba481e against Cargo.lock and package VCS source; updated the existing exact-version/checksum release policy test while retaining registry-only/no-override and feature assertions. Standalone lifecycle source was moved under tests/support and included in the existing required Supabase target so the accepted test recipe executes it. All canonical spec reviews refreshed after the final test-source change.",
         "Second full validation reached provider_terminal_wait then failed anonymous GithubCommitChecks with HTTP 403, reset 1794466932; no changed controller, proxy route, fabricated artifact or manual build/test was used."
       ],
       "inspected_files": [
