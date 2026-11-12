@@ -3707,6 +3707,7 @@ fn validate_validation_rules(
         include_publication: false,
         governing_identity: None,
         evidence_identity: std::collections::BTreeMap::new(),
+        terminal_evidence: None,
     };
 
     // Create and populate rule registry
@@ -3904,11 +3905,11 @@ fn collect_evidence_artifacts(
             error::DecapodError::ValidationError(format!("Invalid governance.json: {}", e))
         })?;
 
-        if let Some(validation) = governance.pointer("/sections/validation")
-            && let Some(receipt) = validation.pointer("/receipt")
-            && let Some(hash) = receipt.pointer("/receipt_hash").and_then(|v| v.as_str())
-        {
-            artifacts.insert("validation_receipt".to_string(), hash.to_string());
+        if let Some(value) = governance.pointer("/sections/validation") {
+            let receipt: ValidationReceipt = serde_json::from_value(value.clone())
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+            receipt.validate_integrity()?;
+            artifacts.insert("validation_receipt".to_string(), receipt.receipt_hash);
         }
 
         if let Some(trajectory) = governance.pointer("/sections/trajectory")
@@ -3922,12 +3923,6 @@ fn collect_evidence_artifacts(
         if let Some(_plan) = governance.pointer("/sections/plan") {
             artifacts.insert("governed_plan".to_string(), "present".to_string());
         }
-    }
-
-    // Check for workunit manifest
-    let workunits_dir = working_root.join(".decapod").join("data").join("workunits");
-    if workunits_dir.exists() {
-        artifacts.insert("workunit_manifest".to_string(), "present".to_string());
     }
 
     // Config toml

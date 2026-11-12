@@ -1307,6 +1307,24 @@ fn run(
                 .ok_or_else(|| invalid("successful readiness lacks a Laya disposition"))?,
         )
         .map_err(io::Error::other)?;
+        let rules = super::validation_rules::evaluate_terminal_rules(
+            &options.root,
+            &completed,
+            &current.identity,
+            &initial_governance,
+            &trajectory_digest,
+        )
+        .map_err(io::Error::other)?;
+        write_new(
+            &directory.join("terminal-rules.json"),
+            &serde_json::to_vec_pretty(&rules).map_err(io::Error::other)?,
+        )?;
+        if rules.has_blocking_failures() || rules.has_unverifiable_mandatory() {
+            return Err(invalid(format!(
+                "TERMINAL_VALIDATION_RULES_FAILED: {:?}",
+                rules.results
+            )));
+        }
         write_new(
             &directory.join(super::validation_history::PROOF_FILE),
             &serde_json::to_vec_pretty(&completed).map_err(io::Error::other)?,

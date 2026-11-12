@@ -820,7 +820,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
+- Repository signal fingerprint: `f7169f4585f51da481dc2eac43fcac4c04bc87a7cd4830cf8c2482b75904a5fb`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1047,3 +1047,7 @@ The coordinated Propodus deployment must verify GitHub identity, repository
 admin permission and paid repository-specific seats. This CLI recovery does
 not deploy that service or prove its Stripe and native-RPC integrations; those
 dependencies remain recorded in `docs/cloud-repository-billing.md`.
+
+## Validation proof lifecycle
+
+Full validation has separate admission and terminal evidence boundaries. `core/validation_rules.rs` checks source/governance inputs before execution; rules requiring proof outputs run in `validation_runtime::run` only after the complete required suite has passed. The runtime passes its owned `CompletedReadinessEvidence`, bound to exact candidate, accepted target, source, configuration, plan, governance and trajectory. No prior prerequisite receipt or string marker can manufacture that completion. Terminal failures precede external readiness receipts and canonical completion history.

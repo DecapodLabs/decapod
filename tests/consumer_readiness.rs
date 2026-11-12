@@ -811,3 +811,308 @@ fn configuration_change_after_successful_execution_invalidates_readiness() {
         },
     )));
 }
+
+// Exercise the public CLI, including real prerequisite gates and a fresh managed
+// docs task. The only fixture adapter redirects the exact accepted-target Git
+// query to a real local bare upstream. It executes Git rather than inventing a
+// revision, and never handles a proof command or writes an execution observation.
+#[cfg(unix)]
+fn governed_cli(root: &Path, storage: &Path, args: &[&str]) -> std::process::Output {
+    let binary = Path::new(env!("CARGO_BIN_EXE_decapod"))
+        .canonicalize()
+        .or_else(|_| {
+            std::env::var_os("RUNFILES_DIR")
+                .map(PathBuf::from)
+                .map(|path| path.join("_main/decapod"))
+                .ok_or_else(|| io::Error::other("missing Decapod test binary"))
+        })
+        .unwrap();
+    let mut command = Command::new(binary);
+    for (name, _) in std::env::vars_os() {
+        let name_text = name.to_string_lossy();
+        if name_text.starts_with("DECAPOD_")
+            || name_text.starts_with("GIT_")
+            || name_text.starts_with("BUILDKITE")
+            || name_text.starts_with("GITHUB_")
+            || name_text.starts_with("XDG_")
+        {
+            command.env_remove(name);
+        }
+    }
+    command
+        .args(args)
+        .current_dir(root)
+        .env("DECAPOD_AGENT_ID", "docs-bootstrap")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .env("HOME", storage.join("home"))
+        .env("XDG_CONFIG_HOME", storage.join("home/config"))
+        .env("XDG_DATA_HOME", storage.join("home/data"))
+        .env("XDG_CACHE_HOME", storage.join("home/cache"))
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env(
+            "PATH",
+            format!(
+                "{}:/usr/bin:/bin:/usr/local/bin",
+                storage.join("bin").display()
+            ),
+        )
+        .bounded_output(Duration::from_secs(300))
+        .unwrap()
+}
+
+#[cfg(unix)]
+fn governed_ok(root: &Path, storage: &Path, args: &[&str]) -> serde_json::Value {
+    let output = governed_cli(root, storage, args);
+    assert!(
+        output.status.success(),
+        "{args:?}: stdout={} stderr={}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    serde_json::from_slice(&output.stdout).unwrap_or(serde_json::Value::Null)
+}
+
+#[test]
+#[cfg(unix)]
+fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior_receipt() {
+    use decapod::core::governance_document;
+    use std::os::unix::fs::PermissionsExt;
+    for succeeds in [true, false] {
+        let mut fixture = Fixture::new();
+        let storage = fixture._storage.path().to_path_buf();
+        let root = fixture.options.root.clone();
+        fs::create_dir(storage.join("bin")).unwrap();
+        fs::create_dir(storage.join("home")).unwrap();
+        let shim = storage.join("bin/git");
+        fs::write(&shim, format!(
+            "#!/bin/sh\ncase \"$*\" in\n  *'ls-remote --refs -- https://github.com/consumer/project.git refs/heads/main')\n    exec /usr/bin/env GIT_ALLOW_PROTOCOL=file /usr/bin/git ls-remote --refs -- '{}' refs/heads/main ;;\nesac\nexec /usr/bin/git \"$@\"\n",
+            fixture.upstream.display())).unwrap();
+        fs::set_permissions(&shim, fs::Permissions::from_mode(0o700)).unwrap();
+        git(&root, &["checkout", "-B", "main"]);
+        fs::write(root.join("README.md"), "# Governed consumer\n\nReviewed source commands inspect the committed documentation payload.\n").unwrap();
+        governed_ok(
+            &root,
+            &storage,
+            &[
+                "init",
+                "--force",
+                "--backend",
+                "local",
+                "--no-container-workspaces",
+            ],
+        );
+        // Init preserves product context; the fixture explicitly re-reviews its
+        // real repository command/source contract after generated surfaces exist.
+        let config = fs::read_to_string(root.join(CONFIG)).unwrap();
+        let mut config: toml::Value = toml::from_str(&config).unwrap();
+        fixture
+            .proof
+            .required_profile
+            .as_mut()
+            .unwrap()
+            .reviewed_sources_digest =
+            runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+                .unwrap()
+                .digest()
+                .unwrap();
+        config["proof"] = toml::Value::try_from(&fixture.proof).unwrap();
+        config["repo"]["base_branch"] = "main".into();
+        fs::write(root.join(CONFIG), toml::to_string_pretty(&config).unwrap()).unwrap();
+        governed_ok(&root, &storage, &["rpc", "--op", "specs.refresh"]);
+        git(&root, &["add", "-A"]);
+        git(
+            &root,
+            &[
+                "commit",
+                "-m",
+                "docs: accept governed consumer configuration",
+            ],
+        );
+        git(&root, &["push", "origin", "main"]);
+        git(
+            &root,
+            &[
+                "remote",
+                "set-url",
+                "origin",
+                "https://github.com/consumer/project.git",
+            ],
+        );
+        let task = governed_ok(
+            &root,
+            &storage,
+            &[
+                "todo",
+                "add",
+                "docs: document reviewed source proof",
+                "--format",
+                "json",
+            ],
+        );
+        let id = task["id"].as_str().unwrap();
+        assert!(
+            id.starts_with("docs_"),
+            "fixture must preserve docs applicability: {task}"
+        );
+        governed_ok(&root, &storage, &["todo", "claim", "--id", id]);
+        let branch = format!("agent/docs-bootstrap/{id}-first-proof");
+        let workspace = governed_ok(
+            &root,
+            &storage,
+            &["workspace", "ensure", "--branch", &branch],
+        );
+        let workspace = PathBuf::from(workspace["worktree_path"].as_str().unwrap());
+        governed_ok(
+            &workspace,
+            &storage,
+            &["infer", "orientation", "--task-id", id],
+        );
+        governed_ok(&workspace, &storage, &["govern", "plan", "approve"]);
+        fs::write(
+            workspace.join("payload.txt"),
+            if succeeds { "ready\n" } else { "invalid\n" },
+        )
+        .unwrap();
+        let intent = workspace.join(".decapod/managed/specs/INTENT.md");
+        let prose = fs::read_to_string(&intent).unwrap();
+        fs::write(intent, format!("{prose}\n## Reviewed documentation proof\n\nThe docs task validates both committed payload files through the required real Python commands. A failed assertion must prevent readiness and receipt issuance.\n")).unwrap();
+        fixture.options.root = workspace.clone();
+        let contract = fixture.proof.repository_contract.as_mut().unwrap();
+        for execution in contract.executions.values_mut() {
+            execution.environment.insert(
+                "FIXTURE_WORKTREE".into(),
+                workspace.to_string_lossy().into_owned(),
+            );
+        }
+        fixture.review_commands();
+        fixture
+            .proof
+            .required_profile
+            .as_mut()
+            .unwrap()
+            .reviewed_sources_digest =
+            runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+                .unwrap()
+                .digest()
+                .unwrap();
+        let mut config: toml::Value =
+            toml::from_str(&fs::read_to_string(workspace.join(CONFIG)).unwrap()).unwrap();
+        config["proof"] = toml::Value::try_from(&fixture.proof).unwrap();
+        fs::write(
+            workspace.join(CONFIG),
+            toml::to_string_pretty(&config).unwrap(),
+        )
+        .unwrap();
+        governed_ok(&workspace, &storage, &["rpc", "--op", "specs.refresh"]);
+        for name in ["ARCHITECTURE", "INTERFACES", "SECURITY"] {
+            governed_ok(
+                &workspace,
+                &storage,
+                &[
+                    "govern",
+                    "plan",
+                    "review-spec",
+                    "--path",
+                    &format!(".decapod/managed/specs/{name}.md"),
+                    "--disposition",
+                    "unchanged-with-reason",
+                    "--reason",
+                    "Documentation fixture retains product architecture, interfaces and security; reviewed command environment binds the actual managed workspace",
+                ],
+            );
+        }
+        git(&workspace, &["add", "-A"]);
+        governed_ok(
+            &workspace,
+            &storage,
+            &[
+                "govern",
+                "artifacts",
+                "checkpoint",
+                "--id",
+                "docs-first-proof",
+                "--summary",
+                "Fresh documentation source and real reviewed command contract",
+            ],
+        );
+        git(&workspace, &["add", governance_document::GOVERNANCE_PATH]);
+        git(
+            &workspace,
+            &["commit", "-m", "docs: describe first governed proof"],
+        );
+        governed_ok(
+            &workspace,
+            &storage,
+            &["workspace", "ensure", "--branch", &branch],
+        );
+        assert!(
+            governance_document::read_section(&workspace, "validation")
+                .unwrap()
+                .is_none()
+        );
+        let output = governed_cli(&workspace, &storage, &["validate", "--format", "json"]);
+        let result: serde_json::Value =
+            serde_json::from_slice(&output.stdout).unwrap_or_else(|error| {
+                panic!(
+                    "{error}: {} {}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr)
+                )
+            });
+        assert_eq!(
+            output.status.success(),
+            succeeds,
+            "{result}\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(result["publication_ready"], succeeds, "{result}");
+        let readiness = &result["readiness"];
+        let evidence = PathBuf::from(
+            readiness["evidence_path"]
+                .as_str()
+                .expect("real proof must have executed, not failed at prerequisites"),
+        );
+        let observations: SuiteEvidence =
+            serde_json::from_slice(&fs::read(evidence.join("observations.json")).unwrap()).unwrap();
+        assert_eq!(
+            observations.results.len(),
+            2,
+            "every reviewed command must execute"
+        );
+        assert!(
+            observations
+                .results
+                .iter()
+                .all(|result| matches!(result.observation, Observation::Executed { .. }))
+        );
+        assert_eq!(
+            evidence
+                .join("completion/native-readiness-receipt.json")
+                .exists(),
+            succeeds
+        );
+        assert_eq!(evidence.join("completion/verdict.json").exists(), succeeds);
+        assert_eq!(evidence.join("historical-proof.json").exists(), succeeds);
+        // A prerequisite receipt must never appear as a substitute for full proof.
+        assert!(
+            governance_document::read_section(&workspace, "validation")
+                .unwrap()
+                .is_none()
+        );
+        if succeeds {
+            assert_eq!(readiness["proof_ready"], true);
+            let rules: serde_json::Value =
+                serde_json::from_slice(&fs::read(evidence.join("terminal-rules.json")).unwrap())
+                    .unwrap();
+            assert_eq!(rules["overall_verdict"], "pass");
+            assert!(
+                !rules["results"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|rule| rule["rule_id"] == "decapod.evidence.proof_backed_completion")
+            );
+        }
+    }
+}

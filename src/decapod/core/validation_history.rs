@@ -246,7 +246,24 @@ impl CompletedReadinessEvidence {
         value.verify()?;
         Ok(value)
     }
-    fn verify(&self) -> Result<(), DecapodError> {
+    pub(crate) fn verify_current(
+        &self,
+        material: &MaterialIdentity,
+        governance_digest: &str,
+        trajectory_digest: &str,
+    ) -> Result<(), DecapodError> {
+        self.verify()?;
+        if &self.material != material
+            || self.governance_digest != governance_digest
+            || self.trajectory_digest != trajectory_digest
+        {
+            return Err(invalid(
+                "terminal proof is bound to stale source or governance",
+            ));
+        }
+        Ok(())
+    }
+    pub(crate) fn verify(&self) -> Result<(), DecapodError> {
         let local = self
             .expected_plan
             .checks
@@ -1229,6 +1246,67 @@ mod tests {
         record.proof.laya.binding.evidence_digest = digest(&record.proof.suite).unwrap();
         record.proof.laya.request_id = digest(&record.proof.laya.binding).unwrap();
         record.record_digest = record.calculated_digest().unwrap();
+    }
+
+    #[test]
+    fn terminal_proof_rejects_partial_forged_and_current_binding_mismatches() {
+        let original = record().proof;
+        assert!(
+            original
+                .verify_current(
+                    &original.material,
+                    &original.governance_digest,
+                    &original.trajectory_digest
+                )
+                .is_ok()
+        );
+        for field in ["source", "accepted_target", "governance", "trajectory"] {
+            let mut material = original.material.clone();
+            let mut governance = original.governance_digest.clone();
+            let mut trajectory = original.trajectory_digest.clone();
+            match field {
+                "source" => material.tree_digest = digest(&"different source").unwrap(),
+                "accepted_target" => material.accepted_base_revision = "c".repeat(40),
+                "governance" => governance = digest(&"different governance").unwrap(),
+                _ => trajectory = digest(&"different trajectory").unwrap(),
+            }
+            assert!(
+                original
+                    .verify_current(&material, &governance, &trajectory)
+                    .is_err(),
+                "{field}"
+            );
+        }
+        for defect in ["empty", "partial", "failed", "unknown", "forged_output"] {
+            let mut proof = original.clone();
+            match defect {
+                "empty" => proof.suite.results.clear(),
+                "partial" => {
+                    proof.suite.results.pop();
+                }
+                "failed" => {
+                    proof.suite.results[0].observation = evidence::Observation::Executed {
+                        execution_id: "failed".into(),
+                        conclusion: evidence::Conclusion::Failure,
+                        exit_code: Some(1),
+                        output_digest: digest(&"failure").unwrap(),
+                        artifact_digest: None,
+                    }
+                }
+                "unknown" => proof.schema = "unknown".into(),
+                _ => proof.suite.results[0].identity.head_revision = "d".repeat(40),
+            }
+            assert!(
+                proof
+                    .verify_current(
+                        &proof.material,
+                        &proof.governance_digest,
+                        &proof.trajectory_digest
+                    )
+                    .is_err(),
+                "{defect}"
+            );
+        }
     }
 
     #[test]

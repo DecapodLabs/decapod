@@ -436,12 +436,23 @@ pub struct RuleEvaluationContext {
     pub policy_fingerprint: String,
     /// Repository whose governed files the evaluators must read.
     pub repo_root: Option<std::path::PathBuf>,
-    /// Include publication-phase rules. Validation omits them.
+    /// Include terminal publication rules, after required proof execution.
     pub include_publication: bool,
     /// Governing identity evidence must be bound to, when freshness is required.
     pub governing_identity: Option<String>,
     /// Evidence name to the state identity it was bound to.
     pub evidence_identity: BTreeMap<String, String>,
+    /// Opaque current-invocation proof. Caller-supplied hashes cannot construct it.
+    pub terminal_evidence: Option<TerminalEvidence>,
+}
+
+/// Full proof is issued only by the live runtime, after complete-suite verification.
+/// Private fields prevent evidence names, marker strings or persisted receipts from
+/// impersonating an executed current invocation.
+#[derive(Debug, Clone)]
+pub struct TerminalEvidence {
+    proof: crate::core::validation_history::CompletedReadinessEvidence,
+    workunit: Option<crate::core::workunit::WorkUnitManifest>,
 }
 
 /// Rule registry for managing validation rules.
@@ -651,11 +662,11 @@ impl RuleRegistry {
                 ],
                 ..Default::default()
             },
-            evaluation_phase: EvaluationPhase::Validation,
+            evaluation_phase: EvaluationPhase::Publication,
             evaluator: "decapod.evidence.validator".to_string(),
             requirements: RuleRequirements {
                 required_evidence: vec![
-                    "validation_receipt".to_string(),
+                    "validation_proof".to_string(),
                     "trajectory_artifact".to_string(),
                 ],
                 required_evaluators: vec!["evidence_validator".to_string()],
@@ -680,7 +691,7 @@ impl RuleRegistry {
                 autonomous_remediation_permitted: true,
                 human_authorization_required: false,
                 evidence_for_revalidation: vec![
-                    "validation_receipt".to_string(),
+                    "validation_proof".to_string(),
                     "trajectory_artifact".to_string(),
                 ],
                 related_rules: vec![RuleId::new("decapod.evidence.proof_backed_completion")],
@@ -711,7 +722,7 @@ impl RuleRegistry {
                 ],
                 ..Default::default()
             },
-            evaluation_phase: EvaluationPhase::Validation,
+            evaluation_phase: EvaluationPhase::Publication,
             evaluator: "decapod.workunit".to_string(),
             requirements: RuleRequirements {
                 required_evidence: vec![
@@ -856,7 +867,7 @@ impl RuleRegistry {
             evaluator: "decapod.publication".to_string(),
             requirements: RuleRequirements {
                 required_evidence: vec![
-                    "validation_receipt".to_string(),
+                    "validation_proof".to_string(),
                     "candidate_head".to_string(),
                 ],
                 ..Default::default()
@@ -876,7 +887,7 @@ impl RuleRegistry {
                 ],
                 autonomous_remediation_permitted: true,
                 human_authorization_required: false,
-                evidence_for_revalidation: vec!["validation_receipt".to_string()],
+                evidence_for_revalidation: vec!["validation_proof".to_string()],
                 related_rules: vec![RuleId::new("decapod.evidence.proof_backed_completion")],
             },
             override_eligibility: OverrideEligibility::NonOverridable,
@@ -1379,6 +1390,16 @@ impl RuleRegistry {
                 {
                     return false;
                 }
+                // Ordinary tasks need full validation, but do not implicitly
+                // declare the separate optional workunit completion protocol.
+                if r.rule.evaluator == "decapod.workunit"
+                    && context
+                        .terminal_evidence
+                        .as_ref()
+                        .is_some_and(|proof| proof.workunit.is_none())
+                {
+                    return false;
+                }
                 r.rule.is_applicable(
                     &context.changed_paths,
                     context.task_type.as_deref(),
@@ -1653,6 +1674,14 @@ fn evaluate_workspace_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext
 
 /// Evaluate evidence rule using actual evidence validation.
 fn evaluate_evidence_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> RuleVerdict {
+    if rule.rule.evaluation_phase == EvaluationPhase::Publication
+        && context
+            .terminal_evidence
+            .as_ref()
+            .is_none_or(|proof| proof.proof.verify().is_err())
+    {
+        return RuleVerdict::Unverifiable;
+    }
     // Check required evidence exists
     let mut missing = Vec::new();
     for evidence in &rule.rule.requirements.required_evidence {
@@ -1666,7 +1695,10 @@ fn evaluate_evidence_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) 
     }
 
     // Check evidence freshness if max_age is set
-    if rule.rule.requirements.evidence_max_age_seconds > 0 {
+    // Runtime-owned proof was produced by this invocation. Source/governance
+    // bindings, rather than the mtime of an older authored trajectory, establish
+    // its freshness. Legacy file evidence retains its bounded-age check.
+    if context.terminal_evidence.is_none() && rule.rule.requirements.evidence_max_age_seconds > 0 {
         let Some(repo_root) = context.repo_root.as_deref() else {
             return RuleVerdict::Unverifiable;
         };
@@ -1746,52 +1778,159 @@ fn evidence_digest_ok(value: &str) -> bool {
 
 /// Evaluate workunit rule using actual workunit validation.
 fn evaluate_workunit_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext) -> RuleVerdict {
-    let Some(gates) = context.evidence_artifacts.get("proof_plan_gates") else {
+    let Some(terminal) = &context.terminal_evidence else {
         return RuleVerdict::Unverifiable;
     };
-    let Some(manifest) = context.evidence_artifacts.get("workunit_manifest") else {
+    let Some(manifest) = &terminal.workunit else {
         return RuleVerdict::Unverifiable;
     };
-    if !evidence_digest_ok(manifest) || !gates.starts_with("proven:") {
+    let Some(root) = context.repo_root.as_deref() else {
+        return RuleVerdict::Unverifiable;
+    };
+    if manifest.validation_epoch.as_ref() != Some(&context.validation_epoch)
+        || manifest.proof_results.iter().any(|result| {
+            manifest.proof_plan.contains(&result.gate)
+                && (result.validation_epoch.as_ref() != Some(&context.validation_epoch)
+                    || result.evaluator_epoch.as_deref()
+                        != Some(context.validation_epoch.epoch_id.as_str()))
+        })
+    {
+        return RuleVerdict::Stale;
+    }
+    if crate::core::workunit::validate_verified_manifest(manifest).is_err()
+        || crate::core::workunit::ensure_living_specs_bound_for_proof(root, manifest).is_err()
+        || crate::core::workunit::verify_capsule_policy_lineage_for_task(root, manifest).is_err()
+    {
         return RuleVerdict::Unverifiable;
     }
-    let proof = gates.trim_start_matches("proven:");
-    if !evidence_digest_ok(proof) {
-        return RuleVerdict::Unverifiable;
-    }
-    match context.governing_identity.as_deref() {
-        Some(governing) => match context
-            .evidence_identity
-            .get("proof_plan_gates")
-            .map(String::as_str)
-        {
-            Some(bound) if bound == governing => RuleVerdict::Pass,
-            Some(_) => RuleVerdict::Stale,
-            None => RuleVerdict::Unverifiable,
-        },
-        None => RuleVerdict::Unverifiable,
-    }
+    RuleVerdict::Pass
 }
 
 fn evaluate_publication_rule(context: &RuleEvaluationContext) -> RuleVerdict {
-    let receipt = context.evidence_artifacts.get("validation_receipt");
-    let head = context.evidence_artifacts.get("candidate_head");
-    let report = serde_json::json!({
-        "status": context.evidence_artifacts.get("validation_status").map(String::as_str).unwrap_or("unknown"),
-        "head": head,
-        "receipt_hash": receipt,
-        "rules_fingerprint": context.evidence_identity.get("validation_receipt"),
-        "current_rules_fingerprint": context.governing_identity,
-        "verifier": context.evidence_identity.get("verifier"),
-        "current_verifier": context.evidence_artifacts.get("current_verifier"),
-    });
-    match crate::core::governed_transition::project_report_publication(&report).judgment {
-        crate::core::governed_transition::ProofJudgment::Proven => RuleVerdict::Pass,
-        crate::core::governed_transition::ProofJudgment::Stale => RuleVerdict::Stale,
-        crate::core::governed_transition::ProofJudgment::Failed => RuleVerdict::Fail,
-        crate::core::governed_transition::ProofJudgment::NotProven
-        | crate::core::governed_transition::ProofJudgment::Unknown => RuleVerdict::Unverifiable,
+    match &context.terminal_evidence {
+        Some(terminal) if terminal.proof.verify().is_ok() => RuleVerdict::Pass,
+        _ => RuleVerdict::Unverifiable,
     }
+}
+
+fn load_terminal_workunit(
+    root: &Path,
+    task_id: &str,
+) -> Result<Option<crate::core::workunit::WorkUnitManifest>, error::DecapodError> {
+    // The durable journal distinguishes an undeclared protocol from a deleted
+    // or invalid projection. Lookup errors never become an exemption.
+    let status = crate::core::workunit::workunit_journal_status(root, task_id)?;
+    if status.projection_state == "absent" {
+        return Ok(None);
+    }
+    if !status.resumable {
+        return Err(error::DecapodError::ValidationError(format!(
+            "TERMINAL_WORKUNIT_UNPROVEN: {} ({})",
+            task_id,
+            status
+                .resume_blocker
+                .as_deref()
+                .unwrap_or(&status.projection_state)
+        )));
+    }
+    crate::core::workunit::load_workunit(root, task_id).map(Some)
+}
+
+/// The terminal production boundary runs before any readiness receipt/history
+/// is issued. It receives the runtime-owned result rather than importing a pass
+/// from a path, a legacy prerequisite receipt, or caller-authored digest strings.
+pub(crate) fn evaluate_terminal_rules(
+    root: &Path,
+    proof: &crate::core::validation_history::CompletedReadinessEvidence,
+    material: &crate::core::readiness_evidence::MaterialIdentity,
+    governance_digest: &str,
+    trajectory_digest: &str,
+) -> Result<RulesValidationReport, error::DecapodError> {
+    proof.verify_current(material, governance_digest, trajectory_digest)?;
+    // Re-read the canonical bytes at this terminal boundary, including the
+    // compact stored trajectory. Expanded read projections are not its digest.
+    let input = crate::core::validation_epoch::input::BoundedEpochInput::new(root)?;
+    use std::io::Read;
+    let mut bytes = Vec::new();
+    input
+        .open_regular(&root.join(".decapod/governance.json"))?
+        .take(8 * 1024 * 1024 + 1)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > 8 * 1024 * 1024 {
+        return Err(error::DecapodError::ValidationError(
+            "terminal governance exceeds byte bound".into(),
+        ));
+    }
+    let document: serde_json::Value = serde_json::from_slice(&bytes)
+        .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    let current_governance = format!("sha256:{:x}", Sha256::digest(&bytes));
+    let current_trajectory =
+        crate::core::readiness_evidence::digest(&document["sections"]["trajectory"])
+            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    proof.verify_current(material, &current_governance, &current_trajectory)?;
+    let governance = crate::core::governance_document::read_section(root, "trajectory")?;
+    let task_id = governance
+        .as_ref()
+        .and_then(|value| value.get("task_id"))
+        .and_then(|value| value.as_str());
+    let workunit = task_id
+        .map(|id| load_terminal_workunit(root, id))
+        .transpose()?
+        .flatten();
+    let mut artifacts = BTreeMap::from([
+        (
+            "validation_proof".into(),
+            crate::core::readiness_evidence::digest(proof)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        ),
+        ("trajectory_artifact".into(), trajectory_digest.into()),
+        ("candidate_head".into(), material.head_revision.clone()),
+    ]);
+    if let Some(manifest) = &workunit {
+        artifacts.insert(
+            "workunit_manifest".into(),
+            manifest
+                .canonical_hash_hex()
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        );
+        artifacts.insert(
+            "proof_plan_gates".into(),
+            crate::core::readiness_evidence::digest(&manifest.proof_results)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
+        );
+    }
+    let identities = artifacts
+        .keys()
+        .map(|key| (key.clone(), governance_digest.into()))
+        .collect();
+    let context = RuleEvaluationContext {
+        changed_paths: BTreeSet::from(["*".into()]),
+        task_type: None,
+        git_ref: None,
+        is_ci: std::env::var("GITHUB_ACTIONS").is_ok() || std::env::var("BUILDKITE").is_ok(),
+        evidence_artifacts: artifacts,
+        validation_epoch: crate::core::validation_epoch::active_validation_epoch_bounded(root)?,
+        policy_fingerprint: governance_digest.into(),
+        repo_root: Some(root.into()),
+        include_publication: true,
+        governing_identity: Some(governance_digest.into()),
+        evidence_identity: identities,
+        terminal_evidence: Some(TerminalEvidence {
+            proof: proof.clone(),
+            workunit,
+        }),
+    };
+    let mut registry = RuleRegistry::new();
+    registry.load_project_rules(root)?;
+    registry.load_task_rules(root)?;
+    Ok(RulesValidationReport::from_results(
+        registry
+            .get_applicable_rules(&context)
+            .iter()
+            .filter(|rule| rule.rule.evaluation_phase == EvaluationPhase::Publication)
+            .map(|rule| evaluate_rule(rule, &context))
+            .collect(),
+    ))
 }
 
 /// Evaluate all applicable rules.
@@ -1893,6 +2032,82 @@ mod tests {
             generated_specs_fingerprint: "test-specs-fingerprint".to_string(),
             material_hashes: BTreeMap::new(),
         }
+    }
+
+    #[test]
+    fn output_rules_do_not_gate_first_execution_and_markers_cannot_prove_completion() {
+        let mut registry = RuleRegistry::new();
+        let hash = format!("sha256:{}", "a".repeat(64));
+        let mut context = RuleEvaluationContext {
+            changed_paths: BTreeSet::from(["README.md".into()]),
+            task_type: Some("docs".into()),
+            git_ref: None,
+            is_ci: false,
+            evidence_artifacts: BTreeMap::from([
+                ("validation_proof".into(), hash.clone()),
+                ("validation_receipt".into(), hash.clone()),
+                ("trajectory_artifact".into(), hash.clone()),
+                ("candidate_head".into(), "b".repeat(40)),
+                ("workunit_manifest".into(), hash.clone()),
+                ("proof_plan_gates".into(), format!("proven:{hash}")),
+            ]),
+            validation_epoch: test_validation_epoch(),
+            policy_fingerprint: hash.clone(),
+            repo_root: None,
+            include_publication: false,
+            governing_identity: Some(hash.clone()),
+            evidence_identity: BTreeMap::new(),
+            terminal_evidence: None,
+        };
+        assert!(
+            registry
+                .get_applicable_rules(&context)
+                .iter()
+                .all(|rule| rule.rule.evaluation_phase != EvaluationPhase::Publication)
+        );
+        context.include_publication = true;
+        context.evidence_identity = context
+            .evidence_artifacts
+            .keys()
+            .map(|name| (name.clone(), hash.clone()))
+            .collect();
+        let terminal: Vec<_> = registry
+            .get_applicable_rules(&context)
+            .iter()
+            .filter(|rule| rule.rule.evaluation_phase == EvaluationPhase::Publication)
+            .map(|rule| evaluate_rule(rule, &context))
+            .collect();
+        assert_eq!(terminal.len(), 3);
+        assert!(
+            terminal
+                .iter()
+                .all(|result| result.verdict != RuleVerdict::Pass)
+        );
+    }
+
+    #[test]
+    fn declared_workunit_never_becomes_absent_when_its_projection_is_removed() {
+        let root = tempfile::tempdir().unwrap();
+        crate::core::todo::initialize_todo_db(&root.path().join(".decapod/data")).unwrap();
+        let id = "docs_declared";
+        assert!(load_terminal_workunit(root.path(), id).unwrap().is_none());
+        crate::core::workunit::init_workunit(root.path(), id, "intent:explicit").unwrap();
+        assert!(
+            load_terminal_workunit(root.path(), id).is_err(),
+            "unproven explicit gates remain required"
+        );
+        let path = crate::core::workunit::workunit_path(root.path(), id).unwrap();
+        std::fs::remove_file(&path).unwrap();
+        assert!(
+            load_terminal_workunit(root.path(), id).is_err(),
+            "durable declaration survives projection deletion"
+        );
+        std::fs::write(&path, "invalid manifest").unwrap();
+        assert!(load_terminal_workunit(root.path(), id).is_err());
+        // Failed durable reads are Unknown, never an absent optional contract.
+        let database = crate::core::events::canonical_db_path(&root.path().join(".decapod/data"));
+        std::fs::write(database, b"not a sqlite database").unwrap();
+        assert!(load_terminal_workunit(root.path(), id).is_err());
     }
 
     #[test]
