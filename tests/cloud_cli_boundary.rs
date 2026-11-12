@@ -78,6 +78,14 @@ impl CloudTodoStoreFactory for MockFactory {
             .push(identity.canonical_name.clone());
         Ok(Box::new(self.store.clone()))
     }
+
+    fn data_repository(
+        &self,
+        _config: &CloudRuntimeConfig,
+        _identity: &RepositoryIdentity,
+    ) -> Result<String, DecapodError> {
+        Ok("account:fixture/server-project".into())
+    }
 }
 
 struct FailingStore;
@@ -231,6 +239,13 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
     );
     assert_eq!(*factory.builds.lock().expect("builds lock"), 7);
     assert!(
+        store.tasks.lock().expect("tasks lock").iter().all(|task| {
+            task.repo_id == "account:fixture/server-project"
+                && task.repo_id != "DecapodLabs/decapod"
+        }),
+        "task parameters must use the returned data scope, independently from the local source identity"
+    );
+    assert!(
         factory
             .identities
             .lock()
@@ -284,4 +299,28 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
             .is_some_and(|identity| identity == "someone/decapod")
     );
     assert_eq!(*factory.builds.lock().expect("builds lock"), 8);
+    git(
+        project.path(),
+        &[
+            "remote",
+            "set-url",
+            "origin",
+            "git@gitlab.com:example/team/project.git",
+        ],
+    );
+    run_todo_cli_with_cloud_factory(
+        &decapod_store,
+        parse_todo(&["list", "--format", "json"]),
+        &factory,
+    )
+    .expect("GitLab source identity must reach the provider boundary");
+    assert!(
+        factory
+            .identities
+            .lock()
+            .expect("identities lock")
+            .last()
+            .is_some_and(|identity| identity == "gitlab:example%2Fteam/project")
+    );
+    assert_eq!(*factory.builds.lock().expect("builds lock"), 9);
 }

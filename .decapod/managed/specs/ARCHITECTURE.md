@@ -28,16 +28,40 @@ and pending records are bounded to 64 KiB, created privately, written atomically
 with Unix file/directory syncing, and never included in Git or storage context.
 A supplied session takes precedence over saved onboarding state.
 
-Ordinary cloud authority is the authenticated Supabase user UUID plus an active
-assigned paid seat and tenant/customer/project isolation. A linked code-host
-identity is verified server-side when needed; sign-in may also use Google.
+Ordinary cloud authority uses the authenticated Supabase user UUID, an active
+assigned workspace seat within backend capacity and tenant/customer/project
+isolation. Cloud data requires a managed verified GitHub/GitLab identity link;
+Google may supply the initial sign-in.
 Neither GitHub usernames, agent IDs nor local `[governance.rbac]` mappings grant
 runtime access or mirror code-host repository/merge permission tiers. Optional
 privileged governance controls stay separately scoped. An optional sign-in
 provider token remains private and is never inferred to be an SCM credential.
-The companion Propodus policy and portal changes own seat materialization and
-administration; these client fixtures establish request composition, not hosted
-OAuth, billing, tenant policy or Git permissions.
+`core::cloud_account` implements merged Propodus account protocol v1 through
+Dactyl's account channel with only the current managed user bearer. It writes a
+stable UUID request and display name privately before registration, retains the
+returned server project reference even when access is not yet active, and checks
+that exact reference through status on later calls. An explicit boolean
+`backend_authorized:true`, active state and returned project ID are required
+before readiness. Successful Auth completion alone only establishes a reusable
+session, which remains available for linking and account setup.
+
+The local source identity is a private registration/recovery key, not the data
+scope or an authorization grant. The existing native context's repository field
+and task parameters both carry the backend-issued project ID. GitHub local keys
+remain compatible; fixed gitlab.com HTTPS/SSH remotes use a distinct provider
+prefix and encode nested namespace separators within the one-slash Auth handoff
+key. Neither source host nor namespace determines app privileges.
+
+Managed add recovery persists the actual endpoint/project fingerprint in its
+existing private operation journal before dispatch. Supplied retries require
+the retained record, and mismatched or missing physical scope blocks dispatch
+without downgrading unknown outcomes. A machine reset cannot silently recreate
+an old operation in a newly registered project. No project ID or seat decision
+is added to repository config, and no authorization boolean is cached. Initial registration currently prepares the personal workspace; selecting
+or joining an existing team project through a portal remains separate integration.
+Workspace seat/project capacity stays backend-owned. Pricing and subscription
+layout belong to the separate billing implementation/discussion. These client fixtures establish composition,
+not hosted OAuth, billing, tenant policy or Git permissions.
 
 ## Storage-independent version dispatch
 
@@ -839,8 +863,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
+- Repository signal fingerprint: `b1d996f68f3b77e6d94ece4503af53d6fc360e66b2f09678e9c1a6bce9083f79`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

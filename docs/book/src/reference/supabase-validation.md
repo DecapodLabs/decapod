@@ -16,7 +16,7 @@ Decapod release. Development source proof is not proof of a registry handoff.
 No local-path override, database password or service-role key is required.
 
 This development candidate is pinned to Dactyl commit
-`a85607e8a8cbfce10cee1daca249efd58f8d58f3`. The accepted registry-only
+`cc9550cda2f5060bd0bd6a886eedc079d856d5e3`. The accepted registry-only
 `tests/release_dependency_policy.rs` policy remains unchanged and will reject
 this temporary source pin. Nix vendoring still requires a registry checksum or
 an explicitly reviewed Git output hash, and Bazel's committed extension lock
@@ -43,11 +43,38 @@ by this source-integration work.
    `/rest/v1/rpc/dactyl_batch_v1` with the public project key, API schema,
    contract version, user bearer and opaque repository context. No cloud failure
    creates or falls back to local replacement task state.
-5. Account registration/status and the org-admin portal establish tenant/project
-   setup and active assigned paid-seat readiness. Successful sign-in alone does
-   not prove paid-seat access. Those coordinated backend/init slices have their
-   own issues and service proofs; this client transport change does not claim
-   hosted OAuth, billing, deployment or full cloud-governance parity.
+5. Decapod sends bearer-only account registration/status through Dactyl. A
+   stable init UUID and display name are persisted privately before Register.
+   The backend supplies the project ID; later calls use Status for that same
+   ID. An explicit boolean `backend_authorized:true`, active state and returned
+   project reference are required before init reports cloud-ready or a normal
+   cloud task reaches RPC. HTTP 200 and Auth `status:complete` are insufficient.
+   Unlinked or unentitled responses retain the session for account setup.
+
+The current bounded client prepares the personal workspace when no binding
+exists. Choosing or joining an existing team project through the admin portal
+remains separate integration. Workspace `seat_limit` and `project_limit` are
+capacity. Pricing and subscription layout belong to the separate billing
+implementation/discussion. The
+native context's legacy repository field and task parameters carry the server
+project ID; repository config still contains only the logical backend selection.
+The private cache stores a routing reference and init UUID, not authorization.
+Supported GitHub and fixed gitlab.com source remotes supply local recovery keys;
+GitLab nested namespaces are preserved without colliding with GitHub keys. The
+backend-issued project remains independent of either source key. Managed task
+retries require retained operation metadata bound to that actual project before
+first dispatch. A printed pre-auth token alone cannot reconstruct its original
+project on another device or after private-state loss; changed/missing bindings
+fail before task submission and preserve any unknown outcome.
+
+Propodus PR99 is merged at
+`1563c19aa38790b7c6e2afa2530dd84b2774b609`. The private schema 009 and additive
+Auth bridge deployment completed in [the protected schema job](https://github.com/DecapodLabs/propodus/actions/runs/43128393279/job/130886948426).
+Anonymous route checks observed readiness 200, account-status GET 405 and POST
+without bearer 401. Those observations establish route presence and rejection
+of anonymous requests. Deployed Edge commit provenance, hosted managed login,
+identity linking, an authenticated active-seat data request, Stripe fulfillment
+and full human init remain unproven. This source change performs no deployment.
 
 Machine-only `DACTYL_CLOUD_ORIGIN` and `DACTYL_CLOUD_PUBLISHABLE_KEY` overrides
 support an explicitly selected private or test deployment. Their values are not
@@ -88,9 +115,9 @@ artifacts. Supported operational tasks and matching events use the selected
 backend. There is no SQLite-file upload or synchronization.
 
 Ordinary runtime authority is an authenticated Supabase user UUID with an active
-assigned paid seat in the correct tenant/customer/project. Linked SCM identities
-are verified server-side when needed; usernames, email and local RBAC mappings
-are not grants. Code-host repository/PR/merge permissions are not mirrored into
+assigned workspace seat within backend capacity in the correct tenant/project.
+Cloud data requires a linked GitHub/GitLab identity verified by the backend;
+usernames, email and local RBAC mappings are not grants. Code-host repository/PR/merge permissions are not mirrored into
 the ordinary app access hierarchy. Privileged governance controls stay separate.
 Cloud task custody also binds the authenticated principal independently from an
 agent's freely chosen label. Client fixtures establish composition and denial
@@ -174,7 +201,7 @@ The retained compatibility permission profile requires denial cases
 `cross_org`, `wrong_group`, `wrong_team`,
 `unauthorized_user`, `insufficient_access`, `revoked_access`, and
 `expired_session`. Each must be provisioned by the service's public permission
-contract. These legacy grant-policy cases do not define the normal paid-seat
+contract. These legacy grant-policy cases do not define the normal workspace-seat
 access hierarchy; the companion identity/seat proof must cover the new tenant
 and assigned-seat contract separately. Insufficient-access fixtures may read but must deny
 add/claim/release/done; other cases must also deny list/get/show. `expected_error` is a safe public error category.

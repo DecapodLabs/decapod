@@ -187,9 +187,10 @@ labels and `[governance.rbac]` remain cooperative custody/audit and exceptional
 local governance policy, not authenticated cloud grants.
 
 Cloud requests carry a Supabase user session through Dactyl. Ordinary access is
-bound to the canonical Supabase user UUID, active assigned paid seat, and
-server-enforced tenant/customer/project scope. Code-host identities, when linked,
-require independent server verification of provider/host/subject. Usernames,
+bound to the canonical Supabase user UUID, active assigned workspace seat, and
+server-enforced tenant/customer/project scope. Cloud data also requires a managed verified GitHub/GitLab link; Google may
+supply the initial sign-in. The backend independently verifies the linked
+provider/host/subject, without requiring its provider access token. Usernames,
 email, local roles, agent IDs and copied task labels cannot grant runtime access.
 SCM repository/PR/merge permissions are not the ordinary app access hierarchy;
 privileged governance controls retain their separate authorization contract.
@@ -208,8 +209,23 @@ Dactyl owns bounded profile/Auth/RPC transport and refuses redirects. Sign-in
 provider credentials can come from Google or another provider. They are stored
 separately and are never inferred to be GitHub/GitLab tokens or automatically
 forwarded as SCM credentials. Data credentials and Debug output omit them.
-Cloud task custody must bind the executing authenticated principal separately
-from its freely chosen collaboration label. Backend seat/tenant authorization,
+Account registration/status use only the managed user bearer through Dactyl.
+Private registration state holds the durable init UUID and backend-issued project
+reference, never an entitlement or authorization boolean. Readiness requires a
+fresh explicit backend authorization response and the returned project reference;
+HTTP 200 or Auth `status:complete` is insufficient. A changed project reference
+is rejected without replacing the saved binding. Setup guidance only renders an
+HTTPS backend-provided link with its public project query, without credentials,
+extra query keys or fragments. Workspace capacity stays backend-owned; this client
+creates no Stripe object and encodes no prices. Source remote resolution accepts
+only supported GitHub/gitlab.com forms, rejects ambiguous credentials/query/
+fragment forms without echoing secrets, and keeps provider-aware local keys apart.
+The private add journal binds actual endpoint/project scope before dispatch;
+supplied managed retries require retained records. Lost or changed bindings never
+cause an old uncertain operation to be submitted into a new project. Scope hashes
+are routing/recovery evidence, not access grants; every attempt still passes live
+managed identity, account and data authorization. Cloud task custody must bind the
+executing authenticated principal separately from its freely chosen label. Backend seat/tenant authorization,
 OAuth and billing require their own actual service proofs; local client fixtures
 only establish composition and failure behavior.
 
@@ -561,8 +577,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
+- Repository signal fingerprint: `b1d996f68f3b77e6d94ece4503af53d6fc360e66b2f09678e9c1a6bce9083f79`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

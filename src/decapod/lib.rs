@@ -254,18 +254,42 @@ fn ensure_project_cloud_session(
     let datastore = cloud.validate_datastore()?;
     core::backend::BackendRoute::cloud(identity.clone(), &cloud.api_url)?;
     let propodus = core::propodus::PropodusConfig::for_repository(&cloud, &identity);
-    core::propodus::ensure_cloud_session_for_datastore(&propodus, &identity, datastore)
-        .map_err(map_cloud_preflight_error)?;
+    let credential =
+        core::propodus::ensure_cloud_session_for_datastore(&propodus, &identity, datastore)
+            .map_err(map_cloud_preflight_error)?;
+    #[cfg(feature = "supabase-cloud")]
+    if datastore == core::backend::CloudDatastore::Supabase {
+        let config = DecapodProjectConfig::load(project_root)?;
+        let name = config
+            .repo
+            .product_name
+            .as_deref()
+            .unwrap_or(&identity.repository);
+        let project = core::cloud_account::prepare(&cloud.api_url, &identity, name, &credential)
+            .map_err(map_cloud_preflight_error)?;
+        return Ok(project.bind(&identity));
+    }
+    #[cfg(not(feature = "supabase-cloud"))]
+    let _ = credential;
     Ok(identity)
 }
 
 fn bootstrap_cloud_session(project_root: &Path) -> Result<(), error::DecapodError> {
     match ensure_project_cloud_session(project_root) {
         Ok(identity) => {
-            println!(
-                "Cloud setup ready for {}; the machine-local Propodus session is available.",
-                identity.canonical_name
-            );
+            if crate::cli::CloudRuntimeConfig::default().validate_datastore()?
+                == core::backend::CloudDatastore::Supabase
+            {
+                println!(
+                    "Cloud setup ready for {}; the backend authorized this project.",
+                    identity.canonical_name
+                );
+            } else {
+                println!(
+                    "Legacy cloud session available for {}; data requests still require backend authorization.",
+                    identity.canonical_name
+                );
+            }
             Ok(())
         }
         Err(error @ error::DecapodError::CloudAuth(_)) => {
@@ -321,7 +345,7 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
         CloudCommand::Status => match auth::load_selected_cloud_credential(None) {
             Ok(credential) => {
                 println!(
-                    "Propodus bearer configured ({:?}); issuer, audience, GitHub subject, repository, and seat claims are validated by Propodus",
+                    "Cloud sign-in session configured ({:?}); this does not establish project or workspace-seat readiness",
                     credential.source
                 );
                 Ok(())

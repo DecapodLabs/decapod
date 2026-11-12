@@ -66,6 +66,7 @@ struct RetryFactory {
     store: RetryStore,
     blocked: Mutex<Option<CloudAuthStatus>>,
     builds: AtomicUsize,
+    project: Mutex<Option<String>>,
 }
 impl RetryFactory {
     fn new() -> Self {
@@ -73,6 +74,7 @@ impl RetryFactory {
             store: RetryStore::default(),
             blocked: Mutex::new(None),
             builds: AtomicUsize::new(0),
+            project: Mutex::new(None),
         }
     }
 }
@@ -91,6 +93,19 @@ impl CloudTodoStoreFactory for RetryFactory {
             )));
         }
         Ok(Box::new(self.store.clone()))
+    }
+
+    fn data_repository(
+        &self,
+        _config: &CloudRuntimeConfig,
+        identity: &RepositoryIdentity,
+    ) -> Result<String, DecapodError> {
+        Ok(self
+            .project
+            .lock()
+            .unwrap()
+            .clone()
+            .unwrap_or_else(|| identity.canonical_name.clone()))
     }
 }
 fn add() -> TodoCommand {
@@ -115,6 +130,63 @@ fn diagnostic(error: DecapodError) -> CloudTodoDiagnostic {
         panic!("expected structured cloud outcome, got {error}");
     };
     diagnostic
+}
+
+#[test]
+fn changed_server_project_or_lost_machine_metadata_never_replays_an_unknown_add() {
+    let temp = tempfile::tempdir().unwrap();
+    let journal = CloudTodoJournal::at(temp.path().join("machine"));
+    let factory = RetryFactory::new();
+    *factory.project.lock().unwrap() = Some("account:one/project".into());
+    factory.store.lose_ack.store(true, Ordering::SeqCst);
+    let first = diagnostic(
+        run_cloud_todo_command_with_factory(
+            temp.path(),
+            &add(),
+            &CloudRuntimeConfig::default(),
+            &identity(),
+            &factory,
+            None,
+            Some(&journal),
+        )
+        .unwrap_err(),
+    );
+    assert_eq!(first.status, Outcome::OutcomeUnknown);
+    assert_eq!(factory.store.calls.load(Ordering::SeqCst), 1);
+    *factory.project.lock().unwrap() = Some("account:two/project".into());
+    let changed = diagnostic(
+        run_cloud_todo_command_with_factory(
+            temp.path(),
+            &add(),
+            &CloudRuntimeConfig::default(),
+            &identity(),
+            &factory,
+            Some(&first.operation_id),
+            Some(&journal),
+        )
+        .unwrap_err(),
+    );
+    assert_eq!(changed.status, Outcome::OutcomeUnknown);
+    assert_eq!(changed.attempt_status, Outcome::BlockedBeforeSubmit);
+    assert!(!changed.retryable);
+    assert_eq!(factory.store.calls.load(Ordering::SeqCst), 1);
+    assert_eq!(journal.list().unwrap()[0].status, Outcome::OutcomeUnknown);
+    let other = CloudTodoJournal::at(temp.path().join("new-machine"));
+    let builds = factory.builds.load(Ordering::SeqCst);
+    assert!(
+        run_cloud_todo_command_with_factory(
+            temp.path(),
+            &add(),
+            &CloudRuntimeConfig::default(),
+            &identity(),
+            &factory,
+            Some(&first.operation_id),
+            Some(&other),
+        )
+        .is_err()
+    );
+    assert_eq!(factory.builds.load(Ordering::SeqCst), builds);
+    assert_eq!(factory.store.calls.load(Ordering::SeqCst), 1);
 }
 
 #[test]

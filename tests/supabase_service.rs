@@ -90,6 +90,57 @@ fn project(fixture: &Fixture, repository: &str, token: &str) -> TempDir {
                 .success()
         );
     }
+    let service_hash = format!(
+        "{:x}",
+        Sha256::digest(fixture.endpoint.trim_end_matches('/'))
+    );
+    let session_dir = root.path().join("data/decapod/services").join(service_hash);
+    std::fs::create_dir_all(&session_dir).unwrap();
+    let session_path = session_dir.join("session_token.json");
+    let session = json!({
+        "access_token": token,
+        "refresh_token": "synthetic-disposable-refresh",
+        "session_id": format!("fixture-session-{}", Sha256::digest(token.as_bytes()).iter().map(|b| format!("{b:02x}")).collect::<String>()),
+        "expires_at": "2099-01-01T00:00:00Z"
+    });
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    use std::io::Write;
+    options
+        .open(&session_path)
+        .unwrap()
+        .write_all(&serde_json::to_vec(&session).unwrap())
+        .unwrap();
+    // The external fixture owner supplies an already registered server project
+    // reference. The real account-status call below still verifies its access;
+    // local fixture metadata is not authorization and never mints an entitlement.
+    let binding = json!({
+        "version": 1, "origin": fixture.endpoint, "repository": repository,
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "project_name": "Disposable service proof", "project_id": repository
+    });
+    let binding_path = session_dir.join(format!(
+        "project-{:x}.json",
+        Sha256::digest(repository.as_bytes())
+    ));
+    let mut binding_options = std::fs::OpenOptions::new();
+    binding_options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        binding_options.mode(0o600);
+    }
+    binding_options
+        .open(binding_path)
+        .unwrap()
+        .write_all(&serde_json::to_vec(&binding).unwrap())
+        .unwrap();
+
     let init = Command::new(
         std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).expect("resolve actual Decapod CLI"),
     )
@@ -117,32 +168,6 @@ fn project(fixture: &Fixture, repository: &str, token: &str) -> TempDir {
     assert!(!config.contains(&fixture.rpc_v1.publishable_key));
     assert!(!config.contains(token));
 
-    let service_hash = format!(
-        "{:x}",
-        Sha256::digest(fixture.endpoint.trim_end_matches('/'))
-    );
-    let session_dir = root.path().join("data/decapod/services").join(service_hash);
-    std::fs::create_dir_all(&session_dir).unwrap();
-    let session_path = session_dir.join("session_token.json");
-    let session = json!({
-        "access_token": token,
-        "refresh_token": "synthetic-disposable-refresh",
-        "session_id": format!("fixture-session-{}", Sha256::digest(token.as_bytes()).iter().map(|b| format!("{b:02x}")).collect::<String>()),
-        "expires_at": "2099-01-01T00:00:00Z"
-    });
-    let mut options = std::fs::OpenOptions::new();
-    options.write(true).create_new(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        options.mode(0o600);
-    }
-    use std::io::Write;
-    options
-        .open(&session_path)
-        .unwrap()
-        .write_all(&serde_json::to_vec(&session).unwrap())
-        .unwrap();
     root
 }
 

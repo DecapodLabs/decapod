@@ -389,7 +389,7 @@ dependencies = [
 [[package]]
 name = "dactyl-db"
 version = "0.11.1"
-source = "git+https://github.com/DecapodLabs/dactyl?rev=a85607e8a8cbfce10cee1daca249efd58f8d58f3#a85607e8a8cbfce10cee1daca249efd58f8d58f3"
+source = "git+https://github.com/DecapodLabs/dactyl?rev=cc9550cda2f5060bd0bd6a886eedc079d856d5e3#cc9550cda2f5060bd0bd6a886eedc079d856d5e3"
 dependencies = [
  "base64",
  "getrandom 0.2.17",

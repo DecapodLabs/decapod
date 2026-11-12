@@ -21,7 +21,7 @@ Private records are size-bounded, reject symlinks, and use atomic durable writes
 
 The native Dactyl route carries the user bearer independently from public
 publishable-key/profile metadata and canonical repository context. Server-side
-Supabase UUID, tenant/project isolation and active assigned paid seat establish
+Supabase UUID, tenant/project isolation and active assigned workspace seat establish
 ordinary runtime access. Local actor labels, GitHub usernames, task-assignee
 strings and `[governance.rbac.actor_roles]` cannot substitute for that bearer,
 select a cloud privilege or reproduce SCM repository/PR/merge roles. Separate
@@ -33,9 +33,26 @@ provider token atomically with the user session and retains it only across an
 explicit refresh; a fresh sign-in without one clears the previous credential.
 `load_provider_token` is separate from ordinary data credentials. A Google
 provider token is not an SCM linking credential and is never automatically sent
-through Dactyl's optional typed SCM account channel. Account setup, paid-seat
-readiness and the org-admin portal are coordinated companion work; successful
-managed login alone does not prove those requirements or hosted readiness.
+through Dactyl's optional typed SCM account channel.
+
+`core::cloud_account` uses Dactyl `AccountOperation::Register` with `version:1`,
+a durable init UUID `request_id` and `project_name`; it uses Status with the
+previously returned `project_id`. Both operations carry only the managed bearer,
+with no SCM credential. The server response must have a valid account ID,
+explicit boolean `backend_authorized:true`, active status and a matching returned
+project reference before readiness. Unlinked/unentitled responses preserve the
+human session and private registration UUID for safe resumption. Status cannot
+silently replace a saved project binding. The native context and task repo_id
+use that server reference, while repo config retains only the logical backend.
+`cloud status` reports local credential presence without claiming authorization.
+GitHub source recovery keys remain unchanged; fixed gitlab.com HTTPS/SSH origins
+also reach setup, with provider-aware keys preserving nested namespaces.
+Managed add records carry an optional `data_scope_fingerprint` bound before
+first dispatch. A supplied retry without its retained record, a different server
+project, or an already-dispatched unbound legacy record fails closed; unknown
+outcomes are preserved. The printed pre-auth token alone cannot authorize a
+cross-device scope reconstruction. The org-admin portal and hosted acceptance
+remain separately scoped.
 
 ## Version reporting
 
@@ -1080,8 +1097,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
+- Repository signal fingerprint: `b1d996f68f3b77e6d94ece4503af53d6fc360e66b2f09678e9c1a6bce9083f79`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

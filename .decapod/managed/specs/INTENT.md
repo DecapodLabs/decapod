@@ -27,11 +27,13 @@ same path with private, resumable browser/PKCE custody. A selected cloud failure
 must remain visible and must not initialize local replacement task state.
 
 Ordinary access belongs to a canonical Supabase user with an active assigned
-paid seat in the correct tenant/project. Linked SCM identity is verified by the
-backend when needed and does not mirror repository/PR/merge permissions. Local
+workspace seat in the correct tenant/project. Cloud data requires a linked GitHub/GitLab identity verified by the backend,
+without mirroring repository/PR/merge permissions. Local
 RBAC continues to govern separately scoped exceptional actions. Login alone is
-not paid-seat readiness: the companion account registration/status, admin portal
-and billing work must establish that policy independently. This connector slice
+not workspace-seat readiness: `core::cloud_account` requires the backend's
+explicit `backend_authorized:true`, active state and returned server project ID
+before init can report ready or the normal cloud todo route can dispatch data.
+The admin portal and entitlement adapter remain separate components. This connector slice
 adds no hosted OAuth/payment/deployment claim and preserves the explicit legacy
 Neon compatibility route. The source candidate temporarily pins the reviewed
 Dactyl Git commit for coordinated development. Normal adoption remains blocked
@@ -310,8 +312,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (223 files)
+- Repository signal fingerprint: `b1d996f68f3b77e6d94ece4503af53d6fc360e66b2f09678e9c1a6bce9083f79`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -281,6 +281,49 @@ mod enabled {
                     }
                 };
                 let headers = String::from_utf8_lossy(&bytes[..body_start]).to_lowercase();
+                let length = headers
+                    .lines()
+                    .find_map(|line| line.strip_prefix("content-length:"))
+                    .unwrap()
+                    .trim()
+                    .parse::<usize>()
+                    .unwrap();
+                while bytes.len() < body_start + length {
+                    let mut buffer = [0; 4096];
+                    let read = stream.read(&mut buffer).unwrap();
+                    assert_ne!(read, 0);
+                    bytes.extend_from_slice(&buffer[..read]);
+                }
+                let envelope: Value =
+                    serde_json::from_slice(&bytes[body_start..body_start + length]).unwrap();
+                if headers.starts_with("post /functions/v1/propodus-onboarding/account-register ")
+                    || headers.starts_with("post /functions/v1/propodus-onboarding/account-status ")
+                {
+                    assert!(headers.contains("authorization: bearer synthetic-bearer-secret"));
+                    assert!(!headers.contains("x-scm-"));
+                    assert!(!headers.contains("x-github-token"));
+                    assert_eq!(envelope["version"], 1);
+                    if headers
+                        .starts_with("post /functions/v1/propodus-onboarding/account-register ")
+                    {
+                        assert_eq!(envelope["request_id"].as_str().unwrap().len(), 36);
+                        assert!(envelope["project_name"].is_string());
+                    } else {
+                        assert_eq!(envelope["project_id"], "example/supabase-proof");
+                    }
+                    // Synthetic account authority for transport composition;
+                    // this is not a seat or managed-Auth policy proof.
+                    let body = if path == "/account" {
+                        response.take().unwrap()(&envelope)
+                    } else {
+                        json!({"version":1,"account_id":"00000000-0000-4000-8000-000000000001","status":"active","backend_authorized":true,"project_id":"example/supabase-proof"})
+                    }.to_string();
+                    write!(stream, "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
+                    if path == "/account" {
+                        break envelope;
+                    }
+                    continue;
+                }
                 let query_path = "/rest/v1/rpc/dactyl_query_v1";
                 let batch_path = "/rest/v1/rpc/dactyl_batch_v1";
                 let expected_path = if path == "/batch" {
@@ -299,21 +342,6 @@ mod enabled {
                 assert!(headers.contains("content-profile: dactyl_api"));
                 assert!(headers.contains("accept-profile: dactyl_api"));
                 assert!(headers.contains("dactyl-contract-version: 1"));
-                let length = headers
-                    .lines()
-                    .find_map(|line| line.strip_prefix("content-length:"))
-                    .unwrap()
-                    .trim()
-                    .parse::<usize>()
-                    .unwrap();
-                while bytes.len() < body_start + length {
-                    let mut buffer = [0; 4096];
-                    let read = stream.read(&mut buffer).unwrap();
-                    assert_ne!(read, 0);
-                    bytes.extend_from_slice(&buffer[..read]);
-                }
-                let envelope: Value =
-                    serde_json::from_slice(&bytes[body_start..body_start + length]).unwrap();
                 assert_eq!(envelope["request"]["version"], 1);
                 let request = envelope["request"].clone();
                 if is_reconciliation {
@@ -354,6 +382,58 @@ mod enabled {
             "tags": "cloud, supabase", "created_at": "2026-01-01T00:00:00Z",
             "updated_at": "2026-01-01T00:00:01Z", "version": version
         })
+    }
+
+    #[test]
+    fn actual_cloud_init_requires_backend_authorization_and_uses_its_project_reference() {
+        const PROJECT: &str =
+            "account:00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002";
+        for authorized in [false, true] {
+            let (origin, server) = request_server(
+                "/account",
+                200,
+                move |_| json!({"version":1,"account_id":"00000000-0000-4000-8000-000000000001","status":if authorized { "active" } else { "entitlement_required" },"backend_authorized":authorized,"project_id":PROJECT,"setup_url":null}),
+            );
+            let project = project();
+            let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+                .args(["init", "--backend", "cloud", "--proof", "--force"])
+                .current_dir(project.path())
+                .env("HOME", project.path())
+                .env("XDG_CONFIG_HOME", project.path().join("config"))
+                .env("XDG_DATA_HOME", project.path().join("data"))
+                .env("DECAPOD_HEADLESS", "1")
+                .env("DECAPOD_CLOUD_DATASTORE", "supabase")
+                .env("DACTYL_CLOUD_ORIGIN", origin)
+                .env(
+                    "DACTYL_CLOUD_PUBLISHABLE_KEY",
+                    "sb_publishable_test_fixture",
+                )
+                .env("DECAPOD_ACCESS_TOKEN", "synthetic-bearer-secret")
+                .env_remove("DECAPOD_CLOUD_AUTH_MODE")
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "scaffolding: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            assert_eq!(stdout.contains("Cloud setup ready"), authorized, "{stdout}");
+            if authorized {
+                assert!(stdout.contains(PROJECT));
+            } else {
+                assert!(stdout.contains("entitlement_required"));
+                assert!(stdout.contains("session is retained"));
+            }
+            let request = server.join().unwrap();
+            assert_eq!(request["version"], 1);
+            assert_eq!(request["request_id"].as_str().unwrap().len(), 36);
+            assert!(!stdout.contains("synthetic-bearer-secret"));
+            let config =
+                std::fs::read_to_string(project.path().join(".decapod/config.toml")).unwrap();
+            assert!(!config.contains(PROJECT));
+            assert!(!config.contains("synthetic-bearer-secret"));
+        }
     }
 
     fn task_rows(row: Value) -> Value {

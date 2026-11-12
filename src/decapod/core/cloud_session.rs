@@ -45,7 +45,9 @@ fn error(status: CloudAuthStatus, message: &str) -> PropodusClientError {
     ))
 }
 
-fn custody<T>(result: Result<T, impl std::fmt::Display>) -> Result<T, PropodusClientError> {
+pub(crate) fn custody<T>(
+    result: Result<T, impl std::fmt::Display>,
+) -> Result<T, PropodusClientError> {
     result.map_err(|_| {
         error(
             CloudAuthStatus::AuthRequired,
@@ -54,7 +56,9 @@ fn custody<T>(result: Result<T, impl std::fmt::Display>) -> Result<T, PropodusCl
     })
 }
 
-fn backend<T>(result: Result<T, dactyl_db::DactylError>) -> Result<T, PropodusClientError> {
+pub(crate) fn backend<T>(
+    result: Result<T, dactyl_db::DactylError>,
+) -> Result<T, PropodusClientError> {
     result.map_err(|e| {
         let status = match e.adapter_kind() {
             Some(
@@ -68,7 +72,7 @@ fn backend<T>(result: Result<T, dactyl_db::DactylError>) -> Result<T, PropodusCl
     })
 }
 
-fn save(path: &Path, value: &impl Serialize) -> Result<(), PropodusClientError> {
+pub(crate) fn save(path: &Path, value: &impl Serialize) -> Result<(), PropodusClientError> {
     if let Some(parent) = path.parent() {
         custody(crate::core::fs_permissions::ensure_private_dir(parent))?;
     }
@@ -83,7 +87,9 @@ fn save(path: &Path, value: &impl Serialize) -> Result<(), PropodusClientError> 
     custody(crate::core::atomic::write_atomic(path, &bytes))
 }
 
-fn read<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<Option<T>, PropodusClientError> {
+pub(crate) fn read<T: for<'de> Deserialize<'de>>(
+    path: &Path,
+) -> Result<Option<T>, PropodusClientError> {
     match fs::symlink_metadata(path) {
         Ok(_) => (),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
@@ -128,7 +134,7 @@ fn preserve_uncertain_pending(path: &Path) -> Result<(), PropodusClientError> {
     ))
 }
 
-fn lock(directory: &Path) -> Result<File, PropodusClientError> {
+pub(crate) fn lock(directory: &Path) -> Result<File, PropodusClientError> {
     custody(crate::core::fs_permissions::ensure_private_dir(directory))?;
     let mut options = OpenOptions::new();
     options.create(true).truncate(false).read(true).write(true);
@@ -391,6 +397,8 @@ fn ensure_with(
 }
 
 #[cfg(test)]
+// Dedicated bounded socket fixtures; production HTTP remains in Dactyl.
+#[allow(clippy::disallowed_types)]
 mod tests {
     use super::*;
     use serde_json::{Value, json};
@@ -497,6 +505,7 @@ mod tests {
                         }
                     }
                 };
+                stream.set_nonblocking(false).unwrap();
                 let request = receive(&mut stream);
                 assert_eq!(request.path, expected);
                 sender.send(request).unwrap();
@@ -593,6 +602,55 @@ mod tests {
             pending_path(directory, "owner/b")
         );
         assert_eq!(pending_path(directory, "owner/a").parent(), Some(directory));
+    }
+
+    #[test]
+    fn gitlab_source_key_reaches_auth_start_before_an_account_project_exists() {
+        let identity = crate::core::repo_identity::resolve_repository_identity_from_remote(
+            "git@gitlab.com:example/team/project.git",
+        )
+        .unwrap();
+        let fixture = fixture(|origin| {
+            vec![
+                (
+                    "/functions/v1/propodus-onboarding/start",
+                    serde_json::to_value(flow(origin, FIRST_FLOW)).unwrap(),
+                ),
+                (
+                    "/functions/v1/propodus-onboarding/status",
+                    json!({"status":"pending"}),
+                ),
+            ]
+        });
+        let root = tempfile::tempdir().unwrap();
+        let store = CloudSessionStore::for_service_in(root.path(), &fixture.origin).unwrap();
+        let connector = connector(&fixture.origin);
+        assert_status(
+            ensure_with(
+                &fixture.origin,
+                &identity.canonical_name,
+                &store,
+                false,
+                None,
+                || Ok(connector.clone()),
+            ),
+            CloudAuthStatus::OnboardingPending,
+        );
+        fixture.handle.join().unwrap();
+        let requests: Vec<_> = fixture.received.try_iter().collect();
+        let repository = requests[0].body["repository"].as_str().unwrap();
+        assert_eq!(repository, "gitlab:example%2Fteam/project");
+        // Merged Propodus1563c19: handler.js accepts a string <=512 bytes;
+        // schema009 start requires ^[^/[:space:]]+/[^/[:space:]]+$.
+        assert!(repository.len() <= 512);
+        let parts: Vec<_> = repository.split('/').collect();
+        assert_eq!(parts.len(), 2);
+        assert!(
+            parts
+                .iter()
+                .all(|part| !part.is_empty() && !part.chars().any(char::is_whitespace))
+        );
+        assert!(store.load_machine_session().unwrap().is_none());
     }
 
     #[test]
@@ -704,7 +762,7 @@ mod tests {
                 ),
                 (
                     "/functions/v1/propodus-onboarding/complete",
-                    json!({"status":"complete"}),
+                    json!({"status":"complete","backend_authorized":false,"account_status":"entitlement_required"}),
                 ),
             ]
         });

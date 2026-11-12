@@ -159,7 +159,7 @@ fn cloud_init_starts_machine_session_when_identity_and_mock_auth_are_available()
         String::from_utf8_lossy(&init_out.stderr)
     );
     assert!(
-        output.contains("Cloud setup ready"),
+        output.contains("Legacy cloud session available") && !output.contains("Cloud setup ready"),
         "unexpected init output: {output}"
     );
     assert!(!output.contains("decapod-test-mock-access"));

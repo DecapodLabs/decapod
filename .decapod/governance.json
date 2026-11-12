@@ -531,6 +531,26 @@
         "tests/unit/core/dactyl_tests.rs"
       ]
     },
+    "immutable-managed-retry-scope": {
+      "statement": "Managed add source binds actual endpoint/project scope in its retained operation record before dispatch and rejects changed/missing retry scope; source GitHub/GitLab keys never substitute for the server data project",
+      "falsifier": "Lost-ack/project-reset/new-machine regression submits the same operation into another project, downgrades its unknown outcome, or lets an unretained supplied token manufacture original physical scope",
+      "status": "open",
+      "proof_refs": [
+        "tests/unit/core/cloud_todo_operation_tests.rs",
+        "tests/unit/core/cloud_todo_retry_tests.rs",
+        "tests/unit/core/repo_identity_tests.rs"
+      ]
+    },
+    "live-account-project-readiness": {
+      "statement": "Source requires a strict live backend_authorized boolean true, active account state and returned server project reference before cloud-ready or normal Supabase todo dispatch; setup uses managed bearer only and retains the session when setup is pending",
+      "falsifier": "Offline account/init fixtures report ready for HTTP200/Auth complete alone, infer SCM credentials from a Google token, drop an unpaid/unlinked session, or route data/task parameters to the local Git key rather than the returned project",
+      "status": "open",
+      "proof_refs": [
+        "tests/cloud_cli_boundary.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/unit/core/cloud_account_tests.rs"
+      ]
+    },
     "managed-session-custody": {
       "statement": "Managed session source bounds no-follow private records, preserves unknown one-time outcomes, serializes refresh rotation and gives a supplied session precedence without replaying saved onboarding",
       "falsifier": "Session regressions expose credentials, follow a dangling link, replace prior state on oversize, replay a one-time request or rotate one service session concurrently twice",
@@ -558,6 +578,15 @@
       "proof_refs": [
         "/private/tmp/decapod-cloud-agent-init.json",
         "/private/tmp/decapod-session-finalization-manifest.json"
+      ]
+    },
+    {
+      "id": "bearer-account-project-readiness",
+      "summary": "Integrate merged Propodus99 account setup with durable init ID, strict backend authorization, backend-issued project routing, GitLab source support and physical-scope-bound managed retry recovery; preserve registry/controller blockers and unexecuted proof status",
+      "input_digest": "sha256:5934745c085ba04147693d05b1015f978d9000fb218f51fe1857f3c35309937d",
+      "proof_refs": [
+        "/private/tmp/decapod-cloud-account-agent-init.json",
+        "/private/tmp/decapod-cloud-account-source-review.json"
       ]
     }
   ],
@@ -593,33 +622,33 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Complete the AI to Decapod to Dactyl to Supabase flow with project local/cloud only. Integrate preserved parent source changes onto accepted v0.138.2 using hunks; preserve accepted journal, Laya and docs behavior. Dactyl owns connector discovery and Auth/native RPC transport. Decapod owns human browser/session custody and carries the user token. Ordinary runtime access uses Supabase UUID, assigned paid seat and tenant/project isolation; local RBAC is separate privileged policy. Reconcile Cargo and source against the final immutable reviewed Dactyl API; update authored specs, checkpoint every candidate, and run full independent decapod validate before creating the PR.",
+      "intent": "Complete Decapod local/cloud selection through Dactyl, private managed Auth custody and merged Propodus PR99 account setup. Require bearer-only Register/Status, durable stable init UUID and display name, backend-issued project ID plus explicit live backend_authorized true before readiness. Use returned server scope in native context and task parameters; preserve unpaid/unlinked sessions. Support fixed GitHub/GitLab source keys for local recovery only. Bind managed add journal to actual server-project scope before dispatch; reject changed or missing scope on supplied retries without downgrading unknown outcomes. Keep registry-only release policy, private credentials and all strict proof gates. No prices, payment objects, deployment, merge or publication.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "decapod validate with independently supported controller; existing0.137.2 contract unsupported"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled onto accepted v0.138.2 preserving new task-journal, Laya and docs sections. Describes AI/system Decapod boundary, Dactyl connector/Auth/native RPC, private session custody and separate ordinary seat/tenant authorization. Development Git pin is not registry release or hosted proof.",
-          "reviewed_code_fingerprint": "f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770",
-          "spec_material_hash": "59b7c9dc22177204224c61b820a0624f7c89ed2e90718cc6739af2ff75677d26"
+          "reason": "Reviewed implemented bearer-only managed account setup, durable init request and server project binding, active backend authorization gate, source/data scope separation, GitLab one-slash Auth compatibility and immutable managed retry scope. Preserve accepted journal/Laya/docs architecture and separate registry/controller/hosted-E2E limits.",
+          "reviewed_code_fingerprint": "b1d996f68f3b77e6d94ece4503af53d6fc360e66b2f09678e9c1a6bce9083f79",
+          "spec_material_hash": "abd2750df96d375bb437fa639d215d466421772430310ca672ba76ec6c425028"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed actual default-origin, profile discovery, bearer/context placement, private managed-session/provider-token custody and preserved explicit Neon compatibility. Project selection is local/cloud; companion account/paid-seat readiness remains separate. Full exact-candidate proof is pending.",
-          "reviewed_code_fingerprint": "f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770",
-          "spec_material_hash": "a678bedb8be34ef39cb205784d965be1c7676197780f46f112038f56aa999411"
+          "reason": "Reviewed Register/Status payloads and strict response readiness, private project references, task/context data scope, provider-aware recovery keys, retained operation record and data_scope_fingerprint behavior. CLI init and data fixture source covers false-ready and replay hazards; no executed source proof is asserted.",
+          "reviewed_code_fingerprint": "b1d996f68f3b77e6d94ece4503af53d6fc360e66b2f09678e9c1a6bce9083f79",
+          "spec_material_hash": "57171500acd0e37bda3dc8f0e11b3069f7d39c5e50a46c39361554f9c2fd4657"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed bounded no-follow private reads, private atomic durable writes, supplied-token precedence, one-time request no-replay, shared-service refresh lock and sign-in token versus typed SCM separation. Existing privileged RBAC, registry dependency checks and complete validation contract remain unchanged.",
-          "reviewed_code_fingerprint": "f41963840d223a56d576be9801ecdb9728ecd336f68924a34a31aaef6af69770",
-          "spec_material_hash": "9026c99daa134605b88b0224d971896e36920d6cef3304f3ada14042eb77cfb2"
+          "reason": "Reviewed managed bearer only, Google/provider token exclusion from SCM, preserved private session, bounded no-follow project records, immutable physical retry scope, secret-redacted origin errors and HTTPS public setup links. Schema deployment/anonymous route observations do not establish hosted authenticated login/seat/init or pricing behavior.",
+          "reviewed_code_fingerprint": "b1d996f68f3b77e6d94ece4503af53d6fc360e66b2f09678e9c1a6bce9083f79",
+          "spec_material_hash": "ad5d7d1220fceaa472a81ddce092371f1ff3474d704c8cbb0e5e5f97b7dd231f"
         }
       ],
       "state": "APPROVED",
@@ -632,7 +661,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794441315Z"
+      "updated_at": "1794446768Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -640,10 +669,22 @@
         "Existing delegated task and actor preserved; no task-type workaround for issue1629",
         "No builds/tests, commits, publication, controller updates, dependency pin changes or parent governance edits",
         "No manual builds/tests, controller install/update, fabricated proof, merge/release/deploy",
-        "Source hunks preserve accepted c5de35a task-journal, Laya and documentation; unchanged registry-only/deny/Nix/Bazel checks remain authoritative"
+        "Source hunks preserve accepted c5de35a task-journal, Laya and documentation; unchanged registry-only/deny/Nix/Bazel checks remain authoritative",
+        "Source review is read-only semantic evidence, not executed compile/test proof. Last actual unsupported report applies only to82fd18f0; new source has not been validated. No same-controller retry, manual build, policy bypass or PR."
       ],
-      "artifact_hash": "sha256:33aad912749b65766653dcadf1dc5de3379a83232bbc02701f7d62d523d2b142",
+      "artifact_hash": "sha256:bfc3f68ab73f1d83c08af403313d47acafeedf27e1592470911377beca663975",
+      "blockers": [
+        "Existing exact controller report remains CONTROLLER_CONTRACT_UNSUPPORTED; no same-controller retry or manual build can resolve it"
+      ],
       "checks": [
+        {
+          "name": "account_source_formatting",
+          "status": "passed"
+        },
+        {
+          "name": "account_source_review",
+          "status": "passed"
+        },
         {
           "name": "builds_tests",
           "status": "unavailable"
@@ -666,7 +707,7 @@
         }
       ],
       "completion_claim": "Source review patch is ready; runtime and full readiness remain unproven pending parent validation",
-      "current_phase": "exact-candidate-checkpoint",
+      "current_phase": "reviewed-account-source",
       "custody": {
         "events": [
           {
@@ -701,10 +742,31 @@
             "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M76ESS9PZYKYZNS31XW9WGRX",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M76ESS9PZYKYZNS31XW9WGRX",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M76ESS9PZYKYZNS31XW9WGRX",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ESS9PZYKYZNS31XW9WGRX": {
@@ -805,29 +867,140 @@
                 "validation_findings": [
                   "Final root handoff resolves development source pin to pushed Dactyl a85607e8; upstream full proof is still running and registry connector release is not published"
                 ]
+              },
+              {
+                "action": "account-contract-integration",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "<external-path>",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/todo.rs",
+                  "https://github.com/DecapodLabs/propodus/blob/1563c19aa38790b7c6e2afa2530dd84b2774b609/docs/cloud-accounts.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".config/deny.toml",
+                  ".decapod/managed/specs",
+                  "Cargo.lock",
+                  "Cargo.toml",
+                  "docs",
+                  "docs/book/src/reference/supabase-validation.md",
+                  "src/decapod",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "tests"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Merged account backend is not deployed; all new client setup evidence is offline fixture source until independent supported proof executes"
+                ]
+              },
+              {
+                "action": "custody-renewal",
+                "command": "workspace status and todo get; same actor and task retained; expired lease inspected before renewal and workspace ensure",
+                "custody_event_id": "event:8",
+                "observations": [],
+                "proof_refs": [],
+                "scope": [
+                  ".config/deny.toml",
+                  ".decapod/managed/specs",
+                  "Cargo.lock",
+                  "Cargo.toml",
+                  "docs",
+                  "docs/book/src/reference/supabase-validation.md",
+                  "src/decapod",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_account.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/lib.rs",
+                  "tests"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Extended source review crossed the30-minute lease boundary; first governance update was refused as AUTHORING_CUSTODY_STALE before mutation. Current ownership and checkout were inspected, same task claim renewed and workspace rebound; no prior admission proof was fabricated."
+                ]
+              },
+              {
+                "action": "reviewed-account-source",
+                "command": "cargo update -p dactyl-db at exact cc9550cda2f5060bd0bd6a886eedc079d856d5e3",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "src/decapod/core/cloud_account.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/cloud_todo_operation.rs",
+                  "src/decapod/core/repo_identity.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/lib.rs",
+                  "tests/unit/core/cloud_account_tests.rs",
+                  "tests/unit/core/cloud_todo_operation_tests.rs",
+                  "tests/unit/core/cloud_todo_retry_tests.rs",
+                  "tests/unit/core/repo_identity_tests.rs",
+                  "tests/cloud_supabase_boundary.rs",
+                  "tests/cloud_cli_boundary.rs",
+                  "/private/tmp/decapod-cloud-account-source-review.json",
+                  "/private/tmp/decapod-cloud-account-agent-init.json",
+                  "/private/tmp/propodus-schema-009-hosted-proof.json"
+                ],
+                "proof_refs": [
+                  "account_source_formatting",
+                  "account_source_review"
+                ],
+                "scope": [
+                  ".config/deny.toml",
+                  ".decapod/managed/specs",
+                  "Cargo.lock",
+                  "Cargo.toml",
+                  "docs",
+                  "docs/book/src/reference/supabase-validation.md",
+                  "src/decapod",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_account.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/lib.rs",
+                  "tests"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Current authoritative deployment handoff resolves earlier undeployed-schema uncertainty: schema009/Auth bridge deployed; Edge commit and hosted authenticated account/seat/login/full init remain unproven. cc9550c development source pin still needs normal published registry release."
+                ]
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "cargo fmt --all",
         "cargo fmt --all -- --check",
+        "cargo update -p dactyl-db at exact cc9550cda2f5060bd0bd6a886eedc079d856d5e3",
         "cargo update -p dactyl-db; exact a85607e8a8cbfce10cee1daca249efd58f8d58f3",
         "git apply --check /private/tmp/decapod-session-finalization.patch in parent worktree",
         "git diff --check",
-        "rustfmt --edition 2024 delegated source paths"
+        "rustfmt --edition 2024 delegated source paths",
+        "workspace status and todo get; same actor and task retained; expired lease inspected before renewal and workspace ensure"
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/decapod-cloud-account-agent-init.json",
+        "/private/tmp/decapod-cloud-account-source-review.json",
         "/private/tmp/decapod-cloud-agent-init.json",
-        "/private/tmp/decapod-session-finalization-manifest.json"
+        "/private/tmp/decapod-session-finalization-manifest.json",
+        "/private/tmp/propodus-schema-009-hosted-proof.json",
+        "https://github.com/DecapodLabs/propodus/blob/1563c19aa38790b7c6e2afa2530dd84b2774b609/docs/cloud-accounts.md"
       ],
       "inspected_files": [
         ".config/build/decapod.MODULE.bazel",
         ".config/deny.toml",
+        "<external-path>",
         "flake.nix",
         "src/decapod/core/auth.rs",
         "src/decapod/core/cloud_session.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
         "tests/release_dependency_policy.rs"
       ],
       "intent_id": "intent:change_01M76ESS6K2ZNFGQ509DWGR8X4",
@@ -842,15 +1015,28 @@
         "docs/book/src/reference/supabase-validation.md",
         "src/decapod/cli.rs",
         "src/decapod/core/auth.rs",
+        "src/decapod/core/cloud_account.rs",
         "src/decapod/core/cloud_session.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
         "src/decapod/core/dactyl.rs",
         "src/decapod/core/propodus.rs",
-        "tests/unit/core/auth_tests.rs"
+        "src/decapod/core/repo_identity.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
+        "tests/cloud_cli_boundary.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/unit/core/auth_tests.rs",
+        "tests/unit/core/cloud_account_tests.rs",
+        "tests/unit/core/cloud_todo_operation_tests.rs",
+        "tests/unit/core/cloud_todo_retry_tests.rs",
+        "tests/unit/core/repo_identity_tests.rs"
       ],
       "next_transitions": [
         "Apply source hunks to accepted c5de35a, reconcile specs, then checkpoint final dependency candidate and measure full validation",
         "Parent integrates applicable patch, checkpoints complete candidate and runs decapod validate",
+        "Record revised account/recovery scope, refresh source-bound specs and checkpoint current candidate; no unsupported-controller retry",
         "Refine plan and declare falsifiable checks",
+        "Stage current source, checkpoint and commit, push authorized workbranch, preserve exact earlier controller blocker without rebinding it to new source",
         "Stage material, checkpoint, commit candidate, ensure binding, then plain full decapod validate with independent installed0.137.2"
       ],
       "repo_scope": [
@@ -862,8 +1048,11 @@
         "docs/book/src/reference/supabase-validation.md",
         "src/decapod",
         "src/decapod/core/auth.rs",
+        "src/decapod/core/cloud_account.rs",
         "src/decapod/core/cloud_session.rs",
         "src/decapod/core/dactyl.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
         "tests"
       ],
       "run_id": "branch_01M76ESS9PZYKYZNS31XW9WGRX",
@@ -872,8 +1061,11 @@
       "task_id": "cicd_01m76ertkgpwa781",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Current authoritative deployment handoff resolves earlier undeployed-schema uncertainty: schema009/Auth bridge deployed; Edge commit and hosted authenticated account/seat/login/full init remain unproven. cc9550c development source pin still needs normal published registry release.",
+        "Extended source review crossed the30-minute lease boundary; first governance update was refused as AUTHORING_CUSTODY_STALE before mutation. Current ownership and checkout were inspected, same task claim renewed and workspace rebound; no prior admission proof was fabricated.",
         "Final Dactyl Git pin is pending root validation/publication handoff",
         "Final root handoff resolves development source pin to pushed Dactyl a85607e8; upstream full proof is still running and registry connector release is not published",
+        "Merged account backend is not deployed; all new client setup evidence is offline fixture source until independent supported proof executes",
         "Parent retains exact dependency and controller publication authority; coordinated account/backend policy proofs remain separate"
       ]
     }
