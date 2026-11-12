@@ -17,6 +17,10 @@ pub enum CloudAuthStatus {
     AuthRequired,
     Missing,
     OnboardingPending,
+    /// The service requires account action; its reason is not inferred locally.
+    ActionRequired,
+    /// A one-time request has an uncertain outcome and cannot be replayed.
+    RestartRequired,
     Expired,
     RefreshFailed,
     Unauthorized,

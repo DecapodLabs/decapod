@@ -19,8 +19,8 @@ use validation_scope::ValidationScope;
 use cli::*;
 
 use core::{
-    auth, cloud_backend, db, docs, docs_cli, error, flight_recorder, migration, obligation, proof,
-    repomap, scaffold, state, state_commit,
+    db, docs, docs_cli, error, flight_recorder, migration, obligation, proof, repomap, scaffold,
+    state, state_commit,
     store::{Store, StoreKind, find_decapod_project_root, find_governance_root},
     todo, trace, validate, workspace,
 };
@@ -205,118 +205,25 @@ fn write_project_config(
     Ok(())
 }
 
-fn record_cloud_init_registration(
-    target_dir: &Path,
-    config: &DecapodProjectConfig,
-    dry_run: bool,
-) -> Result<(), error::DecapodError> {
-    if !config.repo.effective_backend().is_cloud() {
-        return Ok(());
-    }
-
-    let cloud = crate::cli::CloudRuntimeConfig::default();
-    let registration = cloud_backend::CloudInitRegistration::for_init(
-        &cloud.provider,
-        &cloud.api_url,
-        config.repo.cloud_repository.as_deref().unwrap_or_default(),
-        target_dir,
-    );
-    if let Some(path) =
-        cloud_backend::write_mock_init_registration(target_dir, &registration, dry_run)?
-    {
-        println!(
-            "Cloud: recorded mock init registration payload at {}",
-            path.display()
-        );
-    }
-    Ok(())
-}
-
-fn prepare_cloud_roster(
-    target: &Path,
-    repo: &mut RepoContext,
-    init: &InitWithCli,
-    interactive: bool,
-) -> Result<(), error::DecapodError> {
-    if !init.backend.is_cloud() {
-        return Ok(());
-    }
-    repo.set_backend(init.backend);
-    let remote = core::repo_identity::resolve_repository_identity(target).ok();
-    let default_repo = init
-        .cloud_repository
-        .clone()
-        .or_else(|| remote.as_ref().map(|r| r.canonical_name.clone()))
-        .or_else(|| repo.cloud_repository.clone())
-        .unwrap_or_default();
-    let repository = if interactive {
-        prompt_text_field(
-            "Cloud repository",
-            "GitHub owner/repository; your admin approves paid access.",
-            &default_repo,
-        )?
-    } else {
-        default_repo
-    };
-    if let Some(remote) = remote
-        && !repository.eq_ignore_ascii_case(&remote.canonical_name)
-    {
-        return Err(error::DecapodError::ValidationError(
-            "Cloud purchase repository must match the GitHub origin remote.".to_string(),
-        ));
-    }
-    let default_users = if init.github_users.is_empty() {
-        repo.cloud_github_users.join(",")
-    } else {
-        init.github_users.join(",")
-    };
-    let users = if interactive {
-        prompt_text_field(
-            "GitHub users",
-            "Comma-separated named seats, USD15 per person monthly. Config does not grant access.",
-            &default_users,
-        )?
-    } else {
-        default_users
-    };
-    let users = cloud_backend::validate_cloud_roster(&repository, &users)?;
-    repo.cloud_repository = Some(repository);
-    repo.cloud_github_users = users;
-    Ok(())
-}
-
-fn map_cloud_preflight_error(error: core::propodus::PropodusClientError) -> error::DecapodError {
-    match error {
-        core::propodus::PropodusClientError::Authentication(diagnostic) => {
-            error::DecapodError::CloudAuth(diagnostic)
-        }
-        other => error::DecapodError::SessionError(other.to_string()),
-    }
-}
-
 fn ensure_project_cloud_session(
     project_root: &Path,
 ) -> Result<core::repo_identity::RepositoryIdentity, error::DecapodError> {
     let selection = core::backend::BackendSelection::from_project(project_root)?;
     let identity = selection.repository_identity().cloned().ok_or_else(|| {
         error::DecapodError::ValidationError(
-            "cloud session setup did not resolve a repository identity".to_string(),
+            "Cloud session setup requires a repository identity".into(),
         )
     })?;
-    let cloud = crate::cli::CloudRuntimeConfig::default();
-    let datastore = cloud.validate_datastore()?;
-    core::backend::BackendRoute::cloud(identity.clone(), &cloud.api_url)?;
-    let propodus = core::propodus::PropodusConfig::for_repository(&cloud, &identity);
-    core::propodus::ensure_cloud_session_for_datastore(&propodus, &identity, datastore)
-        .map_err(map_cloud_preflight_error)?;
+    core::cloud_client::connect(project_root, &identity, false, true)?;
     Ok(identity)
 }
 
-fn bootstrap_cloud_session(project_root: &Path) -> Result<(), error::DecapodError> {
-    match ensure_project_cloud_session(project_root) {
+fn bootstrap_cloud_session(project_root: &Path, restart: bool) -> Result<(), error::DecapodError> {
+    let identity = core::repo_identity::resolve_repository_identity(project_root)?;
+    match core::cloud_client::connect(project_root, &identity, restart, true).map(|_| identity) {
         Ok(identity) => {
             println!(
-                "Cloud setup ready for {}; the machine-local Propodus session is available.",
+                "Cloud setup ready for {}; the service confirmed repository read access. Credentials remain machine-private.",
                 identity.canonical_name
             );
             Ok(())
@@ -360,7 +267,7 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
             // actionable origin error rather than a misleading config error.
             core::repo_identity::resolve_repository_identity(&current_dir)?;
             let project_root = find_decapod_project_root(&current_dir)?;
-            match bootstrap_cloud_session(&project_root) {
+            match bootstrap_cloud_session(&project_root, false) {
                 Ok(()) => Ok(()),
                 Err(error @ error::DecapodError::CloudAuth(_)) => {
                     if let error::DecapodError::CloudAuth(diagnostic) = &error {
@@ -371,20 +278,16 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 Err(error) => Err(error),
             }
         }
-        CloudCommand::Status => match auth::load_selected_cloud_credential(None) {
-            Ok(credential) => {
-                println!(
-                    "Propodus bearer configured ({:?}); issuer, audience, GitHub subject, repository, and seat claims are validated by Propodus",
-                    credential.source
-                );
-                Ok(())
-            }
-            Err(error::DecapodError::SessionError(message)) => {
-                println!("cloud credential unavailable: {message}");
-                Ok(())
-            }
-            Err(error) => Err(error),
-        },
+        CloudCommand::Status => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let status = core::cloud_client::status(&project_root, &identity)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&status).map_err(std::io::Error::other)?
+            );
+            Ok(())
+        }
     }
 }
 
@@ -424,8 +327,6 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
         ctx.detected_surfaces = existing_cfg.repo.detected_surfaces.clone();
         ctx.capabilities = existing_cfg.repo.capabilities.clone();
         ctx.migration_validation = existing_cfg.repo.migration_validation.clone();
-        ctx.cloud_repository = existing_cfg.repo.cloud_repository.clone();
-        ctx.cloud_github_users = existing_cfg.repo.cloud_github_users.clone();
     }
 
     let authored_product_name = ctx.product_name.is_some();
@@ -1697,8 +1598,7 @@ fn init_with_from_config(
         existing_laya: config.laya.clone(),
         laya_decisions: Some(config.laya.mode == core::laya_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
-        cloud_repository: config.repo.cloud_repository.clone(),
-        github_users: config.repo.cloud_github_users.clone(),
+        restart_cloud_signin: false,
         backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
         } else {
@@ -2118,8 +2018,7 @@ fn enrich_repo_context_interactive(
         println!();
         println!("Decapod Cloud is experimental.");
         println!("It syncs governed operational state for this repo.");
-        println!("Each named GitHub user costs USD15 per month for this repository.");
-        println!("A repository owner/admin approves purchases through Stripe.");
+        println!("Local state remains canonical unless cloud sync is enabled.");
         println!();
         if prompt_yes_no("Continue?", false)? {
             crate::cli::BackendType::Cloud
@@ -2289,7 +2188,7 @@ fn run_init_apply(
         },
         specs_seed: Some(scaffold::SpecsSeed {
             product_name: repo_ctx.product_name.clone(),
-            product_summary: cloud_backend::cloud_generation_summary(repo_ctx),
+            product_summary: repo_ctx.product_summary.clone(),
             architecture_direction: repo_ctx.architecture_direction.clone(),
             product_type: repo_ctx.product_type.clone(),
             primary_languages: repo_ctx.primary_languages.clone(),
@@ -2577,8 +2476,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
                             backend: init_group.backend,
-                            cloud_repository: init_group.cloud_repository.clone(),
-                            github_users: init_group.github_users.clone(),
+                            restart_cloud_signin: init_group.restart_cloud_signin,
                             git: init_group.git,
                             no_git: init_group.no_git,
                         }
@@ -2674,12 +2572,6 @@ pub fn run() -> Result<(), error::DecapodError> {
             {
                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
             }
-            prepare_cloud_roster(
-                &init_target,
-                &mut repo_ctx,
-                &init_with,
-                base_init_invocation && io::stdin().is_terminal() && !init_with.proof,
-            )?;
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
             let mut config = config_from_init_with(&init_with, repo_ctx);
             if let Some(existing) = existing_config.as_ref() {
@@ -2711,7 +2603,6 @@ pub fn run() -> Result<(), error::DecapodError> {
                     &config.repo.capabilities,
                 )?;
             }
-            record_cloud_init_registration(&target_dir, &config, init_with.dry_run)?;
             seed_init_generated_state(&target_dir, init_with.dry_run)?;
             let reconciliation = core::init_reconciliation::inspect(
                 &target_dir,
@@ -2719,20 +2610,20 @@ pub fn run() -> Result<(), error::DecapodError> {
                 config.repo.product_name.as_deref(),
             );
             print_init_reconciliation(&reconciliation);
-            if config.repo.effective_backend().is_cloud() {
-                let link = cloud_backend::cloud_billing_approval_url(
-                    config.repo.cloud_repository.as_deref().unwrap_or_default(),
-                    &config.repo.cloud_github_users,
-                )?;
-                println!("Cloud purchase approval: {link}");
-                println!(
-                    "USD15 per GitHub user per month for this repository. Sign in to detect GitHub admin access; otherwise send this link to an admin."
-                );
-                println!(
-                    "The config roster is a request. Cloud access requires a verified paid seat."
-                );
-                if !init_with.dry_run && !init_with.proof && io::stdin().is_terminal() {
-                    core::propodus::try_open_browser(&link);
+            if !init_with.dry_run && config.repo.effective_backend().is_cloud() {
+                if init_with.proof {
+                    // Explicit fixture/scaffolding mode prepares configuration
+                    // only. It never creates a credential or claims readiness.
+                    println!(
+                        "Cloud configuration prepared for proof; sign-in and server readiness were not evaluated."
+                    );
+                } else if let Err(error) =
+                    bootstrap_cloud_session(&target_dir, init_with.restart_cloud_signin)
+                {
+                    if let error::DecapodError::CloudAuth(diagnostic) = &error {
+                        print_cloud_auth_json_if_needed(diagnostic, None);
+                    }
+                    return Err(error);
                 }
             }
         }
@@ -2865,10 +2756,17 @@ pub fn run() -> Result<(), error::DecapodError> {
                 .map(|config| config.repo.effective_backend())
                 .unwrap_or_default();
             let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
-            if !configured_backend.is_cloud() && !cloud_todo_command {
+            if configured_backend.is_cloud()
+                && !cloud_todo_command
+                && !is_cloud_file_only_command(&cli.command)
+            {
+                return Err(core::cloud_backend::unavailable_error());
+            }
+            let local_storage_startup = !configured_backend.is_cloud() && !cloud_todo_command;
+            if local_storage_startup {
                 core::dactyl::ensure_local_sqlite_runtime()?;
             }
-            // Cloud todo operations use the Propodus machine session/JWT for
+            // Cloud todo operations use the Dactyl-managed session bearer for
             // authentication, then route physical storage through Dactyl and
             // deliberately bypass the local SQLite-backed agent session. This
             // keeps the cloud path free of local database locks while leaving
@@ -2876,7 +2774,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             if requires_session_token(&cli.command) && !cloud_todo_command {
                 ensure_session_valid()?;
             }
-            if !cloud_todo_command {
+            if local_storage_startup {
                 core::fs_permissions::ensure_storage_dir(&store_root)
                     .map_err(error::DecapodError::IoError)?;
             }
@@ -2886,7 +2784,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 root: store_root.clone(),
             };
 
-            if !cloud_todo_command && should_route_via_group_broker(&cli.command, &argv) {
+            if local_storage_startup && should_route_via_group_broker(&cli.command, &argv) {
                 let mut finish = |stdout: &str, request_id: &str| match &cli.command {
                     Command::Todo(todo_cli) => todo::finish_broker_claim_response(
                         &project_store,
@@ -2922,7 +2820,7 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Check for version/schema changes and run protected migrations if needed.
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
-            if !cloud_todo_command
+            if local_storage_startup
                 && !is_validate_cmd
                 && !is_storage_independent_command(&cli.command)
                 && !core::group_broker::has_initialized_owner(&store_root)
@@ -2939,14 +2837,14 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Best-effort hygiene: routinely scrub stale git worktree metadata/config.
             // This must not block primary command execution.
-            if !cloud_todo_command
+            if local_storage_startup
                 && let Err(e) = workspace::prune_stale_worktree_config(&workspace_root)
                 && !is_not_git_repository_error(&e)
             {
                 eprintln!("warn: worktree maintenance skipped: {e}");
             }
 
-            if !cloud_todo_command
+            if local_storage_startup
                 && !is_storage_independent_command(&cli.command)
                 && should_auto_clock_in(&cli.command)
                 && let Err(e) =
@@ -3153,6 +3051,20 @@ fn is_storage_independent_command(command: &Command) -> bool {
         Command::Data(DataCli {
             command: DataCommand::Database(_),
         }) => true,
+        _ => false,
+    }
+}
+
+fn is_cloud_file_only_command(command: &Command) -> bool {
+    match command {
+        Command::Activate
+        | Command::Capabilities(_)
+        | Command::Constitution(_)
+        | Command::Docs(_) => true,
+        Command::Rpc(rpc_cli) => matches!(
+            rpc_cli.op.as_deref(),
+            Some("specs.refresh" | "intent.reconcile")
+        ),
         _ => false,
     }
 }
@@ -5896,7 +5808,7 @@ fn heal_validation_scaffold(
         diagram_style,
         specs_seed: Some(scaffold::SpecsSeed {
             product_name: repo_ctx.product_name.clone(),
-            product_summary: cloud_backend::cloud_generation_summary(&repo_ctx),
+            product_summary: repo_ctx.product_summary.clone(),
             architecture_direction: repo_ctx.architecture_direction.clone(),
             product_type: repo_ctx.product_type.clone(),
             primary_languages: repo_ctx.primary_languages.clone(),

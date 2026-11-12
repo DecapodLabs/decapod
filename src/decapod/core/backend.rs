@@ -165,6 +165,8 @@ impl BackendRoute {
 /// Cloud defaults to Supabase; Neon remains an explicit alternative. Neither is a DSN.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum CloudDatastore {
+    /// Logical managed cloud: Dactyl owns discovery and physical selection.
+    Managed,
     Neon,
     #[default]
     Supabase,
@@ -173,16 +175,17 @@ pub enum CloudDatastore {
 impl CloudDatastore {
     pub fn parse(value: &str) -> Result<Self, DecapodError> {
         match value {
+            "managed" => Ok(Self::Managed),
             "neon" => Ok(Self::Neon),
             "supabase" => Ok(Self::Supabase),
             _ => Err(DecapodError::Config(
-                "unsupported cloud datastore; expected neon or supabase".to_string(),
+                "unsupported cloud datastore; expected managed, neon or supabase".to_string(),
             )),
         }
     }
 
     pub fn validate_available(self) -> Result<(), DecapodError> {
-        if self == Self::Supabase && !cfg!(feature = "supabase-cloud") {
+        if matches!(self, Self::Supabase | Self::Managed) && !cfg!(feature = "supabase-cloud") {
             return Err(DecapodError::Config(
                 "Supabase cloud requires a build with the supabase-cloud feature; no local fallback is permitted".to_string(),
             ));
