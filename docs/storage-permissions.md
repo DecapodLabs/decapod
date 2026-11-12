@@ -66,7 +66,7 @@ After Dactyl verifies the snapshot, Decapod assigns the new snapshot inode its
 private (or explicitly shared) final mode, syncs it, and publishes without
 overwriting an existing destination. Staging is removed on success or failure.
 
-Decapod consumes the published `dactyl-db` 0.11.1 secure recovery primitive.
+Decapod consumes the published `dactyl-db` 0.12.0 secure recovery primitive.
 On Linux and Android, explicit `decapod data db recover --preserve-original-at
 <unused-path>` supports a `0660` database in a trusted-group `2770` directory
 with `DECAPOD_STORAGE_SHARED_GROUP=1`. The archive must be unused and share the

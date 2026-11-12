@@ -25,8 +25,14 @@ claim readiness. The legacy `cloud login` alias uses the same managed flow.
 No new project provider, deployment, credential, price, or roster field exists.
 The fixture-only origin requires explicit test mode and literal loopback HTTP.
 
-The connector-enabled source requires the Dactyl #100 API and a corresponding
-published registry dependency before Decapod can pass its release-policy gate.
+The client consumes the published `dactyl-db 0.12.0` registry API. Pending
+secrets round-trip through its public Serde contract; authentication status and
+code exchange return strings, and completion confirms the session handoff.
+The caller retains its exact origin/repository/checkout binding and saved flow
+deadline, and an authorized repository read remains the readiness requirement.
+Lost responses to one-time mutations require explicit restart; a lost idempotent
+completion response keeps the issued session and can be checked again.
+The release-policy test binds the registry version and actual crate checksum.
 Source-overlay integration results cannot be reported as package publication,
 real PostgreSQL, hosted account enforcement, or full remote governance proof.
 
@@ -1094,7 +1100,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3527a87aebf46a51e05099cf4332e8466ebb4ce04365b8777fb3927098e79546`
+- Repository signal fingerprint: `ec95385344f3bb6e0987d9c7efb5b6541bfe42226afe3376b038a50e34288a55`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

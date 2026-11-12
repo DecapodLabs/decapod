@@ -163,13 +163,13 @@ remain in [#1377](https://github.com/DecapodLabs/decapod/issues/1377),
 [Supabase consumer validation](supabase-validation.md) for protected service
 profiles and their explicit evidence requirements.
 
-Connector-enabled builds require the public API delivered by
-[Dactyl #100](https://github.com/DecapodLabs/dactyl/issues/100). Registry
-dependency alignment and package publication remain
-[#1380](https://github.com/DecapodLabs/decapod/issues/1380). The current required
-repository checks need that API in the published dependency. No governed
-source-overlay recipe is configured before full readiness, and no
-cross-repository integration result is claimed.
+Connector-enabled builds consume the published `dactyl-db 0.12.0` API from
+[Dactyl #102](https://github.com/DecapodLabs/dactyl/pull/102). Its registry
+version and checksum are checked by the release dependency policy. Required
+dependency, compilation and fixture checks still have to pass on the exact
+candidate; a release alone does not establish client readiness. The dependency
+handoff remains tracked in [#1380](https://github.com/DecapodLabs/decapod/issues/1380).
+No Git/path override or source-overlay diagnostic substitutes for those gates.
 
 ## Local SQLite maintenance
 

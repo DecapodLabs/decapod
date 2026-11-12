@@ -29,9 +29,9 @@ requires server-confirmed completion followed by an authorized repository read
 before reporting readiness. A service or credential failure never initializes or
 falls back to SQLite. Local selection works without cloud credentials.
 
-The client implementation requires the connector/authentication/session API from
-Dactyl #100 and its separate registry release handoff in Dactyl #94 and Decapod
-#1380. Offline fixtures do not prove real PostgreSQL, hosted authentication,
+The client consumes the published Dactyl 0.12.0 connector/authentication/session
+API. The registry handoff and required client checks remain tracked in Dactyl #94
+and Decapod #1380. Offline fixtures do not prove real PostgreSQL, hosted authentication,
 billing deployment, production activation or protected hosted acceptance. Those
 service and release gates remain separate from #1628.
 

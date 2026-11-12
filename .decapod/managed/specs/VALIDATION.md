@@ -14,9 +14,16 @@ verified native evidence from run `43131221323`: both mandatory proof groups,
 all fourteen checks, a ready verdict and its exact-candidate readiness receipt.
 Its wrapper failed afterward during PR publication/readback. This upstream
 offline proof does not establish client compilation or protected hosted access.
-The registry still exposes only `dactyl-db 0.11.1`; the client needs a separately
-released version containing the new connector/authentication/session APIs.
+At that observation the registry exposed only `dactyl-db 0.11.1`. During
+continuation Dactyl PR #102 and release #103 merged, publishing `0.12.0` from
+`598415953b5ee568f6d42652982897c58b4433cc`. The crate SHA256 was verified as
+`b9d8eda3a7bad7490d23dbca5c468bf89b28de4c8b4fd566034b342334ba481e`; its
+public API and packaged source match that release. The existing client now
+uses its supported Serde/status/code/completion contract. The original stronger
+repository-response API is not assumed to exist in the registry release.
 Client unit/CLI tests and current-target Buildkite readiness remain unproven.
+The 0.12.0 lockfile also downgrades inactive HTTP/3 dependencies under Dactyl
+MSRV bounds; the required dependency audit must pass without exemptions.
 
 The first current-target validation stopped before Buildkite because the
 immutable candidate still carried v0.138.2 entrypoint headers while the installed
@@ -52,7 +59,7 @@ path rejection, exact binding, phase invariants and serialized custody.
 
 These tests must run on the exact checkpointed candidate. Static review and
 source formatting do not establish compilation or execution. The managed API
-requires Dactyl #100 plus its corresponding published registry dependency.
+is consumed from the published Dactyl 0.12.0 registry dependency.
 `tests/release_dependency_policy.rs`, Cargo manifests and source-CI configuration
 remain intact; an unpublished source overlay cannot establish release-policy or
 publication readiness. No local fixture claims hosted managed Auth, production
@@ -1118,7 +1125,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3527a87aebf46a51e05099cf4332e8466ebb4ce04365b8777fb3927098e79546`
+- Repository signal fingerprint: `ec95385344f3bb6e0987d9c7efb5b6541bfe42226afe3376b038a50e34288a55`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

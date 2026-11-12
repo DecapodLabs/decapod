@@ -75,6 +75,11 @@ pub fn transport_error(error: dactyl_db::DactylError) -> DecapodError {
             "entitlement_required"
             | "organization_seat_required"
             | "seat_required"
+            | "seat_unassigned"
+            | "account_setup_required"
+            | "identity_link_required"
+            | "quote_confirmation_required"
+            | "billing_binding_required"
             | "payment_pending",
         ) => (
             CloudAuthStatus::ActionRequired,
@@ -143,11 +148,30 @@ pub fn transport_error(error: dactyl_db::DactylError) -> DecapodError {
 
 #[cfg(feature = "supabase-cloud")]
 fn secrets(bootstrap: &Bootstrap) -> Result<dactyl_db::AuthenticationSecrets, DecapodError> {
-    dactyl_db::AuthenticationSecrets::from_parts(
-        bootstrap.pkce_verifier.clone(),
-        bootstrap.poll_secret.clone(),
-    )
-    .map_err(transport_error)
+    // The registry API supports private persistence through its Serde contract.
+    // Restore the caller-owned record; Dactyl validates it before transport.
+    serde_json::from_value(serde_json::json!({
+        "verifier": bootstrap.pkce_verifier,
+        "poll_secret": bootstrap.poll_secret,
+    }))
+    .map_err(|_| DecapodError::SessionError("Invalid private cloud sign-in record".into()))
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn one_time_error(error: dactyl_db::DactylError) -> DecapodError {
+    if matches!(
+        error.adapter_kind(),
+        Some(
+            dactyl_db::AdapterErrorKind::Transport
+                | dactyl_db::AdapterErrorKind::Timeout
+                | dactyl_db::AdapterErrorKind::Protocol
+                | dactyl_db::AdapterErrorKind::Unavailable
+        )
+    ) {
+        restart_required()
+    } else {
+        transport_error(error)
+    }
 }
 
 #[cfg(feature = "supabase-cloud")]
@@ -176,18 +200,6 @@ fn managed_session(session: dactyl_db::UserSession) -> Result<Session, DecapodEr
         refresh_token: Some(session.refresh_token),
         expires_at,
     })
-}
-
-#[cfg(feature = "supabase-cloud")]
-fn bound_repository(returned: &str, expected: &str) -> Result<(), DecapodError> {
-    if returned != expected {
-        return Err(diagnostic(
-            CloudAuthStatus::RepositoryDenied,
-            "The service response did not match the selected repository.",
-            "The response was not accepted. Review the service binding before starting another sign-in.",
-        ));
-    }
-    Ok(())
 }
 
 #[cfg(feature = "supabase-cloud")]
@@ -332,7 +344,7 @@ pub fn connect(
                 }
                 Err(error) => {
                     persist_restart(&mut guard, state)?;
-                    return Err(transport_error(error));
+                    return Err(one_time_error(error));
                 }
             }
         } else {
@@ -353,7 +365,7 @@ pub fn connect(
             Ok(flow) => flow,
             Err(error) => {
                 persist_restart(&mut guard, state)?;
-                return Err(transport_error(error));
+                return Err(one_time_error(error));
             }
         };
         let expires_at = handoff_expiry(&flow.expires_at)?;
@@ -385,15 +397,17 @@ pub fn connect(
         let status = connector
             .authentication_status(&flow_id, &private)
             .map_err(transport_error)?;
-        bound_repository(&status.repository, &identity.canonical_name)?;
-        handoff_expiry(&status.expires_at)?;
-        match status.status {
-            dactyl_db::AuthenticationState::Pending => return Err(pending(bootstrap)),
-            dactyl_db::AuthenticationState::Ready => {}
-            dactyl_db::AuthenticationState::Consumed | dactyl_db::AuthenticationState::Complete => {
+        // The published connector returns only the validated flow status. The
+        // saved flow is bound to this origin/repository/checkout; an authorized
+        // repository read below remains the independent readiness requirement.
+        match status.as_str() {
+            "pending" => return Err(pending(bootstrap)),
+            "ready" => {}
+            "consumed" | "complete" => {
                 persist_restart(&mut guard, state)?;
                 return Err(restart_required());
             }
+            _ => return Err(restart_required()),
         }
         state.phase = Phase::ExchangingBootstrap;
         guard.replace(state.clone())?;
@@ -401,11 +415,10 @@ pub fn connect(
             Ok(exchange) => exchange,
             Err(error) => {
                 persist_restart(&mut guard, state)?;
-                return Err(transport_error(error));
+                return Err(one_time_error(error));
             }
         };
-        bound_repository(&exchange.repository, &identity.canonical_name)?;
-        state.bootstrap.as_mut().expect("exchange bootstrap").code = Some(exchange.auth_code);
+        state.bootstrap.as_mut().expect("exchange bootstrap").code = Some(exchange);
         state.phase = Phase::HaveCode;
         guard.replace(state.clone())?;
     }
@@ -432,7 +445,7 @@ pub fn connect(
             Ok(session) => session,
             Err(error) => {
                 persist_restart(&mut guard, state)?;
-                return Err(transport_error(error));
+                return Err(one_time_error(error));
             }
         };
         state.session = Some(managed_session(session)?);
@@ -448,7 +461,7 @@ pub fn connect(
             .as_ref()
             .expect("validated completion state");
         let private = secrets(bootstrap)?;
-        let completion = match connector.complete_authentication(
+        match connector.complete_authentication(
             bootstrap
                 .flow_id
                 .as_deref()
@@ -456,9 +469,17 @@ pub fn connect(
             &private,
             &session.access_token,
         ) {
-            Ok(completion) => completion,
+            Ok(()) => (),
             Err(error) => {
-                if error.adapter_code() == Some("outcome_unknown") {
+                if error.adapter_code() == Some("outcome_unknown")
+                    || matches!(
+                        error.adapter_kind(),
+                        Some(
+                            dactyl_db::AdapterErrorKind::Transport
+                                | dactyl_db::AdapterErrorKind::Timeout
+                        )
+                    )
+                {
                     // Account completion is idempotent for the saved session.
                     // Its lost acknowledgement must not ask the human to
                     // repeat the one-time bootstrap or token exchanges.
@@ -474,7 +495,6 @@ pub fn connect(
                 return Err(transport_error(error));
             }
         };
-        bound_repository(&completion.repository, &identity.canonical_name)?;
         // Completion is service-confirmed and idempotent for this session.
         // Denied/action-required responses retain both the issued credential
         // and pending completion, so a later invocation can recheck safely.
