@@ -675,6 +675,17 @@
         ".decapod/managed/specs/VALIDATION.md",
         "tests/common/cloud_managed_scenarios.rs"
       ]
+    },
+    {
+      "id": "accepted-cloud-release-target",
+      "summary": "Reconcile the accepted 0.139.0 release target and reviewed source inventory without changing proof coverage",
+      "input_digest": "sha256:1060ff1b40e5698452748e60e9820f3974b765361800b7e92875303805dd3d40",
+      "proof_refs": [
+        ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
+        "Cargo.lock",
+        "Cargo.toml"
+      ]
     }
   ],
   "intents": {
@@ -715,22 +726,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the unchanged agent UX implementation after merging accepted master c87e4f49, which contains the original PR 1635 foundation. All current source behavior and security boundaries remain as previously reviewed; earlier proof is not readiness for this reconciled candidate. Retain the complete active journal and checkpoint history rather than compacting its unaccepted follow-up changes.",
-          "reviewed_code_fingerprint": "0da3c038776e2f0d2ae4414d399dbcee1ac2fbdf50ecb144082d513f5abccb05",
+          "reason": "Reviewed current source after accepting release target 19acd21f. The accepted Cargo manifest and lock change only the package version from 0.138.3 to 0.139.0; no workflow, helper, toolchain, dependency graph or required check changed. Updated the reviewed inventory digest after backing up configuration. Pinned Bazel metadata accepts the existing lock in error mode; no application build or manual tests were run.",
+          "reviewed_code_fingerprint": "279581132ea4d1e42fe4d22b960154f8bb719f8483c0a612a43b1c748e9e5a74",
           "spec_material_hash": "7d64fcff5272dde8ba4a1dbc3685417a98c4387d0aa98e0c067b1979d4837662"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the unchanged agent UX implementation after merging accepted master c87e4f49, which contains the original PR 1635 foundation. All current source behavior and security boundaries remain as previously reviewed; earlier proof is not readiness for this reconciled candidate. Retain the complete active journal and checkpoint history rather than compacting its unaccepted follow-up changes.",
-          "reviewed_code_fingerprint": "0da3c038776e2f0d2ae4414d399dbcee1ac2fbdf50ecb144082d513f5abccb05",
+          "reason": "Reviewed current source after accepting release target 19acd21f. The accepted Cargo manifest and lock change only the package version from 0.138.3 to 0.139.0; no workflow, helper, toolchain, dependency graph or required check changed. Updated the reviewed inventory digest after backing up configuration. Pinned Bazel metadata accepts the existing lock in error mode; no application build or manual tests were run.",
+          "reviewed_code_fingerprint": "279581132ea4d1e42fe4d22b960154f8bb719f8483c0a612a43b1c748e9e5a74",
           "spec_material_hash": "1dc7b24d3ab01e25ffabc2493b4f15f30956daf1bbda2b93fd43c9bf5d0702ee"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the unchanged agent UX implementation after merging accepted master c87e4f49, which contains the original PR 1635 foundation. All current source behavior and security boundaries remain as previously reviewed; earlier proof is not readiness for this reconciled candidate. Retain the complete active journal and checkpoint history rather than compacting its unaccepted follow-up changes.",
-          "reviewed_code_fingerprint": "0da3c038776e2f0d2ae4414d399dbcee1ac2fbdf50ecb144082d513f5abccb05",
+          "reason": "Reviewed current source after accepting release target 19acd21f. The accepted Cargo manifest and lock change only the package version from 0.138.3 to 0.139.0; no workflow, helper, toolchain, dependency graph or required check changed. Updated the reviewed inventory digest after backing up configuration. Pinned Bazel metadata accepts the existing lock in error mode; no application build or manual tests were run.",
+          "reviewed_code_fingerprint": "279581132ea4d1e42fe4d22b960154f8bb719f8483c0a612a43b1c748e9e5a74",
           "spec_material_hash": "0b18b2deee00ec20ff5cf50aa23c778107a9524cef9f13c1cf958f169ed4c3a4"
         }
       ],
@@ -742,7 +753,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794475759Z"
+      "updated_at": "1794475962Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -755,15 +766,23 @@
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:ae47341a2592f3e4d38dae0c85cb9e1199a2658ecf75c8b7d13c5b6a36fb1cc0",
+      "artifact_hash": "sha256:7958149d94f0203f10e9bf8095155f1242f4145c12a7d9aaf3fc51440458f34e",
       "checks": [
         {
           "name": "accepted-consumer",
           "status": "failed"
         },
         {
+          "name": "accepted-release-source-review",
+          "status": "passed"
+        },
+        {
           "name": "bazel-lock-consistency",
           "status": "failed"
+        },
+        {
+          "name": "bazel-lock-metadata",
+          "status": "passed"
         },
         {
           "name": "bounded-source-discovery",
@@ -807,6 +826,10 @@
         },
         {
           "name": "current-full-Buildkite",
+          "status": "unavailable"
+        },
+        {
+          "name": "current-full-proof",
           "status": "unavailable"
         },
         {
@@ -1053,10 +1076,17 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 22
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:23",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 23
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 22,
+        "next_sequence": 23,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -1401,6 +1431,25 @@
                 ],
                 "sequence": 22,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:23",
+                "observations": [
+                  "After reconciling foundation c87e4f49, accepted target moved to release merge 19acd21f. Its sole proof-source edits are root package version 0.138.3 to 0.139.0 in Cargo.toml and Cargo.lock; CHANGELOG is the other release file. Merged this exact target without conflicts. Backed up project config privately and updated reviewed inventory to c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 after source review; no recipe, coverage or gate changed. Pinned Bazel mod deps lockfile_mode=error passed; shut down its server. This metadata preparation is not an application build, test or readiness proof."
+                ],
+                "proof_refs": [
+                  "accepted-release-source-review",
+                  "bazel-lock-metadata",
+                  "formatting",
+                  "current-full-proof"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 23,
+                "validation_findings": []
               }
             ]
           }
@@ -1419,6 +1468,7 @@
       "evidence": [
         "Actual pinned Bazel regenerated the module lock from the registry0.12 Cargo graph. Generated indentation exceeded the1MiB source bound by4454bytes; one-space JSON encoding preserves all parsed values and reduces the complete file to1029040bytes. Pinned Bazel mod deps --lockfile_mode=error accepts it. Every discovered source hash was verified; only MODULE.bazel.lock changed relative to the previous reviewed build-source inventory. Neither required checks nor limits nor default stale-lock rejection were changed. Current Buildkite candidate0bff2528 failed in CI build8025; diagnostics identified the stale Bazel metadata. Fresh exact-candidate execution remains required.",
         "Actual source-CI consumer job 131078135474 on 2c7e51b5 passed 1673 library tests and failed the existing cloud_auth_blocked_add_resumes_after_onboarding_without_touching_project redaction assertion because the new wrapper copied raw auth next_action. Corrected the production wrapper to fixed recovery guidance and onboarding-only validated URL propagation. The existing test and secret list are unchanged; integration scenarios did not run after the library failure. Required full Buildkite evidence remains pending; no failure is waived.",
+        "After reconciling foundation c87e4f49, accepted target moved to release merge 19acd21f. Its sole proof-source edits are root package version 0.138.3 to 0.139.0 in Cargo.toml and Cargo.lock; CHANGELOG is the other release file. Merged this exact target without conflicts. Backed up project config privately and updated reviewed inventory to c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 after source review; no recipe, coverage or gate changed. Pinned Bazel mod deps lockfile_mode=error passed; shut down its server. This metadata preparation is not an application build, test or readiness proof.",
         "After renewing the lease to generation2, the original workspace authoring binding was stale. A chained execution mistakenly committed the two-file documentation correction45785a6b despite failed checkpointing, and native validation pushed that work ref before later history verification. Immutable inspection confirms its checkpoint is missing. The original pushed ref is preserved unchanged; no later checkpoint is offered as proof for45785a6b. Supported workspace ensure created the same task recovery branch from accepted d3358e1c, preserved its fresh admission seed and fast-forwarded to the proven2afbd191 containing both original1289a80/d85650b checkpoints and all four later valid checkpoints. Native readmission refreshed the generation2 binding. Only the two reviewed documentation changes were reauthored on this branch, with fresh reviews/checkpoint;45785a6b is not an ancestor. The public GitHub readiness reader also returned a403 rate limit with reset1794459593; it will be retried only after that reset using the same reader, without alternate authentication.",
         "CI 43143251997: all eighteen custody unit tests passed; consumer RPC fixtures lacked required generated_keys; corrected successful envelopes and explicit unavailable/offline diagnostics without weakening negative coverage. Fresh recovery branch preserves six verified checkpoints; uncheckpointed 45785a6b is excluded and left intact on original ref.",
         "CI43156962327 consumer job130979818729 on ee288c86 passed1674 library tests (8ignored), including18 custody tests, and19 of20 boundary cases. Remaining case attempted discovery before rejecting cloud --validated proof capture. Moved shared guard before factory construction and retained direct-store enforcement. Its authenticated dual-root execution record uses accepted d3358e1c commands, excluding candidate helper additions. Thus restored the unchanged recipe and reviewed8f21b5eb inventory; included all12 managed scenarios as a module of the existing mandatory cloud_supabase_boundary target. Seed helper strips only the crate prefix from module_path for exact nested test selection. Interrupted this workspace native validation via SIGINT after real failure diagnosis; no final verdict or readiness claimed. Preserved snapshot1ALZwM and private logs. Scope50 files stays under original51 budget.",

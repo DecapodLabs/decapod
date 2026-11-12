@@ -22,6 +22,9 @@ lineage; the remaining agent UX changes are a follow-up PR. Earlier diagnostics
 on `a0962755` passed 1,674 library tests (eight ignored) and all 33 Supabase
 boundary tests, including the new handoff and stable-operation-ID scenarios.
 That execution does not replace fresh complete proof on the reconciled commit.
+The subsequent accepted release commit
+`19acd21f7ff50656323d037915273f03cdedc04e` changes package versions and the
+changelog and is incorporated as well; the current proof must use that target.
 
 ## Recovery and accepted-target reconciliation (#1628)
 
@@ -1219,7 +1222,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0da3c038776e2f0d2ae4414d399dbcee1ac2fbdf50ecb144082d513f5abccb05`
+- Repository signal fingerprint: `279581132ea4d1e42fe4d22b960154f8bb719f8483c0a612a43b1c748e9e5a74`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
