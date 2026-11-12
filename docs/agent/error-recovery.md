@@ -17,6 +17,23 @@ output when a caller must distinguish failure kinds.
 
 ## Common Error Patterns
 
+### Cloud sign-in handoff
+
+The human initializes the repository once and continues chatting with the agent.
+When a command returns `decapod.cloud.auth.v1` with `onboarding_pending`, present
+its `authorization_url` as a normal sign-in link. Explain that the agent will
+continue after sign-in. Keep the task and original command; retry that command
+when the user returns. Do not prescribe another terminal command or rerun init.
+No access token, refresh token, PKCE verifier or polling secret is needed in chat.
+
+The CLI resumes the same private repository-bound flow, exchanges its one-time
+code, confirms repository access and saves the managed session. Future commands
+reuse it and serialize refresh rotation automatically. An expired or revoked
+refresh credential starts a new browser handoff. An unavailable provider stays
+an error with the saved state intact; it never authorizes local task fallback.
+An interrupted one-time exchange preserves the uncertain result instead of
+replaying it. The next agent invocation can establish a fresh handoff.
+
 ### Interrupted runtime checkpoint or projection write
 
 Inspect `todo journal verify` or `govern workunit journal-status --task-id <id>`

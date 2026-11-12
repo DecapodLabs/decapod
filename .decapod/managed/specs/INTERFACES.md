@@ -1,5 +1,20 @@
 # Interfaces
 
+## Agent-owned cloud connection contract
+
+After one human `decapod init`, the agent uses `session acquire` or its original
+cloud task command to connect. `CloudAuthDiagnostic` adds optional
+`authorization_url` to `decapod.cloud.auth.v1`. On `onboarding_pending`, the agent
+shares that sign-in link and retries its original command after the human returns;
+it never requires repeated init or manual token entry. Saved credentials live at
+`$XDG_DATA_HOME/decapod/services/<origin-hash>/repositories/<repo-hash>/session_token.json`.
+`cloud status` selects that same scope without network I/O. A 60-second refresh
+lead reuses ordinary 15-minute access tokens across commands; definitive refresh
+expiry/revocation starts a fresh handoff. Explicit test credentials take precedence
+without altering pending records. Lost one-time responses remain uncertain and
+are never replayed. Native Dactyl RPC sends the current bearer and opaque repo
+context; authorization and entitlement remain server-owned.
+
 ## Agent delegation and cloud authorization interface
 
 Decapod is invoked by each contributor's coding agent in the repository.
@@ -1064,8 +1079,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `a64eba2e23eb800bf097fc216277a5acafe0d07b2eebe8b5da5d918df1b9d875`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

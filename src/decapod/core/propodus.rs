@@ -513,9 +513,20 @@ pub fn ensure_cloud_session_for_datastore(
         .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
     #[cfg(feature = "supabase-cloud")]
     if datastore == crate::core::backend::CloudDatastore::Supabase {
-        dactyl_db::DatastoreRoute::supabase(&config.api_url, None)
-            .validate()
-            .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
+        dactyl_db::CloudConnector::validate_origin(&config.api_url).map_err(|_| {
+            PropodusClientError::Configuration("invalid cloud deployment origin".into())
+        })?;
+        if mock_cloud_auth_enabled() {
+            let store =
+                auth::CloudSessionStore::for_repository(&config.api_url, &identity.canonical_name)
+                    .map_err(|_| {
+                        PropodusClientError::Configuration(
+                            "cloud session storage is unavailable".into(),
+                        )
+                    })?;
+            return ensure_mock_cloud_session(identity, &store);
+        }
+        return crate::core::cloud_session::ensure(&config.api_url, &identity.canonical_name);
     }
     // This helper owns transport policy as well as credential scope. Callers
     // cannot accidentally enable redirects or credential-bearing arguments.

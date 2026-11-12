@@ -1,5 +1,20 @@
 # Validation
 
+## Agent-owned cloud session regressions
+
+`tests/cloud_session_cli.rs` drives the production binary from one cloud init
+through structured sign-in handoff, process restart, saved PKCE-flow resume,
+managed code exchange, server repository finalization and native RPC. It also
+checks recovery from a rejected still-current bearer and independent custody
+for a second repository, with no managed credentials in output and no local
+replacement task database. All responses are synthetic loopback fixtures;
+this is client behavior evidence, not real OAuth, SQL policy or hosted readiness.
+`core::cloud_session::tests` covers private bounded state, one-time interruption,
+same-repo concurrent refresh, authorization-before-session-publication and stale
+bearer rejection. `tests/unit/core/auth_tests.rs` covers stable global scopes,
+endpoint/repository isolation and restrictive file creation. Actual results must
+come from full candidate validation; source presence alone does not establish pass.
+
 ## Native Laya research reconciliation (#1614)
 
 The historical candidate failed dependency denial on Tokio 1.52.3
@@ -1051,8 +1066,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `a64eba2e23eb800bf097fc216277a5acafe0d07b2eebe8b5da5d918df1b9d875`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

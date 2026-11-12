@@ -253,7 +253,7 @@ fn production_auth_failure_json_and_operation_inspection_do_not_mutate_protected
             .env("DECAPOD_HEADLESS", "1")
             .env("DECAPOD_AGENT_ID", "retry-proof")
             .env("DECAPOD_CLOUD_DATASTORE", "neon")
-            .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
+            .env("DECAPOD_NEON_API_URL", "http://127.0.0.1:1")
             .env_remove("DECAPOD_ACCESS_TOKEN")
             .env_remove("DECAPOD_CLOUD_AUTH_MODE")
             .output()

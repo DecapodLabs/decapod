@@ -1,86 +1,107 @@
 # Supabase consumer validation
 
-The cloud backend selects the public Dactyl Supabase HTTP capability by
-default. The client uses the published `dactyl-db` 0.11.1 registry release.
-This dependency alignment does not migrate historical state, provision
-Supabase, or prove a production deployment. Local storage remains SQLite; Neon is an explicit cloud alternative.
+Project configuration selects `repo.backend = "local" | "cloud"`. The normal
+cloud path is AI ↔ Decapod ↔ Dactyl ↔ Supabase. Dactyl resolves the deployment
+profile and owns managed Auth and PostgreSQL RPC transport; Propodus is the
+infrastructure-as-code for those services. Local storage remains Dactyl-backed
+SQLite. Explicit Neon compatibility is retained for existing integrations.
 
-## Fresh activation
+## Connector activation
 
-1. Decapod consumes `dactyl-db` 0.11.1 from crates.io, including the Supabase
-   client capability reviewed in [Dactyl #92](https://github.com/DecapodLabs/dactyl/pull/92)
-   and released in [v0.11.1](https://github.com/DecapodLabs/dactyl/releases/tag/v0.11.1).
-   `Cargo.lock` records the registry source and checksum; there is no Git or
-   local-path dependency override. Build with `cargo build --locked`; the
-   default features include `supabase-cloud`. A `--no-default-features` build
-   retains SQLite and explicit Neon, and fails closed if the unavailable
-   Supabase route is selected. Nix vendoring uses the same lockfile checksum.
-   Before publishing Decapod, run `cargo package --locked` and
-   `cargo publish --locked --dry-run` to verify the packaged registry dependency.
-2. An operator must first provide a fresh compatible authenticated service
-   backed by PostgreSQL, its task/event schema, and resource permissions.
-   The client does not initialize hosted schemas or connect to PostgreSQL.
-3. In machine-local runtime configuration, set `DECAPOD_PROPODUS_API_URL` to
-   that service's HTTPS origin. No datastore override is required: omitted
-   `DECAPOD_CLOUD_DATASTORE` selects Supabase. Explicit `supabase` is also accepted. Literal-loopback HTTP is supported for disposable
-   test services only. This is neither a PostgreSQL DSN nor Supabase REST.
-4. Select `repo.backend = "cloud"`. Production use requires a service that
-   also implements the existing `decapod init --backend cloud` onboarding,
-   session exchange and refresh contract. A task-only `/query` and `/batch`
-   service does not provide those authentication endpoints. The isolated
-   conformance profile supplies disposable ordinary user tokens directly; it
-   does not establish production onboarding. Ordinary clients receive only
-   user/session credentials. Database passwords, operator credentials, and
-   service-role keys never enter Decapod.
-5. Run normal `todo list`, `add`, `get`, `show`, `claim`, `release`, and
-   `done` commands. `todo done --validated` remains unsupported pending the
-   separate remote proof-capture contract.
+The connector consumes the published `dactyl-db` 0.12.0 registry package.
+`Cargo.lock` pins its checksum; the package records upstream source commit
+`598415953b5ee568f6d42652982897c58b4433cc`. No Git or local-path dependency
+is required. This establishes package availability, not hosted service readiness.
 
-The selector is distinct from `repo.backend = local|cloud` and from the
-hosting-provider label. Its default is `supabase`. Set
-`DECAPOD_CLOUD_DATASTORE=neon` to select the retained Neon route explicitly; only
-that selection can use the legacy Neon service endpoint by default. An unknown
-selector, a build without `supabase-cloud`, an invalid endpoint, or a missing
-Supabase service endpoint fails closed before
-onboarding or todo I/O. Authentication, authorization, timeout, transport,
-protocol, and storage failures never initialize or fall back to local todos.
+1. The human runs `decapod init` once and selects cloud. The resulting
+   configuration contains `repo.backend = "cloud"`. The agent owns all following
+   connection steps. Default builds enable
+   `supabase-cloud`; a build without that feature fails closed for this route.
+2. Dactyl uses its built-in cloud origin and fetches the bounded public
+   `/functions/v1/propodus-onboarding/config` profile. Discovery carries no user
+   bearer. The versioned response contains only project origin, publishable key
+   and API schema; Dactyl validates it against the selected origin. Ordinary
+   project config contains no endpoint or publishable-key requirement.
+3. Decapod supplies the current user session separately from its repository
+   context. If no session is available, Decapod invokes Dactyl's managed browser
+   authentication calls. A headless invocation returns
+   `onboarding_pending` with a structured `authorization_url`. The agent presents
+   the link and resumes its original command after sign-in. The human runs
+   `decapod init` once; the agent owns all later Decapod commands.
+   No standalone task server or direct PostgreSQL client is used.
+4. Dactyl sends native requests to `/rest/v1/rpc/dactyl_query_v1` and
+   `/rest/v1/rpc/dactyl_batch_v1` with the public project key, API schema,
+   contract version, user bearer and opaque repository context. No cloud failure
+   creates or falls back to local replacement task state.
+5. Account registration/status and the org-admin portal establish tenant/project
+   setup and active assigned paid-seat readiness. Successful sign-in alone does
+   not prove paid-seat access. Those coordinated backend/init slices have their
+   own issues and service proofs; this client transport change does not claim
+   hosted OAuth, billing, deployment or full cloud-governance parity.
 
-Dactyl validates the Supabase endpoint before session onboarding or refresh.
-Both Supabase authentication and data requests refuse redirects so an HTTP
-redirect cannot forward a refresh body or user bearer to another origin.
-Supabase authentication passes bearer headers and JSON through the child
-transport's private stdin, not process arguments or a secret temporary file;
-ambient curl configuration is disabled for that path.
-Supabase sessions are stored in endpoint-scoped machine-local files. Switching
-service endpoints never reuses or refreshes the legacy global Neon session or
-another endpoint's session. A new endpoint requires its own onboarding. An
-explicit `DECAPOD_ACCESS_TOKEN` remains a controlled test/operator override;
-set it only for the selected service. Test fixtures isolate `HOME` and both
-XDG directories and use synthetic/disposable session material exclusively.
-No credentials appear in the versioned context, debug output, or repository
-configuration. The client selector is also omitted from the wire context.
+Machine-only `DACTYL_CLOUD_ORIGIN` and `DACTYL_CLOUD_PUBLISHABLE_KEY` overrides
+support an explicitly selected private or test deployment. Their values are not
+written to repository configuration. `DECAPOD_CLOUD_DATASTORE=neon` retains the
+explicit legacy Neon route using `DECAPOD_NEON_API_URL`; ordinary users select
+only local or cloud. Invalid configuration or an unavailable connector feature
+fails before onboarding or task I/O. Authentication, authorization, timeout,
+transport, protocol and storage failures remain visible.
+
+## Human session custody
+
+All profile, Auth and data HTTP requests pass through Dactyl. Discovery and
+managed Auth refuse redirects, and diagnostics do not contain raw service
+response bodies. Decapod owns the human-facing browser handoff and private
+machine-local persistence. Repository-scoped session files isolate both deployments and canonical repositories
+from each other and from the legacy Neon session. They live under
+`$XDG_DATA_HOME/decapod/services/<origin-hash>/repositories/<repo-hash>/session_token.json`,
+with `~/.local/share` as the data-home default. Clones and worktrees of the same
+GitHub repository share this stable scope, including case variants. A supplied `DECAPOD_ACCESS_TOKEN` takes precedence
+without consuming or overwriting saved onboarding state; use this explicit
+override only for the selected service.
+
+Pending browser flows retain PKCE/poll secrets privately so headless setup can
+resume. One-time exchange and rotating refresh requests are checkpointed before
+submission and are not automatically replayed after an unknown result. Private
+records are bounded to 64 KiB, reject symlinks and use atomic private writes,
+including Unix file and directory syncing. A bounded per-repository lock serializes
+refresh across agents and processes. A 60-second refresh lead avoids rotating a
+15-minute token on every command. A definitive refresh authentication failure
+starts a new browser handoff in the same invocation. A definite API bearer
+rejection checkpoints the exact rejected credential so the next agent command
+renews it without replaying a data operation; a stale rejection cannot invalidate
+a newer concurrently stored bearer. The saved session becomes
+usable only after successful repository finalization, whose retry does not
+repeat OAuth or code exchange. An optional sign-in provider token
+is retained atomically with the session, outside ordinary data credentials and
+Debug output. Sign-in may use Google; a provider token is never inferred to be
+an SCM credential or automatically forwarded for SCM linking.
+
+Test fixtures isolate `HOME` and both XDG directories and use synthetic or
+explicit disposable session material. Credentials never enter the versioned
+storage context, repository config, Debug output or Git.
 
 ## Ownership and permissions
 
-Git continues to hold governance plans, claims, trajectory, validation, specs,
-and proof artifacts. Supported shared operational tasks and matching events
-use the configured backend. There is no SQLite-file upload or synchronization.
+Git holds governance plans, claims, trajectory, validation, specs and proof
+artifacts. Supported operational tasks and matching events use the selected
+backend. There is no SQLite-file upload or synchronization.
 
-The authenticated service resolves the principal, organization, group/team
-membership, repository identity and effective permission. Client-supplied
-scope is a request target, never a grant. Decapod exercises public allowed and
-denied outcomes instead of copying the service's authorization rules.
+Ordinary runtime authority is an authenticated Supabase user UUID with an active
+assigned paid seat in the correct tenant/customer/project. Linked SCM identities
+are verified server-side when needed; usernames, email and local RBAC mappings
+are not grants. Code-host repository/PR/merge permissions are not mirrored into
+the ordinary app access hierarchy. Privileged governance controls stay separate.
+Cloud task custody also binds the authenticated principal independently from an
+agent's freely chosen label. Client fixtures establish composition and denial
+propagation, not actual backend seat policy or tenant isolation.
 
-The conformance profile covers the reviewed todo task/event schema. It does
-not establish arbitrary Decapod catalog or schema portability. A compatible
-service implements the current reviewed task SQL and ordered
-three-operation batches: task mutation, matching event, final task read. It
-must commit both state and event or neither. It must gate event insertion on
-the preceding mutation affecting one row; a matching timestamp by itself is
-insufficient. Concurrent claims have one winner. Stale or missing transitions
-return a conflict/zero count and cannot append success events. A response lost
-after commit is ambiguous: observe task state before deciding whether to
-retry. This client contract does not add or claim mutation idempotency.
+The reviewed task/event RPC contract commits a task mutation, its matching event
+and final task read as an ordered batch. The service must commit both task and
+event or neither, gate event insertion on one affected task row, and return one
+winner for concurrent claims. Stale or missing transitions cannot append success
+events. Lost responses remain ambiguous and require the existing operation
+receipt/reconciliation protocol; an HTTP error is not a rollback receipt.
 
 ## Separate evidence profiles
 
@@ -130,6 +151,10 @@ print it, attach it to CI artifacts, or include it in logs. Its schema is:
 {
   "profile": "local-postgres",
   "endpoint": "http://127.0.0.1:PORT",
+  "rpc_v1": {
+    "publishable_key": "sb_publishable_DISPOSABLE_PROFILE_KEY",
+    "schema": "dactyl_api"
+  },
   "repository": "fixture-owner/disposable-repo",
   "allowed_tokens": ["FIRST_USER_SESSION", "SECOND_USER_SESSION"],
   "denials": [
@@ -145,10 +170,13 @@ print it, attach it to CI artifacts, or include it in logs. Its schema is:
 }
 ```
 
-Required denial cases are `cross_org`, `wrong_group`, `wrong_team`,
+The retained compatibility permission profile requires denial cases
+`cross_org`, `wrong_group`, `wrong_team`,
 `unauthorized_user`, `insufficient_access`, `revoked_access`, and
 `expired_session`. Each must be provisioned by the service's public permission
-contract. Insufficient-access fixtures may read but must deny
+contract. These legacy grant-policy cases do not define the normal paid-seat
+access hierarchy; the companion identity/seat proof must cover the new tenant
+and assigned-seat contract separately. Insufficient-access fixtures may read but must deny
 add/claim/release/done; other cases must also deny list/get/show. `expected_error` is a safe public error category.
 The two allowed tokens must belong to independently authenticated users with
 access to the same fresh repository slice, not two copies of one bearer.

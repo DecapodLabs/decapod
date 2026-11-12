@@ -36,6 +36,11 @@ cargo binstall decapod && decapod init
 
 Open your preferred coding agent and describe the change you want. Decapod supplies the project guidance and workflow the agent uses to plan, implement, and validate it.
 
+That is your only terminal setup. Your agent handles Decapod from here. With
+cloud storage, it shares a sign-in link when needed, then keeps the repository
+connected across future chats and agent restarts. Credentials stay in your
+private machine storage; routine token refresh needs no action from you.
+
 ## What Decapod governs
 
 | Concern | What stays with the project |

@@ -10,12 +10,23 @@ This document defines the normative operational contracts for the Decapod CLI.
 
 ## `decapod init`
 - **Intent:** Bootstrap system and manage lifecycle
+- **Human boundary:** The user runs init once per repository. After setup, the
+  agent owns Decapod invocation, connection, authentication and recovery. A user
+  may need to approve payment or sign in in a browser, but does not need to run
+  more CLI commands.
 
 ## `decapod setup`
 - **Intent:** Configure repository (hooks, settings)
 
 ## `decapod session`
 - **Intent:** Session token management (required for agent operation)
+- **Cloud lifecycle:** The agent calls `session acquire`. It reuses the private
+  session for this backend and canonical repository or refreshes it through
+  Dactyl. If browser authentication is needed, `onboarding_pending` includes
+  `authorization_url`. Share that link with the human, then retry the original
+  command after sign-in. The saved flow resumes across agent restarts. Never
+  send the user back to init, ask them to export a token, or paste credentials
+  into a prompt. A pending result is not permission to run dependent cloud work.
 
 ## `decapod cloud`
 - **Intent:** Optional cloud credential and Propodus integration commands

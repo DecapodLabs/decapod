@@ -34,6 +34,9 @@ pub struct CloudAuthDiagnostic {
     pub status: CloudAuthStatus,
     pub message: String,
     pub next_action: String,
+    /// Short-lived browser handoff for the human; never an access/refresh token.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub authorization_url: Option<String>,
 }
 
 impl CloudAuthDiagnostic {
@@ -47,7 +50,13 @@ impl CloudAuthDiagnostic {
             status,
             message: message.into(),
             next_action: next_action.into(),
+            authorization_url: None,
         }
+    }
+
+    pub fn with_authorization_url(mut self, url: impl Into<String>) -> Self {
+        self.authorization_url = Some(url.into());
+        self
     }
 }
 

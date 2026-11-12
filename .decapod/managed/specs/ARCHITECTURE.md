@@ -1,5 +1,19 @@
 # Architecture
 
+## Persistent cloud session custody
+
+The published `dactyl-db` 0.12.0 connector owns public deployment discovery,
+managed Supabase PKCE/refresh I/O and native RPC transport. Decapod's
+`core::cloud_session::ensure` owns agent orchestration and private persistence.
+`CloudSessionStore::for_repository` hashes the endpoint and canonical owner/name
+into global XDG data storage. Clones and worktrees share that repository scope;
+different repositories and endpoints never share automatic session credentials.
+A bounded per-repository lock serializes rotation. Private atomic records retain
+pending PKCE/poll state and interruption markers across foreground processes;
+no background refresher is needed. Server finalization precedes publishing the
+usable session. `DactylBridge` carries its current bearer independently from
+serialized repository context and routes cloud tasks through native RPC.
+
 ## Agent-invoked authority across local and cloud repositories
 
 The repository's agent remains Decapod's operational caller. Solo/local work
@@ -820,8 +834,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `a64eba2e23eb800bf097fc216277a5acafe0d07b2eebe8b5da5d918df1b9d875`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

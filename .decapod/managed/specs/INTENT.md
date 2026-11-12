@@ -1,5 +1,17 @@
 # Intent
 
+## One human setup, agent-owned connection
+
+The human runs `decapod init` once per repository and then chats with their agent.
+The agent owns every later Decapod command, cloud connection, browser handoff,
+resume and refresh. It asks the human only to complete an actual browser sign-in
+or account action. `src/decapod/core/cloud_session.rs` keeps pending and managed
+sessions outside Git, keyed by backend origin and canonical repository. Successful
+sign-in is usable only after the backend confirms repository access. Local mode
+and explicit Neon compatibility remain supported; no cloud failure creates local
+replacement task state. Hosted OAuth, account entitlement and deployment require
+separate service evidence.
+
 ## Current bounded-reader repair (#1571)
 
 Restore ordinary local validation liveness on macOS by enumerating pinned
@@ -287,8 +299,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `a64eba2e23eb800bf097fc216277a5acafe0d07b2eebe8b5da5d918df1b9d875`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

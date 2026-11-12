@@ -94,7 +94,14 @@ Authentication and identity verification tokens.
 
 - **Dual-Token Architecture:**
   - **Local Agent Sessions:** Ephemeral, short-lived tokens generated on-the-fly via `session acquire`. Stored machine-locally under `~/.config/decapod/sessions/<project-hash>/<agent-id>.json` when available, with secure workspace-local fallback under `.decapod/managed/sessions/<agent-id>.json` when machine-local storage is unusable. Gates local coordination, TODO subsystem access, and database locking in the workspace (verified using the process-local or environment-provided `DECAPOD_SESSION_PASSWORD`).
-  - **Cloud Session Token:** Long-lived global OAuth identity token stored as JSON (`{"token": "..."}`) under `~/.local/share/decapod/session_token.json`. Used to authenticate the user's client with the Propodus cloud backend when cloud storage modes are enabled.
+  - **Cloud Sessions:** Managed Supabase access and rotating refresh tokens are
+    stored privately under `$XDG_DATA_HOME/decapod/services/<origin-hash>/repositories/<repo-hash>/session_token.json`,
+    defaulting to `~/.local/share/decapod`. Clones and worktrees of the same
+    canonical repository share custody; other repositories and deployments do
+    not. The agent's `session acquire` and cloud task commands resume pending
+    browser authentication and refresh expiring access tokens. A per-repository
+    lock serializes rotation. These records and pending secrets never enter Git.
+    The legacy global `session_token.json` is used only by explicit Neon mode.
 - **Lifecycle:** Local sessions are acquired via `session acquire` and released via `session release`.
 - **Restriction:** Most repository mutation commands (e.g., `todo add`, `workspace ensure`) require an active local session.
 

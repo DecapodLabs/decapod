@@ -1,5 +1,20 @@
 # Security
 
+## Managed cloud credential custody
+
+Managed access/refresh credentials and pending PKCE/poll secrets are bounded
+private machine records, scoped by deployment origin and canonical repository.
+Directory/file permissions, no-follow reads, exclusive private creation and
+atomic durable replacement keep them outside repository configuration and Git.
+Refresh is serialized per repository. Unknown one-time exchange/rotation outcomes
+are preserved rather than replayed. A definite API rejection marks only its
+matching saved bearer; a concurrent newer session remains valid. Recovery never
+repeats a submitted data operation. The agent exposes only the short-lived
+authorization URL needed for browser sign-in, never managed credentials or
+verifiers. Dactyl owns no-redirect, bounded, redacted Auth/RPC transport. The
+server confirms repository access before a new session is published for reuse;
+cached presence and client-supplied repository context never grant authority.
+
 ## Historical validation trust boundary
 
 `core::validation_history` accepts full execution evidence only from the
@@ -553,8 +568,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `a64eba2e23eb800bf097fc216277a5acafe0d07b2eebe8b5da5d918df1b9d875`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

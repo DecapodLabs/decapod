@@ -2735,6 +2735,16 @@ pub fn run() -> Result<(), error::DecapodError> {
                     core::propodus::try_open_browser(&link);
                 }
             }
+            if !init_with.dry_run {
+                println!(
+                    "\nYou're ready to continue with your coding agent. Just describe what you want to build."
+                );
+                if config.repo.effective_backend().is_cloud() {
+                    println!(
+                        "Your agent will connect this repository and guide you through sign-in when needed."
+                    );
+                }
+            }
         }
         Command::Govern(GovernCli {
             command:
