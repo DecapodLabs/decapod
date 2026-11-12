@@ -21,7 +21,17 @@ continuation Dactyl PR #102 and release #103 merged, publishing `0.12.0` from
 public API and packaged source match that release. The existing client now
 uses its supported Serde/status/code/completion contract. The original stronger
 repository-response API is not assumed to exist in the registry release.
-Client unit/CLI tests and current-target Buildkite readiness remain unproven.
+On registry candidate `0bff2528d498c7423783656b45a47fde8cd92dbc`, the
+independent GitHub diagnostics passed 1,674 library tests (eight ignored),
+including all eighteen private-custody unit tests. The consumer integration
+suite failed because successful RPC fixtures omitted the released protocol's
+required `generated_keys` field, and three human-diagnostic assertions assumed
+lowercase status text. Complete successful fixtures now supply an empty key
+list; the diagnostic assertions match the released transport classification
+and actual status spelling. Existing negative, no-fallback, bounded timeout
+and redaction assertions remain required. This diagnostic run is not Buildkite
+readiness; the twelve managed sign-in scenarios and current-target full proof
+still require successful execution on the corrected exact candidate.
 The 0.12.0 lockfile also downgrades inactive HTTP/3 dependencies under Dactyl
 MSRV bounds; the required dependency audit must pass without exemptions.
 
@@ -40,6 +50,11 @@ bytes. Reformatting its complete JSON with one-space indentation yields
 changed. Pinned Bazel accepts the result with `lockfile_mode=error`. Source and
 runtime discovery limits remain unchanged. This is metadata consistency proof,
 not an executed client test or full-readiness result.
+
+The current registry version and checksum are established by Cargo and
+`tests/release_dependency_policy.rs`. Existing versioned SQLite recovery
+documentation describes the unchanged recovery primitive; those historical
+capability references do not establish the managed connector's release or proof.
 
 The first current-target validation stopped before Buildkite because the
 immutable candidate still carried v0.138.2 entrypoint headers while the installed
@@ -1141,7 +1156,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ec95385344f3bb6e0987d9c7efb5b6541bfe42226afe3376b038a50e34288a55`
+- Repository signal fingerprint: `715e2bc9a3a0c92022bea35be42adb7fb00fd3ac70d3e76ecbdbf2457fdf19a0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -122,7 +122,10 @@ fn legacy_physical_selector_does_not_override_the_logical_cloud_connector() {
     assert!(!output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     #[cfg(feature = "supabase-cloud")]
-    assert!(stderr.contains("offline"), "{stderr}");
+    assert!(
+        stderr.contains("Cloud authentication ProviderUnavailable:"),
+        "{stderr}"
+    );
     #[cfg(not(feature = "supabase-cloud"))]
     assert!(stderr.contains("supabase-cloud"), "{stderr}");
     assert!(!stderr.contains("unsupported-secret-selector"));
@@ -205,7 +208,10 @@ fn logical_cloud_failure_never_requires_a_legacy_endpoint_or_falls_back() {
     assert!(!output.status.success());
     let error = String::from_utf8_lossy(&output.stderr);
     #[cfg(feature = "supabase-cloud")]
-    assert!(error.contains("offline"), "{error}");
+    assert!(
+        error.contains("Cloud authentication ProviderUnavailable:"),
+        "{error}"
+    );
     #[cfg(not(feature = "supabase-cloud"))]
     assert!(error.contains("supabase-cloud"), "{error}");
     assert!(!error.contains("synthetic-bearer-secret"));
@@ -327,7 +333,7 @@ mod enabled {
                         task_rows(task_row("todo_proof1", "open", 1))
                     } else {
                         assert!(sql.contains("FROM events WHERE event_id = $1"));
-                        json!({"columns": ["subject_id", "payload"], "rows": [], "affected_rows": 0})
+                        json!({"columns": ["subject_id", "payload"], "rows": [], "affected_rows": 0, "generated_keys": []})
                     }.to_string();
                     write!(stream, "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
                     continue;
@@ -359,13 +365,13 @@ mod enabled {
 
     fn task_rows(row: Value) -> Value {
         let columns: Vec<_> = row.as_object().unwrap().keys().cloned().collect();
-        json!({"columns": columns, "rows": [row], "affected_rows": 0})
+        json!({"columns": columns, "rows": [row], "affected_rows": 0, "generated_keys": []})
     }
 
     fn batch_result(row: Value, task_count: u64, event_count: u64) -> Value {
         json!({"results": [
-            {"columns": [], "rows": [], "affected_rows": task_count},
-            {"columns": [], "rows": [], "affected_rows": event_count},
+            {"columns": [], "rows": [], "affected_rows": task_count, "generated_keys": []},
+            {"columns": [], "rows": [], "affected_rows": event_count, "generated_keys": []},
             task_rows(row)
         ]})
     }
@@ -472,8 +478,10 @@ mod enabled {
     #[test]
     fn backend_cloud_without_datastore_override_uses_managed_native_rpc() {
         let root = project();
-        let (endpoint, server) =
-            server(200, json!({"columns": [], "rows": [], "affected_rows": 0}));
+        let (endpoint, server) = server(
+            200,
+            json!({"columns": [], "rows": [], "affected_rows": 0, "generated_keys": []}),
+        );
         let output = command_with_optional_datastore(
             root.path(),
             None,
@@ -658,7 +666,7 @@ mod enabled {
                 let body = if present {
                     task_rows(row)
                 } else {
-                    json!({"columns": [], "rows": [], "affected_rows": 0})
+                    json!({"columns": [], "rows": [], "affected_rows": 0, "generated_keys": []})
                 };
                 let (endpoint, server) = server(200, body);
                 let output = command_with_args(
@@ -785,8 +793,10 @@ mod enabled {
     #[test]
     fn production_cli_sends_context_and_bearer_and_normalizes_empty_rows() {
         let root = project();
-        let (endpoint, server) =
-            server(200, json!({"columns": [], "rows": [], "affected_rows": 0}));
+        let (endpoint, server) = server(
+            200,
+            json!({"columns": [], "rows": [], "affected_rows": 0, "generated_keys": []}),
+        );
         let output = command(
             root.path(),
             "supabase",
@@ -1005,7 +1015,10 @@ mod enabled {
             "request was not bounded"
         );
         let diagnostic = String::from_utf8_lossy(&output.stderr);
-        assert!(diagnostic.contains("offline"), "{diagnostic}");
+        assert!(
+            diagnostic.contains("Cloud authentication Offline:"),
+            "{diagnostic}"
+        );
         assert!(!diagnostic.contains("synthetic-bearer-secret"));
         assert_no_fallback(root.path());
         server.join().unwrap();
@@ -1015,7 +1028,7 @@ mod enabled {
     fn explicit_supabase_route_preserves_typed_integer_boolean_and_null_results() {
         let (endpoint, server) = server(
             200,
-            json!({"columns": ["id", "version", "active", "optional"], "rows": [{"id": "explicit-id", "version": 7, "active": true, "optional": null}], "affected_rows": 0}),
+            json!({"columns": ["id", "version", "active", "optional"], "rows": [{"id": "explicit-id", "version": 7, "active": true, "optional": null}], "affected_rows": 0, "generated_keys": []}),
         );
         let identity = resolve_repository_identity_from_remote(
             "https://github.com/example/supabase-proof.git",

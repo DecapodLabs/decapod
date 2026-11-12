@@ -579,6 +579,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "issue1628-registry-fixtures-recovery",
+      "summary": "Reauthor scoped registry evidence on fresh same-task binding and align successful RPC fixtures with published Dactyl 0.12.0",
+      "input_digest": "sha256:d048bf9b8659d3386db2fdacbf28319842b26d62687f23747953716e3d6095aa",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -619,21 +627,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current published-registry client and generated Bazel metadata, including identical JSON data under bounded discovery. No cloud custody/authority boundary, required check coverage or discovery/runtime limit changes. Client fixture and actual Buildkite proof remain required.",
+          "reason": "Reviewed same-task history recovery from valid2afbd191, retaining both original source checkpoints plus all later valid checkpoints. Reauthored only the scoped documentation correction; published registry client behavior, private custody and full required checks remain intact.",
           "reviewed_code_fingerprint": "ec95385344f3bb6e0987d9c7efb5b6541bfe42226afe3376b038a50e34288a55",
           "spec_material_hash": "855b9020ffb388bfa7fd95f9168b54e06432c2921ad8caaea4ab640893304087"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current published-registry client and generated Bazel metadata, including identical JSON data under bounded discovery. No cloud custody/authority boundary, required check coverage or discovery/runtime limit changes. Client fixture and actual Buildkite proof remain required.",
+          "reason": "Reviewed same-task history recovery from valid2afbd191, retaining both original source checkpoints plus all later valid checkpoints. Reauthored only the scoped documentation correction; published registry client behavior, private custody and full required checks remain intact.",
           "reviewed_code_fingerprint": "ec95385344f3bb6e0987d9c7efb5b6541bfe42226afe3376b038a50e34288a55",
           "spec_material_hash": "65edb4f53b3f4c074e198bfeab6502152d7c23335dda29c62fcb21a915a7f817"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current published-registry client and generated Bazel metadata, including identical JSON data under bounded discovery. No cloud custody/authority boundary, required check coverage or discovery/runtime limit changes. Client fixture and actual Buildkite proof remain required.",
+          "reason": "Reviewed same-task history recovery from valid2afbd191, retaining both original source checkpoints plus all later valid checkpoints. Reauthored only the scoped documentation correction; published registry client behavior, private custody and full required checks remain intact.",
           "reviewed_code_fingerprint": "ec95385344f3bb6e0987d9c7efb5b6541bfe42226afe3376b038a50e34288a55",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
@@ -646,18 +654,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794457617Z"
+      "updated_at": "1794458087Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Consume a real published registry version without overrides or audit exemptions; private binding and authorized repository read remain mandatory",
         "Current claimed task and isolated work branch",
         "Preserve original client checkpoints and accepted target history; backend-only project configuration, Dactyl-owned transport and server-owned prices/rosters remain explicit user requirements",
+        "Preserve original refs and all six valid checkpoints; use same-task supported recovery, no force-push or history waiver",
         "Preserve two original checkpoints and accepted target; regenerate only supported projections and retain Buildkite plus registry gates",
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:f52844d572e5cab8d148e81b7f68f16edf40bcb842c5395feebafc0584da1e98",
+      "artifact_hash": "sha256:08c465af63c6a3e1734a2a00b57dbe89547d5aa85153e7f8c1808324084cf8ab",
       "checks": [
         {
           "name": "bazel-lock-consistency",
@@ -720,6 +729,10 @@
           "status": "passed"
         },
         {
+          "name": "registry-consumer",
+          "status": "failed"
+        },
+        {
           "name": "registry-crate-checksum-and-vcs",
           "status": "passed"
         },
@@ -728,11 +741,19 @@
           "status": "unavailable"
         },
         {
+          "name": "renewed-task-workspace-readmission",
+          "status": "passed"
+        },
+        {
           "name": "source-review",
           "status": "passed"
+        },
+        {
+          "name": "uncheckpointed-doc-commit",
+          "status": "failed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -795,10 +816,24 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -934,6 +969,39 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "After renewing the lease to generation2, the original workspace authoring binding was stale. A chained execution mistakenly committed the two-file documentation correction45785a6b despite failed checkpointing, and native validation pushed that work ref before later history verification. Immutable inspection confirms its checkpoint is missing. The original pushed ref is preserved unchanged; no later checkpoint is offered as proof for45785a6b. Supported workspace ensure created the same task recovery branch from accepted d3358e1c, preserved its fresh admission seed and fast-forwarded to the proven2afbd191 containing both original1289a80/d85650b checkpoints and all four later valid checkpoints. Native readmission refreshed the generation2 binding. Only the two reviewed documentation changes were reauthored on this branch, with fresh reviews/checkpoint;45785a6b is not an ancestor. The public GitHub readiness reader also returned a403 rate limit with reset1794459593; it will be retried only after that reset using the same reader, without alternate authentication."
+                ],
+                "proof_refs": [
+                  "uncheckpointed-doc-commit",
+                  "renewed-task-workspace-readmission"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "CI 43143251997: all eighteen custody unit tests passed; consumer RPC fixtures lacked required generated_keys; corrected successful envelopes and explicit unavailable/offline diagnostics without weakening negative coverage. Fresh recovery branch preserves six verified checkpoints; uncheckpointed 45785a6b is excluded and left intact on original ref."
+                ],
+                "proof_refs": [
+                  "registry-consumer"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -951,6 +1019,8 @@
       "destination": "pull request",
       "evidence": [
         "Actual pinned Bazel regenerated the module lock from the registry0.12 Cargo graph. Generated indentation exceeded the1MiB source bound by4454bytes; one-space JSON encoding preserves all parsed values and reduces the complete file to1029040bytes. Pinned Bazel mod deps --lockfile_mode=error accepts it. Every discovered source hash was verified; only MODULE.bazel.lock changed relative to the previous reviewed build-source inventory. Neither required checks nor limits nor default stale-lock rejection were changed. Current Buildkite candidate0bff2528 failed in CI build8025; diagnostics identified the stale Bazel metadata. Fresh exact-candidate execution remains required.",
+        "After renewing the lease to generation2, the original workspace authoring binding was stale. A chained execution mistakenly committed the two-file documentation correction45785a6b despite failed checkpointing, and native validation pushed that work ref before later history verification. Immutable inspection confirms its checkpoint is missing. The original pushed ref is preserved unchanged; no later checkpoint is offered as proof for45785a6b. Supported workspace ensure created the same task recovery branch from accepted d3358e1c, preserved its fresh admission seed and fast-forwarded to the proven2afbd191 containing both original1289a80/d85650b checkpoints and all four later valid checkpoints. Native readmission refreshed the generation2 binding. Only the two reviewed documentation changes were reauthored on this branch, with fresh reviews/checkpoint;45785a6b is not an ancestor. The public GitHub readiness reader also returned a403 rate limit with reset1794459593; it will be retried only after that reset using the same reader, without alternate authentication.",
+        "CI 43143251997: all eighteen custody unit tests passed; consumer RPC fixtures lacked required generated_keys; corrected successful envelopes and explicit unavailable/offline diagnostics without weakening negative coverage. Fresh recovery branch preserves six verified checkpoints; uncheckpointed 45785a6b is excluded and left intact on original ref.",
         "Current-target checkpoint inspection against d3358e1c proves original1289a80,d85650b and mergecfb8d050. Initial validation stopped before Buildkite at ENTRYPOINT_COMMIT_DISCIPLINE because installed released controller changed to0.138.3 while the immutable candidate retained0.138.2 entrypoints. Supported init generated all four current headers and managed image pin. Backups were moved into private storage; the reviewed config was restored exactly and native journal bytes were checked unchanged. Specs refreshed. No check is waived and no compilation or test pass is asserted.",
         "Dactyl main advanced to598415953b5ee568f6d42652982897c58b4433cc via merged PR102 and release103 during execution, and crates.io published0.12.0 with checksum b9d8eda3a7bad7490d23dbca5c468bf89b28de4c8b4fd566034b342334ba481e. Downloaded crate checksum, cargo_vcs_info and cloud.rs bytes match the release. Client now uses its public Serde restoration and string/unit auth API; private origin/repository/checkout/flow deadline and actual authorized read retain isolation/readiness. One-time transport/protocol/availability failures demand restart; idempotent completion response loss preserves its issued session. Registry policy pins actual0.12.0 and checksum. Cargo resolves inactive quinn-proto0.11.9 under upstream MSRV bounds; dependency denial remains mandatory without exemptions. Reviewed source inventory changes only Cargo manifest/lock and required coverage is unchanged. Prior7ffeb668 validation reached real Buildkite8022 and failed; no product pass is inherited.",
         "Diagnostic GitHub job130935222490 on exact0bff2528 rejected MODULE.bazel.lock because the normalized Cargo.lock extension input changed, instructing bazel mod deps --lockfile_mode=update. Ran this metadata-only recovery with pinned9.3.0 in batch mode. Source inventory changes only MODULE.bazel.lock; default lockfile_mode=error and complete required Buildkite graph remain unchanged. GitHub clippy/dependency-lint results do not substitute for actual Buildkite proof. Current candidate requires fresh validation and all managed fixture checks.",
