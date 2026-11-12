@@ -624,6 +624,15 @@
         "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
         "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt"
       ]
+    },
+    {
+      "id": "validation-bootstrap-fixture-diagnostics-v10",
+      "summary": "Restore isolated fixture broker lifecycle and preserve actual failures before measured aggregate timeout",
+      "input_digest": "sha256:7cf2247bd346a1c1e4e66b8bae3b9ec8b69401b359679ff55496b4e0bd94e322",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-3327-cli-diagnostic.log",
+        "/private/tmp/validation-bootstrap-3327-unit-diagnostic.txt"
+      ]
     }
   ],
   "intents": {
@@ -669,22 +678,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "CLI fixture ordering now respects the existing managed workspace authoring boundary; terminal validation architecture is unchanged.",
-          "reviewed_code_fingerprint": "b3e3bae602e5531cd58cac54c5537994e5874bf4ca2866898c37bc8023b2375f",
+          "reason": "Measured consumer fixture lifecycle/diagnostics repair only; terminal proof architecture and accepted CI budget are unchanged.",
+          "reviewed_code_fingerprint": "7cc4b80f1336b93853683fe220932bbbf66e0a21d3605772b3baf82d73498aa9",
           "spec_material_hash": "8ebd18b07ea40a599cc2262ee5fc4e1d8c2d651ae76317ffc7bf1db2a76560e7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Only consumer test ordering changes: supported specs.refresh stays after workspace ensure; public production interfaces remain unchanged.",
-          "reviewed_code_fingerprint": "b3e3bae602e5531cd58cac54c5537994e5874bf4ca2866898c37bc8023b2375f",
+          "reason": "Public validation interfaces remain unchanged; fixture errors are emitted immediately with bounded diagnostics before the same test failure.",
+          "reviewed_code_fingerprint": "7cc4b80f1336b93853683fe220932bbbf66e0a21d3605772b3baf82d73498aa9",
           "spec_material_hash": "5a41bc114c254c047cac2c1ab73dd694185e856d11bc66f1a00a15fdaae79bec"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fixture uses the existing mandatory managed authoring boundary; no credentials, runtime state, proof gates, or security policy changed.",
-          "reviewed_code_fingerprint": "b3e3bae602e5531cd58cac54c5537994e5874bf4ca2866898c37bc8023b2375f",
+          "reason": "Isolated fixture restores existing one-second broker idle lifecycle and bounds diagnostic output; no credentials, authentication, trusted helpers or proof requirements change.",
+          "reviewed_code_fingerprint": "7cc4b80f1336b93853683fe220932bbbf66e0a21d3605772b3baf82d73498aa9",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -698,14 +707,15 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794461500Z"
+      "updated_at": "1794462898Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
+        "Keep accepted 300-second aggregate budget and trusted profile/graph unchanged; no manual builds/tests or native quota retry on known failing source",
         "Preserve current controller0.138.3 and actual native quota blocker; source diagnostics do not authorize readiness"
       ],
-      "artifact_hash": "sha256:10a7e23d0a33f483f940598ea93c2ba774c58a35c8caec4ba90a239cdf01a39f",
+      "artifact_hash": "sha256:3f0ac8b8ba7d1d7f3ec13c8839a5b3f3e3acbd887df693a4fc1a85d95578648c",
       "checks": [
         {
           "name": "accepted_release_inventory_review",
@@ -714,6 +724,22 @@
         {
           "name": "authored_source_review",
           "status": "passed"
+        },
+        {
+          "name": "exact_3327_cli",
+          "status": "failed"
+        },
+        {
+          "name": "exact_3327_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "exact_3327_library",
+          "status": "passed"
+        },
+        {
+          "name": "exact_3327_native",
+          "status": "unavailable"
         },
         {
           "name": "exact_fd6_cli",
@@ -780,7 +806,7 @@
           "status": "failed"
         }
       ],
-      "completion_claim": "Actual fd6 CLI executed68pass1fail1ignored; original consumer fixtures pass. Genuine docs fixture incorrectly invoked authoring specs.refresh from main before workspace ensure. Remove only premature refresh; existing real managed-worktree refresh remains after claim/orientation/approval.",
+      "completion_claim": "Actual3327 source CLI reached aggregate300.1second timeout after new docs fixture had failed; Rust harness lost final panic details. Fixture now restores existing short broker idle lifecycle after env isolation and writes bounded actual command/full-validation failure diagnostics immediately. Genuine failure semantics and required proof remain strict; no readiness claim.",
       "current_phase": "repair",
       "custody": {
         "events": [
@@ -872,10 +898,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1134,6 +1167,31 @@
                 ],
                 "sequence": 14,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "tests/consumer_readiness.rs",
+                  "/private/tmp/validation-bootstrap-3327-cli-diagnostic.txt",
+                  "/private/tmp/validation-bootstrap-3327-unit-diagnostic.txt"
+                ],
+                "proof_refs": [
+                  "exact_3327_clippy",
+                  "exact_3327_library",
+                  "exact_3327_cli",
+                  "exact_3327_native"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 15,
+                "validation_findings": []
               }
             ]
           }
@@ -1144,6 +1202,8 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/validation-bootstrap-3327-cli-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-3327-unit-diagnostic.txt",
         "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
         "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt",
         "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",

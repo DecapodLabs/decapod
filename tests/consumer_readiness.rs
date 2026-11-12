@@ -851,6 +851,7 @@ fn governed_cli(root: &Path, storage: &Path, args: &[&str]) -> std::process::Out
         .current_dir(root)
         .env("DECAPOD_AGENT_ID", "docs-bootstrap")
         .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
         .env("HOME", storage.join("home"))
         .env("XDG_CONFIG_HOME", storage.join("home/config"))
         .env("XDG_DATA_HOME", storage.join("home/data"))
@@ -869,14 +870,25 @@ fn governed_cli(root: &Path, storage: &Path, args: &[&str]) -> std::process::Out
 }
 
 #[cfg(unix)]
+fn governed_failure(diagnostic: String) -> ! {
+    // Preserve the actual error if the aggregate target expires before
+    // libtest prints its captured failure summary; keep diagnostics bounded.
+    let bytes = diagnostic.as_bytes();
+    let _ = io::Write::write_all(&mut io::stderr(), &bytes[..bytes.len().min(16_384)]);
+    panic!("{diagnostic}");
+}
+
+#[cfg(unix)]
 fn governed_ok(root: &Path, storage: &Path, args: &[&str]) -> serde_json::Value {
     let output = governed_cli(root, storage, args);
-    assert!(
-        output.status.success(),
-        "{args:?}: stdout={} stderr={}",
-        String::from_utf8_lossy(&output.stdout),
-        String::from_utf8_lossy(&output.stderr)
-    );
+    if !output.status.success() {
+        let diagnostic = format!(
+            "{args:?}: stdout={} stderr={}\n",
+            String::from_utf8_lossy(&output.stdout[..output.stdout.len().min(8192)]),
+            String::from_utf8_lossy(&output.stderr[..output.stderr.len().min(8192)])
+        );
+        governed_failure(diagnostic);
+    }
     serde_json::from_slice(&output.stdout).unwrap_or(serde_json::Value::Null)
 }
 
@@ -1067,18 +1079,18 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
         let output = governed_cli(&workspace, &storage, &["validate", "--format", "json"]);
         let result: serde_json::Value =
             serde_json::from_slice(&output.stdout).unwrap_or_else(|error| {
-                panic!(
+                governed_failure(format!(
                     "{error}: {} {}",
                     String::from_utf8_lossy(&output.stdout),
                     String::from_utf8_lossy(&output.stderr)
-                )
+                ))
             });
-        assert_eq!(
-            output.status.success(),
-            succeeds,
-            "{result}\n{}",
-            String::from_utf8_lossy(&output.stderr)
-        );
+        if output.status.success() != succeeds {
+            governed_failure(format!(
+                "Expected command success={succeeds}: {result}\n{}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
+        }
         assert_eq!(result["publication_ready"], succeeds, "{result}");
         let readiness = &result["readiness"];
         let evidence = PathBuf::from(
