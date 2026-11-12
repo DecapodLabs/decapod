@@ -590,6 +590,11 @@
       "id": "issue1573-accepted1633-merge",
       "summary": "Reconcile accepted bootstrap fix and existing fixture targets; preserve quota source and five native checkpoints. Prior full proof invalidated by master advance; fresh native proof remains mandatory.",
       "input_digest": "sha256:f0927c1bfc1d3b7844418548a2b5c429f382d01c8e7579ad3907cf63cf6eb523"
+    },
+    {
+      "id": "issue1573-accepted140-release",
+      "summary": "Reconcile accepted0.140.0 release and native release surfaces while preserving six checkpoints, bootstrap fixture coverage and quota implementation. Prior full proof invalidated by moving master; fresh exact-candidate Buildkite proof required.",
+      "input_digest": "sha256:62ce34c3540896d81428b3477e0c08cbc94dc665d5d07b50e7b76cd9d38a7c64"
     }
   ],
   "intents": {
@@ -635,22 +640,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current accepted bootstrap fix, fixture inputs and quota source. Quota source is unchanged; six fixtures passed on ee48c0aa, but accepted-target change invalidates full proof. Preserve new fixture coverage, fresh final source/base/registry identities, denial behavior and bounded waits. Fresh exact-candidate native proof remains required.",
-          "reviewed_code_fingerprint": "eea8821aebca790e1f13ad29c1ac26ae1f51fe8738b4bd05cb820f1a78fdc129",
+          "reason": "Reviewed against accepted fc1e2b94 and independently released0.140.0. Quota implementation and four authored sections retained; accepted bootstrap fixture coverage preserved. No new source tests claimed: prior1687library/6quota/32boundary passed on ee48c0aa only; moving master invalidated full proof. Fresh current-candidate readiness remains required.",
+          "reviewed_code_fingerprint": "707da7c26639f95f244bb96aa301e536b21fe8a69ce8b7bff8c6db8f07d1c28b",
           "spec_material_hash": "0eff925f4447362d473d57e9c7833e15ee82b60aec75b4453925e101d41b7417"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current accepted bootstrap fix, fixture inputs and quota source. Quota source is unchanged; six fixtures passed on ee48c0aa, but accepted-target change invalidates full proof. Preserve new fixture coverage, fresh final source/base/registry identities, denial behavior and bounded waits. Fresh exact-candidate native proof remains required.",
-          "reviewed_code_fingerprint": "eea8821aebca790e1f13ad29c1ac26ae1f51fe8738b4bd05cb820f1a78fdc129",
+          "reason": "Reviewed against accepted fc1e2b94 and independently released0.140.0. Quota implementation and four authored sections retained; accepted bootstrap fixture coverage preserved. No new source tests claimed: prior1687library/6quota/32boundary passed on ee48c0aa only; moving master invalidated full proof. Fresh current-candidate readiness remains required.",
+          "reviewed_code_fingerprint": "707da7c26639f95f244bb96aa301e536b21fe8a69ce8b7bff8c6db8f07d1c28b",
           "spec_material_hash": "b0164554c048717f56882cc5f111da1b6a1c8a914f2cc15a2e2b9ceca8190d1f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current accepted bootstrap fix, fixture inputs and quota source. Quota source is unchanged; six fixtures passed on ee48c0aa, but accepted-target change invalidates full proof. Preserve new fixture coverage, fresh final source/base/registry identities, denial behavior and bounded waits. Fresh exact-candidate native proof remains required.",
-          "reviewed_code_fingerprint": "eea8821aebca790e1f13ad29c1ac26ae1f51fe8738b4bd05cb820f1a78fdc129",
+          "reason": "Reviewed against accepted fc1e2b94 and independently released0.140.0. Quota implementation and four authored sections retained; accepted bootstrap fixture coverage preserved. No new source tests claimed: prior1687library/6quota/32boundary passed on ee48c0aa only; moving master invalidated full proof. Fresh current-candidate readiness remains required.",
+          "reviewed_code_fingerprint": "707da7c26639f95f244bb96aa301e536b21fe8a69ce8b7bff8c6db8f07d1c28b",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -664,14 +669,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794487355Z"
+      "updated_at": "1794488252Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve fresh final registry/source/base checks, required provider proof, public reader identity, immediate denied-request failure and the existing 7200-second maximum budget."
       ],
-      "artifact_hash": "sha256:a8a2a186aa9c7f484c6010ae3c570ff157423d71eed0fe0c36f3ca9318047ea1",
+      "artifact_hash": "sha256:ca445152249af376adf1e8fc74c6a4b1fd5d48cd1c35f5d2b3c0b2faf2d8a0f5",
       "checks": [
         {
           "name": "accepted_target",
@@ -683,6 +688,14 @@
         },
         {
           "name": "candidate-after1633-full",
+          "status": "unavailable"
+        },
+        {
+          "name": "candidate140-full",
+          "status": "unavailable"
+        },
+        {
+          "name": "candidate37-full",
           "status": "unavailable"
         },
         {
@@ -807,10 +820,17 @@
             "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77EJ4KJ409S85KKXV55SAT1": {
@@ -1019,6 +1039,28 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Master advanced again fromf1a6c7a0 tofc1e2b94(release1642/v0.140.0) before fresh proof of37f54593. Source37 push was permitted iteration; its CI event guards rejected obsolete base, no new native proof invoked. Six checkpoint history remains proven. Mergefc1e2b94 changes only accepted CHANGELOG/Cargo version files.",
+                  "Verified registry0.140.0 checksum fa0571ae8052b102097fa98bdb644b17f03608eddf25b0902f346b2a27b83bb0 and official LinuxARM64 release archive76b92ced9e19594b157f51ced7354a7e0ef4237a145f63e7ebc78a8f80b679e8. Observed existing release43220596706; did not start competing release. Fresh native transfer01M77X4C8FTY8BN3RGME8D6YWV imported once; claim/workspacecan_worktrue under independently released0.140.0. Old1391container stopped after fresh claim.",
+                  "All105 proof-source hashes independently rechecked including symlink bytes; only Cargo.lock/Cargo.toml release version changed after1633. Reviewed digest sha256:1a14a4a962890429ec177071bbbc7e1d497e3a08bcc8b68cd3e383ed8ad8b49d. Existing .bzl fixture coverage retained. Native140 regenerated entrypoints, Dockerfile, attestations and manifest in pending merge. No runtime limits/required checks changed."
+                ],
+                "proof_refs": [
+                  "candidate37-full",
+                  "candidate140-full"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -1031,11 +1073,13 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "All105 proof-source hashes independently rechecked including symlink bytes; only Cargo.lock/Cargo.toml release version changed after1633. Reviewed digest sha256:1a14a4a962890429ec177071bbbc7e1d497e3a08bcc8b68cd3e383ed8ad8b49d. Existing .bzl fixture coverage retained. Native140 regenerated entrypoints, Dockerfile, attestations and manifest in pending merge. No runtime limits/required checks changed.",
         "CI43203014899 passed on88b93161:1680 library,8 ignored,6 quota fixtures,32 boundary. Actual Buildkite8437 contracts/health failed Git merge-base verification after master advanced through1636/release1641 tobc0a7197. Corrected prior progress misclassification. Full readiness false. Owned stale read-only collector interrupted; native final CI operation cancelled at/tmp/decapod-snapshot-VJ25px, privately preserved. No PR created.",
         "Exactee48c0aa GitHub CI43210297814 passed:6 quota fixtures,1687library,8 ignored,32cloud boundary. Buildkite8501-8504 passed. Actual8500 completed30steps then deps-lint/setup rejected Git merge-base verification after master advanced to f1a6c7a0(PR1633). No source test failure was observed; complete native readiness never passed. Owned stale collector interrupted; cancelled verdict and /tmp/decapod-snapshot-p0aoqm preserved privately.",
         "Existing-workspace ensure does not rerender release surfaces. Restored four entrypoints and Dockerfile as exact unedited1391 native-generated bytes from preserved stash. entrypoint_integrity::render_entrypoint depends on evaluating binary/template rather than repository source; current config uses same capabilities. specs.refresh regenerates current merged-code attestations and manifest. No old manifest reapplied.",
         "Fetched accepted master advanced from d3358e1ce2cdb137dc57445c64592cb6d327a6ff to c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8 by merge of PR1635. Preserve current authored source with native checkpoint before reconciling accepted history; no validation claim on this unmerged candidate.",
         "Initial governed quota checkpoint committed as b55ee3f8. Normal merge of accepted c87e4f49 produced ten conflicts limited to the active journal and specs. Git resolution preserves exact current native journal from b55ee3f8 and accepted specs/manifest from c87e4f49, with only the four authored quota sections reapplied. Accepted historical governance remains in the incoming parent; projections and canonical spec reviews refreshed through CLI. No source conflict or cloud behavior edit was needed.",
+        "Master advanced again fromf1a6c7a0 tofc1e2b94(release1642/v0.140.0) before fresh proof of37f54593. Source37 push was permitted iteration; its CI event guards rejected obsolete base, no new native proof invoked. Six checkpoint history remains proven. Mergefc1e2b94 changes only accepted CHANGELOG/Cargo version files.",
         "Merged accepted release19acd21f7ff50656323d037915273f03cdedc04e after preserving native checkpoint87bdf449. Native agent.init reported STALE_SOURCE_INVENTORY; independently checked all105 current hashes and previous validated c87 inventory digest8f21b5e. Only Cargo.toml/Cargo.lock own-package version fields changed; configured actual digestc8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 after backing up config. No source graph/carrier/check change. Source review also preserves numeric reset diagnostics when quota waits reach the original deadline.",
         "Native Podman admission reports can_work=true and in_container=true with the actual runtime container ID a746884071f9cd15441394a7b6634ca20a8ab454d874dcd5b04202c82a6e2b83; accepted base d3358e1ce2cdb137dc57445c64592cb6d327a6ff. No product tests have run yet.",
         "Normal merge f1a6c7a0 keeps accepted bootstrap fix and fixture coverage. Active native journal retained; accepted specs retain four quota sections. Independently verified all105source hashes including symlink bytes: only .config/build/decapod.BUILD.bzl changed, adding consumer/fresh-docs fixtures to existing test targets. Actual digest sha256:31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40 matches accepted config. Required graph/carriers/checks retained; current package/controller0.139.1.",
@@ -1043,6 +1087,7 @@
         "Source implements bounded successful-header quota hints shared by nested budgets, cold-discovery pacing, fresh final registry/source/base checks, and no retry on denial. Six new fixtures are authored but have not executed. Canonical ARCHITECTURE/INTERFACES/SECURITY spec reviews recorded through native CLI. Container-private Git configuration backed up, official gh configured for authorized Git publication before proof; anonymous API reader remains credential-free.",
         "Verified official v0.139.0 LinuxAArch64 release archive sha256:24b5153ce3a04d6ab0c37d6d4be2428c623066b4b864c86116524371ca542649; isolated newcontroller image not published. Native successor01M77N7N2XK4M9KE1CB1435JBW imported once into empty private tmpfs with notmpcopyup; claim+workspace can_work true. First destination import rejected old host revision1 and replaced no state. Old owned source container stopped after fresh claim.",
         "Verified official0.139.1 archive ce1e96bde351e32b765a5052411bb601908c2e9a0a89fc3731fd7e8587f99607; successor01M77R6KGAGE6598M0GPA0GWM2 imported once, claimed, can_work true. Source139 container stopped. Generated premerge projections saved in stash71b357f07d1fc0dec78defb948285341b5240541; fresh native projections replace stale ones.",
+        "Verified registry0.140.0 checksum fa0571ae8052b102097fa98bdb644b17f03608eddf25b0902f346b2a27b83bb0 and official LinuxARM64 release archive76b92ced9e19594b157f51ced7354a7e0ef4237a145f63e7ebc78a8f80b679e8. Observed existing release43220596706; did not start competing release. Fresh native transfer01M77X4C8FTY8BN3RGME8D6YWV imported once; claim/workspacecan_worktrue under independently released0.140.0. Old1391container stopped after fresh claim.",
         "https://github.com/DecapodLabs/decapod/actions/runs/43195371875/job/131105695413: 1680 library passed,8 ignored; six quota fixtures passed;32 boundary passed. Source unchanged after838b.",
         "https://github.com/DecapodLabs/decapod/actions/runs/43195371875/job/131105696067:31 entrypoint tests passed,1 stale-release fixture failed,4 ignored. Standalone43195371851:190 passed then generated release drift rejected."
       ],
@@ -1063,6 +1108,7 @@
       ],
       "next_transitions": [
         "Checkpoint exact candidate and run plain decapod validate through required Buildkite profile",
+        "Checkpoint exact140 release-reconciled candidate, verify history, check accepted tip before source push, complete full native Buildkite proof and publish only if ready.",
         "Checkpoint reconciled candidate, push same governed branch, complete fresh exact-candidate Buildkite readiness and publish only if ready.",
         "Checkpoint reconciled1391 candidate, push, complete full native Buildkite readiness and publish only when ready.",
         "Checkpoint regenerated0.139.0 assets, commit, verify immutable history, push exact candidate, complete full native Buildkite proof and publish only when ready.",
