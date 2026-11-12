@@ -1,5 +1,16 @@
 # Intent
 
+## Bounded storage inventory (#1630)
+
+Measure the canonical stores of Decapod, Dactyl and Propodus before choosing a
+compact representation. `data database inspect` and `data.database.inspect`
+provide native, redacted observations through Dactyl, with exact counts,
+bounded samples and explicit unavailable metrics. No content, retained history,
+permissions or entitlements change. Numeric reduction and latency/CPU budgets
+must be agreed from measured baselines before representation or migration work.
+This prerequisite does not establish shared local/hosted domain parity or close
+the coordinated issues. See `docs/storage-inventory.md` for the measured scope.
+
 ## Current bounded-reader repair (#1571)
 
 Restore ordinary local validation liveness on macOS by enumerating pinned
@@ -287,8 +298,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `7e3b97aea2cbb50e68f26988781127f33658944228b35725c19de5840dce2753`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

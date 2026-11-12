@@ -1,5 +1,16 @@
 # Architecture
 
+## Native inventory boundary
+
+`core::storage_inventory` owns semantic measurement and redaction. The
+`DactylBridge::inspect_snapshot` adapter delegates physical reads to Dactyl's
+bounded, consistent read-only transaction. CLI and RPC route inspection before
+normal startup migration, session, presence and worktree maintenance. Native
+filesystem stat observations remain separate from SQL snapshot consistency.
+The inspection path neither selects a representation nor rewrites stored data;
+the existing lifecycle lock still protects replacement. Remote snapshot
+inspection remains an explicit unsupported driver capability.
+
 ## Agent-invoked authority across local and cloud repositories
 
 The repository's agent remains Decapod's operational caller. Solo/local work
@@ -820,8 +831,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `7e3b97aea2cbb50e68f26988781127f33658944228b35725c19de5840dce2753`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

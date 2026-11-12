@@ -1,5 +1,17 @@
 # Interfaces
 
+## Bounded local storage inspection
+
+CLI `data database inspect` and RPC `data.database.inspect` expose the same
+`decapod.storage-inventory.v1` report and resource policy. Options bound sample
+rows, conservative decoded bytes, JSON report bytes and snapshot duration;
+reads beyond five seconds require explicit long-read authorization. A missing
+store stays missing. Samples and unavailable metrics are labeled, and partial
+inventory has a nonzero CLI/RPC exit plus a typed limitation. RPC input framing
+is capped at 32 MiB before decoding. The report contains schema names and size
+statistics, never retained field contents, task IDs or comparison hashes.
+See `docs/storage-inventory.md` for bounds and interpretation.
+
 ## Agent delegation and cloud authorization interface
 
 Decapod is invoked by each contributor's coding agent in the repository.
@@ -1064,8 +1076,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `7e3b97aea2cbb50e68f26988781127f33658944228b35725c19de5840dce2753`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
