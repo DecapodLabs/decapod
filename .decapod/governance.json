@@ -616,6 +616,14 @@
       "id": "reflection-1639-optional-envelope",
       "summary": "Preserve optional RPC blocker omission and record executed reflection/lifecycle outcomes and measured storage/latency.",
       "input_digest": "sha256:98df870bf89bfcc6d988bd4cff471b5e8cb015ef74cacff7b5f96dfeaaf0c7a8"
+    },
+    {
+      "id": "reflection-1639-storage-target",
+      "summary": "Reconcile bounded reflection with accepted storage inventory and 0.140.1 release; retain measured evidence and exact-candidate validation requirement.",
+      "input_digest": "sha256:7f50302367af4df51f7ad191ed07a29500ecabcd555082ab63b231f661c1d5cd",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/8602"
+      ]
     }
   ],
   "intents": {
@@ -660,25 +668,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Measured results are documented for immutable candidate dc7bf2fa. Runtime composition, source binding, custody and phase progress semantics are unchanged.",
-          "reviewed_code_fingerprint": "c6fc3ef723c9c57903641918272909b72f3a3583b008bf7275224ebf7de7a029",
-          "spec_material_hash": "491f7b50dbc49dd909b17c34b2ae50416cd164051e158722ab25528e5d400974"
+          "reason": "Composes existing mentor, orientation, governed-plan custody and federation projections. Accepted storage inventory and Dactyl 0.13.0 remain intact; no reflection datastore or inference engine.",
+          "reviewed_code_fingerprint": "06f9a0e7d79176c13c56c97b1e275bb801b0eadcc781a5c9e3586199f990130f",
+          "spec_material_hash": "38946fea0536bdb5e18529d8d3d0124b5165e74fc33327044f1603d7994f2418"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Successful RPC envelopes may omit empty blockers. The test now accepts that existing optional shape; no runtime permission or protocol contract changed.",
-          "reviewed_code_fingerprint": "c6fc3ef723c9c57903641918272909b72f3a3583b008bf7275224ebf7de7a029",
-          "spec_material_hash": "13dd11d971ba861190919fc1cf20b6ca80e7c10bb45da8bada94c89086195442"
+          "reason": "Optional reflection contract preserves legacy envelopes, explicit matching CLI task binding, CAS continuation and terminal outcomes. Required CLI fixture handles the existing omitted empty blocked_by field.",
+          "reviewed_code_fingerprint": "06f9a0e7d79176c13c56c97b1e275bb801b0eadcc781a5c9e3586199f990130f",
+          "spec_material_hash": "cd4e1e46e408a498db14deec755dcec6f6a6e28a43c11a99d0e8c76a2eaffd70"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The corrected assertion accepts only absent or empty-array blockers, rejects malformed/nonempty blockers, and changes no authority, trust or proof gate.",
-          "reviewed_code_fingerprint": "c6fc3ef723c9c57903641918272909b72f3a3583b008bf7275224ebf7de7a029",
-          "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
+          "reason": "Preserves accepted source-bound trust, exclusive task custody, human decisions, approval and proof. Re-capture invalidates changed governing sources; bounded hashes are not semantic understanding or completion proof.",
+          "reviewed_code_fingerprint": "06f9a0e7d79176c13c56c97b1e275bb801b0eadcc781a5c9e3586199f990130f",
+          "spec_material_hash": "b8095677dc08420d4a01a49b17f3fa7d14064a8b465f2f596046b22c8aafc311"
         }
       ],
       "state": "APPROVED",
@@ -691,13 +699,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794492302Z"
+      "updated_at": "1794493888Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:82340fdf7492980782a7d0998b416ba516aaed1d9227347e950acd5ba09e1c55",
+      "artifact_hash": "sha256:2f41c9a4a6a90de60e616bad4ed48ad6dc690f5b5a4385518717939e4b10c905",
       "checks": [
         {
           "name": "buildkite-clippy",
@@ -748,6 +756,10 @@
           "status": "failed"
         },
         {
+          "name": "full_current_candidate",
+          "status": "unavailable"
+        },
+        {
           "name": "legacy-plan-fixture-compilation",
           "status": "failed"
         },
@@ -758,6 +770,10 @@
         {
           "name": "local-projection-bootstrap",
           "status": "partial"
+        },
+        {
+          "name": "merge_material_review",
+          "status": "passed"
         },
         {
           "name": "published-controller-140",
@@ -776,11 +792,19 @@
           "status": "passed"
         },
         {
+          "name": "release_1401_projection_bootstrap",
+          "status": "partial"
+        },
+        {
+          "name": "required_candidate_c0d3",
+          "status": "unavailable"
+        },
+        {
           "name": "reviewed-profile-inventory",
           "status": "passed"
         }
       ],
-      "current_phase": "validation-repair",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
@@ -885,10 +909,17 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 16,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -1259,6 +1290,35 @@
                   "Full validation ended SNAPSHOT_NOT_READY after 3427640 ms provider wait. The only failed Buildkite job was a CLI fixture assertion assuming blocked_by is always an array; actual round-2 proceed and false completion proof had already passed. The fixed assertion preserves the existing omission contract.",
                   "Required library execution passed 1709 tests with 8 ignored, including all 16 reflection cases and canonical lifecycle. Protocol samples and storage growth are now documented with immutable source references; this narrow evidence supports the recorded claim, not complete current readiness."
                 ]
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/8652",
+                  "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-2P6hYI"
+                ],
+                "proof_refs": [
+                  "required_candidate_c0d3",
+                  "release_1401_projection_bootstrap",
+                  "merge_material_review",
+                  "full_current_candidate"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 17,
+                "validation_findings": [
+                  "Prior candidate proof became stale after accepted master advanced; SNAPSHOT_NOT_READY after 516740 ms is preserved, never readiness.",
+                  "Supported session update installed 0.140.1, private backups preserved, temporary session_auto_update preference removed. Project-check refreshed release projections but remained partial with 201 passed and five host/staging/unrelated-task failures; it is not full proof.",
+                  "Merge accepted 1d04f232c46864eecfadb9c8b9b23069ca0e906e including storage inventory, Dactyl 0.13.0 and release 0.140.1. No unrelated task or scanner policy changed."
+                ]
               }
             ]
           }
@@ -1274,6 +1334,7 @@
       "destination": "pull request",
       "evidence": [
         ".decapod/managed/specs/VALIDATION.md",
+        "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-2P6hYI",
         "docs/architecture/bounded-reflection.md",
         "https://buildkite.com/decapodlabs/decapod/builds/8515#01a1cf92-cad8-45ac-a70d-7d463e25d016",
         "https://buildkite.com/decapodlabs/decapod/builds/8517",
@@ -1281,6 +1342,7 @@
         "https://buildkite.com/decapodlabs/decapod/builds/8537#01a1cf9a-58fa-40d9-bd63-958c6bf567ad",
         "https://buildkite.com/decapodlabs/decapod/builds/8602#01a1cfd6-5d0d-4abb-853c-b4ed9164f022",
         "https://buildkite.com/decapodlabs/decapod/builds/8602#01a1cfd6-5d5a-469d-af87-6e10fbab0321",
+        "https://buildkite.com/decapodlabs/decapod/builds/8652",
         "https://github.com/DecapodLabs/decapod/actions/runs/43206246190",
         "https://github.com/DecapodLabs/decapod/actions/runs/43210330738/job/131155983763",
         "https://github.com/DecapodLabs/decapod/actions/runs/43210330914/job/131156236192",
@@ -1316,6 +1378,7 @@
       ],
       "next_transitions": [
         "After explicit release approval, back up binary/config, use session acquire update, regenerate supported projections, checkpoint and revalidate the new exact candidate against the current accepted target.",
+        "Checkpoint and commit merged exact candidate, then plain decapod validate; publish only after complete readiness.",
         "Commit exact candidate against accepted fc1e2b94 and run plain full decapod validate; preserve all failed/unavailable history.",
         "Commit exact candidate and run plain decapod validate",
         "Commit fixture repair and run plain validation after provider reset; retain release gate until approved supported update.",
@@ -1350,11 +1413,14 @@
         "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
         "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
         "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics.",
+        "Merge accepted 1d04f232c46864eecfadb9c8b9b23069ca0e906e including storage inventory, Dactyl 0.13.0 and release 0.140.1. No unrelated task or scanner policy changed.",
         "Plain validation be4cfbb6 stopped because accepted base moved to released 0.140.0. The session-acquire path installed that published release after private backups; update opt-in was restored to its original absence.",
+        "Prior candidate proof became stale after accepted master advanced; SNAPSHOT_NOT_READY after 516740 ms is preserved, never readiness.",
         "Projection bootstrap applied supported release repairs but is partial, with host container/candidate gates unmet. It is not readiness or an alternate proof path; full Buildkite validation owns all configured prerequisites.",
         "Required library execution passed 1709 tests with 8 ignored, including all 16 reflection cases and canonical lifecycle. Protocol samples and storage growth are now documented with immutable source references; this narrow evidence supports the recorded claim, not complete current readiness.",
         "Source review found missing outer CLI task binding could evaluate different intent. The new regression rejects it before round 1; behavioral execution remains pending. Buildkite clippy assertion-style failure is repaired without lint suppression.",
         "Source review found routine phase progress unnecessarily invalidated reflection. Reusing existing progress normalization fixes the coupling while independent approval/proof gates remain required; the new regression awaits configured execution.",
+        "Supported session update installed 0.140.1, private backups preserved, temporary session_auto_update preference removed. Project-check refreshed release projections but remained partial with 201 passed and five host/staging/unrelated-task failures; it is not full proof.",
         "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved.",
         "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness.",
         "User continuation authorizes the previously requested 0.139.1 update. Session acquire required no install: the installed binary already reports 0.139.1. Temporary update opt-in was removed and binary/config backed up privately."

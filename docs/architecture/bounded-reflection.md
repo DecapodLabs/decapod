@@ -143,8 +143,9 @@ Current readiness always requires a fresh complete `decapod validate` receipt
 for the exact candidate and accepted target, rather than this document.
 
 The work incorporates accepted target
-`fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b`; the installed supported
-controller reports 0.140.0. Release projections were refreshed through supported
+`1d04f232c46864eecfadb9c8b9b23069ca0e906e`; the installed supported
+controller reports 0.140.1. The accepted storage-inventory/SDK changes are
+retained, while reflection adds no datastore. Release projections were refreshed through supported
 interfaces. No PR may be opened before the full exact-candidate gate succeeds.
 
 Limits: explicit plan constraints and literal ADR matches cannot infer arbitrary

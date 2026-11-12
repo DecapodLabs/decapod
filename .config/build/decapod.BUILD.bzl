@@ -240,7 +240,9 @@ def decapod_targets():
             # Gatling runs the complete 50-case CLI suite. The 300s moderate
             # ceiling cut off post-merge CI before completion; keep its full
             # suite and four threads while allowing Bazel's finite 900s budget.
-            timeout = "long" if path in ["tests/gatling.rs", "tests/group_broker.rs", "tests/interop_conformance.rs"] else "moderate",
+            # The expanded CLI contract suite took 294s even in isolation.
+            # Use the finite 900s aggregate class for its real CLI fixtures.
+            timeout = "long" if path in ["tests/gatling.rs", "tests/group_broker.rs", "tests/interop_conformance.rs", "tests/cli_contracts.rs"] else "moderate",
             # These suites depend on finite process/request deadlines. Rust's
             # test-threads flag alone does not isolate concurrent Bazel targets.
             # Keep all broker clients concurrent within its exclusive target.
@@ -248,6 +250,9 @@ def decapod_targets():
                 "tests/group_broker.rs",
                 "tests/validate_termination.rs",
                 "tests/cli_contract_enforcement.rs",
+                # This aggregate launches real CLI fixtures sequentially. Its
+                # 300s deadline also needs isolation from the entrypoint suite.
+                "tests/cli_contracts.rs",
             ] else [],
             srcs = [path] + [
                 "tests/consumer_readiness.rs",
@@ -256,6 +261,7 @@ def decapod_targets():
                 "tests/init_config_behavior.rs",
                 "tests/support/cli_workunit_recovery.rs",
                 "tests/support/justfile_inventory.rs",
+                "tests/support/storage_inventory.rs",
                 "tests/fixtures/justfile_consumer/src/lib.rs",
                 "tests/fixtures/justfile_consumer/src/distance.rs",
                 "tests/fixtures/justfile_consumer/src/temperature.rs",

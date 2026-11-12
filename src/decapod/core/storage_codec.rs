@@ -28,6 +28,17 @@ impl ToSql for StoredText {
 fn invalid(reason: &str) -> DecapodError {
     DecapodError::ValidationError(format!("LCM_STORAGE_CODEC_CORRUPT: {reason}"))
 }
+/// Inspect framing only. This does not validate the compressed body or digest.
+pub(crate) fn header_decoded_len(bytes: &[u8]) -> Result<usize, DecapodError> {
+    if bytes.len() < HEADER || &bytes[..8] != MAGIC {
+        return Err(invalid("truncated or unknown header"));
+    }
+    let expected = u32::from_le_bytes(bytes[8..12].try_into().unwrap()) as usize;
+    if expected > MAX_TEXT {
+        return Err(invalid("decoded size exceeds limit"));
+    }
+    Ok(expected)
+}
 pub fn encode(text: &str) -> Result<StoredText, DecapodError> {
     let input = text.as_bytes();
     if input.len() < MIN_TEXT || input.len() > MAX_TEXT {
@@ -51,15 +62,7 @@ pub fn decode(p: &Parameter) -> Result<String, DecapodError> {
     match p {
         Parameter::Text(s) => Ok(s.clone()),
         Parameter::Blob(bytes) => {
-            if bytes.len() < HEADER || &bytes[..8] != MAGIC {
-                return Err(invalid("truncated or unknown header"));
-            }
-            let mut len = [0; 4];
-            len.copy_from_slice(&bytes[8..12]);
-            let expected = u32::from_le_bytes(len) as usize;
-            if expected > MAX_TEXT {
-                return Err(invalid("decoded size exceeds limit"));
-            }
+            let expected = header_decoded_len(bytes)?;
             let mut raw = Vec::with_capacity(expected.min(128 * 1024));
             ZlibDecoder::new(&bytes[HEADER..])
                 .take(expected as u64 + 1)

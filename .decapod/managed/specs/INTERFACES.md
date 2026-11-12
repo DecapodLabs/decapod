@@ -1125,10 +1125,22 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c6fc3ef723c9c57903641918272909b72f3a3583b008bf7275224ebf7de7a029`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (232 files)
+- Repository signal fingerprint: `06f9a0e7d79176c13c56c97b1e275bb801b0eadcc781a5c9e3586199f990130f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (233 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Bounded local storage inspection
+
+CLI `data database inspect` and RPC `data.database.inspect` expose
+`decapod.storage-inventory.v1`. Options bound rows, decoded scan bytes, report
+bytes and duration; reads beyond five seconds require an explicit option.
+Missing stores remain missing; sampled, unavailable and partial metrics are
+labeled. Incomplete inspection has a typed limitation and nonzero exit.
+The effective catalog digest covers tables, indexes, triggers and views without
+emitting DDL. Checkpoint and prefix metadata samples retain separate coverage.
+RPC framing is capped at 32 MiB before JSON decoding. See
+`docs/storage-inventory.md` for interpretation and bounds.
 
 ## Plan contract revision boundary
 
