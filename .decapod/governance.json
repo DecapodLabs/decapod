@@ -597,6 +597,15 @@
         "/private/tmp/validation-bootstrap-full-v5.json",
         "Buildkite8060 clippy E0308 exact25152b43 source diagnostic"
       ]
+    },
+    {
+      "id": "validation-bootstrap-selected-cli-v7",
+      "summary": "Place genuine fresh governed docs validation regression in accepted CLI contract test entrypoint",
+      "input_digest": "sha256:b3a325b81b6e7c5f72f48d4dabaf1d44d0ae86e6e41d0fd8b79a2bafde02aea0",
+      "proof_refs": [
+        "Accepted source_ci_profile.rs Selection::Cli matches tests/cli_contracts.rs; helpers/carriers unchanged",
+        "Authenticated source-ci.selection.v2 selective-cli exactaa88 status=not_applicable"
+      ]
     }
   ],
   "intents": {
@@ -642,22 +651,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed same final terminal lifecycle; repair only corrects measured capsule fixture API count type; runtime deadline/current-proof design unchanged",
-          "reviewed_code_fingerprint": "f4355c13aba3b8a175e74e3d96863ab8486cbb134d31f7d74a1478d4ee965d9b",
+          "reason": "Reviewed same terminal runtime design; only real CLI regression entrypoint placement changed to match accepted test selection without altering carriers or helpers",
+          "reviewed_code_fingerprint": "f85d45e70263793488ba76927afb1b18a24acd6089dc536fd37fb47743108258",
           "spec_material_hash": "8ebd18b07ea40a599cc2262ee5fc4e1d8c2d651ae76317ffc7bf1db2a76560e7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current source: positive capsule regression now uses actual requested_limit usize API; documented workunit and canonical receipt contracts unchanged",
-          "reviewed_code_fingerprint": "f4355c13aba3b8a175e74e3d96863ab8486cbb134d31f7d74a1478d4ee965d9b",
+          "reason": "Reviewed actual CLI regression now has selected #[test] entrypoint and one shared fixture execution; runtime, proof and canonical receipt interfaces unchanged",
+          "reviewed_code_fingerprint": "f85d45e70263793488ba76927afb1b18a24acd6089dc536fd37fb47743108258",
           "spec_material_hash": "5a41bc114c254c047cac2c1ab73dd694185e856d11bc66f1a00a15fdaae79bec"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified numeric fixture argument repair adds no authority or changed security behavior; existing complete proof, deadline, current workunit and receipt integrity boundaries retained",
-          "reviewed_code_fingerprint": "f4355c13aba3b8a175e74e3d96863ab8486cbb134d31f7d74a1478d4ee965d9b",
+          "reason": "Test placement preserves actual reviewed commands and source/target/custody gates; no selection helper, trusted carrier, workflow or authorization changed; non-applicable status not promoted to execution",
+          "reviewed_code_fingerprint": "f85d45e70263793488ba76927afb1b18a24acd6089dc536fd37fb47743108258",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -671,13 +680,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794457422Z"
+      "updated_at": "1794458325Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2e2c71d3156554f9fc0a132290bfcb426e9d63f5fff04ec6046aa29f87f24d0d",
+      "artifact_hash": "sha256:3fedd793d7bb171aeaa800e74ed9f5011ea323ee8419c3638bcf30adcb021760",
       "checks": [
         {
           "name": "accepted_release_inventory_review",
@@ -686,6 +695,10 @@
         {
           "name": "authored_source_review",
           "status": "passed"
+        },
+        {
+          "name": "full_docs_cli_regression_execution",
+          "status": "unavailable"
         },
         {
           "name": "independent_full_validation_v1",
@@ -728,7 +741,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "validation-repair",
+      "current_phase": "coverage-repair",
       "custody": {
         "events": [
           {
@@ -798,10 +811,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -991,6 +1011,29 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "coverage-repair",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "tests/cli_contracts.rs",
+                  "tests/consumer_readiness.rs",
+                  "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
+                  "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",
+                  "Same exact independent native controller v6 blocked by public GitHub403 with explicit reset1794459593; source change gets new checkpoint/branch push; next full native only after reset+grace."
+                ],
+                "proof_refs": [
+                  "full_docs_cli_regression_execution"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -1001,6 +1044,8 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",
+        "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
         "Authored tests not executed yet; full accepted-controller validation owns builds and all test execution",
         "Buildkite8037 required standalone-validation source build E0282: explicit String map key type required; raw actual provider log /private/tmp/validation-bootstrap-build8037.log",
         "Canonical preparation receipts use epoch_ref compression: collector now reads supported expanded validation section then verifies integrity; positive compact receipt and forged-hash regression authored",
@@ -1012,6 +1057,7 @@
         "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
         "Review repairs: original budget checked around terminal reads, before proof and atomic receipt/ready-verdict publication; optional exemption exact kernel id+authority; regression evaluates actual current declared workunit rule with generated capsule, living spec, current journal and retained artifact; separate mandatory project obligation remains required.",
         "Same actor task lease expired during proof/review; source edits preserved before AUTHORING_CUSTODY_STALE surfaced. Inspected sole unchanged ownership, supported same-task reclaim+4h renew+workspace rebind; lease_generation2. No v5 authored commit preceded recovery.",
+        "Same exact independent native controller v6 blocked by public GitHub403 with explicit reset1794459593; source change gets new checkpoint/branch push; next full native only after reset+grace.",
         "Source review: workunit checkpoint ExecutionStateBinding positively binds current validation_epoch_digest; optional legacy manifest epochs need only reject explicit mismatches. Positive actual journal contract regression added; artifact mutation/deletion remain strict.",
         "Source trace: prerequisite demands own receipt and unconditionally demands workunit outputs",
         "Verified capsule_policy.rs207 signature; fixture corrected Some(1) to1, rustfmt/diff hygiene only; full source execution remains pending independent next proof",
@@ -1036,6 +1082,7 @@
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/tests.rs",
         "src/decapod/core/workunit.rs",
+        "tests/cli_contracts.rs",
         "tests/consumer_readiness.rs",
         "tests/unit/core/validate_tests.rs",
         "tests/unit/core/workunit_journal_tests.rs"

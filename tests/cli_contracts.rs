@@ -191,6 +191,12 @@ fn contract_fixture_is_private_at_creation() {
 // and initialization regressions in that required suite rather than relying
 // on Cargo's discovery of otherwise unscheduled standalone test targets.
 mod consumer_readiness;
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn fresh_governed_docs_task_executes_first_full_validation() {
+    consumer_readiness::fresh_governed_docs_task_full_validate_executes_first_proof_without_prior_receipt();
+}
 mod init_ci_scaffolding;
 mod init_config_behavior;
 

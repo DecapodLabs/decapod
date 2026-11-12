@@ -873,9 +873,10 @@ fn governed_ok(root: &Path, storage: &Path, args: &[&str]) -> serde_json::Value 
     serde_json::from_slice(&output.stdout).unwrap_or(serde_json::Value::Null)
 }
 
-#[test]
+// The accepted source-CI selector schedules tests/cli_contracts.rs explicitly.
+// Its real #[test] entrypoint calls this shared fixture; keep one execution.
 #[cfg(unix)]
-fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior_receipt() {
+pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior_receipt() {
     use decapod::core::governance_document;
     use std::os::unix::fs::PermissionsExt;
     for succeeds in [true, false] {
