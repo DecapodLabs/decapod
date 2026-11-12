@@ -246,6 +246,9 @@ impl CompletedReadinessEvidence {
         value.verify()?;
         Ok(value)
     }
+    pub(crate) fn changed_paths(&self) -> &std::collections::BTreeSet<String> {
+        &self.suite.facts.changed_paths
+    }
     pub(crate) fn verify_current(
         &self,
         material: &MaterialIdentity,

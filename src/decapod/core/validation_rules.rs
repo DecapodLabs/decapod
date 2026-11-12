@@ -712,16 +712,7 @@ impl RuleRegistry {
             description: "Task completion requires passing proof-plan gates with valid evidence"
                 .to_string(),
             authority: RuleAuthority::KernelInvariant,
-            applicability: RuleApplicability {
-                task_types: vec![
-                    "feature".to_string(),
-                    "bugfix".to_string(),
-                    "refactor".to_string(),
-                    "docs".to_string(),
-                    "test".to_string(),
-                ],
-                ..Default::default()
-            },
+            applicability: RuleApplicability::default(),
             evaluation_phase: EvaluationPhase::Publication,
             evaluator: "decapod.workunit".to_string(),
             requirements: RuleRequirements {
@@ -1821,6 +1812,21 @@ fn load_terminal_workunit(
     // or invalid projection. Lookup errors never become an exemption.
     let status = crate::core::workunit::workunit_journal_status(root, task_id)?;
     if status.projection_state == "absent" {
+        for path in [
+            crate::core::workunit::workunit_path(root, task_id)?,
+            root.join(".decapod/governance/workunits")
+                .join(format!("{task_id}.json")),
+        ] {
+            match std::fs::symlink_metadata(path) {
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => return Err(error::DecapodError::IoError(error)),
+                Ok(_) => {
+                    return Err(error::DecapodError::ValidationError(
+                        "TERMINAL_WORKUNIT_UNPROVEN: unknown manifest projection".into(),
+                    ));
+                }
+            }
+        }
         return Ok(None);
     }
     if !status.resumable {
@@ -1877,7 +1883,7 @@ pub(crate) fn evaluate_terminal_rules(
         .map(|id| load_terminal_workunit(root, id))
         .transpose()?
         .flatten();
-    let mut artifacts = BTreeMap::from([
+    let mut artifacts: BTreeMap<String, String> = BTreeMap::from([
         (
             "validation_proof".into(),
             crate::core::readiness_evidence::digest(proof)
@@ -1904,7 +1910,7 @@ pub(crate) fn evaluate_terminal_rules(
         .map(|key| (key.clone(), governance_digest.into()))
         .collect();
     let context = RuleEvaluationContext {
-        changed_paths: BTreeSet::from(["*".into()]),
+        changed_paths: proof.changed_paths().clone(),
         task_type: None,
         git_ref: None,
         is_ci: std::env::var("GITHUB_ACTIONS").is_ok() || std::env::var("BUILDKITE").is_ok(),
