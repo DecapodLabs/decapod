@@ -426,7 +426,7 @@ pub fn inspect(
             "page_count":scalar(reader, "SELECT page_count FROM pragma_page_count")?,
             "freelist_count":scalar(reader, "SELECT freelist_count FROM pragma_freelist_count")?,
             "journal_mode":scalar(reader, "SELECT journal_mode FROM pragma_journal_mode")?});
-        let catalog = reader.read("SELECT type,name,tbl_name,sql FROM sqlite_schema WHERE type IN ('table','index') ORDER BY type,name LIMIT 1025", &[])?;
+        let catalog = reader.read("SELECT type,name,tbl_name,sql,CASE WHEN type='table' AND coalesce(rootpage,0)=0 THEN 1 ELSE 0 END AS virtual_table FROM sqlite_schema WHERE type IN ('table','index','trigger','view') ORDER BY type,name LIMIT 1025", &[])?;
         if catalog.as_slice().len() > 1024 { return Err(DactylError::Conversion("inventory_catalog_budget".into())); }
         let mut schema_hash = HashWriter(Sha256::new());
         serde_json::to_writer(&mut schema_hash, &catalog)
@@ -434,7 +434,7 @@ pub fn inspect(
         report["effective_schema_digest"] = json!(format!("sha256:{:x}", schema_hash.0.finalize()));
         // DBSTAT is optional in the host engine. Query the eponymous read-only
         // table; never CREATE a virtual table or silently install an extension.
-        match reader.read("SELECT name,sum(pgsize) AS allocated_bytes,sum(payload) AS payload_bytes,sum(unused) AS unused_bytes,count(*) AS pages FROM dbstat GROUP BY name ORDER BY name LIMIT 1025", &[]) {
+        match reader.read("SELECT name,sum(pgsize) AS allocated_bytes,sum(payload) AS payload_bytes,sum(unused) AS unused_bytes,sum(ncell) AS physical_cells,count(*) AS pages FROM dbstat GROUP BY name ORDER BY name LIMIT 1025", &[]) {
             Ok(rows) => { report["btree"] = serde_json::to_value(rows).map_err(|_| DactylError::Conversion("inventory_btree_encoding".into()))?; }
             Err(error) if error.adapter_kind() == Some(dactyl_db::AdapterErrorKind::Query) => { report["btree"] = json!({"status":"unavailable", "reason":"host_dbstat_unavailable"}); }
             Err(error) => return Err(error),
@@ -446,9 +446,11 @@ pub fn inspect(
             table_count += 1;
             if table_count > MAX_TABLES { return Err(DactylError::Conversion("inventory_table_budget".into())); }
             let table = item.get_str_ref("name")?;
-            // Only persistent ordinary tables. Virtual tables may execute
-            // arbitrary extension work and require a separately reviewed scope.
-            if item.get_str_ref("sql").unwrap_or("").trim_start().to_ascii_uppercase().starts_with("CREATE VIRTUAL TABLE") {
+            // SQLite documents a zero/NULL root page for virtual tables.
+            // Classify catalog metadata, without interpreting SQL text or
+            // preparing a virtual table that could execute extension work.
+            // https://www.sqlite.org/schematab.html
+            if item.get_int("virtual_table")? == 1 {
                 report["tables"].as_array_mut().unwrap().push(json!({"table":table,
                     "rows":null, "sample_rows":null, "fields":null, "coverage":"unavailable",
                     "limitation":"virtual_table_requires_reviewed_scope"}));

@@ -560,6 +560,15 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/dactyl/releases/tag/v0.13.0"
       ]
+    },
+    {
+      "id": "complete-catalog-inventory",
+      "summary": "Fingerprint triggers and views alongside tables and indexes, classify virtual tables using documented catalog metadata, and verify DDL privacy and unchanged stored rows",
+      "input_digest": "sha256:02d2883283e097f5b3eadc836f50bb623caad8e9d7827274d8a30296cde43bb7",
+      "proof_refs": [
+        "https://www.sqlite.org/schematab.html",
+        "tests/support/storage_inventory.rs"
+      ]
     }
   ],
   "intents": {
@@ -601,22 +610,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Published physical snapshot API, same native semantic/driver boundary and preserved startup/lifecycle custody",
-          "reviewed_code_fingerprint": "78b9e8b45b5d6a672b382ff1b983336fc65f6fb4e894c88e9330426f329a8bb1",
+          "reason": "Read-only physical snapshot and complete schema-object fingerprint preserve data and lifecycle custody",
+          "reviewed_code_fingerprint": "f93becabb6420da769f420a085693ec48563b4e1ec53c0f67e1c0b1d0a2a9323",
           "spec_material_hash": "a0d85e01c7946075c745e34b108465148fc807cc9b6871289449b414adbe7551"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "CLI/RPC inventory contract unchanged while finalized registry companion supplies the new API",
-          "reviewed_code_fingerprint": "78b9e8b45b5d6a672b382ff1b983336fc65f6fb4e894c88e9330426f329a8bb1",
+          "reason": "Effective schema digest covers triggers/views and virtual tables are explicitly unavailable; no DDL exposed",
+          "reviewed_code_fingerprint": "f93becabb6420da769f420a085693ec48563b4e1ec53c0f67e1c0b1d0a2a9323",
           "spec_material_hash": "fdab3ceb0492bc231bf49d4dae60358c97c49e01c480bbfcd47652753276b8a4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve privacy and source-trust guards; replace temporary source with verified released registry package",
-          "reviewed_code_fingerprint": "78b9e8b45b5d6a672b382ff1b983336fc65f6fb4e894c88e9330426f329a8bb1",
+          "reason": "Catalog metadata classification avoids executing virtual-table modules; regression protects DDL privacy and unchanged rows",
+          "reviewed_code_fingerprint": "f93becabb6420da769f420a085693ec48563b4e1ec53c0f67e1c0b1d0a2a9323",
           "spec_material_hash": "7b152b9a23f64145ca028d8dc59ada15c8f01fa808a0bd538cb166df7f41e214"
         }
       ],
@@ -632,7 +641,7 @@
         "Actual live-store distributions and numeric reduction/latency/CPU budgets remain pending inventory; no savings or schema parity claim"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794468031Z"
+      "updated_at": "1794469738Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -640,7 +649,7 @@
         "No live SQL/Python inventory; all physical reads through native Dactyl capability",
         "No reduction, schema parity or migration claim; agree budgets after actual baseline"
       ],
-      "artifact_hash": "sha256:5039ba5b039a743ca5d11cfa3536f1016951a8f6e443c86eda080584d0fbf8b6",
+      "artifact_hash": "sha256:5a198105342dfe8e0e1676b42e36e21cce40b47f40c87461213f03552e642cf9",
       "checks": [
         {
           "name": "full-readiness",
@@ -655,7 +664,7 @@
           "status": "partial"
         }
       ],
-      "current_phase": "validation-repair",
+      "current_phase": "implementation-review",
       "custody": {
         "events": [
           {
@@ -697,10 +706,24 @@
             "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7707E39SWP4NBA39837Y2ZG",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7707E39SWP4NBA39837Y2ZG",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7707E39SWP4NBA39837Y2ZG": {
@@ -798,6 +821,44 @@
                 "validation_findings": [
                   "Dactyl104 merged49a1fbb and0.13.0published; replace temporaryGitpin with registryrelease and exactpublishedchecksum. Earlier sourceCI compiled and newCLI suite passed; Supabaseguard rejected GitURLsource, so no fullpassclaimed. PublicAPIrate resetelapsed; safelyretryfullcontroller onnewexactcandidate."
                 ]
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/storage_inventory.rs",
+                  "tests/support/storage_inventory.rs",
+                  "docs/storage-inventory.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root",
+                  "src/decapod/core/storage_inventory.rs",
+                  "src/decapod/lib.rs",
+                  "tests/support/storage_inventory.rs"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Final source review found schema digest omitted triggers/views. Stop only own verified validation process30608, retain unchanged provider graph and prior evidence, add catalog coverage and DDL-redaction regression, rerun new exact candidate. No publication readiness from interrupted attempt."
+                ]
+              },
+              {
+                "action": "implementation-review",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "https://www.sqlite.org/schematab.html"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root",
+                  "src/decapod/core/storage_inventory.rs",
+                  "src/decapod/lib.rs",
+                  "tests/support/storage_inventory.rs"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Effective schema digest includes all four schema object classes. Virtual-table classification now uses documented zero/NULL rootpage catalog metadata instead of interpreting DDL. DBSTAT physical_cells is not advertised as portable logical index row count."
+                ]
               }
             ]
           }
@@ -814,7 +875,8 @@
         "Source audit reproduces c7609e42 accepted declaration83c629 exactly; accepted release d3358 changes only root versions in Cargo.toml/lock. Candidate changes only Dactyl dependency graph, generated Bazel dependency lock and inclusion of inventory regressions in required CLI suite. Full source-CI graph/provider/checks unchanged.",
         "https://github.com/DecapodLabs/dactyl/pull/104",
         "https://github.com/DecapodLabs/dactyl/releases/tag/v0.13.0",
-        "https://github.com/DecapodLabs/decapod/actions/runs/43165277659"
+        "https://github.com/DecapodLabs/decapod/actions/runs/43165277659",
+        "https://www.sqlite.org/schematab.html"
       ],
       "inspected_files": [
         ".decapod/config.toml",
@@ -829,7 +891,10 @@
         "Cargo.lock",
         "Cargo.toml",
         "MODULE.bazel.lock",
-        "tests/release_dependency_policy.rs"
+        "docs/storage-inventory.md",
+        "src/decapod/core/storage_inventory.rs",
+        "tests/release_dependency_policy.rs",
+        "tests/support/storage_inventory.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -848,6 +913,8 @@
       "unresolved_assumptions": [
         "Candidate uses exact portable Dactyl PR104 source until released API is available; source pin must not silently change",
         "Dactyl104 merged49a1fbb and0.13.0published; replace temporaryGitpin with registryrelease and exactpublishedchecksum. Earlier sourceCI compiled and newCLI suite passed; Supabaseguard rejected GitURLsource, so no fullpassclaimed. PublicAPIrate resetelapsed; safelyretryfullcontroller onnewexactcandidate.",
+        "Effective schema digest includes all four schema object classes. Virtual-table classification now uses documented zero/NULL rootpage catalog metadata instead of interpreting DDL. DBSTAT physical_cells is not advertised as portable logical index row count.",
+        "Final source review found schema digest omitted triggers/views. Stop only own verified validation process30608, retain unchanged provider graph and prior evidence, add catalog coverage and DDL-redaction regression, rerun new exact candidate. No publication readiness from interrupted attempt.",
         "No source build/test has run or passed; first full validation stopped at source discovery. Compact lock serialization preserves every parsed JSON value.",
         "Source review pin reflects four inspected source changes; dependency preparation is not build/test or publication evidence"
       ]

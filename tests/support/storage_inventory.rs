@@ -208,6 +208,36 @@ fn ordinary_ddl_literals_and_generated_columns_are_measured() {
 }
 
 #[test]
+fn effective_schema_digest_covers_triggers_and_views_without_exposing_ddl() {
+    let temp = tempfile::tempdir().unwrap();
+    let bridge = fixture(temp.path());
+    let data = temp.path().join(".decapod/data");
+    let before = inspect(&data, "fixture", &InventoryOptions::default()).unwrap();
+    bridge.write("CREATE TRIGGER reject_empty BEFORE INSERT ON tasks WHEN length(NEW.description)=0 BEGIN SELECT RAISE(ABORT,'PRIVATE_TRIGGER_TEXT'); END", &[]).unwrap();
+    let trigger = inspect(&data, "fixture", &InventoryOptions::default()).unwrap();
+    assert_ne!(
+        before["effective_schema_digest"],
+        trigger["effective_schema_digest"]
+    );
+    bridge
+        .write(
+            "CREATE VIEW task_view AS SELECT id,'PRIVATE_VIEW_TEXT' AS note FROM tasks",
+            &[],
+        )
+        .unwrap();
+    let view = inspect(&data, "fixture", &InventoryOptions::default()).unwrap();
+    assert_eq!(view["status"], "ok");
+    assert_ne!(
+        trigger["effective_schema_digest"],
+        view["effective_schema_digest"]
+    );
+    let encoded = view.to_string();
+    assert!(!encoded.contains("PRIVATE_TRIGGER_TEXT"));
+    assert!(!encoded.contains("PRIVATE_VIEW_TEXT"));
+    assert_eq!(task_report(&view)["rows"], 0);
+}
+
+#[test]
 fn cli_and_stdin_rpc_inventory_do_not_initialize_a_missing_store() {
     let root = tempfile::tempdir().unwrap();
     std::fs::create_dir(root.path().join(".decapod")).unwrap();

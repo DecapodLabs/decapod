@@ -22,7 +22,10 @@ requires its existing transport authentication.
 
 The physical boundary is Dactyl's dedicated read-only snapshot capability. One
 deferred transaction observes the SQLite engine, effective schema digest, page
-and freelist counts, optional `dbstat` allocation and table data. The existing
+and freelist counts, optional `dbstat` allocation and table data. The schema digest
+covers tables, indexes, triggers and views; it never emits their DDL. `dbstat`
+physical cell counts are engine measurements, not a portable logical row count.
+The existing
 bounded lifecycle lock protects file replacement; it may create its ordinary
 `.lock` sidecar. Foreground broker custody can temporarily block a maintenance
 connection. Close that foreground invocation and retry; inspection never takes
