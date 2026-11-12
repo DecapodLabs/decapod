@@ -1064,7 +1064,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cc0e895c120beae21a19f7c079761e667dd5de541bc9b69c70d1cffc13bed5f5`
+- Repository signal fingerprint: `b96d28a71d50bf6fc6297f52453a5c011c397f45be4aa418183a52679d7d812a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1371,3 +1371,9 @@ managed setup; noninteractive/proof init prints the session-resume command and
 records only optional source/roster metadata. Native setup requires a current
 server-returned `backend_authorized` project before reporting ready. No purchase
 URL, client roster or successful browser return can supply that authorization.
+
+The optional machine-local `DECAPOD_CLOUD_PROJECT_ID` selects an existing server
+project before first registration. It is checked by native account-status and
+stored outside repository config; denial creates neither a personal project nor
+a local fallback. This preserves shared-team selection without using source
+rosters as identity or permission.

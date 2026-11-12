@@ -553,7 +553,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cc0e895c120beae21a19f7c079761e667dd5de541bc9b69c70d1cffc13bed5f5`
+- Repository signal fingerprint: `b96d28a71d50bf6fc6297f52453a5c011c397f45be4aa418183a52679d7d812a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -878,3 +878,9 @@ Freshly obtained credentials construct the next consumer connection.
 checks the real CLI composition against a synthetic native HTTP fixture;
 it does not establish hosted Auth or database enforcement. Shared provider/
 server proof and actual release/deployment remain independently required.
+
+Pending handoffs capture a private fingerprint of their initial full credential
+record. A resumed handoff cannot overwrite a newer service credential established
+by another repository/process. An explicit existing-project selector is routing
+metadata only; current server account status must authorize it. An existing
+private project binding cannot be silently switched through that selector.

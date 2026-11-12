@@ -29,6 +29,13 @@ URL or commercial terms are compiled into the CLI. Source changes are not a
 released client, hosted deployment or complete acceptance receipt. Those require
 independently recorded proof of the actual artifact and deployed contract.
 
+For an existing shared project, the agent may set machine-local
+`DECAPOD_CLOUD_PROJECT_ID` to a server-issued reference before first setup in
+that clone. The client requests current account status for that reference and
+persists only a private routing binding. It does not create a personal project
+as a fallback, silently switch an existing binding, or treat selection as access.
+Workspace membership, grants, paid capacity and assignment remain server checks.
+
 ## Generic managed-session contract
 
 A compatible consumer discovers a versioned public deployment profile, validates

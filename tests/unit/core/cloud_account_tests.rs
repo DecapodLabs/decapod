@@ -115,6 +115,40 @@ fn status(state: &str, authorized: bool, project: Option<&str>) -> serde_json::V
 }
 
 #[test]
+fn existing_project_selection_uses_current_server_status_without_creating_a_personal_project() {
+    for authorized in [false, true] {
+        let (origin, requests, server) = fixture(vec![(
+            "account-status",
+            status(
+                if authorized {
+                    "active"
+                } else {
+                    "admin_approval_required"
+                },
+                authorized,
+                Some(PROJECT),
+            ),
+        )]);
+        let root = tempfile::tempdir().unwrap();
+        let result = prepare_with_selected(
+            root.path(),
+            &origin,
+            REPOSITORY,
+            "Display name",
+            "managed-user",
+            &connector(&origin),
+            Some(PROJECT),
+        );
+        assert_eq!(result.is_ok(), authorized);
+        server.join().unwrap();
+        let sent: Vec<_> = requests.try_iter().collect();
+        assert_eq!(sent.len(), 1);
+        assert_eq!(sent[0].body, json!({"version":1,"project_id":PROJECT}));
+        assert!(!sent[0].body.as_object().unwrap().contains_key("request_id"));
+    }
+}
+
+#[test]
 fn unpaid_registration_retains_session_then_active_status_uses_server_project_scope() {
     let (origin, requests, server) = fixture(vec![
         (

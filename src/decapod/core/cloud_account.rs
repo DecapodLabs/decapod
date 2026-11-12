@@ -121,13 +121,15 @@ pub(crate) fn prepare(
 ) -> Result<AuthorizedProject, PropodusClientError> {
     let store = custody(CloudSessionStore::for_service(origin))?;
     let connector = backend(CloudConnector::from_runtime(origin))?;
-    prepare_with(
+    let selected = std::env::var("DECAPOD_CLOUD_PROJECT_ID").ok();
+    prepare_with_selected(
         custody(store.scope_directory())?,
         origin,
         &identity.canonical_name,
         project_name,
         &credential.token,
         &connector,
+        selected.as_deref(),
     )
 }
 
@@ -178,6 +180,7 @@ fn setup_action(url: Option<&str>, project: Option<&str>) -> String {
         .into()
 }
 
+#[cfg(test)]
 fn prepare_with(
     directory: &Path,
     origin: &str,
@@ -185,6 +188,26 @@ fn prepare_with(
     project_name: &str,
     bearer: &str,
     connector: &CloudConnector,
+) -> Result<AuthorizedProject, PropodusClientError> {
+    prepare_with_selected(
+        directory,
+        origin,
+        repository,
+        project_name,
+        bearer,
+        connector,
+        None,
+    )
+}
+
+fn prepare_with_selected(
+    directory: &Path,
+    origin: &str,
+    repository: &str,
+    project_name: &str,
+    bearer: &str,
+    connector: &CloudConnector,
+    selected: Option<&str>,
 ) -> Result<AuthorizedProject, PropodusClientError> {
     let _lock = lock(directory)?;
     let path = registration_path(directory, repository);
@@ -215,6 +238,18 @@ fn prepare_with(
     };
     if !validate_registration(&registration, origin, repository) {
         return Err(protocol());
+    }
+    if let Some(selected) = selected {
+        if !project_id_valid(selected)
+            || registration
+                .project_id
+                .as_deref()
+                .is_some_and(|previous| previous != selected)
+        {
+            return Err(protocol());
+        }
+        registration.project_id = Some(selected.to_owned());
+        save(&path, &registration)?;
     }
     let (operation, payload) = match registration.project_id.as_deref() {
         Some(project_id) => (

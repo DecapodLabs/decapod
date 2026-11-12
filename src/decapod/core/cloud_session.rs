@@ -35,6 +35,8 @@ struct Pending {
     exchange_inflight: bool,
     #[serde(default)]
     token_inflight: bool,
+    #[serde(default)]
+    base_access_fingerprint: Option<String>,
 }
 
 fn error(status: CloudAuthStatus, message: &str) -> PropodusClientError {
@@ -177,6 +179,20 @@ fn usable(credential: &CloudCredential) -> bool {
         })
 }
 
+fn credential_fingerprint(credential: &CloudCredential) -> String {
+    let mut digest = Sha256::new();
+    for value in [
+        credential.token.as_str(),
+        credential.refresh_token.as_deref().unwrap_or_default(),
+        credential.session_id.as_deref().unwrap_or_default(),
+        credential.expires_at.as_deref().unwrap_or_default(),
+    ] {
+        digest.update(value.len().to_be_bytes());
+        digest.update(value.as_bytes());
+    }
+    format!("{digest:x}", digest = digest.finalize())
+}
+
 fn session(value: UserSession) -> Result<CloudSession, PropodusClientError> {
     let expiry = i64::try_from(value.expires_at_unix)
         .ok()
@@ -234,6 +250,27 @@ fn ensure_with(
     let pending_file = pending_path(directory, repository);
     let refresh_file = directory.join("refresh-inflight.json");
     let mut pending: Option<Pending> = read(&pending_file)?;
+    let current = custody(store.load_machine_session())?;
+    let current_fingerprint = current.as_ref().map(credential_fingerprint);
+    if let Some(p) = &pending {
+        let already_stored =
+            p.session
+                .as_ref()
+                .zip(current.as_ref())
+                .is_some_and(|(pending, current)| {
+                    pending.access_token == current.token
+                        && pending.refresh_token == current.refresh_token
+                        && pending.session_id == current.session_id
+                        && pending.expires_at == current.expires_at
+                });
+        if !already_stored && p.base_access_fingerprint != current_fingerprint {
+            // Another repository/process completed sign-in or rotation after
+            // this flow began. Its newer custody wins, even when an old flow
+            // has an exchange response waiting to be stored.
+            preserve_uncertain_pending(&pending_file)?;
+            pending = None;
+        }
+    }
     if let Some(p) = &pending {
         if p.version != 1 || p.origin != origin || p.repository != repository {
             return Err(error(
@@ -315,6 +352,7 @@ fn ensure_with(
                 provider_token: None,
                 exchange_inflight: false,
                 token_inflight: false,
+                base_access_fingerprint: current_fingerprint,
             };
             save(&pending_file, &value)?;
             value
@@ -556,6 +594,7 @@ mod tests {
             provider_token: None,
             exchange_inflight: false,
             token_inflight: false,
+            base_access_fingerprint: None,
         }
     }
 
@@ -964,6 +1003,48 @@ mod tests {
         assert_eq!(requests.len(), 1);
         assert_eq!(requests[0].body, json!({"refresh_token":"old-refresh"}));
         assert!(!requests[0].headers.contains_key("authorization"));
+    }
+
+    #[test]
+    fn resumed_old_handoff_cannot_replace_newer_service_custody() {
+        let root = tempfile::tempdir().unwrap();
+        let origin = "https://fixture.example";
+        let store = CloudSessionStore::for_service_in(root.path(), origin).unwrap();
+        let directory = store.scope_directory().unwrap();
+        custody(crate::core::fs_permissions::ensure_private_dir(directory)).unwrap();
+        let mut old = pending(origin);
+        old.base_access_fingerprint = Some(format!("{:x}", Sha256::digest(b"previous-access")));
+        old.session = Some(CloudSession {
+            access_token: "stale-handoff-access".into(),
+            refresh_token: Some("stale-handoff-refresh".into()),
+            expires_at: Some((Utc::now() + chrono::Duration::minutes(20)).to_rfc3339()),
+            session_id: None,
+        });
+        save(&pending_path(directory, REPOSITORY), &old).unwrap();
+        store
+            .store_managed_session(
+                &CloudSession {
+                    access_token: "newer-access".into(),
+                    refresh_token: Some("newer-refresh".into()),
+                    expires_at: Some((Utc::now() + chrono::Duration::minutes(20)).to_rfc3339()),
+                    session_id: None,
+                },
+                None,
+                false,
+            )
+            .unwrap();
+        let before = fs::read(directory.join("session_token.json")).unwrap();
+        let got = ensure_with(origin, REPOSITORY, &store, false, None, || {
+            panic!("newer usable custody must require no Auth replay")
+        })
+        .unwrap();
+        assert_eq!(got.token, "newer-access");
+        assert_eq!(
+            fs::read(directory.join("session_token.json")).unwrap(),
+            before
+        );
+        assert!(!pending_path(directory, REPOSITORY).exists());
+        assert_eq!(uncertain_records(directory).len(), 1);
     }
 
     #[test]

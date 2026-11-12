@@ -545,6 +545,11 @@
       "id": "managed-native-registry-consumer",
       "summary": "Adapt proven connector contribution to accepted source, pin registry 0.12.0, remove fixed commercial handoff and prove refresh reaches the next native data request.",
       "input_digest": "sha256:7f2856bbad58ed5dda3cf341aabe63bbedb3865eeaabe50492a08c626b2cecf0"
+    },
+    {
+      "id": "managed-native-stale-handoff-project-selection",
+      "summary": "Fence resumed handoffs against newer custody and permit current server-authorized selection of an existing shared project.",
+      "input_digest": "sha256:52530df5c80136f8a4cae63c4ffdab2f1062bfd9f4879800d0fb8979f31dc474"
     }
   ],
   "intents": {
@@ -589,23 +594,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documents registry connector, single-use private custody and replacement data connections after refresh while preserving whole-project architecture.",
-          "reviewed_code_fingerprint": "cc0e895c120beae21a19f7c079761e667dd5de541bc9b69c70d1cffc13bed5f5",
+          "reason": "Native connector architecture remains current; pending state now fences newer credential custody and existing shared projects use explicit server-checked routing.",
+          "reviewed_code_fingerprint": "b96d28a71d50bf6fc6297f52453a5c011c397f45be4aa418183a52679d7d812a",
           "spec_material_hash": "00a2b10104a300c1701e8d97a4fffb3f08e05616702d5c385fec10c5a5c6e2ad"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Source-grounded generic managed session/account/RPC paths replace fixed purchase handoff; legacy service routes remain explicit.",
-          "reviewed_code_fingerprint": "cc0e895c120beae21a19f7c079761e667dd5de541bc9b69c70d1cffc13bed5f5",
-          "spec_material_hash": "1896ba8a264a9e504f640ec6b5ecd22a8f6c2f3cc887ca981f7291bf1727d290"
+          "reason": "Documents machine-local existing-project selection with current server status and no personal-project fallback.",
+          "reviewed_code_fingerprint": "b96d28a71d50bf6fc6297f52453a5c011c397f45be4aa418183a52679d7d812a",
+          "spec_material_hash": "35bac824ab9892d7bd060565ee2409d5464dbd8e18608520b172983ee083608d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Covers origin isolation, bounded serialized credential rotation and actual next-request proof without treating fixtures as hosted authority.",
-          "reviewed_code_fingerprint": "cc0e895c120beae21a19f7c079761e667dd5de541bc9b69c70d1cffc13bed5f5",
-          "spec_material_hash": "163a7bd767407b002da48a61039ced769f8c077c5a28270391c3c29cd54790dc"
+          "reason": "Preserves newer full credential custody against a resumed stale handoff, and rejects silent project-binding switches.",
+          "reviewed_code_fingerprint": "b96d28a71d50bf6fc6297f52453a5c011c397f45be4aa418183a52679d7d812a",
+          "spec_material_hash": "41e595bfa1120d80081a4c979c3532b984f8494286e1c09facaf5f5dc2ca801a"
         }
       ],
       "state": "APPROVED",
@@ -616,13 +621,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794455733Z"
+      "updated_at": "1794456222Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f36b32e181fc1ab73ad43860ccea7ccee0948b03db531be57b5851989ccbbc8b",
+      "artifact_hash": "sha256:330c8407df9e6590e447111ad9c1fb457ffa4496436e3df891680bf2db50e578",
       "checks": [
         {
           "name": "existing_checkpoint_history",
@@ -630,6 +635,10 @@
         },
         {
           "name": "hosted_acceptance",
+          "status": "unavailable"
+        },
+        {
+          "name": "prior_provider_attempt",
           "status": "unavailable"
         }
       ],
@@ -661,10 +670,17 @@
             "intent_id": "intent:change_01M76XWS3AKPY8RFY12X65CSXM",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M76XWS6FDKB72FD182Y8NVPJ",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M76XWS3AKPY8RFY12X65CSXM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76XWS6FDKB72FD182Y8NVPJ": {
@@ -719,6 +735,30 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/cloud_account.rs",
+                  "tests/unit/core/cloud_account_tests.rs",
+                  "/private/tmp/decapod-native-session-validation-01.json",
+                  "First attempt stopped on a public GitHub rate limit; this materially stronger candidate requires new full proof."
+                ],
+                "proof_refs": [
+                  "prior_provider_attempt"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "Generic connector, account/session custody, native data integration, dependency artifact and technical tests/docs.",
+                  "docs/book/src/reference/supabase-validation.md",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -728,7 +768,9 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/decapod-native-session-source-checkpoints.json",
+        "/private/tmp/decapod-native-session-validation-01.json",
         "Existing source commits 82fd18f0 and 4d7d32ca have proven checkpoint history. History recovery command correctly reports NOT_APPLICABLE. Preserve old source ref; adapt reviewed implementation in this new admitted candidate, without copying old validation or journal authority.",
+        "First attempt stopped on a public GitHub rate limit; this materially stronger candidate requires new full proof.",
         "Registry archive checksum independently verified; source pin and lock now use dactyl-db 0.12.0. Reviewed all 105 source inputs: only Cargo.toml/Cargo.lock differ from accepted target; no required check was removed. Full exact-candidate proof has not run yet."
       ],
       "inspected_files": [
@@ -742,7 +784,8 @@
         "Cargo.toml",
         "src/decapod/core/cloud_account.rs",
         "src/decapod/core/cloud_session.rs",
-        "tests/cloud_supabase_boundary.rs"
+        "tests/cloud_supabase_boundary.rs",
+        "tests/unit/core/cloud_account_tests.rs"
       ],
       "next_transitions": [
         "Apply reviewed technical patch, resolve current-source differences, inspect connection refresh and compile only through full validation.",
