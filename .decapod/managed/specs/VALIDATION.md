@@ -25,6 +25,12 @@ That execution does not replace fresh complete proof on the reconciled commit.
 The subsequent accepted release commit
 `19acd21f7ff50656323d037915273f03cdedc04e` changes package versions and the
 changelog and is incorporated as well; the current proof must use that target.
+The 0.139.0 source-CI evaluator then correctly reported release-bound drift on
+`0b3d3f2a`. A private installation of the published 0.139.0 controller, obtained
+through the supported session-update flow, regenerates the entrypoints, managed
+Dockerfile and spec manifest. The temporary workspace update opt-in is removed.
+This projection preparation is not full readiness; the exact refreshed candidate
+still needs every required provider check and independent controller collection.
 
 ## Recovery and accepted-target reconciliation (#1628)
 
