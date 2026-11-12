@@ -539,6 +539,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "decapod-cloud-client-1628-evidence-correction",
+      "summary": "Remove observed unused legacy imports and correct documentation to preserve the actual Dactyl registry API blocker and absence of a governed pre-readiness overlay recipe. Retain original journal and checkpoint history; source push only, without build/test, full readiness, PR or release claims.",
+      "input_digest": "sha256:5758092cad1d55b057ef49b6fa27069d150321efe2d33035e588ec9ae3272346",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -577,24 +585,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Define logical Dactyl transport, exact repository/project/origin private custody, serialized refresh and durable uncertainty; block unsupported cloud database startup.",
-          "reviewed_code_fingerprint": "249f5acb280057e0d97b4b6d51afbba9f6a395af1a23c84fb9627f4d70c1301f",
+          "reason": "Only unused imports and evidence wording change. Existing logical Dactyl transport, private session custody, fail-closed startup and local independence architecture remain unchanged.",
+          "reviewed_code_fingerprint": "01f5202b9a5e47e727e6d37890879b8df1f5dacf97a7d6f9e3b2a0eb9c44c29f",
           "spec_material_hash": "855b9020ffb388bfa7fd95f9168b54e06432c2921ad8caaea4ab640893304087"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Define non-success pending/denied/account-action results, headless continuation, explicit sign-in restart and server-authorized read readiness without project provider/credential fields.",
-          "reviewed_code_fingerprint": "249f5acb280057e0d97b4b6d51afbba9f6a395af1a23c84fb9627f4d70c1301f",
+          "reason": "No CLI or transport interface changes. The correction documents the observed registry API blocker and unavailable pre-readiness overlay path without changing the existing interface contract.",
+          "reviewed_code_fingerprint": "01f5202b9a5e47e727e6d37890879b8df1f5dacf97a7d6f9e3b2a0eb9c44c29f",
           "spec_material_hash": "5b5380bf8be947c9a4f52a23d2139136f4df15978d6344d9452aa8de4d675f7c"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document private no-follow custody, bounded locks and records, exact bearer invalidation, no replay or SQLite fallback, and service-owned authorization.",
-          "reviewed_code_fingerprint": "249f5acb280057e0d97b4b6d51afbba9f6a395af1a23c84fb9627f4d70c1301f",
+          "reason": "No authentication, token handling, origin binding or storage permissions change. Existing private custody, no replay, no fallback and service authorization boundaries remain intact.",
+          "reviewed_code_fingerprint": "01f5202b9a5e47e727e6d37890879b8df1f5dacf97a7d6f9e3b2a0eb9c44c29f",
           "spec_material_hash": "38dd70e5539ae8482b613a0232e058f8e6800fe56a58851bbf87e8b98578e955"
         }
       ],
@@ -606,18 +614,31 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794439033Z"
+      "updated_at": "1794443076Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation"
+        "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
+        "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:56386919f5e692eee911725a1103b89984ab68c27d71b42d512bf695ecad2655",
+      "artifact_hash": "sha256:06766569c8a0cc4dc376c169c93cf249f4eccb28477cc67b4fb530d81e5ee988",
       "checks": [
+        {
+          "name": "corrected-candidate-build-tests",
+          "status": "unavailable"
+        },
+        {
+          "name": "correction-source-review",
+          "status": "passed"
+        },
         {
           "name": "full-workbranch-proof-result",
           "status": "unavailable"
+        },
+        {
+          "name": "prior-buildkite7937-compilation",
+          "status": "failed"
         },
         {
           "name": "source-review",
@@ -645,10 +666,17 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -672,6 +700,25 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "command": "cargo fmt --all",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task. Correction run 43124963685 passed the exact formatted source checks and then stopped after native specs.refresh and trajectory recording because the authored VALIDATION hash included one duplicate blank line. Supported capability-overlay refresh collapses three consecutive newlines to two; approved prose is unchanged, and generated fingerprint changes stay inside existing marker blocks. The revised insertion removes only its final newline and pins the observed authored hash sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849. The failed attempt made no checkpoint, commit or push. Its uncommitted native journal is preserved by encrypted diagnostics archive sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967 and reconstructed journal digest sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8. Archived trajectory branch_01M76ECD20HF9M6Q15W5AKE2WQ event event:5, sequence 5, has step digest sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d (UTF-8 sorted-key compact JSON); native trajectory artifact hash sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083. This archived step is historical evidence, not restored current authority. The latest sealed task continues on the same committed journal through native CLI recording; no raw projection bytes are restored. Exact source, authored-spec, checkpoint and publication boundaries remain enforced."
+                ],
+                "proof_refs": [
+                  "prior-buildkite7937-compilation",
+                  "correction-source-review",
+                  "corrected-candidate-build-tests"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -683,7 +730,8 @@
       ],
       "destination": "pull request",
       "evidence": [
-        "Exact source c5de35a89b27e788169612ae71681e45c13bf71a; original sealed task imported and readmitted. Full native validation has not run; unavailable describes the absent proof result, not an observed provider failure. The accepted source-CI contract and release dependency policy remain intact; no unpublished source overlay is substituted."
+        "Exact source c5de35a89b27e788169612ae71681e45c13bf71a; original sealed task imported and readmitted. Full native validation has not run; unavailable describes the absent proof result, not an observed provider failure. The accepted source-CI contract and release dependency policy remain intact; no unpublished source overlay is substituted.",
+        "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task. Correction run 43124963685 passed the exact formatted source checks and then stopped after native specs.refresh and trajectory recording because the authored VALIDATION hash included one duplicate blank line. Supported capability-overlay refresh collapses three consecutive newlines to two; approved prose is unchanged, and generated fingerprint changes stay inside existing marker blocks. The revised insertion removes only its final newline and pins the observed authored hash sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849. The failed attempt made no checkpoint, commit or push. Its uncommitted native journal is preserved by encrypted diagnostics archive sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967 and reconstructed journal digest sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8. Archived trajectory branch_01M76ECD20HF9M6Q15W5AKE2WQ event event:5, sequence 5, has step digest sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d (UTF-8 sorted-key compact JSON); native trajectory artifact hash sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083. This archived step is historical evidence, not restored current authority. The latest sealed task continues on the same committed journal through native CLI recording; no raw projection bytes are restored. Exact source, authored-spec, checkpoint and publication boundaries remain enforced."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",

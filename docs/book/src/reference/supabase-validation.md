@@ -12,10 +12,11 @@ flow, headless continuation, private custody, and explicit recovery.
 The managed connector requires the public API delivered by
 [Dactyl #100](https://github.com/DecapodLabs/dactyl/issues/100). The existing
 `dactyl-db` 0.11.1 registry release provides the earlier explicit Supabase
-adapter, not this connector API. A coordinated source-overlay build can test
-the client integration before publication, but it cannot satisfy the registry
-dependency policy or establish a publishable Decapod package. The release
-handoff remains [#1380](https://github.com/DecapodLabs/decapod/issues/1380).
+adapter, not this connector API. The current required repository checks need
+a published dependency containing the connector API. No governed source-overlay
+recipe is configured for integration diagnostics before those checks pass; no
+such diagnostic result is claimed. The release handoff remains
+[#1380](https://github.com/DecapodLabs/decapod/issues/1380).
 Do not replace a missing registry artifact with a committed Git/path override
 or remove the release dependency checks.
 

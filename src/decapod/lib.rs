@@ -19,8 +19,8 @@ use validation_scope::ValidationScope;
 use cli::*;
 
 use core::{
-    auth, cloud_backend, db, docs, docs_cli, error, flight_recorder, migration, obligation, proof,
-    repomap, scaffold, state, state_commit,
+    db, docs, docs_cli, error, flight_recorder, migration, obligation, proof, repomap, scaffold,
+    state, state_commit,
     store::{Store, StoreKind, find_decapod_project_root, find_governance_root},
     todo, trace, validate, workspace,
 };

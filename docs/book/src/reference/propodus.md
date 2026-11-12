@@ -166,9 +166,10 @@ profiles and their explicit evidence requirements.
 Connector-enabled builds require the public API delivered by
 [Dactyl #100](https://github.com/DecapodLabs/dactyl/issues/100). Registry
 dependency alignment and package publication remain
-[#1380](https://github.com/DecapodLabs/decapod/issues/1380). A temporary source
-overlay used to test both repositories together is not a published dependency
-and cannot satisfy Decapod's release dependency policy.
+[#1380](https://github.com/DecapodLabs/decapod/issues/1380). The current required
+repository checks need that API in the published dependency. No governed
+source-overlay recipe is configured before full readiness, and no
+cross-repository integration result is claimed.
 
 ## Local SQLite maintenance
 
