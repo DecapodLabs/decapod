@@ -606,6 +606,15 @@
         "Accepted source_ci_profile.rs Selection::Cli matches tests/cli_contracts.rs; helpers/carriers unchanged",
         "Authenticated source-ci.selection.v2 selective-cli exactaa88 status=not_applicable"
       ]
+    },
+    {
+      "id": "validation-bootstrap-canonical-fixture-v8",
+      "summary": "Repair actual CLI fixture failures through canonical governance and genuine init schema",
+      "input_digest": "sha256:82ee647beb64c1de692edb2075988cd57c586f72a46c81ca99f8f7c555ff2560",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-bf98-cli-diagnostic.log",
+        "Read-only review of canonical migrate, runtime lock exclusion, and real init config construction"
+      ]
     }
   ],
   "intents": {
@@ -649,24 +658,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed same terminal runtime design; only real CLI regression entrypoint placement changed to match accepted test selection without altering carriers or helpers",
-          "reviewed_code_fingerprint": "f85d45e70263793488ba76927afb1b18a24acd6089dc536fd37fb47743108258",
+          "reason": "Reviewed current source: only fixture construction repaired through production canonical writer and real init; runtime proof admission/terminal architecture unchanged and accurately described",
+          "reviewed_code_fingerprint": "436b4382ba25a1883aee67f9a36ce6b90da46badbb10e75e6e1d937b1609f0f9",
           "spec_material_hash": "8ebd18b07ea40a599cc2262ee5fc4e1d8c2d651ae76317ffc7bf1db2a76560e7"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed actual CLI regression now has selected #[test] entrypoint and one shared fixture execution; runtime, proof and canonical receipt interfaces unchanged",
-          "reviewed_code_fingerprint": "f85d45e70263793488ba76927afb1b18a24acd6089dc536fd37fb47743108258",
+          "reason": "Reviewed strict governance/config schema interfaces preserved; fixtures now supply canonical producer output rather than weakening validation or altering task kind",
+          "reviewed_code_fingerprint": "436b4382ba25a1883aee67f9a36ce6b90da46badbb10e75e6e1d937b1609f0f9",
           "spec_material_hash": "5a41bc114c254c047cac2c1ab73dd694185e856d11bc66f1a00a15fdaae79bec"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Test placement preserves actual reviewed commands and source/target/custody gates; no selection helper, trusted carrier, workflow or authorization changed; non-applicable status not promoted to execution",
-          "reviewed_code_fingerprint": "f85d45e70263793488ba76927afb1b18a24acd6089dc536fd37fb47743108258",
+          "reason": "Fixture-only canonical construction preserves all strict production source/governing/epoch/receipt checks; runtime lock and state excluded from fixture Git; no trusted helper, carrier, workflow or auth changes",
+          "reviewed_code_fingerprint": "436b4382ba25a1883aee67f9a36ce6b90da46badbb10e75e6e1d937b1609f0f9",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -680,13 +689,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794458325Z"
+      "updated_at": "1794459864Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3fedd793d7bb171aeaa800e74ed9f5011ea323ee8419c3638bcf30adcb021760",
+      "artifact_hash": "sha256:6a2eacc503ecc8a53554480aeab5ffd96039093af92e5813af3dd7ddb7ff98c4",
       "checks": [
         {
           "name": "accepted_release_inventory_review",
@@ -733,6 +742,10 @@
           "status": "passed"
         },
         {
+          "name": "selected_cli_regression_v7",
+          "status": "failed"
+        },
+        {
           "name": "source_execution",
           "status": "unavailable"
         },
@@ -741,7 +754,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "coverage-repair",
+      "current_phase": "fixture-repair",
       "custody": {
         "events": [
           {
@@ -818,10 +831,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1034,6 +1054,27 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "fixture-repair",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
+                  "Fixture repair uses supported canonical governance_document::migrate; ignores data runtime and exact managed governance-document.lock before Git accepted-source commit. Genuine CLI fixture removes only its initial adapter proof-only config before real init creates full schema, then retains actual command/source review. Production schemas, gates, actor and docs task kind unchanged."
+                ],
+                "proof_refs": [
+                  "selected_cli_regression_v7"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -1045,12 +1086,14 @@
       "destination": "pull request",
       "evidence": [
         "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",
+        "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
         "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
         "Authored tests not executed yet; full accepted-controller validation owns builds and all test execution",
         "Buildkite8037 required standalone-validation source build E0282: explicit String map key type required; raw actual provider log /private/tmp/validation-bootstrap-build8037.log",
         "Canonical preparation receipts use epoch_ref compression: collector now reads supported expanded validation section then verifies integrity; positive compact receipt and forged-hash regression authored",
         "Compared accepted current inventory with c7609e42 pin origin: only Cargo.toml/Cargo.lock Decapod version changed0.138.2 to0.138.3; all workflows/helpers/carrier/build definitions identical; explicitly reconcile reviewed digest5fd571a9",
         "Fix evidence map type; terminal applicability now consumes verified suite changed paths and explicit workunit declaration applies across task routing categories; unknown filesystem projections remain blockers",
+        "Fixture repair uses supported canonical governance_document::migrate; ignores data runtime and exact managed governance-document.lock before Git accepted-source commit. Genuine CLI fixture removes only its initial adapter proof-only config before real init creates full schema, then retains actual command/source review. Production schemas, gates, actor and docs task kind unchanged.",
         "Full v1 report /private/tmp/validation-bootstrap-full-v1.json: reviewed source inventory stale before execution",
         "GH Clippy and actual required Buildkite8060 clippy measured E0308 at validation_rules.rs2182: resolve_capsule_policy requested_limit is usize, not Option; exact source log /private/tmp/validation-bootstrap-build8060-clippy.log",
         "Own v5 local controller cancelled and fully reaped before source repair; report /private/tmp/validation-bootstrap-full-v5.json says CI operation cancelled, publication_ready=false. Actual failed compiler subcheck remains distinct from interrupted aggregate proof. No remote jobs cancelled.",

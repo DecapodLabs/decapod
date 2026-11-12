@@ -126,7 +126,14 @@ impl Fixture {
             "import os\nassert not os.path.exists('Cargo.toml')\nassert open('payload.txt').read() == 'ready\\n', 'consumer source is invalid'\nassert os.getcwd() != os.environ['FIXTURE_WORKTREE'], 'proof used mutable worktree'\nassert os.environ['DECAPOD_NATIVE_PROOF_ACTIVE'] == '1'\nassert os.path.isdir(os.environ['HOME'])\nprint('consumer-source-inspected')\n",
         )
         .unwrap();
-        fs::write(root.join(".decapod/governance.json"), "{\"sections\":{}}\n").unwrap();
+        // Use the production canonical constructor; terminal rules reject
+        // unversioned governance stubs. Runtime locks remain outside Git.
+        fs::write(
+            root.join(".gitignore"),
+            ".decapod/data/\n.decapod/managed/governance-document.lock\n",
+        )
+        .unwrap();
+        decapod::core::governance_document::migrate(&root).unwrap();
         // Model first adoption: the accepted target can predate Decapod config.
         if let Some(config) = accepted_config {
             fs::write(root.join(CONFIG), config).unwrap();
@@ -892,6 +899,10 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
         fs::set_permissions(&shim, fs::Permissions::from_mode(0o700)).unwrap();
         git(&root, &["checkout", "-B", "main"]);
         fs::write(root.join("README.md"), "# Governed consumer\n\nReviewed source commands inspect the committed documentation payload.\n").unwrap();
+        // The adapter-only fixture deliberately stores a proof subsection.
+        // Public CLI init must start without that partial config so it can
+        // generate the complete schema before the real contract is reviewed.
+        fs::remove_file(root.join(CONFIG)).unwrap();
         governed_ok(
             &root,
             &storage,
