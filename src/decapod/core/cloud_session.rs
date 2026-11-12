@@ -400,7 +400,7 @@ fn ensure_with(
                     CloudAuthDiagnostic::new(
                         CloudAuthStatus::OnboardingPending,
                         "Sign in once to connect this repository. Your agent will take it from here.",
-                        "Agent: share authorization_url with the user. After they finish signing in, retry the original command automatically; the saved flow resumes. The user does not need another CLI command.",
+                        "Agent: share authorization_url, then retry the original command every 2 seconds for up to 5 minutes. Continue as soon as sign-in completes, without waiting for another user message. Preserve the pending flow if still incomplete. The user does not need another CLI command.",
                     ).with_authorization_url(&pending.flow.browser_url),
                 ));
             }

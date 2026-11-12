@@ -346,13 +346,26 @@ fn init_once_then_agent_resumes_login_refreshes_and_keeps_other_repositories_sep
         root.path(),
         home.path(),
         &origin,
-        &["todo", "list", "--format", "json"],
+        &["todo", "add", "Another repository task", "--format", "json"],
     )
     .output()
     .unwrap();
     safe(&other);
     assert!(!other.status.success());
     let handoff: Value = serde_json::from_slice(&other.stdout).unwrap();
-    assert_eq!(handoff["status"], "onboarding_pending");
+    assert_eq!(handoff["status"], "blocked_before_submit");
+    assert_eq!(handoff["failure_kind"], "onboarding_pending");
+    assert!(
+        handoff["authorization_url"]
+            .as_str()
+            .unwrap()
+            .starts_with(&origin)
+    );
+    assert!(
+        handoff["next_action"]
+            .as_str()
+            .unwrap()
+            .contains(handoff["operation_id"].as_str().unwrap())
+    );
     server.join().unwrap();
 }

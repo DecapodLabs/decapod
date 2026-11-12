@@ -7445,11 +7445,19 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
             if let (Some(operation), Some(journal)) = (&operation, journal) {
                 let kind = cloud_todo_operation::failure_kind(&error);
                 let _ = journal.finish(operation, Outcome::BlockedBeforeSubmit, Some(kind));
-                return Err(error::DecapodError::CloudTodo(CloudTodoDiagnostic::new(
-                    operation,
-                    Outcome::BlockedBeforeSubmit,
-                    kind,
-                )));
+                let mut diagnostic =
+                    CloudTodoDiagnostic::new(operation, Outcome::BlockedBeforeSubmit, kind);
+                if let error::DecapodError::CloudAuth(auth) = &error
+                    && auth.status == error::CloudAuthStatus::OnboardingPending
+                    && let Some(url) = &auth.authorization_url
+                {
+                    diagnostic.authorization_url = Some(url.clone());
+                    diagnostic.next_action = format!(
+                        "Agent: share authorization_url, then retry the original add arguments with --operation-id {} every 2 seconds for up to 5 minutes. Continue as soon as sign-in completes, without waiting for another user message. Preserve this operation ID and pending flow; never issue a fresh add or ask the user for another CLI command.",
+                        operation.operation_id,
+                    );
+                }
+                return Err(error::DecapodError::CloudTodo(diagnostic));
             }
             return Err(error);
         }

@@ -84,11 +84,10 @@ impl CloudTodoStoreFactory for RetryFactory {
     ) -> Result<Box<dyn TodoStore>, DecapodError> {
         self.builds.fetch_add(1, Ordering::SeqCst);
         if let Some(status) = *self.blocked.lock().unwrap() {
-            return Err(DecapodError::CloudAuth(CloudAuthDiagnostic::new(
-                status,
-                "secret-bearer private-backend",
-                "secret-url",
-            )));
+            return Err(DecapodError::CloudAuth(
+                CloudAuthDiagnostic::new(status, "secret-bearer private-backend", "secret-url")
+                    .with_authorization_url("https://signin.example.test/approve?flow=one-time"),
+            ));
         }
         Ok(Box::new(self.store.clone()))
     }
@@ -139,6 +138,11 @@ fn cloud_auth_blocked_add_resumes_after_onboarding_without_touching_project() {
     );
     assert_eq!(blocked.status, Outcome::BlockedBeforeSubmit);
     assert_eq!(blocked.failure_kind, FailureKind::OnboardingPending);
+    assert_eq!(
+        blocked.authorization_url.as_deref(),
+        Some("https://signin.example.test/approve?flow=one-time")
+    );
+    assert!(blocked.next_action.contains(&blocked.operation_id));
     assert_eq!(factory.store.calls.load(Ordering::SeqCst), 0);
     assert!(std::fs::read_dir(&root).unwrap().next().is_none());
     let json = serde_json::to_string(&blocked).unwrap();

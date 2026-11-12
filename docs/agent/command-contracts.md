@@ -23,8 +23,10 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Cloud lifecycle:** The agent calls `session acquire`. It reuses the private
   session for this backend and canonical repository or refreshes it through
   Dactyl. If browser authentication is needed, `onboarding_pending` includes
-  `authorization_url`. Share that link with the human, then retry the original
-  command after sign-in. The saved flow resumes across agent restarts. Never
+  `authorization_url`. Share that link, then poll the original command every
+  two seconds for up to five minutes and continue as soon as sign-in is ready.
+  A confirming user message is not required. Preserve a pending flow for later
+  resume if the bounded poll ends. The saved flow resumes across agent restarts. Never
   send the user back to init, ask them to export a token, or paste credentials
   into a prompt. A pending result is not permission to run dependent cloud work.
 

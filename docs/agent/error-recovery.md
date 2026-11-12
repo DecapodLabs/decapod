@@ -22,8 +22,13 @@ output when a caller must distinguish failure kinds.
 The human initializes the repository once and continues chatting with the agent.
 When a command returns `decapod.cloud.auth.v1` with `onboarding_pending`, present
 its `authorization_url` as a normal sign-in link. Explain that the agent will
-continue after sign-in. Keep the task and original command; retry that command
-when the user returns. Do not prescribe another terminal command or rerun init.
+continue after sign-in. Keep the task and original command; poll that command
+every two seconds for up to five minutes and continue when it is ready, without
+requiring a confirming chat message. If still pending, preserve the flow and
+resume later. Do not prescribe another terminal command or rerun init.
+For `todo add`, the enclosing `decapod.cloud.todo-operation.v1` diagnostic carries
+the same optional `authorization_url` plus its operation ID. Poll with that
+original ID and unchanged arguments; never create a fresh add for each poll.
 No access token, refresh token, PKCE verifier or polling secret is needed in chat.
 
 The CLI resumes the same private repository-bound flow, exchanges its one-time

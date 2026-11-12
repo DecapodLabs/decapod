@@ -548,6 +548,15 @@
         "src/decapod/core/cloud_session.rs",
         "tests/cloud_session_cli.rs"
       ]
+    },
+    {
+      "id": "persistent-cloud-auth-handoff",
+      "summary": "Preserve browser handoff through todo-add operation diagnostics and guide bounded agent polling without a second human chat message; extend existing retry and CLI regressions.",
+      "input_digest": "sha256:d45775cc95071f838951f230b215d66668ccf9adce7fc4edae0552fde200f443",
+      "proof_refs": [
+        "tests/cloud_session_cli.rs",
+        "tests/unit/core/cloud_todo_retry_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -598,9 +607,9 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current authored semantics against one-init agent-owned managed cloud sessions, private repository scope, native RPC, bounded recovery and synthetic-versus-hosted proof limits.",
-          "reviewed_code_fingerprint": "a64eba2e23eb800bf097fc216277a5acafe0d07b2eebe8b5da5d918df1b9d875",
-          "spec_material_hash": "72efb49e918c5e29bdc424529262709c2ec3159303bf43f544eb19a0f8d3873a"
+          "reason": "Reviewed optional auth URL propagation through blocked todo-add diagnostics, stable operation custody and bounded agent polling without a second human chat message.",
+          "reviewed_code_fingerprint": "ca0edaf7312e19a119429b5b041b000e663999a40df7dbe2b1d7e7a401b39bcd",
+          "spec_material_hash": "2b36a4cc97533a5d1d934fea8350245b5d70c9b24a07190984f5fab8ad2283c5"
         },
         {
           "disposition": "updated",
@@ -618,17 +627,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794462722Z"
+      "updated_at": "1794463080Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c51a86f516f31cb543ff0c144b956c1f7a97490a22d4241bdacbb526d859705f",
+      "artifact_hash": "sha256:23cd31e1a801de46c35d5813bf258e99cbc7f12fd1eb62c7257609bc8bd4a194",
       "checks": [
         {
           "name": "formatting",
           "status": "passed"
+        },
+        {
+          "name": "full_validation",
+          "status": "unavailable"
         },
         {
           "name": "required_tests",
@@ -670,10 +683,17 @@
             "intent_id": "intent:change_01M773RFTPFPJXCQ8R6MNGKGDQ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M773RFXVQZAJQ3XYYXJEY4VM",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M773RFTPFPJXCQ8R6MNGKGDQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M773RFXVQZAJQ3XYYXJEY4VM": {
@@ -743,6 +763,24 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Full validation of candidate 43c9818b686cec568e4b320f088384ac1ce62e78 stopped at public GithubObjects GET with HTTP 403 and rate_limit_reset_unix=1794463204 before provider build/test collection. Existing workspace branch was pushed by the configured validator; no alternate authentication route, manual test or gate bypass was used. Follow-up review found todo-add preflight diagnostics discarded the browser handoff; now they retain the optional authorization URL and original operation ID, with bounded polling instructions and regression coverage."
+                ],
+                "proof_refs": [
+                  "full_validation"
+                ],
+                "scope": [
+                  "Supabase datastore composition and documentation",
+                  "cloud authentication",
+                  "initialization",
+                  "session lifecycle"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -754,6 +792,7 @@
       "destination": "pull request",
       "evidence": [
         "Existing connector candidate is uncommitted in separate codex-connector-flow workspace; inspect and selectively integrate source, never modify its custody or claim its unexecuted proof.",
+        "Full validation of candidate 43c9818b686cec568e4b320f088384ac1ce62e78 stopped at public GithubObjects GET with HTTP 403 and rate_limit_reset_unix=1794463204 before provider build/test collection. Existing workspace branch was pushed by the configured validator; no alternate authentication route, manual test or gate bypass was used. Follow-up review found todo-add preflight diagnostics discarded the browser handoff; now they retain the optional authorization URL and original operation ID, with bounded polling instructions and regression coverage.",
         "Per-repository global custody, agent authorization_url, finalization-before-publication, refresh serialization, and next-invocation recovery from rejected bearers are implemented. No data mutation retries were added.",
         "Reviewed and adapted existing connector source; adopted published dactyl-db 0.12.0 with registry checksum and upstream source 598415953b5ee568f6d42652982897c58b4433cc. Regenerated Bazel dependency lock using mod deps, without compiling or running tests. Formatting and git diff --check passed; required builds/tests remain unexecuted until full validation.",
         "Reviewed proof-source delta: only Cargo.toml, Cargo.lock and generated MODULE.bazel.lock change dependency inputs. Published Dactyl 0.12.0 matches registry VCS source. Bazel mod deps --lockfile_mode=error passed after normalizing generated lock JSON indentation to stay within the unchanged 1 MiB discovery bound; values are unchanged. All source CI workflows, required checks and executor helpers remain unchanged. Config was backed up privately before updating the reviewed source digest. Candidate builds/tests have not run separately."

@@ -5,8 +5,11 @@
 After one human `decapod init`, the agent uses `session acquire` or its original
 cloud task command to connect. `CloudAuthDiagnostic` adds optional
 `authorization_url` to `decapod.cloud.auth.v1`. On `onboarding_pending`, the agent
-shares that sign-in link and retries its original command after the human returns;
-it never requires repeated init or manual token entry. Saved credentials live at
+shares that sign-in link and polls its original command every two seconds for
+up to five minutes, continuing as soon as sign-in completes without requiring
+another human message. A pending `todo add` carries the optional URL alongside
+its stable operation ID; polling always reuses that ID and the original arguments.
+No repeated init or manual token entry is required. Saved credentials live at
 `$XDG_DATA_HOME/decapod/services/<origin-hash>/repositories/<repo-hash>/session_token.json`.
 `cloud status` selects that same scope without network I/O. A 60-second refresh
 lead reuses ordinary 15-minute access tokens across commands; definitive refresh
@@ -1079,7 +1082,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a64eba2e23eb800bf097fc216277a5acafe0d07b2eebe8b5da5d918df1b9d875`
+- Repository signal fingerprint: `ca0edaf7312e19a119429b5b041b000e663999a40df7dbe2b1d7e7a401b39bcd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
