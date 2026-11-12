@@ -1,5 +1,5 @@
 use crate::cli::CloudRuntimeConfig;
-use crate::core::backend::{BackendRoute, BackendSelection, StorageContext};
+use crate::core::backend::BackendSelection;
 use crate::core::broker::DbBroker;
 use crate::core::cloud_todo_operation::{
     self, Diagnostic as CloudTodoDiagnostic, Journal as CloudTodoJournal, OperationRecord, Outcome,
@@ -11,9 +11,6 @@ use crate::core::external_action::{self, ExternalCapability};
 use crate::core::fleet_coord::{
     self, ActiveClaimView, DEFAULT_CLAIM_LEASE_SECS, DependencyNodeView, DependencyReadiness,
     LeaseLifecycle, MAX_CLAIM_LEASE_SECS,
-};
-use crate::core::propodus::{
-    PropodusClientError, PropodusConfig, ensure_cloud_session_for_datastore,
 };
 use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::schemas; // Import the new schemas module
@@ -7259,7 +7256,7 @@ fn cloud_runtime(
     if !selection.backend().is_cloud() {
         return Ok(None);
     }
-    let cloud = CloudRuntimeConfig::default();
+    let cloud = CloudRuntimeConfig::logical_cloud()?;
     let identity = selection.repository_identity().cloned().ok_or_else(|| {
         error::DecapodError::ValidationError(
             "cloud todo runtime did not resolve a repository identity".to_string(),
@@ -7270,11 +7267,12 @@ fn cloud_runtime(
 
 fn cloud_error(error: anyhow::Error) -> error::DecapodError {
     let error = match error.downcast::<error::DecapodError>() {
+        Ok(error::DecapodError::DactylError(error)) => return cloud_adapter_error(error),
         Ok(error) => return error,
         Err(error) => error,
     };
     match error.downcast::<dactyl_db::DactylError>() {
-        Ok(error) => error::DecapodError::DactylError(error),
+        Ok(error) => cloud_adapter_error(error),
         Err(_) => error::DecapodError::ValidationError(
             "Dactyl cloud todo operation failed (unclassified storage failure; no local fallback)"
                 .into(),
@@ -7282,7 +7280,27 @@ fn cloud_error(error: anyhow::Error) -> error::DecapodError {
     }
 }
 
+fn cloud_adapter_error(error: dactyl_db::DactylError) -> error::DecapodError {
+    if matches!(
+        error.adapter_kind(),
+        Some(
+            dactyl_db::AdapterErrorKind::Authentication
+                | dactyl_db::AdapterErrorKind::Authorization
+        )
+    ) {
+        crate::core::cloud_client::transport_error(error)
+    } else {
+        error::DecapodError::DactylError(error)
+    }
+}
+
 pub trait CloudTodoStoreFactory {
+    /// Persist a known credential rejection after the original operation ends.
+    /// Test stores and explicit adapter consumers have no managed custody.
+    fn report_failure(&self, _error: &error::DecapodError) -> Result<(), error::DecapodError> {
+        Ok(())
+    }
+
     fn build(
         &self,
         config: &CloudRuntimeConfig,
@@ -7290,46 +7308,30 @@ pub trait CloudTodoStoreFactory {
     ) -> Result<Box<dyn TodoStore>, error::DecapodError>;
 }
 
-struct DactylCloudTodoStoreFactory;
+struct DactylCloudTodoStoreFactory {
+    project_root: std::path::PathBuf,
+    authenticated_context: std::cell::RefCell<Option<crate::core::backend::StorageContext>>,
+}
 
 impl CloudTodoStoreFactory for DactylCloudTodoStoreFactory {
+    fn report_failure(&self, error: &error::DecapodError) -> Result<(), error::DecapodError> {
+        if cloud_todo_operation::failure_kind(error)
+            == cloud_todo_operation::FailureKind::Authentication
+            && let Some(context) = self.authenticated_context.borrow().as_ref()
+        {
+            crate::core::cloud_client::record_rejected_credential(&self.project_root, context)?;
+        }
+        Ok(())
+    }
+
     fn build(
         &self,
-        config: &CloudRuntimeConfig,
+        _config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, error::DecapodError> {
-        let datastore = config.validate_datastore()?;
-        let route = BackendRoute::cloud(identity.clone(), &config.api_url)?;
-        let propodus = PropodusConfig::for_repository(config, identity);
-        let credential = ensure_cloud_session_for_datastore(&propodus, identity, datastore)
-            .map_err(|error| match error {
-                PropodusClientError::Authentication(diagnostic) => {
-                    error::DecapodError::CloudAuth(diagnostic)
-                }
-                other => {
-                    use dactyl_db::AdapterErrorKind as K;
-                    let kind = match other {
-                        PropodusClientError::Transport(_) => K::Transport,
-                        PropodusClientError::Conflict(_) => K::Conflict,
-                        PropodusClientError::Service { status: 401, .. } => K::Authentication,
-                        PropodusClientError::Service { status: 403, .. } => K::Authorization,
-                        PropodusClientError::Service { status: 409, .. } => K::Conflict,
-                        PropodusClientError::Service { status: 429, .. } => K::RateLimited,
-                        PropodusClientError::Service {
-                            status: 500..=599, ..
-                        } => K::Unavailable,
-                        PropodusClientError::Decode(_) => K::Protocol,
-                        _ => K::InvalidOperation,
-                    };
-                    error::DecapodError::DactylError(dactyl_db::DactylError::Adapter {
-                        kind,
-                        code: None,
-                        message: "Cloud authentication preflight failed; no local fallback".into(),
-                    })
-                }
-            })?;
-        let context = StorageContext::from_route(route, Some(&credential.token))?
-            .with_cloud_datastore(datastore)?;
+        let context =
+            crate::core::cloud_client::connect(&self.project_root, identity, false, false)?;
+        *self.authenticated_context.borrow_mut() = Some(context.clone());
         Ok(Box::new(DactylTodoStore::new(
             context,
             identity.canonical_name.clone(),
@@ -7412,6 +7414,21 @@ fn cloud_add_request(command: &TodoCommand) -> Option<JsonValue> {
     }))
 }
 
+fn check_cloud_proof_support(command: &TodoCommand) -> Result<(), error::DecapodError> {
+    if matches!(
+        command,
+        TodoCommand::Done {
+            validated: true,
+            ..
+        }
+    ) {
+        return Err(error::DecapodError::NotImplemented(
+            "cloud todo --validated is intentionally unsupported until the remote Dactyl storage contract carries proof-capture data. Complete the remote task first, then run a separate local/remote proof workflow; see docs/book/src/reference/propodus.md".to_string(),
+        ));
+    }
+    Ok(())
+}
+
 fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     root: &Path,
     command: &TodoCommand,
@@ -7421,6 +7438,9 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     operation_id: Option<&str>,
     journal: Option<&CloudTodoJournal>,
 ) -> Result<JsonValue, error::DecapodError> {
+    // Reject unsupported proof capture before discovery, credential refresh or
+    // any other connector work. The direct-store entry also keeps this guard.
+    check_cloud_proof_support(command)?;
     let mut operation = cloud_add_request(command)
         .map(|payload| {
             OperationRecord::new(
@@ -7492,6 +7512,9 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
             Err(_) => {}
         }
     }
+    if let Err(error) = &result {
+        factory.report_failure(error)?;
+    }
     result
 }
 
@@ -7502,6 +7525,7 @@ async fn run_cloud_todo_command_with_store_async(
     repo_id: &str,
     operation: Option<&OperationRecord>,
 ) -> Result<JsonValue, error::DecapodError> {
+    check_cloud_proof_support(command)?;
     let actor = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
     let result = match command {
         TodoCommand::List {
@@ -7612,16 +7636,8 @@ async fn run_cloud_todo_command_with_store_async(
             })
         }
         TodoCommand::Done {
-            id,
-            id_positional,
-            validated,
-            ..
+            id, id_positional, ..
         } => {
-            if *validated {
-                return Err(error::DecapodError::NotImplemented(
-                    "cloud todo --validated is intentionally unsupported until the remote Dactyl storage contract carries proof-capture data. Complete the remote task first, then run a separate local/remote proof workflow; see docs/book/src/reference/propodus.md".to_string(),
-                ));
-            }
             let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
             let task = store
                 .complete_task(&task_id, actor, String::new())
@@ -7681,7 +7697,24 @@ async fn cloud_get_task(
 }
 
 pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodError> {
-    run_todo_cli_with_cloud_factory(store, cli, &DactylCloudTodoStoreFactory)
+    let project_root = store
+        .root
+        .parent()
+        .and_then(Path::parent)
+        .ok_or_else(|| {
+            error::DecapodError::Config(
+                "Cannot resolve the repository for the cloud session".into(),
+            )
+        })?
+        .to_path_buf();
+    run_todo_cli_with_cloud_factory(
+        store,
+        cli,
+        &DactylCloudTodoStoreFactory {
+            project_root,
+            authenticated_context: std::cell::RefCell::new(None),
+        },
+    )
 }
 
 pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(

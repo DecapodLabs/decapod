@@ -7,11 +7,20 @@ use tempfile::tempdir;
 
 const CANONICAL_REPO_ID: &str = "DecapodLabs/decapod";
 
+// The explicit PropodusClient test below still owns its declared legacy
+// endpoint. Its environment fixture cannot select the managed production CLI.
+fn require_managed_cli_fixture() -> Result<(), &'static str> {
+    Err(
+        "MANAGED_CLI_FIXTURE_UNAVAILABLE: legacy endpoint/token environment fixtures cannot bind the managed CLI origin or private custody; unavailable is not a pass",
+    )
+}
+
 fn required_env(name: &str) -> String {
     env::var(name).unwrap_or_else(|_| panic!("{name} is required for the live proof"))
 }
 
 fn run_decapod(dir: &Path, args: &[&str], agent: &str, token: &str) -> std::process::Output {
+    require_managed_cli_fixture().expect("protected production-command proof is unavailable");
     Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
         .args(args)
@@ -27,21 +36,10 @@ fn run_decapod(dir: &Path, args: &[&str], agent: &str, token: &str) -> std::proc
 }
 
 fn prepare_cloud_repo(dir: &Path, remote: &str) {
+    require_managed_cli_fixture().expect("protected production-command proof is unavailable");
     let init = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
-        .args([
-            "init",
-            "--backend",
-            "cloud",
-            "--force",
-            "--proof",
-            "--cloud-repository",
-            remote
-                .trim_start_matches("git@github.com:")
-                .trim_end_matches(".git"),
-            "--github-users",
-            "alexhraber",
-        ])
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
         .current_dir(dir)
         .output()
         .expect("initialize cloud proof repository");
@@ -138,8 +136,9 @@ fn live_propodus_contract_proves_canonical_scope_and_mutations() {
 }
 
 #[test]
-#[ignore = "requires DECAPOD_PROPODUS_LIVE=1 and protected Propodus inputs"]
+#[ignore = "unavailable until the protected fixture binds the managed CLI; real-service acceptance remains required"]
 fn live_decapod_cloud_commands_share_state_and_reject_forks() {
+    require_managed_cli_fixture().expect("protected production-command proof is unavailable");
     assert_eq!(
         env::var("DECAPOD_PROPODUS_LIVE").as_deref(),
         Ok("1"),
@@ -221,4 +220,10 @@ fn live_decapod_cloud_commands_share_state_and_reject_forks() {
         fork_error.contains("403") || fork_error.contains("repository_not_authorized"),
         "unexpected fork rejection: {fork_error}"
     );
+}
+
+#[test]
+#[should_panic(expected = "MANAGED_CLI_FIXTURE_UNAVAILABLE")]
+fn legacy_cli_profile_fails_before_environment_or_network_access() {
+    live_decapod_cloud_commands_share_state_and_reject_forks();
 }

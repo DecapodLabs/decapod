@@ -568,6 +568,11 @@
         "cargo clippy --lib --test init_cli -- -D warnings",
         "cargo fmt --all --check"
       ]
+    },
+    {
+      "id": "onboarding-cloud-reconciliation-01",
+      "summary": "Reconcile the refined terminal setup with accepted0.139.0 cloud sessions in a real merge; preserve prior checkpoints, defer all interactive writes/auth until review, remove local pricing/rosters and add cloud-cancellation PTY coverage. Full new-candidate execution remains pending.",
+      "input_digest": "sha256:d3d2ad9e487c701ec83782b45a23b4439c3de353e39831902708b8f43f74cb4c"
     }
   ],
   "intents": {
@@ -605,7 +610,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Deliver the authorized refined TUI onboarding with detected context, recommended setup, focused customization, review/edit/cancel before interactive mutation, private config backups and an agent handoff. Preserve unattended init behavior. Reauthor the preserved source with current checkpoint evidence; historical gaps remain observations rather than past proof.",
+      "intent": "Reconcile the existing PR1636 with accepted master19acd21 and release0.139.0, preserving the refined three-step terminal setup, reviewed mutation boundary, private config backups and unattended behavior. Use the accepted Dactyl-managed cloud sign-in and server-confirmed access flow; remove obsolete client-side pricing and roster presentation. Preserve all prior checkpoints in real merge history. Managed-project binding, portal rollout, payment activation and the protected customer journey remain separately owned work.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -615,23 +620,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final source review matches the authored setup contract and private backup/authorization boundary. All 84 focused tests passed with one existing skip, targeted Clippy and formatting passed, and manual terminal review passed. Full required provider validation remains separate and unproven until its exact-candidate run succeeds.",
-          "reviewed_code_fingerprint": "bdad189a74ed24898d335d9589cc321b3360c4cf446a7d5a198208bd2bde13c7",
-          "spec_material_hash": "cda5f45aa3ab30757edb396ff0f0cc496117b4a1faaedd6a2780db7400608746"
+          "reason": "Reviewed the merged code: terminal draft/review/apply owns presentation and consent; accepted cloud_client/cloud_session and Dactyl transport remain unchanged. The authored architecture records ordering and no hosted-payment assurance.",
+          "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
+          "spec_material_hash": "2e83c560d0bc53b1d130317a9bab677b9fdc3db7cb46b61b94996e184ccd1304"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final source review matches the authored setup contract and private backup/authorization boundary. All 84 focused tests passed with one existing skip, targeted Clippy and formatting passed, and manual terminal review passed. Full required provider validation remains separate and unproven until its exact-candidate run succeeds.",
-          "reviewed_code_fingerprint": "bdad189a74ed24898d335d9589cc321b3360c4cf446a7d5a198208bd2bde13c7",
-          "spec_material_hash": "9b8e06852ad88e25b52c1693d1616e48c93d74ca22b358570d80613325d34618"
+          "reason": "Reviewed the merged CLI: preserve accepted restart/sign-in, pending and denial outcomes; no legacy local seat roster or pricing remains in setup. Terminal cancellation and unattended contracts are documented; regression execution is pending full validation.",
+          "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
+          "spec_material_hash": "89f0d2d623341656e789694578a335cc62b7d140ed5d357eca3be8384cd7ab57"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final source review matches the authored setup contract and private backup/authorization boundary. All 84 focused tests passed with one existing skip, targeted Clippy and formatting passed, and manual terminal review passed. Full required provider validation remains separate and unproven until its exact-candidate run succeeds.",
-          "reviewed_code_fingerprint": "bdad189a74ed24898d335d9589cc321b3360c4cf446a7d5a198208bd2bde13c7",
-          "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
+          "reason": "Accepted managed-session private custody, origin binding, serialized refresh, account authority and server-confirmed repository access code remains unchanged from master19acd21. Setup defers authentication until apply and removes client-side roster/price authority; existing security requirements remain applicable.",
+          "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
+          "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
       "state": "APPROVED",
@@ -642,13 +647,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794468321Z"
+      "updated_at": "1794479853Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Keep accepted cloud custody, transport and service authorization; no project binding or billing implementation"
       ],
-      "artifact_hash": "sha256:91629d7fc2e7005eb2680d2d822865bc01caaddc7d0d2e012e8c865915fabd49",
+      "artifact_hash": "sha256:9f90f7522d064a0e2869f9c05cb6c30855f967e0662cde2c79254618d4238bb2",
       "checks": [
         {
           "name": "current-cli-regressions",
@@ -671,6 +677,10 @@
           "status": "unavailable"
         },
         {
+          "name": "master_merge",
+          "status": "passed"
+        },
+        {
           "name": "preserved-source-pty-tests",
           "status": "passed"
         },
@@ -679,11 +689,15 @@
           "status": "passed"
         },
         {
+          "name": "project_preparation",
+          "status": "failed"
+        },
+        {
           "name": "targeted-clippy",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -718,10 +732,24 @@
             "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7742CC2WSBGWSRWRSWJEBMW": {
@@ -808,24 +836,90 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "command": "git merge --no-commit --no-ff -X theirs origin/master with temporary current-PR governance preservation driver",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "tests/init_cli.rs",
+                  "tests/unit/lib_init_prompt_tests.rs",
+                  "docs/book/src/quickstart.md",
+                  "Real pending merge with accepted19acd21; original first-parent candidate58f95d34 and all3 checkpoints preserved. Current PR governance remained byte-identical through Git merge, then updated through the native CLI. New cloud cancellation PTY test is authored but not yet executed."
+                ],
+                "proof_refs": [
+                  "master_merge",
+                  "formatting"
+                ],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"docs/book/src/quickstart.md\"",
+                  "\"src/decapod/core/scaffold.rs\"",
+                  "\"src/decapod/onboarding.rs\"",
+                  "\"tests/init_cli.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  "paths:[\"src/decapod/lib.rs\""
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "tests/init_cli.rs",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Native project-check refreshed release-bound entrypoints and managed Docker pin to0.139.0. Its host-only prerequisite report remains failed for required container custody, pending-merge ancestry/dirty material, a historical done-unverified root task and broad scanner findings before integration. No pass or publication readiness is inferred. All application execution remains pending the configured complete provider proof after checkpointing the real merge. Accepted cloud-client/session/CLI and Cargo/Bazel files compare identical to origin/master."
+                ],
+                "proof_refs": [
+                  "project_preparation"
+                ],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"docs/book/src/quickstart.md\"",
+                  "\"src/decapod/core/scaffold.rs\"",
+                  "\"src/decapod/onboarding.rs\"",
+                  "\"tests/init_cli.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  "Terminal initialization, PTY regression coverage, quickstart and authored setup specs",
+                  "paths:[\"src/decapod/lib.rs\""
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
-      "destination": "pull request",
+      "declared_commands": [
+        "git merge --no-commit --no-ff -X theirs origin/master with temporary current-PR governance preservation driver"
+      ],
+      "destination": "existing PR1636",
       "evidence": [
         "Current presentation source passed all 34 init_prompt_tests plus 2 onboarding layout tests. The separate final config/Git/PTY and targeted Clippy run continues. Fresh candidate f2612990 archives the observed source-history gap and reauthored product changes; the original 402c588a source history remains unproven and preserved. No full-validation success is claimed.",
         "Final focused verification passed: 34 setup unit tests, 2 layout tests, 5 real PTY tests, 5 Git bootstrap tests and 38 config tests, with 1 pre-existing ignored config test. The final PTY test was rerun after using a portable raw pointer for Linux/macOS; cargo clippy --lib --test init_cli -- -D warnings passed. Product/test bytes matched this fresh workstream and the test cache checkout. Manual visual inspection confirmed concise unknown context, optional purpose, review, cancellation and restored terminal state. Checkpoint history for f2612990 and 6e2ad2e6 is proven. Full validation still lacks admission: its most recent attempt returned public GitHub HTTP 403 rate limiting, with no alternate authentication or bypass. A final exact-candidate retry follows this evidence checkpoint.",
+        "Native project-check refreshed release-bound entrypoints and managed Docker pin to0.139.0. Its host-only prerequisite report remains failed for required container custody, pending-merge ancestry/dirty material, a historical done-unverified root task and broad scanner findings before integration. No pass or publication readiness is inferred. All application execution remains pending the configured complete provider proof after checkpointing the real merge. Accepted cloud-client/session/CLI and Cargo/Bazel files compare identical to origin/master.",
+        "Real pending merge with accepted19acd21; original first-parent candidate58f95d34 and all3 checkpoints preserved. Current PR governance remained byte-identical through Git merge, then updated through the native CLI. New cloud cancellation PTY test is authored but not yet executed.",
         "Recovery preserves immutable source 402c588af141811a98a40136b77f01ed171f75f0 and its checkpoint gap. Reauthored product files and only authored semantic spec sections in this fresh admitted workstream. Earlier focused evidence: 33 setup unit tests, 2 layout tests, 5 PTY tests and 5 Git tests passed; config suite had 37 pass, 1 fail, 1 pre-existing ignored test. Its failure exposed a changed unattended Git bootstrap order; the shared mutation helper now restores that contract while interactive setup still confirms first. Current regression rerun is pending. Product/test bytes are verified identical between this workstream and the existing cache checkout used for focused tests; same accepted base d3358e1c. Full readiness remains unproven; GitHub provider rate limit resets at epoch 1794463204. The source inventory review found only the accepted release version bump in Cargo.toml/Cargo.lock since c7609e42; refreshed the reviewed digest without changing providers or required checks."
       ],
       "inspected_files": [
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
         "src/decapod/lib.rs"
       ],
       "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
         "docs/book/src/quickstart.md",
         "src/decapod/core/scaffold.rs",
         "src/decapod/lib.rs",
@@ -834,7 +928,9 @@
         "tests/unit/lib_init_prompt_tests.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Checkpoint and commit the exact real merge, then full decapod validate",
+        "Refine plan and declare falsifiable checks",
+        "Refresh managed projections, re-review current specs, checkpoint the merged candidate and run full exact-target validation"
       ],
       "repo_scope": [
         "\".decapod/config.toml\"",
@@ -844,6 +940,7 @@
         "\"src/decapod/onboarding.rs\"",
         "\"tests/init_cli.rs\"",
         "\"tests/unit/lib_init_prompt_tests.rs\"",
+        "Terminal initialization, PTY regression coverage, quickstart and authored setup specs",
         "paths:[\"src/decapod/lib.rs\""
       ],
       "run_id": "branch_01M7742CC2WSBGWSRWRSWJEBMW",

@@ -23,7 +23,7 @@ ambiguous authority fails closed.
 ## 2. Initialization
 
 Initialize your repository. This is the only human-facing setup command: use
-`--backend cloud` when the repository should use the Propodus todo service.
+`--backend cloud` when the repository should use the managed cloud task service.
 Initialization creates the `.decapod/` directory and scaffolds the initial
 agent entrypoints (`AGENTS.md`, etc.). `.decapod/` is the repo-native substrate
 where governed agent work records intent, context, custody, boundaries,
@@ -34,15 +34,37 @@ agent-driven autonomous upgrades (see [Configuration](configuration.md) and
 
 ```bash
 decapod init
-# For Propodus-backed todos:
+# For managed cloud tasks:
 decapod init --backend cloud
 ```
 
-The terminal setup moves through **Project → Preferences → Review**. Describe what you are building, accept **Recommended** to keep detected settings, then review the setup plan. New projects use local storage without an account. **Customize** opens focused settings for the project, workspace isolation, connections, and advanced options; **Edit choices** returns there from review.
+Terminal setup follows **Project → Preferences → Review**. Describe the project,
+keep **Recommended** defaults, or use **Customize** to adjust project details,
+workspace isolation, connections and advanced settings. Local storage needs no
+account. Existing authored settings remain the defaults.
 
-Setup creates the selected project directory and initializes Git only after **Apply setup**. **Cancel** leaves a newly selected project uncreated. A dry run shows a preview without creating project, Git, or governance state. Existing configuration values remain the defaults, and changed config bytes are backed up privately under `.decapod/data/config-backups/`.
+**Apply setup** creates the selected directory, Git repository and governance
+files. **Edit choices** returns to preferences; **Cancel** leaves a newly selected
+project uncreated. A dry run writes no project state. Changed configuration is
+backed up privately under `.decapod/data/config-backups/`.
 
-When setup finishes, open your coding agent in the project and describe your next task. It reads the generated agent instructions and handles the remaining governance and validation work. Initialization does not establish proof or cloud access. To revisit setup, ask your agent to run `decapod init --refresh`. Scripted `init with`, `--proof`, and redirected output use the unattended path.
+Cloud sign-in starts after applying the reviewed setup. Pricing, seat assignment
+and repository authorization remain service-owned; setup does not collect a
+credential or maintain an access roster in TOML.
+
+Cloud initialization may return `onboarding_pending` with a one-time browser
+URL. Open it on a browser-capable device and rerun the same command, including
+from a headless terminal. Setup is ready only when the service confirms account
+completion and an authenticated repository read succeeds. The `--proof` flag
+prepares cloud configuration only; it does not authenticate or establish
+readiness. See [Cloud sign-in and task access](reference/propodus.md) for
+private custody, account requirements, and explicit interrupted-flow recovery.
+
+When setup succeeds, open your coding agent in the project and describe the next
+task. It reads the generated instructions and handles remaining validation.
+Initialization does not establish proof. Ask the agent to run `decapod init
+--refresh` to revisit setup; scripted `init with`, `--proof` and redirected output
+retain the unattended path.
 
 ## 3. Agent Documentation
 
@@ -60,7 +82,7 @@ Continue only when the prompt gate succeeds and returns `status: allow`.
 
 ## 4. The Agent Handshake
 
-Before performing governed work, an agent must acquire a session. This establishes the agent's identity and permissions for the current work period so later task, workspace, and proof records are attributable (see [CLI Reference](reference/cli.md#decapod-session)). For cloud repositories, session acquisition first establishes local custody and then reuses or refreshes the machine-local Propodus session. Human users should never call this.
+Before performing governed work, an agent must acquire a session. This establishes the agent's identity and permissions for the current work period so later task, workspace, and proof records are attributable (see [CLI Reference](reference/cli.md#decapod-session)). For cloud repositories, session acquisition first establishes local custody and then reuses or refreshes the private managed session through Dactyl. Human users should never call this.
 
 ```bash
 decapod session acquire

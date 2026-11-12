@@ -1339,10 +1339,9 @@ pub fn refresh_project_specs_from_config(
         crate::cli::InitDiagramStyle::Ascii => DiagramStyle::Ascii,
         crate::cli::InitDiagramStyle::Mermaid => DiagramStyle::Mermaid,
     };
-    let cloud_summary = crate::core::cloud_backend::cloud_generation_summary(&config.repo);
     let seed = SpecsSeed {
         product_name: config.repo.product_name,
-        product_summary: cloud_summary,
+        product_summary: config.repo.product_summary,
         architecture_direction: config.repo.architecture_direction,
         product_type: config.repo.product_type,
         primary_languages: config.repo.primary_languages,

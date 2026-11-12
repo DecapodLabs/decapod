@@ -1,5 +1,41 @@
 # Interfaces
 
+## Cloud initialization, continuation, and readiness (#1628)
+
+`decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud
+TODO operations share `core::cloud_client::connect`. Missing custody starts a
+bounded sign-in and returns non-success `onboarding_pending` with a validated
+browser URL and headless resume instruction. A subsequent invocation polls once,
+exchanges only when ready, persists the issued session, and asks the service to
+confirm account completion. Init reports ready only after an authenticated
+read-only task lookup confirms current repository access.
+
+`action_required` describes a service-reported unresolved entitlement without
+inferring price, payment, membership, or seat authority. `repository_denied`
+propagates explicit access denial. `restart_required` preserves uncertainty
+after an interrupted one-time exchange or rotation. The explicit
+`--restart-cloud-signin` flag starts a fresh flow for this binding without
+replaying its old exchange. Normal data failures do not trigger unauthenticated
+retry, mutation replay, or local fallback.
+
+`decapod cloud status` reports only private local phase, credential presence,
+and expiry; its `server_readiness` remains `not_checked`. `--proof` on cloud
+initialization prepares configuration only and does not synthesize sign-in or
+claim readiness. The legacy `cloud login` alias uses the same managed flow.
+No new project provider, deployment, credential, price, or roster field exists.
+The fixture-only origin requires explicit test mode and literal loopback HTTP.
+
+The client consumes the published `dactyl-db 0.12.0` registry API. Pending
+secrets round-trip through its public Serde contract; authentication status and
+code exchange return strings, and completion confirms the session handoff.
+The caller retains its exact origin/repository/checkout binding and saved flow
+deadline, and an authorized repository read remains the readiness requirement.
+Lost responses to one-time mutations require explicit restart; a lost idempotent
+completion response keeps the issued session and can be checked again.
+The release-policy test binds the registry version and actual crate checksum.
+Source-overlay integration results cannot be reported as package publication,
+real PostgreSQL, hosted account enforcement, or full remote governance proof.
+
 ## Agent delegation and cloud authorization interface
 
 Decapod is invoked by each contributor's coding agent in the repository.
@@ -1064,8 +1100,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bdad189a74ed24898d335d9589cc321b3360c4cf446a7d5a198208bd2bde13c7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
+- Repository signal fingerprint: `af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (228 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1342,31 +1378,19 @@ schema change. An unexpected historical index or missing unique enforcement
 raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
 Freed SQLite pages are reusable but are not auto-vacuumed.
 
-## Cloud purchase intent
+## Human setup and cloud handoff presentation
 
-Both init surfaces accept `--cloud-repository owner/repo` and
-`--github-users alice,bob`. Cloud init requires 1–100 distinct valid GitHub
-usernames, lowercases/sorts them, and rejects a repository inconsistent with an
-existing GitHub origin before project-config writes. Refresh preserves the
-requested roster unless explicitly replaced. Non-secret TOML fields are
-`[repo].cloud_repository` and `[repo].cloud_github_users`; they grant neither
-access nor a datastore route override. Generation context and the test-only
-init registration carry the repository name.
+Interactive `decapod init` presents Project, Preferences and Review with
+Recommended/Customize and Apply/Edit/Cancel choices. Arrow keys, typed choices,
+Enter and Escape work in supported terminals; redirected output and `--proof`
+retain unattended behavior. Preview writes nothing; cancellation before apply
+does not create a new directory or initiate cloud authentication. Reinitialization
+preserves existing backend, isolation and structured proof settings.
 
-The purchase URL uses the fixed Propodus HTTPS `billing` destination and
-encoded repository/users intent. Interactive init may open the browser;
-headless, proof, dry-run and noninteractive modes print the URL. Init reports
-purchase approval and does not claim that a session or paid seat exists.
-The hosted service must independently derive price/quantity, verify admin
-authority and reconcile payment before granting repository-specific access.
-Its deployment and native client integration remain separately required.
-
-### First-run terminal setup contract
-
-REQ-ONBOARDING is implemented by the existing `decapod init` command without a new flag or machine schema. Interactive first-run setup and `init --refresh` offer a recommended path, focused customization, a plan review with Apply (or Preview), Edit choices, and Cancel. An explicit `--dir` selects the current project directly; the directory chooser can defer creating a new project until confirmation. Existing flags, scripted `init with`, `--proof`, and redirected output retain unattended operation.
-
-Project review includes purpose, architecture, languages, effective isolation, storage, selected agent files, living specs, CI, diagram notation, proof provider and custom command count, plus Git initialization when needed. Cloud selection remains explicit and displays experimental status, account/seat requirements, and existing billing consent. Review and setup completion do not confer cloud access, passed validation, or publication readiness.
-
-Arrow selection supports typing, numbers, Enter, Escape, Ctrl-C, and Ctrl-D. Invalid yes/no input is retried; EOF cancels instead of silently accepting defaults. On Unix, terminal state is restored on return and error. Narrow terminal rendering and color-free operation do not change stored values. `tests/init_cli.rs` checks the recommended journey, revision and cancellation, lone Escape restoration, and a mutation-free preview using a real PTY.
-
-The human setup view renders known scaffolding guidance as concise unknown context. It does not present template instructions as a detected product purpose or established architecture. Customization can explicitly defer architecture; unattended inference markers remain compatible.
+The cloud review describes account sign-in and service-confirmed repository
+access. It accepts no seat roster, provider credential or local price declaration.
+After apply, the accepted managed-session flow may return `onboarding_pending`,
+`action_required` or a denial; these remain non-success and cannot produce the
+terminal ready receipt. Existing headless continuation, private custody, explicit
+restart and server-readiness contracts are preserved. No managed-project selector
+or protected hosted-payment assurance is added here.

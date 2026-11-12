@@ -1,5 +1,37 @@
 # Architecture
 
+## Managed cloud connector and crash-safe custody (#1628)
+
+`core::cloud_client::connect` composes the public Dactyl `CloudConnector` with
+the private `core::cloud_session::SessionStore`. Dactyl resolves discovery and
+the physical route; the active init/session/TODO path does not use the legacy
+Propodus HTTP client or ambient provider/token selectors. Decapod supplies the
+Git-origin repository target and an opaque bearer to the managed bridge.
+
+The session binding contains the validated origin, repository, and canonical
+main-checkout identity. Linked worktrees share a binding; distinct clones and
+origins do not. Private Unix files, no-follow opened descriptors, ownership and
+link checks, bounded records, a stable exclusive lock, and synchronized atomic
+replacement protect durable custody. Credentials and pending bootstrap state
+are never stored in the project. Every persisted phase validates its required
+session/bootstrap/code shape before orchestration uses it.
+
+Preparing, code exchange, session exchange, and refresh persist an in-flight
+marker before dispatch. Reopening an interrupted one-time phase yields
+`RestartRequired`; no uncertain mutation is replayed. Status polling and
+same-session account completion resume safely. Received codes and rotations
+are durable before later requests. Explicit bearer rejection invalidates that
+same bearer under the refresh lock without discarding a newer concurrent
+rotation. Denied or unresolved entitlement retains a safely retryable account
+completion. `DactylTodoStore::check_read_access` uses an existing read-only,
+service-authorized task query; health checks never stand in for authorization.
+
+Unsupported cloud repository-datastore commands fail before local migration,
+presence, group-broker, or SQLite startup. Explicit file-only controls retain
+their own path; this is a capability boundary, not remote kernel parity.
+`tests/cloud_managed_session.rs` exercises the binary through local fixtures;
+it cannot establish server RLS, PostgreSQL atomicity, or protected hosted policy.
+
 ## Agent-invoked authority across local and cloud repositories
 
 The repository's agent remains Decapod's operational caller. Solo/local work
@@ -820,8 +852,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bdad189a74ed24898d335d9589cc321b3360c4cf446a7d5a198208bd2bde13c7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
+- Repository signal fingerprint: `af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (228 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1027,33 +1059,19 @@ indexes; preferences use `UNIQUE(category,key)`. Runtime initializers stop
 recreating redundant trees. Reverse-key indexes remain. No data or proof
 encodings change; cloud PostgreSQL migration ownership stays with Propodus.
 
-## Cloud repository purchase handoff
+## Terminal setup over the managed cloud boundary
 
-Before `run_init_apply`, `prepare_cloud_roster` in `src/decapod/lib.rs`
-collects the GitHub repository and requested usernames through explicit flags
-or the human interactive init flow. `RepoContext` persists
-`cloud_repository` and `cloud_github_users` without credentials. An existing
-GitHub origin must match purchase intent; a new project may name its intended
-repository before configuring origin. `cloud_generation_summary` adds that
-repository to the generation seed while preserving the authored summary.
+`src/decapod/onboarding.rs` owns terminal sizing, presentation, keyboard input and
+terminal restoration. `lib.rs::{enrich_repo_context_interactive,customize_setup,
+review_setup}` collects a configuration draft; `prepare_init_directory_and_git`
+and `run_init_apply` execute only after interactive approval. Changed configuration
+is backed up privately before replacement. Preview and cancellation do not create
+project state. Unattended initialization retains its direct execution path.
 
-`src/decapod/core/cloud_backend.rs` normalizes the bounded roster and builds
-a fixed HTTPS approval URL. Human interactive init may open it; headless,
-proof, dry-run and noninteractive execution only print it. This init handoff
-does not invoke the legacy login bootstrap or create a cloud session. Explicit
-session acquisition retains its existing independent credential flow.
-
-The coordinated Propodus deployment must verify GitHub identity, repository
-admin permission and paid repository-specific seats. This CLI recovery does
-not deploy that service or prove its Stripe and native-RPC integrations; those
-dependencies remain recorded in `docs/cloud-repository-billing.md`.
-
-### Terminal setup presentation and mutation boundary
-
-`src/decapod/onboarding.rs` owns setup presentation, width-aware wrapping, color policy, and bounded terminal input. `src/decapod/lib.rs` retains repository inference, configuration preservation, setup decisions, review, and application. The short recommended path and focused customization share `setup_review_rows`, so the final plan reflects current choices, including existing cloud and proof settings. `review_setup` precedes directory creation, Git initialization, and `run_init_apply`; explicit `--refresh` seeds the same flow with authored config.
-
-The Unix terminal guard uses native termios with RAII restoration. Escape input is bounded rather than waiting indefinitely for an arrow sequence. Text remains UTF-8, closed line input cancels, and closed approval menus reject arbitrary typed values. Output respects `NO_COLOR` and `TERM=dumb`; raw selection requires both input and output to be terminals. Unsupported terminals retain numbered line selection. Cards and active-option descriptions wrap to terminal width.
-
-`write_project_config` preserves changed prior config bytes under ignored, private `.decapod/data/config-backups/<sha256>.toml` before atomic replacement; unchanged and dry-run writes create no backup. Scaffold dry runs skip target, runtime, Docker, policy, and custody directory creation. The CLI keeps its detailed unattended receipt and uses a compact terminal receipt and an agent handoff that leaves required proof explicitly unrun. Detailed reconciliation stays available through unattended init.
-
-Unattended init retains its established Git bootstrap ordering before cloud-roster validation. Interactive directory and Git creation remain after final confirmation; prepare_init_directory_and_git shares the actual mutation path without moving unattended bootstrap behind interactive review.
+Cloud initialization then calls the accepted `bootstrap_cloud_session` and
+`core::cloud_client::connect` path. Session custody and Dactyl transport retain
+their existing owners. The terminal does not implement billing, duplicate account
+policy, or grant authority from local settings. Errors leave setup non-successful;
+the ready receipt follows successful service-confirmed access only. Real PTY
+coverage verifies that reviewing/canceling cloud setup does not contact even the
+loopback fixture service before consent.

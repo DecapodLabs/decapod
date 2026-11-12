@@ -48,6 +48,16 @@ impl DactylTodoStore {
         )?)
     }
 
+    /// Confirm current repository read authorization through an existing
+    /// service-owned statement. This performs no writes and grants no future
+    /// authority; the service authorizes every subsequent operation again.
+    pub fn check_read_access(&self) -> Result<(), crate::core::error::DecapodError> {
+        let bridge =
+            DactylBridge::from_storage_context(&self.context, dactyl_db::AccessMode::ReadOnly)?;
+        bridge.read(&Self::get_sql(), &["_decapod_readiness_probe_".into()])?;
+        Ok(())
+    }
+
     fn list_sql() -> String {
         format!("SELECT {TASK_COLUMNS} FROM tasks ORDER BY updated_at DESC, id ASC")
     }

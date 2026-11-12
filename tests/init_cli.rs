@@ -63,6 +63,10 @@ struct SetupTerminal {
 
 impl SetupTerminal {
     fn start(directory: &Path, args: &[&str]) -> Self {
+        Self::start_with_env(directory, args, &[])
+    }
+
+    fn start_with_env(directory: &Path, args: &[&str], environment: &[(&str, &str)]) -> Self {
         let (master, slave) = terminal_pair();
         let mut termios = unsafe { std::mem::zeroed() };
         assert_eq!(
@@ -84,6 +88,7 @@ impl SetupTerminal {
             .env("HOME", home.path())
             .env("TERM", "xterm-256color")
             .env("NO_COLOR", "1")
+            .envs(environment.iter().copied())
             .stdin(Stdio::from(slave.try_clone().unwrap()))
             .stdout(Stdio::from(slave.try_clone().unwrap()))
             .stderr(Stdio::from(slave.try_clone().unwrap()));
@@ -259,6 +264,35 @@ fn edit_then_cancel_leaves_a_new_project_uncreated() {
     assert!(!root.path().join("new-project").exists());
     assert!(!root.path().join(".git").exists());
     assert!(terminal.output.contains("No setup changes were applied."));
+}
+
+#[test]
+fn cloud_review_can_cancel_without_creating_state_or_contacting_the_service() {
+    let project = tempfile::tempdir().unwrap();
+    let service = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    service.set_nonblocking(true).unwrap();
+    let origin = format!("http://{}", service.local_addr().unwrap());
+    let mut terminal = SetupTerminal::start_with_env(
+        project.path(),
+        &["init", "--dir", ".", "--backend", "cloud"],
+        &[
+            ("DECAPOD_TEST_MODE", "1"),
+            ("DECAPOD_CLOUD_TEST_ORIGIN", &origin),
+        ],
+    );
+    terminal.recommended();
+    assert!(
+        terminal
+            .output
+            .contains("service confirms repository access")
+    );
+    assert!(!terminal.output.contains("Cloud seats"));
+    assert!(!terminal.output.contains("USD"));
+    terminal.send("Cancel\r");
+    assert!(terminal.finish().success(), "{}", terminal.output);
+    assert!(!project.path().join(".git").exists());
+    assert!(!project.path().join(".decapod").exists());
+    assert!(matches!(service.accept(), Err(error) if error.kind() == io::ErrorKind::WouldBlock));
 }
 
 #[test]

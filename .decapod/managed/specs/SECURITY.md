@@ -1,5 +1,37 @@
 # Security
 
+## Managed credential custody and server authority (#1628)
+
+`core::cloud_session::SessionStore` is the only durable custody owner in the
+managed CLI path. Its binding includes the validated service origin, exact
+repository spelling used by the current service contract, and canonical main
+checkout identity. The store rejects unsafe machine roots (including parent
+traversal), paths within any Git checkout, symlinks/hard links, non-private
+owners/modes, oversized records, invalid phase shapes, and binding mismatches.
+Files use no-follow opened descriptors and synchronized atomic replacement;
+refresh and rejection updates share a stable exclusive lock with a bounded
+wait. Credential material and pending one-time secrets never enter Git.
+
+`core::cloud_client` saves uncertainty before every one-time exchange or refresh
+and never infers successful rotation after response loss. Explicit restart is
+required for ambiguous one-time state. A rejection may invalidate only the
+exact bearer used by that request, preserving a newer concurrent rotation.
+Raw transport/service text and credentials are excluded from diagnostics.
+The deliberately displayed browser handoff is validated by Dactyl and remains
+a short-lived human sign-in capability, not repository authorization.
+
+Dactyl alone performs discovery/auth/account/data transport in the ordinary
+cloud path, with no redirect or ambient legacy token/provider adoption.
+Decapod binds the private flow to the requested repository and validates the
+handoff/session lifetimes. The published connector returns status/code strings
+and a completion acknowledgement, without returning repository metadata to the
+caller. Current access to the bound repository is therefore checked by the
+authorized read rather than inferred from the sign-in result. Decapod does not
+evaluate price, membership, seat/payment authority, or privileged grants. Service-confirmed
+completion plus current authorized read is required before reporting setup
+ready; every subsequent request still requires server authorization. Offline
+fixtures cannot establish hosted PostgreSQL or managed-account enforcement.
+
 ## Historical validation trust boundary
 
 `core::validation_history` accepts full execution evidence only from the
@@ -553,24 +585,25 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bdad189a74ed24898d335d9589cc321b3360c4cf446a7d5a198208bd2bde13c7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
+- Repository signal fingerprint: `af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (228 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## Quinn transitive dependency remediation
 
-The locked dependency graph uses quinn-proto 0.11.19 through Dactyl's reqwest
-resolution. The Cargo lock change updates only that package version and registry
-checksum. The generated Bazel lock must be regenerated with the repository-pinned
-Bazel version so both build systems resolve the same patched dependency;
-release-bound projections must match the evaluating Decapod release.
+The earlier locked graph used quinn-proto 0.11.19. The published Dactyl 0.12.0
+MSRV bounds instead resolve quinn-proto 0.11.9 in the inactive HTTP/3 graph.
+That downgrade is an unresolved dependency-review concern, not inherited audit
+evidence. The configured dependency audit must evaluate the exact candidate
+without ignored advisories; a failure keeps the registry handoff and PR blocked.
+The generated Bazel lock must agree with the Cargo graph and release-bound
+projections must match the evaluating Decapod release.
 No HTTP/3 feature is enabled: Cargo feature-tree inspection across default,
 no-default and all Decapod features finds no active Quinn path. That limits the
 identified runtime exposure but does not excuse vulnerable lockfile entries.
-The dependency audit must pass without ignored advisories; the existing yanked
-chacha20 warning remains separately visible. No transport policy, CI trigger,
-provider permissions or accepted-executor helper is changed by this remediation.
+No transport policy, CI trigger, provider permissions or accepted-executor helper
+is changed to admit this dependency update.
 
 The reviewed provider importer identity is buildkite-gha 0.102.7. The validator
 accepts exactly its independently reviewed official compiler and platform-specific
@@ -848,21 +881,3 @@ instructions and leave the record untouched. Native format, canonical path,
 ownership, single-link, byte-size and digest checks remain enforced. Model setup
 uses bounded credential-free public asset transport. Opaque user configuration
 extensions survive refresh but cannot enable evaluation or grant authority.
-
-## Requested roster and hosted purchase authority
-
-The CLI accepts a bounded repository and distinct GitHub usernames. Its public
-approval URL uses a fixed HTTPS destination and encoded allowlisted values;
-config cannot choose a payment host or embed credentials. An existing GitHub
-origin and requested purchase identity must match. Only non-secret request data
-is persisted. Editing the roster, changing a local role or visiting a return
-URL cannot establish cloud authorization.
-
-Propodus must verify managed numeric GitHub identity, live repository-admin
-permission for purchase, paid named repository seats and applicable directory
-grants. A non-admin can request approval without gaining purchase authority.
-Browser launch remains limited to human interactive init and respects
-`DECAPOD_HEADLESS`; proof and dry-run execution never initiate a purchase.
-`cloud_init_prints_purchase_approval_without_creating_machine_session` in
-`tests/cloud_backend_storage.rs` also requires that even explicit mock auth
-does not make the init handoff write a credential or claim cloud readiness.

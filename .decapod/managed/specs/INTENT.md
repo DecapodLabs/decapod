@@ -1,5 +1,25 @@
 # Intent
 
+## Governed cloud client and private custody (#1628)
+
+Decapod's local-first governance kernel remains the system interface for agent
+work. Optional cloud selection changes the operational task backend without
+moving authorization policy into the agent or turning credentials into Git
+state. `repo.backend = local|cloud` is the only project-level composition
+choice. Dactyl owns discovery, physical connector selection, authentication
+transport, account-completion transport, and cloud data I/O; Decapod owns
+machine-private session custody and the bounded human-facing continuation.
+
+The client must reuse valid sessions, serialize refresh, preserve interrupted
+one-time outcomes, and expose pending/denied/action-required outcomes honestly.
+Only service-confirmed completion plus an authenticated repository read permits
+the init-ready message. This establishes current read access, not future write
+or privileged authority. Local mode requires no cloud account. The implemented
+task slice does not add full remote governance parity, pricing policy, hosted
+PostgreSQL acceptance, or a release exception for an unpublished dependency.
+Source: `core/cloud_client.rs`, `core/cloud_session.rs`, `core/todo.rs`, and
+`lib.rs`. Fixture evidence and protected real-service evidence stay distinct.
+
 ## Current bounded-reader repair (#1571)
 
 Restore ordinary local validation liveness on macOS by enumerating pinned
@@ -287,8 +307,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bdad189a74ed24898d335d9589cc321b3360c4cf446a7d5a198208bd2bde13c7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
+- Repository signal fingerprint: `af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (228 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -444,24 +464,16 @@ WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
 This is a bounded local SQLite optimization. Full semantic parity with
 Propodus Supabase remains a separately gated migration (Propodus #71).
 
-## Cloud repository purchase approval
+## Refined terminal onboarding and managed cloud setup
 
-Cloud init carries repository identity into generated context, collects the
-requested GitHub roster and presents the hosted purchase-approval handoff.
-The preserved commercial contract is USD15 per named user per repository
-monthly, with payment approval owned by a verified repository owner/admin.
-The non-secret config records requested intent; it cannot establish a paid
-seat, a cloud credential or datastore authorization. Local use remains
-available without login or purchase.
+Human setup follows Project, Preferences and Review, with recommended defaults,
+focused customization and an explicit apply/edit/cancel decision. Interactive
+setup creates no project, Git, governance or cloud sign-in state before approval.
+Existing settings and full proof definitions survive refresh, with private
+backups before changed config replacement. Local operation needs no account.
 
-This recovery preserves the previously authored CLI contribution from
-`26a499d9f0789a5ed00605d23cfc57f5392ae8fc` on the current accepted source.
-Hosted billing deployment, sandbox purchase acceptance and released native
-client credential integration remain separate rollout requirements. A printed
-approval link alone cannot establish their completion.
-
-### Refined terminal onboarding
-
-REQ-ONBOARDING: The human-facing `decapod init` journey should make a project understandable before exposing governance controls. With terminal input and output, first-run setup and explicit `--refresh` present Project, Preferences, and Review. The recommended path retains detected or authored values and keeps new projects local without an account. Focused customization preserves access to project context, isolation, cloud consent and billing context, task trackers, proof settings, permissions, diagrams, and CI.
-
-The user reviews the actual plan, can edit it, and confirms before a newly selected directory, Git repository, or governance scaffold is created. Setup ends with an agent-oriented next action and explicitly leaves required proof unrun. Configuration updates preserve private copies of prior bytes. These behaviors are exercised through the real terminal in `tests/init_cli.rs`; automation continues to use the existing unattended CLI contract.
+Cloud setup uses the accepted Dactyl-managed session flow after apply. The service
+owns pricing, account requirements, assignments and repository access; the TUI
+does not infer authority from a local roster. A pending or denied handoff is not
+setup success. Managed-project selection and the protected paid customer journey
+remain separate work and are not claimed by this presentation change.

@@ -648,7 +648,6 @@ fn review_keeps_existing_cloud_isolation_and_full_proof_settings() {
     let dir = tempdir().unwrap();
     let mut config = DecapodProjectConfig::default();
     config.repo.set_backend(BackendType::Cloud);
-    config.repo.cloud_github_users = vec!["alice".into()];
     config.custody.isolation = IsolationMode::Container;
     config.proof.validation_buildkite_preflights = true;
     let init = init_with_from_config(&config, dir.path().to_path_buf(), false, false);
@@ -663,7 +662,10 @@ fn review_keeps_existing_cloud_isolation_and_full_proof_settings() {
     assert!(value("Storage").contains("Cloud"));
     assert!(value("Workspace").contains("containers"));
     assert!(value("Proof").contains("Buildkite"));
-    assert_eq!(value("Cloud seats"), "alice");
+    assert!(value("Cloud setup").contains("service confirms repository access"));
+    assert!(rows.iter().all(|(label, value)| {
+        *label != "Cloud seats" && *label != "Billing" && !value.contains("USD")
+    }));
     assert!(
         config_from_init_with(&init, config.repo.clone())
             .repo
