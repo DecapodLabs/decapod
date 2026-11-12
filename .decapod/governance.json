@@ -605,6 +605,11 @@
       "id": "reflection-1639-validation-recovery",
       "summary": "Merge accepted validation recovery, authorize lifecycle fixture writers, include reflection CLI in the required suite and expose bounded measurements.",
       "input_digest": "sha256:9e3b7211d190f4a47c484489b3ab73702f14443b0ed48e0a16f5bfe1987d82ad"
+    },
+    {
+      "id": "reflection-1639-release-140",
+      "summary": "Reconcile accepted release 0.140.0 and preserve convergence across measured phase progress using existing plan semantics.",
+      "input_digest": "sha256:689c85b3e7c00f75a09c73cea49165f7291beb62fce8333f112cbc15cb8ac1df"
     }
   ],
   "intents": {
@@ -649,24 +654,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reflection still composes existing plan, custody and mentor primitives. Accepted validation recovery is retained; only fixture authorization and existing-suite coverage were repaired.",
-          "reviewed_code_fingerprint": "0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742",
-          "spec_material_hash": "c96ff0f6eb3075ec7a387369b10e73a16fcd77f169f327166a2ef95ac1544bcf"
+          "reason": "Reflection now reuses the existing plan acceptance/progress reset on a clone; governing phase definitions remain source-bound.",
+          "reviewed_code_fingerprint": "5702dbf18594ba1dd936ebff0a27fc817a680cec13b606bbff3b2e0e6f6af266",
+          "spec_material_hash": "491f7b50dbc49dd909b17c34b2ae50416cd164051e158722ab25528e5d400974"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged accepted target retains interface contracts; the existing required entrypoint suite now executes CLI reflection compatibility and continuation cases.",
-          "reviewed_code_fingerprint": "0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742",
-          "spec_material_hash": "b21d876799a996edfb1df92b4486125ae7b5c4fa1fb98a9b8282d5c2a4ceeeae"
+          "reason": "Documented the plan contract projection: routine approval and phase proof progress are separate from reflective convergence.",
+          "reviewed_code_fingerprint": "5702dbf18594ba1dd936ebff0a27fc817a680cec13b606bbff3b2e0e6f6af266",
+          "spec_material_hash": "13dd11d971ba861190919fc1cf20b6ca80e7c10bb45da8bada94c89086195442"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The temporary lifecycle fixture registers verified writers and keeps production trust gates unchanged. The installed supported controller reports 0.139.1; no approval or proof was inferred from labels.",
-          "reviewed_code_fingerprint": "0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742",
+          "reason": "The installed published 0.140.0 controller and generated release surfaces are aligned. Existing approval and proof gates still enforce current execution state; phase normalization changes no authority.",
+          "reviewed_code_fingerprint": "5702dbf18594ba1dd936ebff0a27fc817a680cec13b606bbff3b2e0e6f6af266",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -680,13 +685,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794487181Z"
+      "updated_at": "1794487997Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:90afad655699f6df78b159671dbb3eb371b19390f16db4e8a751abd5eb147525",
+      "artifact_hash": "sha256:56e293908941c6b98b9b97eb9a198fd8a3a164cad77a9bfe4642f36085c56f55",
       "checks": [
         {
           "name": "buildkite-clippy",
@@ -721,12 +726,24 @@
           "status": "failed"
         },
         {
+          "name": "full-validation-be4cfbb6",
+          "status": "unavailable"
+        },
+        {
           "name": "legacy-plan-fixture-compilation",
           "status": "failed"
         },
         {
           "name": "lifecycle-fixture-32fdc534",
           "status": "failed"
+        },
+        {
+          "name": "local-projection-bootstrap",
+          "status": "partial"
+        },
+        {
+          "name": "published-controller-140",
+          "status": "passed"
         },
         {
           "name": "reflection-15-cases-32fdc534",
@@ -832,10 +849,17 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -1138,6 +1162,40 @@
                   "Accepted f1a6c7a0 merged; current task journal retained and generated conflicts refreshed by supported interfaces. The reviewed build delta adds infer_precision.rs to the existing required entrypoint suite without changing the required graph.",
                   "All 15 protocol regressions passed on earlier code. Repaired lifecycle setup, CLI suite inclusion and numeric measurements require new exact-candidate execution."
                 ]
+              },
+              {
+                "action": "validation-preparation",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "src/decapod/core/mentor/reflection.rs",
+                  "src/decapod/plan_governance.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  "tests/infer_precision.rs",
+                  "docs/agent/state-model.md",
+                  "snapshot:decapod-snapshot-yStc2X",
+                  "https://github.com/DecapodLabs/decapod/commit/fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b"
+                ],
+                "proof_refs": [
+                  "full-validation-be4cfbb6",
+                  "published-controller-140",
+                  "local-projection-bootstrap",
+                  "format-and-whitespace"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 15,
+                "validation_findings": [
+                  "Plain validation be4cfbb6 stopped because accepted base moved to released 0.140.0. The session-acquire path installed that published release after private backups; update opt-in was restored to its original absence.",
+                  "Projection bootstrap applied supported release repairs but is partial, with host container/candidate gates unmet. It is not readiness or an alternate proof path; full Buildkite validation owns all configured prerequisites.",
+                  "Source review found routine phase progress unnecessarily invalidated reflection. Reusing existing progress normalization fixes the coupling while independent approval/proof gates remain required; the new regression awaits configured execution."
+                ]
               }
             ]
           }
@@ -1162,8 +1220,10 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/43210330738/job/131155983763",
         "https://github.com/DecapodLabs/decapod/actions/runs/43210330914/job/131156236192",
         "https://github.com/DecapodLabs/decapod/actions/runs/43215838324/job/131175931908",
+        "https://github.com/DecapodLabs/decapod/commit/fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b",
         "https://github.com/DecapodLabs/decapod/issues/1639",
-        "https://github.com/DecapodLabs/decapod/issues/1640"
+        "https://github.com/DecapodLabs/decapod/issues/1640",
+        "snapshot:decapod-snapshot-yStc2X"
       ],
       "inspected_files": [
         "src/decapod/core/mentor.rs",
@@ -1181,6 +1241,7 @@
         "src/decapod/core/mentor/reflection.rs",
         "src/decapod/core/state.rs",
         "src/decapod/lib.rs",
+        "src/decapod/plan_governance.rs",
         "tests/entrypoint_correctness.rs",
         "tests/infer_precision.rs",
         "tests/unit/core/reflection_tests.rs",
@@ -1189,6 +1250,7 @@
       ],
       "next_transitions": [
         "After explicit release approval, back up binary/config, use session acquire update, regenerate supported projections, checkpoint and revalidate the new exact candidate against the current accepted target.",
+        "Commit exact candidate against accepted fc1e2b94 and run plain full decapod validate; preserve all failed/unavailable history.",
         "Commit exact candidate and run plain decapod validate",
         "Commit fixture repair and run plain validation after provider reset; retain release gate until approved supported update.",
         "Commit the merged implementation candidate and run plain decapod validate against accepted f1a6c7a0; keep all previous failed attempts historical.",
@@ -1220,7 +1282,10 @@
         "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
         "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
         "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics.",
+        "Plain validation be4cfbb6 stopped because accepted base moved to released 0.140.0. The session-acquire path installed that published release after private backups; update opt-in was restored to its original absence.",
+        "Projection bootstrap applied supported release repairs but is partial, with host container/candidate gates unmet. It is not readiness or an alternate proof path; full Buildkite validation owns all configured prerequisites.",
         "Source review found missing outer CLI task binding could evaluate different intent. The new regression rejects it before round 1; behavioral execution remains pending. Buildkite clippy assertion-style failure is repaired without lint suppression.",
+        "Source review found routine phase progress unnecessarily invalidated reflection. Reusing existing progress normalization fixes the coupling while independent approval/proof gates remain required; the new regression awaits configured execution.",
         "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved.",
         "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness.",
         "User continuation authorizes the previously requested 0.139.1 update. Session acquire required no install: the installed binary already reports 0.139.1. Temporary update opt-in was removed and binary/config backed up privately."

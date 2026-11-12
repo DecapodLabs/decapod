@@ -166,6 +166,9 @@ do not write; changed reuse or stale tokens fail without consuming a round.
 Replaying an old nonterminal conclusion after relevant source changes fails.
 Plan/policy/ADR/evidence changes invalidate conclusions without resetting the
 lifetime budget. Plan reinitialization and ordinary edits preserve the journal.
+The plan source/context hash binds governing definitions; approval and measured
+phase/gate progress reuse the existing plan contract/progress distinction and
+do not consume extra rounds. Existing execution/proof gates still check them.
 Terminal state dominates historical replays, including an earlier `proceed`.
 A new accepted workstream is the explicit recovery boundary for a terminal stop.
 This initial contract supports one task continuation per plan, local exclusive

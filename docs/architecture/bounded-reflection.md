@@ -44,6 +44,10 @@ without writes; changed reuse and stale tokens fail without consuming a round.
 Meaningful progress requires a removed conflict or strictly narrower scope;
 new prose or arbitrary citations cannot clear a challenge. Changed sources
 invalidate previous conclusions without resetting the lifetime budget.
+Contract hashing reuses the plan's existing progress reset on a clone: routine
+approval and measured phase/gate progress do not spend more rounds. Changes to
+governing definitions still invalidate convergence. Execution/proof gates check
+their own state independently.
 
 `proceed` means only that this reflection has no current challenge. `reflect`
 returns one bounded question. `human_decision` preserves an existing authority
@@ -126,8 +130,8 @@ repository-size estimate. Measured governance/journal byte counts will be
 reported from configured execution rather than inferred from this ceiling.
 
 The work branch now incorporates accepted target
-`f1a6c7a0f8c54bfbb1153e2385c72aafaa8c7ad2`. The installed supported
-controller reports 0.139.1 and release projections were reconciled through
+`fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b`. The installed supported
+controller reports 0.140.0 and release projections were reconciled through
 supported interfaces/accepted source. Earlier projection/quota failures and
 private snapshot identifiers remain in the governed trajectory. Fresh plain
 validation must establish exact-candidate readiness before any PR is opened.

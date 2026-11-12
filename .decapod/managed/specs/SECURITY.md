@@ -585,7 +585,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742`
+- Repository signal fingerprint: `5702dbf18594ba1dd936ebff0a27fc817a680cec13b606bbff3b2e0e6f6af266`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

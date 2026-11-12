@@ -139,6 +139,79 @@ fn obvious_safe_action_has_no_artificial_interview_or_completion_claim() {
 }
 
 #[test]
+fn normal_phase_progress_preserves_convergence_but_contract_edits_invalidate_it() {
+    let (temp, request) = fixture(vec![]);
+    for id in ["inspect", "implement", "verify"] {
+        plan_governance::add_phase(
+            temp.path(),
+            crate::plan_governance::Phase {
+                id: id.into(),
+                name: id.into(),
+                description: id.into(),
+                entry_gates: vec![],
+                exit_gates: vec![],
+                entered: false,
+                completed: false,
+                entered_at: None,
+                completed_at: None,
+            },
+        )
+        .unwrap();
+    }
+    plan_governance::patch_plan(
+        temp.path(),
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let first = submit(temp.path(), &request).unwrap();
+    assert_eq!(first.disposition, Disposition::Proceed);
+    for id in ["inspect", "implement", "verify"] {
+        let entered = plan_governance::enter_phase(temp.path(), id).unwrap();
+        assert!(
+            check_execute(
+                temp.path(),
+                &temp.path().join(".decapod/data"),
+                &entered,
+                None
+            )
+            .is_ok()
+        );
+        let completed = plan_governance::complete_phase(temp.path(), id).unwrap();
+        assert!(
+            check_execute(
+                temp.path(),
+                &temp.path().join(".decapod/data"),
+                &completed,
+                None
+            )
+            .is_ok()
+        );
+    }
+    assert_eq!(submit(temp.path(), &request).unwrap(), first);
+    let changed = plan_governance::update_phase(
+        temp.path(),
+        "inspect",
+        None,
+        Some("A different governing phase contract".into()),
+    )
+    .unwrap();
+    assert_eq!(changed.state, PlanState::Draft);
+    assert!(
+        check_execute(
+            temp.path(),
+            &temp.path().join(".decapod/data"),
+            &changed,
+            None
+        )
+        .is_err()
+    );
+    assert!(plan_governance::enter_phase(temp.path(), "inspect").is_err());
+}
+
+#[test]
 fn architectural_conflict_is_caught_and_evidence_bound_scope_revision_proceeds() {
     let (temp, request) = fixture(vec!["src/mutations.rs".into()]);
     let before = bytes(temp.path()).len();

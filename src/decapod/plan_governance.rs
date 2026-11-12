@@ -389,7 +389,7 @@ pub fn patch_plan(
 
 /// Contract edits cannot carry acceptance or measured phase progress from the
 /// previous contract. This does not authenticate the later approval's author.
-fn invalidate_plan_acceptance(plan: &mut GovernedPlan) {
+pub(crate) fn invalidate_plan_acceptance(plan: &mut GovernedPlan) {
     plan.state = PlanState::Draft;
     for phase in &mut plan.phases {
         phase.entered = false;

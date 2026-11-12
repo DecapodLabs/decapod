@@ -160,7 +160,12 @@ fn source_hash(root: &Path, path: &str) -> Result<String, DecapodError> {
 }
 
 fn plan_contract(plan: &GovernedPlan) -> Result<Value, DecapodError> {
-    let mut value = serde_json::to_value(plan).map_err(|e| invalid(&e.to_string()))?;
+    // Reuse the plan's own contract/progress distinction on a clone. Routine
+    // approval or measured phase progress does not change the reflective gap;
+    // the existing execution gates still enforce approval and proof themselves.
+    let mut contract = plan.clone();
+    plan_governance::invalidate_plan_acceptance(&mut contract);
+    let mut value = serde_json::to_value(contract).map_err(|e| invalid(&e.to_string()))?;
     let object = value
         .as_object_mut()
         .ok_or_else(|| invalid("INVALID_PLAN"))?;

@@ -16,8 +16,12 @@ Plan constraints and existing human decision gates retain their binding meaning;
 mentor ADR heuristics cannot create policy. `proceed` clears only reflection.
 Exact retries do not write or consume rounds; stale tokens, conflicting reuse,
 changed custody and stale evidence preserve state. Relevant source changes
-invalidate conclusions without renewing the budget. Stagnation terminates in
-round two; unresolved progress exhausts round three. Reinitializing or editing
+invalidate conclusions without renewing the budget.
+Routine plan approval and measured phase/gate progress preserve the reflective
+contract projection; they remain separately enforced execution/proof state.
+Changing governing definitions still invalidates convergence.
+Stagnation terminates in round two; unresolved progress exhausts round three.
+Reinitializing or editing
 the plan cannot erase that journal. A terminal stop requires a new governed
 workstream. Superseded/deprecated federation records remain historical;
 disputed records require judgment; inferred/imported records remain proposals,
@@ -317,7 +321,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742`
+- Repository signal fingerprint: `5702dbf18594ba1dd936ebff0a27fc817a680cec13b606bbff3b2e0e6f6af266`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

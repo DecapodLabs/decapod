@@ -11,6 +11,10 @@ Current plan/accepted-base, policy, ADR and supplied source identities invalidat
 dependent conclusions. The existing plan execution, trajectory checkpoint/resume
 and validation boundaries reject binding unresolved or stale reflection.
 The unchanged approval and exact-candidate publication gates remain necessary.
+The reflection contract hash reuses the plan's existing acceptance/progress
+reset on a clone. Approval and measured phase/gate progress do not consume
+reflection rounds; changes to the actual phase/gate definitions still invalidate
+convergence. The original execution and proof gates remain authoritative.
 Mentor text matches stay advisory. `state::project_federation_decision` now
 honors lifecycle before labels and preserves confidence, scope and provenance;
 an inferred/imported accepted tag cannot become a human-confirmed decision.
@@ -871,7 +875,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742`
+- Repository signal fingerprint: `5702dbf18594ba1dd936ebff0a27fc817a680cec13b606bbff3b2e0e6f6af266`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,5 +1,6 @@
 use serde_json::Value;
 use std::fs;
+use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Output};
 use tempfile::tempdir;
@@ -193,7 +194,6 @@ fn test_orientation_and_mentor_share_the_reflection_continuation() {
     assert_eq!(rpc["result"]["reflection"]["completion_proven"], false);
     assert_eq!(rpc["result"]["reflection"]["round"], 2);
     assert!(rpc["blocked_by"].as_array().unwrap().is_empty());
-    use std::io::Write;
     writeln!(
         std::io::stderr().lock(),
         "reflection_eval {}",

@@ -3,10 +3,10 @@
 ## Reflection adversarial proof contract
 
 The current work branch incorporates accepted target
-`f1a6c7a0f8c54bfbb1153e2385c72aafaa8c7ad2` and its validation-recovery
-contracts. The installed controller reports 0.139.1 through
+`fc1e2b94f6909633bf6dd7044fd7a54a05e85a4b` and its validation-recovery
+contracts. The installed controller reports 0.140.0 through
 `capabilities --format json`. The supported session update path was exercised
-after explicit authorization; it required no further installation. Temporary
+after explicit authorization and installed the published release. Temporary
 automatic-update opt-in was removed. Binary/config backups remain private.
 The current task journal was retained from its canonical committed version;
 accepted upstream journals remain in Git history. Generated release surfaces
@@ -21,6 +21,10 @@ competing submissions and custody loss. All 15 cases passed on
 blocked before execution and an adapter-only revision proceeding in round 2
 while preserving plan acceptance, proof hooks and false completion proof.
 These are deterministic structural/evidentiary checks, not model evaluations.
+A further regression checks six ordinary phase transitions without consuming
+extra reflection rounds, then changes a governing definition and requires
+fresh context and approval. The contract projection reuses the plan's existing
+acceptance/progress reset on a clone; execution/proof gates remain separate.
 
 That run's complete library suite reported 1696 passed, 1 failed, 8 ignored.
 The lifecycle test failed at fixture setup because its writers had basic trust.
@@ -35,7 +39,7 @@ outer task binding and preservation of orientation decision gates. A rejected
 missing task binding must leave the subsequent valid proposal at round 1.
 The sole added build input relative to the accepted target is that test file;
 reviewed inventory
-`sha256:4424959148a4659623027d78c9a88a3c5f8b14735038d0a67d8f8cd04d90001d`
+`sha256:2aae6b81cd1826ad84735e3d24c4aa716c726725a3f7e8b04cdf309f13fdf5c1`
 retains the same profile, accepted executor, workflow graph and required checks.
 
 Existing safe/corrected fixtures emit bounded numeric measurements directly to
@@ -1250,7 +1254,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0af3f5ca9825d73ce0dc84271da3efecad9986154a667acf54f533285c7ad742`
+- Repository signal fingerprint: `5702dbf18594ba1dd936ebff0a27fc817a680cec13b606bbff3b2e0e6f6af266`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
