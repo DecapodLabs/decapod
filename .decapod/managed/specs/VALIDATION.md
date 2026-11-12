@@ -1459,3 +1459,11 @@ The actual CLI refresh regression checks the managed Auth endpoint, subsequent
 account request and native query all use the rotated bearer without printing
 credentials or initializing SQLite. HTTP fixture success is not a hosted Auth,
 PostgreSQL, registry publication or released-client receipt.
+
+The registry adoption regenerates MODULE.bazel.lock through `bazel mod deps`
+while preserving strict lock checking. Cargo and Bazel bind the same0.12.0
+archive checksum. The complete generated JSON uses one-space indentation: this
+lossless formatting retains every repository/extension record while fitting the
+controller's existing1MiB source-file bound. No discovery bound or proof stage
+is relaxed. Release-policy assertions retain registry-only provenance and the
+complete SQLite/Neon/default-Supabase feature contract.
