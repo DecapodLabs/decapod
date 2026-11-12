@@ -561,6 +561,15 @@
         "/private/tmp/validation-bootstrap-full-v2.json",
         "Buildkite8037 actual source compiler diagnostic E0282"
       ]
+    },
+    {
+      "id": "validation-bootstrap-journal-epoch-v4",
+      "summary": "Consume supported current workunit journal epoch instead of requiring unset legacy optional fields",
+      "input_digest": "sha256:6726722eadc77ecac89787fe05bae8560729325b2b74dac3be05ac23e21c83ca",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-full-v3.json",
+        "src/decapod/core/trajectory/execution.rs ExecutionStateBinding.validation_epoch_digest and verify_execution_binding"
+      ]
     }
   ],
   "intents": {
@@ -606,22 +615,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final terminal gate after compiler repair; proof facts preserve actual changed paths and declared workunit contracts remain strict across task categories",
-          "reviewed_code_fingerprint": "1f7ca84835afd4abb1c2bc143ff176b32d31fb3291f97bb3d10e44e926de9b50",
+          "reason": "Final journal authority uses actual execution binding including current epoch and rechecks generation after collecting manifest; optional legacy fields do not create an unsupported prerequisite",
+          "reviewed_code_fingerprint": "83da911aa7f9a45a0d0d3e2cd37583349480f3c52369343eff6678a14e55c028",
           "spec_material_hash": "3a8e812199d4dffafff1e0f2ea4e8d9b00ea791117aaa82b016c502d0536992d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Owned proof remains current suite authority; exact source facts drive applicability and absent versus unknown workunit states remain distinct",
-          "reviewed_code_fingerprint": "1f7ca84835afd4abb1c2bc143ff176b32d31fb3291f97bb3d10e44e926de9b50",
+          "reason": "Final terminal workunit API preserves supported checkpoint/proof commands and rejects explicit epoch mismatches plus stale source, artifacts, journal or projection",
+          "reviewed_code_fingerprint": "83da911aa7f9a45a0d0d3e2cd37583349480f3c52369343eff6678a14e55c028",
           "spec_material_hash": "5c9d6666f4df62a9f60c6c3968c89cf1f409b9e14e2c27024b67cd43d6873d9d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed same source/executor trust boundary after map and applicability repairs; no candidate self-authorization or weaker workunit contract",
-          "reviewed_code_fingerprint": "1f7ca84835afd4abb1c2bc143ff176b32d31fb3291f97bb3d10e44e926de9b50",
+          "reason": "Reviewed positive current epoch authority is actual durable binding; field absence cannot bypass current journal, source, policy, task custody or artifact checks; generation changes fail closed",
+          "reviewed_code_fingerprint": "83da911aa7f9a45a0d0d3e2cd37583349480f3c52369343eff6678a14e55c028",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -635,13 +644,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794455507Z"
+      "updated_at": "1794455875Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e65f99bc06024ba426b3af4c460604e19cd4ca54c2740d93b788847e8c6e3033",
+      "artifact_hash": "sha256:ecf7c68f44d623c1344d4de3d97f9bac89b1d6c9f39061d46ff396d9c595662e",
       "checks": [
         {
           "name": "accepted_release_inventory_review",
@@ -658,6 +667,10 @@
         {
           "name": "independent_full_validation_v2",
           "status": "failed"
+        },
+        {
+          "name": "independent_full_validation_v3",
+          "status": "unavailable"
         },
         {
           "name": "lifecycle_trace",
@@ -710,10 +723,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -817,6 +837,27 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
+                  "Source review: workunit checkpoint ExecutionStateBinding positively binds current validation_epoch_digest; optional legacy manifest epochs need only reject explicit mismatches. Positive actual journal contract regression added; artifact mutation/deletion remain strict."
+                ],
+                "proof_refs": [
+                  "independent_full_validation_v3"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -832,6 +873,8 @@
         "Compared accepted current inventory with c7609e42 pin origin: only Cargo.toml/Cargo.lock Decapod version changed0.138.2 to0.138.3; all workflows/helpers/carrier/build definitions identical; explicitly reconcile reviewed digest5fd571a9",
         "Fix evidence map type; terminal applicability now consumes verified suite changed paths and explicit workunit declaration applies across task routing categories; unknown filesystem projections remain blockers",
         "Full v1 report /private/tmp/validation-bootstrap-full-v1.json: reviewed source inventory stale before execution",
+        "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
+        "Source review: workunit checkpoint ExecutionStateBinding positively binds current validation_epoch_digest; optional legacy manifest epochs need only reject explicit mismatches. Positive actual journal contract regression added; artifact mutation/deletion remain strict.",
         "Source trace: prerequisite demands own receipt and unconditionally demands workunit outputs"
       ],
       "inspected_files": [
@@ -851,7 +894,8 @@
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/validation_rules.rs",
         "src/decapod/core/validation_runtime.rs",
-        "tests/consumer_readiness.rs"
+        "tests/consumer_readiness.rs",
+        "tests/unit/core/workunit_journal_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"

@@ -1778,12 +1778,23 @@ fn evaluate_workunit_rule(_rule: &ResolvedRule, context: &RuleEvaluationContext)
     let Some(root) = context.repo_root.as_deref() else {
         return RuleVerdict::Unverifiable;
     };
-    if manifest.validation_epoch.as_ref() != Some(&context.validation_epoch)
+    // Supported workunit commands bind the current epoch through the durable
+    // ExecutionStateBinding verified by load_terminal_workunit. Optional legacy
+    // fields are additional constraints when present, not invented prerequisites.
+    if manifest
+        .validation_epoch
+        .as_ref()
+        .is_some_and(|epoch| epoch != &context.validation_epoch)
         || manifest.proof_results.iter().any(|result| {
             manifest.proof_plan.contains(&result.gate)
-                && (result.validation_epoch.as_ref() != Some(&context.validation_epoch)
-                    || result.evaluator_epoch.as_deref()
-                        != Some(context.validation_epoch.epoch_id.as_str()))
+                && (result
+                    .validation_epoch
+                    .as_ref()
+                    .is_some_and(|epoch| epoch != &context.validation_epoch)
+                    || result
+                        .evaluator_epoch
+                        .as_deref()
+                        .is_some_and(|epoch| epoch != context.validation_epoch.epoch_id))
         })
     {
         return RuleVerdict::Stale;
@@ -1804,7 +1815,7 @@ fn evaluate_publication_rule(context: &RuleEvaluationContext) -> RuleVerdict {
     }
 }
 
-fn load_terminal_workunit(
+pub(crate) fn load_terminal_workunit(
     root: &Path,
     task_id: &str,
 ) -> Result<Option<crate::core::workunit::WorkUnitManifest>, error::DecapodError> {
@@ -1839,7 +1850,17 @@ fn load_terminal_workunit(
                 .unwrap_or(&status.projection_state)
         )));
     }
-    crate::core::workunit::load_workunit(root, task_id).map(Some)
+    let manifest = crate::core::workunit::load_workunit(root, task_id)?;
+    let current = crate::core::workunit::workunit_journal_status(root, task_id)?;
+    if !current.resumable
+        || current.generation != status.generation
+        || current.checkpoint_hash != status.checkpoint_hash
+    {
+        return Err(error::DecapodError::ValidationError(
+            "TERMINAL_WORKUNIT_STALE: journal changed while collecting proof".into(),
+        ));
+    }
+    Ok(Some(manifest))
 }
 
 /// The terminal production boundary runs before any readiness receipt/history
