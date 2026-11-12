@@ -734,6 +734,17 @@
         "git:cff3a3c307b792ce4ea023a1c391cac657675dd8",
         "https://github.com/DecapodLabs/decapod/issues/1629"
       ]
+    },
+    {
+      "id": "validation-bootstrap-authentic01391-projections-v20",
+      "summary": "Commit authentic independentregistry0.139.1 native release projections after actualCI drift; preserve unchanged source definitions, genuineproof placement and all required checks",
+      "input_digest": "sha256:b27b76f5fdf238bdb363ed5860f2faf4fa6861bad02e411422734b34617ff18f",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "git:bc0a71971bce8ee036a24562b7fc4a9b771f2f40",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43207988589/job/131147936469",
+        "https://github.com/DecapodLabs/decapod/issues/1629"
+      ]
     }
   ],
   "intents": {
@@ -777,23 +788,23 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve actual accepted0.139.1 onboarding architecture and incoming whole-product scope, retaining validation admission/ownedterminal lifecycle only as the scoped branch delta",
+          "reason": "Authentic independently released0.139.1 entrypoint/image/manifest regeneration changes no product architecture, public interface or security/proof boundary; full genuineCLI/runtime assertions and unchanged required graph remain; current sourceinventory unchanged",
           "reviewed_code_fingerprint": "1ada811f01a7d6882f14b4b0525018ee0f327becdb06fca3bb126f1656713e08",
           "spec_material_hash": "63d6fb39e791fdc34e8a587a7a3a13e23b4e0a13d827c7db94c599d03ddd6572"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve accepted onboarding and cloud public interfaces exactly; own lifecycle interface and genuineentrypoint/testsupport placement remain unchanged",
+          "reason": "Authentic independently released0.139.1 entrypoint/image/manifest regeneration changes no product architecture, public interface or security/proof boundary; full genuineCLI/runtime assertions and unchanged required graph remain; current sourceinventory unchanged",
           "reviewed_code_fingerprint": "1ada811f01a7d6882f14b4b0525018ee0f327becdb06fca3bb126f1656713e08",
           "spec_material_hash": "c40ac088821e7daca50165b4cd10d4b22abaf3d8f4cff345ccb46571da6eda39"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Incoming accepted security documentation retained; actual onboarding merge changes no branch-authored security/transport/proof guard; fixed accepted executor/independentcontroller and required CI remain strict",
+          "reason": "Authentic independently released0.139.1 entrypoint/image/manifest regeneration changes no product architecture, public interface or security/proof boundary; full genuineCLI/runtime assertions and unchanged required graph remain; current sourceinventory unchanged",
           "reviewed_code_fingerprint": "1ada811f01a7d6882f14b4b0525018ee0f327becdb06fca3bb126f1656713e08",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
@@ -808,7 +819,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794482225Z"
+      "updated_at": "1794484134Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -821,7 +832,7 @@
         "Preserve real Git ELF and HTTPS/no-rewrite guards; CI-local admission never authorizes publication; real sealed current-suite execution and terminal evidence remain mandatory; carrier/aggregatebudget unchanged",
         "Scope actor exclusion only to complete canonical agent/<actor>/<topic>; retain legacy agent/<task> and bare task parsing, multi-task topics and actual task mismatch rejection"
       ],
-      "artifact_hash": "sha256:28e7129efdc2722431569d0c8997da67087fd9b32702142b315d62f53dccdcb6",
+      "artifact_hash": "sha256:cfa6f8939e6e6942cb72be1168b8ac7a75809cde4b16545c94cf84527e610642",
       "checks": [
         {
           "name": "17_configured_source_execution",
@@ -856,6 +867,22 @@
           "status": "passed"
         },
         {
+          "name": "20_full_candidate_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "20_independent_registry_bootstrap",
+          "status": "passed"
+        },
+        {
+          "name": "20_post_heal_source_inventory_metadata",
+          "status": "passed"
+        },
+        {
+          "name": "20_prerequisite_preparation",
+          "status": "failed"
+        },
+        {
           "name": "41e_actual_source_clippy",
           "status": "failed"
         },
@@ -885,6 +912,18 @@
         },
         {
           "name": "authored_source_review",
+          "status": "passed"
+        },
+        {
+          "name": "c626_actual_genuine_docs_proof",
+          "status": "passed"
+        },
+        {
+          "name": "c626_actual_release_drift",
+          "status": "failed"
+        },
+        {
+          "name": "c626_cli_contract_aggregate",
           "status": "passed"
         },
         {
@@ -1056,7 +1095,7 @@
           "status": "passed"
         }
       ],
-      "completion_claim": "New acceptedtarget/material invalidates priorreadiness; exact configuredcurrentCI and independent fullnative remainpending, no fullvalidation attempted on knownstalebase",
+      "completion_claim": "Only authentic releaseprojections and explicit sourcefacts change; exactcurrentconfiguredCI and independentfullnative remainpending, no readinessclaim frompreparation",
       "current_phase": "repair",
       "custody": {
         "events": [
@@ -1232,10 +1271,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 26
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:27",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 27
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 26,
+        "next_sequence": 27,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1827,6 +1873,40 @@
                 ],
                 "sequence": 26,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:27",
+                "observations": [
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Actualc626 officialCI standalonevalidate failed release-bound0.139.0->0.139.1 drift. CLIplacement solved aggregate timeout: contracts281.6s/enforcement274.2s pass, entrypoint207.4s withonlyoldtemplate mismatch; freshdocs genuineproof75.2473s pass. These remain c626 diagnostics, never reboundto20.",
+                  "Authorized native sessionacquire installer used documented Cargo privateinstall/targetenv scopes for officialregistry0.139.1, no--path/wrapper/candidatesource. Exacttemporaryconfigoptin restored, globalCLI unchanged perprivateaudits; privateindependent0.139.1 provenance verified beforeuse. Nativeprerequisite-onlyhealing regenerated actual0.139.1 projections;205passed4failed, scopeproject_prerequisites/publication_readyfalse/readinessnull. Preserve hostcontainer/unrelateddoneTODO andoldHEADcurrency failures; no foreignstate repair.",
+                  "Postheal105file inventoryidentical31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40; no source/carrier/helper/requiredgraph/target/budget/selectorchange. Sameactororiginaltask lease renewed4h and workspace rebound beforecheckpoint; no activeoldvalidation/localinstallerprocess remains."
+                ],
+                "proof_refs": [
+                  "c626_actual_release_drift",
+                  "c626_actual_genuine_docs_proof",
+                  "c626_cli_contract_aggregate",
+                  "20_independent_registry_bootstrap",
+                  "20_post_heal_source_inventory_metadata",
+                  "20_prerequisite_preparation",
+                  "20_full_candidate_execution"
+                ],
+                "scope": [
+                  "Validation lifecycle plus necessary exact source-CI regression placement and additive existing-target Rust input metadata",
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 27,
+                "validation_findings": []
               }
             ]
           }
@@ -1856,10 +1936,12 @@
         "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
         "Actual91cc GH pushCLI job131120183548 aggregate TIMEOUT300.0 after freshdocs genuineCLIadmission/complete-runtime proof passed65.018992583s and real_source_failure/repair passed. Timeout later in init_config_behavior, no positiveproof assertion failure. Current91 library1685passed0failed8ignored and Clippy passed are historical source diagnostics, not newcandidate/fullnativeproof.",
         "Actualacceptedmaster advanced externally after18push through23224a85 onboardingPR1636 andbc0a71971bce8ee036a24562b7fc4a9b771f2f40 releasePR1641 package0.139.1. Genuine merge actualsecondparentbc0a, no rebase/historyrewrite. Authenticcff Gov journal retains18authoredcommits plus allpriorcheckpoints; incoming140baselineobligations byte-equal, currentclaims/unknowns/questions/contradictions/assumptions empty. Whole-product onboarding specs preserved with own lifecycle appendix.",
+        "Actualc626 officialCI standalonevalidate failed release-bound0.139.0->0.139.1 drift. CLIplacement solved aggregate timeout: contracts281.6s/enforcement274.2s pass, entrypoint207.4s withonlyoldtemplate mismatch; freshdocs genuineproof75.2473s pass. These remain c626 diagnostics, never reboundto20.",
         "Actualfab7 PR job131088359791 explicitly passed fresh_docs_cli_admission_then_complete_runtime_proves_current_source and existing real_source_failure; aggregate target then timedout300.1s at final workunit recovery test. New source removes duplicate governed negative preparation/admission and strengthens existing real negative receipt/history/verdict assertions; no budget/test/selector change.",
         "Apply Clippy equivalent is_none_or(count==0) to optional integer pass count. Missing and zero remain rejected; positive nonzero remains admitted only alongside all existing actualscope/failurecount/readiness/clean-source checks. rustfmt only, no manual build/tests, guards or required budgets changed.",
         "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
         "Authored tests not executed yet; full accepted-controller validation owns builds and all test execution",
+        "Authorized native sessionacquire installer used documented Cargo privateinstall/targetenv scopes for officialregistry0.139.1, no--path/wrapper/candidatesource. Exacttemporaryconfigoptin restored, globalCLI unchanged perprivateaudits; privateindependent0.139.1 provenance verified beforeuse. Nativeprerequisite-onlyhealing regenerated actual0.139.1 projections;205passed4failed, scopeproject_prerequisites/publication_readyfalse/readinessnull. Preserve hostcontainer/unrelateddoneTODO andoldHEADcurrency failures; no foreignstate repair.",
         "Buildkite8037 required standalone-validation source build E0282: explicit String map key type required; raw actual provider log /private/tmp/validation-bootstrap-build8037.log",
         "Canonical preparation receipts use epoch_ref compression: collector now reads supported expanded validation section then verifies integrity; positive compact receipt and forged-hash regression authored",
         "Compared accepted current inventory with c7609e42 pin origin: only Cargo.toml/Cargo.lock Decapod version changed0.138.2 to0.138.3; all workflows/helpers/carrier/build definitions identical; explicitly reconcile reviewed digest5fd571a9",
@@ -1874,6 +1956,7 @@
         "Official sourceCI GH job131114983611/run43198189246 on exact41e86d3f accepted19ac failed cargo clippy --all-targets --all-features -- -D warnings: nonminimal_bool at consumer_readiness.rs343. Corresponding Buildkite8399 Clippy push check131116039493 also reports failure; raw native provider proof not yet collected.",
         "Own v5 local controller cancelled and fully reaped before source repair; report /private/tmp/validation-bootstrap-full-v5.json says CI operation cancelled, publication_ready=false. Actual failed compiler subcheck remains distinct from interrupted aggregate proof. No remote jobs cancelled.",
         "Post-heal current filesystem inventory reread all105source files, same c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 digest as actual accepted19ac. Four generated entrypoints and managed Dockerfile are outside source definition inventory; no helper/workflow/carrier change. Private raw diagnostic and provenance retained outside Git.",
+        "Postheal105file inventoryidentical31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40; no source/carrier/helper/requiredgraph/target/budget/selectorchange. Sameactororiginaltask lease renewed4h and workspace rebound beforecheckpoint; no activeoldvalidation/localinstallerprocess remains.",
         "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
         "Read-only acceptedexecutor audit confirms .config/build/decapod.BUILD.bzl additiveRustsrcs is ordinary material-bound candidatebuildmetadata, notcompiledcarrier. Same105file inventory has ONLY that definitiondelta, reviewed actualdigest50c5532ad4dca740a8216688204d2c0446459da2782a66de9377aacb30d360c8. Independentregistry0.139 andaccepted19ac unchanged. No directGovtestsetup, manualbuild/tests or lowerAPI coverage weakening.",
         "Read-only exact105-file Git inventory matches production source roots and serialized BTreeMap digest. Cloud parentc87e inventory8f21 matches prior declaration. Actual accepted19ac release changes ONLY Cargo.toml and Cargo.lock package version0.138.3 to0.139.0; accepted release and candidate both hashc8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174; accepted-to-candidate inventory delta empty.",
@@ -1943,6 +2026,7 @@
       "next_transitions": [
         "Checkpoint actual accepted-target reconciliation and measured fixture-cost consolidation, then execute unchanged required CI and independent full native validation",
         "Checkpoint actual acceptedbc0a reconciliation preserving18 prior commits and freshproof placement, then exact current configured CI/native validation",
+        "Checkpoint authenticreleased0.139.1 projections, execute exactnewhead requiredCI, then independentprivate registry0.139.1 fullnative validation",
         "Checkpoint exact Clippy correction then wait current source CI and required provider execution before independent full native proof",
         "Checkpoint reviewed actual accepted-release source inventory, then wait current-source CI before independent full native proof",
         "Finish source review, final living-spec refresh/reviews and checkpoint18, then execute unchanged selected CI suite and independent full native proof",
