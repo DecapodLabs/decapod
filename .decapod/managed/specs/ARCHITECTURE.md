@@ -863,10 +863,19 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `46e0adf38f1e99250d4fe8c36473e9cabc06a0a4997f1659268c98b236ce696e`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
+- Repository signal fingerprint: `2340ca34f685d73684cc15445ca4d14d6185a7210005999a818f320b7662ba4b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Native inventory boundary
+
+`core::storage_inventory` owns semantic measurement, sampling and redaction;
+`DactylBridge::inspect_snapshot` delegates physical reads to released Dactyl's
+bounded read-only transaction. CLI/RPC inspection dispatches before mutating
+startup. Filesystem observations remain separate from SQL snapshot consistency.
+Exact checkpoint/other totals and a distinct checkpoint sample avoid prefix
+blindness, with shared scan/time/VM budgets. No retention or authority changes.
 
 ## Accepted executor and candidate source
 

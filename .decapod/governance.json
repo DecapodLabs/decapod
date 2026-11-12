@@ -544,6 +544,15 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "bounded-storage-inventory": {
+      "statement": "Native CLI and RPC provide bounded consistent read-only storage measurements with explicit coverage, separate checkpoint strata and redaction, without initializing missing stores",
+      "falsifier": "A meaningful inventory regression fails, read-only inspection changes application state, private contents are emitted, or unavailable/partial observations are misrepresented",
+      "status": "open",
+      "proof_refs": [
+        "docs/storage-inventory.md",
+        "tests/support/storage_inventory.rs"
+      ]
+    },
     "sdk014-registry-floor": {
       "statement": "The published Dactyl0.14.0 registry dependency retains SQLite/Neon/defaultSupabase features and every resolved quinn-proto entry is at least0.11.19; transport/session/role boundaries and required full-proof graph remain unchanged.",
       "falsifier": "A Git/path override, mismatchedregistrychecksum, missing/unpatchedQuinnprotoentry, featureloss, transport/session/authorization change or relaxed required proof can pass the release policy and complete current-source checks.",
@@ -563,6 +572,17 @@
       "proof_refs": [
         "Cargo.lock",
         "MODULE.bazel.lock",
+        "tests/release_dependency_policy.rs"
+      ]
+    },
+    {
+      "id": "sdk014-accepted-inventory-v2",
+      "summary": "Merge actualaccepted1d04 inventory/release0.140.1 with original54ed checkpoint; preserve acceptedinventoryAPI/tests/buildpolicy and143baselineobligations, native-replay inventoryclaim, regenerate exactSDK0.14 closure/floor/registrychecks and authentic0.140.1 projections; complete nativeproof remains pending.",
+      "input_digest": "sha256:9845a1759bcbffb635ade30e059c02f7ce1d1e07a0bbdd9150782a417a62ce34",
+      "proof_refs": [
+        "Cargo.lock",
+        "MODULE.bazel.lock",
+        "docs/storage-inventory.md",
         "tests/release_dependency_policy.rs"
       ]
     }
@@ -613,23 +633,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated current SDK0.14 exactregistry/features/patchedQuinnfloor without changing productarchitecture, publicAPI, session/authorization or HTTPtransport; fullproof remains required.",
-          "reviewed_code_fingerprint": "46e0adf38f1e99250d4fe8c36473e9cabc06a0a4997f1659268c98b236ce696e",
-          "spec_material_hash": "fb37c31cc8e774ad0c68953ef864b9216eb1aa81f35aa1169fa9cb83beea3b84"
+          "reason": "Reviewed finalmerged currentcontent: accepted1d04 inventory API/CLI/RPC/read-only/privacy semantics preserved, exact SDK0.14 and patchedfloor facts updated without transport/session/authorization change. Completecurrentnativeproof pending; metadata/preparation are nonpublication.",
+          "reviewed_code_fingerprint": "2340ca34f685d73684cc15445ca4d14d6185a7210005999a818f320b7662ba4b",
+          "spec_material_hash": "692c0c5af54e13e11952238d7df3415aadef4e6f38a2ad8f4bea2bac19861def"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated current SDK0.14 exactregistry/features/patchedQuinnfloor without changing productarchitecture, publicAPI, session/authorization or HTTPtransport; fullproof remains required.",
-          "reviewed_code_fingerprint": "46e0adf38f1e99250d4fe8c36473e9cabc06a0a4997f1659268c98b236ce696e",
-          "spec_material_hash": "f5333f9c13e86a1f23ebc369397c5f22e25ba9a21ccfb053cba27af2070b2ab3"
+          "reason": "Reviewed finalmerged currentcontent: accepted1d04 inventory API/CLI/RPC/read-only/privacy semantics preserved, exact SDK0.14 and patchedfloor facts updated without transport/session/authorization change. Completecurrentnativeproof pending; metadata/preparation are nonpublication.",
+          "reviewed_code_fingerprint": "2340ca34f685d73684cc15445ca4d14d6185a7210005999a818f320b7662ba4b",
+          "spec_material_hash": "27d92a04e2055509758e030b5d902354662d9602008d5576de958248c7d32333"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Packageclosure aligns to patched SDK and Quinnfloor; no secretcustody, role/grant semantics, transportactivation, fallback, inputvalidation or security-boundary changes. Existing securityspec remains accurate.",
-          "reviewed_code_fingerprint": "46e0adf38f1e99250d4fe8c36473e9cabc06a0a4997f1659268c98b236ce696e",
-          "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
+          "reason": "Reviewed finalmerged currentcontent: accepted1d04 inventory API/CLI/RPC/read-only/privacy semantics preserved, exact SDK0.14 and patchedfloor facts updated without transport/session/authorization change. Completecurrentnativeproof pending; metadata/preparation are nonpublication.",
+          "reviewed_code_fingerprint": "2340ca34f685d73684cc15445ca4d14d6185a7210005999a818f320b7662ba4b",
+          "spec_material_hash": "d19fb5ab8a937310fab585de295899572101fbd2e2b6bf9ba7d44daa35066221"
         }
       ],
       "state": "APPROVED",
@@ -642,15 +662,23 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794491359Z"
+      "updated_at": "1794493877Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No HTTP3 activation, server/RPC broadening, feature changes, sourceoverrides, advisoryignores, guard weakening, manual sourcebuild/test or candidate-builtauthorizer."
       ],
-      "artifact_hash": "sha256:1c450972c399346dfa1c04cea316d07f0f9e8452f0eb6fd90a954cde0b279f63",
+      "artifact_hash": "sha256:ee80ab28947975be94aef360e79f0724f9a25aa8baaaa187e0109e44f87789e3",
       "checks": [
+        {
+          "name": "accepted_inventory_source_and_obligations_preserved",
+          "status": "passed"
+        },
+        {
+          "name": "current_complete_native_proof",
+          "status": "unavailable"
+        },
         {
           "name": "full_current_candidate_execution",
           "status": "unavailable"
@@ -660,15 +688,31 @@
           "status": "passed"
         },
         {
+          "name": "native_preparation_only",
+          "status": "failed"
+        },
+        {
+          "name": "new_release_native_inventory_matches_reviewed_closure",
+          "status": "passed"
+        },
+        {
+          "name": "oldhead_push_source_context",
+          "status": "failed"
+        },
+        {
           "name": "read_only_source_and_metadata_review",
           "status": "passed"
         },
         {
           "name": "registry_checksum_and_repo_fresh_Quinn_floor",
           "status": "passed"
+        },
+        {
+          "name": "staged_merge_gatekeeper_scan",
+          "status": "failed"
         }
       ],
-      "current_phase": "source prepared; configured execution pending",
+      "current_phase": "Accepted1d04 source reconciled; current proof pending",
       "custody": {
         "events": [
           {
@@ -689,10 +733,24 @@
             "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M77Z1T1Y39N8QBFV62DX1Z3B",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M77Z1T1Y39N8QBFV62DX1Z3B",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77Z1T1Y39N8QBFV62DX1Z3B": {
@@ -735,6 +793,63 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "Accepted1d04 source reconciled; current proof pending",
+                "command": "git merge --no-commit 1d04f232c46864eecfadb9c8b9b23069ca0e906e",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/storage_inventory.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "tests/support/storage_inventory.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "Actual target advanced via acceptedPR1645 and release1646. Original54ed authoredcommit/checkpoint retained, actualincomingsecondparent1d04. Native CLI replay preserves incomingopeninventoryclaim alongsideSDKclaim;143baselineunresolved entries exactlyequalincoming. Allincomingproductcode/tests/acceptedbuildsettings preserved.",
+                  "Historical54ed GitHubPRsourcechecks allpassed; BuildkiteCLI failed immutablecontext beforetests aftertargetadvance. Neither is currentmergeproof. Independentregistry0.140.1 nativeinventory confirms50f5571b5bb5475c5b6cfe684ebb1ea65ed63fa7bf4142019e25d14a83872fb6 over105actualinputs."
+                ],
+                "proof_refs": [
+                  "accepted_inventory_source_and_obligations_preserved",
+                  "new_release_native_inventory_matches_reviewed_closure",
+                  "oldhead_push_source_context",
+                  "current_complete_native_proof"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "Cargo.lock",
+                  "Cargo.toml",
+                  "MODULE.bazel",
+                  "MODULE.bazel.lock",
+                  "docs",
+                  "flake.lock",
+                  "flake.nix",
+                  "tests"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Prerequisite-only preparation generated authentic0.140.1 projections;203staticpasses5failures retained, no readiness. Hostcontainerpolicy/foreigndoneTODO untouched; realmerge notyetcommitted. Gatekeeper findings explicitlyreviewed: acceptedCanvasRenderingContext2d identifier, acceptedBearerCLIhelptext, generatedlockpatternbudgetlimits and acceptedboundSQL/worker/testboundaries. No credential added, no scannerdisable or sourceguard change.",
+                  "Sameactorlease renewedgeneration3 beforefinalproof; nexttrajectorycallrejectedstaleauthoringbinding, genuineworkspaceensure thenrefreshedbinding(can_worktrue/blockersnone), currentcustodyconfirmed. No actor/category/history rewrite."
+                ],
+                "proof_refs": [
+                  "native_preparation_only",
+                  "staged_merge_gatekeeper_scan"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "Cargo.lock",
+                  "Cargo.toml",
+                  "MODULE.bazel",
+                  "MODULE.bazel.lock",
+                  "docs",
+                  "flake.lock",
+                  "flake.nix",
+                  "tests"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -743,18 +858,27 @@
       "declared_commands": [
         "bazelisk9.3.0 mod deps --lockfile_mode=update",
         "cargo generate-lockfile: fresh exact registrySDKconsumer metadata only",
-        "cargo update -p dactyl-db --precise 0.14.0"
+        "cargo update -p dactyl-db --precise 0.14.0",
+        "git merge --no-commit 1d04f232c46864eecfadb9c8b9b23069ca0e906e"
       ],
       "destination": "pull request",
       "evidence": [
+        "Actual target advanced via acceptedPR1645 and release1646. Original54ed authoredcommit/checkpoint retained, actualincomingsecondparent1d04. Native CLI replay preserves incomingopeninventoryclaim alongsideSDKclaim;143baselineunresolved entries exactlyequalincoming. Allincomingproductcode/tests/acceptedbuildsettings preserved.",
         "Cargo.lock and fresh registry resolution select quinn-proto0.11.19; downloadedDactylcrate checksumd10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990; metadataonly, no builds/tests.",
-        "Complete105file inventory reviewed; onlyCargo.toml/Cargo.lock/MODULE.bazel.lock inputs changed; requiredcarrier/workflows/helpers/sourcegraph unchanged. Bazellock1036484bytes after valuepreservingserialization."
+        "Complete105file inventory reviewed; onlyCargo.toml/Cargo.lock/MODULE.bazel.lock inputs changed; requiredcarrier/workflows/helpers/sourcegraph unchanged. Bazellock1036484bytes after valuepreservingserialization.",
+        "Historical54ed GitHubPRsourcechecks allpassed; BuildkiteCLI failed immutablecontext beforetests aftertargetadvance. Neither is currentmergeproof. Independentregistry0.140.1 nativeinventory confirms50f5571b5bb5475c5b6cfe684ebb1ea65ed63fa7bf4142019e25d14a83872fb6 over105actualinputs.",
+        "Prerequisite-only preparation generated authentic0.140.1 projections;203staticpasses5failures retained, no readiness. Hostcontainerpolicy/foreigndoneTODO untouched; realmerge notyetcommitted. Gatekeeper findings explicitlyreviewed: acceptedCanvasRenderingContext2d identifier, acceptedBearerCLIhelptext, generatedlockpatternbudgetlimits and acceptedboundSQL/worker/testboundaries. No credential added, no scannerdisable or sourceguard change.",
+        "Sameactorlease renewedgeneration3 beforefinalproof; nexttrajectorycallrejectedstaleauthoringbinding, genuineworkspaceensure thenrefreshedbinding(can_worktrue/blockersnone), currentcustodyconfirmed. No actor/category/history rewrite."
       ],
       "inspected_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".config/build/decapod.MODULE.bazel",
         "Cargo.toml",
         "flake.nix",
-        "src/decapod/core/dactyl_todo.rs"
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/core/dactyl_todo.rs",
+        "src/decapod/core/storage_inventory.rs",
+        "tests/support/storage_inventory.rs"
       ],
       "intent_id": "intent:change_01M77Z1SYXPN3WC9CBT6P3AS7M",
       "modified_files": [
