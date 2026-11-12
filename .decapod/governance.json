@@ -550,6 +550,11 @@
       "id": "managed-native-stale-handoff-project-selection",
       "summary": "Fence resumed handoffs against newer custody and permit current server-authorized selection of an existing shared project.",
       "input_digest": "sha256:52530df5c80136f8a4cae63c4ffdab2f1062bfd9f4879800d0fb8979f31dc474"
+    },
+    {
+      "id": "native-service-project-selector",
+      "summary": "Exercise the public existing-project selector in the independent native service consumer.",
+      "input_digest": "sha256:1b82345ae6070be40048f29a88d6f2742ffe2085efdf60e93b3f1bcdae24bb75"
     }
   ],
   "intents": {
@@ -594,22 +599,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Native connector architecture remains current; pending state now fences newer credential custody and existing shared projects use explicit server-checked routing.",
-          "reviewed_code_fingerprint": "b96d28a71d50bf6fc6297f52453a5c011c397f45be4aa418183a52679d7d812a",
+          "reason": "Connector architecture unchanged; real-service fixture now composes through public project selection.",
+          "reviewed_code_fingerprint": "d5e9d16bf2767b798962ffc15af8d9085ea2d2c12a30d46f9279057a860a81ab",
           "spec_material_hash": "00a2b10104a300c1701e8d97a4fffb3f08e05616702d5c385fec10c5a5c6e2ad"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documents machine-local existing-project selection with current server status and no personal-project fallback.",
-          "reviewed_code_fingerprint": "b96d28a71d50bf6fc6297f52453a5c011c397f45be4aa418183a52679d7d812a",
+          "reason": "Existing-project selection is exercised by the independent service consumer without a fabricated local binding.",
+          "reviewed_code_fingerprint": "d5e9d16bf2767b798962ffc15af8d9085ea2d2c12a30d46f9279057a860a81ab",
           "spec_material_hash": "35bac824ab9892d7bd060565ee2409d5464dbd8e18608520b172983ee083608d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserves newer full credential custody against a resumed stale handoff, and rejects silent project-binding switches.",
-          "reviewed_code_fingerprint": "b96d28a71d50bf6fc6297f52453a5c011c397f45be4aa418183a52679d7d812a",
+          "reason": "Fixture setup no longer bypasses the generic project-selection path; session fixtures remain distinct from hosted Auth.",
+          "reviewed_code_fingerprint": "d5e9d16bf2767b798962ffc15af8d9085ea2d2c12a30d46f9279057a860a81ab",
           "spec_material_hash": "41e595bfa1120d80081a4c979c3532b984f8494286e1c09facaf5f5dc2ca801a"
         }
       ],
@@ -621,13 +626,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794456222Z"
+      "updated_at": "1794456352Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:330c8407df9e6590e447111ad9c1fb457ffa4496436e3df891680bf2db50e578",
+      "artifact_hash": "sha256:bb0de0ba416b8cc70271a66d7fb6e4f6a4b77a8760516ccc9995d1dfb75d4f66",
       "checks": [
         {
           "name": "existing_checkpoint_history",
@@ -677,10 +682,17 @@
             "intent_id": "intent:change_01M76XWS3AKPY8RFY12X65CSXM",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M76XWS6FDKB72FD182Y8NVPJ",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M76XWS3AKPY8RFY12X65CSXM",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76XWS6FDKB72FD182Y8NVPJ": {
@@ -759,6 +771,25 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "tests/supabase_service.rs",
+                  "Native independent consumer fixture now exercises the public existing-project selector, instead of writing a private registration file by hand. It still uses explicit fixture-managed session credentials and makes no hosted Auth claim."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "Generic connector, account/session custody, native data integration, dependency artifact and technical tests/docs.",
+                  "docs/book/src/reference/supabase-validation.md",
+                  "src/decapod/core/auth.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/dactyl.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -771,6 +802,7 @@
         "/private/tmp/decapod-native-session-validation-01.json",
         "Existing source commits 82fd18f0 and 4d7d32ca have proven checkpoint history. History recovery command correctly reports NOT_APPLICABLE. Preserve old source ref; adapt reviewed implementation in this new admitted candidate, without copying old validation or journal authority.",
         "First attempt stopped on a public GitHub rate limit; this materially stronger candidate requires new full proof.",
+        "Native independent consumer fixture now exercises the public existing-project selector, instead of writing a private registration file by hand. It still uses explicit fixture-managed session credentials and makes no hosted Auth claim.",
         "Registry archive checksum independently verified; source pin and lock now use dactyl-db 0.12.0. Reviewed all 105 source inputs: only Cargo.toml/Cargo.lock differ from accepted target; no required check was removed. Full exact-candidate proof has not run yet."
       ],
       "inspected_files": [
@@ -785,6 +817,7 @@
         "src/decapod/core/cloud_account.rs",
         "src/decapod/core/cloud_session.rs",
         "tests/cloud_supabase_boundary.rs",
+        "tests/supabase_service.rs",
         "tests/unit/core/cloud_account_tests.rs"
       ],
       "next_transitions": [

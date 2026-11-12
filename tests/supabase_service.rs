@@ -116,30 +116,9 @@ fn project(fixture: &Fixture, repository: &str, token: &str) -> TempDir {
         .unwrap()
         .write_all(&serde_json::to_vec(&session).unwrap())
         .unwrap();
-    // The external fixture owner supplies an already registered server project
-    // reference. The real account-status call below still verifies its access;
-    // local fixture metadata is not authorization and never mints an entitlement.
-    let binding = json!({
-        "version": 1, "origin": fixture.endpoint, "repository": repository,
-        "request_id": "00000000-0000-4000-8000-000000000001",
-        "project_name": "Disposable service proof", "project_id": repository
-    });
-    let binding_path = session_dir.join(format!(
-        "project-{:x}.json",
-        Sha256::digest(repository.as_bytes())
-    ));
-    let mut binding_options = std::fs::OpenOptions::new();
-    binding_options.write(true).create_new(true);
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::OpenOptionsExt;
-        binding_options.mode(0o600);
-    }
-    binding_options
-        .open(binding_path)
-        .unwrap()
-        .write_all(&serde_json::to_vec(&binding).unwrap())
-        .unwrap();
+    // Select the fixture owner's existing project through the real public
+    // machine-local selector. The subsequent account-status and data RPCs
+    // independently authorize it; no routing/capacity state is fabricated here.
 
     let init = Command::new(
         std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).expect("resolve actual Decapod CLI"),
@@ -188,6 +167,12 @@ fn cli(fixture: &Fixture, root: &Path, actor: &str, token: &str, args: &[&str]) 
         .env_remove("DECAPOD_CLOUD_AUTH_MODE")
         .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
         .env("DECAPOD_AGENT_ID", actor)
+        .env(
+            "DECAPOD_CLOUD_PROJECT_ID",
+            decapod::core::repo_identity::resolve_repository_identity(root)
+                .unwrap()
+                .canonical_name,
+        )
         .env("DECAPOD_CLOUD_DATASTORE", "supabase")
         .env("DACTYL_CLOUD_ORIGIN", &fixture.endpoint)
         .env(
