@@ -633,6 +633,15 @@
         "/private/tmp/validation-bootstrap-3327-cli-diagnostic.log",
         "/private/tmp/validation-bootstrap-3327-unit-diagnostic.txt"
       ]
+    },
+    {
+      "id": "validation-bootstrap-task-actor-binding-v11",
+      "summary": "Repair real docs full-validation actor/task collision without weakening actual topic task bindings",
+      "input_digest": "sha256:f71c4d1732b57e617608ad0356cf3c3231d303e0dc5aa622c159ee251d6c1d1e",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-132-cli-task-binding-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-132-core-timing-diagnostic.txt"
+      ]
     }
   ],
   "intents": {
@@ -678,22 +687,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Measured consumer fixture lifecycle/diagnostics repair only; terminal proof architecture and accepted CI budget are unchanged.",
-          "reviewed_code_fingerprint": "7cc4b80f1336b93853683fe220932bbbf66e0a21d3605772b3baf82d73498aa9",
+          "reason": "Repair actual task binding parser at existing managed branch interface; validation lifecycle architecture remains unchanged and actual task mismatch gates remain strict.",
+          "reviewed_code_fingerprint": "8d64e66304c51d35e35024275ddbd6968217355bfa66322c5bcbd96fcbe6b2ac",
           "spec_material_hash": "8ebd18b07ea40a599cc2262ee5fc4e1d8c2d651ae76317ffc7bf1db2a76560e7"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Public validation interfaces remain unchanged; fixture errors are emitted immediately with bounded diagnostics before the same test failure.",
-          "reviewed_code_fingerprint": "7cc4b80f1336b93853683fe220932bbbf66e0a21d3605772b3baf82d73498aa9",
-          "spec_material_hash": "5a41bc114c254c047cac2c1ab73dd694185e856d11bc66f1a00a15fdaae79bec"
+          "reason": "Document canonical agent actor/topic boundary for task extraction, preserving legacy references and all topic task mismatch checks.",
+          "reviewed_code_fingerprint": "8d64e66304c51d35e35024275ddbd6968217355bfa66322c5bcbd96fcbe6b2ac",
+          "spec_material_hash": "146ed400ed9995dc641a1b28122c9da1428eb9939d24d7535178c0732135761c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Isolated fixture restores existing one-second broker idle lifecycle and bounds diagnostic output; no credentials, authentication, trusted helpers or proof requirements change.",
-          "reviewed_code_fingerprint": "7cc4b80f1336b93853683fe220932bbbf66e0a21d3605772b3baf82d73498aa9",
+          "reason": "Actor identity no longer falsely declares a task; actual topic task ownership and trajectory mismatch rejection remain enforced with positive and negative regressions. No authentication or proof policy changes.",
+          "reviewed_code_fingerprint": "8d64e66304c51d35e35024275ddbd6968217355bfa66322c5bcbd96fcbe6b2ac",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -707,15 +716,16 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794462898Z"
+      "updated_at": "1794468179Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
+        "Do not rename actor or docs task, weaken real task bindings, alter CI helpers/checks/budgets, or authorize own source with candidate controller",
         "Keep accepted 300-second aggregate budget and trusted profile/graph unchanged; no manual builds/tests or native quota retry on known failing source",
         "Preserve current controller0.138.3 and actual native quota blocker; source diagnostics do not authorize readiness"
       ],
-      "artifact_hash": "sha256:3f0ac8b8ba7d1d7f3ec13c8839a5b3f3e3acbd887df693a4fc1a85d95578648c",
+      "artifact_hash": "sha256:88a501a0eeb1a4fa5386a2ed783d2ca8ebf3ca8fb004ba1451328a52c9da2a2b",
       "checks": [
         {
           "name": "accepted_release_inventory_review",
@@ -723,6 +733,18 @@
         },
         {
           "name": "authored_source_review",
+          "status": "passed"
+        },
+        {
+          "name": "exact_132_cli",
+          "status": "failed"
+        },
+        {
+          "name": "exact_132_pr_core",
+          "status": "failed"
+        },
+        {
+          "name": "exact_132_push_core",
           "status": "passed"
         },
         {
@@ -806,7 +828,7 @@
           "status": "failed"
         }
       ],
-      "completion_claim": "Actual3327 source CLI reached aggregate300.1second timeout after new docs fixture had failed; Rust harness lost final panic details. Fixture now restores existing short broker idle lifecycle after env isolation and writes bounded actual command/full-validation failure diagnostics immediately. Genuine failure semantics and required proof remain strict; no readiness claim.",
+      "completion_claim": "User resumed red CI repair. Actual132 CLI68pass1fail shows managed branch parser incorrectly treats actor docs-bootstrap as docs_bootstrap task; scope extraction to canonical topic and preserve legacy/multi-task matching plus real mismatch rejection. PR core timing20398ms exceeded20s while same-head pushcore passed; preserve failure and strict budget, replay new exact candidate. Same actor renewed4h lease generation3; first trajectory write rejected stale binding while own workspace rebind was still running, then rebind fully awaited and unchanged old trajectory inspected before this record.",
       "current_phase": "repair",
       "custody": {
         "events": [
@@ -905,10 +927,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 16,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1192,6 +1221,32 @@
                 ],
                 "sequence": 15,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/unit/core/workspace_tests.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "/private/tmp/validation-bootstrap-132-cli-task-binding-diagnostic.txt",
+                  "/private/tmp/validation-bootstrap-132-core-timing-diagnostic.txt"
+                ],
+                "proof_refs": [
+                  "exact_132_cli",
+                  "exact_132_push_core",
+                  "exact_132_pr_core"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 16,
+                "validation_findings": []
               }
             ]
           }
@@ -1202,6 +1257,8 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/validation-bootstrap-132-cli-task-binding-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-132-core-timing-diagnostic.txt",
         "/private/tmp/validation-bootstrap-3327-cli-diagnostic.txt",
         "/private/tmp/validation-bootstrap-3327-unit-diagnostic.txt",
         "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
@@ -1232,6 +1289,7 @@
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/validation_rules.rs",
         "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/workspace.rs",
         "src/decapod/core/workunit.rs",
         "tests/consumer_readiness.rs"
       ],
@@ -1246,10 +1304,12 @@
         "src/decapod/core/validation_rules.rs",
         "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/validation_runtime/tests.rs",
+        "src/decapod/core/workspace.rs",
         "src/decapod/core/workunit.rs",
         "tests/cli_contracts.rs",
         "tests/consumer_readiness.rs",
         "tests/unit/core/validate_tests.rs",
+        "tests/unit/core/workspace_tests.rs",
         "tests/unit/core/workunit_journal_tests.rs"
       ],
       "next_transitions": [

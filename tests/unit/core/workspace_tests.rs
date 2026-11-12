@@ -52,6 +52,22 @@ fn test_extract_task_ids_from_branch() {
 #[test]
 fn branch_task_ids_do_not_match_inside_agent_names() {
     assert_eq!(
+        extract_task_ids_from_branch("agent/docs-bootstrap/docs_01m776mqcq5g06tx-first-proof"),
+        vec!["docs_01m776mqcq5g06tx".to_string()]
+    );
+    assert_eq!(
+        extract_task_ids_from_branch("agent/bugs_123456/docs_654321-code_987654"),
+        vec!["code_987654".to_string(), "docs_654321".to_string()]
+    );
+    assert_eq!(
+        extract_task_ids_from_branch("agent/docs-bootstrap/unbound"),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        extract_task_ids_from_branch("agent/docs-bootstrap"),
+        Vec::<String>::new()
+    );
+    assert_eq!(
         extract_task_ids_from_branch("agent/release-pr-validation/bugs_01m4pf92p0r108x1"),
         vec!["bugs_01m4pf92p0r108x1".to_string()]
     );
@@ -1126,6 +1142,7 @@ fn readiness_can_retry_failed_history_without_rewriting_it_or_ignoring_boundarie
     .unwrap();
     let before = std::fs::read(trajectory::trajectory_cookie_path(root)).unwrap();
     verify_trajectory_binding_for_readiness(root, "agent/test/bugs_123456").unwrap();
+    verify_trajectory_binding_for_readiness(root, "agent/docs-bootstrap/bugs_123456").unwrap();
     assert!(verify_trajectory_gate_for_publish(root, "agent/test/bugs_123456").is_err());
     assert_eq!(
         before,
@@ -1139,6 +1156,9 @@ fn readiness_can_retry_failed_history_without_rewriting_it_or_ignoring_boundarie
         trajectory::TrajectoryProofStatus::Failed
     );
     assert!(verify_trajectory_binding_for_readiness(root, "agent/test/bugs_654321").is_err());
+    assert!(
+        verify_trajectory_binding_for_readiness(root, "agent/docs-bootstrap/bugs_654321").is_err()
+    );
     trajectory::record_trajectory(
         root,
         "retry-proof",
