@@ -27,6 +27,12 @@ is reconciled to these reviewed release bytes. The profile, Buildkite policy,
 workflow mapping and all required checks are unchanged. This repair is not
 passing build/test evidence; full validation must run again.
 
+Retry `1ee8b502` stopped at the deliberately preserved trajectory blocker
+before build. After the inventory repair was committed, that current blocker
+was cleared through `govern trajectory record --clear-blockers`; the failed
+check and earlier receipt remain historical. No test or readiness status was
+changed to passed. The next committed candidate requires fresh full validation.
+
 ## Recovery and accepted-target reconciliation (#1628)
 
 The client continues from both original checkpoints, including

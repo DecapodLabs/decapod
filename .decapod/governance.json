@@ -559,6 +559,14 @@
         ".decapod/managed/specs/VALIDATION.md",
         "docs/architecture/bounded-reflection.md"
       ]
+    },
+    {
+      "id": "reflection-1639-resume",
+      "summary": "Clear the repaired current inventory blocker through trajectory interface; retain initial failure history and require fresh full proof.",
+      "input_digest": "sha256:45d72c49c6e8b89d3e01ce24d86c19459fdd6378a2928cbf57ff5701bb3aa6b2",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -640,10 +648,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d4022a77cc926bc28c2b7c29edd15d9f3a32ad589d6e82e141b99e3d9dfe907c",
-      "blockers": [
-        "Initial candidate stopped before tests: PROOF_PROFILE_RECONCILIATION_REQUIRED / STALE_SOURCE_INVENTORY. Scoped release-byte inventory reconciliation recorded; rerun full validation."
-      ],
+      "artifact_hash": "sha256:c86a6e1c1ace1aefd3fd1b3a284f2759f1a2f0df8270f307cb73067c00f44660",
       "checks": [
         {
           "name": "formatting",
@@ -654,7 +659,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "validation-repair",
+      "current_phase": "validating",
       "custody": {
         "events": [
           {
@@ -689,10 +694,17 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -778,6 +790,27 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "validating",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required."
+                ]
               }
             ]
           }
@@ -813,7 +846,8 @@
       ],
       "next_transitions": [
         "Commit exact candidate and run plain decapod validate",
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Run full exact-candidate validation after repaired inventory declaration"
       ],
       "repo_scope": [
         "\".decapod/managed/specs\"]",
@@ -831,6 +865,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Behavioral, latency and growth measurements await configured validation; authored tests are not proof.",
+        "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
         "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics."
       ]
     }
