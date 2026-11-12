@@ -852,8 +852,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7369eb1f92d9442f443ce2c3dfdcb040c4f02cba0023be526d128037df666277`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
+- Repository signal fingerprint: `dd338c62c684db7fc0c988f9ab94e51b217813fc3c51034be5806ddf31dbe1c9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (228 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1064,3 +1064,20 @@ encodings change; cloud PostgreSQL migration ownership stays with Propodus.
 `core/cloud_project.rs` owns bounded project-directory selection and the pending creation receipt. `SessionGuard` stores this auxiliary record under the same stable lock and exact checkout/service custody binding, without changing the credential record format or refresh state machine. `cloud_client::acquire` reuses accepted authentication; `connect` resolves the selected project after refresh. The todo factory uses that resolved data reference when opening the consumer connection. No data or authentication transport is implemented outside Dactyl.
 
 The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
+
+## Terminal setup over the managed cloud boundary
+
+`src/decapod/onboarding.rs` owns terminal sizing, presentation, keyboard input and
+terminal restoration. `lib.rs::{enrich_repo_context_interactive,customize_setup,
+review_setup}` collects a configuration draft; `prepare_init_directory_and_git`
+and `run_init_apply` execute only after interactive approval. Changed configuration
+is backed up privately before replacement. Preview and cancellation do not create
+project state. Unattended initialization retains its direct execution path.
+
+Cloud initialization then calls the accepted `bootstrap_cloud_session` and
+`core::cloud_client::connect` path. Session custody and Dactyl transport retain
+their existing owners. The terminal does not implement billing, duplicate account
+policy, or grant authority from local settings. Errors leave setup non-successful;
+the ready receipt follows successful service-confirmed access only. Real PTY
+coverage verifies that reviewing/canceling cloud setup does not contact even the
+loopback fixture service before consent.

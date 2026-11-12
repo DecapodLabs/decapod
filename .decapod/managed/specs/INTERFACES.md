@@ -1100,8 +1100,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7369eb1f92d9442f443ce2c3dfdcb040c4f02cba0023be526d128037df666277`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
+- Repository signal fingerprint: `dd338c62c684db7fc0c988f9ab94e51b217813fc3c51034be5806ddf31dbe1c9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (228 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1385,3 +1385,20 @@ Freed SQLite pages are reusable but are not auto-vacuumed.
 `tests/supabase_service.rs` declares the separate `local-native-projects-v1` consumer profile. An independent fixture owner supplies two ordinary managed bearers, disposable loopback PostgREST, and private client/receipt paths. The first phase selects a real account project and observes a shared native task through two CLI processes; the second phase requires the owner to revoke one account before checking its next operation. Missing provisioned services are unavailable. Modeled session issuance, HTTP fixtures, real local PostgreSQL, hosted authentication and released artifacts remain distinct proof categories.
 
 The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
+
+## Human setup and cloud handoff presentation
+
+Interactive `decapod init` presents Project, Preferences and Review with
+Recommended/Customize and Apply/Edit/Cancel choices. Arrow keys, typed choices,
+Enter and Escape work in supported terminals; redirected output and `--proof`
+retain unattended behavior. Preview writes nothing; cancellation before apply
+does not create a new directory or initiate cloud authentication. Reinitialization
+preserves existing backend, isolation and structured proof settings.
+
+The cloud review describes account sign-in and service-confirmed repository
+access. It accepts no seat roster, provider credential or local price declaration.
+After apply, the accepted managed-session flow may return `onboarding_pending`,
+`action_required` or a denial; these remain non-success and cannot produce the
+terminal ready receipt. Existing headless continuation, private custody, explicit
+restart and server-readiness contracts are preserved. No managed-project selector
+or protected hosted-payment assurance is added here.

@@ -55,6 +55,7 @@ fn dispatch_binding_survives_preflight_and_fences_project_changes() {
     let legacy = digest(b"git-repository");
     let bound = journal.bind_route(&record, &selected, &legacy).unwrap();
     assert_eq!(bound.operation_id, record.operation_id);
+    assert!(journal.finish(&record, Outcome::Succeeded, None).is_err());
     journal
         .finish(
             &bound,

@@ -1196,8 +1196,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7369eb1f92d9442f443ce2c3dfdcb040c4f02cba0023be526d128037df666277`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (227 files)
+- Repository signal fingerprint: `dd338c62c684db7fc0c988f9ab94e51b217813fc3c51034be5806ddf31dbe1c9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (228 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1564,3 +1564,19 @@ and record a distinct checkpoint for the replayed material. Earlier successful
 v0.137.4 execution remains historical evidence; the rebased commit requires
 fresh complete publication proof and execution of the documentation-index and
 real-executable regressions against the captured accepted target.
+
+## Onboarding integration proof boundaries
+
+The refined setup is verified as part of the complete source PR profile. Real
+PTY cases cover recommended setup, edit/cancel, terminal restoration, preview,
+redirected output and cloud review cancellation without a service connection.
+Managed-session CLI cases separately cover authoritative access and recovery;
+neither fixture suite establishes a hosted purchase or paid customer journey.
+
+The reviewed source declaration for the 0.139.0 reconciliation measures all 105
+build/workflow/helper inputs against accepted master19acd21. Every input matches
+that accepted tree; only the package version in Cargo.toml and Cargo.lock changed
+from the preceding accepted cloud mergec87e4f49. Renewing the inventory digest
+retains the same source adapter, accepted executor, required graph and verdict
+policy. A matching inventory is preparation, and full exact-candidate validation
+remains mandatory after every source or target change.

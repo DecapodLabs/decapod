@@ -559,6 +559,14 @@
       "proof_refs": [
         "/private/tmp/decapod-managed-project-validation-02.json"
       ]
+    },
+    {
+      "id": "managed-project-accepted-1391-merge",
+      "summary": "Real merge of accepted bc0a719139.1 onboarding release, preserving both parents and active cumulative custody; regenerate matching projections, reconcile reviewed inventory and retain resolved project/write retry repairs.",
+      "input_digest": "sha256:6aba83af43573a0329ea871e7cc7b8fbf7992d888cc7ed206e002a127663f8ee",
+      "proof_refs": [
+        "/private/tmp/decapod-project-merge-trajectory.json"
+      ]
     }
   ],
   "intents": {
@@ -601,22 +609,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The native fixture exposed Git-label task creation after project routing. Factory now carries resolved repository to task construction, with atomic bind-once operation-route custody before first possible dispatch.",
-          "reviewed_code_fingerprint": "7369eb1f92d9442f443ce2c3dfdcb040c4f02cba0023be526d128037df666277",
-          "spec_material_hash": "ef0cd81e815b3953efdafcfa42a27810fe1c24297cc3a176c378bc6a9db38060"
+          "reason": "Preserved accepted terminal setup and managed-session flow in real merge; auxiliary project selection supplies native context and task repository, with atomic routing custody before write dispatch.",
+          "reviewed_code_fingerprint": "dd338c62c684db7fc0c988f9ab94e51b217813fc3c51034be5806ddf31dbe1c9",
+          "spec_material_hash": "a8e107982924c90498c5b4a4cd1c327586e79df8c41c093a859e6b5759bac45e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Project selection supplies both native context and task repo_id. Optional digest-only journal routing preserves preflight operation IDs; prior unknown records retain original canonical repository semantics.",
-          "reviewed_code_fingerprint": "7369eb1f92d9442f443ce2c3dfdcb040c4f02cba0023be526d128037df666277",
-          "spec_material_hash": "2618485bfc161584c225e289625ffe899425574ae194206c33d2524d0f17cae3"
+          "reason": "Accepted interactive setup contracts and generic account project commands coexist; existing version-one service API retained, optional journal digest fences route changes without altering the preflight operation ID.",
+          "reviewed_code_fingerprint": "dd338c62c684db7fc0c988f9ab94e51b217813fc3c51034be5806ddf31dbe1c9",
+          "spec_material_hash": "3a4d00cb23af0f3e56e4bc2a9826a8058f97cba6982b98a4b287a9a2f66c18ec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Uncertain writes cannot replay into another selected project, concurrent route binding has one winner, stale receipt writers are rejected and legacy unknown records cannot be reinterpreted.",
-          "reviewed_code_fingerprint": "7369eb1f92d9442f443ce2c3dfdcb040c4f02cba0023be526d128037df666277",
+          "reason": "Accepted setup consent preserved. Current account/project and data authorization remain required, with explicit association checks and no cross-project unknown-write replay or stale-writer receipt overwrite.",
+          "reviewed_code_fingerprint": "dd338c62c684db7fc0c988f9ab94e51b217813fc3c51034be5806ddf31dbe1c9",
           "spec_material_hash": "01025606e9b26996aac1242b6ff748d540c573a71859c4ef9035d585548b894f"
         }
       ],
@@ -630,14 +638,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794485619Z"
+      "updated_at": "1794486800Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4817d52357a4ed48a9df54976c2543e6770e28df36cc0f51274a339b38f34144",
+      "artifact_hash": "sha256:e1911a94795c20c377de313261bf4c8fb9307a4b27605f27ba61ea0ed16fc49a",
       "checks": [
+        {
+          "name": "accepted_target_merge",
+          "status": "partial"
+        },
         {
           "name": "implementation",
           "status": "partial"
@@ -709,10 +721,17 @@
             "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77JY4X7Q7EW3YNCPBEC72WV": {
@@ -807,6 +826,24 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Real merge in progress frombc0a71971bce8ee036a24562b7fc4a9b771f2f40. Git restores existing a8d2b65e generated governance/spec baseline rather than inventing JSON; accepted onboarding semantic additions preserved alongside project routing, generated projections refreshed by native CLI. Checkpoints from this active PR remain cumulative, accepted branch custody remains in the real second parent.",
+                  "Use existing official registry0.139.1 controller from supported peer session update; SHA256 fb461bb5b06ea2f2df3e691caef9c1ebdee9bc144a9c6ab7d25b720268cba72c; docs unchanged, applied migration notice none. Reconciled unchanged required graph inventory for accepted version-only Cargo inputs; no check removed."
+                ],
+                "proof_refs": [
+                  "accepted_target_merge"
+                ],
+                "scope": [
+                  "src/decapod/core/cloud_client",
+                  "src/decapod/core/cloud_project",
+                  "tests"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -822,7 +859,9 @@
         "Fixed controller is official registry decapod 0.139.0 from supported session update; SHA256 1e0d9f8704a62f10e51169e6efb659fd7b069f8e1e91f2922a0560d3b2e1bfde.",
         "Full validation 01 failed before tests on candidate 8022cae release entrypoints: /private/tmp/decapod-managed-project-validation-01.json",
         "Independent required Propodus PostgreSQL run on9375325 executed12d95951 and exposed blocked-before-submit add because Task.repo_id retained Git label after native project selection. New repair carries resolved repository and fences operation retries to a bind-once route. Peer session owner confirms Journal serialization outside their scope.",
-        "Supported project-check repaired generated release projections; its host prerequisite findings do not establish full readiness."
+        "Real merge in progress frombc0a71971bce8ee036a24562b7fc4a9b771f2f40. Git restores existing a8d2b65e generated governance/spec baseline rather than inventing JSON; accepted onboarding semantic additions preserved alongside project routing, generated projections refreshed by native CLI. Checkpoints from this active PR remain cumulative, accepted branch custody remains in the real second parent.",
+        "Supported project-check repaired generated release projections; its host prerequisite findings do not establish full readiness.",
+        "Use existing official registry0.139.1 controller from supported peer session update; SHA256 fb461bb5b06ea2f2df3e691caef9c1ebdee9bc144a9c6ab7d25b720268cba72c; docs unchanged, applied migration notice none. Reconciled unchanged required graph inventory for accepted version-only Cargo inputs; no check removed."
       ],
       "inspected_files": [
         "src/decapod/core/cloud_client.rs",
