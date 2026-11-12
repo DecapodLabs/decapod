@@ -545,6 +545,14 @@
         "https://github.com/DecapodLabs/dactyl/pull/104",
         "tests/support/storage_inventory.rs"
       ]
+    },
+    {
+      "id": "inventory-controller-139",
+      "summary": "Regenerate release projections through published v0.139.0 init, preserve frozen inventory code, document failed drift run and refresh all canonical reviews",
+      "input_digest": "sha256:d0ee35ffca5b95b026e5cc98f93a2c143dd1daa7c8cbf0058daad5100fc1db56",
+      "proof_refs": [
+        "/private/tmp/issue-1630-current-ci-validation.log"
+      ]
     }
   ],
   "intents": {
@@ -586,21 +594,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final source on19acd21f retains managed-cloud architecture and adds bounded native read-only inventory, exact classes and explicit checkpoint sampling",
+          "reason": "Reviewed the final v0.139.0 candidate: native inventory uses Dactyl bounded read-only snapshots before startup, separates filesystem and SQLite metrics, and preserves accepted managed-cloud architecture. No storage representation or migration selected.",
           "reviewed_code_fingerprint": "4d2d903bea24444c43ecd6f23d8c0852ac5ad9d2deacf7ef5c1c22cc2741afdb",
           "spec_material_hash": "4e9b9139639ef2de192933af4ede4e2b66be53415fdc0d26df32600c84a9b639"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review final source and prose after every edit; preserve current cloud interface while adding the documented inventory protocol, bounds and typed coverage",
+          "reason": "Reviewed final CLI and RPC inventory contracts, strict options, bounded framing, redacted schema and field metrics, explicit partial and unavailable results, checkpoint strata, and released Dactyl v0.13.0 API.",
           "reviewed_code_fingerprint": "4d2d903bea24444c43ecd6f23d8c0852ac5ad9d2deacf7ef5c1c22cc2741afdb",
           "spec_material_hash": "d78406036140f6ce50370c628b86ef5061514857ec8dceaf3f2a98456df7b23c"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final review preserves server-owned cloud authority and local read-only OS authority; no data content, IDs or hashes exposed and no maintenance mutation",
+          "reason": "Semantic security specification remains unchanged against accepted master 19acd21f. Inventory uses existing lifecycle locks and native read-only snapshots, emits no raw contents or identifiers, and does not mutate database, session or authorization state. Existing security boundaries remain applicable.",
           "reviewed_code_fingerprint": "4d2d903bea24444c43ecd6f23d8c0852ac5ad9d2deacf7ef5c1c22cc2741afdb",
           "spec_material_hash": "b8095677dc08420d4a01a49b17f3fa7d14064a8b465f2f596046b22c8aafc311"
         }
@@ -617,16 +625,21 @@
         "Broader event payloads dominate current capture; checkpoint reuse alone is not sufficient evidence of material reduction"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794476814Z"
+      "updated_at": "1794478590Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve all newly accepted managed-cloud changes from19acd21f; no live mutation or compact format selection"
       ],
-      "artifact_hash": "sha256:e3f073c0b88ec2d64415f0cd9ba93413a98e5813987eb945f27c85eb898972b6",
-      "checks": [],
-      "current_phase": "source-review",
+      "artifact_hash": "sha256:f084589983a9bd3da11ecd3a750cab6901784a562154e7c9cbf03de906a6a22f",
+      "checks": [
+        {
+          "name": "release-projection-drift",
+          "status": "failed"
+        }
+      ],
+      "current_phase": "release-projection-repair",
       "custody": {
         "events": [
           {
@@ -654,10 +667,17 @@
             "intent_id": "intent:change_01M77HMCX32DYFE6DRBB2DZ34Z",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M77HMD0C6PHKVV0X5DCH1H1V",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M77HMCX32DYFE6DRBB2DZ34Z",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77HMD0C6PHKVV0X5DCH1H1V": {
@@ -703,25 +723,48 @@
                 "validation_findings": [
                   "Source audit reproduces acceptedc87e4f49 pin exactly. New source inventory changes only root version/Dactyl0.13.0 registry lock, generated compact Bazel lock and inclusion of the inventory test module; no workflow, provider, recipe or required check changed. Dactyl0.13.1 appeared during update, so explicitly retain already qualified0.13.0 lock instead of introducing another consumer change."
                 ]
+              },
+              {
+                "action": "release-projection-repair",
+                "command": "decapod init --proof --all",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "GitHub Actions standalone run 43195317858 rejected v0.138.3 entrypoints under the v0.139.0 candidate; independently released v0.139.0 controller installed through session acquire; supported init regenerated entrypoints and image pin; temporary update opt-in restored exactly; backups retained privately; inventory code frozen"
+                ],
+                "proof_refs": [
+                  "release-projection-drift"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "decapod init --proof --all"
+      ],
       "destination": "pull request",
       "evidence": [
         "/private/tmp/issue-1630-live-inventory",
+        "GitHub Actions standalone run 43195317858 rejected v0.138.3 entrypoints under the v0.139.0 candidate; independently released v0.139.0 controller installed through session acquire; supported init regenerated entrypoints and image pin; temporary update opt-in restored exactly; backups retained privately; inventory code frozen",
         "https://github.com/DecapodLabs/decapod/actions/runs/43181036159"
       ],
       "inspected_files": [
         "src/decapod/core/cloud_session.rs",
-        "src/decapod/core/dactyl.rs"
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/lib.rs"
       ],
       "intent_id": "intent:change_01M77HMCX32DYFE6DRBB2DZ34Z",
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
         "Cargo.lock",
         "Cargo.toml",
         "MODULE.bazel.lock",
@@ -729,7 +772,8 @@
         "src/decapod/lib.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "full-validation-and-pr-publication"
       ],
       "repo_scope": [
         "root"

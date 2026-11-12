@@ -1214,6 +1214,15 @@ All canonical spec reviews must follow the final source/spec edits. Exact-head
 publication-material verification and complete configured Buildkite validation
 remain required; executable tests and GitHub jobs alone do not authorize a PR.
 
+The inventory candidate preserves the accepted v0.139.0 managed-cloud changes
+and uses the independently published v0.139.0 controller to regenerate the
+release-bound entrypoints and managed image pin through supported initialization.
+An earlier v0.138.3 projection set failed the standalone CI drift check when
+evaluated by the v0.139.0 candidate; that failed run is not publication proof.
+The inventory implementation and its seven regression cases remain fixed during
+this repair. Publication requires new exact-candidate validation after refreshing
+the spec attestations and all canonical review bindings.
+
 ### Validation-owned candidate execution
 
 For the supported remote source-CI profile, plain validation captures the
