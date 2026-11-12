@@ -115,6 +115,11 @@ outcome sizes, plan-file growth and protocol latency, and assert unchanged
 datastore file size. Until those tests run, no resulting latency/storage delta
 or detection-rate claim is established.
 
+The first full validation stopped on a stale reviewed-source inventory before
+executing candidate builds/tests. The reviewed-source change since
+`2f01156c` is solely the accepted package version bump in Cargo manifest/lock;
+the scoped declaration repair retains the complete existing proof contract.
+
 Limits: the first slice recognizes explicit plan constraints and the existing
 literal ADR heuristic. It cannot infer arbitrary semantic architecture conflicts
 from code or prose. Proposed paths are declarations, not an OS write sandbox;

@@ -16,6 +16,17 @@ These are deterministic protocol checks, not model-agent intelligence measures.
 Authorship alone is not passing evidence; configured `decapod validate` owns
 candidate builds/tests and exact-target publication readiness.
 
+The first full validation of `f9e333366f0a7ede0b5ae08da1ad360c2dfa5d30`
+stopped before build with `PROOF_PROFILE_RECONCILIATION_REQUIRED`.
+Read-only `agent.init` reported `STALE_SOURCE_INVENTORY`, no adapter mismatch,
+and inventory `sha256:c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174`.
+Review from the last declaration commit `2f01156c` through accepted base
+`19acd21f` found only the package-version change `0.138.3 -> 0.139.0` in
+`Cargo.toml` and `Cargo.lock` among inventoried sources. The declaration
+is reconciled to these reviewed release bytes. The profile, Buildkite policy,
+workflow mapping and all required checks are unchanged. This repair is not
+passing build/test evidence; full validation must run again.
+
 ## Recovery and accepted-target reconciliation (#1628)
 
 The client continues from both original checkpoints, including

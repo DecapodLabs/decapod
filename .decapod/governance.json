@@ -550,6 +550,15 @@
         "tests/unit/core/reflection_tests.rs",
         "tests/unit/core/state_knowledge_tests.rs"
       ]
+    },
+    {
+      "id": "reflection-1639-inventory",
+      "summary": "Reconcile reviewed source inventory after accepted package version bump; retain all required proof and provider policy; preserve initial validation failure before retry.",
+      "input_digest": "sha256:cdca23c1cb2420d3be1963e404ec8baa1ad2f30817ed1c9f98e78b2e1377251a",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/architecture/bounded-reflection.md"
+      ]
     }
   ],
   "intents": {
@@ -596,21 +605,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final source review: mentor detector, task custody, governance lock and current plan journal are reused; three rounds and 64 KiB cap; existing execution and validation checks retain authority.",
+          "reason": "Rechecked composed mentor, task custody and bounded current-plan journal; existing full proof catalog and provider policy are unchanged.",
           "reviewed_code_fingerprint": "3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210",
           "spec_material_hash": "25b731a843bf8146a1cdc971154dd9bf3eba5e074e2d69e2d7d22ad3f637eb2c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final source review: optional reflection JSON matches CLI/RPC serde types; existing clients omit it; no approval or proof is granted.",
+          "reason": "Rechecked final optional request/outcome contract and compatibility after reviewed release-inventory reconciliation; no authority or proof bypass.",
           "reviewed_code_fingerprint": "3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210",
           "spec_material_hash": "0cc5afe81a0949f80846cc50b58d91f1ec4e584a7b323380166ce2b5d60876f5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final source review: local cooperative trust remains; untrusted documents are advisory; reflection cannot authenticate human approval, set proof status or authorize publication.",
+          "reason": "Reviewed inventory repair changes only the source digest after the accepted package-version bump; local trust, human authority, secrets handling and proof gates remain unchanged.",
           "reviewed_code_fingerprint": "3c152082906bb1dbaf15b87a6c5d0bf5d73419c88c37064d8e1c2a1123448210",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
@@ -625,20 +634,27 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794481333Z"
+      "updated_at": "1794481524Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0f85021ecf1956ca99089652d9868c22cd7b38cb305d26d818404a05f1d40a36",
+      "artifact_hash": "sha256:d4022a77cc926bc28c2b7c29edd15d9f3a32ad589d6e82e141b99e3d9dfe907c",
+      "blockers": [
+        "Initial candidate stopped before tests: PROOF_PROFILE_RECONCILIATION_REQUIRED / STALE_SOURCE_INVENTORY. Scoped release-byte inventory reconciliation recorded; rerun full validation."
+      ],
       "checks": [
         {
           "name": "formatting",
           "status": "passed"
+        },
+        {
+          "name": "full-validation",
+          "status": "failed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
@@ -666,10 +682,17 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -731,6 +754,30 @@
                 "validation_findings": [
                   "Behavioral, latency and growth measurements await configured validation; authored tests are not proof."
                 ]
+              },
+              {
+                "action": "validation-repair",
+                "command": "decapod validate",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  "docs/architecture/bounded-reflection.md",
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -738,10 +785,13 @@
       },
       "declared_commands": [
         "cargo fmt --all",
-        "decapod docs build"
+        "decapod docs build",
+        "decapod rpc --op agent.init",
+        "decapod validate"
       ],
       "destination": "pull request",
       "evidence": [
+        ".decapod/managed/specs/VALIDATION.md",
         "docs/architecture/bounded-reflection.md",
         "https://github.com/DecapodLabs/decapod/issues/1639",
         "https://github.com/DecapodLabs/decapod/issues/1640"
@@ -753,6 +803,7 @@
       ],
       "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
       "modified_files": [
+        ".decapod/config.toml",
         "docs/architecture/bounded-reflection.md",
         "src/decapod/core/mentor/reflection.rs",
         "src/decapod/core/state.rs",
