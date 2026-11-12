@@ -209,6 +209,11 @@ pub fn load_selected_cloud_credential(
 ) -> Result<CloudCredential, DecapodError> {
     let cloud = crate::cli::CloudRuntimeConfig::default();
     let store = match cloud.validate_datastore()? {
+        crate::core::backend::CloudDatastore::Managed => {
+            return Err(DecapodError::SessionError(
+                "Managed cloud sessions require the repository-bound custody interface".into(),
+            ));
+        }
         crate::core::backend::CloudDatastore::Neon => CloudSessionStore::legacy()?,
         crate::core::backend::CloudDatastore::Supabase => {
             CloudSessionStore::for_service(&cloud.api_url)?

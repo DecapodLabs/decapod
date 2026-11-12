@@ -326,6 +326,22 @@ impl DactylBridge {
                     ))
                 })?;
                 let route = match context.cloud_datastore() {
+                    CloudDatastore::Managed => {
+                        #[cfg(feature = "supabase-cloud")]
+                        {
+                            // Resolve the physical connector inside Dactyl.
+                            // Discovery is public and never receives this bearer.
+                            dactyl_db::CloudConnector::discover(uri)
+                                .map_err(crate::core::cloud_client::transport_error)?
+                                .route(Some(bearer.to_owned()))
+                        }
+                        #[cfg(not(feature = "supabase-cloud"))]
+                        {
+                            return Err(DecapodError::Config(
+                                "Cloud requires the supabase-cloud capability; no local fallback is permitted".into(),
+                            ));
+                        }
+                    }
                     CloudDatastore::Neon => {
                         dactyl_db::DatastoreRoute::neon(uri, Some(bearer.to_string()))
                     }

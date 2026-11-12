@@ -1,5 +1,150 @@
 # Validation
 
+## Recovery and accepted-target reconciliation (#1628)
+
+The client continues from both original checkpoints, including
+`d85650bafa610dc952fbc91acd91ba5e28b329b7`, with the accepted billing/release
+history merged into the same work branch. The newer mandatory project roster,
+embedded price and client-built billing URL conflict with the backend-only
+contract and are replaced by the managed Dactyl sign-in/account flow. The fresh
+headless initialization fixture also asserts that these project fields are absent.
+
+Dactyl's unchanged `86ed55dbf4ff78bb3c6c6aa52832949101d9ea91` candidate has
+verified native evidence from run `43131221323`: both mandatory proof groups,
+all fourteen checks, a ready verdict and its exact-candidate readiness receipt.
+Its wrapper failed afterward during PR publication/readback. This upstream
+offline proof does not establish client compilation or protected hosted access.
+At that observation the registry exposed only `dactyl-db 0.11.1`. During
+continuation Dactyl PR #102 and release #103 merged, publishing `0.12.0` from
+`598415953b5ee568f6d42652982897c58b4433cc`. The crate SHA256 was verified as
+`b9d8eda3a7bad7490d23dbca5c468bf89b28de4c8b4fd566034b342334ba481e`; its
+public API and packaged source match that release. The existing client now
+uses its supported Serde/status/code/completion contract. The original stronger
+repository-response API is not assumed to exist in the registry release.
+On registry candidate `0bff2528d498c7423783656b45a47fde8cd92dbc`, the
+independent GitHub diagnostics passed 1,674 library tests (eight ignored),
+including all eighteen private-custody unit tests. The consumer integration
+suite failed because successful RPC fixtures omitted the released protocol's
+required `generated_keys` field, and three human-diagnostic assertions assumed
+lowercase status text. Complete successful fixtures now supply an empty key
+list; the diagnostic assertions match the released transport classification
+and actual status spelling. Existing negative, no-fallback, bounded timeout
+and redaction assertions remain required. This diagnostic run was not Buildkite
+readiness and had not executed the twelve managed sign-in scenarios. Their
+later successful diagnostic execution is recorded below; the current exact
+candidate still requires complete native proof.
+The released connector classifies a dropped non-timeout authentication response
+as `Unavailable`. Completion recovery must retain the saved session and return
+`onboarding_pending` for this kind as well as transport/timeout failures; the
+existing lost-completion fixture verifies the repeated idempotent confirmation
+and the absence of repeated one-time exchanges.
+The pending-account scenario exercises the published `entitlement_required`,
+`seat_unassigned` and `quote_confirmation_required` reasons individually. Each
+must retain the issued session, return action-required, avoid the repository
+read and avoid replaying either exchange until the service confirms completion.
+The 0.12.0 lockfile also downgrades inactive HTTP/3 dependencies under Dactyl
+MSRV bounds; the required dependency audit must pass without exemptions.
+
+The first registry candidate reached actual Buildkite execution. Independent
+GitHub diagnostics on that same candidate passed all-feature clippy and
+dependency lint, but Bazel setup rejected the stale `MODULE.bazel.lock` before
+the Bazel tests could run. The reported recovery, repository-pinned Bazel 9.3.0
+`mod deps --lockfile_mode=update`, regenerates the extension's Cargo inputs.
+The committed build policy remains `lockfile_mode=error`; no test/build gate is
+replaced by this metadata preparation. Fresh Buildkite proof on the current
+exact candidate remains required.
+
+The generated lock was 1,053,030 bytes, exceeding bounded discovery by 4,454
+bytes. Reformatting its complete JSON with one-space indentation yields
+1,029,040 bytes; parsed JSON equality verifies that no value was removed or
+changed. Pinned Bazel accepts the result with `lockfile_mode=error`. Source and
+runtime discovery limits remain unchanged. This is metadata consistency proof,
+not an executed client test or full-readiness result.
+
+The current registry version and checksum are established by Cargo and
+`tests/release_dependency_policy.rs`. Existing versioned SQLite recovery
+documentation describes the unchanged recovery primitive; those historical
+capability references do not establish the managed connector's release or proof.
+
+The first current-target validation stopped before Buildkite because the
+immutable candidate still carried v0.138.2 entrypoint headers while the installed
+released controller was v0.138.3. Supported initialization regenerates the four
+entrypoints and managed image pin; spec refresh updates their projections.
+The original journal, reviewed project configuration and required proof coverage
+are preserved. This projection repair supplies no compilation or test evidence.
+
+## Managed connector execution prerequisites (#1628)
+
+The managed connector requires a published Dactyl dependency containing its
+public API and successful execution of the complete required source checks.
+No governed source-overlay recipe is configured for integration diagnostics
+before those checks pass. Source review, formatting, native checkpoints and
+workbranch pushes do not establish compilation, test execution or readiness.
+
+The registry manifest and lockfile, `tests/release_dependency_policy.rs` and
+complete required source profile remain authoritative. Dependency alignment
+and package publication remain the separate
+[#1380](https://github.com/DecapodLabs/decapod/issues/1380) handoff; no path/Git
+fallback, dependency override or relaxed proof gate supplies that evidence.
+
+## Managed cloud client proof and package prerequisite (#1628)
+
+The configured complete source-CI profile remains required. New
+`tests/cloud_managed_session.rs` fixtures exercise the actual binary through
+headless sign-in, durable continuation, credential refresh, interrupted mutation,
+explicit restart and authenticated read readiness. The cloud backend, CLI,
+Supabase boundary, TODO resume and init regression suites preserve local
+independence and fail-closed cloud behavior. Unit coverage in
+`tests/unit/core/cloud_session_tests.rs` exercises private record permissions,
+path rejection, exact binding, phase invariants and serialized custody.
+
+These tests must run on the exact checkpointed candidate. Static review and
+source formatting do not establish compilation or execution. The managed API
+is consumed from the published Dactyl 0.12.0 registry dependency.
+The accepted source-CI executor retains its own required recipe. Its diagnostic
+record on `ee288c86` showed that a candidate helper edit did not add a new target
+to that recipe. The existing required `cloud_supabase_boundary` target now
+includes the shared `common/cloud_managed_scenarios.rs` test module, so all
+twelve scenarios execute under the accepted recipe without changing executor
+authority. The standalone `cloud_managed_session` entry uses the same scenarios.
+Both entries include the private seed helper once at their crate root; this
+avoids the `clippy::duplicate_mod` failure observed on `2f01156c` without a lint
+exemption. Every existing required command/target remains intact.
+
+That diagnostic run passed 1,674 library tests (eight ignored) and nineteen of
+twenty existing boundary tests. Its remaining failure showed that unsupported
+`todo done --validated` reached discovery before rejecting unavailable proof
+capture. A shared guard now rejects it before connector construction, while
+retaining the direct-store guard and the existing no-network/no-mutation test.
+The full native validation of that superseded candidate was interrupted; it
+does not supply a final readiness verdict.
+
+On `2f01156cfebd9622cc9ae6f43aa80403054a2461`, GitHub consumer job
+`130991125949` passed all 1,674 library tests (eight ignored), including all
+eighteen custody tests, and all thirty-three boundary tests. The boundary
+results explicitly include all twelve managed CLI scenarios and the corrected
+proof-before-network case. Other selected cloud/registry integration targets
+also passed; the two protected Supabase profiles remained ignored. This is
+diagnostic execution, not a full Buildkite readiness receipt. The follow-up
+test layout removes only the duplicate seed-helper inclusion (thirty-two
+boundary tests) to resolve clippy while retaining every product assertion.
+Native validation hit the public metadata reader's rate limit before obtaining
+readiness. A fresh complete verdict on the final exact candidate remains
+required; neither GitHub success nor a rate-limit failure supplies it.
+`tests/release_dependency_policy.rs`, Cargo manifests and source-CI configuration
+remain intact; an unpublished source overlay cannot establish release-policy or
+publication readiness. No local fixture claims hosted managed Auth, production
+entitlement policy, real PostgreSQL, deployment or full remote governance parity.
+
+The legacy protected CLI profiles in `tests/supabase_service.rs` and
+`tests/propodus_live.rs` fail explicitly with `MANAGED_CLI_FIXTURE_UNAVAILABLE`
+before inspecting fixture credentials or dispatching any CLI/network request.
+Their real-service assertions remain intact for a future managed fixture; no
+ignored profile is represented as passing. The explicit legacy PropodusClient
+API test retains its own service boundary. Account completion response loss
+resumes the idempotent confirmation using the same body and bearer; the binary
+fixture asserts that one-time token exchange is never replayed.
+
 ## Native Laya research reconciliation (#1614)
 
 The historical candidate failed dependency denial on Tokio 1.52.3
@@ -1051,8 +1196,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6039093e49be2901ac48f0b04014d8b171267175a160edf4091c49cad81c1486`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1420,48 +1565,22 @@ v0.137.4 execution remains historical evidence; the rebased commit requires
 fresh complete publication proof and execution of the documentation-index and
 real-executable regressions against the captured accepted target.
 
-## Recovered cloud purchase-intent boundary
+## Historical maintenance proof and fresh readiness
 
-The source recovery preserves the CLI approval-link proposal from
-`26a499d9f0789a5ed00605d23cfc57f5392ae8fc` against accepted target
-`c5de35a89b27e788169612ae71681e45c13bf71a`, including accepted historical
-verification, Laya and documentation-index changes. Historical commits and
-prior checks remain evidence of their original candidates only.
+The audit binds native run43133190463 to b984a386 on c5de35a8 and its later
+merge9b5f3de1. Artifact bytes and the terminal publisher's verified outcome are
+the evidence; an earlier green prerequisite check or connector response alone
+is insufficient. Run43111223693 and its authenticated report separately account
+for the six original redundant refs. Current operations history has its own
+complete-bundle import and strict integrity attestation.
 
-`tests/init_config_behavior.rs` checks both init surfaces, requested roster
-persistence, normalization, refresh preservation, duplicate rejection and
-repository/origin mismatch before config writes. Existing cloud storage,
-boundary and live-proof setup callers supply the newly required requested
-repository and usernames; the missing-roster regression intentionally omits
-them. Both `InitWithCli` construction sites carry the new fields and the
-existing `RepoContext` test literal retains default initialization.
+The prepared follow-up3638c7e8 had six regressions execute in Buildkite8258,
+but full publication was cancelled when accepted master advanced to c87e4f49.
+Those checks cannot establish readiness for the reconciled audit. The final
+source and tests must match the accepted implementation, the public record must
+match authenticated artifact hashes and Git identities, and the exact audit
+candidate must pass fresh full native validation before PR publication.
 
-`cloud_init_prints_purchase_approval_without_creating_machine_session` in
-`tests/cloud_backend_storage.rs` replaces the obsolete automatic-login
-expectation. It requires the approval URL, no machine session file, no
-`Cloud setup ready` claim and no exposed mock credential. Independent explicit
-session-acquisition tests retain their original credential expectations.
-
-`tests/unit/core/propodus_tests.rs` requires actionable session-acquisition
-guidance from actual missing-credential, invalid-refresh, unusable-refresh and
-HTTP 401 diagnostic paths, while retaining status distinctions and excluding
-provider secrets. `tests/unit/lib_init_prompt_tests.rs` covers first init,
-ordinary repeat init, explicit refresh, headless and proof prompting policy.
-It also exercises noninteractive roster preparation to prove that stored
-values are normalized and invalid stored rosters still fail.
-
-The required-profile inventory declaration is reconciled to the accepted
-v0.138.3 source: all 105 discovered entries match Git bytes at d3358e1c,
-including the literal mode-120000 toolchain alias. Only Cargo.toml and
-Cargo.lock differ from historical c5de35a8. The digest update declares those
-accepted release bytes; it does not authorize a changed CI carrier.
-
-These are test obligations, not execution claims. Full native validation must
-execute the current candidate's configured source-CI contract before PR
-publication. This source change cannot prove hosted billing deployment,
-GitHub admin verification, Stripe sandbox purchase or native-client integration.
-The earlier recovery environment rejected AF_UNIX sockets before broker
-admission. Its successful hosted publication in run 43133190463 proves only
-candidate b984a386 against accepted target c5de35a8. This follow-up requires
-its own admitted task, isolated workspace and exact-candidate native proof;
-historical recovery evidence cannot establish its readiness.
+Remaining retirement still depends on private recovery authentication, current
+leases and a reviewed merged-state executable finalizer. This documentation
+does not discharge those conditions or either research draft's proof contract.

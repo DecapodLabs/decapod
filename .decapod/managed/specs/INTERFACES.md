@@ -1,5 +1,41 @@
 # Interfaces
 
+## Cloud initialization, continuation, and readiness (#1628)
+
+`decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud
+TODO operations share `core::cloud_client::connect`. Missing custody starts a
+bounded sign-in and returns non-success `onboarding_pending` with a validated
+browser URL and headless resume instruction. A subsequent invocation polls once,
+exchanges only when ready, persists the issued session, and asks the service to
+confirm account completion. Init reports ready only after an authenticated
+read-only task lookup confirms current repository access.
+
+`action_required` describes a service-reported unresolved entitlement without
+inferring price, payment, membership, or seat authority. `repository_denied`
+propagates explicit access denial. `restart_required` preserves uncertainty
+after an interrupted one-time exchange or rotation. The explicit
+`--restart-cloud-signin` flag starts a fresh flow for this binding without
+replaying its old exchange. Normal data failures do not trigger unauthenticated
+retry, mutation replay, or local fallback.
+
+`decapod cloud status` reports only private local phase, credential presence,
+and expiry; its `server_readiness` remains `not_checked`. `--proof` on cloud
+initialization prepares configuration only and does not synthesize sign-in or
+claim readiness. The legacy `cloud login` alias uses the same managed flow.
+No new project provider, deployment, credential, price, or roster field exists.
+The fixture-only origin requires explicit test mode and literal loopback HTTP.
+
+The client consumes the published `dactyl-db 0.12.0` registry API. Pending
+secrets round-trip through its public Serde contract; authentication status and
+code exchange return strings, and completion confirms the session handoff.
+The caller retains its exact origin/repository/checkout binding and saved flow
+deadline, and an authorized repository read remains the readiness requirement.
+Lost responses to one-time mutations require explicit restart; a lost idempotent
+completion response keeps the issued session and can be checked again.
+The release-policy test binds the registry version and actual crate checksum.
+Source-overlay integration results cannot be reported as package publication,
+real PostgreSQL, hosted account enforcement, or full remote governance proof.
+
 ## Agent delegation and cloud authorization interface
 
 Decapod is invoked by each contributor's coding agent in the repository.
@@ -1064,8 +1100,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6039093e49be2901ac48f0b04014d8b171267175a160edf4091c49cad81c1486`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1342,32 +1378,15 @@ schema change. An unexpected historical index or missing unique enforcement
 raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
 Freed SQLite pages are reusable but are not auto-vacuumed.
 
-## Cloud purchase intent
+## Maintenance evidence interfaces
 
-Both init surfaces accept `--cloud-repository owner/repo` and
-`--github-users alice,bob`. Cloud init requires 1–100 distinct valid GitHub
-usernames, lowercases/sorts them, and rejects a repository inconsistent with an
-existing GitHub origin before project-config writes. Refresh preserves the
-requested roster unless explicitly replaced. Non-secret TOML fields are
-`[repo].cloud_repository` and `[repo].cloud_github_users`; they grant neither
-access nor a datastore route override. Generation context and the test-only
-init registration carry the repository name.
+The dated maintenance audit exposes public commit identities, PR and producer
+links, artifact byte counts and SHA256 digests, exact observed deletion leases,
+and retained draft blockers. These observations are historical data, not an
+executable approval interface. An absent ref, a merge, and full native readiness
+are distinct outcomes. A Git bundle attestation states its actual verification
+and persistence boundary; it does not stand in for private task custody.
 
-The purchase URL uses the fixed Propodus HTTPS `billing` destination and
-encoded repository/users intent. Interactive init may open the browser;
-headless, proof, dry-run and noninteractive modes print the URL. Init reports
-purchase approval and does not claim that a session or paid seat exists.
-The hosted service must independently derive price/quantity, verify admin
-authority and reconcile payment before granting repository-specific access.
-Its deployment and native client integration remain separately required.
-
-An ordinary repeat init does not prompt for the cloud repository or roster.
-First initialization and explicit `init --refresh` may prompt; headless,
-proof and explicit `init with` paths remain noninteractive. Disabling prompts
-does not disable validation of the stored roster.
-
-The `decapod.cloud.auth.v1` diagnostic schema and status vocabulary remain
-unchanged. Machine-credential recovery, including refresh failures and HTTP
-401 responses, names `decapod session acquire` as its next action. Purchase
-setup retains its init command; a purchase approval link cannot renew a
-machine credential.
+No runtime CLI, diagnostic schema, credential flow or authorization interface is
+changed by this audit. Active managed sign-in follows the accepted Dactyl path;
+legacy Propodus diagnostic text is not claimed globally removed.

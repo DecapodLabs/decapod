@@ -530,14 +530,30 @@
   },
   "claims": {
     "billing-repeat-init": {
-      "statement": "Roster prompting follows the shared first-init or explicit-refresh policy while noninteractive preparation still validates stored values.",
-      "falsifier": "An ordinary repeat init prompts, first init or explicit refresh loses its terminal prompt, or invalid stored roster values are silently accepted.",
-      "status": "open"
+      "statement": "Accepted PR1635 removed prepare_cloud_roster and its init call, superseding the original repeat-roster-prompt finding. This PR retains that accepted implementation and proposes documentation only.",
+      "falsifier": "The current delta restores roster code or represents the superseded old prompt patch as accepted implementation.",
+      "status": "supported",
+      "proof_refs": [
+        "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8:src/decapod/lib.rs"
+      ]
     },
     "billing-session-recovery": {
-      "statement": "Machine credential lookup, refresh, exchange and HTTP 401 recovery diagnostics direct users to explicit session acquisition while purchase setup keeps its init command.",
-      "falsifier": "Actual missing-credential, refresh or rejected-session regression produces purchase-init guidance, changes diagnostic status or leaks provider secrets.",
-      "status": "open"
+      "statement": "The earlier session-guidance patch is withdrawn: at accepted c87e4f49 managed cloud init and session acquisition both call the Dactyl connector, so the old purchase-only-init premise no longer describes the active path. Legacy Propodus text remains historical API surface and is not claimed globally removed.",
+      "falsifier": "The audit claims the old3638 patch was merged or proved ready, or fails to distinguish managed Dactyl callers from legacy Propodus code.",
+      "status": "supported",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/blob/c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8/src/decapod/lib.rs"
+      ]
+    },
+    "maintenance-audit-binding": {
+      "statement": "The dated public audit preserves exact historical billing proof, accepted integration, six-ref retirement evidence, retained draft blockers and the two still-pending deletion leases without treating them as current readiness or deletion permission.",
+      "falsifier": "An identity or artifact digest differs from the authenticated reports, a pending deletion is described as executed, or historical proof is relabeled as current-candidate readiness.",
+      "status": "supported",
+      "proof_refs": [
+        "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8",
+        "sha256:5d67910ce4cc15925bd918f707a8788174466a40df82b625ce47573ed4c46195",
+        "sha256:6253526f77a83cc146154ab6207dad5591ed905ae52e5d05e006c8eb151f2cc9"
+      ]
     }
   },
   "checkpoints": [
@@ -558,6 +574,17 @@
       "proof_refs": [
         "https://buildkite.com/decapodlabs/decapod/builds/8170",
         "tests/unit/core/propodus_tests.rs"
+      ]
+    },
+    {
+      "id": "billing-audit-reconciliation-3",
+      "summary": "Reconcile accepted PR1635 without restoring the superseded billing patch; preserve its incomplete proof history and publish a nonsecret audit of authenticated historical artifacts, original branch dispositions, current finding status and pending retirement gates. No current readiness claimed; all105 declared inventory entries match accepted c87 and no runtime/test/workflow/helper delta remains.",
+      "input_digest": "sha256:04ff15e986ad98b43ffdc8938c204057a4ba9614da286df2aa1e0d7ca0ba6daf",
+      "proof_refs": [
+        "docs/maintenance/stale-branch-audit-20261112.md",
+        "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43111223693",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43133190463"
       ]
     }
   ],
@@ -591,60 +618,68 @@
         "file_touch_budget": null,
         "forbidden_paths": [
           ".github",
-          "assets/tools"
+          "assets/tools",
+          "src",
+          "tests"
         ]
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Submit one focused PR correcting machine-credential diagnostics to session acquire and applying the first-init or explicit-refresh prompting policy to cloud roster preparation, preserving stored roster validation and genuine purchase/setup guidance. Use fresh native proof from accepted master; preserve concurrent feature branches, the two research drafts, and sealed historical billing custody. Retire stale refs only after authenticating the missing recovery package in the separate host audit.",
+      "intent": "Publish a bounded nonsecret maintenance audit after accepted PR1635 superseded the prepared billing patch. Preserve historical b984/c5 proof binding, distinguish current accepted integration from readiness, account for the six retired original refs, retain the two unique drafts and state the two pending deletions and recovery gates truthfully. Keep accepted runtime and tests byte-identical to c87e4f49. The previous3638 proposal remains historical incomplete work and is withdrawn from the final source delta.",
       "phases": [],
       "proof_hooks": [
         "decapod validate",
-        "Focused diagnostic and init lifecycle regressions execute under full native validation."
+        "Compare public artifact hashes and audit source references with authenticated historical outputs and accepted Git objects."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The shared prompt predicate and credential-diagnostic helper remain the only production changes. Error-only test assertions preserve the existing CloudSession type and independent session acquisition flow.",
-          "reviewed_code_fingerprint": "6039093e49be2901ac48f0b04014d8b171267175a160edf4091c49cad81c1486",
-          "spec_material_hash": "a0f2136b19c50be103f6761b1a9767c1e461d81e19c4b57a9106997cfbef7e97"
+          "reason": "The current architecture separates a static public audit from executable controllers, native state and private custody, and follows the accepted Dactyl implementation instead of restoring the superseded purchase flow.",
+          "reviewed_code_fingerprint": "b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c",
+          "spec_material_hash": "4c7878f1fc967694e80916caaa143fea417597fd407a5e4164a4bbb34de55dd7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The previously authored interface changes still match the current recovery-command and shared-prompt policy. Test repair selects only the error without changing the diagnostic API, statuses, purchase setup or roster validation.",
-          "reviewed_code_fingerprint": "6039093e49be2901ac48f0b04014d8b171267175a160edf4091c49cad81c1486",
-          "spec_material_hash": "9bdc395731e04b3c0e46a1beee581fbee9f4b5e8aea14ce3f2323f72e8410833"
+          "reason": "The current authored interface describes dated public evidence and its approval limits. It distinguishes absent refs, accepted integration and full readiness; no runtime CLI or credential interface is changed from accepted c87.",
+          "reviewed_code_fingerprint": "b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c",
+          "spec_material_hash": "76dbbcc2204061654726750e7293a67c84871c07517b3006094dde871b44bf48"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "CloudSession deliberately lacks Debug to avoid credential output. The repaired tests use err().expect() rather than adding Debug to the secret-bearing type. Existing redaction, storage, origin and entitlement checks remain unchanged.",
-          "reviewed_code_fingerprint": "6039093e49be2901ac48f0b04014d8b171267175a160edf4091c49cad81c1486",
-          "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
+          "reason": "Runtime, tests and credential transports match accepted c87 byte for byte. The new audit contains public commit/run identities and digests only; private keys, sessions, plaintext custody, datastore backups and raw machine logs are excluded from Git.",
+          "reviewed_code_fingerprint": "b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c",
+          "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [
         "Unresolved native decision, access denial, changed accepted target, or competing accepted fix requires reconciliation before publication."
       ],
-      "title": "Fix billing credential recovery diagnostics and repeat-init roster prompting",
+      "title": "Preserve the native maintenance proof chain",
       "todo_ids": [
         "bugs_01m770jrrr9sc7m2"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794468331Z"
+      "updated_at": "1794476886Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "No pricing, CI carrier, release, original task custody or unrelated branch changes."
+        "Historical test and publication evidence is not current readiness. No legacy purchase flow is restored, no source/test change is proposed, and stale-ref retirement remains separately blocked on authenticating private recovery.",
+        "No pricing, CI carrier, release, original task custody or unrelated branch changes.",
+        "This is documentation and authentic generated governance only. No current readiness, retirement completion, legacy API removal, new commercial behavior or original-custody import is claimed."
       ],
-      "artifact_hash": "sha256:92dbfce107d95c62e3cd9ccd578dca4dd449597e9b66dd0d562c68987a3a9af8",
+      "artifact_hash": "sha256:9c34267e69ad297c2a824dc132d1938e64ee0f3d16da1d5506e34813dd6ecba1",
       "checks": [
+        {
+          "name": "accepted_inventory_c87",
+          "status": "passed"
+        },
         {
           "name": "accepted_source_inventory",
           "status": "passed"
@@ -654,8 +689,24 @@
           "status": "passed"
         },
         {
+          "name": "historical_accepted_ancestry",
+          "status": "passed"
+        },
+        {
+          "name": "historical_artifact_hashes",
+          "status": "passed"
+        },
+        {
+          "name": "native_publication_3638",
+          "status": "partial"
+        },
+        {
           "name": "required_source_ci_af132112",
           "status": "failed"
+        },
+        {
+          "name": "superseded_source_withdrawn",
+          "status": "passed"
         }
       ],
       "current_phase": "implementation",
@@ -686,10 +737,24 @@
             "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M771D5V85D3H40VVCZ3QCJMH",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M771D5V85D3H40VVCZ3QCJMH",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M771D5V85D3H40VVCZ3QCJMH": {
@@ -746,28 +811,99 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "reconciliation",
+                "command": "Stopped owned native publisher by SIGINT after current master advanced to c87e4f49; native report returned SNAPSHOT_NOT_READY, CI operation cancelled, exit1. Backed up the actual state and retained raw report/handoff. No PR was created.",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8",
+                  "https://github.com/DecapodLabs/decapod/pull/1635",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8258"
+                ],
+                "proof_refs": [
+                  "native_publication_3638"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/lib.rs\"",
+                  "\"tests/unit/core/propodus_tests.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  "paths:[\"src/decapod/core/propodus.rs\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "command": "Compare the four downloaded artifact/report hashes to expected values; inspect terminal-native success, six-ref report, accepted Git ancestry and exact absence of runtime/test/workflow/helper deltas. Compare all105 inventory entries to accepted c87 bytes, including the real toolchain symlink.",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "docs/maintenance/stale-branch-audit-20261112.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/config.toml",
+                  "/run/decapod-billing-fix-private/audit.document-consistency.json",
+                  "/run/decapod-billing-fix-private/inventory.accepted-c87-comparison.json",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43133190463",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43111223693"
+                ],
+                "proof_refs": [
+                  "historical_artifact_hashes",
+                  "accepted_inventory_c87",
+                  "superseded_source_withdrawn",
+                  "historical_accepted_ancestry"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/lib.rs\"",
+                  "\"tests/unit/core/propodus_tests.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  ".decapod/managed/specs",
+                  "docs/maintenance/stale-branch-audit-20261112.md",
+                  "paths:[\"src/decapod/core/propodus.rs\""
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Compare the four downloaded artifact/report hashes to expected values; inspect terminal-native success, six-ref report, accepted Git ancestry and exact absence of runtime/test/workflow/helper deltas. Compare all105 inventory entries to accepted c87 bytes, including the real toolchain symlink.",
         "Full native validation observed failed source Buildkite 8170 for exact af132112; corresponding GitHub job logs identify E0277 in two new expect_err calls.",
+        "Merge accepted c87e4f49 without committing, preserve the current native journal, and restore all four superseded Rust/test files to exact accepted bytes.",
+        "Stopped owned native publisher by SIGINT after current master advanced to c87e4f49; native report returned SNAPSHOT_NOT_READY, CI operation cancelled, exit1. Backed up the actual state and retained raw report/handoff. No PR was created.",
         "cargo fmt --all (host formatting, exit 0)",
         "git diff --check (exit 0)"
       ],
       "destination": "pull request",
       "evidence": [
+        "/run/decapod-billing-fix-private/audit.document-consistency.json",
         "/run/decapod-billing-fix-private/candidate-af132-ci/diagnostic-excerpts.json",
+        "/run/decapod-billing-fix-private/inventory.accepted-c87-comparison.json",
         "/run/decapod-billing-fix-private/inventory.accepted-comparison.json",
+        "git:c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8",
         "git:d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
         "https://buildkite.com/decapodlabs/decapod/builds/8170",
-        "https://github.com/DecapodLabs/decapod/actions/runs/43163620020/job/131000794950"
+        "https://buildkite.com/decapodlabs/decapod/builds/8258",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43111223693",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43133190463",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43163620020/job/131000794950",
+        "https://github.com/DecapodLabs/decapod/pull/1635"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/maintenance/stale-branch-audit-20261112.md",
         "src/decapod/core/propodus.rs",
         "src/decapod/lib.rs",
         "tests/unit/core/propodus_tests.rs",
@@ -781,6 +917,8 @@
         "\"src/decapod/lib.rs\"",
         "\"tests/unit/core/propodus_tests.rs\"",
         "\"tests/unit/lib_init_prompt_tests.rs\"",
+        ".decapod/managed/specs",
+        "docs/maintenance/stale-branch-audit-20261112.md",
         "paths:[\"src/decapod/core/propodus.rs\""
       ],
       "run_id": "branch_01M771D5V85D3H40VVCZ3QCJMH",

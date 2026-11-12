@@ -29,12 +29,10 @@ pub const PROPODUS_HEALTH_ROUTE: &str = "/api/health";
 pub const PROPODUS_TODOS_ROUTE: &str = "/api/todos";
 pub const PROPODUS_STATUS_IN_PROGRESS: &str = "in_progress";
 pub const PROPODUS_STATUS_COMPLETED: &str = "completed";
-/// Purchase setup remains distinct from machine-credential acquisition.
 pub const CLOUD_INIT_COMMAND: &str = "decapod init --backend cloud";
-pub const CLOUD_SESSION_ACQUIRE_COMMAND: &str = "decapod session acquire";
 
-fn cloud_session_action(detail: &str) -> String {
-    format!("run `{CLOUD_SESSION_ACQUIRE_COMMAND}` {detail}")
+fn cloud_init_action(detail: &str) -> String {
+    format!("run `{CLOUD_INIT_COMMAND}` {detail}")
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -160,8 +158,8 @@ impl CurlTransport {
     /// data requests: refresh material must never follow an HTTP redirect.
     pub fn for_datastore(datastore: crate::core::backend::CloudDatastore) -> Self {
         Self {
-            follow_redirects: datastore != crate::core::backend::CloudDatastore::Supabase,
-            private_stdin: datastore == crate::core::backend::CloudDatastore::Supabase,
+            follow_redirects: datastore == crate::core::backend::CloudDatastore::Neon,
+            private_stdin: datastore != crate::core::backend::CloudDatastore::Neon,
             ..Self::default()
         }
     }
@@ -462,7 +460,7 @@ impl PropodusClient<CurlTransport> {
             cloud_auth_error(
                 CloudAuthStatus::Missing,
                 "no cloud machine session is configured",
-                cloud_session_action(
+                cloud_init_action(
                     "to complete the browser handoff, then rerun the original command",
                 ),
             )
@@ -523,6 +521,12 @@ pub fn ensure_cloud_session_for_datastore(
     // cannot accidentally enable redirects or credential-bearing arguments.
     let transport = CurlTransport::for_datastore(datastore);
     let store = match datastore {
+        crate::core::backend::CloudDatastore::Managed => {
+            return Err(PropodusClientError::Configuration(
+                "Managed cloud authentication belongs to Dactyl and repository-bound custody"
+                    .into(),
+            ));
+        }
         crate::core::backend::CloudDatastore::Neon => auth::CloudSessionStore::legacy(),
         crate::core::backend::CloudDatastore::Supabase => {
             auth::CloudSessionStore::for_service(&config.api_url)
@@ -561,7 +565,7 @@ fn ensure_cloud_session_with_store<T: PropodusTransport>(
                 cloud_auth_error(
                     CloudAuthStatus::AuthRequired,
                     "the refreshed cloud session could not be stored",
-                    cloud_session_action("again after checking machine data-directory permissions"),
+                    cloud_init_action("again after checking machine data-directory permissions"),
                 )
             })?;
             return store
@@ -570,14 +574,14 @@ fn ensure_cloud_session_with_store<T: PropodusTransport>(
                     cloud_auth_error(
                         CloudAuthStatus::AuthRequired,
                         "the refreshed cloud session could not be reloaded",
-                        cloud_session_action("again"),
+                        cloud_init_action("again"),
                     )
                 })?
                 .ok_or_else(|| {
                     cloud_auth_error(
                         CloudAuthStatus::AuthRequired,
                         "the refreshed cloud session was not persisted",
-                        cloud_session_action("again"),
+                        cloud_init_action("again"),
                     )
                 });
         }
@@ -667,7 +671,7 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "cloud onboarding state could not be read",
-                cloud_session_action("again"),
+                cloud_init_action("again"),
             )
         })?
         .filter(|pending| {
@@ -700,7 +704,7 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "the cloud onboarding handoff could not be stored",
-                cloud_session_action("again after checking machine data-directory permissions"),
+                cloud_init_action("again after checking machine data-directory permissions"),
             )
         })?;
         (flow_id, handoff.bootstrap_url, handoff.expires_at)
@@ -756,12 +760,12 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
                     CloudOnboardingState::Expired => cloud_auth_error(
                         CloudAuthStatus::Expired,
                         "the cloud onboarding handoff expired",
-                        cloud_session_action("to start a new handoff"),
+                        cloud_init_action("to start a new handoff"),
                     ),
                     _ => cloud_auth_error(
                         CloudAuthStatus::AuthRequired,
                         "the cloud onboarding handoff was not completed",
-                        cloud_session_action("to start a new handoff"),
+                        cloud_init_action("to start a new handoff"),
                     ),
                 });
             }
@@ -798,7 +802,7 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
         return Err(cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "cloud onboarding returned no exchange code",
-            cloud_session_action("to start a new handoff"),
+            cloud_init_action("to start a new handoff"),
         ));
     }
 
@@ -806,7 +810,7 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
         cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "cloud onboarding returned an invalid exchange code",
-            cloud_session_action("to start a new handoff"),
+            cloud_init_action("to start a new handoff"),
         )
     })?;
     let body = serde_json::to_vec(&request)
@@ -823,28 +827,28 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "cloud onboarding returned no usable session",
-                cloud_session_action("to start a new handoff"),
+                cloud_init_action("to start a new handoff"),
             )
         })?;
     session.validate().map_err(|_| {
         cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "cloud onboarding returned an invalid session",
-            cloud_session_action("to start a new handoff"),
+            cloud_init_action("to start a new handoff"),
         )
     })?;
     store.store_machine_session(&session).map_err(|_| {
         cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "the cloud session could not be stored",
-            cloud_session_action("again after checking machine data-directory permissions"),
+            cloud_init_action("again after checking machine data-directory permissions"),
         )
     })?;
     auth::clear_pending_cloud_onboarding().map_err(|_| {
         cloud_auth_error(
             CloudAuthStatus::AuthRequired,
             "cloud onboarding state could not be cleared",
-            cloud_session_action("again"),
+            cloud_init_action("again"),
         )
     })?;
     store
@@ -853,14 +857,14 @@ fn complete_cloud_onboarding_with_mode<T: PropodusTransport>(
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "the cloud session could not be reloaded",
-                cloud_session_action("again"),
+                cloud_init_action("again"),
             )
         })?
         .ok_or_else(|| {
             cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "the cloud session was not persisted",
-                cloud_session_action("again"),
+                cloud_init_action("again"),
             )
         })
 }
@@ -877,7 +881,7 @@ fn refresh_cloud_session<T: PropodusTransport>(
         cloud_auth_error(
             CloudAuthStatus::RefreshFailed,
             "the machine session refresh credentials are invalid",
-            cloud_session_action("to renew the machine session"),
+            cloud_init_action("to renew the machine session"),
         )
     })?;
     let body = serde_json::to_vec(&request)
@@ -888,7 +892,7 @@ fn refresh_cloud_session<T: PropodusTransport>(
         cloud_auth_error(
             CloudAuthStatus::RefreshFailed,
             "the machine session could not be refreshed",
-            cloud_session_action("to renew the machine session"),
+            cloud_init_action("to renew the machine session"),
         )
     })
 }
@@ -907,7 +911,7 @@ fn public_request<T: PropodusTransport>(
     }
 }
 
-pub(crate) fn try_open_browser(url: &str) {
+fn try_open_browser(url: &str) {
     if std::env::var_os("DECAPOD_HEADLESS").is_some() {
         return;
     }
@@ -946,7 +950,7 @@ impl<T: PropodusTransport> PropodusClient<T> {
             return Err(cloud_auth_error(
                 CloudAuthStatus::AuthRequired,
                 "a cloud machine session is required",
-                cloud_session_action(
+                cloud_init_action(
                     "to complete the browser handoff, then rerun the original command",
                 ),
             ));
@@ -1216,9 +1220,7 @@ fn map_http_error(response: PropodusHttpResponse) -> PropodusClientError {
             cloud_auth_error(
                 status,
                 "the cloud service rejected the machine session",
-                cloud_session_action(
-                    "to renew the machine session, then rerun the original command",
-                ),
+                cloud_init_action("to renew the machine session, then rerun the original command"),
             )
         }
         403 => PropodusClientError::Service {
