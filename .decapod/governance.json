@@ -524,85 +524,249 @@
     }
   },
   "change": {
-    "id": "change_01M7742C8M9Y4385TJS1NEG96V",
+    "id": "change_01M76X3H8DA76YN2BA6BG35R6K",
     "base_commit": "d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
     "target_base": "origin/master"
   },
-  "resolutions": {
-    "history-recovery:402c588af141811a98a40136b77f01ed171f75f0": {
-      "obligation_digest": "sha256:135728ac96465ba3142d6b211fbe5b64a30b6bd41ba85bcaafaf1ec0f9fd46ee",
-      "resolution": "The present-time gap observation is archived in f2612990. Product changes were reviewed and reauthored from accepted d3358e1c under the fresh task and exact-material checkpoint. The original source branch and commit remain preserved with historical proof not proven; this disposition grants no retrospective checkpoint or validation waiver. Current required validation remains mandatory.",
+  "claims": {
+    "claim:decapod-cloud-client": {
+      "statement": "Implement issue1628 client slice: logical project backend, all managed discovery/auth/account/data transport through Dactyl, repository/project/origin-bound private custody with serialized refresh and crash recovery, honest server-confirmed readiness, explicit account denial/action requirements, headless continuation and no cloud-to-SQLite fallback. Preserve local independence and existing governed publication/release dependency gates.",
+      "falsifier": "Any project provider/token/price/roster requirement; direct legacy auth transport on managed init/session/TODO; cross-binding credential reuse; replay of uncertain one-time exchange/rotation; account privilege inferred locally; false ready message; leaked private credential; SQLite fallback; missing required checks or fixture results claimed as hosted evidence.",
+      "status": "open",
       "proof_refs": [
-        "git:402c588af141811a98a40136b77f01ed171f75f0",
-        "git:f2612990",
-        "tests/init_cli.rs"
+        ".decapod/managed/specs/VALIDATION.md",
+        "git:19acd21f7ff50656323d037915273f03cdedc04e:.decapod/governance.json#/claims/claim:decapod-cloud-client"
       ]
+    },
+    "validation-bootstrap": {
+      "statement": "Fresh governed tasks can execute their first full proof without a prior receipt; terminal readiness requires actual current bound proof and declared workunit gates",
+      "falsifier": "A fresh docs task cannot reach a reviewed command, a failing command obtains readiness, or stale/forged/mismatched evidence passes terminal rules",
+      "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "onboarding-reviewed-candidate",
-      "summary": "Reauthor refined terminal onboarding from the accepted base and archive observed source-history gaps; preserve unattended compatibility and explicit unknown context",
-      "input_digest": "sha256:5d9548ba9333759b6e9cf02a5a03b07d188aa6020a562320fcdb2fa37e748290",
+      "id": "validation-bootstrap-terminal-v1",
+      "summary": "Repair first-proof bootstrap with terminal current-suite validation and real governed docs regressions",
+      "input_digest": "sha256:c30a812ee1e30376de469a6c01ae9935181c8dd98d9214f3d0954d685bdaa935",
       "proof_refs": [
-        "48 PTY, config and Git tests passed after unattended bootstrap repair; one existing skip",
-        "git diff --check",
-        "history-recovery:402c588af141811a98a40136b77f01ed171f75f0"
+        "Source inspection and rustfmt; complete execution pending full independent accepted-controller validation"
       ]
     },
     {
-      "id": "onboarding-history-disposition",
-      "summary": "Record current recovery disposition and observed focused unit evidence while preserving the archived source gap",
-      "input_digest": "sha256:1894ee0930892c89f4f03b0179d3ef1b0da20041af998b59a737c24d3f84cf03",
+      "id": "validation-bootstrap-release-inventory-v2",
+      "summary": "Reconcile accepted0.138.3 release version inventory after reviewing unchanged complete source contract",
+      "input_digest": "sha256:66cf35da1f8476bd331366f2f4bc4e375efe4bf1dfe2fc072de8bbf380366f1c",
       "proof_refs": [
-        "34 init_prompt_tests and 2 layout tests passed on byte-identical product source",
-        "git:f2612990"
+        "/private/tmp/validation-bootstrap-full-v1.json",
+        "git diff c7609e42 origin/master inventory: Cargo.toml/Cargo.lock version-only; workflows/helper/carrier unchanged"
       ]
     },
     {
-      "id": "onboarding-final-verification",
-      "summary": "Verify the portable PTY harness, final terminal presentation and all focused regression checks",
-      "input_digest": "sha256:40c4c20ff13e46194b5fe1c52630074b17730055b802595f1b647c1992a3a9e3",
+      "id": "validation-bootstrap-typed-facts-v3",
+      "summary": "Repair measured compile failure and retain verified source facts at terminal rules",
+      "input_digest": "sha256:95919f89ebad08c5899f4315ee3d1e3c0180318ca983878b5d86e825613fa434",
       "proof_refs": [
-        "84 focused tests passed; one pre-existing ignored test",
-        "cargo clippy --lib --test init_cli -- -D warnings",
-        "cargo fmt --all --check"
+        "/private/tmp/validation-bootstrap-full-v2.json",
+        "Buildkite8037 actual source compiler diagnostic E0282"
       ]
     },
     {
-      "id": "onboarding-cloud-reconciliation-01",
-      "summary": "Reconcile the refined terminal setup with accepted0.139.0 cloud sessions in a real merge; preserve prior checkpoints, defer all interactive writes/auth until review, remove local pricing/rosters and add cloud-cancellation PTY coverage. Full new-candidate execution remains pending.",
-      "input_digest": "sha256:d3d2ad9e487c701ec83782b45a23b4439c3de353e39831902708b8f43f74cb4c"
+      "id": "validation-bootstrap-journal-epoch-v4",
+      "summary": "Consume supported current workunit journal epoch instead of requiring unset legacy optional fields",
+      "input_digest": "sha256:6726722eadc77ecac89787fe05bae8560729325b2b74dac3be05ac23e21c83ca",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-full-v3.json",
+        "src/decapod/core/trajectory/execution.rs ExecutionStateBinding.validation_epoch_digest and verify_execution_binding"
+      ]
     },
     {
-      "id": "onboarding-reviewed-01390-inventory",
-      "summary": "Renew the explicitly reviewed source digest after comparing all105 inputs with accepted0.139.0 master; retain unchanged required graph and record the stopped validation and proof boundaries.",
-      "input_digest": "sha256:2a2c5782e0669fb26e9e2b832e6c1f7fdd5c238365a2114843adf7c7014623dd"
+      "id": "validation-bootstrap-reviewed-boundaries-v5",
+      "summary": "Retain original terminal deadline, precise optional-rule applicability, and real capsule workunit regression",
+      "input_digest": "sha256:0ea3e7e9bb2f909e16c33cda2822cb8b1b7d1a4cb5e1e0e3b5a846085c560135",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-full-v4.json",
+        "Independent read-only review deadline and explicit-rule findings"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-reviewed-canonical-v5b",
+      "summary": "Complete reviewed terminal boundary repair and preserve canonical compact preparation receipts",
+      "input_digest": "sha256:555f3ffa2795e5fddc7e27529ff48839f05d71c4ca8e776e376e8301c0c6dd99",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-full-v4.json",
+        "Read-only review fixes and source-grounded current journal/capsule/receipt regressions; execution pending new exact full validation"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-capsule-signature-v6",
+      "summary": "Repair measured capsule regression count type against actual supported API",
+      "input_digest": "sha256:ff56c217a6eb037349e6c0df3cc9414c3f728985af454773850f9ee0596dcc55",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-full-v5.json",
+        "Buildkite8060 clippy E0308 exact25152b43 source diagnostic"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-selected-cli-v7",
+      "summary": "Place genuine fresh governed docs validation regression in accepted CLI contract test entrypoint",
+      "input_digest": "sha256:b3a325b81b6e7c5f72f48d4dabaf1d44d0ae86e6e41d0fd8b79a2bafde02aea0",
+      "proof_refs": [
+        "Accepted source_ci_profile.rs Selection::Cli matches tests/cli_contracts.rs; helpers/carriers unchanged",
+        "Authenticated source-ci.selection.v2 selective-cli exactaa88 status=not_applicable"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-canonical-fixture-v8",
+      "summary": "Repair actual CLI fixture failures through canonical governance and genuine init schema",
+      "input_digest": "sha256:82ee647beb64c1de692edb2075988cd57c586f72a46c81ca99f8f7c555ff2560",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-bf98-cli-diagnostic.log",
+        "Read-only review of canonical migrate, runtime lock exclusion, and real init config construction"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-fixture-workspace-refresh-v9",
+      "summary": "Keep real docs authoring refresh inside claimed managed worktree after measured fd6 CLI failure",
+      "input_digest": "sha256:d542ac210841336b7221b699ebaaa0af453ea240fb9c8f08783a40914b49f7bc",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-fixture-diagnostics-v10",
+      "summary": "Restore isolated fixture broker lifecycle and preserve actual failures before measured aggregate timeout",
+      "input_digest": "sha256:7cf2247bd346a1c1e4e66b8bae3b9ec8b69401b359679ff55496b4e0bd94e322",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-3327-cli-diagnostic.log",
+        "/private/tmp/validation-bootstrap-3327-unit-diagnostic.txt"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-task-actor-binding-v11",
+      "summary": "Repair real docs full-validation actor/task collision without weakening actual topic task bindings",
+      "input_digest": "sha256:f71c4d1732b57e617608ad0356cf3c3231d303e0dc5aa622c159ee251d6c1d1e",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-132-cli-task-binding-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-132-core-timing-diagnostic.txt"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-legacy-task-ref-v12",
+      "summary": "Preserve legacy agent task refs while restricting canonical managed task extraction to topic",
+      "input_digest": "sha256:e4691891c3c21e4b19ecb025dfa576f1d1335b0a5dddc45ee4c56017649b3ef6",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-132-cli-task-binding-diagnostic.txt"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-runtime-cache-scaffold-v13",
+      "summary": "Keep ignored policy cache absence from rewriting frozen source while preserving actual policy validation and missing source repair",
+      "input_digest": "sha256:ff322014928d375d880d33c313a6e8dc90d0f1f8c9703eed43d5438a3b31fba2",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-8023-dirty-scaffold-diagnostic.json",
+        "/private/tmp/validation-bootstrap-gov-typo-recovery.diagnostic.json"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-supported-governed-fixture-v14",
+      "summary": "Observe real fresh docs CLI admission then complete sealed runtime proof with supported target-only fixture transport",
+      "input_digest": "sha256:b3f7ee04521572525aeb3f309674670cf10147d3718b6e3dc4de68a49ffbb458",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-5a83-native-git-diagnostic.json",
+        "/private/tmp/validation-bootstrap-custody-audit-v14.json",
+        "/private/tmp/validation-bootstrap-custody-renew-v14.json"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-accepted19ac-v15",
+      "summary": "Reconcile actual accepted19ac with authentic prior checkpoint journal and carried open cloud claim; consolidate measured duplicate governed negative proof into existing real-source regression without weakening checks or budgets",
+      "input_digest": "sha256:f82643ff88d2929dffcb201c11690ed88eea2a18fa6963ceb05e517e378690bf",
+      "proof_refs": [
+        "git:19acd21f7ff50656323d037915273f03cdedc04e",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43189965235/job/131088359791",
+        "https://github.com/DecapodLabs/decapod/issues/1629",
+        "tests/consumer_readiness.rs"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-reviewed-release01390-v16",
+      "summary": "Review actual accepted0.139 release inventory version delta and include authentic native release-bound projection refresh; retain exact prerequisite failures as nonpublication diagnostics",
+      "input_digest": "sha256:acf9be6fe06b3c1daeefe5ded12e0f42b14deae99d59358ec5aad1355a68fef9",
+      "proof_refs": [
+        ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
+        "git:19acd21f7ff50656323d037915273f03cdedc04e",
+        "https://github.com/DecapodLabs/decapod/issues/1629"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-clippy-v17",
+      "summary": "Simplify equivalent fail-closed fixture pass-count condition from actual exact-source Clippy diagnostic; preserve all source, admission and terminal proof assertions",
+      "input_digest": "sha256:21b607672dcd965482e887480c628f044dbfa76244b455b45255074fc31ddc6e",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/43198189246/job/131114983611",
+        "https://github.com/DecapodLabs/decapod/issues/1629",
+        "tests/consumer_readiness.rs"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-entrypoint-placement-v18",
+      "summary": "Place genuine docs CLI admission and complete runtime regression in existing entrypoint target; preserve every API case and unchanged required CI graph, declaring only shared Rust input metadata and actual CLI report slot",
+      "input_digest": "sha256:d1bfde69667e77d208181590b2f0274eb1eaeeb548be010e18039eeaa88bd14a",
+      "proof_refs": [
+        ".config/build/decapod.BUILD.bzl",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43199720211/job/131120183548",
+        "https://github.com/DecapodLabs/decapod/issues/1629",
+        "tests/common/consumer_readiness_fixture.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/support/fresh_docs_readiness.rs"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-acceptedbc0a-v19",
+      "summary": "Reconcile actual accepted onboarding and0.139.1 release with authentic18commit governance history, preserved whole-product specs and exact reviewed source inventory; retain genuine proof placement and all required checks",
+      "input_digest": "sha256:556d5be9dcaf5de69d2d6fc50b768ed2a1de86e209f5971f5839daf0306c09f0",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "git:bc0a71971bce8ee036a24562b7fc4a9b771f2f40",
+        "git:cff3a3c307b792ce4ea023a1c391cac657675dd8",
+        "https://github.com/DecapodLabs/decapod/issues/1629"
+      ]
+    },
+    {
+      "id": "validation-bootstrap-authentic01391-projections-v20",
+      "summary": "Commit authentic independentregistry0.139.1 native release projections after actualCI drift; preserve unchanged source definitions, genuineproof placement and all required checks",
+      "input_digest": "sha256:b27b76f5fdf238bdb363ed5860f2faf4fa6861bad02e411422734b34617ff18f",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "git:bc0a71971bce8ee036a24562b7fc4a9b771f2f40",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43207988589/job/131147936469",
+        "https://github.com/DecapodLabs/decapod/issues/1629"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M7742C8M9Y4385TJS1NEG96V": {
+    "intent:change_01M76X3H8DA76YN2BA6BG35R6K": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "paths:[\"src/decapod/lib.rs\"",
-        "\"src/decapod/onboarding.rs\"",
-        "\"src/decapod/core/scaffold.rs\"",
-        "\"tests/init_cli.rs\"",
-        "\"tests/unit/lib_init_prompt_tests.rs\"",
-        "\"docs/book/src/quickstart.md\"",
-        "\".decapod/config.toml\"",
-        "\".decapod/managed/specs\"]"
+        "src/core/validation_rules.rs",
+        "src/core/validate.rs",
+        "tests",
+        "doctrine",
+        "specs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+      "id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Refine terminal onboarding with reviewed checkpoint history\n\nComplete the authorized terminal onboarding overhaul: recommended first-run setup, focused customization, review before mutation, private config backups and clear agent handoff. Preserve and recover source branch 402c588a through the governed history-recovery path because its last refinement commit was authored after a checkpoint failed during lease rebinding. Reauthor the reviewed source in a fresh workspace; keep the original branch intact and retain observed test evidence. Parent task retains original user intent.",
-      "refined_intent": "Refine terminal onboarding with reviewed checkpoint history\n\nComplete the authorized terminal onboarding overhaul: recommended first-run setup, focused customization, review before mutation, private config backups and clear agent handoff. Preserve and recover source branch 402c588a through the governed history-recovery path because its last refinement commit was authored after a checkpoint failed during lease rebinding. Reauthor the reviewed source in a fresh workspace; keep the original branch intact and retain observed test evidence. Parent task retains original user intent.",
+      "raw_intent": "Fix validation evidence bootstrap lifecycle for governed proof execution\n\nFix issue #1629 in CI/control-plane validation: permit first execution without prior output evidence; require verified current-run source/governing bound evidence at terminal readiness; preserve strict applicable workunit contracts and negative evidence rejection. Regression uses fresh governed docs task and full validate.",
+      "refined_intent": "Fix validation evidence bootstrap lifecycle for governed proof execution\n\nFix issue #1629 in CI/control-plane validation: permit first execution without prior output evidence; require verified current-run source/governing bound evidence at terminal readiness; preserve strict applicable workunit contracts and negative evidence rejection. Regression uses fresh governed docs task and full validate.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -615,90 +779,295 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Reconcile the existing PR1636 with accepted master19acd21 and release0.139.0, preserving the refined three-step terminal setup, reviewed mutation boundary, private config backups and unattended behavior. Use the accepted Dactyl-managed cloud sign-in and server-confirmed access flow; remove obsolete client-side pricing and roster presentation. Preserve all prior checkpoints in real merge history. Managed-project binding, portal rollout, payment activation and the protected customer journey remain separately owned work.",
+      "intent": "Repair issue #1629 validation lifecycle in the CI/control-plane implementation. Before proof, admit execution using input and governance checks; after actual required execution, evaluate terminal evidence bound to the current source and governing identity. Workunit proof remains strict when declared. Add a real fresh governed docs task full-validate regression with passing and failing reviewed commands plus forged/stale/binding negatives. Preserve accepted registry dependencies and trusted CI executor. Use independent released controller for own full readiness; no PR before it passes.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "decapod validate",
+        "fresh governed docs consumer full-validation regression"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current source after accepted release inventory reconciliation: terminal review/apply and Dactyl-managed sign-in compose without changes to cloud custody, transport or authorization. All105 inventoried inputs match accepted master; no workflow, executor or required-check policy changed. Current full execution remains pending.",
-          "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
-          "spec_material_hash": "2e83c560d0bc53b1d130317a9bab677b9fdc3db7cb46b61b94996e184ccd1304"
+          "reason": "Authentic independently released0.139.1 entrypoint/image/manifest regeneration changes no product architecture, public interface or security/proof boundary; full genuineCLI/runtime assertions and unchanged required graph remain; current sourceinventory unchanged",
+          "reviewed_code_fingerprint": "1ada811f01a7d6882f14b4b0525018ee0f327becdb06fca3bb126f1656713e08",
+          "spec_material_hash": "63d6fb39e791fdc34e8a587a7a3a13e23b4e0a13d827c7db94c599d03ddd6572"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current source after accepted release inventory reconciliation: terminal review/apply and Dactyl-managed sign-in compose without changes to cloud custody, transport or authorization. All105 inventoried inputs match accepted master; no workflow, executor or required-check policy changed. Current full execution remains pending.",
-          "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
-          "spec_material_hash": "89f0d2d623341656e789694578a335cc62b7d140ed5d357eca3be8384cd7ab57"
+          "reason": "Authentic independently released0.139.1 entrypoint/image/manifest regeneration changes no product architecture, public interface or security/proof boundary; full genuineCLI/runtime assertions and unchanged required graph remain; current sourceinventory unchanged",
+          "reviewed_code_fingerprint": "1ada811f01a7d6882f14b4b0525018ee0f327becdb06fca3bb126f1656713e08",
+          "spec_material_hash": "c40ac088821e7daca50165b4cd10d4b22abaf3d8f4cff345ccb46571da6eda39"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current source after accepted release inventory reconciliation: terminal review/apply and Dactyl-managed sign-in compose without changes to cloud custody, transport or authorization. All105 inventoried inputs match accepted master; no workflow, executor or required-check policy changed. Current full execution remains pending.",
-          "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
+          "reason": "Authentic independently released0.139.1 entrypoint/image/manifest regeneration changes no product architecture, public interface or security/proof boundary; full genuineCLI/runtime assertions and unchanged required graph remain; current sourceinventory unchanged",
+          "reviewed_code_fingerprint": "1ada811f01a7d6882f14b4b0525018ee0f327becdb06fca3bb126f1656713e08",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "Refine terminal onboarding and setup review",
+      "stop_conditions": [
+        "Unavailable independent accepted controller or external execution authorization"
+      ],
+      "title": "Fix validation evidence bootstrap lifecycle for governed proof execution",
       "todo_ids": [
-        "code_01m7740n3ywajp3a"
+        "bugs_01m76x2q90tv682e"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794480074Z"
+      "updated_at": "1794484134Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
-        "Keep accepted cloud custody, transport and service authorization; no project binding or billing implementation"
+        "Do not rename actor or docs task, weaken real task bindings, alter CI helpers/checks/budgets, or authorize own source with candidate controller",
+        "Do not weaken accepted executor, ELF/HTTPS transport, source checks, strict20s/300s budgets, or terminal evidence integrity; no source proof claimed from diagnostics",
+        "Keep accepted 300-second aggregate budget and trusted profile/graph unchanged; no manual builds/tests or native quota retry on known failing source",
+        "Keep clean candidate and capsule policy validation strict; validation-lifecycle-only predicate fix, no init/account/carrier/helper/budget changes; independent released controller owns fullsource readiness",
+        "Preserve current controller0.138.3 and actual native quota blocker; source diagnostics do not authorize readiness",
+        "Preserve real Git ELF and HTTPS/no-rewrite guards; CI-local admission never authorizes publication; real sealed current-suite execution and terminal evidence remain mandatory; carrier/aggregatebudget unchanged",
+        "Scope actor exclusion only to complete canonical agent/<actor>/<topic>; retain legacy agent/<task> and bare task parsing, multi-task topics and actual task mismatch rejection"
       ],
-      "artifact_hash": "sha256:64ff74003f8c38c8404aeebbf00eb3f9961ac3c60407b56c60c5d287c385e38d",
+      "artifact_hash": "sha256:cfa6f8939e6e6942cb72be1168b8ac7a75809cde4b16545c94cf84527e610642",
       "checks": [
         {
-          "name": "current-cli-regressions",
-          "status": "passed"
-        },
-        {
-          "name": "current-init-unit-tests",
-          "status": "passed"
-        },
-        {
-          "name": "current-layout-tests",
-          "status": "passed"
-        },
-        {
-          "name": "formatting",
-          "status": "passed"
-        },
-        {
-          "name": "full-validation",
+          "name": "17_configured_source_execution",
           "status": "unavailable"
         },
         {
-          "name": "full_validation_29b5686d",
+          "name": "17_source_format",
+          "status": "passed"
+        },
+        {
+          "name": "18_configured_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "18_named_case_preservation_metadata",
+          "status": "passed"
+        },
+        {
+          "name": "18_observer_source_audit",
+          "status": "passed"
+        },
+        {
+          "name": "18_reviewed_source_inventory_metadata",
+          "status": "passed"
+        },
+        {
+          "name": "19_configured_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "19_source_inventory_metadata",
+          "status": "passed"
+        },
+        {
+          "name": "20_full_candidate_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "20_independent_registry_bootstrap",
+          "status": "passed"
+        },
+        {
+          "name": "20_post_heal_source_inventory_metadata",
+          "status": "passed"
+        },
+        {
+          "name": "20_prerequisite_preparation",
           "status": "failed"
         },
         {
-          "name": "inventory_review",
+          "name": "41e_actual_source_clippy",
+          "status": "failed"
+        },
+        {
+          "name": "91_actual_cli_aggregate",
+          "status": "failed"
+        },
+        {
+          "name": "91_actual_fresh_docs_proof",
           "status": "passed"
         },
         {
-          "name": "master_merge",
+          "name": "91_actual_source_library",
           "status": "passed"
         },
         {
-          "name": "preserved-source-pty-tests",
+          "name": "accepted19ac_source_preservation_review",
           "status": "passed"
         },
         {
-          "name": "preserved-source-unit-tests",
+          "name": "accepted_release_inventory_metadata",
+          "status": "passed"
+        },
+        {
+          "name": "accepted_release_inventory_review",
+          "status": "passed"
+        },
+        {
+          "name": "authored_source_review",
+          "status": "passed"
+        },
+        {
+          "name": "c626_actual_genuine_docs_proof",
+          "status": "passed"
+        },
+        {
+          "name": "c626_actual_release_drift",
+          "status": "failed"
+        },
+        {
+          "name": "c626_cli_contract_aggregate",
+          "status": "passed"
+        },
+        {
+          "name": "current_source_configured_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "exact_132_cli",
+          "status": "failed"
+        },
+        {
+          "name": "exact_132_pr_core",
+          "status": "failed"
+        },
+        {
+          "name": "exact_132_push_core",
+          "status": "passed"
+        },
+        {
+          "name": "exact_3327_cli",
+          "status": "failed"
+        },
+        {
+          "name": "exact_3327_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "exact_3327_library",
+          "status": "passed"
+        },
+        {
+          "name": "exact_3327_native",
+          "status": "unavailable"
+        },
+        {
+          "name": "exact_5a83_cli",
+          "status": "failed"
+        },
+        {
+          "name": "exact_5a83_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "exact_5a83_library",
+          "status": "passed"
+        },
+        {
+          "name": "exact_8023_cli",
+          "status": "failed"
+        },
+        {
+          "name": "exact_8023_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "exact_8023_library",
+          "status": "passed"
+        },
+        {
+          "name": "exact_fd6_cli",
+          "status": "failed"
+        },
+        {
+          "name": "exact_fd6_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "exact_fd6_library",
+          "status": "passed"
+        },
+        {
+          "name": "exact_fd6_native",
+          "status": "unavailable"
+        },
+        {
+          "name": "fab7_aggregate_cli_budget",
+          "status": "failed"
+        },
+        {
+          "name": "fab7_fresh_docs_cli_and_complete_runtime",
+          "status": "passed"
+        },
+        {
+          "name": "fab7_push_trusted_context",
+          "status": "failed"
+        },
+        {
+          "name": "full_docs_cli_regression_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "incoming_bc0a_obligation_audit",
+          "status": "passed"
+        },
+        {
+          "name": "incoming_onboarding_source_preservation",
+          "status": "passed"
+        },
+        {
+          "name": "independent_full_validation_v1",
+          "status": "failed"
+        },
+        {
+          "name": "independent_full_validation_v2",
+          "status": "failed"
+        },
+        {
+          "name": "independent_full_validation_v3",
+          "status": "unavailable"
+        },
+        {
+          "name": "independent_full_validation_v4",
+          "status": "unavailable"
+        },
+        {
+          "name": "independent_full_validation_v5",
+          "status": "unavailable"
+        },
+        {
+          "name": "independent_review",
+          "status": "failed"
+        },
+        {
+          "name": "independent_source_review",
+          "status": "passed"
+        },
+        {
+          "name": "lifecycle_trace",
+          "status": "passed"
+        },
+        {
+          "name": "new_candidate_configured_tests",
+          "status": "unavailable"
+        },
+        {
+          "name": "parser_legacy_contract",
+          "status": "partial"
+        },
+        {
+          "name": "policy_cache_source_peer_review",
+          "status": "passed"
+        },
+        {
+          "name": "post_heal_source_inventory",
           "status": "passed"
         },
         {
@@ -706,238 +1075,837 @@
           "status": "failed"
         },
         {
-          "name": "targeted-clippy",
+          "name": "selected_cli_regression_v7",
+          "status": "failed"
+        },
+        {
+          "name": "source_execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "source_execution_not_run",
+          "status": "unavailable"
+        },
+        {
+          "name": "source_test_compilation_v5",
+          "status": "failed"
+        },
+        {
+          "name": "split_fixture_source_peer_review",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "completion_claim": "Only authentic releaseprojections and explicit sourcefacts change; exactcurrentconfiguredCI and independentfullnative remainpending, no readinessclaim frompreparation",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
             "event_id": "event:8",
-            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 8
           },
           {
-            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
             "event_id": "event:9",
-            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:19",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 19
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:20",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:21",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 21
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:22",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 22
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:23",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 23
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:24",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 24
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:25",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 25
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:26",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 26
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:27",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 27
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 27,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7742CC2WSBGWSRWRSWJEBMW": {
+          "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
             "evidence_only": true,
-            "id": "branch_01M7742CC2WSBGWSRWRSWJEBMW",
-            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "id": "branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/onboarding.rs",
-                  "src/decapod/core/scaffold.rs",
-                  "tests/init_cli.rs",
-                  "tests/unit/lib_init_prompt_tests.rs",
-                  "docs/book/src/quickstart.md",
-                  ".decapod/config.toml",
-                  "Recovery preserves immutable source 402c588af141811a98a40136b77f01ed171f75f0 and its checkpoint gap. Reauthored product files and only authored semantic spec sections in this fresh admitted workstream. Earlier focused evidence: 33 setup unit tests, 2 layout tests, 5 PTY tests and 5 Git tests passed; config suite had 37 pass, 1 fail, 1 pre-existing ignored test. Its failure exposed a changed unattended Git bootstrap order; the shared mutation helper now restores that contract while interactive setup still confirms first. Current regression rerun is pending. Product/test bytes are verified identical between this workstream and the existing cache checkout used for focused tests; same accepted base d3358e1c. Full readiness remains unproven; GitHub provider rate limit resets at epoch 1794463204. The source inventory review found only the accepted release version bump in Cargo.toml/Cargo.lock since c7609e42; refreshed the reviewed digest without changing providers or required checks."
+                  "src/decapod/core/validation_rules.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "src/decapod/core/workunit.rs",
+                  "Source trace: prerequisite demands own receipt and unconditionally demands workunit outputs"
                 ],
                 "proof_refs": [
-                  "preserved-source-unit-tests",
-                  "preserved-source-pty-tests",
-                  "full-validation"
+                  "lifecycle_trace"
                 ],
                 "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"docs/book/src/quickstart.md\"",
-                  "\"src/decapod/core/scaffold.rs\"",
-                  "\"src/decapod/onboarding.rs\"",
-                  "\"tests/init_cli.rs\"",
-                  "\"tests/unit/lib_init_prompt_tests.rs\"",
-                  "paths:[\"src/decapod/lib.rs\""
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Terminal runtime owns freshly verified suite; persisted receipt cannot authorize new proof"
+                ]
               },
               {
-                "action": "trajectory.record",
+                "action": "implementation",
+                "command": "rustfmt --edition 2024 on changed Rust files",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Current presentation source passed all 34 init_prompt_tests plus 2 onboarding layout tests. The separate final config/Git/PTY and targeted Clippy run continues. Fresh candidate f2612990 archives the observed source-history gap and reauthored product changes; the original 402c588a source history remains unproven and preserved. No full-validation success is claimed."
+                  "src/decapod/core/validation_rules.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validate.rs",
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Authored tests not executed yet; full accepted-controller validation owns builds and all test execution"
                 ],
                 "proof_refs": [
-                  "current-init-unit-tests",
-                  "current-layout-tests"
+                  "authored_source_review",
+                  "source_execution"
                 ],
                 "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"docs/book/src/quickstart.md\"",
-                  "\"src/decapod/core/scaffold.rs\"",
-                  "\"src/decapod/onboarding.rs\"",
-                  "\"tests/init_cli.rs\"",
-                  "\"tests/unit/lib_init_prompt_tests.rs\"",
-                  "paths:[\"src/decapod/lib.rs\""
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "validation-repair",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "Final focused verification passed: 34 setup unit tests, 2 layout tests, 5 real PTY tests, 5 Git bootstrap tests and 38 config tests, with 1 pre-existing ignored config test. The final PTY test was rerun after using a portable raw pointer for Linux/macOS; cargo clippy --lib --test init_cli -- -D warnings passed. Product/test bytes matched this fresh workstream and the test cache checkout. Manual visual inspection confirmed concise unknown context, optional purpose, review, cancellation and restored terminal state. Checkpoint history for f2612990 and 6e2ad2e6 is proven. Full validation still lacks admission: its most recent attempt returned public GitHub HTTP 403 rate limiting, with no alternate authentication or bypass. A final exact-candidate retry follows this evidence checkpoint."
+                  ".decapod/config.toml",
+                  "Full v1 report /private/tmp/validation-bootstrap-full-v1.json: reviewed source inventory stale before execution",
+                  "Compared accepted current inventory with c7609e42 pin origin: only Cargo.toml/Cargo.lock Decapod version changed0.138.2 to0.138.3; all workflows/helpers/carrier/build definitions identical; explicitly reconcile reviewed digest5fd571a9"
                 ],
                 "proof_refs": [
-                  "current-cli-regressions",
-                  "targeted-clippy",
-                  "formatting",
-                  "full-validation"
+                  "independent_full_validation_v1",
+                  "accepted_release_inventory_review"
                 ],
                 "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"docs/book/src/quickstart.md\"",
-                  "\"src/decapod/core/scaffold.rs\"",
-                  "\"src/decapod/onboarding.rs\"",
-                  "\"tests/init_cli.rs\"",
-                  "\"tests/unit/lib_init_prompt_tests.rs\"",
-                  "paths:[\"src/decapod/lib.rs\""
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
                 ],
                 "sequence": 6,
                 "validation_findings": []
               },
               {
-                "action": "implementation",
-                "command": "git merge --no-commit --no-ff -X theirs origin/master with temporary current-PR governance preservation driver",
+                "action": "validation-repair",
                 "custody_event_id": "event:7",
                 "observations": [
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "tests/init_cli.rs",
-                  "tests/unit/lib_init_prompt_tests.rs",
-                  "docs/book/src/quickstart.md",
-                  "Real pending merge with accepted19acd21; original first-parent candidate58f95d34 and all3 checkpoints preserved. Current PR governance remained byte-identical through Git merge, then updated through the native CLI. New cloud cancellation PTY test is authored but not yet executed."
+                  "Buildkite8037 required standalone-validation source build E0282: explicit String map key type required; raw actual provider log /private/tmp/validation-bootstrap-build8037.log",
+                  "Fix evidence map type; terminal applicability now consumes verified suite changed paths and explicit workunit declaration applies across task routing categories; unknown filesystem projections remain blockers"
                 ],
                 "proof_refs": [
-                  "master_merge",
-                  "formatting"
+                  "independent_full_validation_v2"
                 ],
                 "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"docs/book/src/quickstart.md\"",
-                  "\"src/decapod/core/scaffold.rs\"",
-                  "\"src/decapod/onboarding.rs\"",
-                  "\"tests/init_cli.rs\"",
-                  "\"tests/unit/lib_init_prompt_tests.rs\"",
-                  "paths:[\"src/decapod/lib.rs\""
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
                 ],
                 "sequence": 7,
                 "validation_findings": []
               },
               {
-                "action": "verification",
+                "action": "validation-repair",
                 "custody_event_id": "event:8",
                 "observations": [
-                  "tests/init_cli.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "Native project-check refreshed release-bound entrypoints and managed Docker pin to0.139.0. Its host-only prerequisite report remains failed for required container custody, pending-merge ancestry/dirty material, a historical done-unverified root task and broad scanner findings before integration. No pass or publication readiness is inferred. All application execution remains pending the configured complete provider proof after checkpointing the real merge. Accepted cloud-client/session/CLI and Cargo/Bazel files compare identical to origin/master."
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
+                  "Source review: workunit checkpoint ExecutionStateBinding positively binds current validation_epoch_digest; optional legacy manifest epochs need only reject explicit mismatches. Positive actual journal contract regression added; artifact mutation/deletion remain strict."
                 ],
                 "proof_refs": [
-                  "project_preparation"
+                  "independent_full_validation_v3"
                 ],
                 "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"docs/book/src/quickstart.md\"",
-                  "\"src/decapod/core/scaffold.rs\"",
-                  "\"src/decapod/onboarding.rs\"",
-                  "\"tests/init_cli.rs\"",
-                  "\"tests/unit/lib_init_prompt_tests.rs\"",
-                  "Terminal initialization, PTY regression coverage, quickstart and authored setup specs",
-                  "paths:[\"src/decapod/lib.rs\""
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
                 ],
                 "sequence": 8,
                 "validation_findings": []
               },
               {
-                "action": "verification",
+                "action": "review-repair",
                 "custody_event_id": "event:9",
                 "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "Full29b5686d validation stopped before provider execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Independently compared every one of the105 discovered build/workflow/helper inputs with accepted19acd21: all byte-identical. Only Cargo.toml and Cargo.lock package versions differ from the accepted cloud mergec87e4f49, both0.138.3 to0.139.0. Backed up current config and renewed only reviewed_sources_digest from8f21b5eb to c8786efc. Required profile, CI-attested mapping, workflow/carrier, executor and checks are unchanged."
+                  "src/decapod/core/workunit.rs",
+                  "src/decapod/core/validation_runtime/tests.rs",
+                  "v4 own local controller cancelled and reaped after reviewed defects; final diagnostic SNAPSHOT_NOT_READY public read cancelled, last provider_terminal_wait579867ms, report /private/tmp/validation-bootstrap-full-v4.json. No remote/unrelated jobs cancelled; no pass/source-test failure claimed.",
+                  "Same actor task lease expired during proof/review; source edits preserved before AUTHORING_CUSTODY_STALE surfaced. Inspected sole unchanged ownership, supported same-task reclaim+4h renew+workspace rebind; lease_generation2. No v5 authored commit preceded recovery.",
+                  "Review repairs: original budget checked around terminal reads, before proof and atomic receipt/ready-verdict publication; optional exemption exact kernel id+authority; regression evaluates actual current declared workunit rule with generated capsule, living spec, current journal and retained artifact; separate mandatory project obligation remains required."
                 ],
                 "proof_refs": [
-                  "full_validation_29b5686d",
-                  "inventory_review"
+                  "independent_review",
+                  "independent_full_validation_v4"
                 ],
                 "scope": [
-                  "\".decapod/config.toml\"",
-                  "\".decapod/managed/specs\"]",
-                  "\"docs/book/src/quickstart.md\"",
-                  "\"src/decapod/core/scaffold.rs\"",
-                  "\"src/decapod/onboarding.rs\"",
-                  "\"tests/init_cli.rs\"",
-                  "\"tests/unit/lib_init_prompt_tests.rs\"",
-                  "Terminal initialization, PTY regression coverage, quickstart and authored setup specs",
-                  "paths:[\"src/decapod/lib.rs\""
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
                 ],
                 "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "review-repair",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "tests/unit/core/validate_tests.rs",
+                  "Canonical preparation receipts use epoch_ref compression: collector now reads supported expanded validation section then verifies integrity; positive compact receipt and forged-hash regression authored"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 10,
+                "validation_findings": []
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "GH Clippy and actual required Buildkite8060 clippy measured E0308 at validation_rules.rs2182: resolve_capsule_policy requested_limit is usize, not Option; exact source log /private/tmp/validation-bootstrap-build8060-clippy.log",
+                  "Own v5 local controller cancelled and fully reaped before source repair; report /private/tmp/validation-bootstrap-full-v5.json says CI operation cancelled, publication_ready=false. Actual failed compiler subcheck remains distinct from interrupted aggregate proof. No remote jobs cancelled.",
+                  "Verified capsule_policy.rs207 signature; fixture corrected Some(1) to1, rustfmt/diff hygiene only; full source execution remains pending independent next proof"
+                ],
+                "proof_refs": [
+                  "source_test_compilation_v5",
+                  "independent_full_validation_v5",
+                  "independent_source_review"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 11,
+                "validation_findings": []
+              },
+              {
+                "action": "coverage-repair",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "tests/cli_contracts.rs",
+                  "tests/consumer_readiness.rs",
+                  "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
+                  "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",
+                  "Same exact independent native controller v6 blocked by public GitHub403 with explicit reset1794459593; source change gets new checkpoint/branch push; next full native only after reset+grace."
+                ],
+                "proof_refs": [
+                  "full_docs_cli_regression_execution"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 12,
+                "validation_findings": []
+              },
+              {
+                "action": "fixture-repair",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
+                  "Fixture repair uses supported canonical governance_document::migrate; ignores data runtime and exact managed governance-document.lock before Git accepted-source commit. Genuine CLI fixture removes only its initial adapter proof-only config before real init creates full schema, then retains actual command/source review. Production schemas, gates, actor and docs task kind unchanged."
+                ],
+                "proof_refs": [
+                  "selected_cli_regression_v7"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 13,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "tests/consumer_readiness.rs",
+                  "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
+                  "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt"
+                ],
+                "proof_refs": [
+                  "exact_fd6_clippy",
+                  "exact_fd6_library",
+                  "exact_fd6_cli",
+                  "exact_fd6_native"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 14,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "tests/consumer_readiness.rs",
+                  "/private/tmp/validation-bootstrap-3327-cli-diagnostic.txt",
+                  "/private/tmp/validation-bootstrap-3327-unit-diagnostic.txt"
+                ],
+                "proof_refs": [
+                  "exact_3327_clippy",
+                  "exact_3327_library",
+                  "exact_3327_cli",
+                  "exact_3327_native"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 15,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/unit/core/workspace_tests.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "/private/tmp/validation-bootstrap-132-cli-task-binding-diagnostic.txt",
+                  "/private/tmp/validation-bootstrap-132-core-timing-diagnostic.txt"
+                ],
+                "proof_refs": [
+                  "exact_132_cli",
+                  "exact_132_push_core",
+                  "exact_132_pr_core"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 16,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/workspace.rs",
+                  "tests/unit/core/workspace_tests.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "/private/tmp/validation-bootstrap-132-cli-task-binding-diagnostic.txt"
+                ],
+                "proof_refs": [
+                  "parser_legacy_contract"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 17,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/scaffold.rs",
+                  "src/decapod/core/capsule_policy.rs",
+                  "src/decapod/lib.rs",
+                  "tests/unit/lib_validation_proof_tests.rs",
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/validation-bootstrap-8023-dirty-scaffold-diagnostic.json",
+                  "/private/tmp/validation-bootstrap-8023-unit-diagnostic.txt",
+                  "/private/tmp/validation-bootstrap-gov-typo-recovery.diagnostic.json"
+                ],
+                "proof_refs": [
+                  "exact_8023_library",
+                  "exact_8023_clippy",
+                  "exact_8023_cli",
+                  "policy_cache_source_peer_review"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 18,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:19",
+                "observations": [
+                  "src/decapod/core/validation_runtime/repository_host.rs",
+                  "src/decapod/core/snapshot_provider/snapshot.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/cli_contracts.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/validation-bootstrap-5a83-native-git-diagnostic.json",
+                  "/private/tmp/validation-bootstrap-custody-audit-v14.json",
+                  "/private/tmp/validation-bootstrap-custody-renew-v14.json"
+                ],
+                "proof_refs": [
+                  "exact_5a83_library",
+                  "exact_5a83_clippy",
+                  "exact_5a83_cli",
+                  "split_fixture_source_peer_review"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 19,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "command": "git merge --no-commit origin/master (actual second parent19acd21f7ff50656323d037915273f03cdedc04e)",
+                "custody_event_id": "event:20",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Actualfab7 PR job131088359791 explicitly passed fresh_docs_cli_admission_then_complete_runtime_proves_current_source and existing real_source_failure; aggregate target then timedout300.1s at final workunit recovery test. New source removes duplicate governed negative preparation/admission and strengthens existing real negative receipt/history/verdict assertions; no budget/test/selector change.",
+                  "Actual accepted master advanced d3358e1ce2cdb137dc57445c64592cb6d327a6ff ->19acd21f7ff50656323d037915273f03cdedc04e. fab7 push early CI merge-base-context failures precede execution. Genuine merge retains original fork metadata and14 committed checkpoint history; incoming baseline unresolved obligations unchanged and incoming claim:decapod-cloud-client carried natively with exact statement/falsifier/status and acceptedcommit proofref.",
+                  "Read-only peer review confirmed incoming cloud source and trusted helper/workflow/config/MODULElock accepted bytes preserved; own lib delta is validation cache predicate only. Independent registry controller remains0.138.3; native environment notice reports no new migration, ignored applied/catalog inspected through sequence1100."
+                ],
+                "proof_refs": [
+                  "fab7_fresh_docs_cli_and_complete_runtime",
+                  "fab7_aggregate_cli_budget",
+                  "fab7_push_trusted_context",
+                  "accepted19ac_source_preservation_review",
+                  "new_candidate_configured_tests"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 20,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:21",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "src/decapod/core/init_reconciliation/mod.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Read-only exact105-file Git inventory matches production source roots and serialized BTreeMap digest. Cloud parentc87e inventory8f21 matches prior declaration. Actual accepted19ac release changes ONLY Cargo.toml and Cargo.lock package version0.138.3 to0.139.0; accepted release and candidate both hashc8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174; accepted-to-candidate inventory delta empty.",
+                  "/private/tmp/validation-bootstrap-source-inventory-19ac-audit.json and private exact config backup preserved; no builds/tests/manual preflight/controller changes/provider evidence or helper changes"
+                ],
+                "proof_refs": [
+                  "accepted_release_inventory_metadata",
+                  "current_source_configured_execution"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 21,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:22",
+                "observations": [
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Supported govern project-check prerequisites-only native healing regenerated release0.139.0 entrypoint fingerprints and managed image/version pins. Report scope project_prerequisites,205passed4failed,publication_ready=false,readiness=null. No source/provider execution: host-container prerequisite and unrelated doneTODO bugs_01m73xpkqns9286n proof hook remain diagnostics, not waived; oldHEAD entrypoint/currency failures addressable by committing authentic generated projections.",
+                  "Post-heal current filesystem inventory reread all105source files, same c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 digest as actual accepted19ac. Four generated entrypoints and managed Dockerfile are outside source definition inventory; no helper/workflow/carrier change. Private raw diagnostic and provenance retained outside Git."
+                ],
+                "proof_refs": [
+                  "post_heal_source_inventory",
+                  "project_preparation",
+                  "source_execution_not_run"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 22,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:23",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "tests/consumer_readiness.rs",
+                  "Official sourceCI GH job131114983611/run43198189246 on exact41e86d3f accepted19ac failed cargo clippy --all-targets --all-features -- -D warnings: nonminimal_bool at consumer_readiness.rs343. Corresponding Buildkite8399 Clippy push check131116039493 also reports failure; raw native provider proof not yet collected.",
+                  "Apply Clippy equivalent is_none_or(count==0) to optional integer pass count. Missing and zero remain rejected; positive nonzero remains admitted only alongside all existing actualscope/failurecount/readiness/clean-source checks. rustfmt only, no manual build/tests, guards or required budgets changed."
+                ],
+                "proof_refs": [
+                  "41e_actual_source_clippy",
+                  "17_source_format",
+                  "17_configured_source_execution"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 23,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:24",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  "tests/consumer_readiness.rs",
+                  "tests/entrypoint_correctness.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "tests/support/fresh_docs_readiness.rs",
+                  "tests/cli_contracts.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/entrypoint_correctness.rs",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Actual91cc GH pushCLI job131120183548 aggregate TIMEOUT300.0 after freshdocs genuineCLIadmission/complete-runtime proof passed65.018992583s and real_source_failure/repair passed. Timeout later in init_config_behavior, no positiveproof assertion failure. Current91 library1685passed0failed8ignored and Clippy passed are historical source diagnostics, not newcandidate/fullnativeproof.",
+                  "Move only single freshdocs test entrypoint to existing required entrypoint_correctness target. Extract helper-onlycommon support; all16 existing consumer case bodies and positivefixture body byte-identical,58combined top-level namedcases preserved, no testcases in support. Existing fixed3-target selectiveCLI command, serialthreads, target names/tags/budgets, selectors/workflows/helpers unchanged.",
+                  "Read-only acceptedexecutor audit confirms .config/build/decapod.BUILD.bzl additiveRustsrcs is ordinary material-bound candidatebuildmetadata, notcompiledcarrier. Same105file inventory has ONLY that definitiondelta, reviewed actualdigest50c5532ad4dca740a8216688204d2c0446459da2782a66de9377aacb30d360c8. Independentregistry0.139 andaccepted19ac unchanged. No directGovtestsetup, manualbuild/tests or lowerAPI coverage weakening."
+                ],
+                "proof_refs": [
+                  "91_actual_cli_aggregate",
+                  "91_actual_fresh_docs_proof",
+                  "91_actual_source_library",
+                  "18_named_case_preservation_metadata",
+                  "18_reviewed_source_inventory_metadata",
+                  "18_configured_execution"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 24,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:25",
+                "observations": [
+                  "Followup extraction review identified Rust1.96 write-only restricted-field lint reachability in API-only consumers. Finalsharedtestplumbing pairs configured genuineCLIstorage with an explicit RcRefCell report slot; common callback reads slot to publish actual success-checked CLIJSON and freshfixture borrows for assertions only after runtime returns. No lintallow, dummyread, overlapping borrow, fake receipt or production change.",
+                  "Supersedes earlier byte-identical-positive-body observation only for this explicit report-slot handoff; positive assertions and execution/governance flow unchanged. All16 consumer case bodies remain byte-identical;58named top-levelcase inventory unchanged; sourceinventory50c and requiredtargets/budgets unchanged."
+                ],
+                "proof_refs": [
+                  "18_observer_source_audit"
+                ],
+                "scope": [
+                  "Validation lifecycle plus necessary exact source-CI regression placement and additive existing-target Rust input metadata",
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 25,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:26",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/scaffold.rs",
+                  "src/decapod/onboarding.rs",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Actualacceptedmaster advanced externally after18push through23224a85 onboardingPR1636 andbc0a71971bce8ee036a24562b7fc4a9b771f2f40 releasePR1641 package0.139.1. Genuine merge actualsecondparentbc0a, no rebase/historyrewrite. Authenticcff Gov journal retains18authoredcommits plus allpriorcheckpoints; incoming140baselineobligations byte-equal, currentclaims/unknowns/questions/contradictions/assumptions empty. Whole-product onboarding specs preserved with own lifecycle appendix.",
+                  "Indexversusactualacceptedbc0a: lib.rs differsonly ignoredpolicycachepredicate deletion; scaffold/onboarding/initCLI/unitprompt exactacceptedbytes. No incoming workflow/helper/action/script/assets-tool/BUILD/MODULE orcompiledcarrier change. Freshproof placement/observer16APIcases unchanged from18commit.",
+                  "Measured105file candidateinventory31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40; versus18 onlyCargo.toml/Cargo.lock accepted0.139.0->0.139.1 versionbytes. Actualaccepted inventoryc9d2697f798bf2409fcfa1ea763efaf676e3bf4d6123b389ec106247a90ef8b0; onlycandidate delta additive .config/build Rustsrcswiring. Independent installed registrycontroller0.139.0 unchanged and reverified privately, no hostinstall/update/rollback or candidatecontroller use."
+                ],
+                "proof_refs": [
+                  "incoming_bc0a_obligation_audit",
+                  "incoming_onboarding_source_preservation",
+                  "19_source_inventory_metadata",
+                  "19_configured_execution"
+                ],
+                "scope": [
+                  "Validation lifecycle plus necessary exact source-CI regression placement and additive existing-target Rust input metadata",
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 26,
+                "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:27",
+                "observations": [
+                  "AGENTS.md",
+                  "CLAUDE.md",
+                  "CODEX.md",
+                  "GEMINI.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Actualc626 officialCI standalonevalidate failed release-bound0.139.0->0.139.1 drift. CLIplacement solved aggregate timeout: contracts281.6s/enforcement274.2s pass, entrypoint207.4s withonlyoldtemplate mismatch; freshdocs genuineproof75.2473s pass. These remain c626 diagnostics, never reboundto20.",
+                  "Authorized native sessionacquire installer used documented Cargo privateinstall/targetenv scopes for officialregistry0.139.1, no--path/wrapper/candidatesource. Exacttemporaryconfigoptin restored, globalCLI unchanged perprivateaudits; privateindependent0.139.1 provenance verified beforeuse. Nativeprerequisite-onlyhealing regenerated actual0.139.1 projections;205passed4failed, scopeproject_prerequisites/publication_readyfalse/readinessnull. Preserve hostcontainer/unrelateddoneTODO andoldHEADcurrency failures; no foreignstate repair.",
+                  "Postheal105file inventoryidentical31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40; no source/carrier/helper/requiredgraph/target/budget/selectorchange. Sameactororiginaltask lease renewed4h and workspace rebound beforecheckpoint; no activeoldvalidation/localinstallerprocess remains."
+                ],
+                "proof_refs": [
+                  "c626_actual_release_drift",
+                  "c626_actual_genuine_docs_proof",
+                  "c626_cli_contract_aggregate",
+                  "20_independent_registry_bootstrap",
+                  "20_post_heal_source_inventory_metadata",
+                  "20_prerequisite_preparation",
+                  "20_full_candidate_execution"
+                ],
+                "scope": [
+                  "Validation lifecycle plus necessary exact source-CI regression placement and additive existing-target Rust input metadata",
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 27,
                 "validation_findings": []
               }
             ]
@@ -945,58 +1913,142 @@
         }
       },
       "declared_commands": [
-        "git merge --no-commit --no-ff -X theirs origin/master with temporary current-PR governance preservation driver"
+        "git merge --no-commit origin/master (actual second parent19acd21f7ff50656323d037915273f03cdedc04e)",
+        "rustfmt --edition 2024 on changed Rust files"
       ],
-      "destination": "existing PR1636",
+      "destination": "pull request",
       "evidence": [
-        "Current presentation source passed all 34 init_prompt_tests plus 2 onboarding layout tests. The separate final config/Git/PTY and targeted Clippy run continues. Fresh candidate f2612990 archives the observed source-history gap and reauthored product changes; the original 402c588a source history remains unproven and preserved. No full-validation success is claimed.",
-        "Final focused verification passed: 34 setup unit tests, 2 layout tests, 5 real PTY tests, 5 Git bootstrap tests and 38 config tests, with 1 pre-existing ignored config test. The final PTY test was rerun after using a portable raw pointer for Linux/macOS; cargo clippy --lib --test init_cli -- -D warnings passed. Product/test bytes matched this fresh workstream and the test cache checkout. Manual visual inspection confirmed concise unknown context, optional purpose, review, cancellation and restored terminal state. Checkpoint history for f2612990 and 6e2ad2e6 is proven. Full validation still lacks admission: its most recent attempt returned public GitHub HTTP 403 rate limiting, with no alternate authentication or bypass. A final exact-candidate retry follows this evidence checkpoint.",
-        "Full29b5686d validation stopped before provider execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Independently compared every one of the105 discovered build/workflow/helper inputs with accepted19acd21: all byte-identical. Only Cargo.toml and Cargo.lock package versions differ from the accepted cloud mergec87e4f49, both0.138.3 to0.139.0. Backed up current config and renewed only reviewed_sources_digest from8f21b5eb to c8786efc. Required profile, CI-attested mapping, workflow/carrier, executor and checks are unchanged.",
-        "Native project-check refreshed release-bound entrypoints and managed Docker pin to0.139.0. Its host-only prerequisite report remains failed for required container custody, pending-merge ancestry/dirty material, a historical done-unverified root task and broad scanner findings before integration. No pass or publication readiness is inferred. All application execution remains pending the configured complete provider proof after checkpointing the real merge. Accepted cloud-client/session/CLI and Cargo/Bazel files compare identical to origin/master.",
-        "Real pending merge with accepted19acd21; original first-parent candidate58f95d34 and all3 checkpoints preserved. Current PR governance remained byte-identical through Git merge, then updated through the native CLI. New cloud cancellation PTY test is authored but not yet executed.",
-        "Recovery preserves immutable source 402c588af141811a98a40136b77f01ed171f75f0 and its checkpoint gap. Reauthored product files and only authored semantic spec sections in this fresh admitted workstream. Earlier focused evidence: 33 setup unit tests, 2 layout tests, 5 PTY tests and 5 Git tests passed; config suite had 37 pass, 1 fail, 1 pre-existing ignored test. Its failure exposed a changed unattended Git bootstrap order; the shared mutation helper now restores that contract while interactive setup still confirms first. Current regression rerun is pending. Product/test bytes are verified identical between this workstream and the existing cache checkout used for focused tests; same accepted base d3358e1c. Full readiness remains unproven; GitHub provider rate limit resets at epoch 1794463204. The source inventory review found only the accepted release version bump in Cargo.toml/Cargo.lock since c7609e42; refreshed the reviewed digest without changing providers or required checks."
+        "/private/tmp/validation-bootstrap-132-cli-task-binding-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-132-core-timing-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-3327-cli-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-3327-unit-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-5a83-native-git-diagnostic.json",
+        "/private/tmp/validation-bootstrap-8023-dirty-scaffold-diagnostic.json",
+        "/private/tmp/validation-bootstrap-8023-unit-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-custody-audit-v14.json",
+        "/private/tmp/validation-bootstrap-custody-renew-v14.json",
+        "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-gov-typo-recovery.diagnostic.json",
+        "/private/tmp/validation-bootstrap-source-inventory-19ac-audit.json and private exact config backup preserved; no builds/tests/manual preflight/controller changes/provider evidence or helper changes",
+        "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",
+        "Actual accepted master advanced d3358e1ce2cdb137dc57445c64592cb6d327a6ff ->19acd21f7ff50656323d037915273f03cdedc04e. fab7 push early CI merge-base-context failures precede execution. Genuine merge retains original fork metadata and14 committed checkpoint history; incoming baseline unresolved obligations unchanged and incoming claim:decapod-cloud-client carried natively with exact statement/falsifier/status and acceptedcommit proofref.",
+        "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
+        "Actual91cc GH pushCLI job131120183548 aggregate TIMEOUT300.0 after freshdocs genuineCLIadmission/complete-runtime proof passed65.018992583s and real_source_failure/repair passed. Timeout later in init_config_behavior, no positiveproof assertion failure. Current91 library1685passed0failed8ignored and Clippy passed are historical source diagnostics, not newcandidate/fullnativeproof.",
+        "Actualacceptedmaster advanced externally after18push through23224a85 onboardingPR1636 andbc0a71971bce8ee036a24562b7fc4a9b771f2f40 releasePR1641 package0.139.1. Genuine merge actualsecondparentbc0a, no rebase/historyrewrite. Authenticcff Gov journal retains18authoredcommits plus allpriorcheckpoints; incoming140baselineobligations byte-equal, currentclaims/unknowns/questions/contradictions/assumptions empty. Whole-product onboarding specs preserved with own lifecycle appendix.",
+        "Actualc626 officialCI standalonevalidate failed release-bound0.139.0->0.139.1 drift. CLIplacement solved aggregate timeout: contracts281.6s/enforcement274.2s pass, entrypoint207.4s withonlyoldtemplate mismatch; freshdocs genuineproof75.2473s pass. These remain c626 diagnostics, never reboundto20.",
+        "Actualfab7 PR job131088359791 explicitly passed fresh_docs_cli_admission_then_complete_runtime_proves_current_source and existing real_source_failure; aggregate target then timedout300.1s at final workunit recovery test. New source removes duplicate governed negative preparation/admission and strengthens existing real negative receipt/history/verdict assertions; no budget/test/selector change.",
+        "Apply Clippy equivalent is_none_or(count==0) to optional integer pass count. Missing and zero remain rejected; positive nonzero remains admitted only alongside all existing actualscope/failurecount/readiness/clean-source checks. rustfmt only, no manual build/tests, guards or required budgets changed.",
+        "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
+        "Authored tests not executed yet; full accepted-controller validation owns builds and all test execution",
+        "Authorized native sessionacquire installer used documented Cargo privateinstall/targetenv scopes for officialregistry0.139.1, no--path/wrapper/candidatesource. Exacttemporaryconfigoptin restored, globalCLI unchanged perprivateaudits; privateindependent0.139.1 provenance verified beforeuse. Nativeprerequisite-onlyhealing regenerated actual0.139.1 projections;205passed4failed, scopeproject_prerequisites/publication_readyfalse/readinessnull. Preserve hostcontainer/unrelateddoneTODO andoldHEADcurrency failures; no foreignstate repair.",
+        "Buildkite8037 required standalone-validation source build E0282: explicit String map key type required; raw actual provider log /private/tmp/validation-bootstrap-build8037.log",
+        "Canonical preparation receipts use epoch_ref compression: collector now reads supported expanded validation section then verifies integrity; positive compact receipt and forged-hash regression authored",
+        "Compared accepted current inventory with c7609e42 pin origin: only Cargo.toml/Cargo.lock Decapod version changed0.138.2 to0.138.3; all workflows/helpers/carrier/build definitions identical; explicitly reconcile reviewed digest5fd571a9",
+        "Fix evidence map type; terminal applicability now consumes verified suite changed paths and explicit workunit declaration applies across task routing categories; unknown filesystem projections remain blockers",
+        "Fixture repair uses supported canonical governance_document::migrate; ignores data runtime and exact managed governance-document.lock before Git accepted-source commit. Genuine CLI fixture removes only its initial adapter proof-only config before real init creates full schema, then retains actual command/source review. Production schemas, gates, actor and docs task kind unchanged.",
+        "Followup extraction review identified Rust1.96 write-only restricted-field lint reachability in API-only consumers. Finalsharedtestplumbing pairs configured genuineCLIstorage with an explicit RcRefCell report slot; common callback reads slot to publish actual success-checked CLIJSON and freshfixture borrows for assertions only after runtime returns. No lintallow, dummyread, overlapping borrow, fake receipt or production change.",
+        "Full v1 report /private/tmp/validation-bootstrap-full-v1.json: reviewed source inventory stale before execution",
+        "GH Clippy and actual required Buildkite8060 clippy measured E0308 at validation_rules.rs2182: resolve_capsule_policy requested_limit is usize, not Option; exact source log /private/tmp/validation-bootstrap-build8060-clippy.log",
+        "Indexversusactualacceptedbc0a: lib.rs differsonly ignoredpolicycachepredicate deletion; scaffold/onboarding/initCLI/unitprompt exactacceptedbytes. No incoming workflow/helper/action/script/assets-tool/BUILD/MODULE orcompiledcarrier change. Freshproof placement/observer16APIcases unchanged from18commit.",
+        "Measured105file candidateinventory31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40; versus18 onlyCargo.toml/Cargo.lock accepted0.139.0->0.139.1 versionbytes. Actualaccepted inventoryc9d2697f798bf2409fcfa1ea763efaf676e3bf4d6123b389ec106247a90ef8b0; onlycandidate delta additive .config/build Rustsrcswiring. Independent installed registrycontroller0.139.0 unchanged and reverified privately, no hostinstall/update/rollback or candidatecontroller use.",
+        "Move only single freshdocs test entrypoint to existing required entrypoint_correctness target. Extract helper-onlycommon support; all16 existing consumer case bodies and positivefixture body byte-identical,58combined top-level namedcases preserved, no testcases in support. Existing fixed3-target selectiveCLI command, serialthreads, target names/tags/budgets, selectors/workflows/helpers unchanged.",
+        "Official sourceCI GH job131114983611/run43198189246 on exact41e86d3f accepted19ac failed cargo clippy --all-targets --all-features -- -D warnings: nonminimal_bool at consumer_readiness.rs343. Corresponding Buildkite8399 Clippy push check131116039493 also reports failure; raw native provider proof not yet collected.",
+        "Own v5 local controller cancelled and fully reaped before source repair; report /private/tmp/validation-bootstrap-full-v5.json says CI operation cancelled, publication_ready=false. Actual failed compiler subcheck remains distinct from interrupted aggregate proof. No remote jobs cancelled.",
+        "Post-heal current filesystem inventory reread all105source files, same c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174 digest as actual accepted19ac. Four generated entrypoints and managed Dockerfile are outside source definition inventory; no helper/workflow/carrier change. Private raw diagnostic and provenance retained outside Git.",
+        "Postheal105file inventoryidentical31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40; no source/carrier/helper/requiredgraph/target/budget/selectorchange. Sameactororiginaltask lease renewed4h and workspace rebound beforecheckpoint; no activeoldvalidation/localinstallerprocess remains.",
+        "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
+        "Read-only acceptedexecutor audit confirms .config/build/decapod.BUILD.bzl additiveRustsrcs is ordinary material-bound candidatebuildmetadata, notcompiledcarrier. Same105file inventory has ONLY that definitiondelta, reviewed actualdigest50c5532ad4dca740a8216688204d2c0446459da2782a66de9377aacb30d360c8. Independentregistry0.139 andaccepted19ac unchanged. No directGovtestsetup, manualbuild/tests or lowerAPI coverage weakening.",
+        "Read-only exact105-file Git inventory matches production source roots and serialized BTreeMap digest. Cloud parentc87e inventory8f21 matches prior declaration. Actual accepted19ac release changes ONLY Cargo.toml and Cargo.lock package version0.138.3 to0.139.0; accepted release and candidate both hashc8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174; accepted-to-candidate inventory delta empty.",
+        "Read-only peer review confirmed incoming cloud source and trusted helper/workflow/config/MODULElock accepted bytes preserved; own lib delta is validation cache predicate only. Independent registry controller remains0.138.3; native environment notice reports no new migration, ignored applied/catalog inspected through sequence1100.",
+        "Review repairs: original budget checked around terminal reads, before proof and atomic receipt/ready-verdict publication; optional exemption exact kernel id+authority; regression evaluates actual current declared workunit rule with generated capsule, living spec, current journal and retained artifact; separate mandatory project obligation remains required.",
+        "Same actor task lease expired during proof/review; source edits preserved before AUTHORING_CUSTODY_STALE surfaced. Inspected sole unchanged ownership, supported same-task reclaim+4h renew+workspace rebind; lease_generation2. No v5 authored commit preceded recovery.",
+        "Same exact independent native controller v6 blocked by public GitHub403 with explicit reset1794459593; source change gets new checkpoint/branch push; next full native only after reset+grace.",
+        "Source review: workunit checkpoint ExecutionStateBinding positively binds current validation_epoch_digest; optional legacy manifest epochs need only reject explicit mismatches. Positive actual journal contract regression added; artifact mutation/deletion remain strict.",
+        "Source trace: prerequisite demands own receipt and unconditionally demands workunit outputs",
+        "Supersedes earlier byte-identical-positive-body observation only for this explicit report-slot handoff; positive assertions and execution/governance flow unchanged. All16 consumer case bodies remain byte-identical;58named top-levelcase inventory unchanged; sourceinventory50c and requiredtargets/budgets unchanged.",
+        "Supported govern project-check prerequisites-only native healing regenerated release0.139.0 entrypoint fingerprints and managed image/version pins. Report scope project_prerequisites,205passed4failed,publication_ready=false,readiness=null. No source/provider execution: host-container prerequisite and unrelated doneTODO bugs_01m73xpkqns9286n proof hook remain diagnostics, not waived; oldHEAD entrypoint/currency failures addressable by committing authentic generated projections.",
+        "Verified capsule_policy.rs207 signature; fixture corrected Some(1) to1, rustfmt/diff hygiene only; full source execution remains pending independent next proof",
+        "v4 own local controller cancelled and reaped after reviewed defects; final diagnostic SNAPSHOT_NOT_READY public read cancelled, last provider_terminal_wait579867ms, report /private/tmp/validation-bootstrap-full-v4.json. No remote/unrelated jobs cancelled; no pass/source-test failure claimed."
       ],
       "inspected_files": [
-        "src/decapod/cli.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/lib.rs"
-      ],
-      "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
-      "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/managed/specs/VALIDATION.md",
-        "docs/book/src/quickstart.md",
+        "Cargo.lock",
+        "Cargo.toml",
+        "src/decapod/core/capsule_policy.rs",
+        "src/decapod/core/init_reconciliation/mod.rs",
+        "src/decapod/core/readiness_profile.rs",
         "src/decapod/core/scaffold.rs",
+        "src/decapod/core/snapshot_provider/snapshot.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/validation_rules.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/repository_host.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/core/workunit.rs",
         "src/decapod/lib.rs",
         "src/decapod/onboarding.rs",
-        "tests/init_cli.rs",
-        "tests/unit/lib_init_prompt_tests.rs"
+        "tests/consumer_readiness.rs",
+        "tests/entrypoint_correctness.rs"
+      ],
+      "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+      "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
+        ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODEX.md",
+        "GEMINI.md",
+        "src/decapod/core/validate.rs",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/validation_rules.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/tests.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/core/workunit.rs",
+        "src/decapod/lib.rs",
+        "tests/cli_contracts.rs",
+        "tests/common/consumer_readiness_fixture.rs",
+        "tests/consumer_readiness.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/support/fresh_docs_readiness.rs",
+        "tests/unit/core/validate_tests.rs",
+        "tests/unit/core/workspace_tests.rs",
+        "tests/unit/core/workunit_journal_tests.rs",
+        "tests/unit/lib_validation_proof_tests.rs"
       ],
       "next_transitions": [
-        "Checkpoint and commit the exact real merge, then full decapod validate",
+        "Checkpoint actual accepted-target reconciliation and measured fixture-cost consolidation, then execute unchanged required CI and independent full native validation",
+        "Checkpoint actual acceptedbc0a reconciliation preserving18 prior commits and freshproof placement, then exact current configured CI/native validation",
+        "Checkpoint authenticreleased0.139.1 projections, execute exactnewhead requiredCI, then independentprivate registry0.139.1 fullnative validation",
+        "Checkpoint exact Clippy correction then wait current source CI and required provider execution before independent full native proof",
+        "Checkpoint reviewed actual accepted-release source inventory, then wait current-source CI before independent full native proof",
+        "Finish source review, final living-spec refresh/reviews and checkpoint18, then execute unchanged selected CI suite and independent full native proof",
         "Refine plan and declare falsifiable checks",
-        "Refresh managed projections, re-review current specs, checkpoint the merged candidate and run full exact-target validation"
+        "checkpoint"
       ],
       "repo_scope": [
-        "\".decapod/config.toml\"",
-        "\".decapod/managed/specs\"]",
-        "\"docs/book/src/quickstart.md\"",
-        "\"src/decapod/core/scaffold.rs\"",
-        "\"src/decapod/onboarding.rs\"",
-        "\"tests/init_cli.rs\"",
-        "\"tests/unit/lib_init_prompt_tests.rs\"",
-        "Terminal initialization, PTY regression coverage, quickstart and authored setup specs",
-        "paths:[\"src/decapod/lib.rs\""
+        "Validation lifecycle plus necessary exact source-CI regression placement and additive existing-target Rust input metadata",
+        "doctrine",
+        "specs",
+        "src/core/validate.rs",
+        "src/core/validation_rules.rs",
+        "tests"
       ],
-      "run_id": "branch_01M7742CC2WSBGWSRWRSWJEBMW",
+      "run_id": "branch_01M76X3HBY5Z48MNEKR4XDQVMW",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7740n3ywajp3a",
+      "task_id": "bugs_01m76x2q90tv682e",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Terminal runtime owns freshly verified suite; persisted receipt cannot authorize new proof"
+      ]
     }
   },
   "legacy_digests": {

@@ -2142,15 +2142,74 @@ fn history_checks_use_controller_git_instead_of_path() {
     );
 }
 
+fn completion_budget(cancel: &Cancellation) -> RuntimeBudget<'_> {
+    RuntimeBudget {
+        deadline: Instant::now() + Duration::from_secs(60),
+        cancel,
+        max_output_bytes: 1024 * 1024,
+        bytes_left: 1024 * 1024,
+    }
+}
+
+#[test]
+fn terminal_evaluation_cannot_renew_the_original_publication_deadline() {
+    let cancel = Cancellation::default();
+    let mut budget = completion_budget(&cancel);
+    budget.deadline = Instant::now() + Duration::from_millis(5);
+    let result = within_terminal_budget(&budget, || {
+        std::thread::sleep(Duration::from_millis(15));
+        Ok(())
+    });
+    assert_eq!(result.unwrap_err().kind(), io::ErrorKind::TimedOut);
+    let directory = tempfile::tempdir().unwrap();
+    assert!(
+        write_native_completion(
+            directory.path(),
+            br#"{"ready":true}"#,
+            br#"{"status":"ok"}"#,
+            &budget,
+            write_new
+        )
+        .is_err()
+    );
+    assert!(write_ready_verdict(directory.path(), br#"{"ready":true}"#, &budget).is_err());
+    assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+}
+
+#[test]
+fn deadline_expiry_during_receipt_staging_never_exposes_ready_artifacts() {
+    let cancel = Cancellation::default();
+    let mut budget = completion_budget(&cancel);
+    budget.deadline = Instant::now() + Duration::from_millis(10);
+    let directory = tempfile::tempdir().unwrap();
+    let result = write_native_completion(
+        directory.path(),
+        br#"{"ready":true}"#,
+        br#"{"status":"ok"}"#,
+        &budget,
+        |path, bytes| {
+            write_new(path, bytes)?;
+            std::thread::sleep(Duration::from_millis(20));
+            Ok(())
+        },
+    );
+    assert_eq!(result.unwrap_err().kind(), io::ErrorKind::TimedOut);
+    assert!(!directory.path().join("completion").exists());
+    assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+}
+
 #[test]
 fn native_completion_write_failures_never_publish_success_artifacts() {
     for failed_file in ["native-readiness-receipt.json", "verdict.json"] {
         for stage in ["create", "write", "sync"] {
             let directory = tempfile::tempdir().unwrap();
+            let cancel = Cancellation::default();
+            let budget = completion_budget(&cancel);
             let result = write_native_completion(
                 directory.path(),
                 br#"{"ready":true}"#,
                 br#"{"status":"ok"}"#,
+                &budget,
                 |path, bytes| {
                     if path.file_name().unwrap() != failed_file {
                         return write_new(path, bytes);
@@ -2204,7 +2263,9 @@ fn native_completion_publishes_both_files_together_and_preserves_existing_bundle
     let directory = tempfile::tempdir().unwrap();
     let verdict = br#"{"ready":true}"#;
     let receipt = br#"{"status":"ok"}"#;
-    write_native_completion(directory.path(), verdict, receipt, write_new).unwrap();
+    let cancel = Cancellation::default();
+    let budget = completion_budget(&cancel);
+    write_native_completion(directory.path(), verdict, receipt, &budget, write_new).unwrap();
     let completed = directory.path().join("completion");
     assert_eq!(fs::read(completed.join("verdict.json")).unwrap(), verdict);
     assert_eq!(
@@ -2213,7 +2274,14 @@ fn native_completion_publishes_both_files_together_and_preserves_existing_bundle
     );
     let replacement = b"replacement";
     assert!(
-        write_native_completion(directory.path(), replacement, replacement, write_new).is_err()
+        write_native_completion(
+            directory.path(),
+            replacement,
+            replacement,
+            &budget,
+            write_new
+        )
+        .is_err()
     );
     assert_eq!(fs::read(completed.join("verdict.json")).unwrap(), verdict);
     assert_eq!(
