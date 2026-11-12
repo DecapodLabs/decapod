@@ -446,9 +446,19 @@ impl DactylBridge {
     }
 
     pub fn atomic(&self, operations: &[Operation]) -> Result<AtomicResult, DecapodError> {
-        self.connection
-            .atomic(operations)
-            .map_err(|error| self.observe_error(error))
+        Ok(self.connection.atomic(operations)?)
+    }
+
+    /// Observe only the completed operation's result. Keep the atomic SQL
+    /// forwarding wrapper directly provable by the existing provenance gate.
+    pub(crate) fn observe_result<T>(
+        &self,
+        result: Result<T, DecapodError>,
+    ) -> Result<T, DecapodError> {
+        result.map_err(|error| match error {
+            DecapodError::DactylError(error) => self.observe_error(error),
+            other => other,
+        })
     }
 
     fn with_session_context(mut self, context: &StorageContext) -> Self {

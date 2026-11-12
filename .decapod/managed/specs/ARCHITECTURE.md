@@ -13,6 +13,9 @@ pending PKCE/poll state and interruption markers across foreground processes;
 no background refresher is needed. Server finalization precedes publishing the
 usable session. `DactylBridge` carries its current bearer independently from
 serialized repository context and routes cloud tasks through native RPC.
+The narrow `DactylBridge::atomic` wrapper retains direct terminal forwarding so
+the existing SQL-consumption proof remains valid. The todo adapter observes its
+completed result for authentication recovery; it never inspects or replays SQL.
 
 ## Agent-invoked authority across local and cloud repositories
 
@@ -834,7 +837,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `de325f61e98257156c89b7dfeee3ab21227e8efb8fdec6e1e761e4be860d1b6a`
+- Repository signal fingerprint: `536cd2169fdc4cba065fef2d8a3c35495b8b843be3051d695aba03466d236b07`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -62,7 +62,7 @@ impl DactylTodoStore {
         event_parameters: Vec<Parameter>,
         task_id: Parameter,
     ) -> Result<AtomicResult> {
-        Ok(DactylBridge::atomic(
+        Ok(bridge.observe_result(DactylBridge::atomic(
             bridge,
             &[
                 mutation,
@@ -90,7 +90,7 @@ impl DactylTodoStore {
                 ),
                 Operation::read(Self::get_sql(), ::std::vec::Vec::from([task_id])),
             ],
-        )?)
+        ))?)
     }
 
     /// Only the immutable creation event proves that this exact request won.
