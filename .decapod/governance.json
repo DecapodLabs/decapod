@@ -624,6 +624,14 @@
       "proof_refs": [
         "https://buildkite.com/decapodlabs/decapod/builds/8602"
       ]
+    },
+    {
+      "id": "pr1649-conflict-repair-20261112",
+      "summary": "Preserve original validated reflection history and fixes, merge currentmasterd31112a1, repair nativegovernance/specs/releaseprojections. Push-only update at explicituserrequest; tests/fullvalidation notrun.",
+      "input_digest": "sha256:015cef94229fa6ccef152632ed12e6469eb8d5d675811a5ca4c4ff8065dcc9b9",
+      "proof_refs": [
+        "pr1649-preserved-history-and-merge-review"
+      ]
     }
   ],
   "intents": {
@@ -670,23 +678,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Composes existing mentor, orientation, governed-plan custody and federation projections. Accepted storage inventory and Dactyl 0.13.0 remain intact; no reflection datastore or inference engine.",
-          "reviewed_code_fingerprint": "06f9a0e7d79176c13c56c97b1e275bb801b0eadcc781a5c9e3586199f990130f",
-          "spec_material_hash": "38946fea0536bdb5e18529d8d3d0124b5165e74fc33327044f1603d7994f2418"
+          "reason": "Preserved validated reflection implementation and all authored source/authority descriptions while merging accepted SDK14/onboarding/release1403. User directs push without tests; no new proof or completion claim.",
+          "reviewed_code_fingerprint": "ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078",
+          "spec_material_hash": "f7fe654cf50d54efb952f9a648fc2f490c6539b9176dde3c05feedc93a80ac42"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Optional reflection contract preserves legacy envelopes, explicit matching CLI task binding, CAS continuation and terminal outcomes. Required CLI fixture handles the existing omitted empty blocked_by field.",
-          "reviewed_code_fingerprint": "06f9a0e7d79176c13c56c97b1e275bb801b0eadcc781a5c9e3586199f990130f",
-          "spec_material_hash": "cd4e1e46e408a498db14deec755dcec6f6a6e28a43c11a99d0e8c76a2eaffd70"
+          "reason": "Preserved validated reflection implementation and all authored source/authority descriptions while merging accepted SDK14/onboarding/release1403. User directs push without tests; no new proof or completion claim.",
+          "reviewed_code_fingerprint": "ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078",
+          "spec_material_hash": "5c82da80912928b3ff94be3ddfebd1d97d7fbfb10e495821d4c1a034794878eb"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserves accepted source-bound trust, exclusive task custody, human decisions, approval and proof. Re-capture invalidates changed governing sources; bounded hashes are not semantic understanding or completion proof.",
-          "reviewed_code_fingerprint": "06f9a0e7d79176c13c56c97b1e275bb801b0eadcc781a5c9e3586199f990130f",
-          "spec_material_hash": "b8095677dc08420d4a01a49b17f3fa7d14064a8b465f2f596046b22c8aafc311"
+          "reason": "Preserved validated reflection implementation and all authored source/authority descriptions while merging accepted SDK14/onboarding/release1403. User directs push without tests; no new proof or completion claim.",
+          "reviewed_code_fingerprint": "ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078",
+          "spec_material_hash": "d19fb5ab8a937310fab585de295899572101fbd2e2b6bf9ba7d44daa35066221"
         }
       ],
       "state": "APPROVED",
@@ -699,13 +707,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794493888Z"
+      "updated_at": "1794506689Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2f41c9a4a6a90de60e616bad4ed48ad6dc690f5b5a4385518717939e4b10c905",
+      "artifact_hash": "sha256:9e05ef9a3faaf047449991be8ef5744eb54ade67e1b88d5b5b3bd5dc59d92107",
       "checks": [
         {
           "name": "buildkite-clippy",
@@ -730,6 +738,10 @@
         {
           "name": "core-suite-dc7bf2fa",
           "status": "passed"
+        },
+        {
+          "name": "current-tests",
+          "status": "unavailable"
         },
         {
           "name": "format-and-whitespace",
@@ -804,7 +816,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "push-only-conflict-repair",
       "custody": {
         "events": [
           {
@@ -916,10 +928,17 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 17
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:18",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 18
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 17,
+        "next_sequence": 18,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -1319,6 +1338,29 @@
                   "Supported session update installed 0.140.1, private backups preserved, temporary session_auto_update preference removed. Project-check refreshed release projections but remained partial with 201 passed and five host/staging/unrelated-task failures; it is not full proof.",
                   "Merge accepted 1d04f232c46864eecfadb9c8b9b23069ca0e906e including storage inventory, Dactyl 0.13.0 and release 0.140.1. No unrelated task or scanner policy changed."
                 ]
+              },
+              {
+                "action": "push-only-conflict-repair",
+                "custody_event_id": "event:18",
+                "observations": [
+                  "User explicitly requests fix and push PR1649 without tests. No tests/build/fullvalidation executed in this repair. Prior native proof at5fb5dec5 remains historical only.",
+                  "Interrupted local rebase8eeb8915 inheritedPR1648governance and dropped validatedreflection progress,terminalreplay,human-question fixes. Preserved it onarchive/pr1649-interrupted-rebase-20261112-8eeb8915 and saved originalspecedits inGitstash (privatepreservationmetadata). RestoredactualPRhead5fb5dec5withoutreset/force, originalnativegovernancestatussucceeds; reclaimedoriginalfeat01m77nmmjwd12v30, workspacecan_worktrue,orientation/authority/context current.",
+                  "Mergedcurrentmasterd31112a1 preservingoriginalPRsource exactly (git diff5fb5--src empty), originaljournal and all authoredreflection prefixes plusacceptedSDK14/onboarding specs. Resolveddiff3markers; native1403agent.init/specs.refresh succeeds. Reusedexactnative1403generatedtask-neutral entrypoints/Dockerfile fromaf23 Git snapshot, onlyreleaseheaderchangesvsacceptedmaster; noquota implementation imported. Reviewed105proofinputhashes; onlyexistinginfer_precision source declarationdiffersfrommaster; digestd8781827659ed6d9c4702265a3d159509daf789e067ac13e961434a36d5b6d37 explicitlydeclaredwithbackup."
+                ],
+                "proof_refs": [
+                  "current-tests"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 18,
+                "validation_findings": []
               }
             ]
           }
@@ -1335,6 +1377,9 @@
       "evidence": [
         ".decapod/managed/specs/VALIDATION.md",
         "/private/var/folders/h9/41kb5hv95hg9yw44654rnl9c0000gn/T/decapod-snapshot-2P6hYI",
+        "Interrupted local rebase8eeb8915 inheritedPR1648governance and dropped validatedreflection progress,terminalreplay,human-question fixes. Preserved it onarchive/pr1649-interrupted-rebase-20261112-8eeb8915 and saved originalspecedits inGitstash (privatepreservationmetadata). RestoredactualPRhead5fb5dec5withoutreset/force, originalnativegovernancestatussucceeds; reclaimedoriginalfeat01m77nmmjwd12v30, workspacecan_worktrue,orientation/authority/context current.",
+        "Mergedcurrentmasterd31112a1 preservingoriginalPRsource exactly (git diff5fb5--src empty), originaljournal and all authoredreflection prefixes plusacceptedSDK14/onboarding specs. Resolveddiff3markers; native1403agent.init/specs.refresh succeeds. Reusedexactnative1403generatedtask-neutral entrypoints/Dockerfile fromaf23 Git snapshot, onlyreleaseheaderchangesvsacceptedmaster; noquota implementation imported. Reviewed105proofinputhashes; onlyexistinginfer_precision source declarationdiffersfrommaster; digestd8781827659ed6d9c4702265a3d159509daf789e067ac13e961434a36d5b6d37 explicitlydeclaredwithbackup.",
+        "User explicitly requests fix and push PR1649 without tests. No tests/build/fullvalidation executed in this repair. Prior native proof at5fb5dec5 remains historical only.",
         "docs/architecture/bounded-reflection.md",
         "https://buildkite.com/decapodlabs/decapod/builds/8515#01a1cf92-cad8-45ac-a70d-7d463e25d016",
         "https://buildkite.com/decapodlabs/decapod/builds/8517",
@@ -1384,6 +1429,7 @@
         "Commit fixture repair and run plain validation after provider reset; retain release gate until approved supported update.",
         "Commit the merged implementation candidate and run plain decapod validate against accepted f1a6c7a0; keep all previous failed attempts historical.",
         "Commit the optional-envelope fixture repair and measured evidence, then rerun plain exact-candidate decapod validate against accepted fc1e2b94.",
+        "Recordmergecheckpoint, commit and normalfastforwardpush originalPRbranch; updatePRdescription currenttestsnotrun. No nativepublisher/fullvalidation/testing requested.",
         "Refine plan and declare falsifiable checks",
         "Revalidate the new exact candidate after prior validation ends; release update still requires pending explicit approval.",
         "Run full exact-candidate validation after repaired inventory declaration",

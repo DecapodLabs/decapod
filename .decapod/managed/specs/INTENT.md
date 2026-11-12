@@ -11,6 +11,14 @@ semantic correctness, executed proof or completion. The kernel remains local,
 daemonless and deterministic, with no model or new memory service.
 See `core/mentor/reflection.rs` and `docs/architecture/bounded-reflection.md`.
 
+## Published SDK adoption (#1638)
+
+The client pins the normally published registry `dactyl-db =0.14.0` release
+without changing local/cloud composition, session custody, role authority or
+transport selection. Its patched `quinn-proto >=0.11.19` requirement must hold
+for every resolved lock entry, including inactive dependencies. This adoption
+does not enable HTTP/3 or establish hosted service acceptance.
+
 ## Governed cloud client and private custody (#1628)
 
 Decapod's local-first governance kernel remains the system interface for agent
@@ -318,8 +326,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `06f9a0e7d79176c13c56c97b1e275bb801b0eadcc781a5c9e3586199f990130f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (233 files)
+- Repository signal fingerprint: `ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

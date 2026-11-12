@@ -23,6 +23,17 @@ captured bytes, followed by current-source revalidation before the atomic write.
 Case-folded proposed paths and challenge identities prevent spelling-only
 aliases from being counted as progress on case-insensitive workspaces.
 
+## Registry dependency closure (#1638)
+
+`Cargo.toml` pins Dactyl 0.14.0 while retaining `sqlite` and `neon`, and the
+existing default `supabase-cloud` feature still forwards `dactyl-db/supabase`.
+Cargo resolves the registry checksum and patched Quinn protocol floor; pinned
+Bazel regenerates its crate-universe metadata from those same committed Cargo
+inputs. Nix consumes `Cargo.lock` directly and needs no Git output hash or
+separate package pin. The SDK requires Rust 1.85, below the existing Decapod
+1.96.1 toolchain. HTTP/3 stays disabled. No cloud/session/authorization code
+is changed by this dependency alignment.
+
 ## Managed cloud connector and crash-safe custody (#1628)
 
 `core::cloud_client::connect` composes the public Dactyl `CloudConnector` with
@@ -875,8 +886,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `06f9a0e7d79176c13c56c97b1e275bb801b0eadcc781a5c9e3586199f990130f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (233 files)
+- Repository signal fingerprint: `ef0b809779d89f44a5898a162dc5f2c358e9bd025aa03cb27e7b0b01c56c2078`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (232 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1106,7 +1117,10 @@ their existing owners. The terminal does not implement billing, duplicate accoun
 policy, or grant authority from local settings. Errors leave setup non-successful;
 the ready receipt follows successful service-confirmed access only. Real PTY
 coverage verifies that reviewing/canceling cloud setup does not contact even the
-loopback fixture service before consent.
+loopback fixture service before consent. The six Unix PTY cases live in the
+private `terminal_onboarding` module of `tests/cli_contracts.rs`, which the
+finite source-CI CLI selector schedules. Declaring a standalone integration
+target alone does not establish required execution.
 
 ## Validation proof lifecycle
 
