@@ -388,9 +388,9 @@ dependencies = [
 
 [[package]]
 name = "dactyl-db"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9d8eda3a7bad7490d23dbca5c468bf89b28de4c8b4fd566034b342334ba481e"
+checksum = "ba334815ca49f203b6a933d559b84b5aca5559686237be9791f48d71b3cb6292"
 dependencies = [
  "base64",
  "getrandom 0.2.17",

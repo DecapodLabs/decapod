@@ -2380,6 +2380,36 @@ pub fn run() -> Result<(), error::DecapodError> {
         command => command,
     };
 
+    // Inspection must bypass startup migrations, session/presence writes and
+    // worktree maintenance. Decode stdin RPC before that path as well, so HTTP
+    // RPC (which uses the stdin carrier) has the same read-only guarantee.
+    let command = match command {
+        Command::Data(DataCli {
+            command:
+                DataCommand::Database(DatabaseCli {
+                    command:
+                        DatabaseCommand::Inspect {
+                            scope,
+                            format,
+                            options,
+                        },
+                }),
+        }) => {
+            let root = find_decapod_project_root(&std::env::current_dir()?)?;
+            return run_storage_inventory(&root, &scope, &format, &options);
+        }
+        command => command,
+    };
+    let predecoded_rpc_request = match &command {
+        Command::Rpc(cli) if !cli.http_server => Some(parse_rpc_request(cli)?),
+        _ => None,
+    };
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && request.op == "data.database.inspect"
+    {
+        let root = find_decapod_project_root(&std::env::current_dir()?)?;
+        return run_storage_inventory_rpc(&root, request);
+    }
     let cli = Cli { command };
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let current_dir = std::env::current_dir()?;
@@ -2907,7 +2937,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     run_workspace_command(workspace_cli, &workspace_root)?;
                 }
                 Command::Rpc(rpc_cli) => {
-                    run_rpc_command(rpc_cli, &workspace_root)?;
+                    run_rpc_command(rpc_cli, &workspace_root, predecoded_rpc_request)?;
                 }
                 Command::Capabilities(cap_cli) => {
                     run_capabilities_command(cap_cli)?;
@@ -9082,6 +9112,9 @@ fn run_data_command(
             }
         },
         DataCommand::Database(database_cli) => match database_cli.command {
+            DatabaseCommand::Inspect { .. } => {
+                unreachable!("read-only inventory dispatched before startup")
+            }
             DatabaseCommand::Verify => verify_database_integrity(store_root)?,
             DatabaseCommand::Backup { destination } => {
                 backup_database_with_dactyl(store_root, &destination)?
@@ -9104,6 +9137,136 @@ fn run_data_command(
         }
     }
 
+    Ok(())
+}
+
+fn inventory_data_root(project_root: &Path) -> PathBuf {
+    find_governance_root(project_root).join(".decapod/data")
+}
+
+fn run_storage_inventory(
+    project_root: &Path,
+    scope: &str,
+    format: &str,
+    options: &core::storage_inventory::InventoryOptions,
+) -> Result<(), error::DecapodError> {
+    let report =
+        core::storage_inventory::inspect(&inventory_data_root(project_root), scope, options)?;
+    if format == "text" {
+        let bytes = report
+            .pointer("/files_before/main/apparent_bytes")
+            .and_then(serde_json::Value::as_u64)
+            .map(|bytes| bytes.to_string())
+            .unwrap_or_else(|| "unavailable".into());
+        let tables = report["tables"].as_array().map_or(0, Vec::len);
+        println!(
+            "{scope}: {bytes} main-file bytes; {tables} table reports; coverage={}",
+            report["coverage"].as_str().unwrap_or("unavailable")
+        );
+        if let Some(limitation) = report["limitation"].as_str() {
+            println!("Limitation: {limitation}");
+        }
+    } else {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&report)
+                .map_err(|_| error::DecapodError::ValidationError("INVENTORY_ENCODING".into()))?
+        );
+    }
+    if report["status"] != "ok" {
+        return Err(error::DecapodError::ValidationError(
+            "INVENTORY_INCOMPLETE: inspect the typed limitation; no maintenance was performed"
+                .into(),
+        ));
+    }
+    Ok(())
+}
+
+fn run_storage_inventory_rpc(
+    project_root: &Path,
+    request: &core::rpc::RpcRequest,
+) -> Result<(), error::DecapodError> {
+    let report = (|| {
+        let params: core::rpc::StorageInventoryParams = if request.params.is_null() {
+            core::rpc::StorageInventoryParams::default()
+        } else {
+            serde_json::from_value(request.params.clone()).map_err(|_| {
+                error::DecapodError::ValidationError(
+                    "INVENTORY_PARAMETERS: expected scope and optional options".into(),
+                )
+            })?
+        };
+        core::storage_inventory::inspect(
+            &inventory_data_root(project_root),
+            &params.scope,
+            &params.options,
+        )
+    })();
+    let report = match report {
+        Ok(report) => report,
+        Err(error) => {
+            let code = match &error {
+                error::DecapodError::ValidationError(message) => message
+                    .split(':')
+                    .next()
+                    .filter(|code| {
+                        [
+                            "INVENTORY_PARAMETERS",
+                            "INVENTORY_BUDGET",
+                            "INVENTORY_SCOPE",
+                        ]
+                        .contains(code)
+                    })
+                    .unwrap_or("INVENTORY_UNAVAILABLE"),
+                _ => "INVENTORY_UNAVAILABLE",
+            };
+            let response = core::rpc::error_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                code.into(),
+                "Inventory options or scope are invalid".into(),
+                None,
+                vec![],
+            );
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&response).map_err(|_| {
+                    error::DecapodError::ValidationError("INVENTORY_ENCODING".into())
+                })?
+            );
+            return Err(error);
+        }
+    };
+    let complete = report["status"] == "ok";
+    let mut response = core::rpc::success_response(
+        request.id.clone(),
+        request.op.clone(),
+        request.params.clone(),
+        Some(report),
+        vec![],
+        None,
+        vec![],
+        vec![],
+    );
+    if !complete {
+        response.success = false;
+        response.error = Some(core::rpc::RpcError {
+            code: "INVENTORY_INCOMPLETE".into(),
+            message: "Inspect the typed limitation; no maintenance was performed".into(),
+            details: None,
+        });
+    }
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&response)
+            .map_err(|_| error::DecapodError::ValidationError("INVENTORY_ENCODING".into()))?
+    );
+    if !complete {
+        return Err(error::DecapodError::ValidationError(
+            "INVENTORY_INCOMPLETE".into(),
+        ));
+    }
     Ok(())
 }
 
@@ -11976,7 +12139,66 @@ fn unsuccessful_validate_rpc_is_nonzero_without_changing_other_rpc_exit_semantic
     }
 }
 
-fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::DecapodError> {
+fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::DecapodError> {
+    use crate::core::rpc::*;
+    // Bound framing before allocating the JSON value, including the early
+    // read-only inspection route. This leaves room for the 8 MiB event envelope.
+    const MAX_REQUEST_BYTES: usize = 32 * 1024 * 1024;
+    let budget_error = || {
+        error::DecapodError::ValidationError("RPC_REQUEST_BUDGET: request exceeds 32 MiB".into())
+    };
+    if cli.stdin {
+        let mut buffer = String::new();
+        std::io::stdin()
+            .take(MAX_REQUEST_BYTES as u64 + 1)
+            .read_to_string(&mut buffer)
+            .map_err(error::DecapodError::IoError)?;
+        if buffer.len() > MAX_REQUEST_BYTES {
+            return Err(budget_error());
+        }
+        serde_json::from_str(&buffer)
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {e}")))
+    } else {
+        if cli
+            .params
+            .as_ref()
+            .is_some_and(|params| params.len() > MAX_REQUEST_BYTES)
+        {
+            return Err(budget_error());
+        }
+        let op = cli
+            .op
+            .clone()
+            .ok_or_else(|| error::DecapodError::ValidationError("Operation required".into()))?;
+        let params = if op == "data.database.inspect" {
+            cli.params
+                .as_ref()
+                .map(|params| serde_json::from_str(params))
+                .transpose()
+                .map_err(|_| {
+                    error::DecapodError::ValidationError("Invalid inventory parameters".into())
+                })?
+                .unwrap_or(serde_json::json!({}))
+        } else {
+            cli.params
+                .as_ref()
+                .and_then(|p| serde_json::from_str(p).ok())
+                .unwrap_or(serde_json::json!({}))
+        };
+        Ok(RpcRequest {
+            op,
+            params,
+            id: default_request_id(),
+            session: None,
+        })
+    }
+}
+
+fn run_rpc_command(
+    cli: RpcCli,
+    project_root: &Path,
+    predecoded: Option<core::rpc::RpcRequest>,
+) -> Result<(), error::DecapodError> {
     use crate::core::rpc::*;
 
     if cli.http_server {
@@ -12000,29 +12222,9 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         .map_err(error::DecapodError::IoError);
     }
 
-    let request: RpcRequest = if cli.stdin {
-        let mut buffer = String::new();
-        std::io::stdin()
-            .read_to_string(&mut buffer)
-            .map_err(error::DecapodError::IoError)?;
-        serde_json::from_str(&buffer)
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {e}")))?
-    } else {
-        let op = cli.op.ok_or_else(|| {
-            error::DecapodError::ValidationError("Operation required".to_string())
-        })?;
-        let params = cli
-            .params
-            .as_ref()
-            .and_then(|p| serde_json::from_str(p).ok())
-            .unwrap_or(serde_json::json!({}));
-
-        RpcRequest {
-            op,
-            params,
-            id: default_request_id(),
-            session: None,
-        }
+    let request = match predecoded {
+        Some(request) => request,
+        None => parse_rpc_request(&cli)?,
     };
 
     enforce_worktree_requirement_for_rpc(&request.op, project_root)?;

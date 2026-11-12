@@ -585,10 +585,20 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b2207ae732c88361ef75864be60e3e356f3ca1ad7b9de9caf71c2ff459ebcf3c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (227 files)
+- Repository signal fingerprint: `4d2d903bea24444c43ecd6f23d8c0852ac5ad9d2deacf7ef5c1c22cc2741afdb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (228 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Inventory privacy and authority
+
+Native inspection uses caller OS authority, the existing lifecycle lock and a
+Dactyl read-only snapshot. It bypasses initialization and does not replay
+migrations or grant hosted access/paid capacity. Raw values, task IDs, principals
+and content fingerprints stay private. Event classes are fixed public labels.
+Unknown formats, skipped JSON, unsupported virtual tables and exhausted budgets
+remain explicit. Header recognition does not verify compressed bodies, proof
+chains or safe deletion. Accepted managed-cloud authority remains server-owned.
 
 ## Quinn transitive dependency remediation
 
