@@ -931,7 +931,8 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
         config["proof"] = toml::Value::try_from(&fixture.proof).unwrap();
         config["repo"]["base_branch"] = "main".into();
         fs::write(root.join(CONFIG), toml::to_string_pretty(&config).unwrap()).unwrap();
-        governed_ok(&root, &storage, &["rpc", "--op", "specs.refresh"]);
+        // Init seeds the accepted baseline. Authoring refresh belongs in the
+        // managed task worktree below, after its real claim and orientation.
         git(&root, &["add", "-A"]);
         git(
             &root,

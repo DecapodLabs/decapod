@@ -615,6 +615,15 @@
         "/private/tmp/validation-bootstrap-bf98-cli-diagnostic.log",
         "Read-only review of canonical migrate, runtime lock exclusion, and real init config construction"
       ]
+    },
+    {
+      "id": "validation-bootstrap-fixture-workspace-refresh-v9",
+      "summary": "Keep real docs authoring refresh inside claimed managed worktree after measured fd6 CLI failure",
+      "input_digest": "sha256:d542ac210841336b7221b699ebaaa0af453ea240fb9c8f08783a40914b49f7bc",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt"
+      ]
     }
   ],
   "intents": {
@@ -660,22 +669,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current source: only fixture construction repaired through production canonical writer and real init; runtime proof admission/terminal architecture unchanged and accurately described",
-          "reviewed_code_fingerprint": "436b4382ba25a1883aee67f9a36ce6b90da46badbb10e75e6e1d937b1609f0f9",
+          "reason": "CLI fixture ordering now respects the existing managed workspace authoring boundary; terminal validation architecture is unchanged.",
+          "reviewed_code_fingerprint": "b3e3bae602e5531cd58cac54c5537994e5874bf4ca2866898c37bc8023b2375f",
           "spec_material_hash": "8ebd18b07ea40a599cc2262ee5fc4e1d8c2d651ae76317ffc7bf1db2a76560e7"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed strict governance/config schema interfaces preserved; fixtures now supply canonical producer output rather than weakening validation or altering task kind",
-          "reviewed_code_fingerprint": "436b4382ba25a1883aee67f9a36ce6b90da46badbb10e75e6e1d937b1609f0f9",
+          "reason": "Only consumer test ordering changes: supported specs.refresh stays after workspace ensure; public production interfaces remain unchanged.",
+          "reviewed_code_fingerprint": "b3e3bae602e5531cd58cac54c5537994e5874bf4ca2866898c37bc8023b2375f",
           "spec_material_hash": "5a41bc114c254c047cac2c1ab73dd694185e856d11bc66f1a00a15fdaae79bec"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fixture-only canonical construction preserves all strict production source/governing/epoch/receipt checks; runtime lock and state excluded from fixture Git; no trusted helper, carrier, workflow or auth changes",
-          "reviewed_code_fingerprint": "436b4382ba25a1883aee67f9a36ce6b90da46badbb10e75e6e1d937b1609f0f9",
+          "reason": "Fixture uses the existing mandatory managed authoring boundary; no credentials, runtime state, proof gates, or security policy changed.",
+          "reviewed_code_fingerprint": "b3e3bae602e5531cd58cac54c5537994e5874bf4ca2866898c37bc8023b2375f",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -689,13 +698,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794459864Z"
+      "updated_at": "1794461500Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Preserve current controller0.138.3 and actual native quota blocker; source diagnostics do not authorize readiness"
       ],
-      "artifact_hash": "sha256:6a2eacc503ecc8a53554480aeab5ffd96039093af92e5813af3dd7ddb7ff98c4",
+      "artifact_hash": "sha256:10a7e23d0a33f483f940598ea93c2ba774c58a35c8caec4ba90a239cdf01a39f",
       "checks": [
         {
           "name": "accepted_release_inventory_review",
@@ -704,6 +714,22 @@
         {
           "name": "authored_source_review",
           "status": "passed"
+        },
+        {
+          "name": "exact_fd6_cli",
+          "status": "failed"
+        },
+        {
+          "name": "exact_fd6_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "exact_fd6_library",
+          "status": "passed"
+        },
+        {
+          "name": "exact_fd6_native",
+          "status": "unavailable"
         },
         {
           "name": "full_docs_cli_regression_execution",
@@ -754,7 +780,8 @@
           "status": "failed"
         }
       ],
-      "current_phase": "fixture-repair",
+      "completion_claim": "Actual fd6 CLI executed68pass1fail1ignored; original consumer fixtures pass. Genuine docs fixture incorrectly invoked authoring specs.refresh from main before workspace ensure. Remove only premature refresh; existing real managed-worktree refresh remains after claim/orientation/approval.",
+      "current_phase": "repair",
       "custody": {
         "events": [
           {
@@ -838,10 +865,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1075,6 +1109,31 @@
                 ],
                 "sequence": 13,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  "tests/consumer_readiness.rs",
+                  "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
+                  "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt"
+                ],
+                "proof_refs": [
+                  "exact_fd6_clippy",
+                  "exact_fd6_library",
+                  "exact_fd6_cli",
+                  "exact_fd6_native"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 14,
+                "validation_findings": []
               }
             ]
           }
@@ -1085,6 +1144,8 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt",
         "Accepted cli_contracts.rs already includes consumer_readiness module, but Selection::Cli matches the entrypoint file, not changed consumer module. Added genuine #[test] entrypoint in already-selected CLI file calling exported shared fixture; removed duplicate standalone #[test]. Helper/carrier/workflow/selection graph unchanged.",
         "Actual authenticated bf98 CLI diagnostic /private/tmp/validation-bootstrap-bf98-cli-diagnostic.log:66pass3fail1ignored; two adapter fixtures invalid unversioned governance, fresh publicCLI fixture partial config missing schema_version. No full native success claimed.",
         "Authenticated GH selective-cli exactaa88 execution receipt is source-ci.selection.v2 status=not_applicable. Earlier green CLI/plugin status alone was not executed proof; no completed native readiness exists.",
@@ -1111,7 +1172,8 @@
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/validation_rules.rs",
         "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/workunit.rs"
+        "src/decapod/core/workunit.rs",
+        "tests/consumer_readiness.rs"
       ],
       "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
       "modified_files": [
@@ -1131,7 +1193,8 @@
         "tests/unit/core/workunit_journal_tests.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "checkpoint"
       ],
       "repo_scope": [
         "doctrine",
