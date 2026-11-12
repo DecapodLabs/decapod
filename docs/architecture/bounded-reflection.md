@@ -141,3 +141,10 @@ CI gate separately reported generated release projections at 0.139.0 where the
 accepted package is 0.139.1. Updating the installed controller requires explicit
 toolchain opt-in. Neither a successful CLI build nor these diagnostics establish
 that the regression corpus passed or that publication is ready.
+
+The supported retry after quota reset reached Buildkite and failed the required
+standalone gate in build 8517 on the same release-projection mismatch. Build
+8536 subsequently passed clippy for `ac9bd730`; this is bounded diagnostic
+evidence, not complete publication proof. Explicit approval to update the
+installed controller is still required. The branch and task remain open;
+behavioral execution and measured cost deltas are not yet established.

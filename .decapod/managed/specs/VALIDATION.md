@@ -74,6 +74,17 @@ and with a legacy architectural intent. It must fail with
 be round 1. This protects the shared task-intent boundary and demonstrates that
 rejecting an incomplete binding writes no successful continuation.
 
+The post-quota plain validation of `42571aaff2d77a7803bc12b0434c8a1831b5fafd`
+waited 638132 ms and returned `SNAPSHOT_NOT_READY` for required Buildkite build
+8517. Its standalone gate compiled the CLI but rejected release-projection
+drift; private snapshot `decapod-snapshot-iZThaW` preserves that attempt.
+The later `ac9bd7302ec490e374e50fc55232098faf021fde` diagnostic has a passed
+Buildkite clippy job in build 8536, including the repaired assertion. Complete
+behavioral proof and measured reflection costs remain pending. Its constitution
+job in build 8537 separately failed provider API quota before execution.
+The installed-release update is awaiting explicit human authorization; the
+current task must remain open and no PR may be published on this evidence.
+
 ## Recovery and accepted-target reconciliation (#1628)
 
 The client continues from both original checkpoints, including

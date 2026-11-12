@@ -595,6 +595,11 @@
       "id": "reflection-1639-cli-intent-binding",
       "summary": "Require matching CLI task context before reflection; fix observed assertion lint without suppressing proof checks.",
       "input_digest": "sha256:f8f15b1c43062e352a83a593fcdc03ccd4e1d0cd08c3412f25eec6e0b68a1776"
+    },
+    {
+      "id": "reflection-1639-release-gate",
+      "summary": "Preserve failed full Buildkite validation, passed candidate clippy, pending corpus proof and explicit release-update authority boundary.",
+      "input_digest": "sha256:069118dc7c84b3ddb96ff9df44d78a415409709a0ce81a63b77d50c337df1ca6"
     }
   ],
   "intents": {
@@ -676,11 +681,18 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:640ff1142412901a1216dd6557b13bfc1658f3bfabcce071a73c1ae1f83c0c94",
+      "artifact_hash": "sha256:bfadde57dae072d94f8fef46e56de7ad1c48eb4357f923f6ef438d14a8e86278",
+      "blockers": [
+        "Required standalone validation rejects 0.139.0 generated projections for accepted package 0.139.1. Explicit approval for the supported session-acquire controller update is pending."
+      ],
       "checks": [
         {
           "name": "buildkite-clippy",
           "status": "failed"
+        },
+        {
+          "name": "buildkite-clippy-ac9bd730",
+          "status": "passed"
         },
         {
           "name": "cli-reflection-task-binding",
@@ -699,11 +711,19 @@
           "status": "unavailable"
         },
         {
+          "name": "full-validation-42571aaf",
+          "status": "failed"
+        },
+        {
           "name": "legacy-plan-fixture-compilation",
           "status": "failed"
+        },
+        {
+          "name": "reflection-behavioral-corpus",
+          "status": "unavailable"
         }
       ],
-      "current_phase": "authority-binding-repair",
+      "current_phase": "awaiting-release-authorization",
       "custody": {
         "events": [
           {
@@ -780,10 +800,17 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -1023,6 +1050,33 @@
                 "validation_findings": [
                   "Source review found missing outer CLI task binding could evaluate different intent. The new regression rejects it before round 1; behavioral execution remains pending. Buildkite clippy assertion-style failure is repaired without lint suppression."
                 ]
+              },
+              {
+                "action": "awaiting-release-authorization",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "https://buildkite.com/decapodlabs/decapod/builds/8517",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8536#01a1cf9a-dfb5-4957-835e-baeef49b7705",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8537#01a1cf9a-58fa-40d9-bd63-958c6bf567ad"
+                ],
+                "proof_refs": [
+                  "full-validation-42571aaf",
+                  "buildkite-clippy-ac9bd730",
+                  "reflection-behavioral-corpus"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 13,
+                "validation_findings": [
+                  "Full validation ended SNAPSHOT_NOT_READY after 638132 ms provider wait; no local process was interrupted. Exact private snapshot remains decapod-snapshot-iZThaW. Complete runtime corpus and cost deltas are unproven."
+                ]
               }
             ]
           }
@@ -1040,6 +1094,9 @@
         ".decapod/managed/specs/VALIDATION.md",
         "docs/architecture/bounded-reflection.md",
         "https://buildkite.com/decapodlabs/decapod/builds/8515#01a1cf92-cad8-45ac-a70d-7d463e25d016",
+        "https://buildkite.com/decapodlabs/decapod/builds/8517",
+        "https://buildkite.com/decapodlabs/decapod/builds/8536#01a1cf9a-dfb5-4957-835e-baeef49b7705",
+        "https://buildkite.com/decapodlabs/decapod/builds/8537#01a1cf9a-58fa-40d9-bd63-958c6bf567ad",
         "https://github.com/DecapodLabs/decapod/actions/runs/43206246190",
         "https://github.com/DecapodLabs/decapod/actions/runs/43210330738/job/131155983763",
         "https://github.com/DecapodLabs/decapod/actions/runs/43210330914/job/131156236192",
@@ -1067,6 +1124,7 @@
         "tests/unit/core/validate_tests.rs"
       ],
       "next_transitions": [
+        "After explicit release approval, back up binary/config, use session acquire update, regenerate supported projections, checkpoint and revalidate the new exact candidate against the current accepted target.",
         "Commit exact candidate and run plain decapod validate",
         "Commit fixture repair and run plain validation after provider reset; retain release gate until approved supported update.",
         "Refine plan and declare falsifiable checks",
@@ -1091,6 +1149,7 @@
       "unresolved_assumptions": [
         "Accepted target bc0a7197 merged; the committed current-task governance record was retained while accepted work remains in Git history. Generated conflicts were refreshed by specs.refresh; no proof or authority was invented.",
         "Behavioral, latency and growth measurements await configured validation; authored tests are not proof.",
+        "Full validation ended SNAPSHOT_NOT_READY after 638132 ms provider wait; no local process was interrupted. Exact private snapshot remains decapod-snapshot-iZThaW. Complete runtime corpus and cost deltas are unproven.",
         "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
         "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
         "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics.",
