@@ -441,7 +441,7 @@ fn oversized_manifest_is_rejected_before_read_or_journal_commit() {
     );
 }
 
-fn accepted_execution_fixture() -> tempfile::TempDir {
+pub(crate) fn accepted_execution_fixture() -> tempfile::TempDir {
     use crate::core::trajectory::{self, TrajectoryInit};
     use crate::plan_governance::{self, InitPlanInput, PlanPatch, PlanState, ScopeConstraints};
     let root = fixture();
@@ -794,5 +794,44 @@ fn bare_or_partial_runtime_is_rejected_before_creating_workunit_state() {
         journal_records_on_conn(&conn, "task_test")
             .unwrap()
             .is_empty()
+    );
+}
+
+#[test]
+fn terminal_contract_uses_current_journal_epoch_and_preserves_explicit_proof_obligations() {
+    let root = accepted_execution_fixture();
+    set_proof_plan(root.path(), "task_test", &["source-check".into()]).unwrap();
+    checkpoint_workunit(root.path(), "task_test", "terminal-checkpoint", Some(2)).unwrap();
+    let artifact = ".decapod/data/terminal-proof.txt";
+    fs::write(root.path().join(artifact), "observed source check output").unwrap();
+    record_proof_result(
+        root.path(),
+        "task_test",
+        "source-check",
+        "pass",
+        Some(artifact.into()),
+    )
+    .unwrap();
+    transition_status(root.path(), "task_test", WorkUnitStatus::Executing).unwrap();
+    transition_status(root.path(), "task_test", WorkUnitStatus::Claimed).unwrap();
+    transition_status(root.path(), "task_test", WorkUnitStatus::Verified).unwrap();
+    let observed = crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test")
+        .unwrap()
+        .unwrap();
+    assert_eq!(observed.status, WorkUnitStatus::Verified);
+    assert!(
+        observed.validation_epoch.is_none(),
+        "supported journal binding owns the current epoch"
+    );
+    assert!(observed.proof_results[0].validation_epoch.is_none());
+    // Current source/epoch/artifact custody was positively rechecked. Mutation
+    // cannot reuse that declaration even though optional legacy fields are absent.
+    fs::write(root.path().join(artifact), "changed output").unwrap();
+    assert!(
+        crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test").is_err()
+    );
+    fs::remove_file(workunit_path(root.path(), "task_test").unwrap()).unwrap();
+    assert!(
+        crate::core::validation_rules::load_terminal_workunit(root.path(), "task_test").is_err()
     );
 }

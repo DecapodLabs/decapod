@@ -567,6 +567,14 @@
       "proof_refs": [
         "/private/tmp/decapod-project-merge-trajectory.json"
       ]
+    },
+    {
+      "id": "managed-project-accepted-proof-lifecycle",
+      "summary": "Merge actual accepted f1a6c7a0 validation lifecycle and additive build inputs with both parents, active custody, reviewed specs and unchanged required profile. Renew full candidate proof.",
+      "input_digest": "sha256:54b45b8f01cc4798208e4cbd7a58ac5f01110648ea7893c46b024e0313f7b7ae",
+      "proof_refs": [
+        "/private/tmp/decapod-project-merge-trajectory-02.json"
+      ]
     }
   ],
   "intents": {
@@ -609,22 +617,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved accepted terminal setup and managed-session flow in real merge; auxiliary project selection supplies native context and task repository, with atomic routing custody before write dispatch.",
-          "reviewed_code_fingerprint": "dd338c62c684db7fc0c988f9ab94e51b217813fc3c51034be5806ddf31dbe1c9",
-          "spec_material_hash": "a8e107982924c90498c5b4a4cd1c327586e79df8c41c093a859e6b5759bac45e"
+          "reason": "Real accepted1633 merge preserves terminal proof lifecycle and accepted onboarding alongside selected project routing and durable per-operation resolved route.",
+          "reviewed_code_fingerprint": "77a8c41302f68583886cc10190ee817cd10069dd8308077519e45821c3c3d0ec",
+          "spec_material_hash": "15fec422daad88270a6f612c713dc3dcdcdb7baad4419e63eca8872d3a80d8d3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Accepted interactive setup contracts and generic account project commands coexist; existing version-one service API retained, optional journal digest fences route changes without altering the preflight operation ID.",
-          "reviewed_code_fingerprint": "dd338c62c684db7fc0c988f9ab94e51b217813fc3c51034be5806ddf31dbe1c9",
-          "spec_material_hash": "3a4d00cb23af0f3e56e4bc2a9826a8058f97cba6982b98a4b287a9a2f66c18ec"
+          "reason": "Accepted validation/source-input definitions remain; new project commands, resolved task repo_id and digest-only route custody reuse existing account/data transports.",
+          "reviewed_code_fingerprint": "77a8c41302f68583886cc10190ee817cd10069dd8308077519e45821c3c3d0ec",
+          "spec_material_hash": "506a265b3672402976d682344a36ad1a6dfd57347d0df64b0d109e9fb528922e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted setup consent preserved. Current account/project and data authorization remain required, with explicit association checks and no cross-project unknown-write replay or stale-writer receipt overwrite.",
-          "reviewed_code_fingerprint": "dd338c62c684db7fc0c988f9ab94e51b217813fc3c51034be5806ddf31dbe1c9",
+          "reason": "Accepted terminal publication gates and setup consent remain, selected project is never authority, and unknown-write route/stale writer fences precede mutation dispatch.",
+          "reviewed_code_fingerprint": "77a8c41302f68583886cc10190ee817cd10069dd8308077519e45821c3c3d0ec",
           "spec_material_hash": "01025606e9b26996aac1242b6ff748d540c573a71859c4ef9035d585548b894f"
         }
       ],
@@ -638,13 +646,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794486800Z"
+      "updated_at": "1794486912Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e1911a94795c20c377de313261bf4c8fb9307a4b27605f27ba61ea0ed16fc49a",
+      "artifact_hash": "sha256:a8f5d53807c1997edd5b77b4256257550b78579394777cd33eb32969c7671705",
       "checks": [
         {
           "name": "accepted_target_merge",
@@ -676,6 +684,10 @@
         },
         {
           "name": "validation_02",
+          "status": "failed"
+        },
+        {
+          "name": "validation_03",
           "status": "failed"
         }
       ],
@@ -728,10 +740,17 @@
             "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M77JY4X7Q7EW3YNCPBEC72WV",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M77JY4SYPX9QSTR9AAYAF6S3",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77JY4X7Q7EW3YNCPBEC72WV": {
@@ -844,6 +863,23 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "557d5ae4 stopped before proof: accepted master advanced again to f1a6c7a0 via1633. Incorporate actual second parent and its accepted validation lifecycle/input wiring; preserve active PR custody and regenerate supported projections. No passing readiness is carried forward."
+                ],
+                "proof_refs": [
+                  "validation_03"
+                ],
+                "scope": [
+                  "src/decapod/core/cloud_client",
+                  "src/decapod/core/cloud_project",
+                  "tests"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -853,6 +889,7 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/decapod-project-orientation-20261112.json",
+        "557d5ae4 stopped before proof: accepted master advanced again to f1a6c7a0 via1633. Incorporate actual second parent and its accepted validation lifecycle/input wiring; preserve active PR custody and regenerate supported projections. No passing readiness is carried forward.",
         "Added separate native project consumer profile; independent real PostgreSQL fixture proof remains pending.",
         "Adjacent session/onboarding owners confirmed no project-binding overlap; plan uncertainty resolved.",
         "Exact 12d95951 Buildkite CI/docs failed Git merge-base admission as accepted master advanced through1636/1641; native GitHub Clippy independently found collapsible_if. No publication readiness.",

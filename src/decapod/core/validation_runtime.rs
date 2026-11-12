@@ -904,8 +904,10 @@ fn write_native_completion(
     directory: &Path,
     verdict: &[u8],
     receipt: &[u8],
+    budget: &RuntimeBudget<'_>,
     mut writer: impl FnMut(&Path, &[u8]) -> io::Result<()>,
 ) -> io::Result<()> {
+    budget.remaining()?;
     let completed = directory.join("completion");
     if completed.try_exists()? {
         return Err(io::Error::new(
@@ -920,8 +922,38 @@ fn write_native_completion(
         &staging.path().join("native-readiness-receipt.json"),
         receipt,
     )?;
+    budget.remaining()?;
     writer(&staging.path().join("verdict.json"), verdict)?;
+    // Only the atomic publication makes either file usable. Expiry while
+    // staging drops both private files and never exposes a ready bundle.
+    budget.remaining()?;
     fs::rename(staging.path(), completed)
+}
+
+fn within_terminal_budget<T>(
+    budget: &RuntimeBudget<'_>,
+    evaluate: impl FnOnce() -> io::Result<T>,
+) -> io::Result<T> {
+    budget.remaining()?;
+    let result = evaluate()?;
+    budget.remaining()?;
+    Ok(result)
+}
+
+fn write_ready_verdict(
+    directory: &Path,
+    bytes: &[u8],
+    budget: &RuntimeBudget<'_>,
+) -> io::Result<()> {
+    budget.remaining()?;
+    let mut staging = tempfile::NamedTempFile::new_in(directory)?;
+    staging.write_all(bytes)?;
+    staging.as_file().sync_all()?;
+    budget.remaining()?;
+    staging
+        .persist_noclobber(directory.join("verdict.json"))
+        .map_err(|error| error.error)?;
+    Ok(())
 }
 
 /// Public caller must use this report's exit_code, never the partial prerequisite
@@ -1307,6 +1339,28 @@ fn run(
                 .ok_or_else(|| invalid("successful readiness lacks a Laya disposition"))?,
         )
         .map_err(io::Error::other)?;
+        let rules = within_terminal_budget(&budget, || {
+            super::validation_rules::evaluate_terminal_rules(
+                &options.root,
+                &completed,
+                &current.identity,
+                &initial_governance,
+                &trajectory_digest,
+                &budget,
+            )
+            .map_err(io::Error::other)
+        })?;
+        write_new(
+            &directory.join("terminal-rules.json"),
+            &serde_json::to_vec_pretty(&rules).map_err(io::Error::other)?,
+        )?;
+        if rules.has_blocking_failures() || rules.has_unverifiable_mandatory() {
+            return Err(invalid(format!(
+                "TERMINAL_VALIDATION_RULES_FAILED: {:?}",
+                rules.results
+            )));
+        }
+        budget.remaining()?;
         write_new(
             &directory.join(super::validation_history::PROOF_FILE),
             &serde_json::to_vec_pretty(&completed).map_err(io::Error::other)?,
@@ -1335,8 +1389,11 @@ fn run(
             &directory,
             &verdict_bytes,
             &serde_json::to_vec_pretty(&receipt).map_err(io::Error::other)?,
+            &budget,
             write_new,
         )?;
+    } else if report.ready {
+        write_ready_verdict(&directory, &verdict_bytes, &budget)?;
     } else {
         write_new(&directory.join("verdict.json"), &verdict_bytes)?;
     }
