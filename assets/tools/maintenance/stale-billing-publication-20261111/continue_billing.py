@@ -18,13 +18,19 @@ REPO = "DecapodLabs/decapod"
 BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
 SOURCE = "26a499d9f0789a5ed00605d23cfc57f5392ae8fc"
 OPS = "ops/stale-billing-publication-20261111"
-ACTOR = "chatgpt-stale-billing"
-RECEIVER = "chatgpt-stale-billing-next"
+ACTOR = "chatgpt-stale-billing-next"
+RECEIVER = "chatgpt-stale-billing"
 CONTROLLER = "dd30b7516c331ac0a6c3128f7a9c433833935bc9f380d311b188502037f857e0"
 MATERIAL_BASE = "c7609e42bbbcff9c72af6be7a86333d4b0408922"
 REMOTE_HEAD = "b984a386fec57ff302f09013a143e63740639ced"
 CURRENT = "b984a386fec57ff302f09013a143e63740639ced"
 CURRENT_TREE = "cbb32bf666025718e35ba733ab9dbc02272b55d6"
+EXPECTED_PR = {
+    "number": 1631, "url": "https://github.com/DecapodLabs/decapod/pull/1631",
+    "state": "open", "draft": True, "repository": REPO, "repository_id": 1155300084,
+    "head_ref": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
+    "head_sha": CURRENT, "base_ref": "master", "base_sha": BASE,
+}
 PREPARATION_HEAD = "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b"
 PREPARATION_MANIFEST = "sha256:9f5ed85eb003abb6eae5b271b2b0105fc3de9308c8c8f33c7439cdcd7f8c836b"
 PREPARATION_CANONICAL = "sha256:642a6ff37e04a841bbe86f512262b37884313c48daabcd734fd5f430707f42f4"
@@ -69,22 +75,23 @@ def main():
     prepared = resume["preparation_result"]
     task_id = "code_01m76aq15fea61e8"
     preserved_branch = "agent/chatgpt-stale-billing/" + task_id + "-cloud-approval"
-    native_digest = "sha256:6ea1b7749d0c4cc2c39b2b66e949a0752dde2cdca6923d8a85931686306937a5"
+    native_digest = "sha256:c849917c6bb779362d3682af11a3c82de5752479b5bf6b607c0f79f3b0fc5b94"
     approved_inventory = "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577"
     if (manifest.get("repository") != REPO or manifest.get("base_sha") != BASE
             or manifest.get("source_sha") != SOURCE or manifest.get("slug") != "billing"
             or resume.get("task_id") != task_id or resume.get("branch") != preserved_branch
-            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43127804573"
+            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43130813275"
             or resume.get("return_receiver") != RECEIVER or resume.get("remote_head_sha") != REMOTE_HEAD
-            or resume.get("prior_operations_sha") != "7f7fe95cd93ab914da4b01652167319d85932eae"
-            or resume.get("prior_report_sha256") != "sha256:23bcdee0df2137cf713ac5c79a2f741af827784033eb51fcac7b5189a33daceb"
+            or resume.get("prior_operations_sha") != "fa1d2fd0ad0e6aee7596d1eb30d95f6a5e942447"
+            or resume.get("prior_report_sha256") != "sha256:87f47dbfe67b94368ffed6c8d1737cd7a6fa56079ab7407a911933ea3caa2cba"
             or digest((json.dumps(prior, indent=2) + "\n").encode()) != resume.get("prior_report_sha256")
             or resume.get("preparation_run_id") != "43123122460"
             or resume.get("preparation_report_sha256") != "sha256:412a64caf4324bca7fa03c812f7a58c565748dfd8c7829fb0c588becdc720873"
             or digest((json.dumps(prepared, indent=2) + "\n").encode()) != resume.get("preparation_report_sha256")
             or resume.get("candidate_sha") != CURRENT or resume.get("candidate_tree") != CURRENT_TREE
+            or resume.get("expected_pr") != EXPECTED_PR
             or resume.get("native_transfer", {}).get("plaintext_sha256") != native_digest
-            or resume.get("native_transfer", {}).get("transfer_id") != "01M76KEP9XVG3M9X5ETME3T9TC"
+            or resume.get("native_transfer", {}).get("transfer_id") != "01M76M6DHXHYPTYFZ3X1JJ1Y3H"
             or prior.get("task") != task_id or prior.get("branch") != preserved_branch
             or prior.get("status") != "blocked" or prior.get("head_sha") != CURRENT
             or prior.get("pushed") is not True or prior.get("checkpoints") is not True
@@ -313,6 +320,18 @@ def main():
         if json.loads(raw) != []:
             raise Blocked("a branch requiring no open PR now has one; retain its current state")
 
+    def require_expected_pr(label):
+        pr = json.loads(run(label, "gh", "api", "--method", "GET", "repos/" + REPO + "/pulls/1631"))
+        head, base = pr.get("head", {}), pr.get("base", {})
+        head_repo, base_repo = head.get("repo") or {}, base.get("repo") or {}
+        observed = dict(number=pr.get("number"), url=pr.get("html_url"), state=pr.get("state"),
+            draft=pr.get("draft"), repository=head_repo.get("full_name"), repository_id=head_repo.get("id"),
+            head_ref=head.get("ref"), head_sha=head.get("sha"), base_ref=base.get("ref"), base_sha=base.get("sha"))
+        if (observed != EXPECTED_PR or base_repo.get("full_name") != REPO
+                or base_repo.get("id") != EXPECTED_PR["repository_id"]):
+            raise Blocked("the authorized existing draft PR identity or source/base changed; preserve its current state")
+        result.setdefault("expected_pr_observations", []).append(dict(stage=label, **observed))
+
     def current_remote():
         if run("verify published continuation source lease", "git", "ls-remote", "origin", "refs/heads/" + preserved_branch).split() != [REMOTE_HEAD, "refs/heads/" + preserved_branch]:
             raise Blocked("original published candidate changed; no source overwrite or replacement is permitted")
@@ -390,7 +409,7 @@ def main():
             raise Blocked("unexpected repository origin")
         fresh_target()
         current_remote()
-        require_no_open_pr(preserved_branch, "verify continued candidate has no existing open PR")
+        require_expected_pr("verify authorized existing draft PR before original task import")
         run("fetch exact original published candidate", "git", "fetch", "--no-tags", "--no-write-fetch-head", "origin", "refs/heads/" + preserved_branch + ":refs/remotes/origin/" + preserved_branch)
         if run("verify fetched published candidate", "git", "rev-parse", "refs/remotes/origin/" + preserved_branch).strip() != REMOTE_HEAD:
             raise Blocked("fetched candidate identity differs from authenticated prior run")
@@ -398,7 +417,7 @@ def main():
         bundle_meta = resume["private_files"]["candidate.bundle"]
         if (bundle.is_symlink() or not bundle.is_file() or bundle.stat().st_size != bundle_meta["bytes"]
                 or digest(bundle.read_bytes()) != bundle_meta["sha256"]
-                or bundle_meta["sha256"] != "sha256:44a9d38f2aa252dd5c139c69b5b24cb77df9761d7ed36d3942fc4054ee23fdb9"):
+                or bundle_meta["sha256"] != "sha256:28fc48547140ddd787cc417767031234db560608629b54db02ca97c88fa37ecb"):
             raise Blocked("authentic checkpoint bundle differs from the captured native source")
         run("verify authentic checkpoint source bundle", "git", "bundle", "verify", str(bundle))
         if run("inspect exact checkpoint bundle refs", "git", "bundle", "list-heads", str(bundle)).split() != [CURRENT, "HEAD"]:
@@ -416,7 +435,7 @@ def main():
         native = json.loads(native_file.read_bytes())
         if (native["receiver"] != ACTOR or native["transfer_id"] != resume["native_transfer"]["transfer_id"]
                 or native["projection"]["task"]["id"] != task_id or native["source_commit"] != BASE
-                or native["source_branch"] != "billing-publication-control-8d4202963760"):
+                or native["source_branch"] != "billing-publication-control-d7af1b96e31b"):
             raise Blocked("private native transfer does not match authenticated original task")
         observed_paths = {entry.split("\t", 2)[2] for entry in run("inspect approved repair patch paths", "git", "apply", "--numstat", "-z", data=patch).split("\0") if entry}
         release_paths = {entry.split("\t", 2)[2] for entry in run("inspect observed release drift paths", "git", "apply", "--numstat", "-z", data=release_patch).split("\0") if entry}
@@ -596,9 +615,10 @@ def main():
         if not (code == 0 and not timeout and isinstance(published, dict) and published.get("status") == "ok"
                 and published.get("pr_verified") is True and published.get("remote_verified") is True
                 and published.get("branch") == branch and published.get("commit_hash") == head
-                and re.fullmatch(r"https://github.com/DecapodLabs/decapod/pull/[0-9]+", published.get("pr_url", ""))):
+                and published.get("pr_url") == EXPECTED_PR["url"]):
             result["publisher"]["diagnostic_excerpt"] = scrub(stderr[-8000:])
             raise Blocked("native publisher did not confirm complete readiness and exact PR")
+        require_expected_pr("verify exact draft PR after native publication readback")
         result.update(status="published_after_native_full_boundary", pushed=True, publication_ready=True,
                       full_boundary_passed=True, pr_url=published["pr_url"], publication=published)
         fresh_target()

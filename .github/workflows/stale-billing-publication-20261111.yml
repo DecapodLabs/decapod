@@ -1,4 +1,4 @@
-name: Diagnose billing GitHub publication with read-only requests
+name: Continue original billing task with measured native gate repairs
 
 on:
   push:
@@ -14,13 +14,14 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  BASE_SHA: c5de35a89b27e788169612ae71681e45c13bf71a
   OPERATIONS_PATH: assets/tools/maintenance/stale-billing-publication-20261111
 
 jobs:
-  diagnose:
+  publish:
     if: github.repository == 'DecapodLabs/decapod' && github.ref == 'refs/heads/ops/stale-billing-publication-20261111'
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 125
     permissions:
       contents: write
       actions: read
@@ -31,20 +32,130 @@ jobs:
           ref: ${{ github.sha }}
           path: operations
           persist-credentials: false
-      - name: Run only bounded read-only transport probes
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: c5de35a89b27e788169612ae71681e45c13bf71a
+          path: subject
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Download independently accepted official v0.138.2 release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
           umask 077
-          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/diagnose_github_publication.py" \
-            --directory "$RUNNER_TEMP/billing-github-read-diagnostics" \
-            --recipient "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/custody-recipient.pem"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
+          python3 - "$GITHUB_WORKSPACE/controller" <<'PYCODE'
+          import hashlib, json, os, pathlib, sys, urllib.request
+          p = pathlib.Path(sys.argv[1]); p.mkdir(mode=0o700)
+          api = 'https://api.github.com/repos/DecapodLabs/decapod/'
+          headers = {'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'}
+          def get(path):
+              with urllib.request.urlopen(urllib.request.Request(api + path, headers=headers), timeout=30) as response:
+                  return json.loads(response.read(2000000))
+          release = get('releases/442229037')
+          assert release['id'] == 442229037 and release['tag_name'] == 'v0.138.2'
+          assert release['draft'] is False and release['prerelease'] is False
+          assets = [a for a in release['assets'] if a['id'] == 737052855]
+          assert len(assets) == 1
+          asset = assets[0]
+          url = 'https://github.com/DecapodLabs/decapod/releases/download/v0.138.2/decapod-x86_64-unknown-linux-gnu.tar.xz'
+          expected = '718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06'
+          assert asset['name'] == 'decapod-x86_64-unknown-linux-gnu.tar.xz' and asset['size'] == 8241216
+          assert asset['digest'] == 'sha256:' + expected and asset['browser_download_url'] == url
+          ref = get('git/ref/tags/v0.138.2')
+          assert ref['object']['type'] == 'tag' and ref['object']['sha'] == '2c9fabc27d681c2ae7636a648008a056fff2903b'
+          tag = get('git/tags/2c9fabc27d681c2ae7636a648008a056fff2903b')
+          assert tag['object'] == {'sha': 'c5de35a89b27e788169612ae71681e45c13bf71a', 'type': 'commit', 'url': api + 'git/commits/c5de35a89b27e788169612ae71681e45c13bf71a'}
+          with urllib.request.urlopen(url, timeout=60) as response:
+              archive = response.read(10000000)
+          assert len(archive) == 8241216 and hashlib.sha256(archive).hexdigest() == expected
+          (p / 'decapod.tar.xz').write_bytes(archive)
+          (p / 'official-release.json').write_text(json.dumps({'release': release, 'tag_ref': ref, 'tag': tag}, indent=2) + '\n')
+          PYCODE
+      - name: Verify exact official release binary before use
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          python3 - "$GITHUB_WORKSPACE/controller" <<'PYCODE'
+          import hashlib, pathlib, sys, tarfile
+          p = pathlib.Path(sys.argv[1])
+          archive = p / 'decapod.tar.xz'
+          assert hashlib.sha256(archive.read_bytes()).hexdigest() == '718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06'
+          with tarfile.open(archive, mode='r:xz') as tar:
+              members = tar.getmembers()
+              assert all(not m.issym() and not m.islnk() and not m.name.startswith('/') and '..' not in pathlib.Path(m.name).parts for m in members)
+              found = [m for m in members if m.name == 'decapod-x86_64-unknown-linux-gnu/decapod' and m.isfile()]
+              assert len(found) == 1 and found[0].size == 29283112
+              binary = tar.extractfile(found[0]).read()
+          assert hashlib.sha256(binary).hexdigest() == '31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723'
+          (p / 'decapod').write_bytes(binary); (p / 'decapod').chmod(0o700)
+          PYCODE
+      - name: Prepare an ephemeral recipient for original private task custody
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/continuation_relay.py" prepare \
+            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/billing-continuation.json" \
+            --directory "$RUNNER_TEMP/billing-custody-relay"
+      - name: Publish only the current runner public custody recipient
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: billing-github-read-diagnostics
-          path: ${{ runner.temp }}/billing-github-read-diagnostics/public/
-          if-no-files-found: error
+          name: billing-continuation-recipient
+          path: ${{ runner.temp }}/billing-custody-relay/public/
+          retention-days: 7
+      - name: Receive the authenticated original task and pending material
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/continuation_relay.py" receive \
+            --manifest "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/billing-continuation.json" \
+            --directory "$RUNNER_TEMP/billing-custody-relay"
+      - name: Prepare native container and continue original billing task inside it
+        working-directory: subject
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          export PATH="$GITHUB_WORKSPACE/controller:$PATH"
+          git config user.name 'ChatGPT'
+          git config user.email 'chatgpt@users.noreply.github.com'
+          python3 "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH/container_billing.py" host \
+            --assets "$GITHUB_WORKSPACE/operations/$OPERATIONS_PATH" \
+            --incoming "$RUNNER_TEMP/billing-custody-relay/recovery" \
+            --runtime "$RUNNER_TEMP/billing-container-runtime" \
+            --publish-timeout 3600
+      - name: Report observed native publication outcome
+        if: always()
+        shell: bash
+        run: |
+          python3 - "$RUNNER_TEMP/billing-container-runtime/result/billing.json" "$RUNNER_TEMP/billing-container-runtime/bootstrap-public/billing-container.json" <<'PY'
+          import json, pathlib, sys
+          p = pathlib.Path(sys.argv[1])
+          if p.is_file():
+              value = json.loads(p.read_text())
+              keys = ('status', 'branch', 'task', 'head_sha', 'pr_url', 'full_boundary_passed', 'custody_exported', 'old_source_archive', 'blocker', 'transfer_error')
+              print(json.dumps({k: value[k] for k in keys if k in value}, indent=2))
+          else:
+              print('No terminal native result. No publication or custody success is inferred.')
+          bootstrap = pathlib.Path(sys.argv[2])
+          if bootstrap.is_file():
+              value = json.loads(bootstrap.read_text())
+              print(json.dumps({k:value[k] for k in ('status', 'original_task_imported_on_host', 'original_task_exported_on_host', 'blocker') if k in value}, indent=2))
+          PY
+      - name: Retain source recovery, native proof, and encrypted custody
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: billing-native-continuation
+          path: |
+            ${{ runner.temp }}/billing-container-runtime/result/
+            ${{ runner.temp }}/billing-container-runtime/bootstrap-public/
+          if-no-files-found: warn
           retention-days: 90

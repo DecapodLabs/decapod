@@ -207,16 +207,16 @@
     }
   },
   "resume": {
-    "prior_run_id": "43127804573",
-    "prior_operations_sha": "7f7fe95cd93ab914da4b01652167319d85932eae",
-    "prior_report_sha256": "sha256:23bcdee0df2137cf713ac5c79a2f741af827784033eb51fcac7b5189a33daceb",
+    "prior_run_id": "43130813275",
+    "prior_operations_sha": "fa1d2fd0ad0e6aee7596d1eb30d95f6a5e942447",
+    "prior_report_sha256": "sha256:87f47dbfe67b94368ffed6c8d1737cd7a6fa56079ab7407a911933ea3caa2cba",
     "prior_result": {
       "schema": "decapod.branch-publication.v1",
       "slug": "billing",
       "repository": "DecapodLabs/decapod",
       "base_sha": "c5de35a89b27e788169612ae71681e45c13bf71a",
       "source_sha": "26a499d9f0789a5ed00605d23cfc57f5392ae8fc",
-      "operations_sha": "7f7fe95cd93ab914da4b01652167319d85932eae",
+      "operations_sha": "fa1d2fd0ad0e6aee7596d1eb30d95f6a5e942447",
       "status": "blocked",
       "branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
       "task": "code_01m76aq15fea61e8",
@@ -230,12 +230,12 @@
       "pr_url": null,
       "resumed": true,
       "continuation_from": "b984a386fec57ff302f09013a143e63740639ced",
-      "prior_run_id": "43126315508",
+      "prior_run_id": "43127804573",
       "imported": true,
-      "incoming_transfer_id": "01M76J2T925DCN9Z1W3JDPDEYP",
+      "incoming_transfer_id": "01M76KEP9XVG3M9X5ETME3T9TC",
       "container_execution": {
         "engine": "podman",
-        "hostname": "50fd04c2c4b2",
+        "hostname": "6d7d8b746413",
         "effective_uid": 0,
         "effective_gid": 0,
         "repository_owner_uid": 0,
@@ -244,7 +244,7 @@
         "host_gid": 1001,
         "actual_dockerenv": false,
         "actual_containerenv": true,
-        "container_id": "50fd04c2c4b236c773b6ce80090ae6cfbf8eb44c41c367679a93df959442a043",
+        "container_id": "6d7d8b74641331843720ade09a212dec8cc9ee6552ca817745f80190d4d6e85b",
         "marker_id": null,
         "marker_metadata_present": false,
         "rootless_host": true,
@@ -299,11 +299,27 @@
           ]
         },
         "native_before_import": {
-          "container_id": "50fd04c2c4b2",
+          "container_id": "6d7d8b746413",
           "docker_available": false,
           "image": null,
           "in_container": true
         }
+      },
+      "github_cli": {
+        "repository": "cli/cli",
+        "release": "v2.103.3",
+        "release_id": 424663522,
+        "release_source_commit": "63837fb778d6a39f02be0ce76ff89f2bc8d74bdc",
+        "asset_id": 679195621,
+        "archive_name": "gh_2.103.3_linux_amd64.tar.gz",
+        "archive_bytes": 15031972,
+        "archive_sha256": "4c806978ffce1cec70853302a56d70ac6da4f19bae7adca4e1a8ab00633dd91d",
+        "binary_sha256": "b768184570b12536be4ac1528893f6340d1c6a7b40b56ad45bca9cd0e87ad34d",
+        "binary_bytes": 41070752,
+        "checksums_asset_id": 679195516,
+        "checksums_sha256": "f756e7859d90dbb5e85aae5194206c37da220bec9bac23d3d659078a8e766fdc",
+        "observed_version": "gh version 2.103.3 (2026-10-26)",
+        "slurp_supported": true
       },
       "controller": {
         "release": "v0.138.2",
@@ -351,14 +367,14 @@
       },
       "admission_seed": {
         "artifact": "billing-admission-seed.der",
-        "plaintext_sha256": "sha256:5d682404ab8c6fbf1207f6d97312f69e4d786a80950fc74c1f059a626c614dcd",
-        "ciphertext_sha256": "sha256:af279be363eeb52e3a5ac9a6a1953da56dbad4863bb06d9732668349cd43a617"
+        "plaintext_sha256": "sha256:d84a933152f43687214e313f63b549f85fc1e69e5f0136febd383bae8af89bf1",
+        "ciphertext_sha256": "sha256:c5373bacc0c0d0503b880018ef804ca04442aae8b7223c267d9fd2d5c1888541"
       },
       "original_committed_journal": {
         "blob": "addf291788d360fb1b297195d47c7cf3af27a106",
         "source_commit": "b984a386fec57ff302f09013a143e63740639ced",
         "source_bundle_sha256": "sha256:44a9d38f2aa252dd5c139c69b5b24cb77df9761d7ed36d3942fc4054ee23fdb9",
-        "prior_run_id": "43126315508",
+        "prior_run_id": "43127804573",
         "exact_bytes_preserved": true
       },
       "prior_checkpoint_verification": {
@@ -832,8 +848,8 @@
       },
       "candidate_bundle": {
         "artifact": "billing-candidate.der",
-        "plaintext_sha256": "sha256:44a9d38f2aa252dd5c139c69b5b24cb77df9761d7ed36d3942fc4054ee23fdb9",
-        "ciphertext_sha256": "sha256:cc2c09a293555632a740048bd9a5f8f48e18875de7ff259545d8997e75731115"
+        "plaintext_sha256": "sha256:28fc48547140ddd787cc417767031234db560608629b54db02ca97c88fa37ecb",
+        "ciphertext_sha256": "sha256:a9e1691dacbfa19d9c1a9396b3ec4af87db086292867a58dc022460930b28768"
       },
       "old_source_archive": {
         "tag": "archive/stale-20261111-billing-26a499d9",
@@ -852,7 +868,7 @@
           "PUBLICATION_INCOMPLETE"
         ],
         "ci_identity_preserved": true,
-        "diagnostic_excerpt": "session: auto-acquired for agent 'chatgpt-stale-billing-next'.\nBuildkite validation: stage=provider_terminal_wait\nBuildkite validation: stage=provider_terminal_wait elapsed_ms=711563\nBuildkite validation: stage=custody_collection elapsed_ms=2395\nValidation error: PUBLICATION_INCOMPLETE: branch was pushed, but publication is not verified. Validation error: GitHub PR publication/readback failed. Check gh authentication, target access, and network availability, then retry. Raw transport diagnostics are withheld to protect credentials.\nRepair the reported condition and retry `decapod workspace publish`; existing matching PRs are reused. Do not force-push, delete the branch, or report the PR ready.\n"
+        "diagnostic_excerpt": "session: auto-acquired for agent 'chatgpt-stale-billing'.\nBuildkite validation: stage=provider_terminal_wait\nBuildkite validation: stage=provider_terminal_wait elapsed_ms=5486\nBuildkite validation: stage=custody_collection elapsed_ms=1926\nValidation error: PUBLICATION_INCOMPLETE: branch was pushed, but publication is not verified. Validation error: GitHub PR publication/readback failed. Check gh authentication, target access, and network availability, then retry. Raw transport diagnostics are withheld to protect credentials.\nRepair the reported condition and retry `decapod workspace publish`; existing matching PRs are reused. Do not force-push, delete the branch, or report the PR ready.\n"
       },
       "blocker": {
         "stage": "native full workspace publisher",
@@ -861,53 +877,53 @@
       },
       "transfer": {
         "task_id": "code_01m76aq15fea61e8",
-        "transfer_id": "01M76KEP9XVG3M9X5ETME3T9TC",
-        "receiver": "chatgpt-stale-billing",
+        "transfer_id": "01M76M6DHXHYPTYFZ3X1JJ1Y3H",
+        "receiver": "chatgpt-stale-billing-next",
         "native_source_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
-        "native_source_branch": "billing-publication-control-8d4202963760",
+        "native_source_branch": "billing-publication-control-d7af1b96e31b",
         "source_sealed": true,
         "candidate_sha": "b984a386fec57ff302f09013a143e63740639ced",
         "candidate_branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
         "artifact": "billing-custody.der",
-        "plaintext_sha256": "sha256:6ea1b7749d0c4cc2c39b2b66e949a0752dde2cdca6923d8a85931686306937a5",
-        "ciphertext_sha256": "sha256:0987b0464a8c3eac78ee09bd06df08c98ebf25fcbd5237d4a1b2167bf3d415cf"
+        "plaintext_sha256": "sha256:c849917c6bb779362d3682af11a3c82de5752479b5bf6b607c0f79f3b0fc5b94",
+        "ciphertext_sha256": "sha256:74fdf32ab35a615d8223a66e83dab2e6d4790b31f0d8d80f241c346810dbe13e"
       },
       "source_dirty_after_attempt": false,
       "final_head_sha": "b984a386fec57ff302f09013a143e63740639ced",
       "observed_remote_head_sha": "b984a386fec57ff302f09013a143e63740639ced",
       "diagnostics": {
         "artifact": "billing-diagnostics.der",
-        "plaintext_sha256": "sha256:4fc0a1a6ecdd8de5a83753eaf63d547cbe3d5fbd716c9fdf5de1d4b9d616ae2e",
-        "ciphertext_sha256": "sha256:dcd18e02b90930bdd9a36fe0fff76437e8f080ee434b97dd51289aea0a6e7590"
+        "plaintext_sha256": "sha256:13a7e2e26e03bc873d398fb8302999be1719d1704e34ab6b40c48db6345cc3e1",
+        "ciphertext_sha256": "sha256:8378b7035874e1e305f1d5a002875d9a62d7cb4358a2db4f9ebd4667663e2e8f"
       }
     },
     "task_id": "code_01m76aq15fea61e8",
     "branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
     "candidate_sha": "b984a386fec57ff302f09013a143e63740639ced",
     "candidate_tree": "cbb32bf666025718e35ba733ab9dbc02272b55d6",
-    "receiver": "chatgpt-stale-billing",
+    "receiver": "chatgpt-stale-billing-next",
     "native_transfer": {
       "task_id": "code_01m76aq15fea61e8",
-      "transfer_id": "01M76KEP9XVG3M9X5ETME3T9TC",
-      "receiver": "chatgpt-stale-billing",
+      "transfer_id": "01M76M6DHXHYPTYFZ3X1JJ1Y3H",
+      "receiver": "chatgpt-stale-billing-next",
       "native_source_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
-      "native_source_branch": "billing-publication-control-8d4202963760",
+      "native_source_branch": "billing-publication-control-d7af1b96e31b",
       "source_sealed": true,
       "candidate_sha": "b984a386fec57ff302f09013a143e63740639ced",
       "candidate_branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
       "artifact": "billing-custody.der",
-      "plaintext_sha256": "sha256:6ea1b7749d0c4cc2c39b2b66e949a0752dde2cdca6923d8a85931686306937a5",
-      "ciphertext_sha256": "sha256:0987b0464a8c3eac78ee09bd06df08c98ebf25fcbd5237d4a1b2167bf3d415cf"
+      "plaintext_sha256": "sha256:c849917c6bb779362d3682af11a3c82de5752479b5bf6b607c0f79f3b0fc5b94",
+      "ciphertext_sha256": "sha256:74fdf32ab35a615d8223a66e83dab2e6d4790b31f0d8d80f241c346810dbe13e"
     },
-    "package_sha256": "sha256:0e624afbc051efa991c6b33ecf9a9352ec382768f61aa82508299378e17915b3",
+    "package_sha256": "sha256:7d057493e57272f7562620fe3e63244cf3d6069b68a95a1ae1674fa7443556b7",
     "private_files": {
       "native-transfer.json": {
-        "sha256": "sha256:6ea1b7749d0c4cc2c39b2b66e949a0752dde2cdca6923d8a85931686306937a5",
-        "bytes": 214235
+        "sha256": "sha256:c849917c6bb779362d3682af11a3c82de5752479b5bf6b607c0f79f3b0fc5b94",
+        "bytes": 257025
       },
       "candidate.bundle": {
-        "sha256": "sha256:44a9d38f2aa252dd5c139c69b5b24cb77df9761d7ed36d3942fc4054ee23fdb9",
-        "bytes": 28333
+        "sha256": "sha256:28fc48547140ddd787cc417767031234db560608629b54db02ca97c88fa37ecb",
+        "bytes": 24837
       }
     },
     "pending_paths": [],
@@ -1023,13 +1039,13 @@
       "status": "needs_reconciliation"
     },
     "approved_baseline_inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
-    "recovery_scope": "Use only the latest original-task native transfer from run43127804573. Restore the unchanged clean b984 checkpoint and verify native lineage/material. Replace the disposable runtime Debian gh2.23 client, which lacks the native required --slurp flag, with the pinned official gh2.103.3 binary through a read-only task-scoped bind. Verify actual version/hash/help before import and publication. Run one native workspace publish retry on the already pushed exact b984; native provider can observe the existing complete41/41 source checks. No separate CI requests, source edits, new checkpoints, generators, prerequisite reruns or permission changes.",
-    "return_receiver": "chatgpt-stale-billing-next",
+    "recovery_scope": "Use only the latest original-task native transfer from run43130813275 and its authenticated clean b984 bundle. The user-authorized connected GitHub app created draft PR1631 at this exact source/base after native readiness reached the GitHub transport step. Verify the known open draft PR identity before native task import, restore and verify the unchanged checkpoint/material, and run one supported native workspace publish retry to reuse and verify that PR. Native validation chooses all applicable current CI proof, including the automatically started PR checks; do not pin an earlier check cohort. Require exact PR1631 in native result and final REST readback. Keep the two semantic merge blockers in the existing draft. No source edits, new checkpoints, generators, prerequisite reruns, separate CI requests or permission changes.",
+    "return_receiver": "chatgpt-stale-billing",
     "remote_head_sha": "b984a386fec57ff302f09013a143e63740639ced",
     "native_checkpoint_bundle": {
       "artifact": "billing-candidate.der",
-      "plaintext_sha256": "sha256:44a9d38f2aa252dd5c139c69b5b24cb77df9761d7ed36d3942fc4054ee23fdb9",
-      "ciphertext_sha256": "sha256:cc2c09a293555632a740048bd9a5f8f48e18875de7ff259545d8997e75731115"
+      "plaintext_sha256": "sha256:28fc48547140ddd787cc417767031234db560608629b54db02ca97c88fa37ecb",
+      "ciphertext_sha256": "sha256:a9e1691dacbfa19d9c1a9396b3ec4af87db086292867a58dc022460930b28768"
     },
     "preparation_evidence": {
       "run_id": "43123122460",
@@ -1773,6 +1789,18 @@
       "inert_override_substitution": false,
       "ci_identity_unchanged": true,
       "source_policy_unchanged": true
+    },
+    "expected_pr": {
+      "number": 1631,
+      "url": "https://github.com/DecapodLabs/decapod/pull/1631",
+      "state": "open",
+      "draft": true,
+      "repository": "DecapodLabs/decapod",
+      "repository_id": 1155300084,
+      "head_ref": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
+      "head_sha": "b984a386fec57ff302f09013a143e63740639ced",
+      "base_ref": "master",
+      "base_sha": "c5de35a89b27e788169612ae71681e45c13bf71a"
     }
   },
   "projection_reference_tree": "6b1963f1a66e6ec624972a9148fdd98a285998a8",
