@@ -552,6 +552,14 @@
       "proof_refs": [
         "/private/tmp/issue-1630-decapod-validation.json"
       ]
+    },
+    {
+      "id": "released-inventory-driver",
+      "summary": "Consume released registry Dactyl0.13.0 and published checksum, preserve source trust and release policy guards, refresh dependency lock with unchanged bounded discovery and required checks",
+      "input_digest": "sha256:384b55be1fa93226876b8c5843963b22976d20e0afcd6ebbdeefd5dd84efeeac",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/dactyl/releases/tag/v0.13.0"
+      ]
     }
   ],
   "intents": {
@@ -593,22 +601,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Bounded semantic inventory delegates physical reads and retains read-only startup and lifecycle custody",
-          "reviewed_code_fingerprint": "f1fac371cb4ef584f6b2834f4175f92aee1f385f5179221323f0bfdf81d1355a",
+          "reason": "Published physical snapshot API, same native semantic/driver boundary and preserved startup/lifecycle custody",
+          "reviewed_code_fingerprint": "78b9e8b45b5d6a672b382ff1b983336fc65f6fb4e894c88e9330426f329a8bb1",
           "spec_material_hash": "a0d85e01c7946075c745e34b108465148fc807cc9b6871289449b414adbe7551"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Explicit versioned size/coverage semantics and typed CLI/RPC errors before mutation",
-          "reviewed_code_fingerprint": "f1fac371cb4ef584f6b2834f4175f92aee1f385f5179221323f0bfdf81d1355a",
+          "reason": "CLI/RPC inventory contract unchanged while finalized registry companion supplies the new API",
+          "reviewed_code_fingerprint": "78b9e8b45b5d6a672b382ff1b983336fc65f6fb4e894c88e9330426f329a8bb1",
           "spec_material_hash": "fdab3ceb0492bc231bf49d4dae60358c97c49e01c480bbfcd47652753276b8a4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No retained content output, integrity/codec validation or authority expansion; budgets stay enforced",
-          "reviewed_code_fingerprint": "f1fac371cb4ef584f6b2834f4175f92aee1f385f5179221323f0bfdf81d1355a",
+          "reason": "Preserve privacy and source-trust guards; replace temporary source with verified released registry package",
+          "reviewed_code_fingerprint": "78b9e8b45b5d6a672b382ff1b983336fc65f6fb4e894c88e9330426f329a8bb1",
           "spec_material_hash": "7b152b9a23f64145ca028d8dc59ada15c8f01fa808a0bd538cb166df7f41e214"
         }
       ],
@@ -624,7 +632,7 @@
         "Actual live-store distributions and numeric reduction/latency/CPU budgets remain pending inventory; no savings or schema parity claim"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794463207Z"
+      "updated_at": "1794468031Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -632,10 +640,14 @@
         "No live SQL/Python inventory; all physical reads through native Dactyl capability",
         "No reduction, schema parity or migration claim; agree budgets after actual baseline"
       ],
-      "artifact_hash": "sha256:e3a13e246cf122078f88a541fefbd09865dd21743cee6764da7e9290d611a116",
+      "artifact_hash": "sha256:5039ba5b039a743ca5d11cfa3536f1016951a8f6e443c86eda080584d0fbf8b6",
       "checks": [
         {
           "name": "full-readiness",
+          "status": "failed"
+        },
+        {
+          "name": "github-source-ci",
           "status": "failed"
         },
         {
@@ -678,10 +690,17 @@
             "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7707E39SWP4NBA39837Y2ZG",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7707E39SWP4NBA39837Y2ZG": {
@@ -754,6 +773,31 @@
                 "validation_findings": [
                   "No source build/test has run or passed; first full validation stopped at source discovery. Compact lock serialization preserves every parsed JSON value."
                 ]
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "MODULE.bazel.lock",
+                  "tests/release_dependency_policy.rs",
+                  "https://github.com/DecapodLabs/dactyl/releases/tag/v0.13.0",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43165277659"
+                ],
+                "proof_refs": [
+                  "github-source-ci"
+                ],
+                "scope": [
+                  "root",
+                  "src/decapod/core/storage_inventory.rs",
+                  "src/decapod/lib.rs",
+                  "tests/support/storage_inventory.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": [
+                  "Dactyl104 merged49a1fbb and0.13.0published; replace temporaryGitpin with registryrelease and exactpublishedchecksum. Earlier sourceCI compiled and newCLI suite passed; Supabaseguard rejected GitURLsource, so no fullpassclaimed. PublicAPIrate resetelapsed; safelyretryfullcontroller onnewexactcandidate."
+                ]
               }
             ]
           }
@@ -768,7 +812,9 @@
         "/private/tmp/issue-1630-decapod-validation.json",
         "Native Bazel mod deps --lockfile_mode=error accepted semantically identical compact JSON; generated dependency lock reduced1052790 to998377bytes below unchanged1MiB source budget. Bazel source/dependency graph and required checks unchanged.",
         "Source audit reproduces c7609e42 accepted declaration83c629 exactly; accepted release d3358 changes only root versions in Cargo.toml/lock. Candidate changes only Dactyl dependency graph, generated Bazel dependency lock and inclusion of inventory regressions in required CLI suite. Full source-CI graph/provider/checks unchanged.",
-        "https://github.com/DecapodLabs/dactyl/pull/104"
+        "https://github.com/DecapodLabs/dactyl/pull/104",
+        "https://github.com/DecapodLabs/dactyl/releases/tag/v0.13.0",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43165277659"
       ],
       "inspected_files": [
         ".decapod/config.toml",
@@ -782,7 +828,8 @@
         ".decapod/config.toml",
         "Cargo.lock",
         "Cargo.toml",
-        "MODULE.bazel.lock"
+        "MODULE.bazel.lock",
+        "tests/release_dependency_policy.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -800,6 +847,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Candidate uses exact portable Dactyl PR104 source until released API is available; source pin must not silently change",
+        "Dactyl104 merged49a1fbb and0.13.0published; replace temporaryGitpin with registryrelease and exactpublishedchecksum. Earlier sourceCI compiled and newCLI suite passed; Supabaseguard rejected GitURLsource, so no fullpassclaimed. PublicAPIrate resetelapsed; safelyretryfullcontroller onnewexactcandidate.",
         "No source build/test has run or passed; first full validation stopped at source discovery. Compact lock serialization preserves every parsed JSON value.",
         "Source review pin reflects four inspected source changes; dependency preparation is not build/test or publication evidence"
       ]
