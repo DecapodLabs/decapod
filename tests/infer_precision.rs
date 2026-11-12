@@ -128,6 +128,19 @@ fn test_orientation_and_mentor_share_the_reflection_continuation() {
         "touched_paths":["src/mutations.rs","src/read_adapter.rs"],
         "rationale":"Cache at the mutation source"
     });
+    let unbound = run_cmd(
+        root,
+        &[
+            "infer",
+            "orientation",
+            "--intent",
+            "refactor the core interface",
+            "--reflection",
+            &first.to_string(),
+        ],
+    );
+    assert!(!unbound.status.success());
+    assert!(String::from_utf8_lossy(&unbound.stderr).contains("REFLECTION_TASK_REQUIRED"));
     let orientation = run_cmd(
         root,
         &[
@@ -142,6 +155,10 @@ fn test_orientation_and_mentor_share_the_reflection_continuation() {
     assert!(orientation.status.success());
     let first = extract_json(&orientation)["reflection"].clone();
     assert_eq!(first["disposition"], "reflect");
+    assert_eq!(
+        first["round"], 1,
+        "rejected outer binding must not consume a round"
+    );
     assert_eq!(first["execution_blocked"], true);
     let revision = serde_json::json!({"reflection": {
         "task_id":task, "submission_id":"adapter-only", "expected_token":first["token"],

@@ -154,8 +154,10 @@ fn architectural_conflict_is_caught_and_evidence_bound_scope_revision_proceeds()
     assert_eq!(plan.state, PlanState::Approved);
     assert_eq!(plan.proof_hooks, ["visibility regression"]);
     assert_eq!(
-        plan.reflection.as_ref().unwrap().receipts[1].resolved_ids,
-        [challenge.id.clone()]
+        plan.reflection.as_ref().unwrap().receipts[1]
+            .resolved_ids
+            .as_slice(),
+        std::slice::from_ref(&challenge.id)
     );
     assert!(!revised.completion_proven);
     assert!(check_execute(temp.path(), &temp.path().join(".decapod/data"), &plan, None).is_ok());

@@ -158,6 +158,8 @@ datastore table, index, event stream or transcript. Each receipt retains input,
 context and progress hashes, proposed paths, pending/resolved challenge IDs,
 source references and the disposition. Agent explanations are hashed and discarded.
 
+CLI reflection requires a matching outer `--task-id`; omitting it fails before
+recording a round so orientation and reflection evaluate the same task intent.
 The first proposal consumes round 1. A continuation uses a new submission ID and
 the last outcome's token as `expected_token`. Exact retries are idempotent and
 do not write; changed reuse or stale tokens fail without consuming a round.

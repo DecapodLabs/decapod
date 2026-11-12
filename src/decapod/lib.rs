@@ -13104,11 +13104,12 @@ fn run_infer_orientation(
             .map_err(|e| {
                 error::DecapodError::ValidationError(format!("Invalid reflection: {e}"))
             })?;
-        if cli
-            .task_id
-            .as_ref()
-            .is_some_and(|id| id != &request.task_id)
-        {
+        if cli.task_id.is_none() {
+            return Err(error::DecapodError::ValidationError(
+                "REFLECTION_TASK_REQUIRED: orientation reflection requires --task-id so both paths use the same governing intent".into(),
+            ));
+        }
+        if cli.task_id.as_ref() != Some(&request.task_id) {
             return Err(error::DecapodError::ValidationError(
                 "REFLECTION_TASK_MISMATCH".into(),
             ));

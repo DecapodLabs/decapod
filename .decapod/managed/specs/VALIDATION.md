@@ -68,6 +68,12 @@ The supported release update requires explicit opt-in; generated pins must not
 be hand-edited or a candidate binary substituted to manufacture a clean result.
 Neither diagnostic establishes behavioral success or publication readiness.
 
+The CLI continuation fixture first submits reflection without an outer task ID
+and with a legacy architectural intent. It must fail with
+`REFLECTION_TASK_REQUIRED`; the subsequent explicitly bound proposal must still
+be round 1. This protects the shared task-intent boundary and demonstrates that
+rejecting an incomplete binding writes no successful continuation.
+
 ## Recovery and accepted-target reconciliation (#1628)
 
 The client continues from both original checkpoints, including
@@ -1264,7 +1270,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `42bfd852419c0f0ebfb081e6d84a192a30a2e205f840ee086c44c508f14cd111`
+- Repository signal fingerprint: `05cff6b42542328d6e0930da49d1b0d5f1137e5eac78c2167af174566a634abe`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

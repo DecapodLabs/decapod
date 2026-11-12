@@ -16,6 +16,10 @@ bounded question, trigger, source references, investigation and binding flag.
 The default round limit is three; one plan supports one current local task
 continuation. Source/path/input limits fail explicitly. No new RPC operation,
 authority hierarchy or persistence format is introduced.
+The CLI requires an explicit matching outer `--task-id` for reflection. This
+keeps its legacy orientation gates and the continuation on the same governing
+task intent. An omitted or conflicting binding fails before recording a round;
+the RPC continues to use the task ID in its typed reflection request.
 
 ## Cloud initialization, continuation, and readiness (#1628)
 
@@ -1117,7 +1121,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `42bfd852419c0f0ebfb081e6d84a192a30a2e205f840ee086c44c508f14cd111`
+- Repository signal fingerprint: `05cff6b42542328d6e0930da49d1b0d5f1137e5eac78c2167af174566a634abe`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

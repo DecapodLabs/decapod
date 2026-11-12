@@ -28,6 +28,8 @@ reflection input must remain inexpensive and stateless.
 ## Chosen slice
 
 Extend `infer orientation` and `mentor.obligations`, retaining their envelopes.
+CLI reflection requires a matching explicit outer task ID, preventing its
+legacy decision gates and the continuation from using different governing intent.
 An explicit reflection request names the claimed task, proposed operation and
 literal repository paths. One question comes from existing plan constraints or
 mentor potential contradictions. Human questions and pending human spec reviews

@@ -590,6 +590,11 @@
       "id": "reflection-1639-legacy-fixture",
       "summary": "Repair legacy plan fixture after accepted-source CI test compilation; preserve release drift and unproven corpus status.",
       "input_digest": "sha256:1d43033fe345216e4ca1c528c36786e3df17dcbf9f1f8ee0a5256c4fb4ea20cb"
+    },
+    {
+      "id": "reflection-1639-cli-intent-binding",
+      "summary": "Require matching CLI task context before reflection; fix observed assertion lint without suppressing proof checks.",
+      "input_digest": "sha256:f8f15b1c43062e352a83a593fcdc03ccd4e1d0cd08c3412f25eec6e0b68a1776"
     }
   ],
   "intents": {
@@ -636,22 +641,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "No new mechanism; repairing an existing plan literal preserves the stateless compatibility path.",
-          "reviewed_code_fingerprint": "42bfd852419c0f0ebfb081e6d84a192a30a2e205f840ee086c44c508f14cd111",
+          "reason": "The existing orientation and mentor continuation remains the sole mechanism; the CLI context check closes an authority edge case.",
+          "reviewed_code_fingerprint": "05cff6b42542328d6e0930da49d1b0d5f1137e5eac78c2167af174566a634abe",
           "spec_material_hash": "5e6f43ab12508970d6c2f14ad52d221c217dc4fdb8faaf6f819df400b3bc9f0c"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Optional reflection schema is unchanged; legacy validation fixtures explicitly omit reflection.",
-          "reviewed_code_fingerprint": "42bfd852419c0f0ebfb081e6d84a192a30a2e205f840ee086c44c508f14cd111",
-          "spec_material_hash": "fde5f696a955e10db3cca7d8470c2e377db77173be09147432f934144a1e7b30"
+          "reason": "CLI reflection requires an explicit matching outer task ID before any continuation is recorded.",
+          "reviewed_code_fingerprint": "05cff6b42542328d6e0930da49d1b0d5f1137e5eac78c2167af174566a634abe",
+          "spec_material_hash": "db9d8060aa30413f96dc380d595ee1f649944fad0298c390a44920c68831650b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Toolchain approval remains pending; diagnostic results do not satisfy required Buildkite authority or proof.",
-          "reviewed_code_fingerprint": "42bfd852419c0f0ebfb081e6d84a192a30a2e205f840ee086c44c508f14cd111",
+          "reason": "Missing outer task binding cannot override an orientation human gate; source-CI diagnostics and style repairs do not establish proof.",
+          "reviewed_code_fingerprint": "05cff6b42542328d6e0930da49d1b0d5f1137e5eac78c2167af174566a634abe",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -665,14 +670,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794483766Z"
+      "updated_at": "1794484317Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:07899c6c9512ba825450b2c38273974c32ccda9a88980785e4c8285aae4ea95d",
+      "artifact_hash": "sha256:640ff1142412901a1216dd6557b13bfc1658f3bfabcce071a73c1ae1f83c0c94",
       "checks": [
+        {
+          "name": "buildkite-clippy",
+          "status": "failed"
+        },
+        {
+          "name": "cli-reflection-task-binding",
+          "status": "partial"
+        },
         {
           "name": "format-and-whitespace",
           "status": "passed"
@@ -690,7 +703,7 @@
           "status": "failed"
         }
       ],
-      "current_phase": "validation-repair",
+      "current_phase": "authority-binding-repair",
       "custody": {
         "events": [
           {
@@ -760,10 +773,17 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -971,6 +991,38 @@
                 "validation_findings": [
                   "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved."
                 ]
+              },
+              {
+                "action": "authority-binding-repair",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "src/decapod/lib.rs",
+                  "tests/infer_precision.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  "docs/agent/state-model.md",
+                  "docs/architecture/bounded-reflection.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8515#01a1cf92-cad8-45ac-a70d-7d463e25d016"
+                ],
+                "proof_refs": [
+                  "cli-reflection-task-binding",
+                  "buildkite-clippy",
+                  "format-and-whitespace"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "Source review found missing outer CLI task binding could evaluate different intent. The new regression rejects it before round 1; behavioral execution remains pending. Buildkite clippy assertion-style failure is repaired without lint suppression."
+                ]
               }
             ]
           }
@@ -987,6 +1039,7 @@
       "evidence": [
         ".decapod/managed/specs/VALIDATION.md",
         "docs/architecture/bounded-reflection.md",
+        "https://buildkite.com/decapodlabs/decapod/builds/8515#01a1cf92-cad8-45ac-a70d-7d463e25d016",
         "https://github.com/DecapodLabs/decapod/actions/runs/43206246190",
         "https://github.com/DecapodLabs/decapod/actions/runs/43210330738/job/131155983763",
         "https://github.com/DecapodLabs/decapod/actions/runs/43210330914/job/131156236192",
@@ -1001,10 +1054,13 @@
       "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
+        "docs/agent/state-model.md",
         "docs/architecture/bounded-reflection.md",
         "src/decapod/core/mentor/reflection.rs",
         "src/decapod/core/state.rs",
+        "src/decapod/lib.rs",
         "tests/infer_precision.rs",
         "tests/unit/core/reflection_tests.rs",
         "tests/unit/core/state_knowledge_tests.rs",
@@ -1014,6 +1070,7 @@
         "Commit exact candidate and run plain decapod validate",
         "Commit fixture repair and run plain validation after provider reset; retain release gate until approved supported update.",
         "Refine plan and declare falsifiable checks",
+        "Revalidate the new exact candidate after prior validation ends; release update still requires pending explicit approval.",
         "Run full exact-candidate validation after repaired inventory declaration",
         "Run plain exact-candidate validation after public-reader reset 2026-11-12T11:42:39Z; do not substitute authentication or proof."
       ],
@@ -1037,6 +1094,7 @@
         "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
         "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
         "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics.",
+        "Source review found missing outer CLI task binding could evaluate different intent. The new regression rejects it before round 1; behavioral execution remains pending. Buildkite clippy assertion-style failure is repaired without lint suppression.",
         "Test compilation requires the repaired legacy fixture; no behavioral pass is claimed. Release 0.139.1 controller update awaits explicit approval; CI release drift remains unresolved.",
         "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness."
       ]
