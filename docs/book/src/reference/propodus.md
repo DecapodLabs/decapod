@@ -165,7 +165,8 @@ remain in [#1377](https://github.com/DecapodLabs/decapod/issues/1377),
 [Supabase consumer validation](supabase-validation.md) for protected service
 profiles and their explicit evidence requirements.
 
-Connector-enabled builds consume the published `dactyl-db 0.12.0` API from
+Connector-enabled builds consume the published `dactyl-db 0.13.0` API, retaining
+the cloud interface introduced in
 [Dactyl #102](https://github.com/DecapodLabs/dactyl/pull/102). Its registry
 version and checksum are checked by the release dependency policy. Required
 dependency, compilation and fixture checks still have to pass on the exact

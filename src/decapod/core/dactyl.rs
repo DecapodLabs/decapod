@@ -374,6 +374,16 @@ impl DactylBridge {
         Ok(self.connection.read(sql, params)?)
     }
 
+    pub fn inspect_snapshot(
+        &self,
+        limits: ::dactyl_db::SnapshotLimits,
+        inspect: &mut dyn FnMut(
+            &mut dyn ::dactyl_db::SnapshotReader,
+        ) -> Result<(), ::dactyl_db::DactylError>,
+    ) -> Result<(), DecapodError> {
+        Ok(self.connection.inspect_snapshot(limits, inspect)?)
+    }
+
     pub fn write(&self, sql: &str, params: &[Parameter]) -> Result<WriteResult, DecapodError> {
         Ok(self.connection.write_result(sql, params)?)
     }

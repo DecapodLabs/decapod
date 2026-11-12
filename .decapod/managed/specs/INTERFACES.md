@@ -41,7 +41,9 @@ this checkout to that server ID needs a supported upstream attachment contract;
 this client does not invent one or claim that SCM ownership or paid-project
 attachment has been verified. Browser directory registration remains distinct.
 
-The client consumes the published `dactyl-db 0.12.0` registry API. Pending
+The client consumes the published `dactyl-db 0.13.0` registry API. Its cloud
+module is byte-identical to the prior 0.12.0 release; current-candidate fixture
+execution remains required for the complete composition. Pending
 secrets round-trip through its public Serde contract; authentication status and
 code exchange return strings, and completion confirms the session handoff.
 The caller retains its exact origin/repository/checkout binding and saved flow
@@ -1116,10 +1118,22 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ae1d24ad5ad4484ab63caae4ef9edb1f4593f4190ba89005fffdb85729982d75`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
+- Repository signal fingerprint: `327bb02ec2aeabd8b21d254a5756070345bde853cef3a95377a81d9f3e7bb9f3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Bounded local storage inspection
+
+CLI `data database inspect` and RPC `data.database.inspect` expose
+`decapod.storage-inventory.v1`. Options bound rows, decoded scan bytes, report
+bytes and duration; reads beyond five seconds require an explicit option.
+Missing stores remain missing; sampled, unavailable and partial metrics are
+labeled. Incomplete inspection has a typed limitation and nonzero exit.
+The effective catalog digest covers tables, indexes, triggers and views without
+emitting DDL. Checkpoint and prefix metadata samples retain separate coverage.
+RPC framing is capped at 32 MiB before JSON decoding. See
+`docs/storage-inventory.md` for interpretation and bounds.
 
 ## Plan contract revision boundary
 

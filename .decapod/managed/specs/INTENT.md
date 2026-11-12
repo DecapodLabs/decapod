@@ -322,10 +322,19 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ae1d24ad5ad4484ab63caae4ef9edb1f4593f4190ba89005fffdb85729982d75`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
+- Repository signal fingerprint: `327bb02ec2aeabd8b21d254a5756070345bde853cef3a95377a81d9f3e7bb9f3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Bounded native storage inventory (#1630)
+
+Measure Decapod, Dactyl and Propodus dogfooding stores before selecting a compact
+representation. Native CLI/RPC inspection exposes exact counts, explicit bounded
+samples and redacted size/reuse observations. Retain all stored history and the
+accepted managed-cloud behavior. This PR supplies the measurement prerequisite;
+field contracts, representation, migration, retention and full domain parity
+remain coordinated work requiring measured budgets and further proof.
 
 ## Laya readiness scope
 

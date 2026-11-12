@@ -1,7 +1,7 @@
 [package]
 name = "decapod"
 default-run = "decapod"
-version = "0.140.0"
+version = "0.140.1"
 edition = "2024"
 rust-version = "1.96.1"
 build = "assets/build/compress_constitution.rs"
@@ -74,7 +74,7 @@ flate2 = "1.0"
 
 [dependencies]
 flate2 = "1.0"
-dactyl-db = { version = "0.12.0", features = ["sqlite", "neon"] }
+dactyl-db = { version = "0.13.0", features = ["sqlite", "neon"] }
 fs2 = "0.4"
 tempfile = "3.10"
 fancy-regex = "0.13"
