@@ -205,6 +205,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 ### Operation: `ConstitutionMigrate`
 ### Operation: `AgentRegistryQuery`
 ### Operation: `SchemaGet`
+### Operation: `StorageInventory`
 ### Operation: `StoreUpsert`
 ### Operation: `StoreQuery`
 ### Operation: `ValidateRun`
