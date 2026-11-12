@@ -537,6 +537,14 @@
         "cargo fmt --all",
         "git diff --check"
       ]
+    },
+    {
+      "id": "onboarding-reviewed-release-inventory",
+      "summary": "Review release-only source inventory drift and preserve required validation coverage",
+      "input_digest": "sha256:4ceca71ba9228f4ac325b652e47580f41d958b57d4bf49f8b017961df5492be7",
+      "proof_refs": [
+        "git diff c7609e42..HEAD -- .github .config assets Cargo.toml Cargo.lock MODULE.bazel MODULE.bazel.lock flake.nix flake.lock rust-toolchain.toml src/decapod/core/release_metadata.rs"
+      ]
     }
   ],
   "intents": {
@@ -592,6 +600,13 @@
           "reason": "Reviewed against the implemented terminal journey, final mutation boundary, automation preservation and new PTY/configuration regression tests. Proof execution is pending.",
           "reviewed_code_fingerprint": "355408d84a7f1aa219571bde6f2481da4034f4e5ecd9044eb4ce00b1693e7568",
           "spec_material_hash": "304d2487a88048e25f8758587dae5c54e16449e961052020ec0b2b271b0d0d4f"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Setup retains explicit cloud consent, authentication and existing authorization policy. Prior config backups use the private ignored runtime data directory; terminal input restoration and approval parsing are bounded UI responsibilities, not a changed trust boundary.",
+          "reviewed_code_fingerprint": "355408d84a7f1aa219571bde6f2481da4034f4e5ecd9044eb4ce00b1693e7568",
+          "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
       "state": "APPROVED",
@@ -602,17 +617,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794459842Z"
+      "updated_at": "1794459921Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:15f6041292b3a9fa011782c54256764c9e031a7540c03773699e450ed8daf83d",
+      "artifact_hash": "sha256:b421c927dab5e682bb0d840102ea6015629b7f46fc37e8ad30ff8ca4d64668cd",
       "checks": [
         {
           "name": "diff-whitespace",
           "status": "passed"
+        },
+        {
+          "name": "full-validation",
+          "status": "failed"
         }
       ],
       "current_phase": "intent",
@@ -643,10 +662,17 @@
             "intent_id": "intent:change_01M771D3W6PEPXR8KXQJ2MBP0N",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M771D3ZPMJKT7VQRHF21S0BV",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M771D3W6PEPXR8KXQJ2MBP0N",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M771D3ZPMJKT7VQRHF21S0BV": {
@@ -699,6 +725,27 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml",
+                  "Plain validation rejected a pre-existing stale source inventory. Reviewed all contract-source differences since c7609e42, the accepted inventory declaration: only Cargo.toml and Cargo.lock changed the decapod version from 0.138.2 to 0.138.3. Workflows, helpers, build recipes and required check matrix are unchanged. Refreshed reviewed_sources_digest to discovered 5fd571a9... after this comparison; preserved private config backup in target. No gate or provider was weakened."
+                ],
+                "proof_refs": [
+                  "full-validation"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"docs/book/src\"",
+                  "\"src/decapod/onboarding.rs\"",
+                  "\"tests/init_cli.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  "paths:[\"src/decapod/lib.rs\""
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -708,6 +755,7 @@
       "destination": "pull request",
       "evidence": [
         "Implemented staged terminal journey, focused customization, final edit/cancel review, native terminal restoration, safe input handling, private configuration backups and agent handoff. Scope includes scaffold.rs: removed leaked debug output and fixed actual writes during dry-run preview. Added real PTY tests and config/selector regressions; not executed yet. Authored INTENT, ARCHITECTURE and INTERFACES updated. cargo fmt and git diff --check completed.",
+        "Plain validation rejected a pre-existing stale source inventory. Reviewed all contract-source differences since c7609e42, the accepted inventory declaration: only Cargo.toml and Cargo.lock changed the decapod version from 0.138.2 to 0.138.3. Workflows, helpers, build recipes and required check matrix are unchanged. Refreshed reviewed_sources_digest to discovered 5fd571a9... after this comparison; preserved private config backup in target. No gate or provider was weakened.",
         "User delegated the complete first-run experience after refinement. Current flow exposes every advanced setting and creates Git state before final review. Scope: reversible terminal UX overhaul; preserve automated init and cloud consent. Workspace generated release projections through CLI; no authored product modifications yet."
       ],
       "inspected_files": [
@@ -716,6 +764,7 @@
       ],
       "intent_id": "intent:change_01M771D3W6PEPXR8KXQJ2MBP0N",
       "modified_files": [
+        ".decapod/config.toml",
         "docs/book/src/quickstart.md",
         "src/decapod/core/scaffold.rs",
         "src/decapod/lib.rs",
