@@ -185,6 +185,24 @@ fn persuasive_nonsense_and_paraphrases_terminate_without_proof() {
 }
 
 #[test]
+fn terminal_stop_cannot_be_revived_by_replaying_an_earlier_proceed() {
+    let (temp, mut safe) = fixture(vec!["src/mutations.rs".into()]);
+    safe.touched_paths = vec!["src/read_adapter.rs".into()];
+    let first = submit(temp.path(), &safe).unwrap();
+    assert_eq!(first.disposition, Disposition::Proceed);
+    let mut unsafe_action = next(&safe, &first, "unsafe-expansion");
+    unsafe_action.touched_paths.push("src/mutations.rs".into());
+    let second = submit(temp.path(), &unsafe_action).unwrap();
+    assert_eq!(second.disposition, Disposition::Reflect);
+    let third = submit(temp.path(), &next(&unsafe_action, &second, "repeat")).unwrap();
+    assert_eq!(third.disposition, Disposition::Blocked);
+    assert!(third.terminal);
+    let before = bytes(temp.path());
+    assert_eq!(submit(temp.path(), &safe).unwrap(), third);
+    assert_eq!(before, bytes(temp.path()));
+}
+
+#[test]
 fn genuine_but_incomplete_progress_exhausts_three_rounds() {
     let (temp, mut request) = fixture(vec!["src".into()]);
     request.touched_paths = vec!["src/a.rs".into(), "src/b.rs".into(), "src/c.rs".into()];
@@ -307,6 +325,44 @@ fn untrusted_text_and_agent_approval_cannot_resolve_human_authority() {
     let plan = plan_governance::load_plan(temp.path()).unwrap().unwrap();
     assert_eq!(plan.state, PlanState::Draft);
     assert_eq!(plan.human_questions.len(), 1);
+}
+
+#[test]
+fn distinct_human_questions_keep_distinct_challenge_identity() {
+    let (temp, request) = fixture(vec![]);
+    plan_governance::patch_plan(
+        temp.path(),
+        PlanPatch {
+            human_questions: Some(vec![
+                "May consistency change?".into(),
+                "May scope expand?".into(),
+            ]),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let first = submit(temp.path(), &request).unwrap();
+    assert_eq!(first.disposition, Disposition::HumanDecision);
+    let first_id = first.challenge.as_ref().unwrap().id.clone();
+    plan_governance::patch_plan(
+        temp.path(),
+        PlanPatch {
+            human_questions: Some(vec!["May scope expand?".into()]),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let mut revised = next(&request, &first, "next-human-question");
+    revised.evidence[0].hash.clear();
+    let second = submit(temp.path(), &revised).unwrap();
+    assert_eq!(second.disposition, Disposition::HumanDecision);
+    assert_ne!(second.challenge.as_ref().unwrap().id, first_id);
+    let journal = plan_governance::load_plan(temp.path())
+        .unwrap()
+        .unwrap()
+        .reflection
+        .unwrap();
+    assert_eq!(journal.receipts[1].resolved_ids, [first_id]);
 }
 
 #[test]

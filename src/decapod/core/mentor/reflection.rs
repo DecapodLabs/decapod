@@ -304,7 +304,7 @@ fn challenges(
     };
     for question in &plan.human_questions {
         result.push(challenge(
-            "human_question",
+            &format!("human_question:{}", digest(question)?),
             question.clone(),
             plan_source.clone(),
             true,
@@ -313,7 +313,11 @@ fn challenges(
     for review in &plan.spec_reviews {
         if review.disposition == SpecReviewDisposition::RequiresDecision {
             result.push(challenge(
-                "human_spec_review",
+                &format!(
+                    "human_spec_review:{}:{}",
+                    review.path,
+                    digest(&review.reason)?
+                ),
                 review.reason.clone(),
                 plan_source.clone(),
                 true,
@@ -454,6 +458,15 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
             if let Some(stop) = &journal.stop {
                 return Ok(stop.clone());
             }
+            let last = journal
+                .receipts
+                .last()
+                .ok_or_else(|| invalid("INVALID_JOURNAL"))?;
+            // A terminal guard dominates historical idempotent outcomes.
+            // An older successful submission must never revive this protocol.
+            if last.outcome.terminal {
+                return Ok(last.outcome.clone());
+            }
             if let Some(receipt) = journal
                 .receipts
                 .iter()
@@ -474,17 +487,10 @@ pub fn submit(root: &Path, request: &Request) -> Result<Outcome, DecapodError> {
                 }
                 return Ok(receipt.outcome.clone());
             }
-            let last = journal
-                .receipts
-                .last()
-                .ok_or_else(|| invalid("INVALID_JOURNAL"))?;
             if request.expected_token.as_deref() != Some(last.outcome.token.as_str()) {
                 return Err(invalid(
                     "STALE_TOKEN: inspect the current plan reflection before retrying",
                 ));
-            }
-            if last.outcome.terminal {
-                return Ok(last.outcome.clone());
             }
             if journal.receipts.len() == ROUND_LIMIT {
                 let mut stop = last.outcome.clone();

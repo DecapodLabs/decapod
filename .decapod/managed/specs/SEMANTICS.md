@@ -2,6 +2,13 @@
 
 ## Reflection, progress and authority
 
+Distinct recorded human questions and spec-review decisions retain distinct
+challenge identities. Resolving one through the existing plan surface does not
+erase another pending human decision or imply authority to execute.
+After a terminal disposition, even an exact replay of an earlier successful
+submission returns the terminal guard. Historical idempotence cannot revive
+permission or reset the lifetime round budget.
+
 A source citation establishes current identity, not verified understanding or
 passing tests. Source-bound removal of a challenge or strict scope narrowing is
 observable structural progress. Different prose or arbitrary citations are not.
@@ -310,7 +317,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `754ecb0297fcaf22e01238d8dcf5c6d6f7860641baf36477b784c3e4332ec335`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (229 files)
+- Repository signal fingerprint: `644cfd48eb098e2a2cfffc54beadb838b5905cda3ebf5dc8dcf7489c9fc2862b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

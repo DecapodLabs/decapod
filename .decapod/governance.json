@@ -576,6 +576,15 @@
         ".decapod/managed/specs/VALIDATION.md",
         "tests/unit/core/reflection_tests.rs"
       ]
+    },
+    {
+      "id": "reflection-1639-merge-1391",
+      "summary": "Merge accepted bc0a7197 into the same task branch, regenerate conflicting projections, retain current canonical task journal, reconcile release-byte inventory, and protect terminal replay/human-question identities. Full proof remains pending.",
+      "input_digest": "sha256:5bd9dd7e8b068951d0255079c0537d288ab0adbb60ca05ac49b9737de71a7967",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "tests/unit/core/reflection_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -622,22 +631,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed shared captured ADR bytes, bounded reads, case-folded progress identities and existing custody/document locking; no new authority or datastore.",
-          "reviewed_code_fingerprint": "754ecb0297fcaf22e01238d8dcf5c6d6f7860641baf36477b784c3e4332ec335",
-          "spec_material_hash": "6b2487506065634e448fe3a9d255a87fc53d19b9557ef23ee2ce4d998d61e7c2"
+          "reason": "Reviewed current task journal preservation, CLI-owned projection regeneration, captured source identity and terminal replay guard after merging accepted target bc0a7197.",
+          "reviewed_code_fingerprint": "644cfd48eb098e2a2cfffc54beadb838b5905cda3ebf5dc8dcf7489c9fc2862b",
+          "spec_material_hash": "5e6f43ab12508970d6c2f14ad52d221c217dc4fdb8faaf6f819df400b3bc9f0c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed repaired CLI module qualification and unchanged optional JSON contract; all approval and proof boundaries remain.",
-          "reviewed_code_fingerprint": "754ecb0297fcaf22e01238d8dcf5c6d6f7860641baf36477b784c3e4332ec335",
-          "spec_material_hash": "0cc5afe81a0949f80846cc50b58d91f1ec4e584a7b323380166ce2b5d60876f5"
+          "reason": "Reviewed reflection JSON continuity against merged accepted onboarding source; existing command envelopes and proof authority remain unchanged.",
+          "reviewed_code_fingerprint": "644cfd48eb098e2a2cfffc54beadb838b5905cda3ebf5dc8dcf7489c9fc2862b",
+          "spec_material_hash": "fde5f696a955e10db3cca7d8470c2e377db77173be09147432f934144a1e7b30"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Snapshot and alias hardening preserve existing cooperative local trust and human approval. Public-reader HTTP 403 is retained as unavailable proof; no alternate authentication or publication bypass.",
-          "reviewed_code_fingerprint": "754ecb0297fcaf22e01238d8dcf5c6d6f7860641baf36477b784c3e4332ec335",
+          "reason": "Accepted upstream source is retained. Reflection introduces no credential path or human approval assertion; current provider denial remains unproven access pending a supported retry after reset.",
+          "reviewed_code_fingerprint": "644cfd48eb098e2a2cfffc54beadb838b5905cda3ebf5dc8dcf7489c9fc2862b",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
       ],
@@ -651,16 +660,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794481970Z"
+      "updated_at": "1794483266Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ee02ada1b7a6d097a285db29343df4ad808704baee5e8dbbf5f305f348675825",
-      "blockers": [
-        "SNAPSHOT_NOT_READY: configured public GithubCommitChecks GET returned HTTP 403; reset epoch 1794483759. No alternate authentication route or substitute readiness proof."
-      ],
+      "artifact_hash": "sha256:c7e4e9d917f2088db756e424ba047206a143506639a0d12275535b2f597ed3e0",
       "checks": [
         {
           "name": "formatting",
@@ -671,7 +677,7 @@
           "status": "unavailable"
         }
       ],
-      "current_phase": "source-repair",
+      "current_phase": "validation-preparation",
       "custody": {
         "events": [
           {
@@ -720,10 +726,24 @@
             "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M77NNMPBCKJFWXSA4SD6RFHS",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77NNMPBCKJFWXSA4SD6RFHS": {
@@ -856,6 +876,53 @@
                 "validation_findings": [
                   "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness."
                 ]
+              },
+              {
+                "action": "target-reconciliation",
+                "command": "git merge --no-commit --no-ff origin/master",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Accepted target bc0a7197 merged; the committed current-task governance record was retained while accepted work remains in Git history. Generated conflicts were refreshed by specs.refresh; no proof or authority was invented."
+                ]
+              },
+              {
+                "action": "validation-preparation",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "src/decapod/core/mentor/reflection.rs",
+                  "tests/unit/core/reflection_tests.rs",
+                  ".decapod/managed/specs/VALIDATION.md"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"assets/schemas\"",
+                  "\"constitution\"",
+                  "\"docs\"",
+                  "\"src/decapod/plugins/federation.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core\""
+                ],
+                "sequence": 10,
+                "validation_findings": [
+                  "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness."
+                ]
               }
             ]
           }
@@ -865,7 +932,8 @@
         "cargo fmt --all",
         "decapod docs build",
         "decapod rpc --op agent.init",
-        "decapod validate"
+        "decapod validate",
+        "git merge --no-commit --no-ff origin/master"
       ],
       "destination": "pull request",
       "evidence": [
@@ -883,6 +951,7 @@
       "intent_id": "intent:change_01M77NNMKGESW1QW4Y2GQ8V6NC",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
         "docs/architecture/bounded-reflection.md",
         "src/decapod/core/mentor/reflection.rs",
         "src/decapod/core/state.rs",
@@ -893,7 +962,8 @@
       "next_transitions": [
         "Commit exact candidate and run plain decapod validate",
         "Refine plan and declare falsifiable checks",
-        "Run full exact-candidate validation after repaired inventory declaration"
+        "Run full exact-candidate validation after repaired inventory declaration",
+        "Run plain exact-candidate validation after public-reader reset 2026-11-12T11:42:39Z; do not substitute authentication or proof."
       ],
       "repo_scope": [
         "\".decapod/managed/specs\"]",
@@ -910,10 +980,12 @@
       "task_id": "feat_01m77nmmjwd12v30",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "Accepted target bc0a7197 merged; the committed current-task governance record was retained while accepted work remains in Git history. Generated conflicts were refreshed by specs.refresh; no proof or authority was invented.",
         "Behavioral, latency and growth measurements await configured validation; authored tests are not proof.",
         "Independent GitHub diagnostics can identify source errors but cannot establish Buildkite publication readiness.",
         "Inventory reconciliation removes the recorded current blocker only; earlier failed proof remains historical and full proof is still required.",
-        "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics."
+        "Mentor literal matches remain advisory; source identity and narrower declared scope do not prove implementation semantics.",
+        "The previous HTTP 403 and unavailable proof remain historical evidence. Clearing the prior attempt blocker prepares a fresh attempt after its reset, and does not establish provider access or readiness."
       ]
     }
   },

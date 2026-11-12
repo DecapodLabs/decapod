@@ -213,7 +213,7 @@ fn selector_render_shows_one_navigable_option_list() {
     assert_eq!(
         lines
             .iter()
-            .filter(|line| line.contains("lambda -> Lambda/Serverless"))
+            .filter(|line| line.contains("Lambda/Serverless"))
             .count(),
         1
     );
@@ -235,15 +235,11 @@ fn diagram_notation_selector_uses_terminal_readable_options() {
     assert_eq!(
         lines
             .iter()
-            .filter(|line| line.contains("ascii -> ASCII/text blocks"))
+            .filter(|line| line.contains("ASCII/text blocks"))
             .count(),
-        1
+        0
     );
-    assert!(
-        lines
-            .iter()
-            .any(|line| line.contains("mermaid -> Mermaid diagrams"))
-    );
+    assert!(lines.iter().any(|line| line.contains("Mermaid diagrams")));
 }
 
 #[test]
@@ -600,4 +596,105 @@ fn init_roundtrip_preserves_basic_shared_claim_opt_in() {
     let init = init_with_from_config(&config, PathBuf::from("."), false, false);
     let roundtrip = config_from_init_with(&init, config.repo.clone());
     assert!(roundtrip.governance.allow_basic_shared_claims);
+}
+
+#[test]
+fn confirmation_retries_invalid_input_instead_of_treating_it_as_no() {
+    assert_eq!(parse_setup_confirmation("maybe", true), None);
+    assert_eq!(parse_setup_confirmation("YES", false), Some(true));
+    assert_eq!(parse_setup_confirmation(" no ", true), Some(false));
+    assert_eq!(parse_setup_confirmation("", true), Some(true));
+    assert_eq!(parse_setup_confirmation("", false), Some(false));
+}
+
+#[test]
+fn selector_zero_and_out_of_range_do_not_underflow_or_select_an_approval() {
+    assert_eq!(find_selector_match(&["Apply", "Cancel"], "0"), None);
+    assert_eq!(find_selector_match(&["Apply", "Cancel"], "3"), None);
+    assert_eq!(find_selector_match(&["Apply", "Cancel"], "2"), Some(1));
+}
+
+#[test]
+fn changed_config_is_backed_up_exactly_and_noop_refresh_creates_no_backup() {
+    let dir = tempdir().unwrap();
+    let mut config = DecapodProjectConfig::default();
+    write_project_config(dir.path(), &config, false).unwrap();
+    let path = dir.path().join(".decapod/config.toml");
+    let original = fs::read(&path).unwrap();
+    let backups = dir.path().join(".decapod/data/config-backups");
+    write_project_config(dir.path(), &config, false).unwrap();
+    assert!(!backups.exists());
+
+    config.repo.product_summary = Some("A new product purpose".into());
+    write_project_config(dir.path(), &config, true).unwrap();
+    assert!(!backups.exists());
+    assert_eq!(fs::read(&path).unwrap(), original);
+
+    write_project_config(dir.path(), &config, false).unwrap();
+    let digest = format!("{:x}", Sha256::digest(&original));
+    assert_eq!(
+        fs::read(backups.join(format!("{digest}.toml"))).unwrap(),
+        original
+    );
+    assert_eq!(fs::read_dir(&backups).unwrap().count(), 1);
+    assert!(
+        fs::read_to_string(path)
+            .unwrap()
+            .contains("A new product purpose")
+    );
+}
+
+#[test]
+fn review_keeps_existing_cloud_isolation_and_full_proof_settings() {
+    let dir = tempdir().unwrap();
+    let mut config = DecapodProjectConfig::default();
+    config.repo.set_backend(BackendType::Cloud);
+    config.custody.isolation = IsolationMode::Container;
+    config.proof.validation_buildkite_preflights = true;
+    let init = init_with_from_config(&config, dir.path().to_path_buf(), false, false);
+    let rows = setup_review_rows(&config.repo, &init);
+    let value = |key| {
+        rows.iter()
+            .find(|(label, _)| *label == key)
+            .unwrap()
+            .1
+            .clone()
+    };
+    assert!(value("Storage").contains("Cloud"));
+    assert!(value("Workspace").contains("containers"));
+    assert!(value("Proof").contains("Buildkite"));
+    assert!(value("Cloud setup").contains("service confirms repository access"));
+    assert!(rows.iter().all(|(label, value)| {
+        *label != "Cloud seats" && *label != "Billing" && !value.contains("USD")
+    }));
+    assert!(
+        config_from_init_with(&init, config.repo.clone())
+            .repo
+            .effective_backend()
+            .is_cloud()
+    );
+}
+
+#[test]
+fn setup_presentation_keeps_scaffold_guidance_out_of_product_defaults() {
+    let dir = tempdir().unwrap();
+    let repo = infer_repo_context(dir.path()).unwrap();
+    assert_eq!(setup_purpose_default(repo.product_summary.as_deref()), "");
+    assert_eq!(
+        setup_architecture_label(repo.architecture_direction.as_deref()),
+        "Discover with your agent"
+    );
+    // The machine-facing inference contract retains its explicit unknown marker.
+    assert_eq!(
+        repo.product_summary.as_deref(),
+        Some(INIT_PURPOSE_PLACEHOLDER)
+    );
+    assert_eq!(
+        setup_purpose_default(Some("Build a music studio")),
+        "Build a music studio"
+    );
+    assert_eq!(
+        setup_architecture_label(Some("event-driven workers")),
+        "event-driven workers"
+    );
 }

@@ -2,6 +2,17 @@
 
 ## Reflection adversarial proof contract
 
+The same work branch integrates accepted target
+`bc0a71971bce8ee036a24562b7fc4a9b771f2f40`, including the accepted onboarding
+repair and package version 0.139.1. The installed evaluating controller remains
+0.139.0; no upgrade or substitution was performed. Git retained the current
+task journal from its committed canonical version, and Decapod refreshed the
+conflicting generated spec attestations and manifest. Authored specifications
+retain both changes. The reviewed-source inventory is
+`sha256:c9d2697f798bf2409fcfa1ea763efaf676e3bf4d6123b389ec106247a90ef8b0`;
+only the accepted Cargo package-version bytes changed in that inventory.
+Full validation must bind the merged candidate and this accepted target.
+
 `tests/unit/core/reflection_tests.rs` covers routine fast-path behavior,
 protected mutation-path conflict, source-bound scope correction, persuasive
 nonsense, changed governing sources, untrusted instructions, human authority,
@@ -1243,8 +1254,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `754ecb0297fcaf22e01238d8dcf5c6d6f7860641baf36477b784c3e4332ec335`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (229 files)
+- Repository signal fingerprint: `644cfd48eb098e2a2cfffc54beadb838b5905cda3ebf5dc8dcf7489c9fc2862b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1611,3 +1622,19 @@ and record a distinct checkpoint for the replayed material. Earlier successful
 v0.137.4 execution remains historical evidence; the rebased commit requires
 fresh complete publication proof and execution of the documentation-index and
 real-executable regressions against the captured accepted target.
+
+## Onboarding integration proof boundaries
+
+The refined setup is verified as part of the complete source PR profile. Real
+PTY cases cover recommended setup, edit/cancel, terminal restoration, preview,
+redirected output and cloud review cancellation without a service connection.
+Managed-session CLI cases separately cover authoritative access and recovery;
+neither fixture suite establishes a hosted purchase or paid customer journey.
+
+The reviewed source declaration for the 0.139.0 reconciliation measures all 105
+build/workflow/helper inputs against accepted master19acd21. Every input matches
+that accepted tree; only the package version in Cargo.toml and Cargo.lock changed
+from the preceding accepted cloud mergec87e4f49. Renewing the inventory digest
+retains the same source adapter, accepted executor, required graph and verdict
+policy. A matching inventory is preparation, and full exact-candidate validation
+remains mandatory after every source or target change.

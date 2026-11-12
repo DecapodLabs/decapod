@@ -164,6 +164,7 @@ do not write; changed reuse or stale tokens fail without consuming a round.
 Replaying an old nonterminal conclusion after relevant source changes fails.
 Plan/policy/ADR/evidence changes invalidate conclusions without resetting the
 lifetime budget. Plan reinitialization and ordinary edits preserve the journal.
+Terminal state dominates historical replays, including an earlier `proceed`.
 A new accepted workstream is the explicit recovery boundary for a terminal stop.
 This initial contract supports one task continuation per plan, local exclusive
 custody, up to 32 literal paths and 32 bounded ADR files; it fails explicitly
