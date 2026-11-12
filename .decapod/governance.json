@@ -586,6 +586,14 @@
       "proof_refs": [
         "tests/support/storage_inventory.rs"
       ]
+    },
+    {
+      "id": "final-review-binding",
+      "summary": "Refresh canonical spec reviews against final executable source after the last edit; document seven required inventory regressions and retain all publication gates",
+      "input_digest": "sha256:4dabc09c385f27d8b8003f6198bdf921979843aeae6379c723f07ddd127110c4",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/43181036159/job/131060529659"
+      ]
     }
   ],
   "intents": {
@@ -627,22 +635,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Inventory remains one bounded driver snapshot; targeted checkpoint sampling shares existing resource budgets",
-          "reviewed_code_fingerprint": "3b7cc64cbb9a19a222164dc1d8e43b105ae6192045c8a25641f31c3dec61b76e",
+          "reason": "Final source reviewed: one bounded physical snapshot, exact event-class totals, separate checkpoint sample, complete schema-object digest",
+          "reviewed_code_fingerprint": "39dbb1149ad1c3f6f6eb6ff7c7cb3e58e3b605205cc236775b9744b9175d2cb7",
           "spec_material_hash": "a0d85e01c7946075c745e34b108465148fc807cc9b6871289449b414adbe7551"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Exact fixed-class event totals and separate checkpoint-prefix coverage address measured sampling blindness without exposing stored event-type strings",
-          "reviewed_code_fingerprint": "3b7cc64cbb9a19a222164dc1d8e43b105ae6192045c8a25641f31c3dec61b76e",
+          "reason": "Bind review to final code after all edits, including distinct checkpoint/prefix metadata samples and explicit coverage and resource limits",
+          "reviewed_code_fingerprint": "39dbb1149ad1c3f6f6eb6ff7c7cb3e58e3b605205cc236775b9744b9175d2cb7",
           "spec_material_hash": "01d83900583f8638e84adb076d44e7a820d16f574b7a4ebd9358c2febb898b7e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No retained data mutation or raw content output; new class labels are fixed literals, all scans share the existing snapshot and quotas",
-          "reviewed_code_fingerprint": "3b7cc64cbb9a19a222164dc1d8e43b105ae6192045c8a25641f31c3dec61b76e",
+          "reason": "Final code preserves read-only startup, fixed public class labels, content redaction, shared quotas and explicit unavailable/partial results",
+          "reviewed_code_fingerprint": "39dbb1149ad1c3f6f6eb6ff7c7cb3e58e3b605205cc236775b9744b9175d2cb7",
           "spec_material_hash": "7b152b9a23f64145ca028d8dc59ada15c8f01fa808a0bd538cb166df7f41e214"
         }
       ],
@@ -658,7 +666,7 @@
         "Actual live-store distributions and numeric reduction/latency/CPU budgets remain pending inventory; no savings or schema parity claim"
       ],
       "unresolved_contradictions": [],
-      "updated_at": "1794470963Z"
+      "updated_at": "1794474830Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -666,7 +674,7 @@
         "No live SQL/Python inventory; all physical reads through native Dactyl capability",
         "No reduction, schema parity or migration claim; agree budgets after actual baseline"
       ],
-      "artifact_hash": "sha256:bcf090cf2c665a7ac9066fa1e41637d6f7040cc2331d68d8258835b7c7f54ecf",
+      "artifact_hash": "sha256:3e4685e2cfbf15daf0084e42b1587660b965ceb05e56aa782207efcf2dfc071c",
       "checks": [
         {
           "name": "full-readiness",
@@ -681,11 +689,15 @@
           "status": "partial"
         },
         {
+          "name": "publication-material",
+          "status": "failed"
+        },
+        {
           "name": "source-inventory-review",
           "status": "partial"
         }
       ],
-      "current_phase": "measurement-feedback",
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
@@ -755,10 +767,17 @@
             "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7707E39SWP4NBA39837Y2ZG",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7707E0D3H82PM5PG17N4YKR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7707E39SWP4NBA39837Y2ZG": {
@@ -934,6 +953,26 @@
                 "validation_findings": [
                   "Report checkpoint envelope metadata separately from prefix envelope metadata so overlap remains explicit and targeted checkpoint components are not duplicated"
                 ]
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43181036159/job/131060529659"
+                ],
+                "proof_refs": [
+                  "publication-material"
+                ],
+                "scope": [
+                  "root",
+                  "src/decapod/core/storage_inventory.rs",
+                  "src/decapod/lib.rs",
+                  "tests/support/storage_inventory.rs"
+                ],
+                "sequence": 12,
+                "validation_findings": [
+                  "Read-only history assessment proves five authored commits. Repair actual STALE_SPEC_REVIEW after final edit; reclaim original unassigned task and rebind same worktree, refresh all canonical reviews, checkpoint, verify exact-head publication material, then full validation. No executable source change."
+                ]
               }
             ]
           }
@@ -952,6 +991,7 @@
         "https://github.com/DecapodLabs/dactyl/pull/104",
         "https://github.com/DecapodLabs/dactyl/releases/tag/v0.13.0",
         "https://github.com/DecapodLabs/decapod/actions/runs/43165277659",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43181036159/job/131060529659",
         "https://www.sqlite.org/schematab.html"
       ],
       "inspected_files": [
@@ -993,6 +1033,7 @@
         "Final source review found schema digest omitted triggers/views. Stop only own verified validation process30608, retain unchanged provider graph and prior evidence, add catalog coverage and DDL-redaction regression, rerun new exact candidate. No publication readiness from interrupted attempt.",
         "Native CI artifact d0b03024, verified2daee1c, performed authorized three-store scans with repository/database mounts RO and only existing lifecycle locks RW. All returned ok sampled. Exact main lengths116248576/10579968/29057024 bytes. Preliminary prototype lacks full-catalog correction and prefix samples can miss checkpoint IDs; retain captures privately, do not call them final full-schema evidence or choose compaction design. Add exact fixed-class totals and bounded checkpoint stratum, then recapture with final source.",
         "No source build/test has run or passed; first full validation stopped at source discovery. Compact lock serialization preserves every parsed JSON value.",
+        "Read-only history assessment proves five authored commits. Repair actual STALE_SPEC_REVIEW after final edit; reclaim original unassigned task and rebind same worktree, refresh all canonical reviews, checkpoint, verify exact-head publication material, then full validation. No executable source change.",
         "Report checkpoint envelope metadata separately from prefix envelope metadata so overlap remains explicit and targeted checkpoint components are not duplicated",
         "Source review pin reflects four inspected source changes; dependency preparation is not build/test or publication evidence"
       ]

@@ -1,5 +1,14 @@
 # Validation
 
+The required CLI target includes seven inventory regressions in
+`tests/support/storage_inventory.rs`: UTF-8 sizes and component reuse with
+redaction; sampled and budget-limited coverage; ordinary DDL and generated
+columns; trigger/view schema binding without DDL disclosure; checkpoint sampling
+outside the ordinary event prefix; missing-store CLI/direct/stdin RPC without
+initialization; and bounded request framing before startup. Review bindings must
+be recorded after the final code and specification edits. A stale review remains
+a publication blocker even when executable tests pass.
+
 ## Inventory companion release and proof
 
 The native inventory consumes the published `dactyl-db` v0.13.0 snapshot API.
