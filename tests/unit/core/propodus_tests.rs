@@ -198,7 +198,8 @@ fn refresh_failures_direct_the_user_to_session_acquire() {
     };
     let transport = NoRequestTransport::default();
     let invalid_request = refresh_cloud_session(&config, "", "refresh-private", &transport)
-        .expect_err("invalid refresh credentials must fail before a provider request");
+        .err()
+        .expect("invalid refresh credentials must fail before a provider request");
     assert_eq!(*transport.calls.lock().unwrap(), 0);
     let unusable_response = refresh_cloud_session(
         &config,
@@ -206,7 +207,8 @@ fn refresh_failures_direct_the_user_to_session_acquire() {
         "refresh-private",
         &UnusableRefreshTransport,
     )
-    .expect_err("a successful HTTP response without usable credentials must fail");
+    .err()
+    .expect("a successful HTTP response without usable credentials must fail");
 
     for error in [invalid_request, unusable_response] {
         let diagnostic = cloud_auth_diagnostic(&error).unwrap();

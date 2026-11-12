@@ -550,6 +550,15 @@
         "tests/unit/core/propodus_tests.rs",
         "tests/unit/lib_init_prompt_tests.rs"
       ]
+    },
+    {
+      "id": "billing-fix-test-repair-2",
+      "summary": "Repair two new error assertions after actual provider compilation errors, preserving the credential-bearing CloudSession Debug boundary. Prior source candidate remains failed; fresh exact native proof is required.",
+      "input_digest": "sha256:acea11195ee88e77bdea924f130b2605b80f09f6fd59bc0d6b2195dfef51a104",
+      "proof_refs": [
+        "https://buildkite.com/decapodlabs/decapod/builds/8170",
+        "tests/unit/core/propodus_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -598,22 +607,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The authored architecture names the shared init_prompts_enabled policy, unconditional stored-roster preparation, and cloud_session_action for credential operations; it preserves the separate purchase handoff and backend authority.",
-          "reviewed_code_fingerprint": "f9a42147a35a1aec8b43047f236620938836c6ac583a89d8421168d14db4c10f",
+          "reason": "The shared prompt predicate and credential-diagnostic helper remain the only production changes. Error-only test assertions preserve the existing CloudSession type and independent session acquisition flow.",
+          "reviewed_code_fingerprint": "6039093e49be2901ac48f0b04014d8b171267175a160edf4091c49cad81c1486",
           "spec_material_hash": "a0f2136b19c50be103f6761b1a9767c1e461d81e19c4b57a9106997cfbef7e97"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The authored interface now names session acquire for machine-credential diagnostics and documents first-init, repeat-init, refresh, proof and noninteractive roster behavior. The existing purchase-approval and server authorization boundaries remain.",
-          "reviewed_code_fingerprint": "f9a42147a35a1aec8b43047f236620938836c6ac583a89d8421168d14db4c10f",
+          "reason": "The previously authored interface changes still match the current recovery-command and shared-prompt policy. Test repair selects only the error without changing the diagnostic API, statuses, purchase setup or roster validation.",
+          "reviewed_code_fingerprint": "6039093e49be2901ac48f0b04014d8b171267175a160edf4091c49cad81c1486",
           "spec_material_hash": "9bdc395731e04b3c0e46a1beee581fbee9f4b5e8aea14ce3f2323f72e8410833"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Source review changes diagnostic command text and prompt eligibility only. Existing credential validation, response redaction, storage, repository-origin checks and server-owned entitlements remain authoritative. No new credential transport, secret output or access grant is introduced.",
-          "reviewed_code_fingerprint": "f9a42147a35a1aec8b43047f236620938836c6ac583a89d8421168d14db4c10f",
+          "reason": "CloudSession deliberately lacks Debug to avoid credential output. The repaired tests use err().expect() rather than adding Debug to the secret-bearing type. Existing redaction, storage, origin and entitlement checks remain unchanged.",
+          "reviewed_code_fingerprint": "6039093e49be2901ac48f0b04014d8b171267175a160edf4091c49cad81c1486",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -627,14 +636,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794462022Z"
+      "updated_at": "1794468331Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "No pricing, CI carrier, release, original task custody or unrelated branch changes."
       ],
-      "artifact_hash": "sha256:f325bf1056543711a7dc010fd1836f94d7d81aa2421db5e96b62fa1a43c01b7e",
+      "artifact_hash": "sha256:92dbfce107d95c62e3cd9ccd578dca4dd449597e9b66dd0d562c68987a3a9af8",
       "checks": [
         {
           "name": "accepted_source_inventory",
@@ -643,6 +652,10 @@
         {
           "name": "formatting",
           "status": "passed"
+        },
+        {
+          "name": "required_source_ci_af132112",
+          "status": "failed"
         }
       ],
       "current_phase": "implementation",
@@ -666,10 +679,17 @@
             "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M771D5V85D3H40VVCZ3QCJMH",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M771D5V85D3H40VVCZ3QCJMH": {
@@ -703,19 +723,46 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Full native validation observed failed source Buildkite 8170 for exact af132112; corresponding GitHub job logs identify E0277 in two new expect_err calls.",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "tests/unit/core/propodus_tests.rs",
+                  "https://buildkite.com/decapodlabs/decapod/builds/8170",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/43163620020/job/131000794950",
+                  "/run/decapod-billing-fix-private/candidate-af132-ci/diagnostic-excerpts.json"
+                ],
+                "proof_refs": [
+                  "required_source_ci_af132112"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/lib.rs\"",
+                  "\"tests/unit/core/propodus_tests.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  "paths:[\"src/decapod/core/propodus.rs\""
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Full native validation observed failed source Buildkite 8170 for exact af132112; corresponding GitHub job logs identify E0277 in two new expect_err calls.",
         "cargo fmt --all (host formatting, exit 0)",
         "git diff --check (exit 0)"
       ],
       "destination": "pull request",
       "evidence": [
+        "/run/decapod-billing-fix-private/candidate-af132-ci/diagnostic-excerpts.json",
         "/run/decapod-billing-fix-private/inventory.accepted-comparison.json",
-        "git:d3358e1ce2cdb137dc57445c64592cb6d327a6ff"
+        "git:d3358e1ce2cdb137dc57445c64592cb6d327a6ff",
+        "https://buildkite.com/decapodlabs/decapod/builds/8170",
+        "https://github.com/DecapodLabs/decapod/actions/runs/43163620020/job/131000794950"
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M771D5QJ4C4ZERK1MEPYNQRS",
