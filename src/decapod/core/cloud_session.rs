@@ -475,10 +475,11 @@ mod tests {
 
     #[test]
     fn authorization_denial_returns_account_guidance_without_a_browser_handoff() {
-        let denied = backend::<()>(Err(dactyl_db::DactylError::adapter(
-            dactyl_db::AdapterErrorKind::Authorization,
-            "cloud authorization denied",
-        )))
+        let denied = backend::<()>(Err(dactyl_db::DactylError::Adapter {
+            kind: dactyl_db::AdapterErrorKind::Authorization,
+            code: None,
+            message: "cloud authorization denied".into(),
+        }))
         .unwrap_err();
         let PropodusClientError::Authentication(diagnostic) = denied else {
             panic!("expected a structured access diagnostic");

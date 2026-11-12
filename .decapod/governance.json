@@ -591,6 +591,14 @@
       "proof_refs": [
         "src/decapod/core/cloud_session.rs"
       ]
+    },
+    {
+      "id": "persistent-cloud-auth-public-error",
+      "summary": "Construct the authorization-denial fixture through Dactyl public Adapter error fields, preserving runtime behavior and all required checks.",
+      "input_digest": "sha256:1b2fca2eafebba6c9f32cf3caadaeaf0719a35b92d73c55016a61240e7418be1",
+      "proof_refs": [
+        "src/decapod/core/cloud_session.rs"
+      ]
     }
   ],
   "intents": {
@@ -634,22 +642,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed final account-denial classification: server authorization failures retain pending custody and provide account-access guidance without initiating another browser handoff. No role, grant or payment authority is inferred locally.",
-          "reviewed_code_fingerprint": "9f5e1cad8e01975c03737b203941e8851e6165fedf018dc29f544f539c70b7ed",
+          "reason": "Reviewed current source after replacing a test-only private Dactyl constructor with its public Adapter error variant. Runtime session, SQL forwarding and server authorization behavior are unchanged.",
+          "reviewed_code_fingerprint": "642c8dc7c405336a6fb115199be7e5a8cbf158149477ebe1cf1de562208fbdac",
           "spec_material_hash": "1fd919a9d11777386aa0ec245d52c7b75f4e01473602a9ec58088a6618e6ede5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed final account-denial classification: server authorization failures retain pending custody and provide account-access guidance without initiating another browser handoff. No role, grant or payment authority is inferred locally.",
-          "reviewed_code_fingerprint": "9f5e1cad8e01975c03737b203941e8851e6165fedf018dc29f544f539c70b7ed",
+          "reason": "Reviewed current source after replacing a test-only private Dactyl constructor with its public Adapter error variant. Runtime session, SQL forwarding and server authorization behavior are unchanged.",
+          "reviewed_code_fingerprint": "642c8dc7c405336a6fb115199be7e5a8cbf158149477ebe1cf1de562208fbdac",
           "spec_material_hash": "d1ccdbd8ad9478d0e0e4bfd778133190ade49730f09a2474d293d435f659e8f7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed final account-denial classification: server authorization failures retain pending custody and provide account-access guidance without initiating another browser handoff. No role, grant or payment authority is inferred locally.",
-          "reviewed_code_fingerprint": "9f5e1cad8e01975c03737b203941e8851e6165fedf018dc29f544f539c70b7ed",
+          "reason": "Reviewed current source after replacing a test-only private Dactyl constructor with its public Adapter error variant. Runtime session, SQL forwarding and server authorization behavior are unchanged.",
+          "reviewed_code_fingerprint": "642c8dc7c405336a6fb115199be7e5a8cbf158149477ebe1cf1de562208fbdac",
           "spec_material_hash": "b942e33744b672969071e8d0a12abb86998ef4272322568c87991043fac1b82c"
         }
       ],
@@ -661,13 +669,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794470294Z"
+      "updated_at": "1794471174Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:586ad1440f98a308c9155795d4c9d40e7dfe77427bc1b4073b7b2453fdd00e39",
+      "artifact_hash": "sha256:69d33db52976da32c9f102daa9f91ac6d9c541fad56df7a782977deaf31ba22f",
       "checks": [
         {
           "name": "formatting",
@@ -756,10 +764,17 @@
             "intent_id": "intent:change_01M773RFTPFPJXCQ8R6MNGKGDQ",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M773RFXVQZAJQ3XYYXJEY4VM",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M773RFTPFPJXCQ8R6MNGKGDQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M773RFXVQZAJQ3XYYXJEY4VM": {
@@ -920,6 +935,24 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "Candidate c75185cb source-CI Docker job 131051508478 failed compilation of the newly added denial-classification unit test: DactylError::adapter is crate-private. Replaced it with the documented public DactylError::Adapter variant used elsewhere in the consumer. No runtime behavior or required checks were changed; the real Docker test had not executed."
+                ],
+                "proof_refs": [
+                  "required_tests"
+                ],
+                "scope": [
+                  "Supabase datastore composition and documentation",
+                  "cloud authentication",
+                  "initialization",
+                  "session lifecycle"
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -932,6 +965,7 @@
       "evidence": [
         "Authenticated read-only CI inspection found real failures at candidate 9053bac: private cli module reference in the Supabase integration fixture, Clippy nonminimal_bool, generated command-contract drift, and code-bound spec reviews stale after follow-up source changes. Fixed these without changing required checks or weakening policy. New lifecycle test is now included as a support module in the existing required cloud_supabase_boundary target. Docs build regenerated documentation; all three canonical reviews were rebound to current source. Existing GitHub source CI execution is diagnostic evidence only and is not substituted for the required Buildkite readiness result.",
         "Candidate 6cc1c6ee GitHub source-CI job 131039676621 ran 1682 library tests: 1673 passed, one existing SQL-consumption proof failed, eight ignored. All 22 auth/cloud_session unit tests passed, including resume, concurrent refresh, interrupted exchange and repository finalization. This is diagnostic source-CI evidence, not full Buildkite readiness.",
+        "Candidate c75185cb source-CI Docker job 131051508478 failed compilation of the newly added denial-classification unit test: DactylError::adapter is crate-private. Replaced it with the documented public DactylError::Adapter variant used elsewhere in the consumer. No runtime behavior or required checks were changed; the real Docker test had not executed.",
         "Existing connector candidate is uncommitted in separate codex-connector-flow workspace; inspect and selectively integrate source, never modify its custody or claim its unexecuted proof.",
         "Full validation of candidate 43c9818b686cec568e4b320f088384ac1ce62e78 stopped at public GithubObjects GET with HTTP 403 and rate_limit_reset_unix=1794463204 before provider build/test collection. Existing workspace branch was pushed by the configured validator; no alternate authentication route, manual test or gate bypass was used. Follow-up review found todo-add preflight diagnostics discarded the browser handoff; now they retain the optional authorization URL and original operation ID, with bounded polling instructions and regression coverage.",
         "Mapped normalized Dactyl Authorization failures to the existing repository_denied result, distinct from missing authentication. Added a regression that checks account-access guidance and absence of a browser URL; no retries or local grants were introduced. Source CI and required Buildkite run remain the verification path. Anonymous GitHub metadata access is still rate-limited until reset 1794471375.",
