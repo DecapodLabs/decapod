@@ -272,11 +272,14 @@ struct LocalHost {
     move_target_after_execution: bool,
     change_config_after_execution: bool,
     force_strict_capability: bool,
+    governed_admission: Option<PathBuf>,
+    observed_admission: Option<serde_json::Value>,
 }
 
 impl LocalHost {
     fn new(fixture: &Fixture, deny_execution: bool) -> Self {
-        let store = fixture.options.root.join(".decapod/data");
+        let store =
+            decapod::core::store::find_governance_root(&fixture.options.root).join(".decapod/data");
         let runner = runtime::repository_host::RepositoryHost::new(
             fixture.options.clone(),
             "https://github.com/consumer/project.git".into(),
@@ -309,12 +312,52 @@ impl LocalHost {
             move_target_after_execution: false,
             change_config_after_execution: false,
             force_strict_capability: false,
+            governed_admission: None,
+            observed_admission: None,
         }
     }
 }
 
 impl Host for LocalHost {
-    fn project_check(&mut self, _: &RuntimeBudget<'_>) -> io::Result<ProjectPrerequisites> {
+    fn project_check(&mut self, budget: &RuntimeBudget<'_>) -> io::Result<ProjectPrerequisites> {
+        if let Some(storage) = &self.governed_admission {
+            let head = git(&self.root, &["rev-parse", "HEAD"]);
+            // Ask the genuine CLI for explicitly partial admission. Its scope
+            // cannot authorize readiness; the runtime below must execute proof.
+            let output = governed_command(&self.root, storage, &["validate", "--format", "json"])
+                .env("GITHUB_ACTIONS", "true")
+                .bounded_output(budget.remaining()?.min(Duration::from_secs(30)))?;
+            let result: serde_json::Value =
+                serde_json::from_slice(&output.stdout).map_err(|error| {
+                    io::Error::other(format!(
+                        "actual CLI admission JSON: {error}; stdout={} stderr={}",
+                        String::from_utf8_lossy(&output.stdout),
+                        String::from_utf8_lossy(&output.stderr)
+                    ))
+                })?;
+            if !output.status.success()
+                || result["scope"] != "ci_local"
+                || result["publication_ready"] != false
+                || result.get("readiness") != Some(&serde_json::Value::Null)
+                || result["report"]["fail_count"] != 0
+                || !result["report"]["pass_count"]
+                    .as_u64()
+                    .is_some_and(|count| count > 0)
+            {
+                return Err(io::Error::other(format!(
+                    "actual CLI prerequisite admission failed: {result}\n{}",
+                    String::from_utf8_lossy(&output.stderr)
+                )));
+            }
+            if head != git(&self.root, &["rev-parse", "HEAD"])
+                || !git(&self.root, &["status", "--porcelain"]).is_empty()
+            {
+                return Err(io::Error::other(
+                    "actual CLI admission changed the committed candidate",
+                ));
+            }
+            self.observed_admission = Some(result);
+        }
         Ok(ProjectPrerequisites::Passed)
     }
 
@@ -819,12 +862,11 @@ fn configuration_change_after_successful_execution_invalidates_readiness() {
     )));
 }
 
-// Exercise the public CLI, including real prerequisite gates and a fresh managed
-// docs task. The only fixture adapter redirects the exact accepted-target Git
-// query to a real local bare upstream. It executes Git rather than inventing a
-// revision, and never handles a proof command or writes an execution observation.
+// Prepare a genuine docs task through the public CLI. Admission is explicitly
+// CI-local; the complete public runtime independently executes source proof.
+// Only its existing Host target transport reads a real local bare upstream.
 #[cfg(unix)]
-fn governed_cli(root: &Path, storage: &Path, args: &[&str]) -> std::process::Output {
+fn governed_command(root: &Path, storage: &Path, args: &[&str]) -> Command {
     let binary = Path::new(env!("CARGO_BIN_EXE_decapod"))
         .canonicalize()
         .or_else(|_| {
@@ -858,15 +900,8 @@ fn governed_cli(root: &Path, storage: &Path, args: &[&str]) -> std::process::Out
         .env("XDG_CACHE_HOME", storage.join("home/cache"))
         .env("GIT_CONFIG_NOSYSTEM", "1")
         .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env(
-            "PATH",
-            format!(
-                "{}:/usr/bin:/bin:/usr/local/bin",
-                storage.join("bin").display()
-            ),
-        )
-        .bounded_output(Duration::from_secs(300))
-        .unwrap()
+        .env("PATH", "/usr/bin:/bin:/usr/local/bin");
+    command
 }
 
 #[cfg(unix)]
@@ -880,7 +915,9 @@ fn governed_failure(diagnostic: String) -> ! {
 
 #[cfg(unix)]
 fn governed_ok(root: &Path, storage: &Path, args: &[&str]) -> serde_json::Value {
-    let output = governed_cli(root, storage, args);
+    let output = governed_command(root, storage, args)
+        .bounded_output(Duration::from_secs(30))
+        .unwrap();
     if !output.status.success() {
         let diagnostic = format!(
             "{args:?}: stdout={} stderr={}\n",
@@ -895,138 +932,132 @@ fn governed_ok(root: &Path, storage: &Path, args: &[&str]) -> serde_json::Value 
 // The accepted source-CI selector schedules tests/cli_contracts.rs explicitly.
 // Its real #[test] entrypoint calls this shared fixture; keep one execution.
 #[cfg(unix)]
-pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior_receipt() {
+pub fn fresh_governed_docs_cli_admission_then_runtime_executes_first_proof() {
     use decapod::core::governance_document;
-    use std::os::unix::fs::PermissionsExt;
-    for succeeds in [true, false] {
-        let mut fixture = Fixture::new();
-        let storage = fixture._storage.path().to_path_buf();
-        let root = fixture.options.root.clone();
-        fs::create_dir(storage.join("bin")).unwrap();
-        fs::create_dir(storage.join("home")).unwrap();
-        let shim = storage.join("bin/git");
-        fs::write(&shim, format!(
-            "#!/bin/sh\ncase \"$*\" in\n  *'ls-remote --refs -- https://github.com/consumer/project.git refs/heads/main')\n    exec /usr/bin/env GIT_ALLOW_PROTOCOL=file /usr/bin/git ls-remote --refs -- '{}' refs/heads/main ;;\nesac\nexec /usr/bin/git \"$@\"\n",
-            fixture.upstream.display())).unwrap();
-        fs::set_permissions(&shim, fs::Permissions::from_mode(0o700)).unwrap();
-        git(&root, &["checkout", "-B", "main"]);
-        fs::write(root.join("README.md"), "# Governed consumer\n\nReviewed source commands inspect the committed documentation payload.\n").unwrap();
-        // The adapter-only fixture deliberately stores a proof subsection.
-        // Public CLI init must start without that partial config so it can
-        // generate the complete schema before the real contract is reviewed.
-        fs::remove_file(root.join(CONFIG)).unwrap();
-        governed_ok(
-            &root,
-            &storage,
-            &[
-                "init",
-                "--force",
-                "--backend",
-                "local",
-                "--no-container-workspaces",
-            ],
-        );
-        // Init preserves product context; the fixture explicitly re-reviews its
-        // real repository command/source contract after generated surfaces exist.
-        let config = fs::read_to_string(root.join(CONFIG)).unwrap();
-        let mut config: toml::Value = toml::from_str(&config).unwrap();
-        fixture
-            .proof
-            .required_profile
-            .as_mut()
+    let mut fixture = Fixture::new();
+    let storage = fixture._storage.path().to_path_buf();
+    let root = fixture.options.root.clone();
+    fs::create_dir(storage.join("home")).unwrap();
+    git(&root, &["checkout", "-B", "main"]);
+    fs::write(root.join("README.md"), "# Governed consumer\n\nReviewed source commands inspect the committed documentation payload.\n").unwrap();
+    // The adapter-only fixture deliberately stores a proof subsection.
+    // Public CLI init must start without that partial config so it can
+    // generate the complete schema before the real contract is reviewed.
+    fs::remove_file(root.join(CONFIG)).unwrap();
+    governed_ok(
+        &root,
+        &storage,
+        &[
+            "init",
+            "--force",
+            "--backend",
+            "local",
+            "--no-container-workspaces",
+        ],
+    );
+    // Init preserves product context; the fixture explicitly re-reviews its
+    // real repository command/source contract after generated surfaces exist.
+    let config = fs::read_to_string(root.join(CONFIG)).unwrap();
+    let mut config: toml::Value = toml::from_str(&config).unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
             .unwrap()
-            .reviewed_sources_digest =
-            runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
-                .unwrap()
-                .digest()
-                .unwrap();
-        config["proof"] = toml::Value::try_from(&fixture.proof).unwrap();
-        config["repo"]["base_branch"] = "main".into();
-        fs::write(root.join(CONFIG), toml::to_string_pretty(&config).unwrap()).unwrap();
-        // Init seeds the accepted baseline. Authoring refresh belongs in the
-        // managed task worktree below, after its real claim and orientation.
-        git(&root, &["add", "-A"]);
-        git(
-            &root,
-            &[
-                "commit",
-                "-m",
-                "docs: accept governed consumer configuration",
-            ],
+            .digest()
+            .unwrap();
+    config["proof"] = toml::Value::try_from(&fixture.proof).unwrap();
+    config["repo"]["base_branch"] = "main".into();
+    fs::write(root.join(CONFIG), toml::to_string_pretty(&config).unwrap()).unwrap();
+    // Init seeds the accepted baseline. Authoring refresh belongs in the
+    // managed task worktree below, after its real claim and orientation.
+    git(&root, &["add", "-A"]);
+    git(
+        &root,
+        &[
+            "commit",
+            "-m",
+            "docs: accept governed consumer configuration",
+        ],
+    );
+    git(&root, &["push", "origin", "main"]);
+    git(
+        &root,
+        &[
+            "remote",
+            "set-url",
+            "origin",
+            "https://github.com/consumer/project.git",
+        ],
+    );
+    let task = governed_ok(
+        &root,
+        &storage,
+        &[
+            "todo",
+            "add",
+            "docs: document reviewed source proof",
+            "--format",
+            "json",
+        ],
+    );
+    let id = task["id"].as_str().unwrap();
+    assert!(
+        id.starts_with("docs_"),
+        "fixture must preserve docs applicability: {task}"
+    );
+    governed_ok(&root, &storage, &["todo", "claim", "--id", id]);
+    let branch = format!("agent/docs-bootstrap/{id}-first-proof");
+    let workspace = governed_ok(
+        &root,
+        &storage,
+        &["workspace", "ensure", "--branch", &branch],
+    );
+    let workspace = PathBuf::from(workspace["worktree_path"].as_str().unwrap());
+    governed_ok(
+        &workspace,
+        &storage,
+        &["infer", "orientation", "--task-id", id],
+    );
+    governed_ok(&workspace, &storage, &["govern", "plan", "approve"]);
+    let intent = workspace.join(".decapod/managed/specs/INTENT.md");
+    let prose = fs::read_to_string(&intent).unwrap();
+    fs::write(intent, format!("{prose}\n## Reviewed documentation proof\n\nThe docs task validates both committed payload files through the required real Python commands. A failed assertion must prevent readiness and receipt issuance.\n")).unwrap();
+    fixture.options.root = workspace.clone();
+    let contract = fixture.proof.repository_contract.as_mut().unwrap();
+    for execution in contract.executions.values_mut() {
+        execution.environment.insert(
+            "FIXTURE_WORKTREE".into(),
+            workspace.to_string_lossy().into_owned(),
         );
-        git(&root, &["push", "origin", "main"]);
-        git(
-            &root,
-            &[
-                "remote",
-                "set-url",
-                "origin",
-                "https://github.com/consumer/project.git",
-            ],
-        );
-        let task = governed_ok(
-            &root,
-            &storage,
-            &[
-                "todo",
-                "add",
-                "docs: document reviewed source proof",
-                "--format",
-                "json",
-            ],
-        );
-        let id = task["id"].as_str().unwrap();
-        assert!(
-            id.starts_with("docs_"),
-            "fixture must preserve docs applicability: {task}"
-        );
-        governed_ok(&root, &storage, &["todo", "claim", "--id", id]);
-        let branch = format!("agent/docs-bootstrap/{id}-first-proof");
-        let workspace = governed_ok(
-            &root,
-            &storage,
-            &["workspace", "ensure", "--branch", &branch],
-        );
-        let workspace = PathBuf::from(workspace["worktree_path"].as_str().unwrap());
-        governed_ok(
-            &workspace,
-            &storage,
-            &["infer", "orientation", "--task-id", id],
-        );
-        governed_ok(&workspace, &storage, &["govern", "plan", "approve"]);
+    }
+    fixture.review_commands();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    let mut config: toml::Value =
+        toml::from_str(&fs::read_to_string(workspace.join(CONFIG)).unwrap()).unwrap();
+    config["proof"] = toml::Value::try_from(&fixture.proof).unwrap();
+    fs::write(
+        workspace.join(CONFIG),
+        toml::to_string_pretty(&config).unwrap(),
+    )
+    .unwrap();
+    let mut previous_candidate: Option<(String, PathBuf)> = None;
+    for succeeds in [true, false] {
         fs::write(
             workspace.join("payload.txt"),
             if succeeds { "ready\n" } else { "invalid\n" },
-        )
-        .unwrap();
-        let intent = workspace.join(".decapod/managed/specs/INTENT.md");
-        let prose = fs::read_to_string(&intent).unwrap();
-        fs::write(intent, format!("{prose}\n## Reviewed documentation proof\n\nThe docs task validates both committed payload files through the required real Python commands. A failed assertion must prevent readiness and receipt issuance.\n")).unwrap();
-        fixture.options.root = workspace.clone();
-        let contract = fixture.proof.repository_contract.as_mut().unwrap();
-        for execution in contract.executions.values_mut() {
-            execution.environment.insert(
-                "FIXTURE_WORKTREE".into(),
-                workspace.to_string_lossy().into_owned(),
-            );
-        }
-        fixture.review_commands();
-        fixture
-            .proof
-            .required_profile
-            .as_mut()
-            .unwrap()
-            .reviewed_sources_digest =
-            runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
-                .unwrap()
-                .digest()
-                .unwrap();
-        let mut config: toml::Value =
-            toml::from_str(&fs::read_to_string(workspace.join(CONFIG)).unwrap()).unwrap();
-        config["proof"] = toml::Value::try_from(&fixture.proof).unwrap();
-        fs::write(
-            workspace.join(CONFIG),
-            toml::to_string_pretty(&config).unwrap(),
         )
         .unwrap();
         governed_ok(&workspace, &storage, &["rpc", "--op", "specs.refresh"]);
@@ -1056,7 +1087,11 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
                 "artifacts",
                 "checkpoint",
                 "--id",
-                "docs-first-proof",
+                if succeeds {
+                    "docs-first-proof"
+                } else {
+                    "docs-failed-command-proof"
+                },
                 "--summary",
                 "Fresh documentation source and real reviewed command contract",
             ],
@@ -1064,7 +1099,15 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
         git(&workspace, &["add", governance_document::GOVERNANCE_PATH]);
         git(
             &workspace,
-            &["commit", "-m", "docs: describe first governed proof"],
+            &[
+                "commit",
+                "-m",
+                if succeeds {
+                    "docs: describe first governed proof"
+                } else {
+                    "docs: exercise failed source proof"
+                },
+            ],
         );
         governed_ok(
             &workspace,
@@ -1076,44 +1119,55 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
                 .unwrap()
                 .is_none()
         );
-        assert!(
-            !workspace
-                .join(decapod::core::capsule_policy::GENERATED_POLICY_REL_PATH)
-                .exists(),
-            "fresh worktrees must not need an ignored policy cache to admit proof"
-        );
+        if succeeds {
+            assert!(
+                !workspace
+                    .join(decapod::core::capsule_policy::GENERATED_POLICY_REL_PATH)
+                    .exists(),
+                "fresh worktrees must not need an ignored policy cache to admit proof"
+            );
+        }
         let prepared_status = git(&workspace, &["status", "--porcelain"]);
         assert!(
             prepared_status.is_empty(),
             "prepared candidate must be clean: {prepared_status}"
         );
-        let output = governed_cli(&workspace, &storage, &["validate", "--format", "json"]);
-        let result: serde_json::Value =
-            serde_json::from_slice(&output.stdout).unwrap_or_else(|error| {
-                governed_failure(format!(
-                    "{error}: {} {}",
-                    String::from_utf8_lossy(&output.stdout),
-                    String::from_utf8_lossy(&output.stderr)
-                ))
-            });
-        if output.status.success() != succeeds {
+        let head = git(&workspace, &["rev-parse", "HEAD"]);
+        let mut host = fixture.host();
+        host.governed_admission = Some(storage.clone());
+        let readiness = fixture.validate(&mut host);
+        let admission = host.observed_admission.as_ref().unwrap_or_else(|| {
             governed_failure(format!(
-                "Expected command success={succeeds}: {result}\n{}",
-                String::from_utf8_lossy(&output.stderr)
+                "Actual CLI admission must pass before source proof: {readiness:?}"
+            ))
+        });
+        assert_eq!(admission["scope"], "ci_local");
+        assert_eq!(admission["publication_ready"], false);
+        assert_eq!(admission["report"]["fail_count"], 0);
+        if readiness.ready != succeeds {
+            governed_failure(format!(
+                "Expected complete runtime ready={succeeds}: {readiness:?}"
             ));
         }
-        assert_eq!(result["publication_ready"], succeeds, "{result}");
+        assert_eq!(readiness.exit_code(), i32::from(!succeeds));
+        assert_eq!(host.execution_attempts, 1);
+        assert_eq!(git(&workspace, &["rev-parse", "HEAD"]), head);
         let final_status = git(&workspace, &["status", "--porcelain"]);
         assert!(
             final_status.is_empty(),
-            "full validation must preserve the committed candidate: {final_status}"
+            "CLI admission and complete runtime must preserve the candidate: {final_status}"
         );
-        let readiness = &result["readiness"];
-        let evidence = PathBuf::from(
-            readiness["evidence_path"]
-                .as_str()
-                .expect("real proof must have executed, not failed at prerequisites"),
-        );
+        let evidence = readiness
+            .evidence_path
+            .as_ref()
+            .expect("real proof must have executed, not failed at prerequisites");
+        if let Some((prior_head, prior_evidence)) = &previous_candidate {
+            assert_ne!(&head, prior_head, "negative proof needs its own candidate");
+            assert_ne!(
+                evidence, prior_evidence,
+                "negative proof cannot reuse success"
+            );
+        }
         let observations: SuiteEvidence =
             serde_json::from_slice(&fs::read(evidence.join("observations.json")).unwrap()).unwrap();
         assert_eq!(
@@ -1127,6 +1181,15 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
                 .iter()
                 .all(|result| matches!(result.observation, Observation::Executed { .. }))
         );
+        if !succeeds {
+            let stderr = fs::read_to_string(evidence.join("native-0.stderr")).unwrap_or_default()
+                + &fs::read_to_string(evidence.join("native-1.stderr")).unwrap_or_default();
+            if !stderr.contains("consumer source is invalid") {
+                governed_failure(format!(
+                    "Negative proof must observe the actual failed source assertion: {readiness:?}\n{stderr}"
+                ));
+            }
+        }
         assert_eq!(
             evidence
                 .join("completion/native-readiness-receipt.json")
@@ -1142,11 +1205,18 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
                 .is_none()
         );
         if succeeds {
-            assert_eq!(readiness["proof_ready"], true);
+            assert!(readiness.proof_ready);
             let rules: serde_json::Value =
                 serde_json::from_slice(&fs::read(evidence.join("terminal-rules.json")).unwrap())
                     .unwrap();
             assert_eq!(rules["overall_verdict"], "pass");
+            assert!(
+                rules["results"].as_array().unwrap().iter().any(|rule| {
+                    rule["rule_id"] == "decapod.evidence.required_and_fresh"
+                        && rule["verdict"] == "pass"
+                }),
+                "the docs evidence rule must consume the actual complete proof"
+            );
             assert!(
                 !rules["results"]
                     .as_array()
@@ -1155,5 +1225,6 @@ pub fn fresh_governed_docs_task_full_validate_executes_first_proof_without_prior
                     .any(|rule| rule["rule_id"] == "decapod.evidence.proof_backed_completion")
             );
         }
+        previous_candidate = Some((head, evidence.clone()));
     }
 }

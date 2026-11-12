@@ -194,8 +194,8 @@ mod consumer_readiness;
 
 #[test]
 #[cfg(any(target_os = "linux", target_os = "macos"))]
-fn fresh_governed_docs_task_executes_first_full_validation() {
-    consumer_readiness::fresh_governed_docs_task_full_validate_executes_first_proof_without_prior_receipt();
+fn fresh_docs_cli_admission_then_complete_runtime_proves_current_source() {
+    consumer_readiness::fresh_governed_docs_cli_admission_then_runtime_executes_first_proof();
 }
 mod init_ci_scaffolding;
 mod init_config_behavior;

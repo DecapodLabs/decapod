@@ -659,6 +659,16 @@
         "/private/tmp/validation-bootstrap-8023-dirty-scaffold-diagnostic.json",
         "/private/tmp/validation-bootstrap-gov-typo-recovery.diagnostic.json"
       ]
+    },
+    {
+      "id": "validation-bootstrap-supported-governed-fixture-v14",
+      "summary": "Observe real fresh docs CLI admission then complete sealed runtime proof with supported target-only fixture transport",
+      "input_digest": "sha256:b3f7ee04521572525aeb3f309674670cf10147d3718b6e3dc4de68a49ffbb458",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-5a83-native-git-diagnostic.json",
+        "/private/tmp/validation-bootstrap-custody-audit-v14.json",
+        "/private/tmp/validation-bootstrap-custody-renew-v14.json"
+      ]
     }
   ],
   "intents": {
@@ -702,24 +712,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Distinguish ignored runtime policy cache from tracked source scaffold; fresh worktrees lazily create validated cache without rewriting committed specs manifest before proof.",
-          "reviewed_code_fingerprint": "123ee43dfe50e373895f97e013b5222a29812ee50a9f6b7b3d9f16b7dd07fc42",
+          "reason": "Only regression transport/admission seam changes: same actual CLI project admission and complete sealed public runtime validate the existing lifecycle; production architecture and transport guards remain unchanged.",
+          "reviewed_code_fingerprint": "f448a0a180476a2ad14b86673cf70383857fb4f2d7a60536b770d1eb65e5c812",
           "spec_material_hash": "5a87d7918290e60cbcea35f5b68eba731bcf192eec164b4f6c312e29916ad03d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Public policy and proof interfaces remain unchanged; runtime cache is still lazily materialized and validated, and only inappropriate source scaffold admission is corrected.",
-          "reviewed_code_fingerprint": "123ee43dfe50e373895f97e013b5222a29812ee50a9f6b7b3d9f16b7dd07fc42",
+          "reason": "No public interface changes: component coverage now states actual CI-local CLI admission plus existing complete-runtime Host API; real ELF/HTTPS/no-rewrite guards and nonpublication semantics are unchanged.",
+          "reviewed_code_fingerprint": "f448a0a180476a2ad14b86673cf70383857fb4f2d7a60536b770d1eb65e5c812",
           "spec_material_hash": "d552fd3e108d74b4a5d35bde3d015e49274e6bc07f0ff4bfc97338b465821386"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Capsule policy loading, schema/tier/risk checks and invalidoverride rejection remain intact. Removing ignoredcache from sourcepresencepredicate preserves clean candidate custody without weakening source or proof gates.",
-          "reviewed_code_fingerprint": "123ee43dfe50e373895f97e013b5222a29812ee50a9f6b7b3d9f16b7dd07fc42",
+          "reason": "Unsupported Git shellshim removed rather than weakening ELF or HTTPS/rewrite checks. CI-local observation is explicitly nonpublication; actual sealed source execution and terminal evidence authorize only the isolated consumer runtime.",
+          "reviewed_code_fingerprint": "f448a0a180476a2ad14b86673cf70383857fb4f2d7a60536b770d1eb65e5c812",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -733,7 +743,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794471484Z"
+      "updated_at": "1794474850Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -742,9 +752,10 @@
         "Keep accepted 300-second aggregate budget and trusted profile/graph unchanged; no manual builds/tests or native quota retry on known failing source",
         "Keep clean candidate and capsule policy validation strict; validation-lifecycle-only predicate fix, no init/account/carrier/helper/budget changes; independent released controller owns fullsource readiness",
         "Preserve current controller0.138.3 and actual native quota blocker; source diagnostics do not authorize readiness",
+        "Preserve real Git ELF and HTTPS/no-rewrite guards; CI-local admission never authorizes publication; real sealed current-suite execution and terminal evidence remain mandatory; carrier/aggregatebudget unchanged",
         "Scope actor exclusion only to complete canonical agent/<actor>/<topic>; retain legacy agent/<task> and bare task parsing, multi-task topics and actual task mismatch rejection"
       ],
-      "artifact_hash": "sha256:82fed4ae05a098c3836da6c18f5bdd008e941a96cd6ae47ad0e09eac258e220a",
+      "artifact_hash": "sha256:6fea0719b41077cf0a616a9f222fc3ce5596a29899017ab456ca47cd2db06d40",
       "checks": [
         {
           "name": "accepted_release_inventory_review",
@@ -781,6 +792,18 @@
         {
           "name": "exact_3327_native",
           "status": "unavailable"
+        },
+        {
+          "name": "exact_5a83_cli",
+          "status": "failed"
+        },
+        {
+          "name": "exact_5a83_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "exact_5a83_library",
+          "status": "passed"
         },
         {
           "name": "exact_8023_cli",
@@ -865,9 +888,13 @@
         {
           "name": "source_test_compilation_v5",
           "status": "failed"
+        },
+        {
+          "name": "split_fixture_source_peer_review",
+          "status": "passed"
         }
       ],
-      "completion_claim": "Actual8023 CLI68pass1fail reached193staticpasses then UNCOMMITTED_PUBLICATION_CONTENT because ignored context policycache missing in freshworktree was treated as missing source scaffold. Init/scaffold creates this cache, but Git checkout omits it; lazy policyloader recreates and validates it without sourcehealing. Remove only cachepresence requirement. Canonicaltests remove initializedcache to model checkout; absentcache mustnothealmanifest, missingtrackedINTENT muststillheal; genuineCLI asserts absentcache and clean candidate before/after fullvalidate. Peer reviewed source/test setup. A resolved trace note was mistakenly recorded with --assumption in an uncommitted draft; root authorized exactdraftbackup plus Git restore only gov to authentic8023 and replay this genuine evidence. Backups/hashes preserved; no committedhistory, task, actor or trajectory reset, no new checkpoint/commit/fullvalidate occurred before recovery. No native readiness claimed.",
+      "completion_claim": "Actual5a83 exposed rejected Git shellshim and aggregate300s timeout. Root-approved supported split uses one realfreshdocs CLI task/workspace and samecandidate: Host.project_check runs genuineCLI explicitci_local, actualexit0/nonemptychecks/zeroerrors/pubfalse/readinessnull and cleanunchangedHEAD required. Existing sealed production RepositoryHost executes completeactualPython suite+terminalrules; only acceptedtargettransport uses freshactualbareGitread. Second separatelycheckpointed candidate intentionallyfails source, with actualstderr required and nonewreceipt; uniqueHEAD/evidence prevent priorproofreuse. CLIcalls bounded30s withinoriginalruntimebudget. Read-only peerreview foundboundaries/authorizations sound. Currenttaskunexpectedly becameopenunassigned revision5 updated1794472134 despiteearlier4hlease; firstmetadatawrite rejected withoutmutation. Sameactorreclaimedoriginaltask and renewed4hgen4; claimlocalcontainerprep pending due omittedautorunoff, atomicclaim/renew committed, onlyownlocalclaim cancelledexit130fullyreaped; nativecurrentownerverified and workspaceensure autorunoff fullycompletedcan_worktrue beforethisrecord. No owner/category/run substitution, newcheckpoint/commit/fullvalidate duringcustodygap, guardweakening or native ownsource readiness claim.",
       "current_phase": "repair",
       "custody": {
         "events": [
@@ -987,10 +1014,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 18
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:19",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 19
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 18,
+        "next_sequence": 19,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -1355,6 +1389,35 @@
                 ],
                 "sequence": 18,
                 "validation_findings": []
+              },
+              {
+                "action": "repair",
+                "custody_event_id": "event:19",
+                "observations": [
+                  "src/decapod/core/validation_runtime/repository_host.rs",
+                  "src/decapod/core/snapshot_provider/snapshot.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/cli_contracts.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "/private/tmp/validation-bootstrap-5a83-native-git-diagnostic.json",
+                  "/private/tmp/validation-bootstrap-custody-audit-v14.json",
+                  "/private/tmp/validation-bootstrap-custody-renew-v14.json"
+                ],
+                "proof_refs": [
+                  "exact_5a83_library",
+                  "exact_5a83_clippy",
+                  "exact_5a83_cli",
+                  "split_fixture_source_peer_review"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 19,
+                "validation_findings": []
               }
             ]
           }
@@ -1369,8 +1432,11 @@
         "/private/tmp/validation-bootstrap-132-core-timing-diagnostic.txt",
         "/private/tmp/validation-bootstrap-3327-cli-diagnostic.txt",
         "/private/tmp/validation-bootstrap-3327-unit-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-5a83-native-git-diagnostic.json",
         "/private/tmp/validation-bootstrap-8023-dirty-scaffold-diagnostic.json",
         "/private/tmp/validation-bootstrap-8023-unit-diagnostic.txt",
+        "/private/tmp/validation-bootstrap-custody-audit-v14.json",
+        "/private/tmp/validation-bootstrap-custody-renew-v14.json",
         "/private/tmp/validation-bootstrap-fd6-cli-diagnostic.txt",
         "/private/tmp/validation-bootstrap-fd6-unit-diagnostic.txt",
         "/private/tmp/validation-bootstrap-gov-typo-recovery.diagnostic.json",
@@ -1398,10 +1464,12 @@
       "inspected_files": [
         "src/decapod/core/capsule_policy.rs",
         "src/decapod/core/scaffold.rs",
+        "src/decapod/core/snapshot_provider/snapshot.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/core/validation_history.rs",
         "src/decapod/core/validation_rules.rs",
         "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/repository_host.rs",
         "src/decapod/core/workspace.rs",
         "src/decapod/core/workunit.rs",
         "src/decapod/lib.rs",
