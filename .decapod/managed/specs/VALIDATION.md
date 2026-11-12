@@ -1564,3 +1564,19 @@ and record a distinct checkpoint for the replayed material. Earlier successful
 v0.137.4 execution remains historical evidence; the rebased commit requires
 fresh complete publication proof and execution of the documentation-index and
 real-executable regressions against the captured accepted target.
+
+## Onboarding integration proof boundaries
+
+The refined setup is verified as part of the complete source PR profile. Real
+PTY cases cover recommended setup, edit/cancel, terminal restoration, preview,
+redirected output and cloud review cancellation without a service connection.
+Managed-session CLI cases separately cover authoritative access and recovery;
+neither fixture suite establishes a hosted purchase or paid customer journey.
+
+The reviewed source declaration for the 0.139.0 reconciliation measures all 105
+build/workflow/helper inputs against accepted master19acd21. Every input matches
+that accepted tree; only the package version in Cargo.toml and Cargo.lock changed
+from the preceding accepted cloud mergec87e4f49. Renewing the inventory digest
+retains the same source adapter, accepted executor, required graph and verdict
+policy. A matching inventory is preparation, and full exact-candidate validation
+remains mandatory after every source or target change.

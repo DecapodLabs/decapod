@@ -573,6 +573,11 @@
       "id": "onboarding-cloud-reconciliation-01",
       "summary": "Reconcile the refined terminal setup with accepted0.139.0 cloud sessions in a real merge; preserve prior checkpoints, defer all interactive writes/auth until review, remove local pricing/rosters and add cloud-cancellation PTY coverage. Full new-candidate execution remains pending.",
       "input_digest": "sha256:d3d2ad9e487c701ec83782b45a23b4439c3de353e39831902708b8f43f74cb4c"
+    },
+    {
+      "id": "onboarding-reviewed-01390-inventory",
+      "summary": "Renew the explicitly reviewed source digest after comparing all105 inputs with accepted0.139.0 master; retain unchanged required graph and record the stopped validation and proof boundaries.",
+      "input_digest": "sha256:2a2c5782e0669fb26e9e2b832e6c1f7fdd5c238365a2114843adf7c7014623dd"
     }
   ],
   "intents": {
@@ -620,21 +625,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the merged code: terminal draft/review/apply owns presentation and consent; accepted cloud_client/cloud_session and Dactyl transport remain unchanged. The authored architecture records ordering and no hosted-payment assurance.",
+          "reason": "Reviewed current source after accepted release inventory reconciliation: terminal review/apply and Dactyl-managed sign-in compose without changes to cloud custody, transport or authorization. All105 inventoried inputs match accepted master; no workflow, executor or required-check policy changed. Current full execution remains pending.",
           "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
           "spec_material_hash": "2e83c560d0bc53b1d130317a9bab677b9fdc3db7cb46b61b94996e184ccd1304"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the merged CLI: preserve accepted restart/sign-in, pending and denial outcomes; no legacy local seat roster or pricing remains in setup. Terminal cancellation and unattended contracts are documented; regression execution is pending full validation.",
+          "reason": "Reviewed current source after accepted release inventory reconciliation: terminal review/apply and Dactyl-managed sign-in compose without changes to cloud custody, transport or authorization. All105 inventoried inputs match accepted master; no workflow, executor or required-check policy changed. Current full execution remains pending.",
           "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
           "spec_material_hash": "89f0d2d623341656e789694578a335cc62b7d140ed5d357eca3be8384cd7ab57"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted managed-session private custody, origin binding, serialized refresh, account authority and server-confirmed repository access code remains unchanged from master19acd21. Setup defers authentication until apply and removes client-side roster/price authority; existing security requirements remain applicable.",
+          "reason": "Reviewed current source after accepted release inventory reconciliation: terminal review/apply and Dactyl-managed sign-in compose without changes to cloud custody, transport or authorization. All105 inventoried inputs match accepted master; no workflow, executor or required-check policy changed. Current full execution remains pending.",
           "reviewed_code_fingerprint": "af430a9e1fdf7d659f7bf29999a41cffd21a0e056c3faa5ff67529dc42914f18",
           "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
         }
@@ -647,14 +652,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794479853Z"
+      "updated_at": "1794480074Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Keep accepted cloud custody, transport and service authorization; no project binding or billing implementation"
       ],
-      "artifact_hash": "sha256:9f90f7522d064a0e2869f9c05cb6c30855f967e0662cde2c79254618d4238bb2",
+      "artifact_hash": "sha256:64ff74003f8c38c8404aeebbf00eb3f9961ac3c60407b56c60c5d287c385e38d",
       "checks": [
         {
           "name": "current-cli-regressions",
@@ -675,6 +680,14 @@
         {
           "name": "full-validation",
           "status": "unavailable"
+        },
+        {
+          "name": "full_validation_29b5686d",
+          "status": "failed"
+        },
+        {
+          "name": "inventory_review",
+          "status": "passed"
         },
         {
           "name": "master_merge",
@@ -746,10 +759,17 @@
             "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7742CC2WSBGWSRWRSWJEBMW",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7742C8M9Y4385TJS1NEG96V",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7742CC2WSBGWSRWRSWJEBMW": {
@@ -893,6 +913,32 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Full29b5686d validation stopped before provider execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Independently compared every one of the105 discovered build/workflow/helper inputs with accepted19acd21: all byte-identical. Only Cargo.toml and Cargo.lock package versions differ from the accepted cloud mergec87e4f49, both0.138.3 to0.139.0. Backed up current config and renewed only reviewed_sources_digest from8f21b5eb to c8786efc. Required profile, CI-attested mapping, workflow/carrier, executor and checks are unchanged."
+                ],
+                "proof_refs": [
+                  "full_validation_29b5686d",
+                  "inventory_review"
+                ],
+                "scope": [
+                  "\".decapod/config.toml\"",
+                  "\".decapod/managed/specs\"]",
+                  "\"docs/book/src/quickstart.md\"",
+                  "\"src/decapod/core/scaffold.rs\"",
+                  "\"src/decapod/onboarding.rs\"",
+                  "\"tests/init_cli.rs\"",
+                  "\"tests/unit/lib_init_prompt_tests.rs\"",
+                  "Terminal initialization, PTY regression coverage, quickstart and authored setup specs",
+                  "paths:[\"src/decapod/lib.rs\""
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -905,6 +951,7 @@
       "evidence": [
         "Current presentation source passed all 34 init_prompt_tests plus 2 onboarding layout tests. The separate final config/Git/PTY and targeted Clippy run continues. Fresh candidate f2612990 archives the observed source-history gap and reauthored product changes; the original 402c588a source history remains unproven and preserved. No full-validation success is claimed.",
         "Final focused verification passed: 34 setup unit tests, 2 layout tests, 5 real PTY tests, 5 Git bootstrap tests and 38 config tests, with 1 pre-existing ignored config test. The final PTY test was rerun after using a portable raw pointer for Linux/macOS; cargo clippy --lib --test init_cli -- -D warnings passed. Product/test bytes matched this fresh workstream and the test cache checkout. Manual visual inspection confirmed concise unknown context, optional purpose, review, cancellation and restored terminal state. Checkpoint history for f2612990 and 6e2ad2e6 is proven. Full validation still lacks admission: its most recent attempt returned public GitHub HTTP 403 rate limiting, with no alternate authentication or bypass. A final exact-candidate retry follows this evidence checkpoint.",
+        "Full29b5686d validation stopped before provider execution with PROOF_PROFILE_RECONCILIATION_REQUIRED. Independently compared every one of the105 discovered build/workflow/helper inputs with accepted19acd21: all byte-identical. Only Cargo.toml and Cargo.lock package versions differ from the accepted cloud mergec87e4f49, both0.138.3 to0.139.0. Backed up current config and renewed only reviewed_sources_digest from8f21b5eb to c8786efc. Required profile, CI-attested mapping, workflow/carrier, executor and checks are unchanged.",
         "Native project-check refreshed release-bound entrypoints and managed Docker pin to0.139.0. Its host-only prerequisite report remains failed for required container custody, pending-merge ancestry/dirty material, a historical done-unverified root task and broad scanner findings before integration. No pass or publication readiness is inferred. All application execution remains pending the configured complete provider proof after checkpointing the real merge. Accepted cloud-client/session/CLI and Cargo/Bazel files compare identical to origin/master.",
         "Real pending merge with accepted19acd21; original first-parent candidate58f95d34 and all3 checkpoints preserved. Current PR governance remained byte-identical through Git merge, then updated through the native CLI. New cloud cancellation PTY test is authored but not yet executed.",
         "Recovery preserves immutable source 402c588af141811a98a40136b77f01ed171f75f0 and its checkpoint gap. Reauthored product files and only authored semantic spec sections in this fresh admitted workstream. Earlier focused evidence: 33 setup unit tests, 2 layout tests, 5 PTY tests and 5 Git tests passed; config suite had 37 pass, 1 fail, 1 pre-existing ignored test. Its failure exposed a changed unattended Git bootstrap order; the shared mutation helper now restores that contract while interactive setup still confirms first. Current regression rerun is pending. Product/test bytes are verified identical between this workstream and the existing cache checkout used for focused tests; same accepted base d3358e1c. Full readiness remains unproven; GitHub provider rate limit resets at epoch 1794463204. The source inventory review found only the accepted release version bump in Cargo.toml/Cargo.lock since c7609e42; refreshed the reviewed digest without changing providers or required checks."
@@ -920,6 +967,7 @@
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/VALIDATION.md",
         "docs/book/src/quickstart.md",
         "src/decapod/core/scaffold.rs",
         "src/decapod/lib.rs",
