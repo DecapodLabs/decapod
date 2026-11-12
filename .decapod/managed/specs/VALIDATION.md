@@ -1196,10 +1196,42 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `707da7c26639f95f244bb96aa301e536b21fe8a69ce8b7bff8c6db8f07d1c28b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (229 files), `tests/` (230 files)
+- Repository signal fingerprint: `f5a5c188b16b5a9dc367187e37fdea0046587d60e53d93e29a3a0f6584743882`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (230 files), `tests/` (231 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Native inventory qualification
+
+The required CLI suite includes seven inventory regressions: UTF-8/reuse and
+redaction; sampled/budget-limited coverage; ordinary DDL and generated columns;
+trigger/view binding without DDL disclosure; checkpoints outside the ordinary
+event prefix; missing-store CLI/direct/stdin RPC without initialization; and
+bounded framing before startup. The registry dependency/version/checksum guard
+remains enabled for Dactyl v0.13.0. Read-only live captures use a CI-produced
+binary with database trees mounted read-only and only existing locks writable.
+Those captures bind their actual historical source/binary identity; they cannot
+establish publication readiness for the current candidate.
+
+The candidate preserves accepted managed-cloud, terminal onboarding and
+first-proof admission changes through v0.140.0 at fc1e2b94. Its release-bound
+entrypoints and managed image pin require regeneration through the independently
+published matching controller. Canonical spec reviews follow the final source
+and authored-spec edits. Complete exact-candidate Buildkite proof and current
+accepted-target verification remain required before publication; earlier passing
+stages, GitHub diagnostics and checkpoint-history checks cannot replace them.
+
+The CLI contract target runs exclusively in Bazel. Two hosted attempts of the
+previous 74-case candidate exhausted its 300-second deadline during the final
+existing workunit-recovery case after all seven inventory regressions passed;
+the same suite previously completed in 252 seconds. Rust's single test thread
+did not isolate real CLI fixtures from the concurrent entrypoint target.
+Exclusive scheduling let that complete suite pass in 293.7 seconds, leaving
+insufficient margin under the previous aggregate ceiling. The expanded target
+therefore uses Bazel's existing finite 900-second class, like the other large
+CLI suites. Every case, assertion and individual operation deadline remains
+required. Fresh execution must establish complete current-suite success;
+earlier partial runs do not prove it.
 
 ### Validation-owned candidate execution
 

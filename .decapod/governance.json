@@ -595,6 +595,14 @@
       "id": "issue1573-accepted140-release",
       "summary": "Reconcile accepted0.140.0 release and native release surfaces while preserving six checkpoints, bootstrap fixture coverage and quota implementation. Prior full proof invalidated by moving master; fresh exact-candidate Buildkite proof required.",
       "input_digest": "sha256:62ce34c3540896d81428b3477e0c08cbc94dc665d5d07b50e7b76cd9d38a7c64"
+    },
+    {
+      "id": "candidate1645-merge",
+      "summary": "Reconcile accepted storage inventory34aec878; preserve quota implementation/history, combine whole-product specs, independently review105 source inventory and require fresh full Buildkite proof.",
+      "input_digest": "sha256:772693ecd701268c96f0e23852e474f7530aefb6e3690c2146144e50b0854224",
+      "proof_refs": [
+        "after1645-source-review"
+      ]
     }
   ],
   "intents": {
@@ -640,23 +648,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed against accepted fc1e2b94 and independently released0.140.0. Quota implementation and four authored sections retained; accepted bootstrap fixture coverage preserved. No new source tests claimed: prior1687library/6quota/32boundary passed on ee48c0aa only; moving master invalidated full proof. Fresh current-candidate readiness remains required.",
-          "reviewed_code_fingerprint": "707da7c26639f95f244bb96aa301e536b21fe8a69ce8b7bff8c6db8f07d1c28b",
-          "spec_material_hash": "0eff925f4447362d473d57e9c7833e15ee82b60aec75b4453925e101d41b7417"
+          "reason": "Retains accepted storage inventory architecture and quota shared in-process Budget; bounded hints cannot authorize proof.",
+          "reviewed_code_fingerprint": "f5a5c188b16b5a9dc367187e37fdea0046587d60e53d93e29a3a0f6584743882",
+          "spec_material_hash": "90b6e8e313f593ad0ec8d7c40bd12e03ba0eeedcab3aeb8f0b6988f849ce6b03"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed against accepted fc1e2b94 and independently released0.140.0. Quota implementation and four authored sections retained; accepted bootstrap fixture coverage preserved. No new source tests claimed: prior1687library/6quota/32boundary passed on ee48c0aa only; moving master invalidated full proof. Fresh current-candidate readiness remains required.",
-          "reviewed_code_fingerprint": "707da7c26639f95f244bb96aa301e536b21fe8a69ce8b7bff8c6db8f07d1c28b",
-          "spec_material_hash": "b0164554c048717f56882cc5f111da1b6a1c8a914f2cc15a2e2b9ceca8190d1f"
+          "reason": "Retains accepted storage inventory interfaces and quota reader boundary; CLI flags and provider identity checks unchanged.",
+          "reviewed_code_fingerprint": "f5a5c188b16b5a9dc367187e37fdea0046587d60e53d93e29a3a0f6584743882",
+          "spec_material_hash": "94a84e14ff6ee74d6777ebdd75b9fe2445fce8814e29a15ded1be7bb3d28805a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed against accepted fc1e2b94 and independently released0.140.0. Quota implementation and four authored sections retained; accepted bootstrap fixture coverage preserved. No new source tests claimed: prior1687library/6quota/32boundary passed on ee48c0aa only; moving master invalidated full proof. Fresh current-candidate readiness remains required.",
-          "reviewed_code_fingerprint": "707da7c26639f95f244bb96aa301e536b21fe8a69ce8b7bff8c6db8f07d1c28b",
-          "spec_material_hash": "ecc8e7afebb549a800744002854826201e68cfbacea69a822006093227f6f7a9"
+          "reason": "Retains accepted storage privacy/security text. Quota tracking only bounded decimal successful-response hints; denial remains terminal and does not select credentials or another reader.",
+          "reviewed_code_fingerprint": "f5a5c188b16b5a9dc367187e37fdea0046587d60e53d93e29a3a0f6584743882",
+          "spec_material_hash": "b8095677dc08420d4a01a49b17f3fa7d14064a8b465f2f596046b22c8aafc311"
         }
       ],
       "state": "APPROVED",
@@ -669,17 +677,21 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794488252Z"
+      "updated_at": "1794492908Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve fresh final registry/source/base checks, required provider proof, public reader identity, immediate denied-request failure and the existing 7200-second maximum budget."
       ],
-      "artifact_hash": "sha256:ca445152249af376adf1e8fc74c6a4b1fd5d48cd1c35f5d2b3c0b2faf2d8a0f5",
+      "artifact_hash": "sha256:9016b992a463db43e3d9bd8ed1e0a0475afb33c074b55dca5669469783686254",
       "checks": [
         {
           "name": "accepted_target",
+          "status": "passed"
+        },
+        {
+          "name": "after1645-source-review",
           "status": "passed"
         },
         {
@@ -739,11 +751,15 @@
           "status": "passed"
         },
         {
+          "name": "validate022",
+          "status": "failed"
+        },
+        {
           "name": "workspace_admission",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -827,10 +843,24 @@
             "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M77EJ4KJ409S85KKXV55SAT1",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M77EJ4FZFRDV331WWPVRF36S",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M77EJ4KJ409S85KKXV55SAT1": {
@@ -1061,6 +1091,49 @@
                 ],
                 "sequence": 13,
                 "validation_findings": []
+              },
+              {
+                "action": "reconciliation",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "Private validate022.stdout: STALE_ACCEPTED_BASE before adapter preparation; remote master advanced fc1e2b94 to34aec878 via merged1645 storage inventory"
+                ],
+                "proof_refs": [
+                  "validate022"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
+                ],
+                "sequence": 14,
+                "validation_findings": [
+                  "Prior022 test passes are historical source diagnostics; current accepted-target readiness requires merge/checkpoint and fresh full validation"
+                ]
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:15",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  "MODULE.bazel.lock",
+                  "Accepted34aec878 adds storage inventory, registry Dactyl0.13 and matching Cargo/Bazel lock; independent105 hashes match declared aada494fcce7e3de0015e30abd8a954983c9324186ce13637f5699df2b91962d. Accepted bzl adds storage fixture/finite CLI isolation. No candidate workflow or quota implementation changes.",
+                  "Preserved native active journal in Git stash6f4306909bd74ccddb6cf62d494097c9b3b3bb71; restored it into merge, accepted whole-product storage prose plus four authored quota sections; native agent.init/specs.refresh regenerates projections."
+                ],
+                "proof_refs": [
+                  "after1645-source-review"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"]",
+                  "\"src/decapod/core/validation_runtime/snapshot\"",
+                  "\"src/decapod/core/validation_runtime/snapshot.rs\"",
+                  "\"tests\"",
+                  "paths:[\"src/decapod/core/snapshot_provider\""
+                ],
+                "sequence": 15,
+                "validation_findings": []
               }
             ]
           }
@@ -1073,6 +1146,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Accepted34aec878 adds storage inventory, registry Dactyl0.13 and matching Cargo/Bazel lock; independent105 hashes match declared aada494fcce7e3de0015e30abd8a954983c9324186ce13637f5699df2b91962d. Accepted bzl adds storage fixture/finite CLI isolation. No candidate workflow or quota implementation changes.",
         "All105 proof-source hashes independently rechecked including symlink bytes; only Cargo.lock/Cargo.toml release version changed after1633. Reviewed digest sha256:1a14a4a962890429ec177071bbbc7e1d497e3a08bcc8b68cd3e383ed8ad8b49d. Existing .bzl fixture coverage retained. Native140 regenerated entrypoints, Dockerfile, attestations and manifest in pending merge. No runtime limits/required checks changed.",
         "CI43203014899 passed on88b93161:1680 library,8 ignored,6 quota fixtures,32 boundary. Actual Buildkite8437 contracts/health failed Git merge-base verification after master advanced through1636/release1641 tobc0a7197. Corrected prior progress misclassification. Full readiness false. Owned stale read-only collector interrupted; native final CI operation cancelled at/tmp/decapod-snapshot-VJ25px, privately preserved. No PR created.",
         "Exactee48c0aa GitHub CI43210297814 passed:6 quota fixtures,1687library,8 ignored,32cloud boundary. Buildkite8501-8504 passed. Actual8500 completed30steps then deps-lint/setup rejected Git merge-base verification after master advanced to f1a6c7a0(PR1633). No source test failure was observed; complete native readiness never passed. Owned stale collector interrupted; cancelled verdict and /tmp/decapod-snapshot-p0aoqm preserved privately.",
@@ -1084,6 +1158,8 @@
         "Native Podman admission reports can_work=true and in_container=true with the actual runtime container ID a746884071f9cd15441394a7b6634ca20a8ab454d874dcd5b04202c82a6e2b83; accepted base d3358e1ce2cdb137dc57445c64592cb6d327a6ff. No product tests have run yet.",
         "Normal merge f1a6c7a0 keeps accepted bootstrap fix and fixture coverage. Active native journal retained; accepted specs retain four quota sections. Independently verified all105source hashes including symlink bytes: only .config/build/decapod.BUILD.bzl changed, adding consumer/fresh-docs fixtures to existing test targets. Actual digest sha256:31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40 matches accepted config. Required graph/carriers/checks retained; current package/controller0.139.1.",
         "Normal mergebc0a7197 preserves accepted onboarding/release and active native journal. Accepted product specs retain four authored quota sections. All105 source hashes independently checked, including symlink bytes; only Cargo.toml/Cargo.lock changed. Reviewed digest sha256:c9d2697f798bf2409fcfa1ea763efaf676e3bf4d6123b389ec106247a90ef8b0. Required graph/carriers/coverage unchanged.",
+        "Preserved native active journal in Git stash6f4306909bd74ccddb6cf62d494097c9b3b3bb71; restored it into merge, accepted whole-product storage prose plus four authored quota sections; native agent.init/specs.refresh regenerates projections.",
+        "Private validate022.stdout: STALE_ACCEPTED_BASE before adapter preparation; remote master advanced fc1e2b94 to34aec878 via merged1645 storage inventory",
         "Source implements bounded successful-header quota hints shared by nested budgets, cold-discovery pacing, fresh final registry/source/base checks, and no retry on denial. Six new fixtures are authored but have not executed. Canonical ARCHITECTURE/INTERFACES/SECURITY spec reviews recorded through native CLI. Container-private Git configuration backed up, official gh configured for authorized Git publication before proof; anonymous API reader remains credential-free.",
         "Verified official v0.139.0 LinuxAArch64 release archive sha256:24b5153ce3a04d6ab0c37d6d4be2428c623066b4b864c86116524371ca542649; isolated newcontroller image not published. Native successor01M77N7N2XK4M9KE1CB1435JBW imported once into empty private tmpfs with notmpcopyup; claim+workspace can_work true. First destination import rejected old host revision1 and replaced no state. Old owned source container stopped after fresh claim.",
         "Verified official0.139.1 archive ce1e96bde351e32b765a5052411bb601908c2e9a0a89fc3731fd7e8587f99607; successor01M77R6KGAGE6598M0GPA0GWM2 imported once, claimed, can_work true. Source139 container stopped. Generated premerge projections saved in stash71b357f07d1fc0dec78defb948285341b5240541; fresh native projections replace stale ones.",
@@ -1092,6 +1168,8 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/43195371875/job/131105696067:31 entrypoint tests passed,1 stale-release fixture failed,4 ignored. Standalone43195371851:190 passed then generated release drift rejected."
       ],
       "inspected_files": [
+        ".config/build/decapod.BUILD.bzl",
+        "MODULE.bazel.lock",
         "src/decapod/core/snapshot_provider/automatic.rs",
         "src/decapod/core/snapshot_provider/mod.rs",
         "src/decapod/core/snapshot_provider/provider.rs",
@@ -1109,13 +1187,15 @@
       "next_transitions": [
         "Checkpoint exact candidate and run plain decapod validate through required Buildkite profile",
         "Checkpoint exact140 release-reconciled candidate, verify history, check accepted tip before source push, complete full native Buildkite proof and publish only if ready.",
+        "Checkpoint merge, validate exact candidate against34aec878 using full actual Buildkite evidence, then native publisher if ready.",
         "Checkpoint reconciled candidate, push same governed branch, complete fresh exact-candidate Buildkite readiness and publish only if ready.",
         "Checkpoint reconciled1391 candidate, push, complete full native Buildkite readiness and publish only when ready.",
         "Checkpoint regenerated0.139.0 assets, commit, verify immutable history, push exact candidate, complete full native Buildkite proof and publish only when ready.",
         "Checkpoint source, merge current accepted target without replacing active governance journal, refresh projections and revalidate exact reconciled candidate.",
         "Checkpoint/commit accepted-target merge, verify immutable history, run plain decapod validate outside CI.",
         "Checkpoint/commit exact release-reconciled candidate, verify history, run native workspace publish for full required Buildkite validation and PR creation only if ready.",
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Review accepted1645 source contract and merge without changing quota implementation or required proof"
       ],
       "repo_scope": [
         "\".decapod/managed/specs\"]",
@@ -1131,6 +1211,7 @@
       "tool_calls": [],
       "unresolved_assumptions": [
         "Native exact-candidate Buildkite proof remains required. Current released controller may expose the separately tracked fresh-validation prerequisite issue1629; preserve any actual blocker instead of using candidate-built controller authority.",
+        "Prior022 test passes are historical source diagnostics; current accepted-target readiness requires merge/checkpoint and fresh full validation",
         "User authorized independent maintenance while PR1635 awaits merge; selected existing issue1573 from current backlog, with no changes to the pending cloud branch. GitHub quota hints advise pacing only and cannot establish execution readiness."
       ]
     }

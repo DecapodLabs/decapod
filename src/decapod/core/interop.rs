@@ -49,6 +49,7 @@ pub const RPC_OPS: &[&str] = &[
     "agent.registry.query",
     "specs.refresh",
     "schema.get",
+    "data.database.inspect",
     "store.upsert",
     "store.query",
     "validate.run",
@@ -296,6 +297,12 @@ const OP_META: &[OpMeta] = &[
         description: "Read entity JSON schema",
     },
     OpMeta {
+        op: "data.database.inspect",
+        read_only: true,
+        session_required: false,
+        description: "Inspect repository-local storage with bounded snapshot reads and explicit coverage",
+    },
+    OpMeta {
         op: "store.upsert",
         read_only: false,
         session_required: false,
@@ -311,7 +318,7 @@ const OP_META: &[OpMeta] = &[
         op: "validate.run",
         read_only: true,
         session_required: false,
-        description: "Run/read authoritative validation (the only op with non-zero exit on failure)",
+        description: "Run/read authoritative validation; unsuccessful validation returns non-zero",
     },
     OpMeta {
         op: "scaffold.next_question",
