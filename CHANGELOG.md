@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.139.0](https://github.com/DecapodLabs/decapod/compare/v0.138.3...v0.139.0) - 2026-11-12
+
+### Fixed
+
+- *(cloud)* reject unsupported proof before connector discovery
+- *(cloud)* retain pending completion after unavailable responses
+- *(cloud)* align offline RPC fixtures with Dactyl registry contract
+- *(build)* refresh complete Bazel registry metadata
+- *(cloud)* consume the published Dactyl connector API
+- *(cloud)* reconcile current target with Dactyl backend-only flow
+- *(cloud)* preserve observed dependency proof boundary
+- route governed cloud sessions and readiness through Dactyl
+
+### Other
+
+- *(cloud)* share managed scenarios through one private fixture
+- *(cloud)* require managed-session CLI scenarios in source proof
+- *(cloud)* verify service-owned seat and quote readiness states
+- *(governance)* align cloud candidate release projections
+
 ## [0.138.3](https://github.com/DecapodLabs/decapod/compare/v0.138.2...v0.138.3) - 2026-11-12
 
 ### Added
