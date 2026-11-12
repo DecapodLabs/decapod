@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Continue the exact sealed billing task from its published commit; repair measured gates natively."""
+"""Preserve the original billing task's authenticated preparation receipt, then publish natively."""
 import argparse
 import hashlib
 import json
@@ -18,11 +18,14 @@ REPO = "DecapodLabs/decapod"
 BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
 SOURCE = "26a499d9f0789a5ed00605d23cfc57f5392ae8fc"
 OPS = "ops/stale-billing-publication-20261111"
-ACTOR = "chatgpt-stale-billing"
-RECEIVER = "chatgpt-stale-billing-next"
+ACTOR = "chatgpt-stale-billing-next"
+RECEIVER = "chatgpt-stale-billing"
 CONTROLLER = "dd30b7516c331ac0a6c3128f7a9c433833935bc9f380d311b188502037f857e0"
-CURRENT = "c7609e42bbbcff9c72af6be7a86333d4b0408922"
-CURRENT_TREE = "f08a124d242dbb85d9eb058a16f3c5bb68a039a3"
+MATERIAL_BASE = REMOTE_HEAD = "c7609e42bbbcff9c72af6be7a86333d4b0408922"
+CURRENT = "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b"
+CURRENT_TREE = "58d4c05f32a1fef13e57f26cf61eac655e93d143"
+PREPARATION_MANIFEST = "sha256:9f5ed85eb003abb6eae5b271b2b0105fc3de9308c8c8f33c7439cdcd7f8c836b"
+PREPARATION_CANONICAL = "sha256:642a6ff37e04a841bbe86f512262b37884313c48daabcd734fd5f430707f42f4"
 OLD_BRANCH = "agent/codex-init-billing/code_01m7513af6jtzhp4-admin-checkout"
 ARCHIVE_TAG = "archive/stale-20261111-billing-26a499d9"
 RELEASE_GENERATED = {"AGENTS.md", "CLAUDE.md", "CODEX.md", "GEMINI.md", ".decapod/managed/Dockerfile.decapod", ".decapod/managed/specs/.manifest.json"}
@@ -63,36 +66,40 @@ def main():
     prior = resume["prior_result"]
     task_id = "code_01m76aq15fea61e8"
     preserved_branch = "agent/chatgpt-stale-billing/" + task_id + "-cloud-approval"
-    native_digest = "sha256:d8ca6ffaef87b2ff63283eb1906e5f54f32b1e8ec5b53fdd5408cdfd1f614090"
+    native_digest = "sha256:14b825cfa91ac27bb20fe462a49f8e0f29c45e9212f38c789a0b633c98331a85"
     approved_inventory = "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577"
     if (manifest.get("repository") != REPO or manifest.get("base_sha") != BASE
             or manifest.get("source_sha") != SOURCE or manifest.get("slug") != "billing"
             or resume.get("task_id") != task_id or resume.get("branch") != preserved_branch
-            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43116091778"
+            or resume.get("receiver") != ACTOR or resume.get("prior_run_id") != "43123122460"
+            or resume.get("return_receiver") != RECEIVER or resume.get("remote_head_sha") != REMOTE_HEAD
+            or resume.get("prior_operations_sha") != "8f5a5a2d0a0bade9042866ea4e36a37d8a3b8858"
+            or resume.get("prior_report_sha256") != "sha256:412a64caf4324bca7fa03c812f7a58c565748dfd8c7829fb0c588becdc720873"
+            or digest((json.dumps(prior, indent=2) + "\n").encode()) != resume.get("prior_report_sha256")
             or resume.get("candidate_sha") != CURRENT or resume.get("candidate_tree") != CURRENT_TREE
             or resume.get("native_transfer", {}).get("plaintext_sha256") != native_digest
-            or resume.get("native_transfer", {}).get("transfer_id") != "01M76DE2RNCERKRCA9J5C23RXG"
+            or resume.get("native_transfer", {}).get("transfer_id") != "01M76GKZEF5THJVB26HEP9VA6F"
             or prior.get("task") != task_id or prior.get("branch") != preserved_branch
-            or prior.get("status") != "blocked" or prior.get("head_sha") is not None
-            or prior.get("pushed") is not False or prior.get("checkpoints") is not False
-            or prior.get("observed_remote_head_sha") != CURRENT
-            or prior.get("prior_checkpoint_verification", {}).get("history_proven") is not True
-            or prior.get("prior_checkpoint_verification", {}).get("head_commit") != CURRENT
+            or prior.get("status") != "blocked" or prior.get("head_sha") != CURRENT
+            or prior.get("pushed") is not False or prior.get("checkpoints") is not True
+            or prior.get("observed_remote_head_sha") != REMOTE_HEAD
+            or prior.get("checkpoint_verification", {}).get("history_proven") is not True
+            or prior.get("checkpoint_verification", {}).get("head_commit") != CURRENT
             or prior.get("custody_exported") is not True or prior.get("full_boundary_passed") is not False
             or prior.get("final_head_sha") != CURRENT or prior.get("source_dirty_after_attempt") is not True
-            or set(resume.get("private_files", {})) != {"native-transfer.json", "pending-tracked.patch"}
-            or len(resume.get("pending_paths", [])) != 18
+            or set(resume.get("private_files", {})) != {"native-transfer.json", "pending-tracked.patch", "candidate.bundle"}
+            or set(resume.get("pending_paths", [])) != {".decapod/governance.json", ".decapod/managed/specs/.manifest.json"}
             or resume.get("approved_baseline_inventory_digest") != approved_inventory
             or manifest.get("allowed_source_changes") != []
             or set(manifest.get("release_generated_paths", [])) != RELEASE_GENERATED
             or set(repair.get("reviewed_paths", [])) != REPAIR_SCOPE
             or not set(repair.get("changed_paths", [])) <= REPAIR_SCOPE
             or set(repair.get("changed_paths", [])) - NATIVE_DOCS != {"src/decapod/lib.rs", "docs/cloud-repository-billing.md"}
-            or repair.get("base_sha") != CURRENT
+            or repair.get("base_sha") != MATERIAL_BASE
             or not re.fullmatch(r"[0-9a-f]{40}", repair.get("expected_material_tree", ""))
             or not re.fullmatch(r"[0-9a-f]{40}", manifest.get("projection_reference_tree", ""))
             or not 60 <= args.publish_timeout <= 5400):
-        parser.error("only the exact original published task and authenticated pending gate repairs may continue")
+        parser.error("only the exact original task, preserved checkpoint and authentic preparation receipt may continue")
     incoming = args.resume_private_dir.resolve()
     if incoming.is_symlink():
         parser.error("private continuation directory cannot be a symlink")
@@ -129,7 +136,16 @@ def main():
     controller = None
     spec_files = set()
     reviewed_inventory_digest = None
-    native_refresh = None
+    preparation = prior["project_prerequisites"]
+    project_report = preparation.get("native_json", {})
+    validation_epoch = project_report.get("report", {}).get("validation_epoch", {})
+    if (preparation.get("head_sha") != CURRENT or preparation.get("exit_code") != 0 or preparation.get("timeout") is not False
+            or project_report.get("status") != "ok" or project_report.get("scope") != "project_prerequisites"
+            or project_report.get("publication_ready") is not False or project_report.get("readiness") is not None
+            or project_report.get("report", {}).get("status") != "ok" or project_report.get("report", {}).get("fail_count") != 0
+            or project_report.get("report", {}).get("failures") != [] or project_report.get("report", {}).get("pass_count") != 206
+            or validation_epoch.get("generated_specs_manifest_hash") != PREPARATION_CANONICAL):
+        parser.error("continuation requires the authentic successful preparation at the exact preserved checkpoint")
 
     def scrub(value):
         if isinstance(value, dict):
@@ -218,8 +234,8 @@ def main():
 
     def verify_material(label):
         # This reference tree fixes all authored changes and release projections.
-        # Native refresh owns attestation fingerprints and their manifest hashes;
-        # compare those narrowly in memory, never normalize the actual source.
+        # The successful prior native preparation owns the exact manifest time,
+        # attestation and hashes. Compare them without refreshing or normalizing.
         manifest_path = SPEC_PREFIX + ".manifest.json"
         native_fields = {".decapod/governance.json", manifest_path} | ATTESTATION_SPECS
         delta = set(run(label + " complete tracked tree", "git", "diff", "--no-renames", "--name-only", "-z", expected_tree, cwd=work).split("\0")) - {""}
@@ -227,15 +243,19 @@ def main():
             raise Blocked("candidate differs from independently reviewed authored/release material: " + ", ".join(sorted(delta - native_fields)))
         if run(label + " untracked material", "git", "ls-files", "--others", "--exclude-standard", "-z", cwd=work):
             raise Blocked("untracked material remains outside complete reviewed tree")
-        if (not isinstance(native_refresh, dict) or native_refresh.get("success") is not True
-                or native_refresh.get("receipt", {}).get("op") != "specs.refresh"):
-            raise Blocked("current official native projection refresh is not recorded")
-        refreshed = native_refresh.get("result", {})
-        signal = refreshed.get("repo_signal_fingerprint", "")
-        generated_at = refreshed.get("refreshed_at", "")
-        if (refreshed.get("manifest_path") != manifest_path or not re.fullmatch(r"[0-9a-f]{64}", signal)
-                or not re.fullmatch(r"[0-9]+Z", generated_at)):
-            raise Blocked("native projection refresh omitted its exact signal/time identity")
+        manifest_bytes = (work / manifest_path).read_bytes()
+        if digest(manifest_bytes) != PREPARATION_MANIFEST:
+            raise Blocked("native preparation manifest bytes differ from the authenticated pending snapshot")
+        actual_manifest = json.loads(manifest_bytes)
+        canonical_manifest = dict(actual_manifest)
+        canonical_manifest.pop("generated_at")
+        if digest(json.dumps(canonical_manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()) != PREPARATION_CANONICAL:
+            raise Blocked("native manifest canonical identity differs from the authentic preparation epoch")
+        signal = validation_epoch.get("generated_specs_fingerprint", "")
+        generated_at = actual_manifest.get("generated_at")
+        if (signal != "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f"
+                or generated_at != "1794441332Z"):
+            raise Blocked("native preparation fingerprint or observed timestamp differs")
         expected_manifest = json.loads(run(label + " observed release manifest reference", "git", "show", expected_tree + ":" + manifest_path, cwd=work))
         original_signal = expected_manifest["repo_signal_fingerprint"]
         if [entry["path"] for entry in expected_manifest["files"]] != [SPEC_PREFIX + name + ".md" for name in SPEC_ORDER]:
@@ -244,7 +264,7 @@ def main():
         spec_hashes = {}
         for name in SPEC_ORDER:
             path = SPEC_PREFIX + name + ".md"
-            original = run(label + " original authored spec " + name, "git", "show", CURRENT + ":" + path, cwd=work)
+            original = run(label + " original authored spec " + name, "git", "show", MATERIAL_BASE + ":" + path, cwd=work)
             start, end = "<!-- decapod:codebase-attestation:start -->", "<!-- decapod:codebase-attestation:end -->"
             if original.count(start) != 1 or original.count(end) != 1:
                 raise Blocked("original spec does not have one canonical native attestation block")
@@ -258,6 +278,8 @@ def main():
             if actual != expected.encode():
                 raise Blocked("spec changed beyond exact native fingerprint substitution: " + path)
             content_hash = hashlib.sha256(actual).hexdigest()
+            if validation_epoch.get("material_hashes", {}).get("generated_spec:" + path) != "sha256:" + content_hash:
+                raise Blocked("native preparation epoch does not bind the exact preserved spec: " + path)
             spec_hashes[path] = content_hash
             input_hash.update(path.encode() + b"\0" + content_hash.encode() + b"\n")
         expected_manifest["generated_at"] = generated_at
@@ -265,7 +287,7 @@ def main():
         expected_manifest["spec_input_hash"] = input_hash.hexdigest()
         for entry in expected_manifest["files"]:
             entry["content_hash"] = spec_hashes[entry["path"]]
-        if json.loads((work / manifest_path).read_bytes()) != expected_manifest:
+        if actual_manifest != expected_manifest:
             raise Blocked("native manifest differs beyond current attestation/time and independently rehashed spec content")
         for path in RELEASE_GENERATED | ATTESTATION_SPECS | {".decapod/governance.json"}:
             if (work / path).is_symlink() or not (work / path).is_file():
@@ -275,7 +297,9 @@ def main():
         result.setdefault("material_verification", []).append(dict(stage=label, projection_reference_tree=expected_tree,
             complete_authored_and_release_material_equal=True, authored_specs_preserved_byte_exact=True,
             native_attestation_signal=signal, independently_rehashed_spec_input=input_hash.hexdigest(),
-            manifest_other_fields_exact=True, policy_unchanged_from_published_candidate=True))
+            manifest_raw_sha256=PREPARATION_MANIFEST, manifest_canonical_sha256=PREPARATION_CANONICAL,
+            authentic_native_generated_at=generated_at, manifest_other_fields_exact=True,
+            policy_unchanged_from_published_candidate=True))
 
     def require_no_open_pr(branch_name, label):
         raw = run(label, "gh", "api", "--method", "GET", "repos/" + REPO + "/pulls",
@@ -284,7 +308,7 @@ def main():
             raise Blocked("a branch requiring no open PR now has one; retain its current state")
 
     def current_remote():
-        if run("verify published continuation source lease", "git", "ls-remote", "origin", "refs/heads/" + preserved_branch).split() != [CURRENT, "refs/heads/" + preserved_branch]:
+        if run("verify published continuation source lease", "git", "ls-remote", "origin", "refs/heads/" + preserved_branch).split() != [REMOTE_HEAD, "refs/heads/" + preserved_branch]:
             raise Blocked("original published candidate changed; no source overwrite or replacement is permitted")
 
     def archive_original_before_freeze():
@@ -359,9 +383,21 @@ def main():
         current_remote()
         require_no_open_pr(preserved_branch, "verify continued candidate has no existing open PR")
         run("fetch exact original published candidate", "git", "fetch", "--no-tags", "--no-write-fetch-head", "origin", "refs/heads/" + preserved_branch + ":refs/remotes/origin/" + preserved_branch)
-        if (run("verify fetched candidate", "git", "rev-parse", "refs/remotes/origin/" + preserved_branch).strip() != CURRENT
-                or run("verify original candidate tree", "git", "rev-parse", CURRENT + "^{tree}").strip() != CURRENT_TREE):
+        if run("verify fetched published candidate", "git", "rev-parse", "refs/remotes/origin/" + preserved_branch).strip() != REMOTE_HEAD:
             raise Blocked("fetched candidate identity differs from authenticated prior run")
+        bundle = incoming / "candidate.bundle"
+        bundle_meta = resume["private_files"]["candidate.bundle"]
+        if (bundle.is_symlink() or not bundle.is_file() or bundle.stat().st_size != bundle_meta["bytes"]
+                or digest(bundle.read_bytes()) != bundle_meta["sha256"]
+                or bundle_meta["sha256"] != "sha256:0778dbf2443e1170d8b6a72f9a1dfca394da7b3aff61c29ffdba1acc06aaf5cb"):
+            raise Blocked("authentic checkpoint bundle differs from the captured native source")
+        run("verify authentic checkpoint source bundle", "git", "bundle", "verify", str(bundle))
+        if run("inspect exact checkpoint bundle refs", "git", "bundle", "list-heads", str(bundle)).split() != [CURRENT, "HEAD"]:
+            raise Blocked("checkpoint bundle contains unexpected source refs")
+        run("import exact native checkpoint Git objects", "git", "fetch", "--no-tags", "--no-write-fetch-head", str(bundle), "HEAD")
+        if (run("verify preserved native checkpoint tree", "git", "rev-parse", CURRENT + "^{tree}").strip() != CURRENT_TREE
+                or run("verify preserved native checkpoint parent", "git", "rev-parse", CURRENT + "^").strip() != REMOTE_HEAD):
+            raise Blocked("captured source checkpoint or direct parent differs")
         run("verify historical archive source is available", "git", "cat-file", "-e", SOURCE + "^{commit}")
         native_file = incoming / "native-transfer.json"
         metadata = resume["private_files"]["native-transfer.json"]
@@ -370,7 +406,7 @@ def main():
         native = json.loads(native_file.read_bytes())
         if (native["receiver"] != ACTOR or native["transfer_id"] != resume["native_transfer"]["transfer_id"]
                 or native["projection"]["task"]["id"] != task_id or native["source_commit"] != BASE
-                or native["source_branch"] != "billing-publication-control-acfe121a6fb2"):
+                or native["source_branch"] != "billing-publication-control-ae8c343cdb01"):
             raise Blocked("private native transfer does not match authenticated original task")
         observed_paths = {entry.split("\t", 2)[2] for entry in run("inspect approved repair patch paths", "git", "apply", "--numstat", "-z", data=patch).split("\0") if entry}
         release_paths = {entry.split("\t", 2)[2] for entry in run("inspect observed release drift paths", "git", "apply", "--numstat", "-z", data=release_patch).split("\0") if entry}
@@ -416,15 +452,16 @@ def main():
             run("archive native admission seed", "git", "bundle", "create", str(seed_archive), "refs/stash", "^" + BASE, cwd=work)
             result["admission_seed"] = encrypt(seed_archive, "billing-admission-seed.der")
         clean("verify clean receiver transition")
-        run("continue exact authenticated published commit", "git", "merge", "--ff-only", CURRENT, cwd=work)
+        run("restore exact authenticated native checkpoint", "git", "merge", "--ff-only", CURRENT, cwd=work)
         if run("verify continued task source", "git", "rev-parse", "HEAD", cwd=work).strip() != CURRENT:
-            raise Blocked("workspace did not continue the original published source")
+            raise Blocked("workspace did not continue the exact preserved native checkpoint")
         clean("verify exact source restoration cleanliness")
         pending_file = incoming / "pending-tracked.patch"
         pending_meta = resume["private_files"]["pending-tracked.patch"]
         if (pending_file.is_symlink() or not pending_file.is_file()
                 or pending_file.stat().st_size != pending_meta["bytes"]
-                or digest(pending_file.read_bytes()) != pending_meta["sha256"]):
+                or digest(pending_file.read_bytes()) != pending_meta["sha256"]
+                or pending_meta["sha256"] != "sha256:b00266f65ff3603edb0d1dd80ba24ecd141a2443bbf7ea6c35a673b8e1e53684"):
             raise Blocked("authentic pending source/journal recovery differs")
         pending = pending_file.read_text()
         pending_paths = {entry.split("\t", 2)[2] for entry in run("inspect authenticated pending continuation paths", "git", "apply", "--numstat", "-z", data=pending).split("\0") if entry}
@@ -442,17 +479,16 @@ def main():
         run("orient original billing task", "decapod", "infer", "orientation", "--task-id", task, cwd=work)
         run("read core doctrine", "decapod", "constitution", "get", "core/DECAPOD", cwd=work)
         doc("resolve current task context", "rpc", "--op", "context.resolve", cwd=work)
-        proof = doc("verify original published checkpoint lineage", "govern", "artifacts", "verify-checkpoints", "--base-branch", BASE, "--head-ref", CURRENT, "--target-base", "master", "--format", "json", cwd=work)
+        proof = doc("verify preserved original checkpoint lineage", "govern", "artifacts", "verify-checkpoints", "--base-branch", BASE, "--head-ref", CURRENT, "--target-base", "master", "--format", "json", cwd=work)
         if not (proof.get("history_proven") is True and proof.get("inspection_complete") is True and proof.get("findings") == [] and proof.get("head_commit") == CURRENT and proof.get("base_commit") == BASE):
-            raise Blocked("original published source lineage no longer verifies")
+            raise Blocked("preserved original checkpoint lineage no longer verifies")
         result["prior_checkpoint_verification"] = proof
-        doc("approve continued original billing plan", "govern", "plan", "approve", cwd=work)
         # Materialize both independently reviewed deltas only in a private index.
-        # Authored code is repaired below; native CLI must reproduce docs and all
-        # release-generated bytes. The isolated index grants no execution proof.
+        # These are comparison references only. The authenticated checkpoint
+        # already contains the authored/docs/release changes; do not rerender.
         review_env = dict(env, GIT_INDEX_FILE=str(private / "review-material.index"))
         for label, argv, data in [
-            ("read immutable published baseline", ["git", "read-tree", CURRENT], None),
+            ("read immutable reviewed material baseline", ["git", "read-tree", MATERIAL_BASE], None),
             ("apply reviewed gate material to isolated index", ["git", "apply", "--cached", "--whitespace=error", "-"], patch),
             ("compute reviewed repaired source tree", ["git", "write-tree"], None),
         ]:
@@ -462,7 +498,7 @@ def main():
         if observed.stdout.strip() != repair["expected_material_tree"]:
             raise Blocked("reviewed source gate patch does not produce its bound complete material tree")
         for path, reviewed in reviewed_files.items():
-            before = run("verify original material blob " + path, "git", "rev-parse", CURRENT + ":" + path, cwd=work).strip()
+            before = run("verify original material blob " + path, "git", "rev-parse", MATERIAL_BASE + ":" + path, cwd=work).strip()
             after = run("verify repaired material blob " + path, "git", "rev-parse", repair["expected_material_tree"] + ":" + path, cwd=work).strip()
             if before != reviewed["before_blob"] or after != reviewed["after_blob"]:
                 raise Blocked("independent repair material blob identity differs")
@@ -476,104 +512,70 @@ def main():
         if observed.stdout.strip() != expected_tree:
             raise Blocked("reviewed release projection tree identity differs")
         result["projection_reference_tree"] = expected_tree
-        candidate = reconciliation(doc("inspect unchanged accepted source inventory", "rpc", "--op", "agent.init", cwd=work), "candidate_reconciliation")
         approved_map = resume["baseline_inventory"]["discovered_sources"]
         recomputed = digest(json.dumps({"files": dict(sorted(approved_map.items()))}, separators=(",", ":")).encode())
         if (len(approved_map) != 105 or recomputed != approved_inventory
-                or candidate["discovered_sources"] != approved_map or candidate["inventory_digest"] != approved_inventory
                 or set(approved_map) & REPAIR_SCOPE or baseline["discovered_sources"] != approved_map):
             raise Blocked("continued candidate is not exactly the reviewed accepted-baseline inventory")
         for path, expected_digest in approved_map.items():
             source = subprocess.run(["git", "show", BASE + ":" + path], cwd=work, env=env, capture_output=True, timeout=120)
-            if source.returncode or digest(source.stdout) != expected_digest:
+            actual_source = work / path
+            if (source.returncode or digest(source.stdout) != expected_digest or actual_source.is_symlink()
+                    or not actual_source.is_file() or digest(actual_source.read_bytes()) != expected_digest):
                 raise Blocked("accepted-base source digest differs: " + path)
         result["inventory_review"] = dict(inventory_digest=approved_inventory, independently_hashed_sources=105,
             candidate_inventory_equal_to_accepted_base=True, new_policy_changes=False, carrier_approval=False, execution_proof=False)
         for path, reviewed in reviewed_files.items():
             if run("verify restored approved material " + path, "git", "hash-object", path, cwd=work).strip() != reviewed["after_blob"]:
                 raise Blocked("restored pending authored/doc material differs from independently approved gate repair")
-        run("regenerate exact source-backed documentation natively", "decapod", "docs", "build", cwd=work)
-        for path in NATIVE_DOCS:
-            if run("verify native generated doc " + Path(path).stem, "git", "hash-object", path, cwd=work).strip() != reviewed_files[path]["after_blob"]:
-                raise Blocked("official native docs output differs from independently reviewed deterministic source rendering")
-        native_refresh = doc("refresh official release projections", "rpc", "--op", "specs.refresh", cwd=work)
-        result["native_projection_refresh"] = native_refresh
-        for name in ("ARCHITECTURE", "INTERFACES", "SECURITY"):
-            doc("record bounded repair spec review " + name, "govern", "plan", "review-spec", "--path", SPEC_PREFIX + name + ".md",
-                "--disposition", "unchanged-with-reason", "--reason", "Continuation changes only measured lint, exact generated documentation with preserved existing authorization prose, and official release projections; accepted feature contracts and rollout boundaries remain unchanged.", cwd=work)
-        run("verify whitespace", "git", "diff", "--check", cwd=work)
-        run_id = doc("inspect original native trajectory", "govern", "artifacts", "status", cwd=work)["sections"]["trajectory"]["run_id"]
-        doc("record actual native gate repair evidence", "govern", "trajectory", "record", "--run-id", run_id, "--task-id", task,
-            "--phase", "validation", "--scope", "billing", "--boundary", "Continue original transferred task and published source; no failed readiness is reused as proof",
-            "--command", "git merge --ff-only " + CURRENT, "--command", "git apply authenticated pending snapshot " + pending_meta["sha256"],
-            "--command", "decapod docs build", "--command", "decapod rpc --op specs.refresh",
-            "--check", "git-diff-whitespace=passed", "--check", "prior-full-publication=failed", "--check", "current-full-workbranch-validation=unavailable",
-            "--evidence", "Native run 43111757803 stopped on actual source validation. Run 43116091778 preserved the original task and all 18 pending paths after native release healing, but project prerequisites correctly required an actual container. This continuation imports that exact native custody and journal only inside the native-prepared real container, preserves reviewed lint/docs/release material, and records a checkpoint before rerunning JSON project prerequisites and full native publication. No failed or partial check is reused as proof; source and CI policy remain unchanged.", cwd=work)
-        changed = set(run("inspect exact gate repair paths", "git", "diff", "HEAD", "--name-only", "-z", cwd=work).split("\0")) - {""}
-        changed |= set(run("inspect untracked gate repair paths", "git", "ls-files", "--others", "--exclude-standard", "-z", cwd=work).split("\0")) - {""}
-        if not changed <= REPAIR_SCOPE | RELEASE_GENERATED | ATTESTATION_SPECS | {".decapod/governance.json"}:
-            raise Blocked("gate repair changed material beyond reviewed source/generated scope")
-        run("stage bounded native gate repair", "git", "add", "--", *sorted(changed), cwd=work)
-        verify_material("after native gate repair and projection refresh")
-        doc("checkpoint exact native gate repair", "govern", "artifacts", "checkpoint", "--id", "billing-v1382-measured-gate-repair",
-            "--summary", "Continue original billing task at its published checkpoint; fix measured lint, regenerate exact source docs preserving accepted prose, and refresh six official release surfaces. Full readiness must rerun.",
+        # The authentic prior run already completed this preparation at CURRENT.
+        # Its timestamp and receipt are preserved, not regenerated or promoted
+        # into final readiness. Only the fresh full publisher may prove new HEAD.
+        verify_material("exact restored native preparation material")
+        run("verify authentic pending whitespace", "git", "diff", "--check", cwd=work)
+        receipt_paths = {".decapod/governance.json", SPEC_PREFIX + ".manifest.json"}
+        changed = set(run("inspect authentic preparation receipt paths", "git", "diff", "HEAD", "--name-only", "-z", cwd=work).split("\0")) - {""}
+        if changed != receipt_paths:
+            raise Blocked("restored successful preparation differs from its exact two-path snapshot")
+        restored_governance = json.loads((work / ".decapod/governance.json").read_bytes())
+        preserved_validation = restored_governance["sections"]["validation"]
+        preserved_epoch = restored_governance["epochs"][validation_epoch["epoch_id"]]
+        result["project_prerequisites"] = dict(preparation,
+            preserved_from_run=resume["prior_run_id"], native_reexecution=False,
+            preparation_only=True, publication_ready=False)
+        result["preparation_snapshot"] = dict(
+            head_sha=CURRENT, pending_patch_sha256=pending_meta["sha256"],
+            manifest_raw_sha256=PREPARATION_MANIFEST,
+            manifest_canonical_sha256=PREPARATION_CANONICAL,
+            pending_paths=sorted(receipt_paths), generated_at="1794441332Z",
+            source_regenerated=False, prerequisite_rerun=False)
+        run("stage authentic native preparation snapshot", "git", "add", "--", *sorted(receipt_paths), cwd=work)
+        checkpoint_id = "billing-preserved-preparation-" + env["GITHUB_RUN_ID"] + "-" + env["GITHUB_RUN_ATTEMPT"]
+        doc("checkpoint authentic native preparation receipt", "govern", "artifacts", "checkpoint", "--id", checkpoint_id,
+            "--summary", "Preserve the authentic successful 206-pass/0-fail project-prerequisites receipt and native manifest timestamp from run " + resume["prior_run_id"] + " at " + CURRENT + "; preparation evidence only. The original transferred task continues unchanged, and the full publisher must prove the new exact candidate.",
             "--proof-ref", SPEC_PREFIX + "VALIDATION.md", cwd=work)
-        run("stage native checkpoint", "git", "add", ".decapod/governance.json", cwd=work)
-        verify_material("after native checkpoint")
-        run("commit checkpointed gate repairs", "git", "commit", "--signoff", "-m", manifest["commit_message"], cwd=work)
-        head = run("bind exact continued candidate", "git", "rev-parse", "HEAD", cwd=work).strip()
-        if run("verify exact parent continuity", "git", "rev-parse", head + "^").strip() != CURRENT:
-            raise Blocked("repair did not create a direct continuation of original published candidate")
-        result.update(head_sha=head, tree=run("bind continued candidate tree", "git", "rev-parse", "HEAD^{tree}", cwd=work).strip())
-        proof = doc("verify exact continued checkpoint lineage", "govern", "artifacts", "verify-checkpoints", "--base-branch", BASE, "--head-ref", head, "--target-base", "master", "--format", "json", cwd=work)
+        run("stage native receipt checkpoint", "git", "add", "--", ".decapod/governance.json", cwd=work)
+        if set(run("verify native receipt checkpoint scope", "git", "diff", "HEAD", "--name-only", "-z", cwd=work).split("\0")) - {""} != receipt_paths:
+            raise Blocked("native receipt checkpoint exceeded the two authentic pending paths")
+        checkpointed_governance = json.loads((work / ".decapod/governance.json").read_bytes())
+        if (checkpointed_governance["sections"]["validation"] != preserved_validation
+                or checkpointed_governance["epochs"][validation_epoch["epoch_id"]] != preserved_epoch):
+            raise Blocked("native checkpoint did not preserve the authentic preparation receipt and epoch")
+        verify_material("after native preparation receipt checkpoint")
+        run("commit authentic native preparation receipt", "git", "commit", "--signoff", "-m", manifest["commit_message"], cwd=work)
+        head = run("bind final receipt-bearing candidate", "git", "rev-parse", "HEAD", cwd=work).strip()
+        if run("verify receipt commit parent", "git", "rev-parse", head + "^", cwd=work).strip() != CURRENT:
+            raise Blocked("native receipt commit did not continue the exact preserved checkpoint")
+        if set(run("verify committed preparation-only delta", "git", "diff", "--name-only", "-z", CURRENT, head, cwd=work).split("\0")) - {""} != receipt_paths:
+            raise Blocked("committed native receipt changed material beyond its authentic two-path scope")
+        result.update(head_sha=head, tree=run("bind final receipt-bearing tree", "git", "rev-parse", "HEAD^{tree}", cwd=work).strip())
+        result["project_prerequisites"]["receipt_commit_sha"] = head
+        proof = doc("verify final receipt-bearing checkpoint lineage", "govern", "artifacts", "verify-checkpoints", "--base-branch", BASE, "--head-ref", head, "--target-base", "master", "--format", "json", cwd=work)
         if not (proof.get("history_proven") is True and proof.get("inspection_complete") is True and proof.get("findings") == [] and proof.get("base_commit") == BASE and proof.get("head_commit") == head):
-            raise Blocked("continued candidate checkpoint lineage is not proven")
+            raise Blocked("final receipt-bearing candidate checkpoint lineage is not proven")
         result.update(checkpoints=True, checkpoint_verification=proof)
-        clean("verify continued candidate cleanliness")
-        verify_material("exact continued committed candidate")
-        code, stdout, stderr, timed_out = execute("validate exact committed project prerequisites in native container", ["decapod", "govern", "project-check", "--refresh-specs", "--format", "json"], cwd=work)
-        try:
-            project_check = json.loads(stdout)
-        except ValueError:
-            project_check = None
-        result["project_prerequisites"] = dict(command="decapod govern project-check --refresh-specs --format json", exit_code=code, timeout=timed_out, publication_ready=False, head_sha=head, native_json=project_check)
-        report = project_check.get("report", {}) if isinstance(project_check, dict) else {}
-        if (code or timed_out or not isinstance(project_check, dict) or project_check.get("status") != "ok"
-                or project_check.get("scope") != "project_prerequisites" or project_check.get("publication_ready") is not False
-                or project_check.get("readiness") is not None or report.get("status") != "ok"
-                or report.get("fail_count") != 0 or report.get("failures") != []):
-            result["blocker"] = dict(stage=stage, exit_code=code, timeout=timed_out, failures=scrub(report.get("failures", [])), codes=sorted(set(re.findall(CODES, stdout + stderr))), full_output="encrypted diagnostics")
-            raise Blocked("exact committed native project prerequisites did not pass every required gate")
-        if run("verify project check preserved exact commit", "git", "rev-parse", "HEAD", cwd=work).strip() != head:
-            raise Blocked("native project prerequisites changed the checkpointed commit")
-        verify_material("after successful native project prerequisites")
-        receipt_paths = set(run("inspect native preparation receipt paths", "git", "diff", "HEAD", "--name-only", "-z", cwd=work).split("\0")) - {""}
-        if not receipt_paths <= {".decapod/governance.json"}:
-            raise Blocked("native project prerequisites changed source beyond its preparation journal")
-        if receipt_paths:
-            preparation_head = head
-            checkpoint_id = "billing-project-prerequisites-" + env["GITHUB_RUN_ID"] + "-" + env["GITHUB_RUN_ATTEMPT"]
-            doc("checkpoint authentic native preparation receipt", "govern", "artifacts", "checkpoint", "--id", checkpoint_id,
-                "--summary", "Preserve the native successful project-prerequisites receipt for " + preparation_head + "; this is preparation evidence only. Full publisher must prove the final exact candidate.",
-                "--proof-ref", SPEC_PREFIX + "VALIDATION.md", cwd=work)
-            if set(run("verify receipt checkpoint scope", "git", "diff", "HEAD", "--name-only", "-z", cwd=work).split("\0")) - {""} != {".decapod/governance.json"}:
-                raise Blocked("native preparation checkpoint exceeded governance-only scope")
-            verify_material("after native preparation receipt checkpoint")
-            run("stage authentic native preparation receipt", "git", "add", "--", ".decapod/governance.json", cwd=work)
-            run("commit authentic native preparation receipt", "git", "commit", "--signoff", "-m", "chore(governance): preserve native billing project prerequisites", cwd=work)
-            head = run("bind final receipt-bearing candidate", "git", "rev-parse", "HEAD", cwd=work).strip()
-            if run("verify receipt commit parent", "git", "rev-parse", head + "^", cwd=work).strip() != preparation_head:
-                raise Blocked("native receipt commit did not continue the exact prepared candidate")
-            if set(run("verify committed receipt-only delta", "git", "diff", "--name-only", "-z", preparation_head, head, cwd=work).split("\0")) - {""} != {".decapod/governance.json"}:
-                raise Blocked("committed native receipt changed non-governance material")
-            result.update(head_sha=head, tree=run("bind final receipt-bearing tree", "git", "rev-parse", "HEAD^{tree}", cwd=work).strip())
-            result["project_prerequisites"]["receipt_commit_sha"] = head
-            proof = doc("verify final receipt-bearing checkpoint lineage", "govern", "artifacts", "verify-checkpoints", "--base-branch", BASE, "--head-ref", head, "--target-base", "master", "--format", "json", cwd=work)
-            if not (proof.get("history_proven") is True and proof.get("inspection_complete") is True and proof.get("findings") == [] and proof.get("base_commit") == BASE and proof.get("head_commit") == head):
-                raise Blocked("final receipt-bearing candidate checkpoint lineage is not proven")
-            result["checkpoint_verification"] = proof
-        clean("verify clean final candidate after native preparation")
-        verify_material("exact final candidate after native preparation")
+        clean("verify clean final candidate after native receipt preservation")
+        verify_material("exact final candidate before fresh full publisher")
         archive = private / "candidate.bundle"
         run("preserve final checkpointed source", "git", "bundle", "create", str(archive), "HEAD", "^" + BASE, cwd=work)
         run("verify preserved final source bundle", "git", "bundle", "verify", str(archive), cwd=work)

@@ -6,7 +6,7 @@
   "source_sha": "26a499d9f0789a5ed00605d23cfc57f5392ae8fc",
   "title": "feat(init): recover cloud repository purchase approval handoff",
   "intent": "Recover the reviewed cloud-init requested-seat and purchase-approval handoff onto accepted master; repair obsolete session assertions; preserve native governance and proof boundaries without deploying billing or claiming paid cloud is operational.",
-  "commit_message": "fix(billing): repair measured lint and generated documentation gates",
+  "commit_message": "chore(governance): preserve native billing preparation receipt",
   "body": "Cloud init now records a requested GitHub repository and named-user roster, validates that request against the local origin, and provides the hosted purchase-approval link. This recovers the unpublished billing contribution and corrects its obsolete assumption that init creates a cloud session automatically.\n\n## Changes\n\n- Add `--cloud-repository` and `--github-users` to both init entrypoints and preserve the normalized request in non-secret configuration.\n- Reject missing or duplicate usernames and repository/origin mismatches before writing configuration.\n- Expose the fixed approval URL; human interactive init may open it, while headless, proof, and dry-run execution only prints it.\n- Keep explicit session acquisition and backend entitlement checks authoritative. Regression coverage requires the approval link, no automatic session file, no leaked mock credential, and no readiness claim from init.\n- Update the living specifications and preserve the accepted verification, Laya, and documentation work.\n\n## Provenance and validation\n\nRecovered source: [`26a499d9`](https://github.com/DecapodLabs/decapod/commit/26a499d9f0789a5ed00605d23cfc57f5392ae8fc).\n\nExact candidate: `{{HEAD_SHA}}`.\nAccepted target: `{{BASE_SHA}}`.\n\nThe native publisher gates PR creation on complete validation of this exact candidate and target. The change does not modify CI, build definitions, or the controller contract; static patch checks are not publication proof.\n\n## Rollout boundary\n\nThis preserves the existing USD15 per named user per repository monthly purchase-intent contract. It does not deploy billing or establish that paid cloud is operational. Propodus billing deployment, GitHub admin verification, Stripe configuration and sandbox acceptance, and released client credential/route support remain prerequisites in `docs/cloud-repository-billing.md`. A roster entry or approval link cannot grant access.\n",
   "original_authored_paths": [
     ".decapod/managed/specs/ARCHITECTURE.md",
@@ -207,22 +207,22 @@
     }
   },
   "resume": {
-    "prior_run_id": "43116091778",
-    "prior_operations_sha": "a7efef8b2737a4b38c8040e00face07dbb6d4cec",
-    "prior_report_sha256": "sha256:89db3a331ab97c32aff9468962d9e1415fc1e248fcd7f9100903b496765b7f77",
+    "prior_run_id": "43123122460",
+    "prior_operations_sha": "8f5a5a2d0a0bade9042866ea4e36a37d8a3b8858",
+    "prior_report_sha256": "sha256:412a64caf4324bca7fa03c812f7a58c565748dfd8c7829fb0c588becdc720873",
     "prior_result": {
       "schema": "decapod.branch-publication.v1",
       "slug": "billing",
       "repository": "DecapodLabs/decapod",
       "base_sha": "c5de35a89b27e788169612ae71681e45c13bf71a",
       "source_sha": "26a499d9f0789a5ed00605d23cfc57f5392ae8fc",
-      "operations_sha": "a7efef8b2737a4b38c8040e00face07dbb6d4cec",
+      "operations_sha": "8f5a5a2d0a0bade9042866ea4e36a37d8a3b8858",
       "status": "blocked",
       "branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
       "task": "code_01m76aq15fea61e8",
-      "head_sha": null,
-      "tree": null,
-      "checkpoints": false,
+      "head_sha": "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b",
+      "tree": "58d4c05f32a1fef13e57f26cf61eac655e93d143",
+      "checkpoints": true,
       "pushed": false,
       "publication_ready": false,
       "full_boundary_passed": false,
@@ -230,11 +230,101 @@
       "pr_url": null,
       "resumed": true,
       "continuation_from": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
-      "prior_run_id": "43115014473",
+      "prior_run_id": "43116091778",
       "imported": true,
-      "incoming_transfer_id": "01M76CY9MZA01A2EC1FBYR76JE",
+      "incoming_transfer_id": "01M76DE2RNCERKRCA9J5C23RXG",
+      "container_execution": {
+        "engine": "podman",
+        "hostname": "c1a9176c9350",
+        "effective_uid": 0,
+        "effective_gid": 0,
+        "repository_owner_uid": 0,
+        "repository_owner_gid": 0,
+        "host_uid": 1001,
+        "host_gid": 1001,
+        "actual_dockerenv": false,
+        "actual_containerenv": true,
+        "container_id": "c1a9176c935059daf85027d65811300391a5cb640c0eac9e613c7e5b9e62081d",
+        "marker_id": null,
+        "marker_metadata_present": false,
+        "rootless_host": true,
+        "uid_map": [
+          {
+            "container_id": 0,
+            "host_id": 1001,
+            "size": 1
+          },
+          {
+            "container_id": 1,
+            "host_id": 165536,
+            "size": 65536
+          }
+        ],
+        "gid_map": [
+          {
+            "container_id": 0,
+            "host_id": 1001,
+            "size": 1
+          },
+          {
+            "container_id": 1,
+            "host_id": 165536,
+            "size": 65536
+          }
+        ],
+        "host_id_mappings": {
+          "gidmap": [
+            {
+              "container_id": 0,
+              "host_id": 1001,
+              "size": 1
+            },
+            {
+              "container_id": 1,
+              "host_id": 165536,
+              "size": 65536
+            }
+          ],
+          "uidmap": [
+            {
+              "container_id": 0,
+              "host_id": 1001,
+              "size": 1
+            },
+            {
+              "container_id": 1,
+              "host_id": 165536,
+              "size": 65536
+            }
+          ]
+        },
+        "native_before_import": {
+          "container_id": "c1a9176c9350",
+          "docker_available": false,
+          "image": null,
+          "in_container": true
+        }
+      },
       "controller": {
         "release": "v0.138.2",
+        "distribution": "oci",
+        "binary_sha256": "dd30b7516c331ac0a6c3128f7a9c433833935bc9f380d311b188502037f857e0",
+        "binary_bytes": 29185240,
+        "image_repository": "ghcr.io/decapodlabs/decapod",
+        "image_index_digest": "sha256:38ff07bbbaf33643f7dcb1b98ba7e4352a67e9f6e40e0a21f1988dfec804ade2",
+        "platform_manifest_digest": "sha256:aaca38cd94450d512f85415e529e0176c0dab2168cc135602ff601d6514aefe4",
+        "image_config_digest": "sha256:89b8305bb9de658d420c10b75b281b30f5f02f598116be58fe506f9a6daeb416",
+        "platform": {
+          "os": "linux",
+          "architecture": "amd64"
+        },
+        "release_tag_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
+        "source_workflow_run_id": 43106957801,
+        "source_workflow_job_id": 130812709187
+      },
+      "host_controller": {
+        "release": "v0.138.2",
+        "distribution": "github_release",
         "binary_sha256": "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723",
         "archive_sha256": "718fa969ca3eb7372a7b31e72e8572e3517ac61f969adad03790928a9d03dc06",
         "release_id": 442229037,
@@ -261,14 +351,14 @@
       },
       "admission_seed": {
         "artifact": "billing-admission-seed.der",
-        "plaintext_sha256": "sha256:1f8706cf2414fe8ce34c9185ea07277f595ae117d35c5906f6981a2703a85ef6",
-        "ciphertext_sha256": "sha256:214420cdacd3117a99c433a7179e53edc7a2db9924d72c04967b8217709f861f"
+        "plaintext_sha256": "sha256:093edf4e30d0e6e55e9fcbdb076704d551f7267fe412ee71b7cc5f2e8f0b1fd0",
+        "ciphertext_sha256": "sha256:f68d4566039901143f845b72439b0973db33a8a035667ea605618d0cc232c1df"
       },
       "original_pending_journal": {
-        "blob": "0bb993c9a62b5d0df70cf1687c585d7e2d91588a",
+        "blob": "f783d256d1137ca014436f56e51c243a5cb7618b",
         "source_commit": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
-        "pending_patch_sha256": "sha256:4bd2ed697dd65042aaf61fd1fdad82712ecceff70fe99107a48f1bd81b6c1136",
-        "prior_run_id": "43115014473",
+        "pending_patch_sha256": "sha256:e7c2e4dfa8a4d20b5a7172e7d472917337ff998cfef370d510202fe2a0f87420",
+        "prior_run_id": "43116091778",
         "exact_bytes_preserved": true
       },
       "prior_checkpoint_verification": {
@@ -299,90 +389,535 @@
         "carrier_approval": false,
         "execution_proof": false
       },
-      "blocker": {
-        "stage": "refresh full official release surfaces through native project prerequisites",
-        "exit_code": 1,
+      "native_projection_refresh": {
+        "id": "01M76GK4A1JHX3PVDSEDJGJ51Q",
+        "success": true,
+        "receipt": {
+          "op": "specs.refresh",
+          "timestamp": "1794441318Z",
+          "inputs_hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "outputs_hash": "79c67e8783fc9a06dd84d1dce0336c9966daca84b9b2945fd763c216149d7e21"
+        },
+        "result": {
+          "manifest_path": ".decapod/managed/specs/.manifest.json",
+          "refreshed_at": "1794437983Z",
+          "repo_signal_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f"
+        },
+        "allowed_next_ops": []
+      },
+      "material_verification": [
+        {
+          "stage": "after native gate repair and projection refresh",
+          "projection_reference_tree": "6b1963f1a66e6ec624972a9148fdd98a285998a8",
+          "complete_authored_and_release_material_equal": true,
+          "authored_specs_preserved_byte_exact": true,
+          "native_attestation_signal": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
+          "independently_rehashed_spec_input": "7a40742145eed407f5885320d5f969fcd6b4b7e77f133934cca3e1fe463c1022",
+          "manifest_other_fields_exact": true,
+          "policy_unchanged_from_published_candidate": true
+        },
+        {
+          "stage": "after native checkpoint",
+          "projection_reference_tree": "6b1963f1a66e6ec624972a9148fdd98a285998a8",
+          "complete_authored_and_release_material_equal": true,
+          "authored_specs_preserved_byte_exact": true,
+          "native_attestation_signal": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
+          "independently_rehashed_spec_input": "7a40742145eed407f5885320d5f969fcd6b4b7e77f133934cca3e1fe463c1022",
+          "manifest_other_fields_exact": true,
+          "policy_unchanged_from_published_candidate": true
+        },
+        {
+          "stage": "exact continued committed candidate",
+          "projection_reference_tree": "6b1963f1a66e6ec624972a9148fdd98a285998a8",
+          "complete_authored_and_release_material_equal": true,
+          "authored_specs_preserved_byte_exact": true,
+          "native_attestation_signal": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
+          "independently_rehashed_spec_input": "7a40742145eed407f5885320d5f969fcd6b4b7e77f133934cca3e1fe463c1022",
+          "manifest_other_fields_exact": true,
+          "policy_unchanged_from_published_candidate": true
+        }
+      ],
+      "checkpoint_verification": {
+        "schema": "decapod.checkpoint-history.v1",
+        "scope": "checkpoint_history",
+        "disposition": "proven",
+        "base_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
+        "head_commit": "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b",
+        "history_proven": true,
+        "inspection_complete": true,
+        "publication_ready": false,
+        "verified_commits": [
+          "c7609e42bbbcff9c72af6be7a86333d4b0408922",
+          "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b"
+        ],
+        "findings": []
+      },
+      "project_prerequisites": {
+        "command": "decapod govern project-check --refresh-specs --format json",
+        "exit_code": 0,
         "timeout": false,
-        "codes": [],
-        "detail": "76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/Contract test fixtures\n  [external-integrations] Mock/stub implementations -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/Mock/stub implementations\n  [persistent-state] migrations/ directory for schema migrations -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/migrations/ directory for schema migrations\n  [persistent-state] storage/ or repository/ abstraction layer -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/storage/ or repository/ abstraction layer\n  [persistent-state] test fixtures for database integration tests -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/test fixtures for database integration tests\n  [persistent-state] .decapod/managed/artifacts/custody/ directory for epistemic custody artifacts -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/.decapod/managed/artifacts/custody/ directory for epistemic custody artifacts\n  [scheduled-jobs] schedules/ or cron/ directory -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/schedules/ or cron/ directory\n  [scheduled-jobs] Schedule test fixtures -> /home/runner/work/decapod/decapod/subject/.decapod/workspaces/chatgpt-stale-billing-next-todo-01m76a-agent-chatgpt-stale-billing-code_01m76aq15fea61e8-cloud-approval/Schedule test fixtures\n\n",
-        "full_output": "encrypted diagnostics",
-        "reason": "native or Git command failed; preserve its exact diagnosis"
+        "publication_ready": false,
+        "head_sha": "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b",
+        "native_json": {
+          "agent_guidance": null,
+          "publication_ready": false,
+          "readiness": null,
+          "report": {
+            "advisory_count": 0,
+            "ci_prediction": {
+              "confidence": "medium",
+              "reasons": [
+                "Risk map missing (run `decapod riskmap init`)",
+                "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v4' while current scaffolding is 'scaffold-v5'; living spec content remains authoritative.",
+                "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (unregistered_workspace: workspace ownership is unverified; --force does not authorize deleting unrelated directories. Inspect and preserve or remove this directory explicitly), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning)",
+                "Watcher audit trail missing (run `decapod govern watcher run`)",
+                "Workspace branch 'agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval' has unpushed commits or does not exist on origin. Branch pushes and iteration are allowed before preflight; hold PR creation until intent is converged, the branch is mergeable, and full `decapod validate` succeeds against the exact current candidate and accepted target."
+              ],
+              "recommendations": [
+                "Review the reported validation warnings before relying on the CI result.",
+                "Use `decapod validate -v --format json` to inspect the affected gate output."
+              ],
+              "result": "review"
+            },
+            "drift_findings": [],
+            "elapsed_ms": 2506,
+            "fail_count": 0,
+            "failures": [],
+            "gate_timings": [
+              {
+                "elapsed_ms": 578,
+                "name": "validate_machine_contract"
+              },
+              {
+                "elapsed_ms": 540,
+                "name": "validate_project_specs_docs"
+              },
+              {
+                "elapsed_ms": 469,
+                "name": "validate_markdown_primitives_roundtrip_gate"
+              },
+              {
+                "elapsed_ms": 212,
+                "name": "validate_validation_rules"
+              },
+              {
+                "elapsed_ms": 153,
+                "name": "validate_obligations"
+              },
+              {
+                "elapsed_ms": 96,
+                "name": "validate_legacy_jsonl_retired"
+              },
+              {
+                "elapsed_ms": 91,
+                "name": "validate_stale_workspaces"
+              },
+              {
+                "elapsed_ms": 90,
+                "name": "validate_git_workspace_context"
+              },
+              {
+                "elapsed_ms": 53,
+                "name": "validate_archive_integrity"
+              },
+              {
+                "elapsed_ms": 28,
+                "name": "validate_control_plane_contract"
+              },
+              {
+                "elapsed_ms": 24,
+                "name": "validate_plan_governed_execution_gate"
+              },
+              {
+                "elapsed_ms": 23,
+                "name": "validate_schema_determinism"
+              },
+              {
+                "elapsed_ms": 15,
+                "name": "validate_no_legacy_namespaces"
+              },
+              {
+                "elapsed_ms": 13,
+                "name": "validate_federation_gates"
+              },
+              {
+                "elapsed_ms": 9,
+                "name": "validate_lineage_hard_gate"
+              },
+              {
+                "elapsed_ms": 8,
+                "name": "validate_embedded_self_contained"
+              },
+              {
+                "elapsed_ms": 6,
+                "name": "validate_knowledge_promotions_if_present"
+              },
+              {
+                "elapsed_ms": 6,
+                "name": "validate_watcher_audit"
+              },
+              {
+                "elapsed_ms": 6,
+                "name": "validate_lcm_immutability"
+              },
+              {
+                "elapsed_ms": 6,
+                "name": "validate_lcm_rebuild_gate"
+              },
+              {
+                "elapsed_ms": 6,
+                "name": "validate_repomap_determinism"
+              },
+              {
+                "elapsed_ms": 5,
+                "name": "validate_git_protected_branch"
+              },
+              {
+                "elapsed_ms": 5,
+                "name": "validate_git_push_pr_gate"
+              },
+              {
+                "elapsed_ms": 3,
+                "name": "validate_database_schema_versions"
+              },
+              {
+                "elapsed_ms": 3,
+                "name": "validate_interface_contract_bootstrap"
+              },
+              {
+                "elapsed_ms": 3,
+                "name": "validate_knowledge_integrity"
+              },
+              {
+                "elapsed_ms": 2,
+                "name": "validate_health_cache_integrity"
+              },
+              {
+                "elapsed_ms": 2,
+                "name": "validate_policy_integrity"
+              },
+              {
+                "elapsed_ms": 2,
+                "name": "validate_gatekeeper_gate"
+              },
+              {
+                "elapsed_ms": 1,
+                "name": "validate_generated_artifact_whitelist"
+              },
+              {
+                "elapsed_ms": 1,
+                "name": "validate_health_purity"
+              },
+              {
+                "elapsed_ms": 1,
+                "name": "validate_override_authority"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_trajectory_artifacts_if_present"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_project_config_toml"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_research_claims_if_present"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_validation_receipt_if_present"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_recursive_improvement_passes_if_present"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_entrypoint_invariants"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_heartbeat_invocation_gate"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_repo_map"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_project_scoped_state"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_canon_mutation"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_watcher_purity"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_context_capsule_policy_contract"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_spec_drift"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_risk_map_violations"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_docs_templates_bucket"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_state_commit_gate"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_internalization_artifacts_if_present"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_eval_gate_if_required"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_workunit_manifests_if_present"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_context_capsules_if_present"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_root_dockerfile_seed_detection"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_risk_map"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_coplayer_policy_tightening"
+              },
+              {
+                "elapsed_ms": 0,
+                "name": "validate_tooling_gate"
+              }
+            ],
+            "note_count": 63,
+            "notes": [
+              "Agent Trajectory Artifact Gate",
+              "Archive Integrity Gate",
+              "Canon Mutation Gate",
+              "Co-Player Policy Tightening Gate",
+              "Context Capsule Gate",
+              "Context Capsule Policy Gate",
+              "Control Plane Contract Gate",
+              "Database Schema Version Gate",
+              "Embedded Self-Contained Gate",
+              "Entrypoint Commit Discipline Gate",
+              "Entrypoint Gate",
+              "Eval Gate Requirement",
+              "Federation Gates",
+              "Four Invariants Gate",
+              "Gatekeeper Safety Gate",
+              "Generated Artifact Whitelist Gate",
+              "Git Protected Branch Gate",
+              "Git Push & PR Gate",
+              "Git Workspace Context Gate",
+              "Governance PR Update Gate",
+              "Health Cache Non-Authoritative Gate",
+              "Health Purity Gate",
+              "Heartbeat Invocation Gate",
+              "Interface Contract Bootstrap Gate",
+              "Internalization Artifact Gate",
+              "Knowledge Integrity Gate",
+              "Knowledge Promotion Ledger Gate",
+              "LCM Immutability Gate",
+              "LCM Rebuild Gate",
+              "Legacy JSONL Retirement Gate",
+              "Lineage Hard Gate",
+              "Living Specs Material Mutation Gate",
+              "Machine Contract Drift Detection Gate",
+              "Managed Spec Projection Inventory Gate",
+              "Markdown Primitive Round-Trip Gate",
+              "Namespace Purge Gate",
+              "Plan-Governed Execution Gate",
+              "Policy Integrity Gates",
+              "Project Config Gate",
+              "Project Specs Architecture Gate",
+              "Project-Scoped State Gate",
+              "Publication Bundle Currency Gate",
+              "Recursive Improvement Pass Gate",
+              "Repo Map",
+              "Repo Map Determinism Gate",
+              "Repository Override Authority Gate",
+              "Research Claims Ledger Gate",
+              "Risk Map Gate",
+              "Root Dockerfile Boundary Gate",
+              "STATE_COMMIT Validation Gate",
+              "STATE_COMMIT: required_ci_job = state_commit_golden_vectors",
+              "Schema Determinism Gate",
+              "Spec Drift Detection Gate (Hygiene)",
+              "Stale Workspaces Cleanup Gate",
+              "Store: repo (dogfood backlog semantics)",
+              "Tooling Validation Gate",
+              "Validation Receipt Gate",
+              "Validation Rules Gate",
+              "Watcher Audit Gate",
+              "Watcher Purity Gate",
+              "Work Unit Manifest Gate",
+              "Zone Violation Gate",
+              "material_specs: outcome=passed proof=authored_change"
+            ],
+            "parallelism": 1,
+            "pass_count": 206,
+            "skip_count": 9,
+            "status": "ok",
+            "temporary_artifacts_cleaned": 0,
+            "validation_epoch": {
+              "constitution_hash": "sha256:27c3a78e5546640f5ef8da0460decda605aca8f82b9019482bb27a8f0b6d8a5d",
+              "constitution_version": "embedded-docs@0.138.2",
+              "epoch_id": "ve_374307117d754267",
+              "evaluator_identity": "decapod-validate@0.138.2",
+              "evaluator_set_hash": "sha256:364dab4609ec1d7772e23123f7588bec3a529a2f126a2cf842a69b12fb90b187",
+              "generated_specs_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
+              "generated_specs_manifest_hash": "sha256:642a6ff37e04a841bbe86f512262b37884313c48daabcd734fd5f430707f42f4",
+              "material_hashes": {
+                "constitution:core/DECAPOD": "sha256:27c3a78e5546640f5ef8da0460decda605aca8f82b9019482bb27a8f0b6d8a5d",
+                "generated_spec:.decapod/managed/specs/ARCHITECTURE.md": "sha256:28a904dca7f2023dab8ed89669a7174607e059446c6379742ae71b059f6e1a10",
+                "generated_spec:.decapod/managed/specs/INTENT.md": "sha256:57323f3d6867545494cb24869a36e95f300191ba74183cef99e5b29ad303b537",
+                "generated_spec:.decapod/managed/specs/INTERFACES.md": "sha256:9c1f859a1d402960bc96fb1bb50c3c2907cc5ec80b2907ef29687a4c1d33085b",
+                "generated_spec:.decapod/managed/specs/OPERATIONS.md": "sha256:44f374d5a5ae5ce7cf825a72e41d9124823285e5bded2896387f07a3f6d74ada",
+                "generated_spec:.decapod/managed/specs/README.md": "sha256:f26b20c96a54df781a67dd89403991b15e08cd5bd0355ae28f5d5397eeb17775",
+                "generated_spec:.decapod/managed/specs/SECURITY.md": "sha256:e5edfe4047e88c8a82c5b0b14e842b5cc9cb4c6df604676e703c6a002ad9108a",
+                "generated_spec:.decapod/managed/specs/SEMANTICS.md": "sha256:0c3dab1cd6ded799acf2797d97a0993368b9ba657222dc8355b39a535073b537",
+                "generated_spec:.decapod/managed/specs/VALIDATION.md": "sha256:79d2b857cfa3a92a21dabc59ed3be9d87baab1e33d9c2718a3861c81326da00e",
+                "generated_specs_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
+                "generated_specs_manifest": "sha256:642a6ff37e04a841bbe86f512262b37884313c48daabcd734fd5f430707f42f4",
+                "governance_context": "sha256:a51e19255afd04d3956cfb180276a433c862efaf045c8ee30d9280497ab8c8fe",
+                "governance_material:.decapod/managed/Dockerfile.decapod": "sha256:5f65ee3e42ab5c556b9bc9ddd9e12081fe186eb3e641363a3f29d6ffbb9c54e5",
+                "governance_material:AGENTS.md": "sha256:465f81b79748e422dc604a5d3c98d1a3d6e0d64a20207187d7cc62e2e9278a72",
+                "governance_material:CLAUDE.md": "sha256:23e6c0ad0bfb5088cd6c086aa59d099e63abd1da588ae33f64bff88c20b87641",
+                "governance_material:CODEX.md": "sha256:df9b66f1e5a9c6eb0973c8139b7a793b954a4970b8ff441a84d595952af27c36",
+                "governance_material:GEMINI.md": "sha256:b459b7b7a8fcb35c4006bf6e72bcc24762a168814811a58937865a55f93f127b",
+                "governance_section:claims": "sha256:065edaffb62282d613d1d4013750c3dfc1f58a45bd1cba116ff82c02a2a689c4",
+                "governance_section:plan": "sha256:fca3898d5f34b034244f42d7e6da571c235aaf23aba53a6f7597dfc6d72de269",
+                "living_spec_material:.decapod/managed/specs/ARCHITECTURE.md": "sha256:2abef7c024c78f47e368f59e41963a48f3f474f1fa01db724e83a8f410c709bc",
+                "living_spec_material:.decapod/managed/specs/INTENT.md": "sha256:831ed24b7d84227536c328947502e4e47c29abe648775cbcddc7e75484eabdb1",
+                "living_spec_material:.decapod/managed/specs/INTERFACES.md": "sha256:4ee67aebac958a1aac7f08e6cc0655b591911c02c023ed4ae45bebcc61756a47",
+                "living_spec_material:.decapod/managed/specs/OPERATIONS.md": "sha256:1d3e29277d53611989f0ecc92d40beebbee3283a59eb8bafa1369d3b4dce5a98",
+                "living_spec_material:.decapod/managed/specs/README.md": "sha256:b438399f5c0f241858ccea303abbd1076a8728d2560509e7a15e012dd698765c",
+                "living_spec_material:.decapod/managed/specs/SECURITY.md": "sha256:ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365",
+                "living_spec_material:.decapod/managed/specs/SEMANTICS.md": "sha256:9d018633011f35a358599d2a446443272ac8abad4c2bdc0a811e97fdaad7c365",
+                "living_spec_material:.decapod/managed/specs/VALIDATION.md": "sha256:90a5f15a733df37456966f4cedbf1bb91edabb2cb09ef42d84ea6a50cd92e725",
+                "proof_rubric": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
+                "validation_profile": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
+              },
+              "proof_rubric": "decapod-validate/current-proof-v1",
+              "proof_rubric_hash": "sha256:99e8ef25629da391e9b479db9fff52b82f340224f7a69d8a88d2992ae8e90466",
+              "schema_version": "1.0.0",
+              "validation_profile": "default",
+              "validation_profile_hash": "sha256:37a8eec1ce19687d132fe29051dca629d164e2c4958ba141d5f4133a33f0688f"
+            },
+            "warn_count": 5,
+            "warnings": [
+              "Risk map missing (run `decapod riskmap init`)",
+              "STALE_SPECS_TEMPLATE: Project specs use template version 'scaffold-v4' while current scaffolding is 'scaffold-v5'; living spec content remains authoritative.",
+              "Stale workspaces preserved for explicit review: <external-path> (current_workspace: workspace contains the current process; rerun prune from the host checkout after leaving this workspace so Git can release the branch), <external-path> (unregistered_workspace: workspace ownership is unverified; --force does not authorize deleting unrelated directories. Inspect and preserve or remove this directory explicitly), <external-path> (active_claim: workspace belongs to an active task claim; release or complete the claim before pruning)",
+              "Watcher audit trail missing (run `decapod govern watcher run`)",
+              "Workspace branch 'agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval' has unpushed commits or does not exist on origin. Branch pushes and iteration are allowed before preflight; hold PR creation until intent is converged, the branch is mergeable, and full `decapod validate` succeeds against the exact current candidate and accepted target."
+            ]
+          },
+          "scope": "project_prerequisites",
+          "self_heal": [
+            {
+              "action": "heal_override_checksum",
+              "detail": "Cached OVERRIDE.md checksum for deterministic governance reads.",
+              "outcome": "cached"
+            },
+            {
+              "action": "heal_validation_scaffold",
+              "detail": "Scaffolded missing validation surfaces (entrypoints_created=0, config_created=0, specs_created=0, ci_created=0).",
+              "outcome": "updated"
+            }
+          ],
+          "status": "ok"
+        }
+      },
+      "blocker": {
+        "stage": "after successful native project prerequisites original authored spec SECURITY",
+        "kind": "Blocked",
+        "reason": "native manifest differs beyond current attestation/time and independently rehashed spec content"
       },
       "transfer": {
         "task_id": "code_01m76aq15fea61e8",
-        "transfer_id": "01M76DE2RNCERKRCA9J5C23RXG",
-        "receiver": "chatgpt-stale-billing",
+        "transfer_id": "01M76GKZEF5THJVB26HEP9VA6F",
+        "receiver": "chatgpt-stale-billing-next",
         "native_source_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
-        "native_source_branch": "billing-publication-control-acfe121a6fb2",
+        "native_source_branch": "billing-publication-control-ae8c343cdb01",
         "source_sealed": true,
-        "candidate_sha": null,
+        "candidate_sha": "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b",
         "candidate_branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
         "artifact": "billing-custody.der",
-        "plaintext_sha256": "sha256:d8ca6ffaef87b2ff63283eb1906e5f54f32b1e8ec5b53fdd5408cdfd1f614090",
-        "ciphertext_sha256": "sha256:e5d2590e57568e4b3da69fa11fb128bec0cde75146c1953859458e574150ced2"
+        "plaintext_sha256": "sha256:14b825cfa91ac27bb20fe462a49f8e0f29c45e9212f38c789a0b633c98331a85",
+        "ciphertext_sha256": "sha256:55d05a3434ad2283346851eda3665e15529df47d98c60b55bb8d26e2163a492d"
       },
       "source_dirty_after_attempt": true,
-      "final_head_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
+      "final_head_sha": "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b",
       "recovery_candidate_bundle": {
         "artifact": "billing-candidate-recovery.der",
-        "plaintext_sha256": "sha256:8b3988b9aa3857eebde86740ebddb4a03120f20f7ed71e49ec7f2cdf9773fafc",
-        "ciphertext_sha256": "sha256:78349257532987d02369b223cd401fc2e95905feadd4062d0077937fcff46b5f"
+        "plaintext_sha256": "sha256:0778dbf2443e1170d8b6a72f9a1dfca394da7b3aff61c29ffdba1acc06aaf5cb",
+        "ciphertext_sha256": "sha256:4e4342ba5b03b45079e37b449eeb4e550227dc473625b76270ab7a4468a1265e"
       },
       "observed_remote_head_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
       "diagnostics": {
         "artifact": "billing-diagnostics.der",
-        "plaintext_sha256": "sha256:e9a68455907aebbab6729c353b000a04afbcd9d59b65698fa010635507c502aa",
-        "ciphertext_sha256": "sha256:e530a188c98a0d7242a86b1829deb94bdb1aed696b5f405201e2c86be4d28be8"
+        "plaintext_sha256": "sha256:66451ab6e2decbe9be803ce33b794b9afd4cb337fd7c8382489740ed546bde51",
+        "ciphertext_sha256": "sha256:88dda1c23fb4f57c1dc193f6838416f9b10c322e19d3bf7c328e5cf25add866f"
       }
     },
     "task_id": "code_01m76aq15fea61e8",
     "branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
-    "candidate_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
-    "candidate_tree": "f08a124d242dbb85d9eb058a16f3c5bb68a039a3",
-    "receiver": "chatgpt-stale-billing",
+    "candidate_sha": "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b",
+    "candidate_tree": "58d4c05f32a1fef13e57f26cf61eac655e93d143",
+    "receiver": "chatgpt-stale-billing-next",
     "native_transfer": {
       "task_id": "code_01m76aq15fea61e8",
-      "transfer_id": "01M76DE2RNCERKRCA9J5C23RXG",
-      "receiver": "chatgpt-stale-billing",
+      "transfer_id": "01M76GKZEF5THJVB26HEP9VA6F",
+      "receiver": "chatgpt-stale-billing-next",
       "native_source_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
-      "native_source_branch": "billing-publication-control-acfe121a6fb2",
+      "native_source_branch": "billing-publication-control-ae8c343cdb01",
       "source_sealed": true,
-      "candidate_sha": null,
+      "candidate_sha": "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b",
       "candidate_branch": "agent/chatgpt-stale-billing/code_01m76aq15fea61e8-cloud-approval",
       "artifact": "billing-custody.der",
-      "plaintext_sha256": "sha256:d8ca6ffaef87b2ff63283eb1906e5f54f32b1e8ec5b53fdd5408cdfd1f614090",
-      "ciphertext_sha256": "sha256:e5d2590e57568e4b3da69fa11fb128bec0cde75146c1953859458e574150ced2"
+      "plaintext_sha256": "sha256:14b825cfa91ac27bb20fe462a49f8e0f29c45e9212f38c789a0b633c98331a85",
+      "ciphertext_sha256": "sha256:55d05a3434ad2283346851eda3665e15529df47d98c60b55bb8d26e2163a492d"
     },
-    "package_sha256": "sha256:fbbc18a87f9a36debd0eb1eee259c275fd897fdfa1e0d62027659e5550c05986",
+    "package_sha256": "sha256:8795ddd2173fdcb1b53f1a6a7a98d3b69ff72c87d1a98dd564eba2d5d71d91f5",
     "private_files": {
       "native-transfer.json": {
-        "sha256": "sha256:d8ca6ffaef87b2ff63283eb1906e5f54f32b1e8ec5b53fdd5408cdfd1f614090",
-        "bytes": 78645
+        "sha256": "sha256:14b825cfa91ac27bb20fe462a49f8e0f29c45e9212f38c789a0b633c98331a85",
+        "bytes": 107115
       },
       "pending-tracked.patch": {
-        "sha256": "sha256:e7c2e4dfa8a4d20b5a7172e7d472917337ff998cfef370d510202fe2a0f87420",
-        "bytes": 23087
+        "sha256": "sha256:b00266f65ff3603edb0d1dd80ba24ecd141a2443bbf7ea6c35a673b8e1e53684",
+        "bytes": 18577
+      },
+      "candidate.bundle": {
+        "sha256": "sha256:0778dbf2443e1170d8b6a72f9a1dfca394da7b3aff61c29ffdba1acc06aaf5cb",
+        "bytes": 20213
       }
     },
     "pending_paths": [
       ".decapod/governance.json",
-      ".decapod/managed/Dockerfile.decapod",
-      ".decapod/managed/specs/.manifest.json",
-      ".decapod/managed/specs/ARCHITECTURE.md",
-      ".decapod/managed/specs/INTENT.md",
-      ".decapod/managed/specs/INTERFACES.md",
-      ".decapod/managed/specs/OPERATIONS.md",
-      ".decapod/managed/specs/README.md",
-      ".decapod/managed/specs/SECURITY.md",
-      ".decapod/managed/specs/SEMANTICS.md",
-      ".decapod/managed/specs/VALIDATION.md",
-      "AGENTS.md",
-      "CLAUDE.md",
-      "CODEX.md",
-      "GEMINI.md",
-      "docs/agent/config-schema.md",
-      "docs/cloud-repository-billing.md",
-      "src/decapod/lib.rs"
+      ".decapod/managed/specs/.manifest.json"
     ],
     "baseline_inventory": {
       "discovered_sources": {
@@ -496,11 +1031,42 @@
       "status": "needs_reconciliation"
     },
     "approved_baseline_inventory_digest": "sha256:83c629aa22fba433bbd69e480aa0ecbd0abfdda74dc7dfec2a88758932920577",
-    "recovery_scope": "Authenticated 18-path pending material from the actual native container prerequisite failure. Import the original task only inside a real native-prepared coordination container, restore exact source and journal, checkpoint, then run JSON project prerequisites. Preserve only native preparation receipt changes through a governance-only checkpoint before full publication."
+    "recovery_scope": "Import the original task only inside the proven native container, restore the exact authenticated 04dd checkpoint bundle and two pending native paths, preserve the already successful 206/0 preparation receipt and observed manifest timestamp through one unique native checkpoint/commit, then run one fresh full native workspace publisher. No source regeneration, spec refresh, optional prerequisite rerun, or reuse of preparation as final readiness.",
+    "return_receiver": "chatgpt-stale-billing",
+    "remote_head_sha": "c7609e42bbbcff9c72af6be7a86333d4b0408922",
+    "native_checkpoint_bundle": {
+      "artifact": "billing-candidate-recovery.der",
+      "plaintext_sha256": "sha256:0778dbf2443e1170d8b6a72f9a1dfca394da7b3aff61c29ffdba1acc06aaf5cb",
+      "ciphertext_sha256": "sha256:4e4342ba5b03b45079e37b449eeb4e550227dc473625b76270ab7a4468a1265e"
+    },
+    "pending_tree": "bb11f463d9647b88ddeb39e7e58cd47fe981d13e",
+    "independent_pending_review_sha256": "sha256:f672a42a31cf8872103b13e7559bd4b230e684516d8c64902c4c9f781698c7e0",
+    "preparation_evidence": {
+      "run_id": "43123122460",
+      "head_sha": "04ddbedf90cd107ab9e7e3a46b4cb00e9c69bf6b",
+      "scope": "project_prerequisites",
+      "pass_count": 206,
+      "fail_count": 0,
+      "publication_ready": false,
+      "epoch_id": "ve_374307117d754267",
+      "receipt_hash": "sha256:fe50d3e9eec3c7a490757f4fe36bbf9dc6e5a3b1fda71423726291eb372002f7",
+      "manifest": {
+        "only_changed_field": "generated_at",
+        "old_generated_at": "1794437983Z",
+        "new_generated_at": "1794441332Z",
+        "old_raw_sha256": "sha256:305bd7a77455aed4d6e30c3dab5cd04b889c800b693b10673d6d59a1b97ad9f0",
+        "new_raw_sha256": "sha256:9f5ed85eb003abb6eae5b271b2b0105fc3de9308c8c8f33c7439cdcd7f8c836b",
+        "native_epoch_canonical_sha256": "sha256:642a6ff37e04a841bbe86f512262b37884313c48daabcd734fd5f430707f42f4",
+        "canonical_algorithm": "Remove generated_at; serde_json sorted-object compact UTF8 serialization; SHA256. Read-only comparison only.",
+        "canonical_equal_before_and_after": true,
+        "repo_signal_fingerprint": "f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f",
+        "all_eight_spec_bytes_unchanged_and_epoch_hashes_verified": true
+      }
+    }
   },
   "projection_reference_tree": "6b1963f1a66e6ec624972a9148fdd98a285998a8",
   "native_projection_comparison": {
-    "reference_tree_scope": "Exact reviewed gate repair plus observed release surface changes; native attestation signal and manifest time/content hashes are checked separately, never written by the helper.",
+    "reference_tree_scope": "Exact reviewed authored/docs/release reference. The authenticated 04dd checkpoint already contains every source repair; preserve the observed native preparation timestamp and all actual native bytes without regeneration.",
     "spec_order": [
       "README",
       "INTENT",
@@ -511,12 +1077,11 @@
       "OPERATIONS",
       "SECURITY"
     ],
-    "spec_allowance": "One exact fingerprint substitution only inside each existing codebase-attestation block, matching the current official specs.refresh receipt. Every other authored/generated spec byte remains exact.",
+    "spec_allowance": "The exact eight preserved 04dd spec bytes, bound both to the independently reviewed fingerprint substitution and to the authentic successful preparation epoch.",
     "manifest_allowance": [
-      "generated_at from specs.refresh refreshed_at",
-      "repo_signal_fingerprint from specs.refresh result",
-      "spec_input_hash recomputed from ordered native spec content",
-      "files[].content_hash recomputed from actual native spec bytes"
+      "Exact authenticated pending raw bytes at sha256:9f5ed85eb003abb6eae5b271b2b0105fc3de9308c8c8f33c7439cdcd7f8c836b",
+      "Only generated_at changed from 1794437983Z to 1794441332Z in the prior native project-check",
+      "Native canonical hash removes only generated_at in memory and must equal sha256:642a6ff37e04a841bbe86f512262b37884313c48daabcd734fd5f430707f42f4"
     ],
     "every_other_manifest_field_exact": true,
     "no_manual_machine_state_normalization": true
@@ -524,8 +1089,8 @@
   "native_container_continuation": {
     "host_role": "Native workspace coordination only; no original billing import, claim or export",
     "original_task_owner": "Actual native-prepared container child, actual repository UID",
-    "launch_contract": "Exact native backup, labels, whole-repository bind, readonly snapshot, and private tmpfs; TTY removed, scoped runtime inputs added, ephemeral tools installed, only private tmpfs ownership changed before setpriv",
-    "project_check_order": "Restore authentic18 paths; native projection receipt/material guard; source checkpoint; JSON project prerequisites; native governance-only receipt checkpoint if needed; exact final full native publisher",
+    "launch_contract": "Preserve exact native backup, labels, whole-repository bind, readonly snapshot and private tmpfs; noninteractive scoped runtime inputs. Proven rootless Podman namespace retains actual host-owner mapping; Docker drops to actual owner after changing only private tmpfs ownership.",
+    "project_check_order": "Restore exact authenticated 04dd bundle and two native pending paths; preserve the completed 206/0 preparation at 04dd without rerunning it; native unique receipt/timestamp checkpoint and commit; fresh full native workspace publisher on the final exact head.",
     "project_check_is_publication_proof": false,
     "host_custody_fallback": false,
     "official_distribution": "Host uses the verified GNU v0.138.2 release; child uses the independently verified immutable official v0.138.2-debian OCI controller compatible with the native image. Both identify accepted source c5de35a8; no candidate-built authoring controller."
