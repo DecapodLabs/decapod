@@ -62,6 +62,11 @@ pub(crate) fn backend<T>(
     result: Result<T, dactyl_db::DactylError>,
 ) -> Result<T, PropodusClientError> {
     result.map_err(|e| {
+        if matches!(e, dactyl_db::DactylError::Config(_)) {
+            return PropodusClientError::Configuration(
+                "cloud connector configuration is invalid".into(),
+            );
+        }
         let status = match e.adapter_kind() {
             Some(
                 dactyl_db::AdapterErrorKind::Unavailable

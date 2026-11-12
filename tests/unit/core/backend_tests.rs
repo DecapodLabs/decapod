@@ -279,13 +279,18 @@ fn cloud_datastore_selection_defaults_to_supabase_and_preserves_explicit_neon() 
 }
 
 #[test]
-fn supabase_requires_project_configuration_and_neon_stays_explicit() {
+fn supabase_validates_origin_and_neon_stays_explicit() {
     let config = crate::cli::CloudRuntimeConfig {
         provider: "supabase".to_string(),
         api_url: "https://legacy-service.example.test".to_string(),
         datastore: "supabase".to_string(),
     };
-    assert!(config.validate_datastore().is_err());
+    // Native discovery resolves the public project configuration after origin
+    // validation. The optional connector feature must still be explicit.
+    assert_eq!(
+        config.validate_datastore().is_ok(),
+        cfg!(feature = "supabase-cloud")
+    );
     let config = crate::cli::CloudRuntimeConfig {
         api_url: "https://neon.example.test".to_string(),
         datastore: "neon".to_string(),
