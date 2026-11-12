@@ -38,11 +38,12 @@ struct Pending {
 }
 
 fn error(status: CloudAuthStatus, message: &str) -> PropodusClientError {
-    PropodusClientError::Authentication(CloudAuthDiagnostic::new(
-        status,
-        message,
-        "Agent: retry the original command to resume the saved connection. Ask the user only for the browser action shown; do not ask them to run CLI commands or repeat init.",
-    ))
+    let next_action = if status == CloudAuthStatus::RepositoryDenied {
+        "Agent: explain that account or repository access needs attention. Preserve the pending connection and task; resume the original command when access is restored. The user may need their account administrator, and does not need another CLI command."
+    } else {
+        "Agent: retry the original command to resume the saved connection. Ask the user only for the browser action shown; do not ask them to run CLI commands or repeat init."
+    };
+    PropodusClientError::Authentication(CloudAuthDiagnostic::new(status, message, next_action))
 }
 
 fn custody<T>(result: Result<T, impl std::fmt::Display>) -> Result<T, PropodusClientError> {
@@ -62,6 +63,7 @@ fn backend<T>(result: Result<T, dactyl_db::DactylError>) -> Result<T, PropodusCl
                 | dactyl_db::AdapterErrorKind::Timeout
                 | dactyl_db::AdapterErrorKind::Transport,
             ) => CloudAuthStatus::Offline,
+            Some(dactyl_db::AdapterErrorKind::Authorization) => CloudAuthStatus::RepositoryDenied,
             _ => CloudAuthStatus::AuthRequired,
         };
         error(status, &format!("cloud connector: {e}"))
@@ -470,6 +472,21 @@ mod tests {
     const FIRST_FLOW: &str = "00000000-0000-4000-8000-000000000001";
     const SECOND_FLOW: &str = "00000000-0000-4000-8000-000000000002";
     const PREFIX: &str = "/functions/v1/propodus-onboarding";
+
+    #[test]
+    fn authorization_denial_returns_account_guidance_without_a_browser_handoff() {
+        let denied = backend::<()>(Err(dactyl_db::DactylError::adapter(
+            dactyl_db::AdapterErrorKind::Authorization,
+            "cloud authorization denied",
+        )))
+        .unwrap_err();
+        let PropodusClientError::Authentication(diagnostic) = denied else {
+            panic!("expected a structured access diagnostic");
+        };
+        assert_eq!(diagnostic.status, CloudAuthStatus::RepositoryDenied);
+        assert!(diagnostic.authorization_url.is_none());
+        assert!(diagnostic.next_action.contains("when access is restored"));
+    }
 
     struct Request {
         path: String,

@@ -9,7 +9,10 @@ shares that sign-in link and polls its original command every two seconds for
 up to five minutes, continuing as soon as sign-in completes without requiring
 another human message. A pending `todo add` carries the optional URL alongside
 its stable operation ID; polling always reuses that ID and the original arguments.
-No repeated init or manual token entry is required. Saved credentials live at
+No repeated init or manual token entry is required.
+`repository_denied` carries account-access guidance without an authorization URL;
+the agent preserves pending custody and resumes after access is restored.
+Saved credentials live at
 `$XDG_DATA_HOME/decapod/services/<origin-hash>/repositories/<repo-hash>/session_token.json`.
 `cloud status` selects that same scope without network I/O. A 60-second refresh
 lead reuses ordinary 15-minute access tokens across commands; definitive refresh
@@ -1082,7 +1085,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `536cd2169fdc4cba065fef2d8a3c35495b8b843be3051d695aba03466d236b07`
+- Repository signal fingerprint: `9f5e1cad8e01975c03737b203941e8851e6165fedf018dc29f544f539c70b7ed`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (226 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

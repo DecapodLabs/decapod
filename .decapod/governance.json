@@ -583,6 +583,14 @@
         "src/decapod/core/gatekeeper/sql_context.rs",
         "tests/support/cloud_session_lifecycle.rs"
       ]
+    },
+    {
+      "id": "persistent-cloud-auth-access-guidance",
+      "summary": "Distinguish server access denial from browser authentication and preserve pending custody with actionable agent guidance; add the bounded classification regression.",
+      "input_digest": "sha256:bae435fa75c67403e514bdd2616e892ef0b7e8b7e71acf0949c0de60ef3fc7f8",
+      "proof_refs": [
+        "src/decapod/core/cloud_session.rs"
+      ]
     }
   ],
   "intents": {
@@ -626,22 +634,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed current repair: atomic SQL wrapper keeps its exact direct forwarding contract, while the todo adapter observes only the completed result for session recovery. No provenance gate or authorization check changed.",
-          "reviewed_code_fingerprint": "536cd2169fdc4cba065fef2d8a3c35495b8b843be3051d695aba03466d236b07",
+          "reason": "Reviewed final account-denial classification: server authorization failures retain pending custody and provide account-access guidance without initiating another browser handoff. No role, grant or payment authority is inferred locally.",
+          "reviewed_code_fingerprint": "9f5e1cad8e01975c03737b203941e8851e6165fedf018dc29f544f539c70b7ed",
           "spec_material_hash": "1fd919a9d11777386aa0ec245d52c7b75f4e01473602a9ec58088a6618e6ede5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed current repair: atomic SQL wrapper keeps its exact direct forwarding contract, while the todo adapter observes only the completed result for session recovery. No provenance gate or authorization check changed.",
-          "reviewed_code_fingerprint": "536cd2169fdc4cba065fef2d8a3c35495b8b843be3051d695aba03466d236b07",
-          "spec_material_hash": "2b36a4cc97533a5d1d934fea8350245b5d70c9b24a07190984f5fab8ad2283c5"
+          "reason": "Reviewed final account-denial classification: server authorization failures retain pending custody and provide account-access guidance without initiating another browser handoff. No role, grant or payment authority is inferred locally.",
+          "reviewed_code_fingerprint": "9f5e1cad8e01975c03737b203941e8851e6165fedf018dc29f544f539c70b7ed",
+          "spec_material_hash": "d1ccdbd8ad9478d0e0e4bfd778133190ade49730f09a2474d293d435f659e8f7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current repair: atomic SQL wrapper keeps its exact direct forwarding contract, while the todo adapter observes only the completed result for session recovery. No provenance gate or authorization check changed.",
-          "reviewed_code_fingerprint": "536cd2169fdc4cba065fef2d8a3c35495b8b843be3051d695aba03466d236b07",
+          "reason": "Reviewed final account-denial classification: server authorization failures retain pending custody and provide account-access guidance without initiating another browser handoff. No role, grant or payment authority is inferred locally.",
+          "reviewed_code_fingerprint": "9f5e1cad8e01975c03737b203941e8851e6165fedf018dc29f544f539c70b7ed",
           "spec_material_hash": "b942e33744b672969071e8d0a12abb86998ef4272322568c87991043fac1b82c"
         }
       ],
@@ -653,13 +661,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794469900Z"
+      "updated_at": "1794470294Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:118ac68eeb2361050f52f49e95f879271ef0a4d264ef109eeb2ae4add7715262",
+      "artifact_hash": "sha256:586ad1440f98a308c9155795d4c9d40e7dfe77427bc1b4073b7b2453fdd00e39",
       "checks": [
         {
           "name": "formatting",
@@ -741,10 +749,17 @@
             "intent_id": "intent:change_01M773RFTPFPJXCQ8R6MNGKGDQ",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M773RFXVQZAJQ3XYYXJEY4VM",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M773RFTPFPJXCQ8R6MNGKGDQ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M773RFXVQZAJQ3XYYXJEY4VM": {
@@ -889,6 +904,22 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Mapped normalized Dactyl Authorization failures to the existing repository_denied result, distinct from missing authentication. Added a regression that checks account-access guidance and absence of a browser URL; no retries or local grants were introduced. Source CI and required Buildkite run remain the verification path. Anonymous GitHub metadata access is still rate-limited until reset 1794471375."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "Supabase datastore composition and documentation",
+                  "cloud authentication",
+                  "initialization",
+                  "session lifecycle"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -903,6 +934,7 @@
         "Candidate 6cc1c6ee GitHub source-CI job 131039676621 ran 1682 library tests: 1673 passed, one existing SQL-consumption proof failed, eight ignored. All 22 auth/cloud_session unit tests passed, including resume, concurrent refresh, interrupted exchange and repository finalization. This is diagnostic source-CI evidence, not full Buildkite readiness.",
         "Existing connector candidate is uncommitted in separate codex-connector-flow workspace; inspect and selectively integrate source, never modify its custody or claim its unexecuted proof.",
         "Full validation of candidate 43c9818b686cec568e4b320f088384ac1ce62e78 stopped at public GithubObjects GET with HTTP 403 and rate_limit_reset_unix=1794463204 before provider build/test collection. Existing workspace branch was pushed by the configured validator; no alternate authentication route, manual test or gate bypass was used. Follow-up review found todo-add preflight diagnostics discarded the browser handoff; now they retain the optional authorization URL and original operation ID, with bounded polling instructions and regression coverage.",
+        "Mapped normalized Dactyl Authorization failures to the existing repository_denied result, distinct from missing authentication. Added a regression that checks account-access guidance and absence of a browser URL; no retries or local grants were introduced. Source CI and required Buildkite run remain the verification path. Anonymous GitHub metadata access is still rate-limited until reset 1794471375.",
         "Per-repository global custody, agent authorization_url, finalization-before-publication, refresh serialization, and next-invocation recovery from rejected bearers are implemented. No data mutation retries were added.",
         "Public cloud deployment discovery returned HTTP 200, v1, matching project origin and dactyl_api with a public publishable key; no session or task was created. This proves public discovery only, not hosted login or authorization.",
         "Repaired SQL proof failure by restoring DactylBridge::atomic to exact direct Connection forwarding and observing only its completed Result in DactylTodoStore::atomic_mutation. Existing provenance tests and their strict accepted wrapper shape remain unchanged. Also made the synthetic TCP fixture explicitly blocking after accept for macOS portability. Re-run the full consumer suite before claiming the CLI lifecycle passes.",

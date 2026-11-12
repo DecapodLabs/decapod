@@ -31,6 +31,11 @@ the same optional `authorization_url` plus its operation ID. Poll with that
 original ID and unchanged arguments; never create a fresh add for each poll.
 No access token, refresh token, PKCE verifier or polling secret is needed in chat.
 
+`repository_denied` is an account/access problem, not a new browser handoff.
+Preserve the pending connection and task, explain the access requirement, and
+resume when access is restored. Repeated login cannot supply a missing grant or
+paid seat; those decisions remain with the backend and account administrator.
+
 The CLI resumes the same private repository-bound flow, exchanges its one-time
 code, confirms repository access and saves the managed session. Future commands
 reuse it and serialize refresh rotation automatically. An expired or revoked
