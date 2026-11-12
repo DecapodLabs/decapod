@@ -15,6 +15,12 @@ exercises real CLI initialization, claimed workspace admission and first-proof
 execution through `tests/support/fresh_docs_readiness.rs`. The cloud handoff
 must preserve that Decapod lifecycle and its terminal evidence checks.
 
+In the accepted 0.140.0 runtime, terminal rules consume completed source
+execution evidence and recheck current governance and trajectory digests before
+publishing the readiness bundle. The cloud handoff cannot substitute a partial
+project-check receipt for that result. Release reconciliation changes the root
+package version and generated release surfaces while retaining this proof path.
+
 ## Init-once agent continuation
 
 This continuation adopts PR #1635's exact `ee44e5f8773697b5341107c0d3153de4ebe28bfb`
@@ -1243,7 +1249,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `106a69824c2a350f103f0b7f3fe4d00a8f2305cc4962e1f92a851aab2944f3b6`
+- Repository signal fingerprint: `ae1d24ad5ad4484ab63caae4ef9edb1f4593f4190ba89005fffdb85729982d75`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (228 files), `tests/` (230 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -3784,6 +3784,11 @@
       "id": "reconcile-first-proof-admission",
       "summary": "Integrate accepted #1633 canonical fixtures, genuine CLI admission and terminal proof rules with preserved cloud handoff and intent-bound source-repair evidence; retain both complete governance histories and required full proof.",
       "input_digest": "sha256:cb8f8c54cc4197243d35b76df1473adc34107b0f31ac67093d8ebe9afc604283"
+    },
+    {
+      "id": "reconcile-accepted-140-release",
+      "summary": "Reconcile accepted140.0 package and native release projections without changing required proof policy; preserve the first-proof CLI admission and intent-bound cloud handoff. Full current-candidate proof pending.",
+      "input_digest": "sha256:3a863965830bc3c94e94731cfcbbf3a53d299d5bc3939219ac0319a4de6eed43"
     }
   ],
   "intents": {
@@ -3824,22 +3829,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed accepted first-proof admission and terminal validation integration together with the cloud handoff. The canonical consumer fixture now preserves its full failure and historical-proof assertions; our additional intent custody uses native APIs without replacing the canonical document. Full runtime receipts still require actual source execution and terminal evidence evaluation. Generated boundaries are intact and natively refreshed; no hosted, account-policy or session-custody guarantee is expanded.",
-          "reviewed_code_fingerprint": "106a69824c2a350f103f0b7f3fe4d00a8f2305cc4962e1f92a851aab2944f3b6",
+          "reason": "Reviewed the final140.0 source and generated release surfaces after accepted first-proof admission and terminal-evidence repairs. Cloud handoff, sanitized browser diagnostics and operation identity retain their boundaries. The native source-repair regression preserves canonical fixtures, intent custody and current receipt bindings; the required entrypoint suite retains genuine CLI admission. Session updater opt-in is removed, no required check or policy is relaxed, and host preparation is not publication readiness.",
+          "reviewed_code_fingerprint": "ae1d24ad5ad4484ab63caae4ef9edb1f4593f4190ba89005fffdb85729982d75",
           "spec_material_hash": "55a821bb674a9b180d59115f3693e9f1d2a40336f6aeefadd67bbf269eeda146"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed accepted first-proof admission and terminal validation integration together with the cloud handoff. The canonical consumer fixture now preserves its full failure and historical-proof assertions; our additional intent custody uses native APIs without replacing the canonical document. Full runtime receipts still require actual source execution and terminal evidence evaluation. Generated boundaries are intact and natively refreshed; no hosted, account-policy or session-custody guarantee is expanded.",
-          "reviewed_code_fingerprint": "106a69824c2a350f103f0b7f3fe4d00a8f2305cc4962e1f92a851aab2944f3b6",
+          "reason": "Reviewed the final140.0 source and generated release surfaces after accepted first-proof admission and terminal-evidence repairs. Cloud handoff, sanitized browser diagnostics and operation identity retain their boundaries. The native source-repair regression preserves canonical fixtures, intent custody and current receipt bindings; the required entrypoint suite retains genuine CLI admission. Session updater opt-in is removed, no required check or policy is relaxed, and host preparation is not publication readiness.",
+          "reviewed_code_fingerprint": "ae1d24ad5ad4484ab63caae4ef9edb1f4593f4190ba89005fffdb85729982d75",
           "spec_material_hash": "a37539e1d3d05f8f599850acc4024d062560b780704a9f8340db3e855c58b0eb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed accepted first-proof admission and terminal validation integration together with the cloud handoff. The canonical consumer fixture now preserves its full failure and historical-proof assertions; our additional intent custody uses native APIs without replacing the canonical document. Full runtime receipts still require actual source execution and terminal evidence evaluation. Generated boundaries are intact and natively refreshed; no hosted, account-policy or session-custody guarantee is expanded.",
-          "reviewed_code_fingerprint": "106a69824c2a350f103f0b7f3fe4d00a8f2305cc4962e1f92a851aab2944f3b6",
+          "reason": "Reviewed the final140.0 source and generated release surfaces after accepted first-proof admission and terminal-evidence repairs. Cloud handoff, sanitized browser diagnostics and operation identity retain their boundaries. The native source-repair regression preserves canonical fixtures, intent custody and current receipt bindings; the required entrypoint suite retains genuine CLI admission. Session updater opt-in is removed, no required check or policy is relaxed, and host preparation is not publication readiness.",
+          "reviewed_code_fingerprint": "ae1d24ad5ad4484ab63caae4ef9edb1f4593f4190ba89005fffdb85729982d75",
           "spec_material_hash": "0b18b2deee00ec20ff5cf50aa23c778107a9524cef9f13c1cf958f169ed4c3a4"
         }
       ],
@@ -3851,7 +3856,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794487826Z"
+      "updated_at": "1794488156Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -3864,7 +3869,7 @@
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:0932a7ddbf07d3ec5d418b06b1e3f7515114439450ac7e041ee0cd9b2fde15d7",
+      "artifact_hash": "sha256:7c92ab24e25b9f14ce7c6d130b651f750d4f685f8eae09784f351edcf75bd4b9",
       "checks": [
         {
           "name": "accepted-consumer",
@@ -4021,6 +4026,10 @@
         {
           "name": "registry-handoff",
           "status": "unavailable"
+        },
+        {
+          "name": "release-140-preparation",
+          "status": "partial"
         },
         {
           "name": "release-projection-preparation",
@@ -4222,10 +4231,17 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 26
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:27",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 27
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 26,
+        "next_sequence": 27,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -4650,6 +4666,22 @@
                 ],
                 "sequence": 26,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:27",
+                "observations": [
+                  "Accepted #1642 fc1e2b94 changes only root package version139.1 to140.0 and CHANGELOG. Merged after checkpointed #1633 reconciliation. Supported session updater installed published0.140.0 under an isolated Cargo root; restored temporary update opt-in, ingested matching docs, natively regenerated release surfaces. Independent inventory1a14a4a9 reflects only the accepted package version change; required checks, scope and budgets unchanged. Host project-check remains partial preparation, full actual Buildkite proof is required for this new candidate."
+                ],
+                "proof_refs": [
+                  "release-140-preparation"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 27,
+                "validation_findings": []
               }
             ]
           }
@@ -4666,6 +4698,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Accepted #1642 fc1e2b94 changes only root package version139.1 to140.0 and CHANGELOG. Merged after checkpointed #1633 reconciliation. Supported session updater installed published0.140.0 under an isolated Cargo root; restored temporary update opt-in, ingested matching docs, natively regenerated release surfaces. Independent inventory1a14a4a9 reflects only the accepted package version change; required checks, scope and budgets unchanged. Host project-check remains partial preparation, full actual Buildkite proof is required for this new candidate.",
         "Accepted target advanced to f1a6c7a (#1633) while e1331f79 had all GitHub workflows passing and34 Buildkite steps successful with3 suites queued. No prior proof promoted. Merged its terminal runtime evidence rules, canonical shared consumer fixture and genuine CLI first-proof admission regression. Preserved19 active checkpoints plus exact21-checkpoint accepted governance as historical context under the existing approved metadata-merge exception. Corrected a merge-resolution script that dropped generated suffix boundaries by restoring the backed-up conflict lines and selecting only line-bounded generated content; native refresh subsequently owns projections.",
         "Actual pinned Bazel regenerated the module lock from the registry0.12 Cargo graph. Generated indentation exceeded the1MiB source bound by4454bytes; one-space JSON encoding preserves all parsed values and reduces the complete file to1029040bytes. Pinned Bazel mod deps --lockfile_mode=error accepts it. Every discovered source hash was verified; only MODULE.bazel.lock changed relative to the previous reviewed build-source inventory. Neither required checks nor limits nor default stale-lock rejection were changed. Current Buildkite candidate0bff2528 failed in CI build8025; diagnostics identified the stale Bazel metadata. Fresh exact-candidate execution remains required.",
         "Actual source-CI consumer job 131078135474 on 2c7e51b5 passed 1673 library tests and failed the existing cloud_auth_blocked_add_resumes_after_onboarding_without_touching_project redaction assertion because the new wrapper copied raw auth next_action. Corrected the production wrapper to fixed recovery guidance and onboarding-only validated URL propagation. The existing test and secret list are unchanged; integration scenarios did not run after the library failure. Required full Buildkite evidence remains pending; no failure is waived.",
