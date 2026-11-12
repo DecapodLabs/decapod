@@ -588,6 +588,15 @@
         "/private/tmp/validation-bootstrap-full-v4.json",
         "Read-only review fixes and source-grounded current journal/capsule/receipt regressions; execution pending new exact full validation"
       ]
+    },
+    {
+      "id": "validation-bootstrap-capsule-signature-v6",
+      "summary": "Repair measured capsule regression count type against actual supported API",
+      "input_digest": "sha256:ff56c217a6eb037349e6c0df3cc9414c3f728985af454773850f9ee0596dcc55",
+      "proof_refs": [
+        "/private/tmp/validation-bootstrap-full-v5.json",
+        "Buildkite8060 clippy E0308 exact25152b43 source diagnostic"
+      ]
     }
   ],
   "intents": {
@@ -633,22 +642,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Final lifecycle retains original deadline at terminal and atomic success issuance; legacy compact receipts expanded through canonical accessor before integrity checks",
-          "reviewed_code_fingerprint": "2bab3428937a54725004eda525fbe98da15f8e07bf9eb7178b117b3d092d4a81",
+          "reason": "Reviewed same final terminal lifecycle; repair only corrects measured capsule fixture API count type; runtime deadline/current-proof design unchanged",
+          "reviewed_code_fingerprint": "f4355c13aba3b8a175e74e3d96863ab8486cbb134d31f7d74a1478d4ee965d9b",
           "spec_material_hash": "8ebd18b07ea40a599cc2262ee5fc4e1d8c2d651ae76317ffc7bf1db2a76560e7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Final reviewed interfaces: exact kernel optional protocol, explicit mandatory obligations retained, current journal epoch/capsule/spec binding, canonical compact receipt projection supported",
-          "reviewed_code_fingerprint": "2bab3428937a54725004eda525fbe98da15f8e07bf9eb7178b117b3d092d4a81",
+          "reason": "Reviewed current source: positive capsule regression now uses actual requested_limit usize API; documented workunit and canonical receipt contracts unchanged",
+          "reviewed_code_fingerprint": "f4355c13aba3b8a175e74e3d96863ab8486cbb134d31f7d74a1478d4ee965d9b",
           "spec_material_hash": "5a41bc114c254c047cac2c1ab73dd694185e856d11bc66f1a00a15fdaae79bec"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Final source rejects forged receipt hashes after canonical expansion, expired ready publication, omitted explicit workunit rules, stale current execution authority and capsule corruption",
-          "reviewed_code_fingerprint": "2bab3428937a54725004eda525fbe98da15f8e07bf9eb7178b117b3d092d4a81",
+          "reason": "Verified numeric fixture argument repair adds no authority or changed security behavior; existing complete proof, deadline, current workunit and receipt integrity boundaries retained",
+          "reviewed_code_fingerprint": "f4355c13aba3b8a175e74e3d96863ab8486cbb134d31f7d74a1478d4ee965d9b",
           "spec_material_hash": "ad2e4b9264d7b5a4b280944b771b1b1729c3deee646215dab25928a929cd7365"
         }
       ],
@@ -662,13 +671,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794456853Z"
+      "updated_at": "1794457422Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:78fddd3078162e3a843bce7288928bdcf3de730d97ad559705fd4dcb0cf8e5e9",
+      "artifact_hash": "sha256:2e2c71d3156554f9fc0a132290bfcb426e9d63f5fff04ec6046aa29f87f24d0d",
       "checks": [
         {
           "name": "accepted_release_inventory_review",
@@ -695,8 +704,16 @@
           "status": "unavailable"
         },
         {
+          "name": "independent_full_validation_v5",
+          "status": "unavailable"
+        },
+        {
           "name": "independent_review",
           "status": "failed"
+        },
+        {
+          "name": "independent_source_review",
+          "status": "passed"
         },
         {
           "name": "lifecycle_trace",
@@ -705,9 +722,13 @@
         {
           "name": "source_execution",
           "status": "unavailable"
+        },
+        {
+          "name": "source_test_compilation_v5",
+          "status": "failed"
         }
       ],
-      "current_phase": "review-repair",
+      "current_phase": "validation-repair",
       "custody": {
         "events": [
           {
@@ -770,10 +791,17 @@
             "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M76X3HBY5Z48MNEKR4XDQVMW",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M76X3H8DA76YN2BA6BG35R6K",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76X3HBY5Z48MNEKR4XDQVMW": {
@@ -940,6 +968,29 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "validation-repair",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "GH Clippy and actual required Buildkite8060 clippy measured E0308 at validation_rules.rs2182: resolve_capsule_policy requested_limit is usize, not Option; exact source log /private/tmp/validation-bootstrap-build8060-clippy.log",
+                  "Own v5 local controller cancelled and fully reaped before source repair; report /private/tmp/validation-bootstrap-full-v5.json says CI operation cancelled, publication_ready=false. Actual failed compiler subcheck remains distinct from interrupted aggregate proof. No remote jobs cancelled.",
+                  "Verified capsule_policy.rs207 signature; fixture corrected Some(1) to1, rustfmt/diff hygiene only; full source execution remains pending independent next proof"
+                ],
+                "proof_refs": [
+                  "source_test_compilation_v5",
+                  "independent_full_validation_v5",
+                  "independent_source_review"
+                ],
+                "scope": [
+                  "doctrine",
+                  "specs",
+                  "src/core/validate.rs",
+                  "src/core/validation_rules.rs",
+                  "tests"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -956,11 +1007,14 @@
         "Compared accepted current inventory with c7609e42 pin origin: only Cargo.toml/Cargo.lock Decapod version changed0.138.2 to0.138.3; all workflows/helpers/carrier/build definitions identical; explicitly reconcile reviewed digest5fd571a9",
         "Fix evidence map type; terminal applicability now consumes verified suite changed paths and explicit workunit declaration applies across task routing categories; unknown filesystem projections remain blockers",
         "Full v1 report /private/tmp/validation-bootstrap-full-v1.json: reviewed source inventory stale before execution",
+        "GH Clippy and actual required Buildkite8060 clippy measured E0308 at validation_rules.rs2182: resolve_capsule_policy requested_limit is usize, not Option; exact source log /private/tmp/validation-bootstrap-build8060-clippy.log",
+        "Own v5 local controller cancelled and fully reaped before source repair; report /private/tmp/validation-bootstrap-full-v5.json says CI operation cancelled, publication_ready=false. Actual failed compiler subcheck remains distinct from interrupted aggregate proof. No remote jobs cancelled.",
         "Public GitHub quota403 with explicit reset1794455981 preserved in /private/tmp/validation-bootstrap-full-v3.json; no auth fallback or pre-reset API retry",
         "Review repairs: original budget checked around terminal reads, before proof and atomic receipt/ready-verdict publication; optional exemption exact kernel id+authority; regression evaluates actual current declared workunit rule with generated capsule, living spec, current journal and retained artifact; separate mandatory project obligation remains required.",
         "Same actor task lease expired during proof/review; source edits preserved before AUTHORING_CUSTODY_STALE surfaced. Inspected sole unchanged ownership, supported same-task reclaim+4h renew+workspace rebind; lease_generation2. No v5 authored commit preceded recovery.",
         "Source review: workunit checkpoint ExecutionStateBinding positively binds current validation_epoch_digest; optional legacy manifest epochs need only reject explicit mismatches. Positive actual journal contract regression added; artifact mutation/deletion remain strict.",
         "Source trace: prerequisite demands own receipt and unconditionally demands workunit outputs",
+        "Verified capsule_policy.rs207 signature; fixture corrected Some(1) to1, rustfmt/diff hygiene only; full source execution remains pending independent next proof",
         "v4 own local controller cancelled and reaped after reviewed defects; final diagnostic SNAPSHOT_NOT_READY public read cancelled, last provider_terminal_wait579867ms, report /private/tmp/validation-bootstrap-full-v4.json. No remote/unrelated jobs cancelled; no pass/source-test failure claimed."
       ],
       "inspected_files": [

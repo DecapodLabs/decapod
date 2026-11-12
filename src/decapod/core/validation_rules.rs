@@ -2179,8 +2179,7 @@ mod tests {
         )
         .unwrap();
         let policy =
-            capsule_policy::resolve_capsule_policy(root, "interfaces", None, Some(1), true)
-                .unwrap();
+            capsule_policy::resolve_capsule_policy(root, "interfaces", None, 1, true).unwrap();
         let capsule = context_capsule::query_embedded_capsule_governed(
             root,
             "source proof",
