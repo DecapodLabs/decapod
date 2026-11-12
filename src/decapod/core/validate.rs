@@ -3905,8 +3905,10 @@ fn collect_evidence_artifacts(
             error::DecapodError::ValidationError(format!("Invalid governance.json: {}", e))
         })?;
 
-        if let Some(value) = governance.pointer("/sections/validation") {
-            let receipt: ValidationReceipt = serde_json::from_value(value.clone())
+        if let Some(value) =
+            crate::core::governance_document::read_section(working_root, "validation")?
+        {
+            let receipt: ValidationReceipt = serde_json::from_value(value)
                 .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
             receipt.validate_integrity()?;
             artifacts.insert("validation_receipt".to_string(), receipt.receipt_hash);

@@ -1083,6 +1083,9 @@ pub(crate) mod test_fixture {
             store_root: store_root.into(),
         })
     }
+    pub(crate) fn completed() -> CompletedReadinessEvidence {
+        record().proof
+    }
     pub(super) fn record() -> CompletionRecord {
         use evidence::*;
         let hash = |label: &str| evidence::digest(&label).unwrap();

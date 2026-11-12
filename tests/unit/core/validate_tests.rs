@@ -1701,3 +1701,34 @@ fn obligation_gate_ignores_malformed_backlog_until_completion_or_dependency_requ
         assert_eq!(required.pass_count.load(Ordering::Relaxed), 0);
     }
 }
+
+#[test]
+fn evidence_collector_preserves_integrity_valid_compact_preparation_receipt() {
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    git(root, &["init", "-b", "master"]);
+    git(root, &["config", "user.email", "test@example.invalid"]);
+    git(root, &["config", "user.name", "Tests"]);
+    fs::write(root.join("README.md"), "receipt fixture").unwrap();
+    git(root, &["add", "."]);
+    git(root, &["commit", "-m", "baseline"]);
+    seed_publication_bundle(root);
+    let path = root.join(".decapod/governance.json");
+    let mut stored: serde_json::Value = serde_json::from_slice(&fs::read(&path).unwrap()).unwrap();
+    assert!(stored["sections"]["validation"]["epoch_ref"].is_string());
+    assert!(
+        stored["sections"]["validation"]
+            .get("validation_epoch")
+            .is_none()
+    );
+    let observed = super::collect_evidence_artifacts(root).unwrap();
+    assert_eq!(
+        observed["validation_receipt"],
+        stored["sections"]["validation"]["receipt_hash"]
+            .as_str()
+            .unwrap()
+    );
+    stored["sections"]["validation"]["receipt_hash"] = serde_json::json!("sha256:forged");
+    fs::write(path, serde_json::to_vec(&stored).unwrap()).unwrap();
+    assert!(super::collect_evidence_artifacts(root).is_err());
+}

@@ -1383,7 +1383,8 @@ impl RuleRegistry {
                 }
                 // Ordinary tasks need full validation, but do not implicitly
                 // declare the separate optional workunit completion protocol.
-                if r.rule.evaluator == "decapod.workunit"
+                if r.rule.id.as_str() == "decapod.evidence.proof_backed_completion"
+                    && r.rule.authority == RuleAuthority::KernelInvariant
                     && context
                         .terminal_evidence
                         .as_ref()
@@ -1815,13 +1816,24 @@ fn evaluate_publication_rule(context: &RuleEvaluationContext) -> RuleVerdict {
     }
 }
 
+#[cfg(test)]
 pub(crate) fn load_terminal_workunit(
     root: &Path,
     task_id: &str,
 ) -> Result<Option<crate::core::workunit::WorkUnitManifest>, error::DecapodError> {
+    load_terminal_workunit_with_budget(root, task_id, &|| Ok(()))
+}
+
+fn load_terminal_workunit_with_budget(
+    root: &Path,
+    task_id: &str,
+    check_budget: &dyn Fn() -> Result<(), error::DecapodError>,
+) -> Result<Option<crate::core::workunit::WorkUnitManifest>, error::DecapodError> {
+    check_budget()?;
     // The durable journal distinguishes an undeclared protocol from a deleted
     // or invalid projection. Lookup errors never become an exemption.
     let status = crate::core::workunit::workunit_journal_status(root, task_id)?;
+    check_budget()?;
     if status.projection_state == "absent" {
         for path in [
             crate::core::workunit::workunit_path(root, task_id)?,
@@ -1851,7 +1863,9 @@ pub(crate) fn load_terminal_workunit(
         )));
     }
     let manifest = crate::core::workunit::load_workunit(root, task_id)?;
+    check_budget()?;
     let current = crate::core::workunit::workunit_journal_status(root, task_id)?;
+    check_budget()?;
     if !current.resumable
         || current.generation != status.generation
         || current.checkpoint_hash != status.checkpoint_hash
@@ -1872,7 +1886,15 @@ pub(crate) fn evaluate_terminal_rules(
     material: &crate::core::readiness_evidence::MaterialIdentity,
     governance_digest: &str,
     trajectory_digest: &str,
+    budget: &crate::core::validation_runtime::RuntimeBudget<'_>,
 ) -> Result<RulesValidationReport, error::DecapodError> {
+    let check_budget = || {
+        budget
+            .remaining()
+            .map(|_| ())
+            .map_err(error::DecapodError::IoError)
+    };
+    check_budget()?;
     proof.verify_current(material, governance_digest, trajectory_digest)?;
     // Re-read the canonical bytes at this terminal boundary, including the
     // compact stored trajectory. Expanded read projections are not its digest.
@@ -1895,13 +1917,14 @@ pub(crate) fn evaluate_terminal_rules(
         crate::core::readiness_evidence::digest(&document["sections"]["trajectory"])
             .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
     proof.verify_current(material, &current_governance, &current_trajectory)?;
+    check_budget()?;
     let governance = crate::core::governance_document::read_section(root, "trajectory")?;
     let task_id = governance
         .as_ref()
         .and_then(|value| value.get("task_id"))
         .and_then(|value| value.as_str());
     let workunit = task_id
-        .map(|id| load_terminal_workunit(root, id))
+        .map(|id| load_terminal_workunit_with_budget(root, id, &check_budget))
         .transpose()?
         .flatten();
     let mut artifacts: BTreeMap<String, String> = BTreeMap::from([
@@ -1930,6 +1953,7 @@ pub(crate) fn evaluate_terminal_rules(
         .keys()
         .map(|key| (key.clone(), governance_digest.into()))
         .collect();
+    check_budget()?;
     let context = RuleEvaluationContext {
         changed_paths: proof.changed_paths().clone(),
         task_type: None,
@@ -1950,14 +1974,17 @@ pub(crate) fn evaluate_terminal_rules(
     let mut registry = RuleRegistry::new();
     registry.load_project_rules(root)?;
     registry.load_task_rules(root)?;
-    Ok(RulesValidationReport::from_results(
+    check_budget()?;
+    let report = RulesValidationReport::from_results(
         registry
             .get_applicable_rules(&context)
             .iter()
             .filter(|rule| rule.rule.evaluation_phase == EvaluationPhase::Publication)
             .map(|rule| evaluate_rule(rule, &context))
             .collect(),
-    ))
+    );
+    check_budget()?;
+    Ok(report)
 }
 
 /// Evaluate all applicable rules.
@@ -2059,6 +2086,184 @@ mod tests {
             generated_specs_fingerprint: "test-specs-fingerprint".to_string(),
             material_hashes: BTreeMap::new(),
         }
+    }
+
+    fn terminal_test_context(
+        root: Option<&Path>,
+        workunit: Option<crate::core::workunit::WorkUnitManifest>,
+    ) -> RuleEvaluationContext {
+        let governing = root
+            .map(|root| {
+                format!(
+                    "sha256:{:x}",
+                    Sha256::digest(std::fs::read(root.join(".decapod/governance.json")).unwrap())
+                )
+            })
+            .unwrap_or_else(|| format!("sha256:{}", "a".repeat(64)));
+        let mut artifacts: BTreeMap<String, String> = BTreeMap::new();
+        if let Some(manifest) = &workunit {
+            artifacts.insert(
+                "workunit_manifest".into(),
+                manifest.canonical_hash_hex().unwrap(),
+            );
+            artifacts.insert(
+                "proof_plan_gates".into(),
+                crate::core::readiness_evidence::digest(&manifest.proof_results).unwrap(),
+            );
+        }
+        let identities = artifacts
+            .keys()
+            .map(|name: &String| (name.clone(), governing.clone()))
+            .collect();
+        RuleEvaluationContext {
+            changed_paths: BTreeSet::from(["README.md".into()]),
+            task_type: Some("docs".into()),
+            git_ref: None,
+            is_ci: false,
+            evidence_artifacts: artifacts,
+            validation_epoch: root
+                .map(|root| crate::core::validation_epoch::active_validation_epoch(root).unwrap())
+                .unwrap_or_else(test_validation_epoch),
+            policy_fingerprint: governing.clone(),
+            repo_root: root.map(Path::to_path_buf),
+            include_publication: true,
+            governing_identity: Some(governing),
+            evidence_identity: identities,
+            terminal_evidence: Some(TerminalEvidence {
+                proof: crate::core::validation_history::test_fixture::completed(),
+                workunit,
+            }),
+        }
+    }
+
+    #[test]
+    fn explicit_project_workunit_obligation_is_never_exempted_as_optional() {
+        let mut registry = RuleRegistry::new();
+        let mut required = registry
+            .get_rule(&RuleId::new("decapod.evidence.proof_backed_completion"))
+            .unwrap()
+            .rule;
+        required.id = RuleId::new("decapod.project.required_workunit");
+        required.authority = RuleAuthority::ProjectOverride;
+        let id = required.id.clone();
+        registry.project_rules.insert(id.clone(), required);
+        registry.resolved_cache = None;
+        let context = terminal_test_context(None, None);
+        let applicable = registry.get_applicable_rules(&context);
+        assert!(
+            !applicable
+                .iter()
+                .any(|rule| rule.rule.id.as_str() == "decapod.evidence.proof_backed_completion")
+        );
+        let required = applicable
+            .iter()
+            .find(|rule| rule.rule.id == id)
+            .expect("explicit mandatory project rule remains applicable");
+        assert_eq!(
+            evaluate_rule(required, &context).verdict,
+            RuleVerdict::Unverifiable
+        );
+    }
+
+    #[test]
+    fn current_declared_workunit_reaches_terminal_rule_with_real_capsule_lineage() {
+        use crate::core::{capsule_policy, context_capsule, workunit};
+        let root = workunit::journal_tests::accepted_execution_fixture();
+        let root = root.path();
+        let task = "task_test";
+        let spec = ".decapod/managed/specs/INTENT.md";
+        std::fs::create_dir_all(root.join(spec).parent().unwrap()).unwrap();
+        std::fs::write(
+            root.join(spec),
+            "# Workunit fixture\n\nBind declared source proof to reviewed task intent.\n",
+        )
+        .unwrap();
+        let policy =
+            capsule_policy::resolve_capsule_policy(root, "interfaces", None, Some(1), true)
+                .unwrap();
+        let capsule = context_capsule::query_embedded_capsule_governed(
+            root,
+            "source proof",
+            "interfaces",
+            Some(task),
+            Some(task),
+            policy.effective_limit,
+            policy.binding,
+        )
+        .unwrap();
+        let capsule_path = context_capsule::write_context_capsule(root, &capsule).unwrap();
+        let capsule_ref = capsule_path.strip_prefix(root).unwrap().to_string_lossy();
+        workunit::add_state_ref(root, task, &capsule_ref).unwrap();
+        workunit::add_spec_ref(root, task, spec).unwrap();
+        workunit::set_proof_plan(root, task, &["source-check".into()]).unwrap();
+        for args in [
+            vec!["add", "."],
+            vec![
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "-m",
+                "bind actual capsule and spec",
+            ],
+        ] {
+            let out = std::process::Command::new("git")
+                .current_dir(root)
+                .args(args)
+                .output()
+                .unwrap();
+            assert!(
+                out.status.success(),
+                "{}",
+                String::from_utf8_lossy(&out.stderr)
+            );
+        }
+        workunit::checkpoint_workunit(root, task, "terminal-current", Some(4)).unwrap();
+        let artifact = ".decapod/data/terminal-source.txt";
+        std::fs::write(root.join(artifact), "unit-fixture source proof bytes").unwrap();
+        workunit::record_proof_result(root, task, "source-check", "pass", Some(artifact.into()))
+            .unwrap();
+        for state in [
+            workunit::WorkUnitStatus::Executing,
+            workunit::WorkUnitStatus::Claimed,
+            workunit::WorkUnitStatus::Verified,
+        ] {
+            workunit::transition_status(root, task, state).unwrap();
+        }
+        let manifest = load_terminal_workunit(root, task).unwrap().unwrap();
+        assert!(manifest.validation_epoch.is_none());
+        let mut context = terminal_test_context(Some(root), Some(manifest));
+        let rule = RuleRegistry::new()
+            .get_rule(&RuleId::new("decapod.evidence.proof_backed_completion"))
+            .unwrap();
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Pass);
+        context
+            .terminal_evidence
+            .as_mut()
+            .unwrap()
+            .workunit
+            .as_mut()
+            .unwrap()
+            .validation_epoch = Some(test_validation_epoch());
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Stale);
+        context
+            .terminal_evidence
+            .as_mut()
+            .unwrap()
+            .workunit
+            .as_mut()
+            .unwrap()
+            .validation_epoch = None;
+        std::fs::write(&capsule_path, "corrupt capsule").unwrap();
+        assert_eq!(
+            evaluate_rule(&rule, &context).verdict,
+            RuleVerdict::Unverifiable
+        );
+        assert!(
+            load_terminal_workunit(root, task).is_err(),
+            "changed source/capsule cannot reuse current binding"
+        );
+        std::fs::remove_file(workunit::workunit_path(root, task).unwrap()).unwrap();
+        assert!(load_terminal_workunit(root, task).is_err());
     }
 
     #[test]

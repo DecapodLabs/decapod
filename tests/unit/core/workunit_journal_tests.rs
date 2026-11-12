@@ -441,7 +441,7 @@ fn oversized_manifest_is_rejected_before_read_or_journal_commit() {
     );
 }
 
-fn accepted_execution_fixture() -> tempfile::TempDir {
+pub(crate) fn accepted_execution_fixture() -> tempfile::TempDir {
     use crate::core::trajectory::{self, TrajectoryInit};
     use crate::plan_governance::{self, InitPlanInput, PlanPatch, PlanState, ScopeConstraints};
     let root = fixture();
