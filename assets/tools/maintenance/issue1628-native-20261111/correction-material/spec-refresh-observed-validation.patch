@@ -1,0 +1,33 @@
+diff --git a/.decapod/managed/specs/VALIDATION.md b/.decapod/managed/specs/VALIDATION.md
+index 55783cab..4f6976f1 100644
+--- a/.decapod/managed/specs/VALIDATION.md
++++ b/.decapod/managed/specs/VALIDATION.md
+@@ -1,5 +1,19 @@
+ # Validation
+ 
++## Managed connector execution prerequisites (#1628)
++
++The managed connector requires a published Dactyl dependency containing its
++public API and successful execution of the complete required source checks.
++No governed source-overlay recipe is configured for integration diagnostics
++before those checks pass. Source review, formatting, native checkpoints and
++workbranch pushes do not establish compilation, test execution or readiness.
++
++The registry manifest and lockfile, `tests/release_dependency_policy.rs` and
++complete required source profile remain authoritative. Dependency alignment
++and package publication remain the separate
++[#1380](https://github.com/DecapodLabs/decapod/issues/1380) handoff; no path/Git
++fallback, dependency override or relaxed proof gate supplies that evidence.
++
+ ## Managed cloud client proof and package prerequisite (#1628)
+ 
+ The configured complete source-CI profile remains required. New
+@@ -1079,7 +1093,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
+ 
+ ## Codebase Attestation
+ 
+-- Repository signal fingerprint: `249f5acb280057e0d97b4b6d51afbba9f6a395af1a23c84fb9627f4d70c1301f`
++- Repository signal fingerprint: `01f5202b9a5e47e727e6d37890879b8df1f5dacf97a7d6f9e3b2a0eb9c44c29f`
+ - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
+ - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+ <!-- decapod:codebase-attestation:end -->

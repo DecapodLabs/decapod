@@ -6,12 +6,12 @@
   "task": "code_01m76c1kqhjgr3yr",
   "branch": "agent/chatgpt-issue1628-decapod/code_01m76c1kqhjgr3yr-cloud-connector",
   "intent": "Continue the original issue1628 task and preserved candidate through exact native successor custody. Apply only the reviewed unused-import and evidence-boundary patches plus material VALIDATION prose. Preserve the original journal, required Buildkite source contract, registry dependency policy and release handoff. Format, refresh native projections, append trajectory and checkpoint, verify full checkpoint history and clean source, then make a normal fast-forward push of this same existing workbranch. No build, tests, full publisher, PR creation or readiness success is authorized or claimed by this continuation.",
-  "previous_report_sha256": "sha256:9e35b4b53c29de6d7c30fa2bde43453151f04486aef01385e89a480d40555c9f",
+  "previous_report_sha256": "sha256:635c675a6530581adb7e83c11d537db09558c0b1b031e7cfd76130ec9c179b08",
   "buildkite_evidence_sha256": "sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8",
-  "prior_diagnostics_archive_sha256": "sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485",
-  "incoming_transfer_id": "01M76GWVMZWGY8XFXFZ8W5JR6V",
-  "incoming_native_sha256": "sha256:b3cbf82ce49aa91fcf740580d36ab8f2e57e6766207aa8dcddbc3948774756dc",
-  "incoming_source_branch": "issue1628-decapod-corrections-757cabb0b9e1",
+  "prior_diagnostics_archive_sha256": "sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967",
+  "incoming_transfer_id": "01M76HEVW68M4ZFHWX9NXKXZDX",
+  "incoming_native_sha256": "sha256:2d88601af5d679fe85ddecd200b7f0c50c10596cde1041182d5fe28a0313df09",
+  "incoming_source_branch": "issue1628-decapod-corrections-8f05354b04ba",
   "original_change": {
     "id": "change_01M76ECD1993X600J9GEM0D7FY",
     "base_commit": "c5de35a89b27e788169612ae71681e45c13bf71a",
@@ -51,9 +51,9 @@
     "Cargo.lock": "sha256:ee80472cdbae893ecdaf86e98d8d287eabe338d2e2eb876a9012d49c78eb1ff7",
     "tests/release_dependency_policy.rs": "sha256:96d3936d2e2ac255ec7f7b73173652109bd3213a45800a9e39ff6fb4fe1f49b9"
   },
-  "validation_addition": "## Managed connector execution prerequisites (#1628)\n\nThe managed connector requires a published Dactyl dependency containing its\npublic API and successful execution of the complete required source checks.\nNo governed source-overlay recipe is configured for integration diagnostics\nbefore those checks pass. Source review, formatting, native checkpoints and\nworkbranch pushes do not establish compilation, test execution or readiness.\n\nThe registry manifest and lockfile, `tests/release_dependency_policy.rs` and\ncomplete required source profile remain authoritative. Dependency alignment\nand package publication remain the separate\n[#1380](https://github.com/DecapodLabs/decapod/issues/1380) handoff; no path/Git\nfallback, dependency override or relaxed proof gate supplies that evidence.\n",
+  "validation_addition": "## Managed connector execution prerequisites (#1628)\n\nThe managed connector requires a published Dactyl dependency containing its\npublic API and successful execution of the complete required source checks.\nNo governed source-overlay recipe is configured for integration diagnostics\nbefore those checks pass. Source review, formatting, native checkpoints and\nworkbranch pushes do not establish compilation, test execution or readiness.\n\nThe registry manifest and lockfile, `tests/release_dependency_policy.rs` and\ncomplete required source profile remain authoritative. Dependency alignment\nand package publication remain the separate\n[#1380](https://github.com/DecapodLabs/decapod/issues/1380) handoff; no path/Git\nfallback, dependency override or relaxed proof gate supplies that evidence.",
   "validation_before_sha256": "sha256:ee0768e0f8d14c179c666b0c3940aee5f14318eaa5071bc53c0d7ccfb9100b36",
-  "validation_after_authored_sha256": "sha256:97c9b9c29ac70febbe58ee318269e73ffe0cf3494227e8e59d587afeb68dcf6e",
+  "validation_after_authored_sha256": "sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849",
   "spec_reviews": {
     "ARCHITECTURE": {
       "disposition": "unchanged-with-reason",
@@ -68,7 +68,7 @@
       "reason": "No authentication, token handling, origin binding or storage permissions change. Existing private custody, no replay, no fallback and service authorization boundaries remain intact."
     }
   },
-  "trajectory_evidence": "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task.",
+  "trajectory_evidence": "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task. Correction run 43124963685 passed the exact formatted source checks and then stopped after native specs.refresh and trajectory recording because the authored VALIDATION hash included one duplicate blank line. Supported capability-overlay refresh collapses three consecutive newlines to two; approved prose is unchanged, and generated fingerprint changes stay inside existing marker blocks. The revised insertion removes only its final newline and pins the observed authored hash sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849. The failed attempt made no checkpoint, commit or push. Its uncommitted native journal is preserved by encrypted diagnostics archive sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967 and reconstructed journal digest sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8. Archived trajectory branch_01M76ECD20HF9M6Q15W5AKE2WQ event event:5, sequence 5, has step digest sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d (UTF-8 sorted-key compact JSON); native trajectory artifact hash sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083. This archived step is historical evidence, not restored current authority. The latest sealed task continues on the same committed journal through native CLI recording; no raw projection bytes are restored. Exact source, authored-spec, checkpoint and publication boundaries remain enforced.",
   "checkpoint_summary": "Remove observed unused legacy imports and correct documentation to preserve the actual Dactyl registry API blocker and absence of a governed pre-readiness overlay recipe. Retain original journal and checkpoint history; source push only, without build/test, full readiness, PR or release claims.",
   "commit_message": "fix(cloud): preserve observed dependency proof boundary",
   "execution_scope": "Same-task correction preparation and normal fast-forward source push only; publication_ready remains false.",
@@ -90,5 +90,35 @@
     "previous_expected_lib_sha256": "sha256:f8c9632776d171cd148494a8e81ff49dabd79ae8b5c84663a37e8bca6caa249f",
     "reviewed_post_format_lib_sha256": "sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f",
     "review": "Exact preserved formatter delta moves only state to the following import line beside state_commit. All other lib.rs bytes, both documentation outputs and authored VALIDATION semantics match the approved correction. Replay patch now yields the exact observed formatted bytes. Original checkpoint and journal remained unchanged; no commit, source push, build or test occurred."
+  },
+  "formatting_failure_report_sha256": "sha256:9e35b4b53c29de6d7c30fa2bde43453151f04486aef01385e89a480d40555c9f",
+  "spec_refresh_recovery": {
+    "run_id": 43124963685,
+    "operations_sha": "807430af07dc680ae481356859ce7bbbb1626e2c",
+    "source": "1289a80a782d651af337125ee447db4b5723cbd7",
+    "blocker": {
+      "stage": "record observed failure and correction boundary",
+      "kind": "Blocked",
+      "reason": "prepared correction: authored spec semantics changed: .decapod/managed/specs/VALIDATION.md"
+    },
+    "original_journal_blob": "1b79f21875be80efa3245186fc937f3e0a5f25b6",
+    "diagnostics_archive_sha256": "sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967",
+    "pending_patch_sha256": "sha256:3bbf3adaba5e0822faa21358793c4b31d6c9b58e595aa0b60e188d5b0fc2995a",
+    "pending_journal_sha256": "sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8",
+    "validation_diff_sha256": "sha256:842d9aa1694bff69d617b7c79b6f849b0964610c43fcd37b9890f4d6e04ac838",
+    "previous_authored_sha256": "sha256:97c9b9c29ac70febbe58ee318269e73ffe0cf3494227e8e59d587afeb68dcf6e",
+    "reviewed_authored_sha256": "sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849",
+    "native_trajectory_artifact_hash": "sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083",
+    "trajectory_run_id": "branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+    "archived_event_id": "event:5",
+    "archived_event_sequence": 5,
+    "archived_step_sha256": "sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d",
+    "step_digest_encoding": "UTF-8 JSON, sorted object keys, compact comma/colon separators, ensure_ascii=false",
+    "normalization_source": [
+      "src/decapod/core/project_specs.rs::refresh_specs_from_codebase",
+      "src/decapod/core/capabilities.rs::reconcile_capability_overlays",
+      "src/decapod/core/capabilities.rs::apply_capability_overlays"
+    ],
+    "review": "Native refresh removed one duplicate blank line at the new section boundary and updated only marked generated attestation content. All approved prose and all other authored spec bytes are unchanged. Remove only the trailing newline from the insertion value so pre-refresh and observed post-refresh authored bytes match exactly. Preserve byte-level equality; no manual native projection restoration. The failed attempt appended a native trajectory step but made no checkpoint/commit/push; its exact uncommitted journal remains historical evidence in the verified encrypted archive."
   }
 }

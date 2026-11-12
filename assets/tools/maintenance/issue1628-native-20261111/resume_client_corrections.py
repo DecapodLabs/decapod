@@ -16,12 +16,12 @@ BASE = "c5de35a89b27e788169612ae71681e45c13bf71a"
 SOURCE = "1289a80a782d651af337125ee447db4b5723cbd7"
 TASK = "code_01m76c1kqhjgr3yr"
 BRANCH = "agent/chatgpt-issue1628-decapod/" + TASK + "-cloud-connector"
-ACTOR = "chatgpt-issue1628-decapod-next"
-RECEIVER = "chatgpt-issue1628-decapod"
+ACTOR = "chatgpt-issue1628-decapod"
+RECEIVER = "chatgpt-issue1628-decapod-next"
 OPS = "ops/issue1628-native-20261111"
-TRANSFER = "01M76GWVMZWGY8XFXFZ8W5JR6V"
-INCOMING = "sha256:b3cbf82ce49aa91fcf740580d36ab8f2e57e6766207aa8dcddbc3948774756dc"
-INCOMING_BRANCH = "issue1628-decapod-corrections-757cabb0b9e1"
+TRANSFER = "01M76HEVW68M4ZFHWX9NXKXZDX"
+INCOMING = "sha256:2d88601af5d679fe85ddecd200b7f0c50c10596cde1041182d5fe28a0313df09"
+INCOMING_BRANCH = "issue1628-decapod-corrections-8f05354b04ba"
 CONTROLLER = "31bd8e3983dd328a1796da8af827647be691982c91d7ec7a7b11c7fdc2b4d723"
 CERT = "c54fbd6b328ebc89c57a0b158cbdddc434e37f48b8283b0e9af532506600f6dc"
 SPEC = ".decapod/managed/specs/"
@@ -243,7 +243,7 @@ def main():
                 and prior_proof.get("inspection_complete") is True and prior_proof.get("findings") == []
                 and prior_proof.get("base_commit") == BASE and prior_proof.get("head_commit") == SOURCE):
             raise Blocked("original source report does not bind the exact clean checkpoint")
-        prior = json.loads(input_bytes("previous-result.json", manifest["previous_report_sha256"]))
+        prior = json.loads(input_bytes("formatting-failure-result.json", manifest["formatting_failure_report_sha256"]))
         recovery = manifest["formatting_recovery"]
         prior_transfer = prior["transfer"]
         if not (prior.get("repository") == REPO and prior.get("task") == TASK and prior.get("branch") == BRANCH
@@ -259,15 +259,46 @@ def main():
                 and prior.get("build_tests") == "not_run" and prior.get("full_publisher") == "not_run"
                 and recovery.get("run_id") == 43123429502 and prior.get("blocker") == recovery["blocker"]
                 and prior.get("diagnostics", {}).get("plaintext_sha256") == recovery["diagnostics_archive_sha256"]
-                and prior_transfer.get("transfer_id") == TRANSFER and prior_transfer.get("receiver") == ACTOR
-                and prior_transfer.get("plaintext_sha256") == INCOMING and prior_transfer.get("source_sealed") is True
+                and prior_transfer.get("transfer_id") == "01M76GWVMZWGY8XFXFZ8W5JR6V"
+                and prior_transfer.get("receiver") == "chatgpt-issue1628-decapod-next"
+                and prior_transfer.get("plaintext_sha256") == "sha256:b3cbf82ce49aa91fcf740580d36ab8f2e57e6766207aa8dcddbc3948774756dc"
+                and prior_transfer.get("source_sealed") is True
                 and prior_transfer.get("candidate_sha") == SOURCE and prior_transfer.get("candidate_branch") == BRANCH
-                and prior_transfer.get("native_source_commit") == BASE and prior_transfer.get("native_source_branch") == INCOMING_BRANCH):
-            raise Blocked("formatting recovery does not bind the exact preserved failure and sealed successor")
+                and prior_transfer.get("native_source_commit") == BASE
+                and prior_transfer.get("native_source_branch") == "issue1628-decapod-corrections-757cabb0b9e1"):
+            raise Blocked("historical formatting report does not bind the exact preserved failure")
         input_bytes("formatting-failure-pending.patch", recovery["pending_patch_sha256"])
         input_bytes("formatting-failure-prepared-hashes.json", recovery["prepared_hashes_sha256"])
         input_bytes("unused-imports-preformat.patch", recovery["original_patch_sha256"])
         result["formatting_recovery"] = recovery
+        prior = json.loads(input_bytes("previous-result.json", manifest["previous_report_sha256"]))
+        refresh_recovery = manifest["spec_refresh_recovery"]
+        prior_transfer = prior["transfer"]
+        if not (prior.get("repository") == REPO and prior.get("task") == TASK and prior.get("branch") == BRANCH
+                and prior.get("base") == BASE and prior.get("source") == SOURCE
+                and prior.get("head_sha") == SOURCE and prior.get("final_head_sha") == SOURCE
+                and prior.get("source_dirty") is True and prior.get("custody_exported") is True
+                and prior.get("publication_ready") is False and prior.get("full_boundary_passed") is False
+                and prior.get("checkpoints") is False and prior.get("original_journal_preserved") is True
+                and prior.get("original_journal_blob") == refresh_recovery["original_journal_blob"]
+                and prior.get("original_checkpoint_verification") == prior_proof
+                and prior.get("source_push") is None and prior.get("pushed") is False
+                and prior.get("observed_remote_head_sha") == SOURCE and prior.get("status") == "blocked"
+                and prior.get("build_tests") == "not_run" and prior.get("full_publisher") == "not_run"
+                and refresh_recovery.get("run_id") == 43124963685
+                and prior.get("blocker") == refresh_recovery["blocker"]
+                and prior.get("formatting_recovery") == recovery
+                and prior.get("diagnostics", {}).get("plaintext_sha256") == refresh_recovery["diagnostics_archive_sha256"]
+                and prior_transfer.get("transfer_id") == TRANSFER and prior_transfer.get("receiver") == ACTOR
+                and prior_transfer.get("plaintext_sha256") == INCOMING and prior_transfer.get("source_sealed") is True
+                and prior_transfer.get("candidate_sha") == SOURCE and prior_transfer.get("candidate_branch") == BRANCH
+                and prior_transfer.get("native_source_commit") == BASE and prior_transfer.get("native_source_branch") == INCOMING_BRANCH):
+            raise Blocked("spec refresh recovery does not bind the exact preserved failure and sealed successor")
+        input_bytes("spec-refresh-observed-validation.patch", refresh_recovery["validation_diff_sha256"])
+        # The previous uncommitted native journal remains historical evidence
+        # in its verified encrypted archive. Its event identity and step digest
+        # are recorded through the CLI below, never restored by raw file writes.
+        result["spec_refresh_recovery"] = refresh_recovery
         observed = json.loads(input_bytes("buildkite-7937-observed-errors.json", manifest["buildkite_evidence_sha256"]))
         if (observed.get("candidate") != SOURCE or observed.get("accepted_base") != BASE
                 or observed.get("build") != 7937 or observed.get("compiler_result", {}).get("errors") != 11
