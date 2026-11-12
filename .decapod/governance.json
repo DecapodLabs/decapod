@@ -547,6 +547,14 @@
       "proof_refs": [
         ".decapod/managed/specs/VALIDATION.md"
       ]
+    },
+    {
+      "id": "issue1628-current-target-reconciliation",
+      "summary": "Preserve both original client checkpoints and merge accepted billing/release history. Keep backend-only project configuration and Dactyl-mediated readiness instead of mandatory local rosters, prices and billing URLs; update fixtures/docs and review the source profile version-only digest. Compilation and required Buildkite proof remain pending the supported Dactyl registry API release.",
+      "input_digest": "sha256:be62731a51926e692355883ea16ef6ad58cd8c4e12572af5ae52d84e30bf04ad",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md"
+      ]
     }
   ],
   "intents": {
@@ -585,24 +593,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only unused imports and evidence wording change. Existing logical Dactyl transport, private session custody, fail-closed startup and local independence architecture remain unchanged.",
-          "reviewed_code_fingerprint": "01f5202b9a5e47e727e6d37890879b8df1f5dacf97a7d6f9e3b2a0eb9c44c29f",
+          "reason": "Reviewed the recovered Dactyl-mediated client/custody contract against current source and the accepted billing merge. Project backend remains the only required cloud field; hosted pricing, rosters and authority stay on the service. Offline fixtures do not prove hosted readiness; registry dependency and current Buildkite proof remain required.",
+          "reviewed_code_fingerprint": "3527a87aebf46a51e05099cf4332e8466ebb4ce04365b8777fb3927098e79546",
           "spec_material_hash": "855b9020ffb388bfa7fd95f9168b54e06432c2921ad8caaea4ab640893304087"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI or transport interface changes. The correction documents the observed registry API blocker and unavailable pre-readiness overlay path without changing the existing interface contract.",
-          "reviewed_code_fingerprint": "01f5202b9a5e47e727e6d37890879b8df1f5dacf97a7d6f9e3b2a0eb9c44c29f",
+          "reason": "Reviewed the recovered Dactyl-mediated client/custody contract against current source and the accepted billing merge. Project backend remains the only required cloud field; hosted pricing, rosters and authority stay on the service. Offline fixtures do not prove hosted readiness; registry dependency and current Buildkite proof remain required.",
+          "reviewed_code_fingerprint": "3527a87aebf46a51e05099cf4332e8466ebb4ce04365b8777fb3927098e79546",
           "spec_material_hash": "5b5380bf8be947c9a4f52a23d2139136f4df15978d6344d9452aa8de4d675f7c"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No authentication, token handling, origin binding or storage permissions change. Existing private custody, no replay, no fallback and service authorization boundaries remain intact.",
-          "reviewed_code_fingerprint": "01f5202b9a5e47e727e6d37890879b8df1f5dacf97a7d6f9e3b2a0eb9c44c29f",
+          "reason": "Reviewed the recovered Dactyl-mediated client/custody contract against current source and the accepted billing merge. Project backend remains the only required cloud field; hosted pricing, rosters and authority stay on the service. Offline fixtures do not prove hosted readiness; registry dependency and current Buildkite proof remain required.",
+          "reviewed_code_fingerprint": "3527a87aebf46a51e05099cf4332e8466ebb4ce04365b8777fb3927098e79546",
           "spec_material_hash": "38dd70e5539ae8482b613a0232e058f8e6800fe56a58851bbf87e8b98578e955"
         }
       ],
@@ -614,15 +622,16 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794443076Z"
+      "updated_at": "1794447833Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
+        "Preserve original client checkpoints and accepted target history; backend-only project configuration, Dactyl-owned transport and server-owned prices/rosters remain explicit user requirements",
         "Reviewed managed client and private custody source; configured Buildkite proof remains required and Dactyl registry API availability requires native confirmation",
         "Same-task reviewed corrections and checkpointed source push only; complete Buildkite readiness and separate registry handoff remain unsatisfied"
       ],
-      "artifact_hash": "sha256:06766569c8a0cc4dc376c169c93cf249f4eccb28477cc67b4fb530d81e5ee988",
+      "artifact_hash": "sha256:26d94b65c9b7d7ae7b18d0534f391b58dcbb59681a21718db4762749e19efbca",
       "checks": [
         {
           "name": "corrected-candidate-build-tests",
@@ -641,11 +650,19 @@
           "status": "failed"
         },
         {
+          "name": "recovery-custody",
+          "status": "passed"
+        },
+        {
+          "name": "registry-handoff",
+          "status": "unavailable"
+        },
+        {
           "name": "source-review",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
@@ -673,10 +690,17 @@
             "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M76ECD20HF9M6Q15W5AKE2WQ",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M76ECD20HF9M6Q15W5AKE2WQ": {
@@ -719,6 +743,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "command": "git fetch origin",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Verified operator handoff and imported original sealed task 01M76J985NNC1F519D2CE4V9Y7. Candidate d85650bafa610dc952fbc91acd91ba5e28b329b7 remains unmodified. Accepted master advanced to d3358e1c after billing PR1631 and release1632; merge reconciliation will remove the new mandatory project roster/pricing client behavior in accordance with issue1628 and the current explicit user boundary, while retaining unrelated accepted changes. Dactyl run43131221323 artifacts verified by ciphertext/plaintext and per-file hashes: both native groups and all14 checks passed on86ed55d; publication/readback failed. Registry still only0.11.1, so client compilation/product execution remain blocked."
+                ],
+                "proof_refs": [
+                  "recovery-custody",
+                  "registry-handoff"
+                ],
+                "scope": [
+                  "decapod-cloud-client",
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -726,12 +768,14 @@
       },
       "declared_commands": [
         "cargo fmt --all",
-        "decapod rpc --op specs.refresh"
+        "decapod rpc --op specs.refresh",
+        "git fetch origin"
       ],
       "destination": "pull request",
       "evidence": [
         "Exact source c5de35a89b27e788169612ae71681e45c13bf71a; original sealed task imported and readmitted. Full native validation has not run; unavailable describes the absent proof result, not an observed provider failure. The accepted source-CI contract and release dependency policy remain intact; no unpublished source overlay is substituted.",
-        "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task. Correction run 43124963685 passed the exact formatted source checks and then stopped after native specs.refresh and trajectory recording because the authored VALIDATION hash included one duplicate blank line. Supported capability-overlay refresh collapses three consecutive newlines to two; approved prose is unchanged, and generated fingerprint changes stay inside existing marker blocks. The revised insertion removes only its final newline and pins the observed authored hash sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849. The failed attempt made no checkpoint, commit or push. Its uncommitted native journal is preserved by encrypted diagnostics archive sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967 and reconstructed journal digest sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8. Archived trajectory branch_01M76ECD20HF9M6Q15W5AKE2WQ event event:5, sequence 5, has step digest sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d (UTF-8 sorted-key compact JSON); native trajectory artifact hash sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083. This archived step is historical evidence, not restored current authority. The latest sealed task continues on the same committed journal through native CLI recording; no raw projection bytes are restored. Exact source, authored-spec, checkpoint and publication boundaries remain enforced."
+        "Same original task and journal continue from 1289a80a782d651af337125ee447db4b5723cbd7. Native full publisher in run 43117917740 returned SNAPSHOT_NOT_READY for Buildkite docs_sync build 7937. Direct observed job output compiled dactyl-db 0.11.1, then reported 11 E0433/E0425 errors for missing CloudConnector, AuthenticationSecrets, AuthenticationState and UserSession; one unused auth/cloud_backend import warning was also observed. Evidence artifact sha256:71dff4b541fe957f4e8f3b62ba538738d91d25824b608013d0cf4225527dd4f8 records exact log locations. These are historical candidate failures, not results on this correction. Reviewed patches remove unused imports and correct overlay wording; authored VALIDATION states that no governed pre-readiness source-overlay recipe is configured. Only formatting, native projections, checkpoint/history checks and a normal same-branch source push are performed. New CLI/custody tests, full Buildkite readiness and registry release handoff remain unproven; no path/Git dependency fallback or profile weakening occurs. Correction run 43123429502 then stopped after native cargo fmt because the pre-format import-layout hash differed. Its verified encrypted diagnostics archive sha256:d9d5fef54128f7571623cdc85bbe2ce6b75b43db1853fb1e7b4b225371d09485 preserves the actual output: only state moved to the next import line beside state_commit; every other source byte and all approved documentation/spec changes matched. No new checkpoint, commit, push, build or test occurred, and the original journal remained intact. The revised replay patch matches that exact observed formatter output (sha256:a607389e0f43dad013b315df52500a3357252cecf33098a25db812516599531f); exact source hash checks remain enforced, and the latest sealed successor continues the same task. Correction run 43124963685 passed the exact formatted source checks and then stopped after native specs.refresh and trajectory recording because the authored VALIDATION hash included one duplicate blank line. Supported capability-overlay refresh collapses three consecutive newlines to two; approved prose is unchanged, and generated fingerprint changes stay inside existing marker blocks. The revised insertion removes only its final newline and pins the observed authored hash sha256:1a51db2abfc394e552cf520ac9d54bd64d00489d0c07377d8c2bfc344fb7f849. The failed attempt made no checkpoint, commit or push. Its uncommitted native journal is preserved by encrypted diagnostics archive sha256:776d5e4500639f6c3608ff3cab5bf8689fc0aee9886304b152fec4ed97f31967 and reconstructed journal digest sha256:75413445dd842e0ef71e00253e1552e1729a517c7dd8c1e60aab47db31b5dfa8. Archived trajectory branch_01M76ECD20HF9M6Q15W5AKE2WQ event event:5, sequence 5, has step digest sha256:4b6e8108c1a392130940c40b71bb1fc89df6d56fcb2a99767522ed1e277cf87d (UTF-8 sorted-key compact JSON); native trajectory artifact hash sha256:184610a2a7a10452ab83f27794aea0f7e19b6a9ba7f08dc00e61b38499e7d083. This archived step is historical evidence, not restored current authority. The latest sealed task continues on the same committed journal through native CLI recording; no raw projection bytes are restored. Exact source, authored-spec, checkpoint and publication boundaries remain enforced.",
+        "Verified operator handoff and imported original sealed task 01M76J985NNC1F519D2CE4V9Y7. Candidate d85650bafa610dc952fbc91acd91ba5e28b329b7 remains unmodified. Accepted master advanced to d3358e1c after billing PR1631 and release1632; merge reconciliation will remove the new mandatory project roster/pricing client behavior in accordance with issue1628 and the current explicit user boundary, while retaining unrelated accepted changes. Dactyl run43131221323 artifacts verified by ciphertext/plaintext and per-file hashes: both native groups and all14 checks passed on86ed55d; publication/readback failed. Registry still only0.11.1, so client compilation/product execution remain blocked."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M76ECD1993X600J9GEM0D7FY",

@@ -1,5 +1,23 @@
 # Validation
 
+## Recovery and accepted-target reconciliation (#1628)
+
+The client continues from both original checkpoints, including
+`d85650bafa610dc952fbc91acd91ba5e28b329b7`, with the accepted billing/release
+history merged into the same work branch. The newer mandatory project roster,
+embedded price and client-built billing URL conflict with the backend-only
+contract and are replaced by the managed Dactyl sign-in/account flow. The fresh
+headless initialization fixture also asserts that these project fields are absent.
+
+Dactyl's unchanged `86ed55dbf4ff78bb3c6c6aa52832949101d9ea91` candidate has
+verified native evidence from run `43131221323`: both mandatory proof groups,
+all fourteen checks, a ready verdict and its exact-candidate readiness receipt.
+Its wrapper failed afterward during PR publication/readback. This upstream
+offline proof does not establish client compilation or protected hosted access.
+The registry still exposes only `dactyl-db 0.11.1`; the client needs a separately
+released version containing the new connector/authentication/session APIs.
+Client unit/CLI tests and current-target Buildkite readiness remain unproven.
+
 ## Managed connector execution prerequisites (#1628)
 
 The managed connector requires a published Dactyl dependency containing its
@@ -1093,7 +1111,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `01f5202b9a5e47e727e6d37890879b8df1f5dacf97a7d6f9e3b2a0eb9c44c29f`
+- Repository signal fingerprint: `6a29706349fc2b19d32beb42ab421b3dde77fe07e03f185f53ee3c42b6739dc7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

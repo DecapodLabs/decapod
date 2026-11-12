@@ -404,6 +404,24 @@ fn fresh_headless_init_resumes_the_same_private_flow_and_checks_repository_read_
     let first = fixture.init();
     failed(&first, "onboarding_pending");
     assert!(output(&first).contains("/begin?flow_id="));
+    let config: toml::Value = toml::from_str(
+        &std::fs::read_to_string(fixture.project.path().join(".decapod/config.toml")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(config["repo"]["backend"].as_str(), Some("cloud"));
+    for field in [
+        "cloud_repository",
+        "cloud_github_users",
+        "api_url",
+        "provider",
+        "driver",
+    ] {
+        assert!(
+            config["repo"].get(field).is_none(),
+            "unexpected project field {field}"
+        );
+    }
+    assert!(!output(&first).contains("USD15"));
     assert_eq!(fixture.count(START), 1);
     assert_eq!(fixture.count(STATUS), 0);
     assert_eq!(fixture.status()["phase"], "waiting");

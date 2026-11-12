@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.138.3](https://github.com/DecapodLabs/decapod/compare/v0.138.2...v0.138.3) - 2026-11-12
+
+### Added
+
+- *(init)* recover cloud repository purchase approval handoff
+
+### Fixed
+
+- *(billing)* repair measured lint and generated documentation gates
+
+### Other
+
+- *(governance)* preserve native billing preparation receipt
+
 ## [0.138.2](https://github.com/DecapodLabs/decapod/compare/v0.138.1...v0.138.2) - 2026-11-11
 
 ### Fixed
