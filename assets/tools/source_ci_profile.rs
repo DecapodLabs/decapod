@@ -680,7 +680,7 @@ pub fn commands(check: &Check, paths: &[String]) -> io::Result<Vec<Invocation>> 
         "selective-cli" => vec![bazel(&["test", "//:cli_contract_enforcement", "//:entrypoint_correctness", "//:cli_contracts", "--test_arg=--test-threads=1"])],
         "supabase-consumer" => vec![
             cargo(&["test", "--locked", "--features", "supabase-cloud", "--lib", "core::fs_permissions::tests::recovery_fixture_selection_rejects_incompatible_candidates", "--", "--exact", "--nocapture"]),
-            cargo(&["test", "--locked", "--features", "supabase-cloud", "--lib", "--test", "cloud_supabase_boundary", "--test", "cloud_dactyl_boundary", "--test", "release_dependency_policy", "--test", "cloud_cli_boundary", "--test", "cloud_command_path", "--test", "cloud_todo_resume_wire", "--test", "propodus_contract", "--test", "supabase_service"]),
+            cargo(&["test", "--locked", "--features", "supabase-cloud", "--lib", "--test", "cloud_managed_session", "--test", "cloud_supabase_boundary", "--test", "cloud_dactyl_boundary", "--test", "release_dependency_policy", "--test", "cloud_cli_boundary", "--test", "cloud_command_path", "--test", "cloud_todo_resume_wire", "--test", "propodus_contract", "--test", "supabase_service"]),
         ],
         "workspace-lifecycle-docker" => vec![
             Invocation::new("docker", &["pull", "busybox:1.37"]),

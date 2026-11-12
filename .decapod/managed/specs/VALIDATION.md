@@ -100,6 +100,11 @@ path rejection, exact binding, phase invariants and serialized custody.
 These tests must run on the exact checkpointed candidate. Static review and
 source formatting do not establish compilation or execution. The managed API
 is consumed from the published Dactyl 0.12.0 registry dependency.
+The required `supabase-consumer` recipe explicitly includes the new
+`cloud_managed_session` integration target alongside every existing target and
+the complete library suite. Merely adding its source file would leave all
+twelve CLI scenarios outside that recipe; source review caught and corrected
+this omission before readiness. No existing command, feature or check is removed.
 `tests/release_dependency_policy.rs`, Cargo manifests and source-CI configuration
 remain intact; an unpublished source overlay cannot establish release-policy or
 publication readiness. No local fixture claims hosted managed Auth, production
@@ -1165,7 +1170,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `66344e0cda2b53e9db72df8379d6260f0a23ca4135e4ecbafc099e67f246721f`
+- Repository signal fingerprint: `954f906200fb956f178545d4670c1e6d4555f002ddb46f82012065a4a66afe06`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (226 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

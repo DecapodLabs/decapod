@@ -20,16 +20,6 @@ Project tooling is Rust. Non-Rust one-offs (Python, Bash) are not the contributi
 
 Tools under `assets/tools/` MUST be deterministic: fixed inputs produce fixed outputs. This keeps a tool callable from a `.github/` workflow today and from a future `decapod validate` repository-specific gate extension without rework. Avoid time-based seeds, network fetches, or ambient environment reads inside the tool surface.
 
-### Dependency lock metadata
-
-After changing Cargo inputs, regenerate `MODULE.bazel.lock` with the pinned
-`bazelisk --batch mod deps --lockfile_mode=update`. Store the complete generated
-JSON with one-space indentation so it remains within the controller's 1 MiB
-source-discovery bound. Formatting must preserve every JSON value. Verify with
-`bazelisk --batch mod deps --lockfile_mode=error`; the committed build policy
-continues to reject stale metadata. These commands prepare dependency metadata
-and do not establish compilation, test execution or PR readiness.
-
 ## 2. Before Implementation
 
 When asked to add a maintenance or release-ops tool:
