@@ -6,6 +6,7 @@
 
 use serde::Deserialize;
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::TempDir;
@@ -15,6 +16,7 @@ use tempfile::TempDir;
 struct Fixture {
     profile: String,
     endpoint: String,
+    rpc_v1: RpcV1,
     repository: String,
     allowed_tokens: [String; 2],
     denials: Vec<Denial>,
@@ -22,6 +24,13 @@ struct Fixture {
     // cleanup owned by the harness even if this test fails or is interrupted.
     disposable: bool,
     receipt_path: PathBuf,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RpcV1 {
+    publishable_key: String,
+    schema: String,
 }
 
 #[derive(Deserialize)]
@@ -64,7 +73,7 @@ fn protected_fixture_errors_do_not_reveal_credential_values() {
     }
 }
 
-fn project(repository: &str) -> TempDir {
+fn project(fixture: &Fixture, repository: &str, token: &str) -> TempDir {
     // Parse through the same public repository identity contract as the CLI.
     let remote = format!("https://github.com/{repository}.git");
     let identity =
@@ -81,10 +90,84 @@ fn project(repository: &str) -> TempDir {
                 .success()
         );
     }
-    std::fs::create_dir_all(root.path().join(".decapod/data")).unwrap();
-    std::fs::write(root.path().join(".decapod/config.toml"),
-        "schema_version = \"1.0.0\"\n[init]\ndiagram_style = \"mermaid\"\nentrypoints = []\n[repo]\nbackend = \"cloud\"\n"
-    ).unwrap();
+    let service_hash = format!(
+        "{:x}",
+        Sha256::digest(fixture.endpoint.trim_end_matches('/'))
+    );
+    let session_dir = root.path().join("data/decapod/services").join(service_hash);
+    std::fs::create_dir_all(&session_dir).unwrap();
+    let session_path = session_dir.join("session_token.json");
+    let session = json!({
+        "access_token": token,
+        "refresh_token": "synthetic-disposable-refresh",
+        "session_id": format!("fixture-session-{}", Sha256::digest(token.as_bytes()).iter().map(|b| format!("{b:02x}")).collect::<String>()),
+        "expires_at": "2099-01-01T00:00:00Z"
+    });
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    use std::io::Write;
+    options
+        .open(&session_path)
+        .unwrap()
+        .write_all(&serde_json::to_vec(&session).unwrap())
+        .unwrap();
+    // The external fixture owner supplies an already registered server project
+    // reference. The real account-status call below still verifies its access;
+    // local fixture metadata is not authorization and never mints an entitlement.
+    let binding = json!({
+        "version": 1, "origin": fixture.endpoint, "repository": repository,
+        "request_id": "00000000-0000-4000-8000-000000000001",
+        "project_name": "Disposable service proof", "project_id": repository
+    });
+    let binding_path = session_dir.join(format!(
+        "project-{:x}.json",
+        Sha256::digest(repository.as_bytes())
+    ));
+    let mut binding_options = std::fs::OpenOptions::new();
+    binding_options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        binding_options.mode(0o600);
+    }
+    binding_options
+        .open(binding_path)
+        .unwrap()
+        .write_all(&serde_json::to_vec(&binding).unwrap())
+        .unwrap();
+
+    let init = Command::new(
+        std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).expect("resolve actual Decapod CLI"),
+    )
+    .args(["init", "--backend", "cloud", "--force", "--proof"])
+    .current_dir(root.path())
+    .env("HOME", root.path())
+    .env("XDG_CONFIG_HOME", root.path().join("config"))
+    .env("XDG_DATA_HOME", root.path().join("data"))
+    .env("DECAPOD_CLOUD_DATASTORE", "supabase")
+    .env("DACTYL_CLOUD_ORIGIN", &fixture.endpoint)
+    .env(
+        "DACTYL_CLOUD_PUBLISHABLE_KEY",
+        &fixture.rpc_v1.publishable_key,
+    )
+    .env("DECAPOD_SUPABASE_API_SCHEMA", &fixture.rpc_v1.schema)
+    .output()
+    .expect("run actual cloud initialization");
+    assert!(
+        init.status.success(),
+        "decapod init --backend cloud failed: {}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+    let config = std::fs::read_to_string(root.path().join(".decapod/config.toml")).unwrap();
+    assert!(config.contains("backend = \"cloud\""));
+    assert!(!config.contains(&fixture.rpc_v1.publishable_key));
+    assert!(!config.contains(token));
+
     root
 }
 
@@ -106,8 +189,15 @@ fn cli(fixture: &Fixture, root: &Path, actor: &str, token: &str, args: &[&str]) 
         .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
         .env("DECAPOD_AGENT_ID", actor)
         .env("DECAPOD_CLOUD_DATASTORE", "supabase")
-        .env("DECAPOD_PROPODUS_API_URL", &fixture.endpoint)
-        .env("DECAPOD_ACCESS_TOKEN", token);
+        .env("DACTYL_CLOUD_ORIGIN", &fixture.endpoint)
+        .env(
+            "DACTYL_CLOUD_PUBLISHABLE_KEY",
+            &fixture.rpc_v1.publishable_key,
+        )
+        .env("DECAPOD_SUPABASE_API_SCHEMA", &fixture.rpc_v1.schema)
+        .env_remove("DECAPOD_PROPODUS_API_URL")
+        .env_remove("DECAPOD_ACCESS_TOKEN");
+    let _ = token; // Session custody is read from the endpoint-scoped machine file.
     command
 }
 
@@ -131,6 +221,8 @@ fn assert_safe(output: &Output, fixture: &Fixture) {
     {
         assert!(!text.contains(token), "CLI exposed a fixture credential");
     }
+    assert!(!text.contains(&fixture.rpc_v1.publishable_key));
+    assert!(!text.contains("synthetic-disposable-refresh"));
 }
 
 fn assert_no_fallback(root: &Path) {
@@ -209,10 +301,10 @@ fn run(profile: &str) {
             "explicit protected hosted opt-in required"
         );
     }
-    let first = project(&fixture.repository);
-    let second = project(&fixture.repository);
     let one = &fixture.allowed_tokens[0];
     let two = &fixture.allowed_tokens[1];
+    let first = project(&fixture, &fixture.repository, one);
+    let second = project(&fixture, &fixture.repository, two);
     let before = result(
         cli(
             &fixture,
@@ -228,6 +320,23 @@ fn run(profile: &str) {
     assert!(
         before["items"].as_array().unwrap().is_empty(),
         "fixture must start with fresh empty task state"
+    );
+    let restarted = result(
+        cli(
+            &fixture,
+            first.path(),
+            "proof-one",
+            one,
+            &["list", "--status", "all"],
+        )
+        .output()
+        .unwrap(),
+        &fixture,
+    );
+    assert!(restarted["items"].as_array().unwrap().is_empty());
+    assert!(
+        first.path().join("data/decapod/services").exists(),
+        "a new Decapod process reused the endpoint-scoped machine session"
     );
     let add = result(
         cli(
@@ -442,7 +551,7 @@ fn run(profile: &str) {
     assert_safe(&validated, &fixture);
 
     for denial in &fixture.denials {
-        let denied_repo = project(&denial.repository);
+        let denied_repo = project(&fixture, &denial.repository, &denial.token);
         let mut operations = vec![
             vec!["add", "denied mutation sentinel"],
             vec!["claim", "--id", id],

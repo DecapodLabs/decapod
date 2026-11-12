@@ -27,6 +27,25 @@ original arguments with its token. This inspection never opens the repository's
 local task database. It is metadata inspection, not authentication or a task
 store: task descriptions and other request contents are not retained there.
 
+## Managed project binding and machine continuity
+
+Managed Supabase setup uses a server-issued project reference rather than the
+local source key. Before an add can dispatch, its private operation record binds
+a fingerprint of the actual endpoint/project scope. A retry must match that
+binding. A changed project is blocked before data dispatch, and an unknown
+outcome remains unknown. A previously dispatched legacy record without this
+binding cannot be silently adopted into a new managed project.
+
+A supplied managed retry also requires the retained machine-local operation
+record. The printed pre-auth token alone does not establish its original server
+project after a machine reset or on another device. Missing metadata fails before
+authentication or task submission; preserve the original metadata and restore its
+original project binding for authorized reconciliation. Never create a new task
+to retry an uncertain original operation. Successful metadata eviction can make
+this automatic managed recovery unavailable even though the service event
+remains authoritative. A future explicit cross-device handoff must preserve the
+project binding; no such inference or import is implemented here.
+
 ## Outcomes
 
 - `blocked_before_submit`: this attempt did not dispatch the mutation. Its

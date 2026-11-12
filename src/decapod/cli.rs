@@ -279,13 +279,13 @@ pub(crate) struct InitGroupCli {
     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// Init provides a hosted GitHub-admin approval link for USD15 monthly named seats.
+    /// Managed sign-in and server-confirmed project authorization are separate from local setup.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
-    /// Canonical GitHub owner/repository for cloud purchase approval.
+    /// Optional repository context; never a cloud authorization claim.
     #[clap(long)]
     pub cloud_repository: Option<String>,
-    /// Requested named GitHub seats (repeatable or comma separated). No credentials.
+    /// Optional requested GitHub usernames (repeatable or comma separated); no access is assigned.
     #[clap(long = "github-users", value_delimiter = ',')]
     pub github_users: Vec<String>,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
@@ -447,13 +447,13 @@ pub(crate) struct InitWithCli {
     /// Init storage backend: 'local' (default) or 'cloud' (experimental, account required).
     ///
     /// Cloud backend records non-secret Decapod Cloud intent in `.decapod/config.toml`.
-    /// Init provides a hosted GitHub-admin approval link for USD15 monthly named seats.
+    /// Managed sign-in and server-confirmed project authorization are separate from local setup.
     #[clap(long, value_enum, default_value_t = BackendType::Local)]
     pub backend: BackendType,
-    /// Canonical GitHub owner/repository for cloud purchase approval.
+    /// Optional repository context; never a cloud authorization claim.
     #[clap(long)]
     pub cloud_repository: Option<String>,
-    /// Requested named GitHub seats (repeatable or comma separated). No credentials.
+    /// Optional requested GitHub usernames (repeatable or comma separated); no access is assigned.
     #[clap(long = "github-users", value_delimiter = ',')]
     pub github_users: Vec<String>,
     /// Explicitly request local Git repository initialization (the default unless --no-git is set).
@@ -697,13 +697,8 @@ impl From<CloudRuntimeConfigInput> for CloudRuntimeConfig {
     }
 }
 
-/// Binary-owned production origin for the Propodus Vercel/Neon service.
-/// Explicit environment overrides remain available to controlled test and
-/// development harnesses, but project configuration never stores this route.
-pub const PROPODUS_VERCEL_NEON_ENTRYPOINT: &str = "https://project-oqn7i.vercel.app";
-
 fn default_cloud_provider() -> String {
-    "vercel".to_string()
+    "supabase".to_string()
 }
 
 fn default_cloud_datastore() -> String {
@@ -718,34 +713,40 @@ impl CloudRuntimeConfig {
         use crate::core::backend::CloudDatastore;
         let datastore = CloudDatastore::parse(&self.datastore)?;
         datastore.validate_available()?;
-        if datastore == CloudDatastore::Supabase
-            && (self.api_url.trim().is_empty() || self.api_url == PROPODUS_VERCEL_NEON_ENTRYPOINT)
-        {
-            return Err(crate::core::error::DecapodError::Config(
-                "Supabase cloud requires an explicit authenticated service endpoint via DECAPOD_PROPODUS_API_URL; select DECAPOD_CLOUD_DATASTORE=neon only for the explicit Neon alternative".to_string(),
-            ));
-        }
-        #[cfg(feature = "supabase-cloud")]
         if datastore == CloudDatastore::Supabase {
-            // Validate transport policy before onboarding or refreshing a session.
-            // Dactyl owns URL parsing; this operation never performs network I/O.
-            dactyl_db::DatastoreRoute::supabase(&self.api_url, None).validate()?;
+            if self.api_url.trim().is_empty() {
+                return Err(crate::core::error::DecapodError::Config(
+                    "The selected cloud connector has no deployment origin".to_string(),
+                ));
+            }
+            #[cfg(feature = "supabase-cloud")]
+            dactyl_db::CloudConnector::validate_origin(&self.api_url)?;
+        } else if self.api_url.trim().is_empty() {
+            return Err(crate::core::error::DecapodError::Config(
+                "explicit Neon storage requires DECAPOD_NEON_API_URL".to_string(),
+            ));
+        } else {
+            dactyl_db::DatastoreRoute::neon(&self.api_url, None).validate()?;
         }
         Ok(datastore)
     }
 }
 
 fn default_cloud_api_url(datastore: &str) -> String {
-    std::env::var("DECAPOD_PROPODUS_API_URL")
-        .ok()
-        .filter(|value| !value.trim().is_empty())
-        .unwrap_or_else(|| {
-            if datastore == "neon" {
-                PROPODUS_VERCEL_NEON_ENTRYPOINT.to_string()
-            } else {
-                String::new()
-            }
-        })
+    if datastore == "neon" {
+        return std::env::var("DECAPOD_NEON_API_URL")
+            .ok()
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_default();
+    }
+    #[cfg(feature = "supabase-cloud")]
+    {
+        dactyl_db::CloudConnector::default_origin()
+    }
+    #[cfg(not(feature = "supabase-cloud"))]
+    {
+        String::new()
+    }
 }
 
 impl Default for CloudRuntimeConfig {
@@ -781,7 +782,7 @@ pub struct RepoContext {
     /// Canonical repository backend selection.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub backend: Option<BackendType>,
-    /// Requested purchase repository, independently verified by the cloud service.
+    /// Requested source repository context, independently verified by the cloud service.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cloud_repository: Option<String>,
     /// Requested roster only. Paid seats and authorization remain server owned.

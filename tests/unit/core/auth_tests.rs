@@ -1,6 +1,88 @@
 use super::*;
 
 #[test]
+fn oversized_machine_sessions_are_refused_without_replacing_private_state() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("session_token.json");
+    let mut session = CloudSession {
+        access_token: "original-access".into(),
+        refresh_token: Some("original-refresh".into()),
+        session_id: None,
+        expires_at: None,
+    };
+    store_machine_session_at(&session, &path).unwrap();
+    let before = fs::read(&path).unwrap();
+    session.access_token = "a".repeat(MAX_SESSION_FILE_BYTES);
+    assert!(store_machine_session_at(&session, &path).is_err());
+    assert_eq!(fs::read(&path).unwrap(), before);
+    let oversized = vec![b' '; MAX_SESSION_FILE_BYTES + 1];
+    fs::write(&path, &oversized).unwrap();
+    let error = load_machine_session_at(&path).unwrap_err();
+    assert!(error.to_string().contains("size bound"));
+    assert_eq!(fs::read(&path).unwrap(), oversized);
+}
+
+#[cfg(unix)]
+#[test]
+fn dangling_machine_session_symlinks_are_refused() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("session_token.json");
+    std::os::unix::fs::symlink(directory.path().join("absent.json"), &path).unwrap();
+    assert!(load_machine_session_at(&path).is_err());
+    assert!(
+        fs::symlink_metadata(&path)
+            .unwrap()
+            .file_type()
+            .is_symlink()
+    );
+}
+
+#[cfg(feature = "supabase-cloud")]
+#[test]
+fn managed_provider_token_is_atomic_scoped_and_kept_out_of_data_credentials() {
+    let directory = tempfile::tempdir().unwrap();
+    let store =
+        CloudSessionStore::for_service_in(directory.path(), "https://one.example.test").unwrap();
+    let other =
+        CloudSessionStore::for_service_in(directory.path(), "https://two.example.test").unwrap();
+    let mut session = CloudSession {
+        access_token: "user-a".into(),
+        refresh_token: Some("refresh-a".into()),
+        session_id: None,
+        expires_at: None,
+    };
+    store
+        .store_managed_session(&session, Some("scm-provider-secret"), false)
+        .unwrap();
+    assert_eq!(
+        store.load_provider_token().unwrap().as_deref(),
+        Some("scm-provider-secret")
+    );
+    assert_eq!(other.load_provider_token().unwrap(), None);
+    let data = store.load_machine_session().unwrap().unwrap();
+    assert_eq!(data.token, "user-a");
+    assert!(!format!("{data:?}").contains("scm-provider-secret"));
+    session.access_token = "rotated-user-a".into();
+    store.store_managed_session(&session, None, true).unwrap();
+    assert_eq!(
+        store.load_provider_token().unwrap().as_deref(),
+        Some("scm-provider-secret")
+    );
+    session.access_token = "new-user-b".into();
+    store.store_managed_session(&session, None, false).unwrap();
+    assert_eq!(store.load_provider_token().unwrap(), None);
+    assert!(
+        store
+            .store_managed_session(&session, Some("invalid\nprovider"), false)
+            .is_err()
+    );
+    assert_eq!(
+        store.load_machine_session().unwrap().unwrap().token,
+        "new-user-b"
+    );
+}
+
+#[test]
 fn scoped_machine_sessions_never_reuse_legacy_or_other_service_credentials() {
     let directory = tempfile::tempdir().unwrap();
     let legacy = directory.path().join("session_token.json");

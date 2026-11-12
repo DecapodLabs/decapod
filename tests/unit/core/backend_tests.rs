@@ -279,14 +279,15 @@ fn cloud_datastore_selection_defaults_to_supabase_and_preserves_explicit_neon() 
 }
 
 #[test]
-fn supabase_requires_explicit_service_endpoint_and_never_uses_neon_default() {
+fn supabase_requires_project_configuration_and_neon_stays_explicit() {
     let config = crate::cli::CloudRuntimeConfig {
-        provider: "vercel".to_string(),
-        api_url: crate::cli::PROPODUS_VERCEL_NEON_ENTRYPOINT.to_string(),
+        provider: "supabase".to_string(),
+        api_url: "https://legacy-service.example.test".to_string(),
         datastore: "supabase".to_string(),
     };
     assert!(config.validate_datastore().is_err());
     let config = crate::cli::CloudRuntimeConfig {
+        api_url: "https://neon.example.test".to_string(),
         datastore: "neon".to_string(),
         ..config
     };
@@ -301,12 +302,12 @@ fn supabase_validates_transport_before_onboarding() {
         "postgres://user:secret@host/db",
         "https://service.example.test/?token=secret",
     ] {
-        let config = crate::cli::CloudRuntimeConfig {
-            provider: "vercel".to_string(),
-            api_url: endpoint.to_string(),
-            datastore: "supabase".to_string(),
-        };
-        let error = config.validate_datastore().unwrap_err();
+        let error = crate::core::dactyl::supabase_rpc_config_with_settings(
+            endpoint,
+            "sb_publishable_fixture",
+            "dactyl_api",
+        )
+        .unwrap_err();
         assert!(!error.to_string().contains("secret"));
     }
     for endpoint in [
@@ -314,11 +315,13 @@ fn supabase_validates_transport_before_onboarding() {
         "http://127.0.0.1:9000",
         "http://[::1]:9000",
     ] {
-        let config = crate::cli::CloudRuntimeConfig {
-            provider: "vercel".to_string(),
-            api_url: endpoint.to_string(),
-            datastore: "supabase".to_string(),
-        };
-        assert!(config.validate_datastore().is_ok());
+        assert!(
+            crate::core::dactyl::supabase_rpc_config_with_settings(
+                endpoint,
+                "sb_publishable_fixture",
+                "dactyl_api",
+            )
+            .is_ok()
+        );
     }
 }

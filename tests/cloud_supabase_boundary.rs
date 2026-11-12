@@ -69,10 +69,22 @@ fn command_with_optional_datastore(
         .env_remove("DECAPOD_CLOUD_AUTH_MODE")
         .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
         .env_remove("DECAPOD_CLOUD_DATASTORE")
-        .env("DECAPOD_PROPODUS_API_URL", endpoint)
+        .env_remove("DECAPOD_PROPODUS_API_URL")
+        .env_remove("DECAPOD_NEON_API_URL")
+        .env_remove("DACTYL_CLOUD_ORIGIN")
+        .env_remove("DACTYL_CLOUD_PUBLISHABLE_KEY")
+        .env_remove("DECAPOD_SUPABASE_API_SCHEMA")
         .env_remove("DECAPOD_ACCESS_TOKEN");
     if let Some(selector) = selector {
         command.env("DECAPOD_CLOUD_DATASTORE", selector);
+    }
+    if selector == Some("neon") {
+        command.env("DECAPOD_NEON_API_URL", endpoint);
+    } else if !endpoint.trim().is_empty() {
+        command.env("DACTYL_CLOUD_ORIGIN", endpoint).env(
+            "DACTYL_CLOUD_PUBLISHABLE_KEY",
+            "sb_publishable_test_fixture",
+        );
     }
     if let Some(token) = token {
         command.env("DECAPOD_ACCESS_TOKEN", token);
@@ -122,15 +134,24 @@ fn cloud_runtime_deserialization_uses_its_selected_datastore() {
     const CHILD: &str = "DECAPOD_TEST_CLOUD_CONFIG_CHILD";
     if std::env::var_os(CHILD).is_some() {
         use decapod::CloudRuntimeConfig;
-        const PROPODUS_VERCEL_NEON_ENTRYPOINT: &str = "https://project-oqn7i.vercel.app";
         let neon: CloudRuntimeConfig = serde_json::from_str(r#"{"datastore":"neon"}"#).unwrap();
         assert_eq!(neon.datastore, "neon");
-        assert_eq!(neon.api_url, PROPODUS_VERCEL_NEON_ENTRYPOINT);
-        assert!(neon.validate_datastore().is_ok());
+        assert!(neon.api_url.is_empty());
+        assert!(neon.validate_datastore().is_err());
+        let neon_explicit = CloudRuntimeConfig {
+            api_url: "https://neon.example.test".to_string(),
+            ..neon
+        };
+        assert!(neon_explicit.validate_datastore().is_ok());
         let supabase: CloudRuntimeConfig =
             serde_json::from_str(r#"{"datastore":"supabase"}"#).unwrap();
         assert_eq!(supabase.datastore, "supabase");
-        assert!(supabase.api_url.is_empty());
+        #[cfg(feature = "supabase-cloud")]
+        {
+            assert_eq!(supabase.api_url, dactyl_db::DEFAULT_CLOUD_ORIGIN);
+            assert!(supabase.validate_datastore().is_ok());
+        }
+        #[cfg(not(feature = "supabase-cloud"))]
         assert!(supabase.validate_datastore().is_err());
         let implicit: CloudRuntimeConfig = serde_json::from_str("{}").unwrap();
         assert_eq!(implicit, CloudRuntimeConfig::default());
@@ -150,6 +171,10 @@ fn cloud_runtime_deserialization_uses_its_selected_datastore() {
             ])
             .env(CHILD, "1")
             .env_remove("DECAPOD_PROPODUS_API_URL")
+            .env_remove("DECAPOD_NEON_API_URL")
+            .env_remove("DACTYL_CLOUD_ORIGIN")
+            .env_remove("DACTYL_CLOUD_PUBLISHABLE_KEY")
+            .env_remove("DECAPOD_SUPABASE_API_SCHEMA")
             .env_remove("DECAPOD_CLOUD_DATASTORE");
         if let Some(value) = ambient {
             child.env("DECAPOD_CLOUD_DATASTORE", value);
@@ -165,26 +190,36 @@ fn cloud_runtime_deserialization_uses_its_selected_datastore() {
 }
 
 #[test]
-fn default_cloud_requires_service_endpoint_without_local_fallback() {
-    let root = project();
-    let output = command_with_optional_datastore(
-        root.path(),
-        None,
-        "",
-        Some("synthetic-bearer-secret"),
-        &["list"],
-    );
-    assert!(!output.status.success());
-    let error = String::from_utf8_lossy(&output.stderr);
-    #[cfg(feature = "supabase-cloud")]
+fn default_cloud_resolves_through_dactyl_without_project_endpoint_configuration() {
+    const CHILD: &str = "DECAPOD_TEST_DEFAULT_CLOUD_CONNECTOR";
+    if std::env::var_os(CHILD).is_some() {
+        let config = decapod::CloudRuntimeConfig::default();
+        #[cfg(feature = "supabase-cloud")]
+        {
+            assert_eq!(config.api_url, dactyl_db::DEFAULT_CLOUD_ORIGIN);
+            assert!(config.validate_datastore().is_ok());
+        }
+        #[cfg(not(feature = "supabase-cloud"))]
+        assert!(config.validate_datastore().is_err());
+        return;
+    }
+    let output = Command::new(std::env::current_exe().unwrap())
+        .args([
+            "--exact",
+            "default_cloud_resolves_through_dactyl_without_project_endpoint_configuration",
+        ])
+        .env(CHILD, "1")
+        .env_remove("DACTYL_CLOUD_ORIGIN")
+        .env_remove("DACTYL_CLOUD_PUBLISHABLE_KEY")
+        .env_remove("DECAPOD_CLOUD_DATASTORE")
+        .env_remove("DECAPOD_PROPODUS_API_URL")
+        .output()
+        .unwrap();
     assert!(
-        error.contains("explicit authenticated service endpoint"),
-        "{error}"
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
     );
-    #[cfg(not(feature = "supabase-cloud"))]
-    assert!(error.contains("supabase-cloud"), "{error}");
-    assert!(!error.contains("synthetic-bearer-secret"));
-    assert_no_fallback(root.path());
 }
 
 #[cfg(feature = "supabase-cloud")]
@@ -198,6 +233,140 @@ mod enabled {
     use std::net::TcpListener;
     use std::thread::JoinHandle;
     use std::time::Duration;
+
+    #[test]
+    fn managed_refresh_reopens_the_actual_cli_data_connection_with_the_new_bearer() {
+        use sha2::{Digest, Sha256};
+        let root = project();
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let endpoint = format!("http://{}", listener.local_addr().unwrap());
+        let scope = root
+            .path()
+            .join("data/decapod/services")
+            .join(format!("{:x}", Sha256::digest(endpoint.as_bytes())));
+        decapod::core::fs_permissions::ensure_private_dir(&scope).unwrap();
+        decapod::core::fs_permissions::write_private(
+            scope.join("session_token.json"),
+            serde_json::to_vec(&json!({
+                "access_token":"synthetic-expired-access", "refresh_token":"synthetic-old-refresh",
+                "expires_at":"2000-01-01T00:00:00Z"
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        let server = std::thread::spawn(move || {
+            let mut paths = Vec::new();
+            for step in 0..3 {
+                let deadline = std::time::Instant::now() + Duration::from_secs(10);
+                let (mut stream, _) = loop {
+                    match listener.accept() {
+                        Ok(value) => break value,
+                        Err(error)
+                            if error.kind() == std::io::ErrorKind::WouldBlock
+                                && std::time::Instant::now() < deadline =>
+                        {
+                            std::thread::sleep(Duration::from_millis(10))
+                        }
+                        Err(error) => panic!("refresh/data fixture unavailable: {error}"),
+                    }
+                };
+                stream.set_nonblocking(false).unwrap();
+                stream
+                    .set_read_timeout(Some(Duration::from_secs(5)))
+                    .unwrap();
+                let mut bytes = Vec::new();
+                let (headers, offset, length) = loop {
+                    let mut buffer = [0; 4096];
+                    let count = stream.read(&mut buffer).unwrap();
+                    assert_ne!(count, 0);
+                    bytes.extend_from_slice(&buffer[..count]);
+                    assert!(bytes.len() <= 65536);
+                    if let Some(offset) = bytes.windows(4).position(|x| x == b"\r\n\r\n") {
+                        let headers = String::from_utf8(bytes[..offset].to_vec())
+                            .unwrap()
+                            .to_lowercase();
+                        let length: usize = headers
+                            .lines()
+                            .find_map(|x| x.strip_prefix("content-length:"))
+                            .unwrap()
+                            .trim()
+                            .parse()
+                            .unwrap();
+                        break (headers, offset + 4, length);
+                    }
+                };
+                assert!(length <= 32768);
+                while bytes.len() < offset + length {
+                    let mut buffer = [0; 4096];
+                    let count = stream.read(&mut buffer).unwrap();
+                    assert_ne!(count, 0);
+                    bytes.extend_from_slice(&buffer[..count]);
+                }
+                let body: Value = serde_json::from_slice(&bytes[offset..offset + length]).unwrap();
+                let path = headers
+                    .lines()
+                    .next()
+                    .unwrap()
+                    .split_whitespace()
+                    .nth(1)
+                    .unwrap()
+                    .to_owned();
+                paths.push(path.clone());
+                assert!(!headers.contains("synthetic-expired-access"));
+                assert!(headers.contains("apikey: sb_publishable_test_fixture"));
+                let response = match step {
+                    0 => {
+                        assert_eq!(path,"/auth/v1/token?grant_type=refresh_token");
+                        assert!(!headers.contains("authorization:"));
+                        assert_eq!(body,json!({"refresh_token":"synthetic-old-refresh"}));
+                        json!({"access_token":"synthetic-rotated-access","refresh_token":"synthetic-rotated-refresh","expires_in":900})
+                    },
+                    1 => {
+                        assert_eq!(path,"/functions/v1/propodus-onboarding/account-register");
+                        assert!(headers.contains("authorization: bearer synthetic-rotated-access"));
+                        json!({"version":1,"account_id":"00000000-0000-4000-8000-000000000001","status":"active","backend_authorized":true,"project_id":"example/supabase-proof"})
+                    },
+                    _ => {
+                        assert_eq!(path,"/rest/v1/rpc/dactyl_query_v1");
+                        assert!(headers.contains("authorization: bearer synthetic-rotated-access"));
+                        assert!(headers.contains("content-profile: dactyl_api"));
+                        assert_eq!(body["request"]["version"],1);
+                        json!({"columns":[],"rows":[],"affected_rows":0})
+                    }
+                }.to_string();
+                write!(stream,"HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{response}",response.len()).unwrap();
+            }
+            paths
+        });
+        let output = command(root.path(), "supabase", &endpoint, None);
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(server.join().unwrap().len(), 3);
+        let stored: Value =
+            serde_json::from_slice(&std::fs::read(scope.join("session_token.json")).unwrap())
+                .unwrap();
+        assert_eq!(stored["access_token"], "synthetic-rotated-access");
+        assert_eq!(stored["refresh_token"], "synthetic-rotated-refresh");
+        assert!(!scope.join("refresh-inflight.json").exists());
+        let output = format!(
+            "{}{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        for value in [
+            "synthetic-expired-access",
+            "synthetic-old-refresh",
+            "synthetic-rotated-access",
+            "synthetic-rotated-refresh",
+        ] {
+            assert!(!output.contains(value));
+        }
+        assert_no_fallback(root.path());
+    }
 
     fn server(status: u16, body: Value) -> (String, JoinHandle<Value>) {
         request_server("/query", status, move |_| body)
@@ -246,9 +415,6 @@ mod enabled {
                     }
                 };
                 let headers = String::from_utf8_lossy(&bytes[..body_start]).to_lowercase();
-                let is_reconciliation = path == "/batch" && headers.starts_with("post /query ");
-                assert!(is_reconciliation || headers.starts_with(&format!("post {path} ")));
-                assert!(headers.contains("authorization: bearer synthetic-bearer-secret"));
                 let length = headers
                     .lines()
                     .find_map(|line| line.strip_prefix("content-length:"))
@@ -262,8 +428,56 @@ mod enabled {
                     assert_ne!(read, 0);
                     bytes.extend_from_slice(&buffer[..read]);
                 }
-                let request: Value =
+                let envelope: Value =
                     serde_json::from_slice(&bytes[body_start..body_start + length]).unwrap();
+                if headers.starts_with("post /functions/v1/propodus-onboarding/account-register ")
+                    || headers.starts_with("post /functions/v1/propodus-onboarding/account-status ")
+                {
+                    assert!(headers.contains("authorization: bearer synthetic-bearer-secret"));
+                    assert!(!headers.contains("x-scm-"));
+                    assert!(!headers.contains("x-github-token"));
+                    assert_eq!(envelope["version"], 1);
+                    if headers
+                        .starts_with("post /functions/v1/propodus-onboarding/account-register ")
+                    {
+                        assert_eq!(envelope["request_id"].as_str().unwrap().len(), 36);
+                        assert!(envelope["project_name"].is_string());
+                    } else {
+                        assert_eq!(envelope["project_id"], "example/supabase-proof");
+                    }
+                    // Synthetic account authority for transport composition;
+                    // this is not a seat or managed-Auth policy proof.
+                    let body = if path == "/account" {
+                        response.take().unwrap()(&envelope)
+                    } else {
+                        json!({"version":1,"account_id":"00000000-0000-4000-8000-000000000001","status":"active","backend_authorized":true,"project_id":"example/supabase-proof"})
+                    }.to_string();
+                    write!(stream, "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
+                    if path == "/account" {
+                        break envelope;
+                    }
+                    continue;
+                }
+                let query_path = "/rest/v1/rpc/dactyl_query_v1";
+                let batch_path = "/rest/v1/rpc/dactyl_batch_v1";
+                let expected_path = if path == "/batch" {
+                    batch_path
+                } else {
+                    query_path
+                };
+                let is_reconciliation =
+                    path == "/batch" && headers.starts_with(&format!("post {query_path} "));
+                assert!(
+                    is_reconciliation || headers.starts_with(&format!("post {expected_path} ")),
+                    "unexpected Supabase RPC request: {headers}"
+                );
+                assert!(headers.contains("authorization: bearer synthetic-bearer-secret"));
+                assert!(headers.contains("apikey: sb_publishable_test_fixture"));
+                assert!(headers.contains("content-profile: dactyl_api"));
+                assert!(headers.contains("accept-profile: dactyl_api"));
+                assert!(headers.contains("dactyl-contract-version: 1"));
+                assert_eq!(envelope["request"]["version"], 1);
+                let request = envelope["request"].clone();
                 if is_reconciliation {
                     assert_context(&request);
                     let sql = request["sql"].as_str().unwrap();
@@ -274,12 +488,16 @@ mod enabled {
                         task_rows(task_row("todo_proof1", "open", 1))
                     } else {
                         assert!(sql.contains("FROM events WHERE event_id = $1"));
-                        json!({"columns": ["subject_id", "payload"], "rows": [], "affected_rows": 0})
+                        json!({"columns": ["subject_id", "payload"], "rows": [], "affected_rows": 0, "generated_keys": []})
                     }.to_string();
                     write!(stream, "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
                     continue;
                 }
-                let body = response.take().unwrap()(&request).to_string();
+                let body = if (200..300).contains(&status) {
+                    rpc_result(response.take().unwrap()(&request)).to_string()
+                } else {
+                    response.take().unwrap()(&request).to_string()
+                };
                 write!(stream, "HTTP/1.1 {status} Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
                 break request;
             }
@@ -300,15 +518,83 @@ mod enabled {
         })
     }
 
+    #[test]
+    fn actual_cloud_init_requires_backend_authorization_and_uses_its_project_reference() {
+        const PROJECT: &str =
+            "account:00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002";
+        for authorized in [false, true] {
+            let (origin, server) = request_server(
+                "/account",
+                200,
+                move |_| json!({"version":1,"account_id":"00000000-0000-4000-8000-000000000001","status":if authorized { "active" } else { "entitlement_required" },"backend_authorized":authorized,"project_id":PROJECT,"setup_url":null}),
+            );
+            let project = project();
+            let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+                .args(["init", "--backend", "cloud", "--proof", "--force"])
+                .current_dir(project.path())
+                .env("HOME", project.path())
+                .env("XDG_CONFIG_HOME", project.path().join("config"))
+                .env("XDG_DATA_HOME", project.path().join("data"))
+                .env("DECAPOD_HEADLESS", "1")
+                .env("DECAPOD_CLOUD_DATASTORE", "supabase")
+                .env("DACTYL_CLOUD_ORIGIN", origin)
+                .env(
+                    "DACTYL_CLOUD_PUBLISHABLE_KEY",
+                    "sb_publishable_test_fixture",
+                )
+                .env("DECAPOD_ACCESS_TOKEN", "synthetic-bearer-secret")
+                .env_remove("DECAPOD_CLOUD_AUTH_MODE")
+                .output()
+                .unwrap();
+            assert!(
+                output.status.success(),
+                "scaffolding: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            assert_eq!(stdout.contains("Cloud setup ready"), authorized, "{stdout}");
+            if authorized {
+                assert!(stdout.contains(PROJECT));
+            } else {
+                assert!(stdout.contains("entitlement_required"));
+                assert!(stdout.contains("session is retained"));
+            }
+            let request = server.join().unwrap();
+            assert_eq!(request["version"], 1);
+            assert_eq!(request["request_id"].as_str().unwrap().len(), 36);
+            assert!(!stdout.contains("synthetic-bearer-secret"));
+            let config =
+                std::fs::read_to_string(project.path().join(".decapod/config.toml")).unwrap();
+            assert!(!config.contains(PROJECT));
+            assert!(!config.contains("synthetic-bearer-secret"));
+        }
+    }
+
     fn task_rows(row: Value) -> Value {
         let columns: Vec<_> = row.as_object().unwrap().keys().cloned().collect();
-        json!({"columns": columns, "rows": [row], "affected_rows": 0})
+        json!({"columns": columns, "rows": [row], "affected_rows": 0, "generated_keys": []})
+    }
+
+    fn rpc_result(mut value: Value) -> Value {
+        fn complete(result: &mut Value) {
+            if let Some(object) = result.as_object_mut() {
+                object.entry("generated_keys").or_insert_with(|| json!([]));
+            }
+        }
+        if let Some(results) = value.get_mut("results").and_then(Value::as_array_mut) {
+            for result in results {
+                complete(result);
+            }
+        } else {
+            complete(&mut value);
+        }
+        value
     }
 
     fn batch_result(row: Value, task_count: u64, event_count: u64) -> Value {
         json!({"results": [
-            {"columns": [], "rows": [], "affected_rows": task_count},
-            {"columns": [], "rows": [], "affected_rows": event_count},
+            {"columns": [], "rows": [], "affected_rows": task_count, "generated_keys": []},
+            {"columns": [], "rows": [], "affected_rows": event_count, "generated_keys": []},
             task_rows(row)
         ]})
     }
@@ -371,7 +657,12 @@ mod enabled {
                 .env("XDG_CONFIG_HOME", root.path().join("config"))
                 .env_remove("DECAPOD_ACCESS_TOKEN")
                 .env_remove("DECAPOD_CLOUD_DATASTORE")
-                .env("DECAPOD_PROPODUS_API_URL", endpoint);
+                .env("DACTYL_CLOUD_ORIGIN", endpoint)
+                .env("DECAPOD_NEON_API_URL", endpoint)
+                .env(
+                    "DACTYL_CLOUD_PUBLISHABLE_KEY",
+                    "sb_publishable_test_fixture",
+                );
             if let Some(selector) = selector {
                 command.env("DECAPOD_CLOUD_DATASTORE", selector);
             }
@@ -401,7 +692,12 @@ mod enabled {
             .env("XDG_DATA_HOME", root.path().join("data"))
             .env_remove("DECAPOD_ACCESS_TOKEN")
             .env_remove("DECAPOD_CLOUD_DATASTORE")
-            .env("DECAPOD_PROPODUS_API_URL", endpoint);
+            .env("DACTYL_CLOUD_ORIGIN", endpoint)
+            .env("DECAPOD_NEON_API_URL", endpoint)
+            .env(
+                "DACTYL_CLOUD_PUBLISHABLE_KEY",
+                "sb_publishable_test_fixture",
+            );
             if let Some(selector) = selector {
                 gate.env("DECAPOD_CLOUD_DATASTORE", selector);
             }
@@ -430,7 +726,7 @@ mod enabled {
         .unwrap();
         assert!(status(None, endpoint).contains("bearer configured"));
         assert!(status(None, "https://other.example.test").contains("unavailable"));
-        assert!(status(Some("neon"), "").contains("bearer configured"));
+        assert!(status(Some("neon"), endpoint).contains("bearer configured"));
         assert_no_fallback(root.path());
     }
 
@@ -601,13 +897,18 @@ mod enabled {
                 endpoint.strip_prefix("http://").unwrap(),
             ).await.unwrap();
             tokio::time::sleep(Duration::from_millis(30)).await;
-            stream.write_all(b"POST /query HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer synthetic-bearer-secret\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{}").await.unwrap();
+            let body = br#"{"request":{"version":1,"sql":"select 1","params":[],"kind":"read","access_mode":"read_only","context":{"version":1,"payload":{}}}}"#;
+            let headers = format!("POST /rest/v1/rpc/dactyl_query_v1 HTTP/1.1\r\nHost: localhost\r\nAuthorization: Bearer synthetic-bearer-secret\r\napikey: sb_publishable_test_fixture\r\ncontent-profile: dactyl_api\r\naccept-profile: dactyl_api\r\ndactyl-contract-version: 1\r\ncontent-type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len());
+            stream.write_all(headers.as_bytes()).await.unwrap();
+            stream.write_all(body).await.unwrap();
             let mut response = String::new();
             stream.read_to_string(&mut response).await.unwrap();
             response
         }).await.expect("fixture response exceeded its budget");
         assert!(response.starts_with("HTTP/1.1 200 Fixture"));
-        assert_eq!(server.join().unwrap(), json!({}));
+        let request = server.join().unwrap();
+        assert_eq!(request["version"], 1);
+        assert_eq!(request["sql"], "select 1");
     }
 
     #[test]
@@ -956,14 +1257,19 @@ mod enabled {
         )
         .unwrap();
         let context = StorageContext::from_route(
-            BackendRoute::cloud(identity, endpoint).unwrap(),
+            BackendRoute::cloud(identity, endpoint.clone()).unwrap(),
             Some("synthetic-bearer-secret"),
         )
         .unwrap()
         .with_cloud_datastore(CloudDatastore::Supabase)
         .unwrap();
-        let bridge =
-            DactylBridge::from_storage_context(&context, dactyl_db::AccessMode::ReadOnly).unwrap();
+        let rpc = dactyl_db::SupabaseRpcConfig::v1(&endpoint, "sb_publishable_test_fixture");
+        let bridge = DactylBridge::from_storage_context_with_rpc_config(
+            &context,
+            dactyl_db::AccessMode::ReadOnly,
+            Some(rpc),
+        )
+        .unwrap();
         let rows = bridge
             .read("SELECT id, version, active, optional FROM fixture", &[])
             .unwrap();

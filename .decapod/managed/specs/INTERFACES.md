@@ -1064,8 +1064,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `cc0e895c120beae21a19f7c079761e667dd5de541bc9b69c70d1cffc13bed5f5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1360,3 +1360,14 @@ purchase approval and does not claim that a session or paid seat exists.
 The hosted service must independently derive price/quantity, verify admin
 authority and reconcile payment before granting repository-specific access.
 Its deployment and native client integration remain separately required.
+
+## Managed native cloud contract
+
+Dactyl owns discovery, `/functions/v1/propodus-onboarding` account/handoff
+transport, managed `/auth/v1/token` exchange/refresh and explicit PostgREST RPC.
+Project publishable configuration and user bearer stay separate. Decapod's
+legacy Neon route retains its existing envelopes. Interactive init performs
+managed setup; noninteractive/proof init prints the session-resume command and
+records only optional source/roster metadata. Native setup requires a current
+server-returned `backend_authorized` project before reporting ready. No purchase
+URL, client roster or successful browser return can supply that authorization.

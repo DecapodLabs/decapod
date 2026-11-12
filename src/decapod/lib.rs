@@ -236,52 +236,39 @@ fn prepare_cloud_roster(
     target: &Path,
     repo: &mut RepoContext,
     init: &InitWithCli,
-    interactive: bool,
+    _interactive: bool,
 ) -> Result<(), error::DecapodError> {
     if !init.backend.is_cloud() {
         return Ok(());
     }
     repo.set_backend(init.backend);
     let remote = core::repo_identity::resolve_repository_identity(target).ok();
-    let default_repo = init
+    let repository = init
         .cloud_repository
         .clone()
         .or_else(|| remote.as_ref().map(|r| r.canonical_name.clone()))
         .or_else(|| repo.cloud_repository.clone())
         .unwrap_or_default();
-    let repository = if interactive {
-        prompt_text_field(
-            "Cloud repository",
-            "GitHub owner/repository; your admin approves paid access.",
-            &default_repo,
-        )?
-    } else {
-        default_repo
-    };
     if let Some(remote) = remote
         && !repository.eq_ignore_ascii_case(&remote.canonical_name)
     {
         return Err(error::DecapodError::ValidationError(
-            "Cloud purchase repository must match the GitHub origin remote.".to_string(),
+            "Cloud repository context must match the source origin remote.".into(),
         ));
     }
-    let default_users = if init.github_users.is_empty() {
+    let users = if init.github_users.is_empty() {
         repo.cloud_github_users.join(",")
     } else {
         init.github_users.join(",")
     };
-    let users = if interactive {
-        prompt_text_field(
-            "GitHub users",
-            "Comma-separated named seats, USD15 per person monthly. Config does not grant access.",
-            &default_users,
-        )?
+    // Legacy roster flags are optional request metadata. Only server-owned
+    // capacity, explicit assignments and current grants authorize cloud data.
+    repo.cloud_github_users = if users.is_empty() {
+        Vec::new()
     } else {
-        default_users
+        cloud_backend::validate_cloud_roster(&repository, &users)?
     };
-    let users = cloud_backend::validate_cloud_roster(&repository, &users)?;
-    repo.cloud_repository = Some(repository);
-    repo.cloud_github_users = users;
+    repo.cloud_repository = (!repository.is_empty()).then_some(repository);
     Ok(())
 }
 
@@ -307,18 +294,42 @@ fn ensure_project_cloud_session(
     let datastore = cloud.validate_datastore()?;
     core::backend::BackendRoute::cloud(identity.clone(), &cloud.api_url)?;
     let propodus = core::propodus::PropodusConfig::for_repository(&cloud, &identity);
-    core::propodus::ensure_cloud_session_for_datastore(&propodus, &identity, datastore)
-        .map_err(map_cloud_preflight_error)?;
+    let credential =
+        core::propodus::ensure_cloud_session_for_datastore(&propodus, &identity, datastore)
+            .map_err(map_cloud_preflight_error)?;
+    #[cfg(feature = "supabase-cloud")]
+    if datastore == core::backend::CloudDatastore::Supabase {
+        let config = DecapodProjectConfig::load(project_root)?;
+        let name = config
+            .repo
+            .product_name
+            .as_deref()
+            .unwrap_or(&identity.repository);
+        let project = core::cloud_account::prepare(&cloud.api_url, &identity, name, &credential)
+            .map_err(map_cloud_preflight_error)?;
+        return Ok(project.bind(&identity));
+    }
+    #[cfg(not(feature = "supabase-cloud"))]
+    let _ = credential;
     Ok(identity)
 }
 
 fn bootstrap_cloud_session(project_root: &Path) -> Result<(), error::DecapodError> {
     match ensure_project_cloud_session(project_root) {
         Ok(identity) => {
-            println!(
-                "Cloud setup ready for {}; the machine-local Propodus session is available.",
-                identity.canonical_name
-            );
+            if crate::cli::CloudRuntimeConfig::default().validate_datastore()?
+                == core::backend::CloudDatastore::Supabase
+            {
+                println!(
+                    "Cloud setup ready for {}; the backend authorized this project.",
+                    identity.canonical_name
+                );
+            } else {
+                println!(
+                    "Legacy cloud session available for {}; data requests still require backend authorization.",
+                    identity.canonical_name
+                );
+            }
             Ok(())
         }
         Err(error @ error::DecapodError::CloudAuth(_)) => {
@@ -374,7 +385,7 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
         CloudCommand::Status => match auth::load_selected_cloud_credential(None) {
             Ok(credential) => {
                 println!(
-                    "Propodus bearer configured ({:?}); issuer, audience, GitHub subject, repository, and seat claims are validated by Propodus",
+                    "Cloud sign-in session configured ({:?}); this does not establish project or workspace-seat readiness",
                     credential.source
                 );
                 Ok(())
@@ -2118,8 +2129,10 @@ fn enrich_repo_context_interactive(
         println!();
         println!("Decapod Cloud is experimental.");
         println!("It syncs governed operational state for this repo.");
-        println!("Each named GitHub user costs USD15 per month for this repository.");
-        println!("A repository owner/admin approves purchases through Stripe.");
+        println!("Managed account setup and repository authorization are required.");
+        println!(
+            "Your workspace administrator manages capacity and assignments in the account portal."
+        );
         println!();
         if prompt_yes_no("Continue?", false)? {
             crate::cli::BackendType::Cloud
@@ -2720,19 +2733,17 @@ pub fn run() -> Result<(), error::DecapodError> {
             );
             print_init_reconciliation(&reconciliation);
             if config.repo.effective_backend().is_cloud() {
-                let link = cloud_backend::cloud_billing_approval_url(
-                    config.repo.cloud_repository.as_deref().unwrap_or_default(),
-                    &config.repo.cloud_github_users,
-                )?;
-                println!("Cloud purchase approval: {link}");
-                println!(
-                    "USD15 per GitHub user per month for this repository. Sign in to detect GitHub admin access; otherwise send this link to an admin."
-                );
-                println!(
-                    "The config roster is a request. Cloud access requires a verified paid seat."
-                );
-                if !init_with.dry_run && !init_with.proof && io::stdin().is_terminal() {
-                    core::propodus::try_open_browser(&link);
+                if !init_with.dry_run
+                    && !init_with.proof
+                    && io::stdin().is_terminal()
+                    && std::env::var_os("DECAPOD_HEADLESS").is_none()
+                {
+                    bootstrap_cloud_session(&target_dir)?;
+                } else {
+                    println!(
+                        "Cloud setup deferred; run `decapod session acquire` to start or resume managed sign-in and account authorization."
+                    );
+                    println!("Repository and roster context do not grant cloud access.");
                 }
             }
         }

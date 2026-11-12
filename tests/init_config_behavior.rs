@@ -128,13 +128,10 @@ fn init_with_backend_cloud_saves_to_config() {
     assert!(config.contains("cloud_repository = \"DecapodLabs/decapod\""));
     assert!(config.contains("cloud_github_users = [\"alice\"]"));
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(
-        stdout
-            .contains("/propodus-onboarding/billing?repository=DecapodLabs%2Fdecapod&users=alice")
-    );
+    assert!(stdout.contains("Cloud setup deferred"));
     assert!(
         !stdout.contains("Cloud setup ready"),
-        "purchase link is not proof of access"
+        "deferred setup is not proof of access"
     );
     let intent = fs::read_to_string(tmp.path().join(".decapod/managed/specs/INTENT.md")).unwrap();
     assert!(intent.contains("GitHub cloud repository: DecapodLabs/decapod"));
@@ -154,10 +151,10 @@ fn init_with_backend_cloud_saves_to_config() {
         fs::read_to_string(registration_path).expect("read cloud init registration payload");
     let registration: serde_json::Value =
         serde_json::from_str(&registration).expect("parse cloud init registration");
-    assert_eq!(registration["provider"], "vercel");
+    assert_eq!(registration["provider"], "supabase");
     assert_eq!(
         registration["route"],
-        "POST /query for task reads/writes; POST /batch for atomic task operations",
+        "Supabase RPC v1: POST /rest/v1/rpc/dactyl_query_v1 for reads and POST /rest/v1/rpc/dactyl_batch_v1 for atomic ordered operations",
         "registration should target the Dactyl storage contract"
     );
     assert!(

@@ -40,6 +40,55 @@ fn fresh_identical_adds_are_distinct_but_explicit_retries_bind_every_input() {
 }
 
 #[test]
+fn managed_retries_require_retained_metadata_and_an_immutable_physical_scope() {
+    let temp = tempfile::tempdir().unwrap();
+    let journal = Journal::at(temp.path().join("operations"));
+    let record = record();
+    assert!(journal.prepare_scoped(&record, true).is_err());
+    assert!(journal.list().unwrap().is_empty());
+    journal.prepare_scoped(&record, false).unwrap();
+    journal
+        .finish(
+            &record,
+            Outcome::BlockedBeforeSubmit,
+            Some(FailureKind::Authentication),
+        )
+        .unwrap();
+    let pending = journal.prepare_scoped(&record, true).unwrap();
+    let bound = journal.bind_data_scope(&pending, &"a".repeat(64)).unwrap();
+    assert_eq!(
+        bound.data_scope_fingerprint.as_deref(),
+        Some("a".repeat(64).as_str())
+    );
+    journal
+        .finish(&bound, Outcome::OutcomeUnknown, None)
+        .unwrap();
+    assert!(journal.bind_data_scope(&bound, &"b".repeat(64)).is_err());
+    let retained = journal.list().unwrap().remove(0);
+    assert_eq!(retained.status, Outcome::OutcomeUnknown);
+    assert_eq!(
+        retained.data_scope_fingerprint,
+        bound.data_scope_fingerprint
+    );
+    assert!(journal.bind_data_scope(&retained, &"a".repeat(64)).is_ok());
+    let other_machine = Journal::at(temp.path().join("new-machine"));
+    assert!(other_machine.prepare_scoped(&record, true).is_err());
+}
+
+#[test]
+fn a_legacy_unknown_outcome_cannot_be_rebound_to_an_unproven_managed_project() {
+    let temp = tempfile::tempdir().unwrap();
+    let journal = Journal::at(temp.path().join("operations"));
+    let record = record();
+    journal.prepare(&record).unwrap();
+    journal
+        .finish(&record, Outcome::OutcomeUnknown, None)
+        .unwrap();
+    assert!(journal.bind_data_scope(&record, &"a".repeat(64)).is_err());
+    assert_eq!(journal.list().unwrap()[0].status, Outcome::OutcomeUnknown);
+}
+
+#[test]
 fn diagnostic_is_non_secret_and_separates_unknown_outcome_from_preflight() {
     let operation = record();
     let diagnostic = Diagnostic::new(&operation, Outcome::OutcomeUnknown, FailureKind::Transport);

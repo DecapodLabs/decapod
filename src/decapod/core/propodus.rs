@@ -174,7 +174,11 @@ fn quote_curl_config(value: &str) -> String {
         .replace('\t', "\\t")
 }
 
-fn private_curl_config(bearer: &str, body: Option<&[u8]>) -> Result<String, PropodusClientError> {
+fn private_curl_config(
+    bearer: &str,
+    publishable_key: &str,
+    body: Option<&[u8]>,
+) -> Result<String, PropodusClientError> {
     if bearer
         .chars()
         .any(|value| value.is_whitespace() || value.is_control())
@@ -184,6 +188,21 @@ fn private_curl_config(bearer: &str, body: Option<&[u8]>) -> Result<String, Prop
         ));
     }
     let mut config = String::new();
+    if !publishable_key.is_empty() {
+        if !publishable_key.starts_with("sb_publishable_")
+            || publishable_key
+                .bytes()
+                .any(|value| !(value.is_ascii_alphanumeric() || value == b'_' || value == b'-'))
+        {
+            return Err(PropodusClientError::Configuration(
+                "invalid Supabase publishable project key".to_string(),
+            ));
+        }
+        config.push_str(&format!(
+            "header = \"apikey: {}\"\n",
+            quote_curl_config(publishable_key)
+        ));
+    }
     if !bearer.is_empty() {
         config.push_str(&format!(
             "header = \"Authorization: Bearer {}\"\n",
@@ -266,7 +285,9 @@ impl PropodusTransport for CurlTransport {
         let output = if self.private_stdin {
             use std::io::Write;
             use std::process::Stdio;
-            let config = private_curl_config(bearer, body)?;
+            let publishable_key = std::env::var(crate::core::dactyl::SUPABASE_PUBLISHABLE_KEY_ENV)
+                .unwrap_or_default();
+            let config = private_curl_config(bearer, &publishable_key, body)?;
             command
                 .args(["--config", "-"])
                 .stdin(Stdio::piped())
@@ -513,9 +534,13 @@ pub fn ensure_cloud_session_for_datastore(
         .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
     #[cfg(feature = "supabase-cloud")]
     if datastore == crate::core::backend::CloudDatastore::Supabase {
-        dactyl_db::DatastoreRoute::supabase(&config.api_url, None)
-            .validate()
-            .map_err(|error| PropodusClientError::Configuration(error.to_string()))?;
+        if mock_cloud_auth_enabled() {
+            let store = auth::CloudSessionStore::for_service(&config.api_url).map_err(|_| {
+                PropodusClientError::Configuration("cloud session storage is unavailable".into())
+            })?;
+            return ensure_mock_cloud_session(identity, &store);
+        }
+        return crate::core::cloud_session::ensure(&config.api_url, &identity.canonical_name);
     }
     // This helper owns transport policy as well as credential scope. Callers
     // cannot accidentally enable redirects or credential-bearing arguments.

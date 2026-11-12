@@ -122,11 +122,11 @@ fn test_cloud_init_records_opt_in_without_auth_or_repo_credentials() {
         .expect("cloud opt-in should create a mock init registration payload");
     let registration: serde_json::Value =
         serde_json::from_str(&registration).expect("parse cloud init registration");
-    assert_eq!(registration["provider"], "vercel");
-    assert_eq!(registration["api_url"], "https://project-oqn7i.vercel.app");
+    assert_eq!(registration["provider"], "supabase");
+    assert_eq!(registration["api_url"], "");
     assert_eq!(
         registration["route"],
-        "POST /query for task reads/writes; POST /batch for atomic task operations"
+        "Supabase RPC v1: POST /rest/v1/rpc/dactyl_query_v1 for reads and POST /rest/v1/rpc/dactyl_batch_v1 for atomic ordered operations"
     );
     assert!(
         registration["writes"]
@@ -156,6 +156,7 @@ fn cloud_init_prints_purchase_approval_without_creating_machine_session() {
 
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+        .env("DECAPOD_NEON_API_URL", "https://neon.example.test")
         .args([
             "init",
             "--backend",
@@ -188,10 +189,7 @@ fn cloud_init_prints_purchase_approval_without_creating_machine_session() {
         String::from_utf8_lossy(&init_out.stderr)
     );
     assert!(
-        output.contains("Cloud purchase approval:")
-            && output.contains(
-                "/propodus-onboarding/billing?repository=DecapodLabs%2Fdecapod&users=alice"
-            ),
+        output.contains("Cloud setup deferred") && !output.contains("Cloud setup ready"),
         "unexpected init output: {output}"
     );
     assert!(
@@ -239,7 +237,7 @@ fn cloud_cli_preflight_does_not_initialize_local_sqlite() {
         .args(["todo", "list", "--format", "json"])
         .current_dir(&dir)
         .env_remove("DECAPOD_ACCESS_TOKEN")
-        .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
+        .env("DECAPOD_NEON_API_URL", "http://127.0.0.1:1")
         .env("XDG_DATA_HOME", data_home.path())
         .output()
         .expect("cloud list");
@@ -304,7 +302,7 @@ fn canonical_backend_selection_uses_cloud_without_local_fallback() {
         .args(["todo", "list", "--format", "json"])
         .current_dir(&dir)
         .env_remove("DECAPOD_ACCESS_TOKEN")
-        .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
+        .env("DECAPOD_NEON_API_URL", "http://127.0.0.1:1")
         .env("XDG_DATA_HOME", data_home.path())
         .output()
         .expect("cloud todo list");
@@ -382,10 +380,11 @@ fn cloud_session_acquire_keeps_local_custody_when_cloud_preflight_fails() {
 
     let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+        .env("DECAPOD_NEON_API_URL", "https://neon.example.test")
         .args(["session", "acquire"])
         .current_dir(tmp.path())
         .env_remove("DECAPOD_ACCESS_TOKEN")
-        .env("DECAPOD_PROPODUS_API_URL", "http://127.0.0.1:1")
+        .env("DECAPOD_NEON_API_URL", "http://127.0.0.1:1")
         .env("XDG_DATA_HOME", data_home.path())
         .env("XDG_CONFIG_HOME", config_home.path())
         .output()
@@ -417,6 +416,7 @@ fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
     let config_home = TempDir::new().expect("config home");
     let init_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+        .env("DECAPOD_NEON_API_URL", "https://neon.example.test")
         .args([
             "init",
             "--backend",
@@ -444,6 +444,7 @@ fn cloud_session_acquire_uses_explicit_mock_onboarding_in_validation_harness() {
 
     let session_out = Command::new(env!("CARGO_BIN_EXE_decapod"))
         .env("DECAPOD_CLOUD_DATASTORE", "neon")
+        .env("DECAPOD_NEON_API_URL", "https://neon.example.test")
         .args(["session", "acquire"])
         .current_dir(tmp.path())
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")

@@ -5,11 +5,13 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const CLOUD_ACCESS_TOKEN_ENV: &str = "DECAPOD_ACCESS_TOKEN";
 pub const CLOUD_SESSION_REFRESH_LEAD_SECS: i64 = 30 * 60;
+const MAX_SESSION_FILE_BYTES: usize = 64 * 1024;
 
 fn machine_data_dir() -> Result<PathBuf, DecapodError> {
     if let Ok(data_home) = env::var("XDG_DATA_HOME") {
@@ -72,7 +74,7 @@ impl std::fmt::Debug for CloudCredential {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
 struct MachineSessionRecord {
     #[serde(alias = "token", alias = "session_token")]
     access_token: String,
@@ -82,6 +84,8 @@ struct MachineSessionRecord {
     session_id: Option<String>,
     #[serde(default)]
     expires_at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    provider_token: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -133,18 +137,33 @@ pub fn resolve_cloud_credential(
 }
 
 fn read_machine_session_record(path: &Path) -> Result<Option<MachineSessionRecord>, DecapodError> {
-    if !path.exists() {
-        return Ok(None);
+    match fs::symlink_metadata(path) {
+        Ok(_) => (),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(DecapodError::IoError(error)),
     }
-    crate::core::fs_permissions::check_file(path, false).map_err(DecapodError::IoError)?;
-    let raw = fs::read_to_string(path).map_err(DecapodError::IoError)?;
-    let record: MachineSessionRecord = serde_json::from_str(&raw).map_err(|_| {
+    let file =
+        crate::core::fs_permissions::open_private_file(path, fs::OpenOptions::new().read(true))
+            .map_err(DecapodError::IoError)?;
+    let mut raw = Vec::new();
+    file.take((MAX_SESSION_FILE_BYTES + 1) as u64)
+        .read_to_end(&mut raw)
+        .map_err(DecapodError::IoError)?;
+    if raw.len() > MAX_SESSION_FILE_BYTES {
+        return Err(DecapodError::SessionError(
+            "cloud credential file exceeds its size bound".into(),
+        ));
+    }
+    let record: MachineSessionRecord = serde_json::from_slice(&raw).map_err(|_| {
         DecapodError::SessionError("cloud credential file is not valid JSON".to_string())
     })?;
     if record.access_token.trim().is_empty() {
         return Err(DecapodError::SessionError(
             "cloud credential file does not contain an access token".to_string(),
         ));
+    }
+    if let Some(token) = record.provider_token.as_deref() {
+        validate_provider_token(token)?;
     }
     Ok(Some(record))
 }
@@ -157,6 +176,13 @@ pub struct CloudSessionStore {
 }
 
 impl CloudSessionStore {
+    #[cfg(feature = "supabase-cloud")]
+    pub(crate) fn scope_directory(&self) -> Result<&Path, DecapodError> {
+        self.path
+            .parent()
+            .ok_or_else(|| DecapodError::SessionError("invalid machine session path".into()))
+    }
+
     pub fn legacy() -> Result<Self, DecapodError> {
         Ok(Self {
             path: machine_session_token_path()?,
@@ -167,7 +193,7 @@ impl CloudSessionStore {
         Self::for_service_in(&machine_data_dir()?, endpoint)
     }
 
-    fn for_service_in(directory: &Path, endpoint: &str) -> Result<Self, DecapodError> {
+    pub(crate) fn for_service_in(directory: &Path, endpoint: &str) -> Result<Self, DecapodError> {
         use sha2::{Digest, Sha256};
         let key = format!(
             "{:x}",
@@ -199,6 +225,29 @@ impl CloudSessionStore {
 
     pub fn store_machine_session(&self, session: &CloudSession) -> Result<(), DecapodError> {
         store_machine_session_at(session, &self.path)
+    }
+
+    /// Sign-in provider credentials stay in the private session record and never
+    /// enter ordinary data access credentials or serialized storage context.
+    /// The sign-in provider can be Google; this token is not an SCM credential.
+    #[cfg(feature = "supabase-cloud")]
+    pub fn load_provider_token(&self) -> Result<Option<String>, DecapodError> {
+        Ok(read_machine_session_record(&self.path)?.and_then(|record| record.provider_token))
+    }
+
+    #[cfg(feature = "supabase-cloud")]
+    pub fn store_managed_session(
+        &self,
+        session: &CloudSession,
+        provider_token: Option<&str>,
+        retain_provider_on_refresh: bool,
+    ) -> Result<(), DecapodError> {
+        store_session_with_provider_at(
+            session,
+            &self.path,
+            provider_token,
+            retain_provider_on_refresh,
+        )
     }
 }
 
@@ -265,20 +314,55 @@ fn create_private_session_file(path: &Path) -> Result<fs::File, DecapodError> {
 }
 
 fn store_machine_session_at(session: &CloudSession, path: &Path) -> Result<(), DecapodError> {
+    store_session_with_provider_at(session, path, None, false)
+}
+
+fn validate_provider_token(token: &str) -> Result<(), DecapodError> {
+    if token.is_empty()
+        || token.len() > 16384
+        || token.chars().any(|c| c.is_control() || c.is_whitespace())
+    {
+        return Err(DecapodError::SessionError(
+            "invalid linked-provider credential".into(),
+        ));
+    }
+    Ok(())
+}
+
+fn store_session_with_provider_at(
+    session: &CloudSession,
+    path: &Path,
+    provider_token: Option<&str>,
+    retain_provider_on_refresh: bool,
+) -> Result<(), DecapodError> {
     session.validate()?;
     if let Some(parent) = path.parent() {
         crate::core::fs_permissions::ensure_private_dir(parent).map_err(DecapodError::IoError)?;
     }
     crate::core::fs_permissions::check_file(path, false).map_err(DecapodError::IoError)?;
+    let provider_token = if let Some(token) = provider_token {
+        validate_provider_token(token)?;
+        Some(token.to_owned())
+    } else if retain_provider_on_refresh {
+        read_machine_session_record(path)?.and_then(|record| record.provider_token)
+    } else {
+        None
+    };
     let record = MachineSessionRecord {
         access_token: session.access_token.clone(),
         refresh_token: session.refresh_token.clone(),
         session_id: session.session_id.clone(),
         expires_at: session.expires_at.clone(),
+        provider_token,
     };
     let bytes = serde_json::to_vec_pretty(&record).map_err(|error| {
         DecapodError::SessionError(format!("failed to serialize cloud session: {error}"))
     })?;
+    if bytes.len() > MAX_SESSION_FILE_BYTES {
+        return Err(DecapodError::SessionError(
+            "cloud credential file exceeds its size bound".into(),
+        ));
+    }
     let parent = path.parent().ok_or_else(|| {
         DecapodError::SessionError("cloud session path has no parent directory".to_string())
     })?;
@@ -297,8 +381,10 @@ fn store_machine_session_at(session: &CloudSession, path: &Path) -> Result<(), D
         use std::io::Write;
         let mut temporary = temporary;
         temporary.write_all(&bytes).map_err(DecapodError::IoError)?;
+        temporary.sync_all().map_err(DecapodError::IoError)?;
         drop(temporary);
-        fs::rename(&temp_path, path).map_err(DecapodError::IoError)
+        fs::rename(&temp_path, path).map_err(DecapodError::IoError)?;
+        crate::core::atomic::sync_parent_directory(parent).map_err(DecapodError::IoError)
     })();
     if write_result.is_err() {
         let _ = fs::remove_file(&temp_path);

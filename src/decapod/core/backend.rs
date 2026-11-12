@@ -1,7 +1,8 @@
 //! Provider-neutral repository-to-datastore routing.
 //!
 //! Decapod chooses only the logical backend from `.decapod/config.toml` and
-//! derives the repository scope from the Git origin.  The local route is a
+//! uses the Git origin as a stable local recovery key. Supabase account setup
+//! binds the data scope to its returned server project ID. The local route is a
 //! repository-owned SQLite path.  A cloud route is an opaque URI returned by
 //! the authenticated remote/session boundary; Decapod does not construct or
 //! interpret provider-specific storage URLs here.
@@ -15,9 +16,10 @@ use std::path::{Path, PathBuf};
 pub const LOCAL_DATASTORE_RELATIVE_PATH: &str = ".decapod/data/decapod.db";
 
 /// The logical backend selection plus the repository scope it is allowed to
-/// address.  Local selection deliberately does not require a GitHub remote;
-/// cloud selection does, because the remote is the source of repository
-/// tenancy rather than project configuration.
+/// address. Local selection deliberately does not require a source Git remote;
+/// cloud selection currently does, as a local registration/recovery key. That
+/// source identity does not grant tenancy; the account backend issues the
+/// project reference used by the normal Supabase data route.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BackendSelection {
     backend: BackendType,

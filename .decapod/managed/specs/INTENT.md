@@ -287,8 +287,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `cc0e895c120beae21a19f7c079761e667dd5de541bc9b69c70d1cffc13bed5f5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -444,18 +444,17 @@ WAL settings, run VACUUM, weaken integrity, or silently fall back from cloud.
 This is a bounded local SQLite optimization. Full semantic parity with
 Propodus Supabase remains a separately gated migration (Propodus #71).
 
-## Cloud repository purchase approval
+## Managed cloud accounts and native sessions
 
-Cloud init carries repository identity into generated context, collects the
-requested GitHub roster and presents the hosted purchase-approval handoff.
-The preserved commercial contract is USD15 per named user per repository
-monthly, with payment approval owned by a verified repository owner/admin.
-The non-secret config records requested intent; it cannot establish a paid
-seat, a cloud credential or datastore authorization. Local use remains
-available without login or purchase.
+The public client uses the published Dactyl 0.12.0 connector for managed Auth,
+account transport and explicit native data RPC. Decapod owns repository context,
+local governance and durable private custody. Authentication handoff readiness
+and effective repository authorization remain separate. The service returns the
+project reference and rechecks current identity, session, membership, grants and
+capacity/assignment for every data boundary. Optional source rosters confer no
+access. Local operation remains available without a cloud account or network.
 
-This recovery preserves the previously authored CLI contribution from
-`26a499d9f0789a5ed00605d23cfc57f5392ae8fc` on the current accepted source.
-Hosted billing deployment, sandbox purchase acceptance and released native
-client credential integration remain separate rollout requirements. A printed
-approval link alone cannot establish their completion.
+This candidate adapts the checkpoint-proven connector contribution at
+`4d7d32ca29cd21d927a21646324074db73fc0819` to current accepted source. New full
+validation must establish this candidate's readiness; previous source custody
+is not hosted, publication, release or deployment proof.

@@ -1,63 +1,102 @@
-# Cloud init and paid repository approval
+# Cloud account readiness and repository access
 
-Cloud init collects the GitHub repository and requested named users before
-generating context. Use either init surface, with headless flags when needed:
+Decapod owns the agent-facing workflow, repository context, local governance and
+private credential custody. Dactyl owns generic connector, authentication/account
+transport and storage execution. The hosted service owns managed identity
+validation, effective repository authorization and authoritative capacities and
+assignments. Commercial configuration and lifecycle decisions are outside this
+public repository.
 
-```sh
-decapod init --backend cloud --cloud-repository example/repo --github-users alice,bob
-```
+## Current consumer boundary
 
-The non-secret config is:
+The source in `Cargo.toml` consumes the exact Dactyl 0.12.0 registry version.
+`src/decapod/core/cloud_session.rs` coordinates managed sign-in, single-use
+handoff, serialized refresh and private custody through Dactyl's connector.
+`cloud_account.rs` registers or resumes an idempotent project reference and
+requires a current server authorization response. Native data explicitly uses
+Dactyl's Supabase RPC configuration. Legacy session helpers remain available for
+the explicitly selected legacy service route; they do not define native Auth.
 
-```toml
-[repo]
-backend = "cloud"
-cloud_repository = "example/repo"
-cloud_github_users = ["alice", "bob"]
-```
+Interactive cloud init starts or resumes managed setup. Proof, dry-run and
+noninteractive init record local intent and print the session-resume command.
+`decapod session acquire` and subsequent cloud operations can resume a headless
+handoff. Completing authentication does not establish repository data access.
 
-Two users on one repository cost USD30 monthly. The owner/admin manages one
-repository subscription. The payer need not occupy a seat unless they also use
-cloud storage. An existing GitHub origin must match this purchase repository.
-A new project can name its intended GitHub repository before configuring origin,
-but the repository must exist when the admin approves it.
+The optional `--cloud-repository` and `--github-users` flags and their config
+fields describe requested context only. They do not purchase or assign capacity.
+The native setup uses a server-returned account action URL; no fixed purchase
+URL or commercial terms are compiled into the CLI. Source changes are not a
+released client, hosted deployment or complete acceptance receipt. Those require
+independently recorded proof of the actual artifact and deployed contract.
 
-Init provides a hosted approval link and opens it for human interactive runs.
-Headless, proof and dry-run runs print the link. The page signs in with GitHub
-through Supabase Auth, verifies the numeric account identity and actual GitHub
-repository admin permission, resolves the requested users, and displays the
-roster and total before an explicit purchase. A non-admin gets the link to send
-to their admin. Added names remain requests until that admin buys the extra seats.
-Changing TOML does not confer a seat, admin status or cloud authorization.
+## Generic managed-session contract
 
-The CLI stores no Stripe keys, purchase sessions, GitHub tokens or Supabase
-credentials in project config. It does not treat a browser return as proof of
-payment. Propodus owns Stripe Checkout, paid increases, webhook reconciliation,
-repository-specific named seat records and authorization on each native RPC.
-The generated specs include the repository name while preserving the authored
-product summary. Refresh preserves the normalized roster.
+A compatible consumer discovers a versioned public deployment profile, validates
+the exact HTTPS service origin, and keeps the project publishable key separate
+from the current user's access bearer. Discovery grants no user authorization.
+Native data uses explicitly selected PostgREST RPC query and atomic batch routes;
+supported legacy service routes retain their own envelopes.
 
-The coordinated Propodus implementation is migration 009 and
-`supabase/functions/propodus-onboarding/billing.js`. It requires a separate
-restricted billing executor, Stripe monthly USD15 price/server key/webhook
-secrets, Auth redirect configuration, deployment and sandbox acceptance before
-this CLI change is rolled out. Init's purchase handoff replaces its legacy login
-bootstrap; released Dactyl/Decapod native RPC credential and route support must
-also be accepted before presenting paid cloud as usable. An approval link alone
-does not establish a working cloud session.
+Managed login/handoff, exchange, refresh and revoke must use the connector's
+supported methods and the intended managed Auth endpoints. The client privately
+persists PKCE/polling state and an in-flight marker before single-use exchanges.
+It validates service/repository binding, expiry and handoff state. An interrupted
+or lost rotation response is uncertain; the client must not replay a consumed
+credential or overwrite a newer session.
 
-Seat removal, subscription restart and refund/dispute policies are outside this
-initial-purchase/add-seat contract and need an explicit lifecycle design.
+The following records have different meanings:
 
-## Cloud access and task authority
+| Record | Meaning |
+| --- | --- |
+| Managed human account | Stable identity independently validated by the service |
+| Agent/work custody session | Local governed work and task ownership |
+| Cloud authentication session | Managed user's current authentication lifecycle |
+| Database connection/transaction | One transport or atomic storage execution context |
+| Repository capacity and assignment | Service-owned capacity plus explicit authorized human/repository association |
+| Historical decision session | Decision history, not an authentication credential |
 
-These actor labels are cooperative local identities, not authenticated users.
-For cloud repositories, a Decapod agent carries an authenticated user's bearer;
-server-side Propodus grants determine its permitted operations. Cloud repository
-access has `read`, `write`, `maintainer`, and `owner` tiers, with expiring
-direct user grants for contractors. A client-selected agent ID or local
-`actor_roles` entry cannot elevate cloud authority. A contractor is a bounded
-delegation for the same agent interface, with no separate human CLI workflow.
-Propodus rechecks expiration and revocation on each operation. An expired direct
-grant remains an explicit denial over inherited group, team, or organization
-access; changing an agent ID or local role mapping cannot restore that access.
+A new access token must reach the next data request. If a Dactyl connection
+captures its bearer when opened, refresh must replace or reopen that connection;
+updating a token file alone is insufficient. Serialize private custody across
+processes, use atomic replacement and restrictive permissions, and keep tokens
+outside repositories and diagnostic output.
+
+## Readiness and authority
+
+Authentication completion means a session handoff succeeded. The client must
+separately obtain server-confirmed account/project readiness and effective data
+authorization. An invitation, incidental membership, requested roster, local
+TOML entry, actor label or browser return cannot supply that authority.
+
+The hosted service must check current managed identity/session, active native
+organization/repository membership, applicable grant and effective capacity /
+assignment at every authorization boundary. Session, membership, grant and
+assignment revocation must deny the next operation even while a bearer remains
+unexpired. A transaction already executing is not claimed canceled.
+
+Repository grants distinguish read, write/contributor, maintainer and owner.
+Capacity does not grant maintainer/owner, repair, source-control administration or
+governance bypass. Expired or revoked direct contractor grants remain denial
+fences over inherited permissions. Changing an agent label or local `actor_roles`
+cannot restore cloud access.
+
+Account administration and legitimately authorized recovery must remain distinct
+from a data assignment. Service-returned action URLs are guidance only; the
+service still verifies authority and readiness independently.
+
+## Proof and failure boundaries
+
+Required consumer proof includes origin/repository isolation, headless resume,
+current bearer after refresh/reconnect, concurrent custody, live revocation,
+physical read-only execution, ordered atomic batches, CAS conflicts and no local
+fallback. A timed-out mutation may have committed: use durable operation identity
+and reconciliation, without blind write/batch retries.
+
+Distinguish synthetic HTTP fixtures, executing local database profiles, registry
+artifact verification, clean consumer compilation, managed hosted authentication,
+deployment and complete browser-to-CLI acceptance. Missing credentials/fixtures
+are unavailable proof. A green unit suite, health probe or approval link cannot
+establish the full chain.
+
+Local SQLite use remains independently available without a cloud account or
+network. A rejected cloud operation must not silently create local state.

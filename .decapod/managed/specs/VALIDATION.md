@@ -1051,8 +1051,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `cc0e895c120beae21a19f7c079761e667dd5de541bc9b69c70d1cffc13bed5f5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1449,3 +1449,13 @@ GitHub admin verification, Stripe sandbox purchase or native-client integration.
 The local preparation environment rejects AF_UNIX sockets before broker
 admission, so native task/workspace creation and proof execution require the
 supported hosted environment; no local governance or publication pass is claimed.
+
+## Native registry consumer proof
+
+The exact registry pin and checksum are in Cargo.toml/Cargo.lock. Existing
+source-CI obligations remain complete. Session fixtures cover bounded locks,
+concurrent rotation, single-use exchange uncertainty and private file bounds.
+The actual CLI refresh regression checks the managed Auth endpoint, subsequent
+account request and native query all use the rotated bearer without printing
+credentials or initializing SQLite. HTTP fixture success is not a hosted Auth,
+PostgreSQL, registry publication or released-client receipt.

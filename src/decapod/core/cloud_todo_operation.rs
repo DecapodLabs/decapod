@@ -52,6 +52,9 @@ impl FailureKind {
 pub struct OperationRecord {
     pub operation_id: String,
     pub request_fingerprint: String,
+    /// Actual server project binding, established before the first dispatch.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data_scope_fingerprint: Option<String>,
     pub task_id: String,
     pub status: Outcome,
     pub failure_kind: Option<FailureKind>,
@@ -173,6 +176,7 @@ impl OperationRecord {
         Ok(Self {
             operation_id,
             request_fingerprint: fingerprint,
+            data_scope_fingerprint: None,
             task_id,
             status: Outcome::Prepared,
             failure_kind: None,
@@ -324,6 +328,67 @@ impl Journal {
         })
     }
 
+    /// Managed project references are not encoded in the pre-auth token. A
+    /// supplied retry therefore requires its retained local record; recreating
+    /// it on another machine would erase the original physical target binding.
+    pub fn prepare_scoped(
+        &self,
+        record: &OperationRecord,
+        supplied: bool,
+    ) -> Result<OperationRecord, DecapodError> {
+        if !supplied {
+            return self.prepare(record);
+        }
+        self.with_records(|records| {
+            records
+                .iter()
+                .find(|existing| {
+                    existing.operation_id == record.operation_id
+                        && existing.request_fingerprint == record.request_fingerprint
+                        && existing.task_id == record.task_id
+                })
+                .cloned()
+                .ok_or_else(project_binding_error)
+        })
+    }
+
+    pub fn bind_data_scope(
+        &self,
+        record: &OperationRecord,
+        scope_fingerprint: &str,
+    ) -> Result<OperationRecord, DecapodError> {
+        if scope_fingerprint.len() != 64
+            || !scope_fingerprint.bytes().all(|b| b.is_ascii_hexdigit())
+        {
+            return Err(project_binding_error());
+        }
+        self.with_records(|records| {
+            let existing = records
+                .iter_mut()
+                .find(|existing| {
+                    existing.operation_id == record.operation_id
+                        && existing.request_fingerprint == record.request_fingerprint
+                        && existing.task_id == record.task_id
+                })
+                .ok_or_else(project_binding_error)?;
+            match existing.data_scope_fingerprint.as_deref() {
+                Some(previous) if previous == scope_fingerprint => (),
+                Some(_) => return Err(project_binding_error()),
+                None if matches!(
+                    existing.status,
+                    Outcome::Prepared | Outcome::BlockedBeforeSubmit
+                ) =>
+                {
+                    existing.data_scope_fingerprint = Some(scope_fingerprint.into());
+                }
+                // An old or missing binding cannot establish which project a
+                // possibly committed operation originally addressed.
+                None => return Err(project_binding_error()),
+            }
+            Ok(existing.clone())
+        })
+    }
+
     pub fn finish(
         &self,
         record: &OperationRecord,
@@ -346,6 +411,12 @@ impl Journal {
     pub fn list(&self) -> Result<Vec<OperationRecord>, DecapodError> {
         self.with_records(|records| Ok(records.clone()))
     }
+}
+
+fn project_binding_error() -> DecapodError {
+    DecapodError::ValidationError(
+        "Cloud todo project binding is missing or changed. Preserve the original operation metadata and reconcile against its original server project; do not issue a fresh add to retry.".into(),
+    )
 }
 
 fn read_records(path: &Path) -> Result<Vec<OperationRecord>, DecapodError> {

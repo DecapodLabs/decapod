@@ -553,8 +553,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `cc0e895c120beae21a19f7c079761e667dd5de541bc9b69c70d1cffc13bed5f5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -866,3 +866,15 @@ Browser launch remains limited to human interactive init and respects
 `cloud_init_prints_purchase_approval_without_creating_machine_session` in
 `tests/cloud_backend_storage.rs` also requires that even explicit mock auth
 does not make the init handoff write a credential or claim cloud readiness.
+
+## Managed native session custody
+
+Refresh/exchange requests go through Dactyl's bounded same-origin transport.
+Machine records remain outside the repository, with restrictive permissions,
+size bounds, atomic replacement and fsync. A per-service lock serializes callers;
+a durable in-flight marker prevents replay after lost rotation responses.
+Freshly obtained credentials construct the next consumer connection.
+`managed_refresh_reopens_the_actual_cli_data_connection_with_the_new_bearer`
+checks the real CLI composition against a synthetic native HTTP fixture;
+it does not establish hosted Auth or database enforcement. Shared provider/
+server proof and actual release/deployment remain independently required.

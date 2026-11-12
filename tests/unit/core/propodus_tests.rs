@@ -489,17 +489,24 @@ fn expired_machine_session_refreshes_without_human_interaction() {
 fn supabase_auth_stdin_config_escapes_directives_and_rejects_file_inputs() {
     let body =
         serde_json::json!({"refresh_token": "synthetic-quote\"slash\\newline\nsecret"}).to_string();
-    let config = private_curl_config("synthetic-bearer", Some(body.as_bytes())).unwrap();
+    let config = private_curl_config(
+        "synthetic-bearer",
+        "sb_publishable_test_fixture",
+        Some(body.as_bytes()),
+    )
+    .unwrap();
     assert_eq!(
         config.lines().count(),
-        2,
+        3,
         "secret values cannot add curl directives"
     );
-    assert!(config.starts_with("header = \"Authorization: Bearer synthetic-bearer\"\n"));
+    assert!(config.starts_with("header = \"apikey: sb_publishable_test_fixture\"\n"));
+    assert!(config.contains("header = \"Authorization: Bearer synthetic-bearer\"\n"));
     assert!(config.contains("\\\"refresh_token\\\""));
-    assert!(private_curl_config("token\nheader=injected", None).is_err());
-    assert!(private_curl_config("token", Some(b"@/private/file")).is_err());
-    assert!(private_curl_config("token", Some(&[0xff])).is_err());
+    assert!(private_curl_config("token\nheader=injected", "", None).is_err());
+    assert!(private_curl_config("token", "sb_secret_never", None).is_err());
+    assert!(private_curl_config("token", "", Some(b"@/private/file")).is_err());
+    assert!(private_curl_config("token", "", Some(&[0xff])).is_err());
     let transport = CurlTransport::for_datastore(crate::core::backend::CloudDatastore::Supabase);
     assert!(transport.private_stdin);
     assert!(!transport.follow_redirects);

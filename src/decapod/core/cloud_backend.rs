@@ -6,8 +6,7 @@ use std::path::{Path, PathBuf};
 
 pub const PUBLIC_CLOUD_BACKEND_UNAVAILABLE: &str = "This cloud storage operation is not implemented yet; cloud mode never falls back to local SQLite, and todo persistence is routed through Dactyl.";
 
-pub const PROPODUS_TODO_ROUTE_SUMMARY: &str =
-    "POST /query for task reads/writes; POST /batch for atomic task operations";
+pub const PROPODUS_TODO_ROUTE_SUMMARY: &str = "Supabase RPC v1: POST /rest/v1/rpc/dactyl_query_v1 for reads and POST /rest/v1/rpc/dactyl_batch_v1 for atomic ordered operations";
 pub const CLOUD_ONBOARDING_CONTRACT_VERSION: &str = "v1";
 pub const CLOUD_ONBOARDING_START_ROUTE: &str = "/api/onboarding/start";
 pub const CLOUD_ONBOARDING_STATUS_ROUTE: &str = "/api/onboarding/status";
@@ -18,10 +17,6 @@ pub const CLOUD_SESSION_TTL_MIN_SECS: u64 = 30 * 60;
 pub const CLOUD_SESSION_TTL_DEFAULT_SECS: u64 = 4 * 60 * 60;
 pub const CLOUD_SESSION_TTL_MAX_SECS: u64 = 6 * 60 * 60;
 pub const CLOUD_SESSION_TTL_ENV: &str = "DECAPOD_CLOUD_SESSION_TTL_SECS";
-
-/// Public purchase UI only; this is never a datastore route or credential store.
-pub const CLOUD_BILLING_APPROVAL: &str =
-    "https://goyxpcmxetztjlrrcwew.supabase.co/functions/v1/propodus-onboarding/billing";
 
 pub fn validate_cloud_roster(repository: &str, users: &str) -> Result<Vec<String>, DecapodError> {
     let invalid = || {
@@ -67,20 +62,6 @@ pub fn validate_cloud_roster(repository: &str, users: &str) -> Result<Vec<String
         return Err(invalid());
     }
     Ok(names)
-}
-
-pub fn cloud_billing_approval_url(
-    repository: &str,
-    users: &[String],
-) -> Result<String, DecapodError> {
-    let names = validate_cloud_roster(repository, &users.join(","))?;
-    // Both values have a strict ASCII allowlist. Only the query delimiters need
-    // encoding; arbitrary URLs, tokens, fragments and callbacks cannot enter.
-    Ok(format!(
-        "{CLOUD_BILLING_APPROVAL}?repository={}&users={}",
-        repository.replace('/', "%2F"),
-        names.join("%2C")
-    ))
 }
 
 pub fn cloud_generation_summary(repo: &crate::cli::RepoContext) -> Option<String> {

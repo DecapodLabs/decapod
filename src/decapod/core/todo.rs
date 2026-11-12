@@ -7288,6 +7288,16 @@ pub trait CloudTodoStoreFactory {
         config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, error::DecapodError>;
+
+    /// The logical source key stays stable for operation recovery. The physical
+    /// task slice may instead be a server-issued project reference.
+    fn data_repository(
+        &self,
+        _config: &CloudRuntimeConfig,
+        identity: &RepositoryIdentity,
+    ) -> Result<String, error::DecapodError> {
+        Ok(identity.canonical_name.clone())
+    }
 }
 
 struct DactylCloudTodoStoreFactory;
@@ -7299,7 +7309,6 @@ impl CloudTodoStoreFactory for DactylCloudTodoStoreFactory {
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, error::DecapodError> {
         let datastore = config.validate_datastore()?;
-        let route = BackendRoute::cloud(identity.clone(), &config.api_url)?;
         let propodus = PropodusConfig::for_repository(config, identity);
         let credential = ensure_cloud_session_for_datastore(&propodus, identity, datastore)
             .map_err(|error| match error {
@@ -7328,12 +7337,43 @@ impl CloudTodoStoreFactory for DactylCloudTodoStoreFactory {
                     })
                 }
             })?;
+        #[cfg(feature = "supabase-cloud")]
+        let identity = if datastore == crate::core::backend::CloudDatastore::Supabase {
+            crate::core::cloud_account::prepare(
+                &config.api_url,
+                identity,
+                &identity.repository,
+                &credential,
+            )
+            .map_err(crate::map_cloud_preflight_error)?
+            .bind(identity)
+        } else {
+            identity.clone()
+        };
+        #[cfg(not(feature = "supabase-cloud"))]
+        let identity = identity.clone();
+        let route = BackendRoute::cloud(identity.clone(), &config.api_url)?;
         let context = StorageContext::from_route(route, Some(&credential.token))?
             .with_cloud_datastore(datastore)?;
         Ok(Box::new(DactylTodoStore::new(
             context,
             identity.canonical_name.clone(),
         )))
+    }
+
+    fn data_repository(
+        &self,
+        config: &CloudRuntimeConfig,
+        identity: &RepositoryIdentity,
+    ) -> Result<String, error::DecapodError> {
+        #[cfg(feature = "supabase-cloud")]
+        if config.validate_datastore()? == crate::core::backend::CloudDatastore::Supabase {
+            return crate::core::cloud_account::project_id(&config.api_url, identity)
+                .map_err(crate::map_cloud_preflight_error);
+        }
+        #[cfg(not(feature = "supabase-cloud"))]
+        let _ = config;
+        Ok(identity.canonical_name.clone())
     }
 }
 
@@ -7437,10 +7477,19 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
         return Err(error::DecapodError::ValidationError("Cloud add requires machine-local operation metadata; no repository fallback is permitted".into()));
     }
     if let (Some(operation), Some(journal)) = (&mut operation, journal) {
-        *operation = journal.prepare(operation)?;
+        *operation = if config.datastore == "supabase" {
+            journal.prepare_scoped(operation, operation_id.is_some())?
+        } else {
+            journal.prepare(operation)?
+        };
     }
-    let store = match factory.build(config, identity) {
-        Ok(store) => store,
+    let prepared = factory.build(config, identity).and_then(|store| {
+        factory
+            .data_repository(config, identity)
+            .map(|repository| (store, repository))
+    });
+    let (store, data_repository) = match prepared {
+        Ok(prepared) => prepared,
         Err(error) => {
             if let (Some(operation), Some(journal)) = (&operation, journal) {
                 let kind = cloud_todo_operation::failure_kind(&error);
@@ -7454,6 +7503,30 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
             return Err(error);
         }
     };
+    if config.datastore == "supabase"
+        && let (Some(operation), Some(journal)) = (&mut operation, journal)
+    {
+        let scope = cloud_todo_operation::fingerprint(
+            &config.api_url,
+            &data_repository,
+            &serde_json::json!({"scope_version":1}),
+        );
+        match journal.bind_data_scope(operation, &scope) {
+            Ok(bound) => *operation = bound,
+            Err(_) => {
+                let kind = cloud_todo_operation::FailureKind::Conflict;
+                let _ = journal.finish(operation, Outcome::BlockedBeforeSubmit, Some(kind));
+                let mut diagnostic =
+                    CloudTodoDiagnostic::new(operation, Outcome::BlockedBeforeSubmit, kind);
+                diagnostic.retryable = false;
+                diagnostic.next_action = format!(
+                    "Restore the retained original server-project binding and operation metadata before reconciling --operation-id {}. Do not dispatch this operation to another project or issue a fresh add to retry it.",
+                    operation.operation_id
+                );
+                return Err(error::DecapodError::CloudTodo(diagnostic));
+            }
+        }
+    }
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -7473,7 +7546,7 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
         root,
         command,
         store.as_ref(),
-        &identity.canonical_name,
+        &data_repository,
         operation.as_ref(),
     ));
     if let (Some(operation), Some(journal)) = (&operation, journal) {

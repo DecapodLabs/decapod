@@ -14,7 +14,11 @@ pub mod bounded_process;
 pub mod broker;
 pub mod capabilities;
 pub mod capsule_policy;
+#[cfg(feature = "supabase-cloud")]
+pub(crate) mod cloud_account;
 pub mod cloud_backend;
+#[cfg(feature = "supabase-cloud")]
+pub(crate) mod cloud_session;
 pub mod cloud_todo_operation;
 pub mod completion_evidence;
 pub mod constitution_cli;

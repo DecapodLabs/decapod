@@ -820,8 +820,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f52d1dd54bc5da5637472029b9070177ea359485bd2f706b57e34686ceb10d7f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (225 files), `tests/` (223 files)
+- Repository signal fingerprint: `cc0e895c120beae21a19f7c079761e667dd5de541bc9b69c70d1cffc13bed5f5`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (227 files), `tests/` (224 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1047,3 +1047,14 @@ The coordinated Propodus deployment must verify GitHub identity, repository
 admin permission and paid repository-specific seats. This CLI recovery does
 not deploy that service or prove its Stripe and native-RPC integrations; those
 dependencies remain recorded in `docs/cloud-repository-billing.md`.
+
+## Native connector and custody composition
+
+The source consumes registry Dactyl 0.12.0 without a Git/path override.
+`cloud_session::ensure` serializes service-scoped rotation, persists an in-flight
+marker before one-time requests and preserves uncertain outcomes. Each cloud
+command obtains the resulting bearer before constructing its `StorageContext`;
+`DactylTodoStore::bridge` opens a new physical Dactyl connection for execution.
+The previous captured bearer is not reused after refresh. `cloud_account` stores
+an idempotent registration/project routing reference privately and asks the
+service for current authorization; the routing file cannot grant data access.
